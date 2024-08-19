@@ -209,8 +209,7 @@ void SoundReactivePlugin::process(bool isConnected)
     {
         if (true == spectrumAnalyzer->areFreqBinsReady())
         {
-            uint8_t         bandIdx     = 0U;
-            const size_t    freqBinLen  = spectrumAnalyzer->getFreqBinsLen();
+            const size_t freqBinLen = spectrumAnalyzer->getFreqBinsLen();
 
             if (nullptr != m_freqBins)
             {

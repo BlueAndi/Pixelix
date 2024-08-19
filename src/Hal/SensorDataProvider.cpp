@@ -251,7 +251,6 @@ bool SensorDataProvider::find(
             uint8_t channelCnt = sensor->getNumChannels();
 
             /* Walk through all sensor channels and try to find the requested one. */
-            channelIdx = 0U;
             while((channelCnt > channelIdx) && (false == isFound))
             {
                 ISensorChannel* channel = sensor->getChannel(channelIdx);
@@ -285,6 +284,11 @@ bool SensorDataProvider::find(
 
                 ++channelIdx;
             }
+            
+            /* Don't reset in front of the channel loop to avoid overwritting
+             * the initial channel start index.
+             */
+            channelIdx = 0U;
         }
 
         ++sensorIdx;
@@ -571,8 +575,6 @@ void SensorDataProvider::registerSensorTopics()
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObjectConst     extra;
-        uint8_t             sensorIndex             = 0U;
-        uint8_t             channelIndex            = 0U;
 
         if (DeserializationError::Ok != deserializeJson(jsonDoc, sensorTopic->extra))
         {
@@ -580,6 +582,9 @@ void SensorDataProvider::registerSensorTopics()
         }
         else
         {
+            uint8_t sensorIndex     = 0U;
+            uint8_t channelIndex    = 0U;
+            
             extra = jsonDoc.as<JsonObjectConst>();
 
             /* Try to find a sensor channel which provides the required information. */

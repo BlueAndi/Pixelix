@@ -224,10 +224,11 @@ void ConnectedState::pushUrl(const String& pushUrl)
     /* If a push URL is set, notify about the online status. */
     if (false == pushUrl.isEmpty())
     {
-        String      url         = pushUrl;
-        const char* GET_CMD     = "get ";
-        const char* POST_CMD    = "post ";
-        bool        isGet       = true;
+        String      url             = pushUrl;
+        const char* GET_CMD         = "get ";
+        const char* POST_CMD        = "post ";
+        bool        isGet           = true;
+        bool        isSuccessful    = false;
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
@@ -248,11 +249,30 @@ void ConnectedState::pushUrl(const String& pushUrl)
 
         if (true == m_client.begin(url))
         {
-            if (false == m_client.GET())
+            if (false == isGet)
             {
-                LOG_WARNING("GET %s failed.", url.c_str());
+                if (false == m_client.POST())
+                {
+                    LOG_WARNING("POST %s failed.", url.c_str());
+                }
+                else
+                {
+                    isSuccessful = true;
+                }
             }
             else
+            {
+                if (false == m_client.GET())
+                {
+                    LOG_WARNING("GET %s failed.", url.c_str());
+                }
+                else
+                {
+                    isSuccessful = true;
+                }
+            }
+
+            if (false == isSuccessful)
             {
                 LOG_INFO("Notification triggered.");
             }

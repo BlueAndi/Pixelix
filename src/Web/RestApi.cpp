@@ -150,9 +150,6 @@ static const ContentTypeElem    contentTypeTable[] =
     { ".gif",   "image/gif"                 },
     { ".jpg",   "image/jpg"                 },
     { ".ico",   "image/x-icon"              },
-    { ".xml",   "text/xml"                  },
-    { ".pdf",   "application/x-pdf"         },
-    { ".zip",   "application/x-zip"         },
     { ".gz",    "application/x-gzip"        }
 };
 
@@ -271,7 +268,6 @@ static void handleButton(AsyncWebServerRequest* request)
             buttonActions.executeAction(actionId);
 
             (void)RestUtil::prepareRspSuccess(jsonDoc);
-            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         } 
     }
 
@@ -298,7 +294,6 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
     if (HTTP_GET == request->method())
     {
         JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
         
         dataObj["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
     }
@@ -308,8 +303,6 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
         DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
         uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
         DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
         DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
 
@@ -384,8 +377,6 @@ static void handleSlots(AsyncWebServerRequest* request)
             slot["isLocked"]    = isLocked;
             slot["duration"]    = duration;
         }
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -446,7 +437,6 @@ static void handleSlot(AsyncWebServerRequest* request)
                     JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
                     UTIL_NOT_USED(dataObj);
-                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
                 }
             }
             /* Consider sticky flag. */
@@ -485,7 +475,6 @@ static void handleSlot(AsyncWebServerRequest* request)
                             DisplayMgr::getInstance().clearSticky();
 
                             UTIL_NOT_USED(dataObj);
-                            httpStatusCode = HttpStatus::STATUS_CODE_OK;
                         }
                     }
                     else if (false == DisplayMgr::getInstance().setSlotSticky(slotId))
@@ -498,7 +487,6 @@ static void handleSlot(AsyncWebServerRequest* request)
                         JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
                         UTIL_NOT_USED(dataObj);
-                        httpStatusCode = HttpStatus::STATUS_CODE_OK;
                     }
                 }
             }
@@ -562,7 +550,6 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
                 /* Prepare response */
                 dataObj["slotId"]   = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
                 dataObj["uid"]      = plugin->getUID();
-                httpStatusCode      = HttpStatus::STATUS_CODE_OK;
             }
         }
     }
@@ -647,7 +634,6 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
                     PluginMgr::getInstance().save();
 
                     (void)RestUtil::prepareRspSuccess(jsonDoc);
-                    httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
             }
         }
@@ -692,8 +678,6 @@ static void handlePlugins(AsyncWebServerRequest* request)
             
             ++idx;
         }
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -729,8 +713,6 @@ static void handleReset(AsyncWebServerRequest* request)
         (void)RestUtil::prepareRspSuccess(jsonDoc);
 
         UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -799,8 +781,6 @@ static void handleSensors(AsyncWebServerRequest* request)
                 }
             }
         }
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -845,8 +825,6 @@ static void handleSettings(AsyncWebServerRequest* request)
                 (void)settingsArray.add(setting->getKey());
             }
         }
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -970,8 +948,6 @@ static void handleSetting(AsyncWebServerRequest* request)
             }
 
             settings.close();
-
-            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
     }
     else if (HTTP_POST == request->method())
@@ -1015,7 +991,6 @@ static void handleSetting(AsyncWebServerRequest* request)
                 else
                 {
                     (void)RestUtil::prepareRspSuccess(jsonDoc);
-                    httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
 
                 settings.close();
@@ -1289,7 +1264,7 @@ static void handleStatus(AsyncWebServerRequest* request)
     else
     {
         String              ssid;
-        int8_t              rssi            = -100; // dbm
+        int8_t              rssi            = -100; /* [dbm] */
         JsonVariant         dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
         JsonObject          hwObj           = dataObj.createNestedObject("hardware");
         JsonObject          swObj           = dataObj.createNestedObject("software");
@@ -1323,10 +1298,8 @@ static void handleStatus(AsyncWebServerRequest* request)
         internalRamObj["availableHeap"] = ESP.getFreeHeap();
 
         wifiObj["ssid"]         = ssid;
-        wifiObj["rssi"]         = rssi;                             // dBm
-        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); // percent
-
-        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
+        wifiObj["rssi"]         = rssi;                             /* [dbm] */
+        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); /* [%] */
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1467,9 +1440,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        jsonDoc["status"]   = "ok";
-
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        jsonDoc["status"] = "ok";
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1484,7 +1455,6 @@ static void handleFilesystem(AsyncWebServerRequest* request)
  */
 static void handleFileGet(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -1496,9 +1466,8 @@ static void handleFileGet(AsyncWebServerRequest* request)
     if (HTTP_GET != request->method())
     {
         RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-        RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+        RestUtil::sendJsonRsp(request, jsonDoc, HttpStatus::STATUS_CODE_NOT_FOUND);
     }
     else
     {
@@ -1512,9 +1481,8 @@ static void handleFileGet(AsyncWebServerRequest* request)
             errorMsg += path;
 
             RestUtil::prepareRspError(jsonDoc, errorMsg.c_str());
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-            RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+            RestUtil::sendJsonRsp(request, jsonDoc, HttpStatus::STATUS_CODE_NOT_FOUND);
         }
         else
         {
@@ -1575,7 +1543,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
     else
     {
         (void)RestUtil::prepareRspSuccess(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1673,7 +1640,6 @@ static void handleFileDelete(AsyncWebServerRequest* request)
         else
         {
             (void)RestUtil::prepareRspSuccess(jsonDoc);
-            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
     }
 
@@ -1690,10 +1656,10 @@ static void handleFileDelete(AsyncWebServerRequest* request)
  */
 static bool isValidHostname(const String& hostname)
 {
-    bool                isValid         = true;
-    SettingsService&    settings        = SettingsService::getInstance();
-    const size_t    MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
-    const size_t    MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
+    bool                isValid             = true;
+    SettingsService&    settings            = SettingsService::getInstance();
+    const size_t        MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
+    const size_t        MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
 
     if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
         (MAX_HOSTNAME_LENGTH < hostname.length()))
@@ -1702,7 +1668,7 @@ static bool isValidHostname(const String& hostname)
     }
     else
     {
-        uint8_t index = 0;
+        uint8_t index = 0U;
 
         while((true == isValid) && (index < hostname.length()))
         {
@@ -1730,7 +1696,7 @@ static bool isValidHostname(const String& hostname)
             else if ('-' == hostname[index])
             {
                 /* No - at the begin */
-                if (0 == index)
+                if (0U == index)
                 {
                     isValid = false;
                 }

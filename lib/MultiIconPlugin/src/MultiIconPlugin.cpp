@@ -77,8 +77,8 @@ const char* MultiIconPlugin::FILE_EXT_TMP   = ".tmp";
 
 void MultiIconPlugin::getTopics(JsonArray& topics) const
 {
-    uint8_t slotId = 0U;
-    uint8_t iconId = 0U;
+    uint8_t slotId;
+    uint8_t iconId;
 
     for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     {
@@ -216,8 +216,7 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
                 for (iconIdx = 0U; iconIdx < MAX_ICONS_PER_SLOT; ++iconIdx)
                 {
-                    String              fullPath;
-                    JsonVariantConst    jsonObject  = jsonIcons[iconIdx];
+                    JsonVariantConst jsonObject = jsonIcons[iconIdx];
 
                     if (false == jsonObject.isNull())
                     {
@@ -312,8 +311,8 @@ bool MultiIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
 
 void MultiIconPlugin::start(uint16_t width, uint16_t height)
 {
-    uint8_t                     slotId      = 0U;
-    uint8_t                     iconId      = 0U;
+    uint8_t                     slotId;
+    uint8_t                     iconId;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_view.init(width, height);
@@ -361,15 +360,13 @@ void MultiIconPlugin::start(uint16_t width, uint16_t height)
 
 void MultiIconPlugin::stop()
 {
-    uint8_t                     slotId      = 0U;
-    uint8_t                     iconId      = 0U;
+    uint8_t                     slotId;
+    uint8_t                     iconId;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Scan the filesystem for the icon images. */
     for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
-    { 
-        IconSlot&   iconSlot = m_slots[slotId];
-
+    {
         for(iconId = 0U; iconId < MAX_ICONS_PER_SLOT; ++iconId)
         {
             String fullPathGif = getFileName(slotId, iconId, BitmapWidget::FILE_EXT_GIF);

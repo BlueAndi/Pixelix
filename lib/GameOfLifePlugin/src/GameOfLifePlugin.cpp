@@ -154,8 +154,8 @@ void GameOfLifePlugin::update(YAGfx& gfx)
     if ((true == isInit) &&
         (true == m_displayTimer.isTimeout()))
     {
-        int32_t cellX           = 0;
-        int32_t cellY           = 0;
+        int32_t cellX;
+        int32_t cellY;
         uint8_t inactiveGrid    = (m_activeGrid + 1U) % GRIDS;
         bool    isStable        = true;
 

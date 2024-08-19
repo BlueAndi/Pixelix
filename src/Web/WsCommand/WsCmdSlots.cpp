@@ -78,8 +78,8 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
     {
         String      msg;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
         uint8_t     stickySlot  = displayMgr.getStickySlot();
+        uint8_t     slotId;
 
         preparePositiveResponse(msg);
 

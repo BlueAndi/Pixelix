@@ -73,11 +73,8 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
         int             writtenTotal                    = 0;
 
         /* Timestamp */
-        if (BUFFER_SIZE_CUT_OFF > writtenTotal)
-        {
-            written = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%u", msg.timestamp);
-            writtenTotal += written;
-        }
+        written = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%u", msg.timestamp);
+        writtenTotal += written;
 
         while((BUFFER_SIZE_CUT_OFF > writtenTotal) && (TIMESTAMP_LEN >= written))
         {

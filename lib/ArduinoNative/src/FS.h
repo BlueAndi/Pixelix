@@ -110,7 +110,7 @@ public:
 
     size_t readBytes(char *buffer, size_t length)
     {
-        return read((uint8_t*)buffer, length);
+        return read(static_cast<uint8_t*>(buffer), length);
     }
 
     bool seek(uint32_t pos, SeekMode mode)

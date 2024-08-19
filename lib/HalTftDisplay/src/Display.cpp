@@ -81,8 +81,8 @@ Display::~Display()
 
 void Display::show()
 {
-    int32_t x = 0;
-    int32_t y = 0;
+    int32_t x;
+    int32_t y;
 
     for(y = 0; y < MATRIX_HEIGHT; ++y)
     {
@@ -93,7 +93,7 @@ void Display::show()
 #else
             Color       brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
 #endif           
-    	    uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
+            uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
             int32_t     xNative                 = y * (PIXEL_HEIGHT + PiXEL_DISTANCE) + BORDER_Y;
             int32_t     yNative                 = TFT_HEIGHT - (x * (PIXEL_WIDTH  + PiXEL_DISTANCE) + BORDER_X) - 1;
 

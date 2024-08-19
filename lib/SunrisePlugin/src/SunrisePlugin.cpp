@@ -462,10 +462,10 @@ void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 
 String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) const
 {
-    tm      gmTimeInfo;
-    tm*     lcTimeInfo          = nullptr;
-    time_t  gmTime;
-    char    timeBuffer[17]      = { 0 };
+    tm          gmTimeInfo;
+    const tm*   lcTimeInfo      = nullptr;
+    time_t      gmTime;
+    char        timeBuffer[17]  = { 0 };
 
     /* Example: "2015-05-21T05:05:35+00:00" */
 

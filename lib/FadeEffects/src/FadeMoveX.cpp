@@ -75,8 +75,8 @@ bool FadeMoveX::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 bool FadeMoveX::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
     bool    isFinished  = false;
-    int16_t x           = 0;
-    int16_t y           = 0;
+    int16_t x;
+    int16_t y;
 
     if (FADE_STATE_OUT != m_state)
     {

@@ -60,8 +60,8 @@
 
 void RainbowPlugin::update(YAGfx& gfx)
 {
-    int16_t x       = 0;
-    int16_t y       = 0;
+    int16_t x;
+    int16_t y;
     uint8_t angle   = m_angle;
     Color   color;
 

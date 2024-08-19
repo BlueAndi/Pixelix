@@ -192,8 +192,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
         }
         else
         {
-            jsonDoc["status"]   = "ok";
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+            jsonDoc["status"] = "ok";
         }
     }
     else if ((HTTP_POST == request->method()) &&

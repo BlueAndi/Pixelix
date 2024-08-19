@@ -135,8 +135,8 @@ void FadeLinear::dimBitmap(YAGfxBitmap& bitmap, uint8_t intensity)
 {
     uint16_t    width   = bitmap.getWidth();
     uint16_t    height  = bitmap.getHeight();
-    int16_t     x       = 0;
-    int16_t     y       = 0;
+    int16_t     x;
+    int16_t     y;
 
     for(y = 0; y < height; ++y)
     {

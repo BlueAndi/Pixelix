@@ -136,6 +136,36 @@ extern String uint32ToHex(uint32_t value);
  */
 extern uint32_t hexToUInt32(const String& str);
 
+/**
+ * Minimum between two values, used for compile time calculations.
+ * 
+ * @tparam      T    Value type
+ * @param[in]   valA Value A
+ * @param[in]   valB Value B
+ * 
+ * @return The minimum value between A and B.
+ */
+template < typename T >
+constexpr T min(T valA, T valB)
+{
+    return (valA < valB) ? valA : valB;
+}
+
+/**
+ * Maximum between two values, used for compile time calculations.
+ * 
+ * @tparam      T    Value type
+ * @param[in]   valA Value A
+ * @param[in]   valB Value B
+ * 
+ * @return The maximum value between A and B.
+ */
+template < typename T >
+constexpr T max(T valA, T valB)
+{
+    return (valA > valB) ? valA : valB;
+}
+
 }
 
 #endif  /* UTILITY_H */

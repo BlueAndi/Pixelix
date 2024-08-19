@@ -672,8 +672,8 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
         (0 < length))
     {
         IDisplay&                   display = Display::getInstance();
-        int16_t                     x       = 0;
-        int16_t                     y       = 0;
+        int16_t                     x;
+        int16_t                     y;
         size_t                      index   = 0;
         MutexGuard<MutexRecursive>  guard(m_mutexInterf);
 
