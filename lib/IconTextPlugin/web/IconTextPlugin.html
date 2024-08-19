@@ -75,7 +75,7 @@
                 <h2>Configuration</h2>
                 <h3>Icon</h3>
                 <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-                    <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
+                    <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files)">
                         <div class="form-group">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
                             <select class="form-select" id="pluginUidIcon" name="pluginUid" size="1">
@@ -189,13 +189,17 @@
                 });
             };
 
-            function uploadIcon(pluginUid, file) {
+            function uploadIcon(pluginUid, files) {
                 var promise;
 
                 disableUI();
 
-                if (true === file.name.toLowerCase().endsWith(".bmp")) {
-                    promise = utils.checkBMPFile(file);
+                if (0 === files.length) {
+                    promise = Promise.reject("No file selected.");
+                
+                } else if (true === files[0].name.toLowerCase().endsWith(".bmp")) {
+                    promise = utils.checkBMPFile(files[0]);
+
                 } else {
                     promise = Promise.resolve();
                 }
@@ -206,10 +210,10 @@
                         url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
                         isJsonResponse: true,
                         parameter: {
-                            file: file
+                            file: files[0]
                         },
                         headers: {
-                            "X-File-Size": file.size
+                            "X-File-Size": files[0].size
                         }
                     });
                 }).then(function(rsp) {
