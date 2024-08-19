@@ -74,12 +74,13 @@ size_t Print::write(const char *str)
     if(str == nullptr) {
         return 0;
     }
-    return write(static_cast<const uint8_t *>(str), strlen(str));
+
+    return write(reinterpret_cast<const uint8_t *>(str), strlen(str));
 }
 
 size_t Print::write(const char *buffer, size_t size)
 {
-    return write(static_cast<const uint8_t *>(buffer), size);
+    return write(reinterpret_cast<const uint8_t *>(buffer), size);
 }
 
 size_t Print::print(const String &s)
