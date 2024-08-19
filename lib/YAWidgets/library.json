@@ -16,8 +16,6 @@
         "name": "ArduinoJson",
         "version": "~6.21.5"
     }, {
-        "name": "LinkedList"
-    }, {
         "name": "Fonts"
     }],
     "frameworks": "*",

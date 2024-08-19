@@ -916,7 +916,6 @@ INPUT                  = . \
                          ../../lib/Fonts \
                          ../../lib/HalLedMatrix \
                          ../../lib/HalTftDisplay \
-                         ../../lib/LinkedList \
                          ../../lib/Os \
                          ../../lib/Sensors \
                          ../../lib/StateMachine \

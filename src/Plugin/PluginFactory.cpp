@@ -88,7 +88,7 @@ IPluginMaintenance* PluginFactory::createPlugin(const char* name, uint16_t uid)
 
             if (nullptr != plugin)
             {
-                m_plugins.append(plugin);
+                m_plugins.push_back(plugin);
             }
         }
 
@@ -98,20 +98,29 @@ IPluginMaintenance* PluginFactory::createPlugin(const char* name, uint16_t uid)
     return plugin;
 }
 
-void PluginFactory::destroyPlugin(IPluginMaintenance* plugin)
+void PluginFactory::destroyPlugin(const IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        DLinkedListIterator<IPluginMaintenance*> it(m_plugins);
+        if (0U < m_plugins.size())
+        {
+            ListOfPlugins::iterator it = m_plugins.begin();
 
-        if (false == it.find(plugin))
-        {
-            LOG_WARNING("Plugin 0x%X (%s) not found in list.", plugin, plugin->getName());
-        }
-        else
-        {
-            it.remove();
-            delete plugin;
+            while(it != m_plugins.end())
+            {
+                IPluginMaintenance* currentPlugin = *it;
+
+                if (currentPlugin == plugin)
+                {
+                    it = m_plugins.erase(it);
+
+                    delete currentPlugin;
+                }
+                else
+                {
+                    ++it;
+                }
+            }
         }
     }
 }
@@ -126,34 +135,29 @@ void PluginFactory::destroyPlugin(IPluginMaintenance* plugin)
 
 uint16_t PluginFactory::generateUID()
 {
-    uint16_t                                        uid;
-    bool                                            isFound;
-    DLinkedListConstIterator<IPluginMaintenance*>   it(m_plugins);
-
+    uint16_t    uid;
+    bool        isFound;
+    
     do
     {
         isFound = false;
         uid     = random(UINT16_MAX);
 
-        /* Ensure that UID is really unique. */
-        if (true == it.first())
+        if (0U < m_plugins.size())
         {
-            const IPluginMaintenance* plugin = *it.current();
+            ListOfPlugins::const_iterator it = m_plugins.begin();
 
-            while((false == isFound) && (nullptr != plugin))
+            /* Ensure that UID is really unique. */
+            while((it != m_plugins.end()) && (false == isFound))
             {
-                if (uid == plugin->getUID())
+                const IPluginMaintenance* currentPlugin = *it;
+
+                if (currentPlugin->getUID() == uid)
                 {
                     isFound = true;
                 }
-                else if (false == it.next())
-                {
-                    plugin = nullptr;
-                }
-                else
-                {
-                    plugin = *it.current();
-                }
+
+                ++it;
             }
         }
     }

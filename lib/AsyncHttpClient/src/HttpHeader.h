@@ -94,6 +94,17 @@ public:
     }
 
     /**
+     * Constructs a header by copying an existing one.
+     * 
+     * @param[in] other The header which to copy.
+     */
+    HttpHeader(const HttpHeader& other) :
+        m_name(other.m_name),
+        m_value(other.m_value)
+    {
+    }
+
+    /**
      * Destroys the header.
      */
     ~HttpHeader()

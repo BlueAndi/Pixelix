@@ -44,9 +44,8 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "IPluginMaintenance.hpp"
-
-#include <LinkedList.hpp>
+#include <IPluginMaintenance.hpp>
+#include <vector>
 
 /******************************************************************************
  * Macros
@@ -108,11 +107,14 @@ public:
      * 
      * @param[in] plugin    The plugin object pointer.
      */
-    void destroyPlugin(IPluginMaintenance* plugin);
+    void destroyPlugin(const IPluginMaintenance* plugin);
 
 private:
 
-    DLinkedList<IPluginMaintenance*>    m_plugins;  /**< List with all produced plugin objects. */
+    /** List of plugins type. */
+    typedef std::vector<IPluginMaintenance*> ListOfPlugins;
+
+    ListOfPlugins   m_plugins;  /**< List with all produced plugin objects. */
 
     PluginFactory(const PluginFactory& factory);
     PluginFactory& operator=(const PluginFactory& factory);
