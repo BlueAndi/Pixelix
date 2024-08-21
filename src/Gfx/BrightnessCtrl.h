@@ -261,6 +261,11 @@ public:
      */
     static constexpr float  DARKENING_LIGHT_HYSTERESIS      = 0.2F;
 
+    /**
+     * Gamma correction factor.
+     */
+    static constexpr float  GAMMA                           = 2.2F;
+
 private:
 
     /** Direction of ambient light changes. */
