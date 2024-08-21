@@ -35,7 +35,7 @@ utils.obj2FormData = function(obj, formData = new FormData()) {
                 subKeyStrTrans = subKeyStr ? subKeyStr + "." + i : i;
             }                
 
-            if ((typeof(value) === "string") || (typeof(value) === "number") || (value instanceof File)) {
+            if ((typeof(value) === "string") || (typeof(value) === "number")|| (typeof(value) === "boolean") || (value instanceof File)) {
 
                 this.formData.append(subKeyStrTrans, value);
 
