@@ -216,6 +216,10 @@ void BrightnessCtrl::process()
                 ;
             }
         }
+        else
+        {
+            /* Do nothing! */
+        }
 
         m_autoBrightnessTimer.restart();
     }
@@ -316,7 +320,7 @@ void BrightnessCtrl::updateBrightnessGoal()
 
 void BrightnessCtrl::updateBrightness()
 {
-    const uint8_t   STEP    = 2U;
+    const uint8_t STEP = 32U;
 
     if (m_brightnessGoal > m_brightness)
     {
