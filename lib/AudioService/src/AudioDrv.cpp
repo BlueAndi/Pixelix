@@ -80,9 +80,16 @@
 
 bool AudioDrv::start()
 {
-    bool    isSuccessful    = true;
+    bool isSuccessful = true;
 
-    if (nullptr == m_taskHandle)
+    if ((IoPin::NC == CONFIG_PIN_I2S_WS) ||
+        (IoPin::NC == CONFIG_PIN_I2S_SC) ||
+        (IoPin::NC == CONFIG_PIN_I2S_DI))
+    {
+        LOG_WARNING("Audio not supported.");
+        isSuccessful = false;
+    }
+    else if (nullptr == m_taskHandle)
     {
         if (false == m_mutex.create())
         {
@@ -118,11 +125,14 @@ bool AudioDrv::start()
                                                 &m_taskHandle,
                                                 TASK_RUN_CORE);
 
-                /* Task successful created? */
-                if (pdPASS == osRet)
+                /* Task creation failed? */
+                if (pdPASS != osRet)
+                {
+                    isSuccessful = false;
+                }
+                else
                 {
                     (void)xSemaphoreGive(m_xSemaphore);
-                    isSuccessful = true;
                 }
             }
         }
@@ -196,6 +206,10 @@ void AudioDrv::processTask(void* parameters)
             tthis->deInitI2S();
 
             LOG_INFO("I2S driver uninstalled.");
+        }
+        else
+        {
+            LOG_ERROR("I2S initialization failed, shutdown audio task.");
         }
 
         (void)xSemaphoreGive(tthis->m_xSemaphore);
