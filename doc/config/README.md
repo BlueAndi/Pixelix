@@ -64,7 +64,11 @@ The concept behind the version number follows the [semantic versioning](https://
 11. Release version on github.
 
 ## Declaring dependencies
-Note that the order of declaring the dependencies is important!
+* Note that the order of declaring the dependencies is important!
+* Use always a version, except its a local library in the _libs_ folder.
+* Prefer the tilde to specify the version:
+    * ^ (Caret): This symbol allows updates that do not change the left-most non-zero digit. For example, ^1.2.3 will match any version from 1.2.3 to less than 2.0.0.
+    * ~ (Tilde): This symbol allows updates to the most recent minor version. For example, ~1.2.3 will match any version from 1.2.3 to less than 1.3.0.
 
 ### Common dependencies (target + native test)
 Declare common dependencies for all environments (target and native test related) in the ```platformio.ini``` _[env]_ section.
