@@ -9,7 +9,13 @@
         "maintainer": true
     }],
     "license": "MIT",
-    "dependencies": [],
+    "dependencies": [{
+        "name": "https://github.com/BlueAndi/AsyncTCPSock"
+    }, {
+        "name": "Os"
+    }, {
+        "name": "Utilities"
+    }],
     "frameworks": "*",
     "platforms": "*"
 }

@@ -10,7 +10,9 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "muwerk/mufonts"
+        "owner": "muwerk",
+        "name": "mufonts",
+        "version": "~0.2.0"
     }, {
         "name": "YAGfx"
     }],

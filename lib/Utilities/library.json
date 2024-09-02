@@ -9,7 +9,19 @@
         "maintainer": true
     }],
     "license": "MIT",
-    "dependencies": [],
+    "dependencies": [{
+        "owner": "bblanchon",
+        "name": "StreamUtils",
+        "version": "~1.8.0"
+    }, {
+        "owner": "bblanchon",
+        "name": "ArduinoJson",
+        "version": "~6.21.5"
+    }, {
+        "name": "FS"
+    }, {
+        "name": "LittleFS"
+    }],
     "frameworks": "*",
     "platforms": "*"
 }
