@@ -12,6 +12,8 @@
     "dependencies": [{
         "name": "Common"
     }, {
+        "name": "SPI"
+    }, {
         "owner": "bodmer",
         "name": "TFT_eSPI",
         "version": "~2.5.31"
