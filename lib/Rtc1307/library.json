@@ -12,13 +12,17 @@
     "dependencies": [{
         "name": "IRtc"
     }, {
-        "owner": "Adafruit",
-        "name": "RTClib",
-        "version": "~2.1.1"
+        "name": "SPI"
     }, {
         "owner": "Adafruit",
         "name": "Adafruit BusIO",
         "version": "~1.14.1"
+    }, {
+        "owner": "Adafruit",
+        "name": "RTClib",
+        "version": "~2.1.1"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

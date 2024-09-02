@@ -33,14 +33,12 @@
  * Includes
  *****************************************************************************/
 #include "Pages.h"
-#include "HttpStatus.h"
 #include "WebConfig.h"
 #include "Version.h"
 #include "UpdateMgr.h"
 #include "DisplayMgr.h"
 #include "RestApi.h"
 #include "PluginList.h"
-#include "FileSystem.h"
 
 #include <WiFi.h>
 #include <Esp.h>
@@ -50,6 +48,8 @@
 #include <ArduinoJson.h>
 #include <lwip/init.h>
 #include <SettingsService.h>
+#include <FileSystem.h>
+#include <HttpStatus.h>
 
 #include <mbedtls/version.h>
 
