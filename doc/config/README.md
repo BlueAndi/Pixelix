@@ -13,6 +13,11 @@
 * [Development Strategy](#development-strategy)
 * [Work Instructions](#work-instructions)
   * [How to release?](#how-to-release)
+  * [Declaring dependencies](#declaring-dependencies)
+    * [Common dependencies (target + native test)](#common-dependencies-target--native-test)
+    * [Common target dependencies (target only)](#common-target-dependencies-target-only)
+    * [Library dependencies](#library-dependencies)
+    * [Board dependencies](#board-dependencies)
 * [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 * [License](#license)
 * [Contribution](#contribution)
@@ -57,6 +62,21 @@ The concept behind the version number follows the [semantic versioning](https://
 9. Wait till all CI actions successful finished. If CI run fails, fix it and repeat.
 10. Merge remote **dev** branch to remote **master** branch.
 11. Release version on github.
+
+## Declaring dependencies
+Note that the order of declaring the dependencies is important!
+
+### Common dependencies (target + native test)
+Declare common dependencies for all environments (target and native test related) in the ```platformio.ini``` _[env]_ section.
+
+### Common target dependencies (target only)
+Declare common dependencies for all target environments in the ```mcu.ini``` _lib\_deps\_external_ and _lib\_deps\_builtin_ section.
+
+### Library dependencies
+Declare library dependencies in the ```library.json``` _dependency_ section.
+
+### Board dependencies
+Declare board dependencies in the ```board.ini``` _lib\_deps_ section.
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
