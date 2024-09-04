@@ -228,6 +228,7 @@ This is a low level error code. Please have a look into the following table.
 | E5 | The display manager didn't start up. |
 | E6 | The system message handler didn't start up. |
 | E7 | The update manager didn't start up. |
+| E8 | One of the services failed to start. |
 
 ## How can I use animated icons?
 Use animated GIF images to get animated icons. The sprite sheet support (< v8.0.0) was replaced with the GIF images.

@@ -82,14 +82,7 @@ bool AudioDrv::start()
 {
     bool isSuccessful = true;
 
-    if ((IoPin::NC == CONFIG_PIN_I2S_WS) ||
-        (IoPin::NC == CONFIG_PIN_I2S_SC) ||
-        (IoPin::NC == CONFIG_PIN_I2S_DI))
-    {
-        LOG_WARNING("Audio not supported.");
-        isSuccessful = false;
-    }
-    else if (nullptr == m_taskHandle)
+    if (nullptr == m_taskHandle)
     {
         if (false == m_mutex.create())
         {
