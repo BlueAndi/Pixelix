@@ -167,7 +167,12 @@ void WebSocketSrv::init(AsyncWebServer& srv)
     (void)m_msgQueue.create(MAX_WEBSOCKET_MSGS);
 
     /* Register websocket event handler */
-    m_webSocket.onEvent(onEvent);
+    m_webSocket.onEvent(
+        [this](AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
+        {
+            this->onEvent(server, client, type, arg, data, len);
+        }
+    );
 
     /* HTTP Authenticate before switch to Websocket protocol */
     m_webSocket.setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
@@ -241,27 +246,27 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     {
     /* Client connected */
     case WS_EVT_CONNECT:
-        getInstance().onConnect(server, client, static_cast<AsyncWebServerRequest*>(arg));
+        onConnect(server, client, static_cast<AsyncWebServerRequest*>(arg));
         break;
 
     /* Client disconnected */
     case WS_EVT_DISCONNECT:
-        getInstance().onDisconnect(server, client);
+        onDisconnect(server, client);
         break;
 
     /* Pong received */
     case WS_EVT_PONG:
-        getInstance().onPong(server, client, data, len);
+        onPong(server, client, data, len);
         break;
 
     /* Remote error */
     case WS_EVT_ERROR:
-        getInstance().onError(server, client, *static_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
+        onError(server, client, *static_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
         break;
 
     /* Data */
     case WS_EVT_DATA:
-        getInstance().onData(server, client, static_cast<AwsFrameInfo*>(arg), data, len);
+        onData(server, client, static_cast<AwsFrameInfo*>(arg), data, len);
         break;
 
     default:
@@ -384,7 +389,7 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
         uint8_t index = 0U;
 
         /* Find command object */
-        while((nullptr == wsCmd) && (index < UTIL_ARRAY_NUM(gWsCommands)))
+        while((nullptr == wsCmd) && (UTIL_ARRAY_NUM(gWsCommands) > index))
         {
             /* Note, cmd is NOT terminated! */
             if (0 == strncmp(gWsCommands[index]->getCmd(), cmd, cmdLength))
@@ -405,7 +410,8 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
             WebSocketMsg* wsMsg = new(std::nothrow) WebSocketMsg;
 
             /* Overstep delimiter in case there are parameters. */
-            if (DELIMITER == msg[msgIndex])
+            if ((DELIMITER == msg[msgIndex]) &&
+                (msgLen > msgIndex))
             {
                 ++msgIndex;
             }
@@ -414,7 +420,11 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
             {
                 wsMsg->cmd          = wsCmd;
                 wsMsg->clientId     = client->id();
-                wsMsg->parameters   = String(&msg[msgIndex], msgLen - msgIndex);
+
+                if (0U < (msgLen - msgIndex))
+                {
+                    wsMsg->parameters = String(&msg[msgIndex], msgLen - msgIndex);
+                }
 
                 if (false == m_msgQueue.sendToBack(wsMsg, QUEUE_WAIT_TIME * portTICK_PERIOD_MS))
                 {

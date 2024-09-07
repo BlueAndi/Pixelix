@@ -80,6 +80,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
         uint8_t     stickySlot  = displayMgr.getStickySlot();
         uint8_t     slotId;
+        uint8_t     maxSlots    = displayMgr.getMaxSlots();
 
         preparePositiveResponse(msg);
 
@@ -93,7 +94,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
          * - Information about whether the slot is sticky or not.
          * - Slot duration in ms.
          */
-        for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
+        for(slotId = 0U; slotId < maxSlots; ++slotId)
         {
             IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
             const char*         name        = (nullptr != plugin) ? plugin->getName() : "";

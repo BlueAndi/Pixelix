@@ -156,7 +156,7 @@ private:
      * @param[in] data      Websocket data
      * @param[in] len       Websocket data length in bytes
      */
-    static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
+    void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
 
     /**
      * Websocket connect event handler.
