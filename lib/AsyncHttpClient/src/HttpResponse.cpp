@@ -234,7 +234,7 @@ String HttpResponse::getHeader(const String& name)
 
             if (nullptr != header)
             {
-                if (0U != header->getName().equalsIgnoreCase(name))
+                if (true == header->getName().equalsIgnoreCase(name))
                 {
                     value   = header->getValue();
                     isFound = true;

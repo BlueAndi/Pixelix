@@ -392,12 +392,12 @@ void AsyncHttpClient::setKeepAlive(bool keepAlive)
 void AsyncHttpClient::addHeader(const String& name, const String& value)
 {
     /* Only add header if not handled by the client itself. */
-    if ((0U == name.equalsIgnoreCase("Host")) &&
-        (0U == name.equalsIgnoreCase("User-Agent")) &&
-        (0U == name.equalsIgnoreCase("Connection")) &&
-        (0U == name.equalsIgnoreCase("Accept-Encoding")) &&
-        (0U == name.equalsIgnoreCase("Authorization")) &&
-        (0U == name.equalsIgnoreCase("Content-Length")))
+    if ((false == name.equalsIgnoreCase("Host")) &&
+        (false == name.equalsIgnoreCase("User-Agent")) &&
+        (false == name.equalsIgnoreCase("Connection")) &&
+        (false == name.equalsIgnoreCase("Accept-Encoding")) &&
+        (false == name.equalsIgnoreCase("Authorization")) &&
+        (false == name.equalsIgnoreCase("Content-Length")))
     {
         m_headers += name;
         m_headers += ": ";

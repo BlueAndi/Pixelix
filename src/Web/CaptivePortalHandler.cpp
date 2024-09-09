@@ -96,7 +96,7 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
             }
         }
         else if ((true == request->hasArg("restart")) &&
-                (0 != request->arg("restart").equals("now")))
+                (true == request->arg("restart").equals("now")))
         {
             if (nullptr == m_resetReqHandler)
             {
