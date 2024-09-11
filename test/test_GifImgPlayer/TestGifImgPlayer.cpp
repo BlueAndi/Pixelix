@@ -58,6 +58,8 @@
 
 static void testGifImgPlayerStatic();
 static void testGifImgPlayerAnimated();
+static void testGifImgPlayerMemStatic();
+static void testGifImgPlayerMemAnimated();
 
 /******************************************************************************
  * Local Variables
@@ -113,6 +115,8 @@ extern int main(int argc, char **argv)
 
     RUN_TEST(testGifImgPlayerStatic);
     RUN_TEST(testGifImgPlayerAnimated);
+    RUN_TEST(testGifImgPlayerMemStatic);
+    RUN_TEST(testGifImgPlayerMemAnimated);
 
     return UNITY_END();
 }
@@ -195,6 +199,74 @@ static void testGifImgPlayerAnimated()
     FS              fileSystem;
     
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif"));
+    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+    usleep(200000);
+    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+    usleep(200000);
+    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+    usleep(200000);
+    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+    gifImgPlayer.close();
+}
+
+/**
+ * Test GIF image player with a static GIF image.
+ */
+static void testGifImgPlayerMemStatic()
+{
+    GifImgPlayer    gifImgPlayer;
+    YAGfxTest       testGfx;
+    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS              fileSystem;
+    int32_t         x;
+    int32_t         y;
+    int32_t         width   = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
+    int32_t         height  = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
+    
+    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif", true));
+    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+
+    for(y = 0; y < height; ++y)
+    {
+        for(x = 0; x < width; ++x)
+        {
+            Color& color = testGfx.getColor(x, y);
+
+            printf("%u, %u / 0x%X <-> 0x%X\n", x, y, EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
+
+            TEST_ASSERT_EQUAL_UINT32(EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
+        }
+    }
+
+    /* Verify that the a 2nd play() call with redraw the image. */
+    testGfx.fillScreen(ColorDef::BLACK);
+    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+    gifImgPlayer.close();
+
+    for(y = 0; y < height; ++y)
+    {
+        for(x = 0; x < width; ++x)
+        {
+            Color& color = testGfx.getColor(x, y);
+
+            printf("%u, %u / 0x%X <-> 0x%X\n", x, y, EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
+
+            TEST_ASSERT_EQUAL_UINT32(EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
+        }
+    }
+}
+
+/**
+ * Test GIF image player with a animated GIF image.
+ */
+static void testGifImgPlayerMemAnimated()
+{
+    GifImgPlayer    gifImgPlayer;
+    YAGfxTest       testGfx;
+    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS              fileSystem;
+    
+    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif", true));
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     usleep(200000);
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));

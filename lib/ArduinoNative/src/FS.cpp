@@ -58,6 +58,26 @@
  * Public Methods
  *****************************************************************************/
 
+size_t File::size() const
+{
+    size_t  fileSize    = 0U;
+    size_t  currPos     = ftell(m_fd);
+    
+    if (0 == fseek(m_fd, 0, SEEK_END))
+    {
+        long pos = ftell(m_fd);
+
+        if (0 <= pos)
+        {
+            fileSize = pos;
+        }
+
+        (void)fseek(m_fd, currPos, SEEK_SET);
+    }
+
+    return fileSize;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

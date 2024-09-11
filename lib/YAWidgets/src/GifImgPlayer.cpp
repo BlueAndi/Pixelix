@@ -34,6 +34,8 @@
  *****************************************************************************/
 #include "GifImgPlayer.h"
 #include "LzwDecoder.h"
+#include "GifFileLoader.h"
+#include "GifFileToMemLoader.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -207,22 +209,32 @@ typedef struct _ApplicationExtension
  * Public Methods
  *****************************************************************************/
 
-GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
+GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, bool toMem)
 {
     Ret ret = RET_OK;
     
     /* File already opened? */
-    if (true == m_fd)
+    if (nullptr != m_gifLoader)
     {
         ret = RET_FILE_ALREADY_OPENED;
     }
     /* Open file */
     else
     {
-        m_fd = fs.open(fileName);
+        if (false == toMem)
+        {
+            m_gifLoader = new(std::nothrow) GifFileLoader;
+        }
+        else
+        {
+            m_gifLoader = new(std::nothrow) GifFileToMemLoader;
+        }
 
-        /* File not found? */
-        if (false == m_fd)
+        if (nullptr == m_gifLoader)
+        {
+            ret = RET_IMG_TOO_BIG;
+        }
+        else if (false == m_gifLoader->open(fs, fileName))
         {
             ret = RET_FILE_NOT_FOUND;
         }
@@ -245,7 +257,7 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
         LogicalScreenDescriptor logicalScreenDescriptor;
 
         /* Read the GIF file header. */
-        if (false == read(m_fd, &gifFileHeader, sizeof(gifFileHeader)))
+        if (false == m_gifLoader->read(&gifFileHeader, sizeof(gifFileHeader)))
         {
             ret = RET_FILE_FORMAT_INVALID;
         }
@@ -255,7 +267,7 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
             ret = RET_FILE_FORMAT_UNSUPPORTED;
         }
         /* Read the logical screen descriptor. */
-        else if (false == read(m_fd, &logicalScreenDescriptor, sizeof(logicalScreenDescriptor)))
+        else if (false == m_gifLoader->read(&logicalScreenDescriptor, sizeof(logicalScreenDescriptor)))
         {
             ret = RET_FILE_FORMAT_INVALID;
         }
@@ -305,7 +317,7 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
                         ret = RET_IMG_TOO_BIG;
                     }
                     /* Read global color table. */
-                    else if (false == read(m_fd, m_globalColorTable, globalColorTableSize))
+                    else if (false == m_gifLoader->read(m_globalColorTable, globalColorTableSize))
                     {
                         ret = RET_FILE_FORMAT_INVALID;
                     }
@@ -337,7 +349,8 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
     bool isSuccessful = true;
 
     /* No GIF image opened? */
-    if (false == m_fd)
+    if ((nullptr == m_gifLoader) ||
+        (false == (*m_gifLoader)))
     {
         isSuccessful = false;
     }
@@ -363,19 +376,19 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
         while((BLOCK_ID_TRAILER != blockId) && (false == isImageShown) && (true == isSuccessful))
         {
             /* Read block id. */
-            if (false == read(m_fd, &blockId, sizeof(blockId)))
+            if (false == m_gifLoader->read(&blockId, sizeof(blockId)))
             {
                 isSuccessful = false;
             }
             /* Is the block a extension? */
             else if (BLOCK_ID_EXTENSION == blockId)
             {
-                isSuccessful = parseExtension(m_fd);
+                isSuccessful = parseExtension();
             }
             /* Is the block an image descriptor? */
             else if (BLOCK_ID_IMAGE_DESCRIPTOR == blockId)
             {
-                isSuccessful = parseImageDescriptor(m_fd);
+                isSuccessful = parseImageDescriptor();
 
                 if (true == isSuccessful)
                 {
@@ -419,7 +432,7 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
                     if (false == m_isFinished)
                     {
                         /* Restart from begin. */
-                        if (false == m_fd.seek(m_restartFilePos, SeekSet))
+                        if (false == m_gifLoader->seek(m_restartFilePos, SeekSet))
                         {
                             isSuccessful = false;
                         }
@@ -469,9 +482,12 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
 
 void GifImgPlayer::cleanup()
 {
-    if (true == m_fd)
+    if (nullptr != m_gifLoader)
     {
-        m_fd.close();
+        m_gifLoader->close();
+
+        delete m_gifLoader;
+        m_gifLoader = nullptr;
     }
 
     m_bitmap.release();
@@ -497,19 +513,6 @@ void GifImgPlayer::cleanup()
         m_localColorTable       = nullptr;
         m_localColorTableLength = 0U;
     }
-}
-
-bool GifImgPlayer::read(File& fd, void* buffer, size_t size)
-{
-    bool        isSuccessful    = true;
-    uint8_t*    u8Buffer        = static_cast<uint8_t*>(buffer);
-
-    if (size != fd.read(u8Buffer, size))
-    {
-        isSuccessful = false;
-    }
-
-    return isSuccessful;
 }
 
 bool GifImgPlayer::isFileSupported(const GifFileHeader& header) const
@@ -576,13 +579,13 @@ size_t GifImgPlayer::calcColorTableSize(uint8_t sizeExp) const
     return size;
 }
 
-bool GifImgPlayer::parseExtension(File& fd)
+bool GifImgPlayer::parseExtension()
 {
     bool            isSuccessful = true;
     ExtensionLabel  label;
 
         /* Load extension label. */
-    if (false == read(fd, &label, sizeof(label)))
+    if (false == m_gifLoader->read(&label, sizeof(label)))
     {
         isSuccessful = false;
     }
@@ -590,11 +593,11 @@ bool GifImgPlayer::parseExtension(File& fd)
     {
         if (LABEL_GRAPHIC_CONTROL_EXTENSION == label)
         {
-            isSuccessful = parseGraphicControlExentsion(fd);
+            isSuccessful = parseGraphicControlExentsion();
         }
         else if (LABEL_APPLICATION_EXTENSION == label)
         {
-            isSuccessful = parseApplicationExtension(fd);
+            isSuccessful = parseApplicationExtension();
         }
         /* Skip every other extension. */
         else
@@ -602,7 +605,7 @@ bool GifImgPlayer::parseExtension(File& fd)
             GIF_IMG_PLAYER_LOG_DEBUG("Extension\n");
             GIF_IMG_PLAYER_LOG_DEBUG("\tSkip unknown label: %u\n", label);
 
-            if (false == skipBlock(fd))
+            if (false == skipBlock())
             {
                 isSuccessful = false;
             }
@@ -612,12 +615,12 @@ bool GifImgPlayer::parseExtension(File& fd)
     return isSuccessful;
 }
 
-bool GifImgPlayer::parseImageDescriptor(File& fd)
+bool GifImgPlayer::parseImageDescriptor()
 {
     bool            isSuccessful = true;
     ImageDescriptor imageDescriptor;
 
-    if (false == read(fd, &imageDescriptor, sizeof(imageDescriptor)))
+    if (false == m_gifLoader->read(&imageDescriptor, sizeof(imageDescriptor)))
     {
         isSuccessful = false;
     }
@@ -665,7 +668,7 @@ bool GifImgPlayer::parseImageDescriptor(File& fd)
 
                 isSuccessful = false;
             }
-            else if (false == read(fd, m_localColorTable, localColorTableSize))
+            else if (false == m_gifLoader->read(m_localColorTable, localColorTableSize))
             {
                 isSuccessful = false;
             }
@@ -680,7 +683,7 @@ bool GifImgPlayer::parseImageDescriptor(File& fd)
         {
             uint8_t lzwMinCodeSize = 0U;
 
-            if (false == read(fd, &lzwMinCodeSize, sizeof(lzwMinCodeSize)))
+            if (false == m_gifLoader->read(&lzwMinCodeSize, sizeof(lzwMinCodeSize)))
             {
                 isSuccessful = false;
             }
@@ -717,7 +720,7 @@ bool GifImgPlayer::parseImageDescriptor(File& fd)
                 lzwDecoder.deInit();
 
                 /* After the image data, the block terminator marks the end. */
-                if (sizeof(blockTerminator) != fd.read(&blockTerminator, sizeof(blockTerminator)))
+                if (false == m_gifLoader->read(&blockTerminator, sizeof(blockTerminator)))
                 {
                     isSuccessful = false;
                 }
@@ -736,14 +739,14 @@ bool GifImgPlayer::parseImageDescriptor(File& fd)
     return isSuccessful;
 }
 
-bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
+bool GifImgPlayer::parseGraphicControlExentsion()
 {
     bool                    isSuccessful    = true;
     uint8_t                 blockSize       = 0x0U;
     uint8_t                 blockTerminator = 0x0U;
     GraphicControlExtension gce;
 
-    if (sizeof(blockSize) != fd.read(&blockSize, sizeof(blockSize)))
+    if (false == m_gifLoader->read(&blockSize, sizeof(blockSize)))
     {
         isSuccessful = false;
     }
@@ -751,11 +754,11 @@ bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
     {
         isSuccessful = false;
     }
-    else if (false == read(fd, &gce, sizeof(gce)))
+    else if (false == m_gifLoader->read(&gce, sizeof(gce)))
     {
         isSuccessful = false;
     }
-    else if (sizeof(blockTerminator) != fd.read(&blockTerminator, sizeof(blockTerminator)))
+    else if (false == m_gifLoader->read(&blockTerminator, sizeof(blockTerminator)))
     {
         isSuccessful = false;
     }
@@ -848,14 +851,14 @@ bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
     return isSuccessful;
 }
 
-bool GifImgPlayer::parseApplicationExtension(File& fd)
+bool GifImgPlayer::parseApplicationExtension()
 {
     bool                    isSuccessful    = true;
     uint8_t                 blockSize       = 0x0U;
     ApplicationExtension    appExt;
 
     /* Read application extension block size. */
-    if (sizeof(blockSize) != fd.read(&blockSize, sizeof(blockSize)))
+    if (false == m_gifLoader->read(&blockSize, sizeof(blockSize)))
     {
         isSuccessful = false;
     }
@@ -865,7 +868,7 @@ bool GifImgPlayer::parseApplicationExtension(File& fd)
         isSuccessful = false;
     }
     /* Read application extension. */
-    else if (false == read(fd, &appExt, sizeof(appExt)))
+    else if (false == m_gifLoader->read(&appExt, sizeof(appExt)))
     {
         isSuccessful = false;
     }
@@ -880,7 +883,7 @@ bool GifImgPlayer::parseApplicationExtension(File& fd)
         if ((0 == strncmp(appIdentifier, "NETSCAPE", sizeof(appExt.identifier))) &&
             (0 == strncmp(appAuthCode, "2.0", sizeof(appExt.authenticationCode))))
         {
-            isSuccessful = parseNetscape20subBlocks(fd);
+            isSuccessful = parseNetscape20subBlocks();
         }
         else
         {
@@ -888,14 +891,14 @@ bool GifImgPlayer::parseApplicationExtension(File& fd)
             GIF_IMG_PLAYER_LOG_DEBUG("\tSkip unknown\n");
 
             /* Skip all sub-blocks, which are application specific. */
-            isSuccessful = skipBlock(fd);
+            isSuccessful = skipBlock();
         }
     }
 
     return isSuccessful;
 }
 
-bool GifImgPlayer::parseNetscape20subBlocks(File& fd)
+bool GifImgPlayer::parseNetscape20subBlocks()
 {
     bool    isSuccessful    = true;
     uint8_t subBlockSize    = 0xFFU;
@@ -903,7 +906,7 @@ bool GifImgPlayer::parseNetscape20subBlocks(File& fd)
     uint8_t blockTerminator = 0U;
 
     /* Read sub-block size. */
-    if (sizeof(subBlockSize) != fd.read(&subBlockSize, sizeof(subBlockSize)))
+    if (false == m_gifLoader->read(&subBlockSize, sizeof(subBlockSize)))
     {
         isSuccessful = false;
     }
@@ -913,7 +916,7 @@ bool GifImgPlayer::parseNetscape20subBlocks(File& fd)
         isSuccessful = false;
     }
     /* Read the id. */
-    else if (sizeof(subBlockId) != fd.read(&subBlockId, sizeof(subBlockId)))
+    else if (false == m_gifLoader->read(&subBlockId, sizeof(subBlockId)))
     {
         isSuccessful = false;
     }
@@ -923,12 +926,12 @@ bool GifImgPlayer::parseNetscape20subBlocks(File& fd)
         isSuccessful = false;
     }
     /* Read the loop counter. */
-    else if (false == read(fd, &m_loopCount, sizeof(m_loopCount)))
+    else if (false == m_gifLoader->read(&m_loopCount, sizeof(m_loopCount)))
     {
         isSuccessful = false;
     }
     /* Read block terminator. */
-    else if (sizeof(blockTerminator) != fd.read(&blockTerminator, sizeof(blockTerminator)))
+    else if (false == m_gifLoader->read(&blockTerminator, sizeof(blockTerminator)))
     {
         isSuccessful = false;
     }
@@ -948,26 +951,26 @@ bool GifImgPlayer::parseNetscape20subBlocks(File& fd)
         /* Store position after application extension to know where to restart
          * the animation.
          */
-        m_restartFilePos = fd.position();
+        m_restartFilePos = m_gifLoader->position();
     }
 
     return isSuccessful;
 }
 
-bool GifImgPlayer::skipBlock(File& fd)
+bool GifImgPlayer::skipBlock()
 {
     bool    isSuccessful    = true;
     uint8_t blockSize       = 0xFFU;
 
     while((0U < blockSize) && (true == isSuccessful))
     {
-        if (sizeof(blockSize) != fd.read(&blockSize, sizeof(blockSize)))
+        if (false == m_gifLoader->read(&blockSize, sizeof(blockSize)))
         {
             isSuccessful = false;
         }
         else if (0U < blockSize)
         {
-            if (false == fd.seek(blockSize, SeekCur))
+            if (false == m_gifLoader->seek(blockSize, SeekCur))
             {
                 isSuccessful = false;
             }
@@ -981,7 +984,7 @@ bool GifImgPlayer::skipBlock(File& fd)
     return isSuccessful;
 }
 
-size_t GifImgPlayer::loadImageDataBlock(File& fd, uint8_t* block, size_t size)
+size_t GifImgPlayer::loadImageDataBlock(uint8_t* block, size_t size)
 {
     bool        isSuccessful    = true;
     uint8_t     blockSize       = 0U;
@@ -991,7 +994,7 @@ size_t GifImgPlayer::loadImageDataBlock(File& fd, uint8_t* block, size_t size)
     {
         isSuccessful = false;
     }
-    else if (false == read(fd, &blockSize, sizeof(blockSize)))
+    else if (false == m_gifLoader->read(&blockSize, sizeof(blockSize)))
     {
         isSuccessful = false;
     }
@@ -1001,7 +1004,7 @@ size_t GifImgPlayer::loadImageDataBlock(File& fd, uint8_t* block, size_t size)
         {
             isSuccessful = false;
         }
-        else if (false == read(fd, block, blockSize))
+        else if (false == m_gifLoader->read(block, blockSize))
         {
             isSuccessful = false;
         }
@@ -1026,7 +1029,7 @@ bool GifImgPlayer::readFromCodeStream(uint8_t& data)
     if ((0U == m_imageDataBlockLength) ||
         (m_imageDataBlockLength <= m_imageDataBlockIdx))
     {
-        m_imageDataBlockLength = loadImageDataBlock(m_fd, m_imageDataBlock, IMAGE_DATA_BLOCK_SIZE);
+        m_imageDataBlockLength = loadImageDataBlock(m_imageDataBlock, IMAGE_DATA_BLOCK_SIZE);
 
         if (0U == m_imageDataBlockLength)
         {

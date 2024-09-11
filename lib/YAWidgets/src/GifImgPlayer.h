@@ -47,8 +47,8 @@
 #include <YAGfx.h>
 #include <YAGfxCanvas.h>
 #include <YAGfxBitmap.h>
-#include <FS.h>
 #include <SimpleTimer.hpp>
+#include <IGifLoader.h>
 
 /******************************************************************************
  * Macros
@@ -77,7 +77,7 @@ public:
      */
     GifImgPlayer() :
         m_bitmap(),
-        m_fd(),
+        m_gifLoader(nullptr),
         m_canvas(&m_bitmap),
         m_bgColorIndex(0U),
         m_globalColorTable(nullptr),
@@ -126,10 +126,11 @@ public:
      * 
      * @param[in] fs        Filesystem to use
      * @param[in] fileName  Name of the GIF file.
+     * @param[in] toMem     If true, the GIF file will be loaded to memory and the file is closed immediately.
      * 
      * @return Status informtion
      */
-    Ret open(FS& fs, const String& fileName);
+    Ret open(FS& fs, const String& fileName, bool toMem = false);
 
     /**
      * Close the GIF file.
@@ -193,7 +194,7 @@ private:
     } __attribute__ ((packed)) PaletteColor;
 
     YAGfxDynamicBitmap  m_bitmap;                   /**< The bitmap contains the last drawn scene. */
-    File                m_fd;                       /**< File descriptor */
+    IGifLoader*         m_gifLoader;                /**< GIF file loader used to read the file. */
     YAGfxCanvas         m_canvas;                   /**< Canvas used for drawing each scene. Its position and size follows the image descriptor. */
     uint8_t             m_bgColorIndex;             /**< Background color index. Used by disposal method. */
     PaletteColor*       m_globalColorTable;         /**< Global color table. */
@@ -222,18 +223,6 @@ private:
     void cleanup();
 
     /**
-     * Read some bytes from the file.
-     * The file must be already opened.
-     * 
-     * @param[in] fd        File descriptor
-     * @param[in] buffer    Buffer to fill.
-     * @param[in] size      Buffer size in bytes.
-     * 
-     * @return If successful read, it will return true otherwise false.
-     */
-    bool read(File& fd, void* buffer, size_t size);
-
-    /**
      * Verifies whether the file format is supported or not.
      * 
      * @param[in] header    GIF file header
@@ -254,69 +243,56 @@ private:
     /**
      * Parse extemsopm.
      * 
-     * @param[in] fd    File descriptor
-     * 
      * @return If successful, it will return true otherwise false.
      */
-    bool parseExtension(File& fd);
+    bool parseExtension();
 
     /**
      * Parse image descriptor.
      * 
-     * @param[in] fd    File descriptor
-     * 
      * @return If successful, it will return true otherwise false.
      */
-    bool parseImageDescriptor(File& fd);
+    bool parseImageDescriptor();
 
     /**
      * Parse graphic control extension.
      * 
-     * @param[in] fd    File descriptor
-     * 
      * @return If successful, it will return true otherwise false.
      */
 
-    bool parseGraphicControlExentsion(File& fd);
+    bool parseGraphicControlExentsion();
 
     /**
      * Parse application extension.
      * 
-     * @param[in] fd    File descriptor
-     * 
      * @return If successful, it will return true otherwise false.
      */
-    bool parseApplicationExtension(File& fd);
+    bool parseApplicationExtension();
 
     /**
      * Parse NETSCAPE 2.0 sub-blocks.
      * 
-     * @param[in] fd    File descriptor
-     * 
      * @return If successful, it will return true otherwise false.
      */
-    bool parseNetscape20subBlocks(File& fd);
+    bool parseNetscape20subBlocks();
 
     /**
      * Skips the current block in the file.
      * Note, the file descriptor must be just before the block size!
      * 
-     * @param[in] fd    File descriptor
-     * 
      * @return If successful, it will return true otherwise false.
      */
-    bool skipBlock(File& fd);
+    bool skipBlock();
 
     /**
      * Load a single image data block.
      * 
-     * @param[in]   fd      File descriptor
      * @param[out]  block   Block buffer
      * @param[in]   size    Block buffer size (at least 256 bytes)
      * 
      * @return Read number of data bytes.
      */
-    size_t loadImageDataBlock(File& fd, uint8_t* block, size_t size);
+    size_t loadImageDataBlock(uint8_t* block, size_t size);
 
     /**
      * Callback used by LZW decoder to read data from the code stream.
