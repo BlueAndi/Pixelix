@@ -120,7 +120,7 @@ bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
 
         isSuccessful = true;
     }
-    else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
+    else if (true == topic.startsWith(String(TOPIC_LAMP) + "/"))
     {
         uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
         String      lampIdStr           = topic.substring(indexBeginLampId);
@@ -209,7 +209,7 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
             }
         }
     }
-    else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
+    else if (true == topic.startsWith(String(TOPIC_LAMP) + "/"))
     {
         uint32_t            indexBeginLampId    = topic.lastIndexOf("/") + 1U;
         String              lampIdStr           = topic.substring(indexBeginLampId);
@@ -265,7 +265,7 @@ bool IconTextLampPlugin::hasTopicChanged(const String& topic)
         hasTopicChanged = m_hasTopicLampsChanged;
         m_hasTopicLampsChanged = false;
     }
-    else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
+    else if (true == topic.startsWith(String(TOPIC_LAMP) + "/"))
     {
         uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
         String      lampIdStr           = topic.substring(indexBeginLampId);
@@ -291,11 +291,27 @@ bool IconTextLampPlugin::hasTopicChanged(const String& topic)
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                      iconFullPath;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
+
+    m_view.setFormatText(m_formatTextStored);
+
+    if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+    {
+        LOG_WARNING("Unknown file id %u.", m_iconFileId);
+    }
+    else if (false == m_view.loadIcon(iconFullPath))
+    {
+        LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+    }
+    else
+    {
+        ;
+    }
 }
 
 void IconTextLampPlugin::stop()

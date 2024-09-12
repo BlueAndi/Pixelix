@@ -187,11 +187,27 @@ bool IconTextPlugin::hasTopicChanged(const String& topic)
 
 void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                      iconFullPath;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
+
+    m_view.setFormatText(m_formatTextStored);
+
+    if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+    {
+        LOG_WARNING("Unknown file id %u.", m_iconFileId);
+    }
+    else if (false == m_view.loadIcon(iconFullPath))
+    {
+        LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+    }
+    else
+    {
+        ;
+    }
 }
 
 void IconTextPlugin::stop()

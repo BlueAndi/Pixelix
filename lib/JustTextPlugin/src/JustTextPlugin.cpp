@@ -34,7 +34,6 @@
  *****************************************************************************/
 #include "JustTextPlugin.h"
 
-#include <FileSystem.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
 
@@ -185,6 +184,8 @@ void JustTextPlugin::start(uint16_t width, uint16_t height)
     m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
+
+    m_view.setFormatText(m_formatTextStored);
 }
 
 void JustTextPlugin::stop()
