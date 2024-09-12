@@ -408,7 +408,7 @@ static void handleSlot(AsyncWebServerRequest* request)
     {
         const char* uriWithSlotId = "/rest/api/v1/display/slot/";
 
-        if (0U == request->url().startsWith(uriWithSlotId))
+        if (false == request->url().startsWith(uriWithSlotId))
         {
             RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
             httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;

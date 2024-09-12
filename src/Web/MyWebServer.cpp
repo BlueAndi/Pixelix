@@ -146,7 +146,7 @@ static void error(AsyncWebServerRequest* request)
     }
 
     /* REST request? */
-    if (request->url().startsWith(RestApi::BASE_URI))
+    if (true == request->url().startsWith(RestApi::BASE_URI))
     {
         RestApi::error(request);
     }

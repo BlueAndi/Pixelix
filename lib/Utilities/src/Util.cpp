@@ -174,8 +174,8 @@ extern uint32_t Util::hexToUInt32(const String& str)
     uint32_t    idx     = 0U;
     bool        isError = false;
 
-    if ((0U != str.startsWith("0x")) ||
-        (0U != str.startsWith("0X")))
+    if ((true == str.startsWith("0x")) ||
+        (true == str.startsWith("0X")))
     {
         idx = 2U;
     }

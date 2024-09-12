@@ -232,12 +232,12 @@ void ConnectedState::pushUrl(const String& pushUrl)
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
-        if (0U != url.startsWith(GET_CMD))
+        if (true == url.startsWith(GET_CMD))
         {
             url = url.substring(strlen(GET_CMD));
             isGet = true;
         }
-        else if (0U != url.startsWith(POST_CMD))
+        else if (true == url.startsWith(POST_CMD))
         {
             url = url.substring(strlen(POST_CMD));
             isGet = false;
