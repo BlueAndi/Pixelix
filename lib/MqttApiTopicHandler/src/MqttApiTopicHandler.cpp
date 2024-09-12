@@ -170,7 +170,8 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 String topicUriReadable;
                 String topicUriWriteable;
 
-                if (nullptr != topicState->getTopicFunc)
+                if ((nullptr != topicState->getTopicFunc) &&
+                    (true == m_isMqttConnected))
                 {
                     topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
 

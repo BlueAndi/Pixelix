@@ -83,9 +83,9 @@ public:
     };
 
     /**
-     * Get the audio service instance.
+     * Get the MQTT service instance.
      * 
-     * @return Audio service instance
+     * @return MQTT service instance
      */
     static MqttService& getInstance()
     {
