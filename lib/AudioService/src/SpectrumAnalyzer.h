@@ -76,6 +76,7 @@ public:
         m_freqBins{0.0f},
         m_freqBinsAreReady(false)
     {
+        (void)m_mutex.create();
     }
 
     /**
@@ -83,7 +84,7 @@ public:
      */
     ~SpectrumAnalyzer()
     {
-        /* Never called. */
+        m_mutex.destroy();
     }
 
     /**
