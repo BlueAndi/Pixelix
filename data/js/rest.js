@@ -236,3 +236,22 @@ pixelix.rest.Client.prototype.reset = function() {
         isJsonResponse: true
     });
 };
+
+pixelix.rest.Client.prototype.fileMgrRemoveFile = function(fileId) {
+    var promise = null;
+
+    if ("number" !== typeof fileId) {
+        promise = Promise.reject();
+    } else {
+        promise = utils.makeRequest({
+            method: "POST",
+            url: this._hostname + this._baseUri + "/files/remove",
+            isJsonResponse: true,
+            parameter: {
+                fileId: fileId
+            }
+        });
+    }
+
+    return promise;
+};
