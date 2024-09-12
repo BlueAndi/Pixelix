@@ -319,7 +319,7 @@ private:
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& cfg) const final;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
@@ -328,7 +328,7 @@ private:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(JsonObjectConst& cfg) final;
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
      * Get current date/time and update the text, which to be displayed.

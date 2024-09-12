@@ -75,7 +75,7 @@ bool CountdownPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -88,7 +88,7 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -222,7 +222,7 @@ void CountdownPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["descSingular"] = m_targetDateInformation.singular;
 }
 
-bool CountdownPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool CountdownPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status              = false;
     JsonVariantConst    jsonDay             = jsonCfg["day"];

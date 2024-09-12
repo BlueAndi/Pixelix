@@ -46,9 +46,10 @@
 #include "./internal/View.h"
 
 #include <stdint.h>
-#include <Plugin.hpp>
-#include <FS.h>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
+#include <FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -62,7 +63,7 @@
  * Shows an icon on the left side in 8 x 8 and text on the right side.
  * If the text is too long for the display width, it automatically scrolls.
  */
-class IconTextPlugin : public Plugin
+class IconTextPlugin : public PluginWithConfig
 {
 public:
 
@@ -73,10 +74,11 @@ public:
      * @param[in] uid   Unique id
      */
     IconTextPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_view(),
-        m_iconPath(),
-        m_isUploadError(false),
+        m_iconFileId(FileMgrService::FILE_ID_INVALID),
+        m_formatTextStored(),
+        m_iconFileIdStored(FileMgrService::FILE_ID_INVALID),
         m_mutex(),
         m_hasTopicChanged(false)
     {
@@ -101,7 +103,7 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)IconTextPlugin(name, uid);
+        return new(std::nothrow) IconTextPlugin(name, uid);
     }
 
     /**
@@ -199,17 +201,6 @@ public:
     bool hasTopicChanged(const String& topic) final;
 
     /**
-     * Is a upload request accepted or rejected?
-     * 
-     * @param[in] topic         The topic which the upload belongs to.
-     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
-     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
-     * 
-     * @return If accepted it will return true otherwise false.
-     */
-    bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
-
-    /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
@@ -248,29 +239,26 @@ public:
      * Set text, which may contain format tags.
      *
      * @param[in] formatText    Text, which may contain format tags.
+     * @param[in] storeFlag     Store the text persistent or not.
      */
-    void setText(const String& formatText);
+    void setText(const String& formatText, bool storeFlag);
 
     /**
-     * Load icon image from filesystem.
+     * Load icon by file id.
      *
-     * @param[in] filename  Image filename
+     * @param[in] fileId    File id
+     * @param[in] storeFlag Store the text persistent or not.
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadIcon(const String& filename);
+    bool loadIcon(FileMgrService::FileId fileId, bool storeFlag);
 
     /**
      * Clear icon from view and remove it from filesytem.
-     */
-    void clearIcon();
-
-    /**
-     * Get icon file path.
      * 
-     * @param[out] Path to icon file.
+     * @param[in] storeFlag Store the text persistent or not.
      */
-    void getIconFilePath(String& fullPath) const;
+    void clearIcon(bool storeFlag);
 
 private:
 
@@ -279,39 +267,45 @@ private:
      */
     static const char*      TOPIC_TEXT;
 
-    /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_ICON;
-
-    /**
-     * File extension used for temporary files.
-     */
-    static const char*      FILE_EXT_TMP;
-
     _IconTextPlugin::View   m_view;             /**< View with all widgets. */
-    String                  m_iconPath;         /**< Full path to icon. */
-    bool                    m_isUploadError;    /**< Flag to signal a upload error. */
+    FileMgrService::FileId  m_iconFileId;       /**< Icon file id, used to retrieve the full path to the icon from the file manager. */
+    String                  m_formatTextStored; /**< It contains the format text, which is persistent stored. */
+    FileMgrService::FileId  m_iconFileIdStored; /**< Icon file id, which is persistent stored. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
+    bool                    m_hasTopicChanged;  /**< Has the topic content changed? Used to notify the TopicHandlerService about changes. */
 
     /**
-     * Get filename with path.
+     * Get actual configuration in JSON.
      * 
-     * @param[in] ext   File extension
-     *
-     * @return Filename with path.
+     * @param[out] cfg  Configuration
      */
-    String getFileName(const String& ext) const;
+    void getActualConfiguration(JsonObject& cfg) const;
 
     /**
-     * Checks whether the given filen is owned by the plugin or not.
+     * Set actual configuration in JSON.
+     * It will not be stored to configuration file.
      * 
-     * @param[in] filename  The name of the file.
+     * @param[in] cfg   Configuration
      * 
-     * @return If plugin owns the file, it will return true otherwise false:
+     * @return If successful set, it will return true otherwise false.
      */
-    bool isFileOwnedByPlugin(const String& filename) const;
+    bool setActualConfiguration(const JsonObjectConst& jsonCfg);
+
+    /**
+     * Get persistent configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& jsonCfg) const final;
+
+    /**
+     * Set persistent configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 };
 
 /******************************************************************************

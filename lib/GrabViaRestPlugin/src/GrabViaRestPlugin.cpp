@@ -74,7 +74,7 @@ bool GrabViaRestPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -87,7 +87,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 1024U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -358,7 +358,7 @@ void GrabViaRestPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["offset"]       = m_offset;
 }
 
-bool GrabViaRestPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status          = false;
     JsonVariantConst    jsonMethod      = jsonCfg["method"];

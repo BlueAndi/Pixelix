@@ -460,7 +460,7 @@ void InitState::exit(StateMachine& sm)
                     {
                         if (0 == strcmp(WELCOME_PLUGIN_TYPE,  pluginInSlot1->getName()))
                         {
-                            if (0U != pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
+                            if (true == pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
                             {
                                 welcome(pluginInSlot1);
                             }
@@ -549,8 +549,13 @@ void InitState::welcome(IPluginMaintenance* plugin)
 
     if (nullptr != welcomePlugin)
     {
-        (void)welcomePlugin->loadIcon("/images/smiley.bmp");
-        welcomePlugin->setText("{hc}Hello World!");
+        FileMgrService::FileId iconFileId = FileMgrService::getInstance().getFileIdByName("smiley");
+
+        if (FileMgrService::FILE_ID_INVALID != iconFileId)
+        {
+            (void)welcomePlugin->loadIcon(iconFileId, false);
+        }
+        welcomePlugin->setText("{hc}Hello World!", false);
     }
 }
 

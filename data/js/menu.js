@@ -11,6 +11,9 @@ menu.data = [{
     "hyperRef": "#",
     "subMenu": []
 }, {
+    "title": "Icons",
+    "hyperRef": "/icons.html"
+}, {
     "title": "Settings",
     "hyperRef": "/settings.html"
 }, {

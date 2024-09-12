@@ -375,7 +375,7 @@ private:
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& cfg) const final;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
@@ -384,7 +384,7 @@ private:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(JsonObjectConst& cfg) final;
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
      * Calculates the remaining days between m_targetTime and m_currentTime in days and

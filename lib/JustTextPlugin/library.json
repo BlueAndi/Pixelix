@@ -10,11 +10,13 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "LittleFS"
+        "name": "FileMgrService"
     }, {
         "name": "Plugin"
     }, {
         "name": "Views"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

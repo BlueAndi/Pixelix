@@ -94,7 +94,7 @@ bool SoundReactivePlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -107,7 +107,7 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& v
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -284,7 +284,7 @@ void SoundReactivePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["freqBandLen"] = m_numOfFreqBands;
 }
 
-bool SoundReactivePlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool SoundReactivePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status          = false;
     JsonVariantConst    jsonFreqBandLen = jsonCfg["freqBandLen"];

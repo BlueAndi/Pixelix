@@ -57,43 +57,22 @@
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3>Set text</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;&amp;iconFullPath=&lt;ICON-FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;&amp;iconFullPath=&lt;ICON-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;&amp;iconFileId=&lt;ICON-FILE-ID&gt;&amp;storeFlag=&lt;STORE-FLAG&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;&amp;iconFileId=&lt;ICON-FILE-ID&gt;&amp;storeFlag=&lt;STORE-FLAG&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>TEXT: The text to show on the display.</li>
-                    <li>ICON-FULL-PATH: Full path to the icon.</li>
-                </ul>
-                <h3>Upload icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap</code></pre>
-                <ul>
-                    <li>PLUGIN-UID: The plugin unique id.</li>
-                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>ICON-FILE-ID: ID of the icon file.</li>
+                    <li>STORE-FLAG: Store persistent (true) or not (false).</li>
                 </ul>
                 <h2>Configuration</h2>
-                <h3>Icon</h3>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-                    <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files)">
-                        <div class="form-group">
-                            <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidIcon" name="pluginUid" size="1">
-                            </select>    
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="icon">Icon:</label>
-                            <input class="form-control" id="icon" type="file" accept=".bmp,.gif" />    
-                        </div>
-                        <input name="submit" type="submit" value="Update" />
-                    </form>
-                </div>
                 <h3>Text</h3>
                 <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-                    <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value, iconFullPath.value)">
+                    <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value, iconFileId.value, storeFlag.checked)">
                         <div class="form-group">
                             <label class="form-label" for="pluginUidText">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText', 'iconFullPath')">
+                            <select class="form-select" id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText', 'iconFileId', 'storeFlag')">
                             </select>    
                         </div>
                         <div class="form-group">
@@ -101,9 +80,13 @@
                             <input class="form-control" type="text" id="justText" name="justText" value="" size="40" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="iconFullPath">Icon full path:</label>
-                            <input class="form-control" type="text" id="iconFullPath" name="iconFullPath" value="" size="40" />
-                            <small id="iconFullPathHelpBlock" class="form-text text-muted">The path in the Pixelix file system must start with '/' and refer to an already existing icon image.</small>
+                            <label class="form-label" for="iconFileId">Icon file id:</label>
+                            <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="19" />
+                            <small class="form-text text-muted">Find the file id in the icons page.</small>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="storeFlag" name="storeFlag" value="0" />
+                            <label class="form-label" for="storeFlag">Store this configuration persistent. It will be used after restart.</label>
                         </div>
                         <input name="submit" type="submit" value="Update"/>
                     </form>
@@ -137,12 +120,10 @@
             var restClient  = new pixelix.rest.Client();
 
             function enableUI() {
-                utils.enableForm("myFormIcon", true);
                 utils.enableForm("myFormText", true);
             }
 
             function disableUI() {
-                utils.enableForm("myFormIcon", false);
                 utils.enableForm("myFormText", false);
             }
 
@@ -189,50 +170,7 @@
                 });
             };
 
-            function uploadIcon(pluginUid, files) {
-                var promise;
-
-                disableUI();
-
-                if (0 === files.length) {
-                    promise = Promise.reject("No file selected.");
-                
-                } else if (true === files[0].name.toLowerCase().endsWith(".bmp")) {
-                    promise = utils.checkBMPFile(files[0]);
-
-                } else {
-                    promise = Promise.resolve();
-                }
-
-                return promise.then(function() {
-                    return utils.makeRequest({
-                        method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
-                        isJsonResponse: true,
-                        parameter: {
-                            file: files[0]
-                        },
-                        headers: {
-                            "X-File-Size": files[0].size
-                        }
-                    });
-                }).then(function(rsp) {
-                    updateForms();
-                    alert("Ok.");
-                }).catch(function(rsp) {
-                    if ("string" === typeof rsp) {
-                        alert("Error: " + rsp);
-                    } else if (("undefined" !== typeof rsp) && ("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
-                        alert("Error: " + rsp.error.msg);
-                    } else {
-                        alert("Failed.");
-                    }
-                }).finally(function() {
-                    enableUI();
-                });
-            }
-
-            function getText(pluginUid, justTextId, iconFullPathId) {
+            function getText(pluginUid, justTextId, iconFileId, storeFlagId) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
@@ -240,10 +178,12 @@
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var justTextInput = document.getElementById(justTextId);
-                    var iconFullPathInput = document.getElementById(iconFullPathId);
+                    var iconFileIdInput = document.getElementById(iconFileId);
+                    var storeFlagIdInput = document.getElementById(storeFlagId);
 
                     justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
-                    iconFullPathInput.value = rsp.data.iconFullPath;
+                    iconFileIdInput.value = rsp.data.iconFileId;
+                    storeFlagIdInput.checked = false;
 
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -252,7 +192,7 @@
                 });
             }
 
-            function setText(pluginUid, justText, iconFullPath) {
+            function setText(pluginUid, justText, iconFileId, storeFlag) {
                 disableUI();
 
                 justText = justText.replaceAll("\\n", "\n");
@@ -264,7 +204,8 @@
                     isJsonResponse: true,
                     parameter: {
                         text: justText,
-                        iconFullPath: iconFullPath
+                        iconFileId: parseInt(iconFileId),
+                        storeFlag: storeFlag
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -283,7 +224,8 @@
                     return getText(
                         selectText.options[selectText.selectedIndex].value,
                         "justText",
-                        "iconFullPath"
+                        "iconFileId",
+                        "storeFlag"
                     );
                 }
             }

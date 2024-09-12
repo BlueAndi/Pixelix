@@ -334,7 +334,7 @@
                     }
                     $("#" + id).parent().remove();
 
-                    return dialog.showInfo("<p>File " + filename + " removed.</p>")
+                    return dialog.showInfo("<p>File " + filename + " removed.</p>");
 
                 }).catch(function(rsp) {
                     return dialog.showError("<p>" + rsp.error.msg + "</p>");

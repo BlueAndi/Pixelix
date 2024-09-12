@@ -84,7 +84,7 @@ bool SunrisePlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -97,7 +97,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -281,7 +281,7 @@ void SunrisePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["timeFormat"]   = m_timeFormat;
 }
 
-bool SunrisePlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool SunrisePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status          = false;
     JsonVariantConst    jsonLon         = jsonCfg["longitude"];

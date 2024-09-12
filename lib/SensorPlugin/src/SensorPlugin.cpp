@@ -75,7 +75,7 @@ bool SensorPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -88,7 +88,7 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -211,7 +211,7 @@ void SensorPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["isAvailable"]  = isAvailable;
 }
 
-bool SensorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool SensorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status              = false;
     JsonVariantConst    jsonSensorIndex     = jsonCfg["sensorIndex"];

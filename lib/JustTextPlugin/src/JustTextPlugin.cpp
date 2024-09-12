@@ -34,9 +34,9 @@
  *****************************************************************************/
 #include "JustTextPlugin.h"
 
+#include <FileSystem.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <functional>
 
 /******************************************************************************
  * Compiler Switches
@@ -97,12 +97,9 @@ bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_TEXT))
+    if (true == topic.equals(TOPIC_TEXT))
     {
-        String  formattedText   = getText();
-
-        value["text"] = formattedText;
-
+        getActualConfiguration(value);
         isSuccessful = true;
     }
 
@@ -113,20 +110,55 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_TEXT))
+    if (true == topic.equals(TOPIC_TEXT))
     {
-        String              text;
-        JsonVariantConst    jsonText    = value["text"];
+        bool                storeFlag               = false;
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonText                = value["text"];
+        JsonVariantConst    jsonStoreFlag           = value["storeFlag"];
+    
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getActualConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
 
         if (false == jsonText.isNull())
         {
-            text = jsonText.as<String>();
+            jsonCfg["text"] = jsonText.as<String>();
+            isSuccessful = true;
+        }
+
+        /* Note: The store flag is not part of the stored configuration, its just
+         * used by the user to force that the text is stored persistent. By default
+         * text is not stored to avoid too many flash write cycles.
+         */
+        if (false == jsonStoreFlag.isNull())
+        {
+            storeFlag = jsonStoreFlag.as<bool>();
             isSuccessful = true;
         }
 
         if (true == isSuccessful)
         {
-            setText(text);
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            if (false == storeFlag)
+            {
+                isSuccessful = setActualConfiguration(jsonCfgConst);
+            }
+            else
+            {
+                isSuccessful = setConfiguration(jsonCfgConst);
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
@@ -151,11 +183,15 @@ void JustTextPlugin::start(uint16_t width, uint16_t height)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
+
+    PluginWithConfig::start(width, height);
 }
 
 void JustTextPlugin::stop()
 {
-    /* Nothing to do. */
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    PluginWithConfig::stop();
 }
 
 void JustTextPlugin::update(YAGfx& gfx)
@@ -173,13 +209,19 @@ String JustTextPlugin::getText() const
     return formattedText;
 }
 
-void JustTextPlugin::setText(const String& formatText)
+void JustTextPlugin::setText(const String& formatText, bool storeFlag)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (m_view.getFormatText() != formatText)
     {
         m_view.setFormatText(formatText);
+
+        if (true == storeFlag)
+        {
+            m_formatTextStored = formatText;
+            requestStoreToPersistentMemory();
+        }
 
         m_hasTopicChanged = true;
     }
@@ -192,6 +234,59 @@ void JustTextPlugin::setText(const String& formatText)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void JustTextPlugin::getActualConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["text"] = m_view.getFormatText();
+}
+
+bool JustTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
+{
+    bool             status     = false;
+    JsonVariantConst jsonText   = jsonCfg["text"];
+
+    if (false == jsonText.is<String>())
+    {
+        LOG_WARNING("JSON text not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive>  guard(m_mutex);
+        String                      newFormatText   = jsonText.as<String>();
+
+        if (m_view.getFormatText() != newFormatText)
+        {
+            m_view.setFormatText(newFormatText);
+
+            m_hasTopicChanged = true;
+        }
+
+        status = true;
+    }
+
+    return status;
+}
+
+void JustTextPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["text"] = m_formatTextStored;
+}
+
+bool JustTextPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
+{
+    bool status = setActualConfiguration(jsonCfg);
+
+    if (true == status)
+    {
+        m_formatTextStored = m_view.getFormatText();
+    }
+
+    return status;
+}
 
 /******************************************************************************
  * External Functions

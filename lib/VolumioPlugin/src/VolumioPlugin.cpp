@@ -74,7 +74,7 @@ bool VolumioPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -87,7 +87,7 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -295,7 +295,7 @@ void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["host"] = m_volumioHost;
 }
 
-bool VolumioPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status      = false;
     JsonVariantConst    jsonHost    = jsonCfg["host"];

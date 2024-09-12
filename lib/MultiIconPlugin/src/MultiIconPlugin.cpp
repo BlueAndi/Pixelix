@@ -131,7 +131,7 @@ bool MultiIconPlugin::getTopic(const String& topic, JsonObject& value) const
             isSuccessful = true;
         }
     }
-    else if (0U != topic.equals(TOPIC_SLOTS))
+    else if (true == topic.equals(TOPIC_SLOTS))
     {
         value["slots"] = _MultiIconPlugin::View::MAX_ICON_SLOTS;
 

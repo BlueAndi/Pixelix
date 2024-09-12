@@ -287,8 +287,12 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
     /* A already opened GIF image shall be closed first. */
     m_gifPlayer.close();
 
-    /* Open GIF image and keep it opened as long its shown. */
-    ret = m_gifPlayer.open(fs, filename);
+    /* Open GIF image and keep it opened as long its shown.
+     *
+     * Note: The file is kept in memory, because the application will be able
+     *       to remove or replace the file in the filesystem.
+     */
+    ret = m_gifPlayer.open(fs, filename, true);
 
     if (GifImgPlayer::RET_OK != ret)
     {

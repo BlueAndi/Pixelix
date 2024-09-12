@@ -204,7 +204,7 @@ protected:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    virtual bool setConfiguration(JsonObjectConst& cfg) = 0;
+    virtual bool setConfiguration(const JsonObjectConst& cfg) = 0;
 
     /**
      * Request to store configuration to persistent memory.

@@ -85,7 +85,7 @@ bool OpenWeatherPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -98,7 +98,7 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -441,7 +441,7 @@ void OpenWeatherPlugin::getConfiguration(JsonObject& jsonCfg) const
     }
 }
 
-bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool OpenWeatherPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status              = false;
     JsonVariantConst    jsonSourceId        = jsonCfg["sourceId"];

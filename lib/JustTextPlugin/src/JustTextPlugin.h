@@ -46,8 +46,9 @@
 #include "./internal/View.h"
 
 #include <stdint.h>
-#include <Plugin.hpp>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -61,7 +62,7 @@
  * Shows text over the whole display.
  * If the text is too long for the display width, it automatically scrolls.
  */
-class JustTextPlugin : public Plugin
+class JustTextPlugin : public PluginWithConfig
 {
 public:
 
@@ -72,8 +73,9 @@ public:
      * @param[in] uid   Unique id
      */
     JustTextPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_view(),
+        m_formatTextStored(),
         m_mutex(),
         m_hasTopicChanged(false)
     {
@@ -214,7 +216,7 @@ public:
      * Stop the plugin. This is called only once during plugin lifetime.
      */
     void stop() final;
-    
+
     /**
      * Update the display.
      * The scheduler will call this method periodically.
@@ -234,8 +236,9 @@ public:
      * Set text, which may contain format tags.
      *
      * @param[in] formatText    Text, which may contain format tags.
+     * @param[in] storeFlag     Store the text persistent or not.
      */
-    void setText(const String& formatText);
+    void setText(const String& formatText, bool storeFlag);
 
 private:
 
@@ -245,8 +248,42 @@ private:
     static const char*  TOPIC_TEXT;
 
     _JustTextPlugin::View   m_view;             /**< View with all widgets. */
+    String                  m_formatTextStored; /**< It contains the format text, which is persistent stored. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
+    bool                    m_hasTopicChanged;  /**< Has the topic content changed? Used to notify the TopicHandlerService about changes. */
+
+    /**
+     * Get actual configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getActualConfiguration(JsonObject& cfg) const;
+
+    /**
+     * Set actual configuration in JSON.
+     * It will not be stored to configuration file.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setActualConfiguration(const JsonObjectConst& jsonCfg);
+
+    /**
+     * Get persistent configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& jsonCfg) const final;
+
+    /**
+     * Set persistent configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 };
 
 /******************************************************************************

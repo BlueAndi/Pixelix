@@ -84,6 +84,7 @@ static void aboutPage(AsyncWebServerRequest* request);
 static void debugPage(AsyncWebServerRequest* request);
 static void displayPage(AsyncWebServerRequest* request);
 static void editPage(AsyncWebServerRequest* request);
+static void iconsPage(AsyncWebServerRequest* request);
 static void indexPage(AsyncWebServerRequest* request);
 static void infoPage(AsyncWebServerRequest* request);
 static void settingsPage(AsyncWebServerRequest* request);
@@ -204,6 +205,8 @@ void Pages::init(AsyncWebServer& srv)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
     (void)srv.on("/edit.html", HTTP_GET, editPage)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/icons.html", HTTP_GET, iconsPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
     (void)srv.on("/index.html", HTTP_GET, indexPage)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
     (void)srv.on("/info.html", HTTP_GET, infoPage)
@@ -222,7 +225,7 @@ void Pages::init(AsyncWebServer& srv)
         }
     });
 
-    /* Serve files with static content with disabled cache control. */
+    /* Serve files with volatile content with disabled cache control. */
     (void)srv.serveStatic("/configuration/", FILESYSTEM, "/configuration/")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
@@ -373,6 +376,21 @@ static void editPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
+}
+
+/**
+ * Icons page for managing icons.
+ *
+ * @param[in] request   HTTP request
+ */
+static void iconsPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    request->send(FILESYSTEM, "/icons.html", "text/html", false, tmplPageProcessor);
 }
 
 /**

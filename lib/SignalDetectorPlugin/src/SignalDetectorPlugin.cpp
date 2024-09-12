@@ -94,7 +94,7 @@ bool SignalDetectorPlugin::getTopic(const String& topic, JsonObject& value) cons
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -107,7 +107,7 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& 
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -335,7 +335,7 @@ void SignalDetectorPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["pushUrl"]  = m_pushUrl;
 }
 
-bool SignalDetectorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool SignalDetectorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status      = false;
     JsonArrayConst      jsonTones   = jsonCfg["tones"];
