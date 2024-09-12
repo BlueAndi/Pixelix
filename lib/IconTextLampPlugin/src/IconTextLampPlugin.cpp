@@ -300,17 +300,20 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 
     m_view.setFormatText(m_formatTextStored);
 
-    if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+    if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
     {
-        LOG_WARNING("Unknown file id %u.", m_iconFileId);
-    }
-    else if (false == m_view.loadIcon(iconFullPath))
-    {
-        LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-    }
-    else
-    {
-        ;
+        if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+        {
+            LOG_WARNING("Unknown file id %u.", m_iconFileId);
+        }
+        else if (false == m_view.loadIcon(iconFullPath))
+        {
+            LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+        }
+        else
+        {
+            ;
+        }
     }
 }
 
@@ -372,7 +375,11 @@ bool IconTextLampPlugin::loadIcon(FileMgrService::FileId fileId, bool storeFlag)
         }
     }
 
-    if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+    if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
+    {
+        m_view.clearIcon();
+    }
+    else if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
     {
         LOG_WARNING("Unknown file id %u.", m_iconFileId);
         m_view.clearIcon();
