@@ -36,124 +36,63 @@
                 <p><img src="MultiIconPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin is able to show multiple different icons.</p>
                 <p>Each icon can be set separately via the REST API.</p>
-                <p>Show icon in one of the three slots. Supported are bitmap (.bmp) and GIF (.gif) files.</p>
-                <p>The bitmap files are limited to:</p>
-                <ul>
-                    <li>24 or 32 bits per pixel.</li>
-                    <li>1 plane.</li>
-                    <li>No compression.</li>
-                </ul>
-                <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
-                <ul>
-                    <li>Compatibility options: Don't write color informations.</li>
-                    <li>Extended options: Select 24 bit per pixel.</li>
-                </ul>
                 <h2>REST API</h2>
-                <h3>Set icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;</code></pre>
-                <ul>
-                    <li>PLUGIN-UID: The plugin unique id.</li>
-                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
-                    <li>ICON-ID: The id of the icon ([0; 1]).</li>
-                </ul>
-                <h3>Clear icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
-                <ul>
-                    <li>PLUGIN-UID: The plugin unique id.</li>
-                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
-                    <li>ICON-ID: The id of the icon ([0; 1]).</li>
-                    <li>STATE: <code>true</code> or <code>false</code></li>
-                </ul>
-                <h3>Control slot</h3>
+                <h3>Get icon file id of slot</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slot/&lt;SLOT-ID&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slot/&lt;SLOT-ID&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slot/&lt;SLOT-ID&gt;?activeIconId=&lt;ACTIVE-ICON-ID&gt;&amp;icons._0_.iconid=&lt;ICON-ID&gt;&amp;icons._0_.fullPath=&lt;FULL-PATH&gt;&amp;icons._1_.iconid=&lt;ICON-ID&gt;&amp;icons._1_.fullPath=&lt;FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slot/&lt;SLOT-ID&gt;?activeIconId=&lt;ACTIVE-ICON-ID&gt;&amp;icons._0_.iconid=&lt;ICON-ID&gt;&amp;icons._0_.fullPath=&lt;FULL-PATH&gt;&amp;icons._1_.iconid=&lt;ICON-ID&gt;&amp;icons._1_.fullPath=&lt;FULL-PATH&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
-                    <li>ACTIVE-ICON-ID: The id of the active icon in the slot ([0; 1])</li>
-                    <li>ICON-ID: The id of the icon, the path relates to.</li>
-                    <li>FULL-PATH: The full path to the icon image.</li>
+                </ul>
+                <h3>Set a icon file id of slot</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slot/&lt;SLOT-ID&gt;?fileId=&lt;FILE-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slot/&lt;SLOT-ID&gt;?fileId=&lt;FILE-ID&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
+                    <li>FILE-ID: The id of the icon file.</li>
+                </ul>
+                <h3>Get all icons</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slots</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slots</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                </ul>
+                <h3>Set all icons</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slots?slots._0_.fileId=&lt;FILE-ID&gt;slots._1_.fileId=&lt;FILE-ID&gt;slots._2_.fileId=&lt;FILE-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slots?slots._0_.fileId=&lt;FILE-ID&gt;slots._1_.fileId=&lt;FILE-ID&gt;slots._2_.fileId=&lt;FILE-ID&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
+                    <li>FILE-ID: The id of the icon file.</li>
                 </ul>
                 <h2>Configuration</h2>
-                <h3>Icon</h3>
+                <h3>Slot icons</h3>
                 <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-                    <form id="setIconForm" enctype="multipart/form-data" action="javascript:uploadIconByForm('setIconForm')">
-                        <div class="form-group">
-                            <label class="form-label" for="pluginUidBitmap">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidBitmap" name="pluginUid" size="1">
-                            </select>    
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="slotIdBitmap">Slot ID:</label>
-                            <select class="form-select" id="slotIdBitmap" name="slotId" size="1">
-                            </select>
-                            <label class="form-label" for="iconIdBitmap">Icon ID:</label>
-                            <select class="form-select" id="iconIdBitmap" name="iconId" size="1">
-                                <option value="0" selected>0 (default)</option>
-                                <option value="1">1</option>
-                            </select>    
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="bitmap">Icon:</label>
-                            <input class="form-control" id="bitmap" name="bitmap" type="file" accept=".bmp,.gif" />    
-                        </div>
-                        <input name="submit" type="submit" value="Update"/>
-                    </form>
-                </div>
-                <h3 class="mt-1">Clear Icon</h3>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-                    <form id="clearIconForm" enctype="multipart/form-data" action="javascript:clearIconByForm('clearIconForm')">
-                        <div class="form-group">
-                            <label class="form-label" for="pluginUidClearIcon">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidClearIcon" name="pluginUid" size="1">
-                            </select>    
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="slotIdClearIcon">Slot ID:</label>
-                            <select class="form-select" id="slotIdClearIcon" name="slotId" size="1">
-                            </select>
-                            <label class="form-label" for="iconIdClearIcon">Icon ID:</label>
-                            <select class="form-select" id="iconIdClearIcon" name="iconId" size="1">
-                                <option value="0" selected>0 (default)</option>
-                                <option value="1">1</option>
-                            </select>    
-                        </div>
-                        <input name="submit" type="submit" value="Clear"/>
-                    </form>
-                </div>
-                <h3>Slot configuration</h3>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-                    <form id="myFormSlot" enctype="multipart/form-data" action="javascript:setSlotByForm('myFormSlot')">
+                    <form id="myFormSlot" enctype="multipart/form-data" action="javascript:setSlotsByForm('myFormSlot')">
                         <div class="form-group">
                             <label class="form-label" for="pluginUidSlot">Plugin UID:</label>
                             <select class="form-select" id="pluginUidSlot" name="pluginUid" size="1">
                             </select>    
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="slotIdSlot">Slot ID:</label>
-                            <select class="form-select" id="slotIdSlot" name="slotId" size="1" onchange="getSlotByForm('myFormSlot')">
-                            </select>
+                            <label class="form-label" for="icon0FileId">Icon 0 file id:</label>
+                            <input class="form-control" type="number" id="icon0FileId" name="icon0FileId" min="0" max="255" />
+                            <small class="form-text text-muted">Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="activeIconId">Active Icon ID:</label>
-                            <input class="form-control" type="number" id="activeIconId" name="activeIconId" value="0" min="0" max="1" />
+                            <label class="form-label" for="icon1FileId">Icon 1 file id:</label>
+                            <input class="form-control" type="number" id="icon1FileId" name="icon1FileId" min="0" max="255" />
+                            <small class="form-text text-muted">Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="icon0FullPath">Icon ID 0 full path:</label>
-                            <input class="form-control" type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" />
-                            <small id="icon0FullPathHelpBlock" class="form-text text-muted">The path in the Pixelix file system must start with '/' and refer to an already existing icon image.</small>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="icon1FullPath">Icon ID 1 full path:</label>
-                            <input class="form-control" type="text" id="icon1FullPath" name="icon1FullPath" value="" size="40" />
-                            <small id="icon1FullPathHelpBlock" class="form-text text-muted">The path in the Pixelix file system must start with '/' and refer to an already existing icon image.</small>
+                            <label class="form-label" for="icon2FileId">Icon 2 file id:</label>
+                            <input class="form-control" type="number" id="icon2FileId" name="icon2FileId" min="0" max="255" />
+                            <small class="form-text text-muted">Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
                         <input name="submit" type="submit" value="Update"/>
                     </form>
@@ -187,14 +126,10 @@
             var restClient  = new pixelix.rest.Client();
 
             function enableUI() {
-                utils.enableForm("setIconForm", true);
-                utils.enableForm("clearIconForm", true);
                 utils.enableForm("myFormSlot", true);
             }
 
             function disableUI() {
-                utils.enableForm("setIconForm", false);
-                utils.enableForm("clearIconForm", false);
                 utils.enableForm("myFormSlot", false);
             }
 
@@ -241,147 +176,44 @@
                 });
             };
 
-            function uploadIconByForm(formId) {
+            function getSlotsByForm(formId) {
                 var values = $("#" + formId).serializeAllArray();
                 var pluginUid = 0;
-                var slotId = 0xff;
-                var iconId = 0xff;
-                var file = $("#bitmap").prop("files")[0]
-                
+                var icon0FileId = 0xff;
+                var icon1FileId = 0xff;
+                var icon2FileId = 0xff;
+
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "slotId") {
-                        slotId = field.value;
-                    } else if (field.name === "iconId") {
-                        iconId = field.value;
+                    } else if (field.name === "icon0FileId") {
+                        icon0FileId = field.value;
+                    } else if (field.name === "icon1FileId") {
+                        icon1FileId = field.value;
+                    } else if (field.name === "icon2FileId") {
+                        icon2FileId = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                setIcon(pluginUid, file, slotId, iconId);
+                getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId);
             }
 
-            function setIcon(pluginUid, file, slotId, iconId) {
-                var promise;
-
-                disableUI();
-
-                if (true === file.name.toLowerCase().endsWith(".bmp")) {
-                    promise = utils.checkBMPFile(file);
-                } else {
-                    promise = Promise.resolve();
-                }
-
-                return promise.then(function() {
-                    return utils.makeRequest({
-                        method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + slotId + "/" + iconId,
-                        isJsonResponse: true,
-                        parameter: {
-                            file: file
-                        },
-                        headers: {
-                            "X-File-Size": file.size
-                        }
-                    });
-                }).then(function(rsp) {
-                    updateForms();
-                    alert("Ok.");
-                }).catch(function(rsp) {
-                    if ("string" === typeof rsp) {
-                        alert("Error: " + rsp);
-                    } else if (("undefined" !== typeof rsp) && ("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
-                        alert("Error: " + rsp.error.msg);
-                    } else {
-                        alert("Failed.");
-                    }
-                }).finally(function() {
-                    enableUI();
-                });
-            }
-
-            function clearIconByForm(formId) {
-                var values = $("#" + formId).serializeAllArray();
-                var pluginUid = 0;
-                var slotId = 0xff;
-                var iconId = 0xff;
-
-                $.each(values, function(idx, field) {
-                    if (field.name === "pluginUid") {
-                        pluginUid = field.value;
-                    } else if (field.name === "slotId") {
-                        slotId = field.value;
-                    } else if (field.name === "iconId") {
-                        iconId = field.value;
-                    } else {
-                        /* Skip. */
-                    }
-                });
-
-                clearIcon(pluginUid, slotId, iconId);
-            }
-
-            function clearIcon(pluginUid, slotId, iconId) {
-                disableUI();
-
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slot/" + slotId,
-                    isJsonResponse: true,
-                    parameter: {
-                        icons: [{
-                            iconId: iconId,
-                            fullPath: ""
-                        }]
-                    }
-                }).then(function(rsp) {
-                    updateForms();
-                    alert("Ok.");
-                }).catch(function(rsp) {
-                    if (("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
-                        alert("Error: " + rsp.error.msg);
-                    } else {
-                        alert("Failed.");
-                    }
-                }).finally(function() {
-                    enableUI();
-                });
-            }
-
-            function getSlotByForm(formId) {
-                var values = $("#" + formId).serializeAllArray();
-                var pluginUid = 0;
-                var slotId = 0xff;
-
-                $.each(values, function(idx, field) {
-                    if (field.name === "pluginUid") {
-                        pluginUid = field.value;
-                    } else if (field.name === "slotId") {
-                        slotId = field.value;
-                    } else {
-                        /* Skip. */
-                    }
-                });
-
-                getSlot(pluginUid, slotId);
-            }
-
-            function getSlot(pluginUid, slotId) {
+            function getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slot/" + slotId,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slots",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var activeIconIdInput = document.getElementById("activeIconId");
-                    var icon0FullPathInput = document.getElementById("icon0FullPath");
-                    var icon1FullPathInput = document.getElementById("icon1FullPath");
+                    var icon0FileIdInput = document.getElementById("icon0FileId");
+                    var icon1FileIdInput = document.getElementById("icon1FileId");
+                    var icon2FileIdInput = document.getElementById("icon2FileId");
 
-                    activeIconIdInput.value = rsp.data.activeIconId;
-                    icon0FullPathInput.value = rsp.data.icons[0].fullPath;
-                    icon1FullPathInput.value = rsp.data.icons[1].fullPath;
+                    icon0FileIdInput.value = rsp.data.slots[0];
+                    icon1FileIdInput.value = rsp.data.slots[1];
+                    icon2FileIdInput.value = rsp.data.slots[2];
 
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -390,48 +222,37 @@
                 });
             }
 
-            function setSlotByForm(formId) {
+            function setSlotsByForm(formId) {
                 var values = $("#" + formId).serializeAllArray();
                 var pluginUid = 0;
-                var slotId = 0xff;
-                var activeIconId = 0xff;
-                var icons = [{
-                    iconId: 0,
-                    fullPath: ""
-                }, {
-                    iconId: 1,
-                    fullPath: ""
-                }]
+                var slots = [255, 255, 255];
 
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "slotId") {
-                        slotId = field.value;
-                    } else if (field.name === "activeIconId") {
-                        activeIconId = field.value;
-                    } else if (field.name === "icon0FullPath") {
-                        icons[0].fullPath = field.value;
-                    } else if (field.name === "icon1FullPath") {
-                        icons[1].fullPath = field.value;
+                    } else if (field.name === "icon0FileId") {
+                        slots[0] = field.value;
+                    } else if (field.name === "icon1FileId") {
+                        slots[1] = field.value;
+                    } else if (field.name === "icon2FileId") {
+                        slots[2] = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                setSlot(pluginUid, slotId, activeIconId, icons);
+                setSlots(pluginUid, slots);
             }
 
-            function setSlot(pluginUid, slotId, activeIconId, icons) {
+            function setSlots(pluginUid, slots) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slot/" + slotId,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slots",
                     isJsonResponse: true,
                     parameter: {
-                        activeIconId: activeIconId,
-                        icons: icons
+                        slots: slots
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -442,50 +263,12 @@
                 });
             }
 
-            function setupSlots(pluginUid) {
-                disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slots",
-                    isJsonResponse: true
-                }).then(function(rsp) {
-                    var idx;
-
-                    $("#slotIdBitmap").empty();
-                    $("#slotIdClearIcon").empty();
-                    $("#slotIdSlot").empty();
-                    
-                    for(idx = 0; idx < rsp.data.slots; ++idx) {
-                        $("#slotIdBitmap").append(
-                            $("<option>")
-                            .attr("value", "" + idx)
-                            .prop("selected", (0 === idx) ? true : false)
-                            .text(idx));
-                        $("#slotIdClearIcon").append(
-                            $("<option>")
-                            .attr("value", "" + idx)
-                            .prop("selected", (0 === idx) ? true : false)
-                            .text(idx));
-                        $("#slotIdSlot").append(
-                            $("<option>")
-                            .attr("value", "" + idx)
-                            .prop("selected", (0 === idx) ? true : false)
-                            .text(idx));
-                    }
-
-                }).catch(function(rsp) {
-                    alert("Internal error.");
-                }).finally(function() {
-                    enableUI();
-                });
-            }
-
             function updateForms() {
                 var selectText = document.getElementById("pluginUidSlot");
 
                 if (0 <= selectText.selectedIndex) {
 
-                    return getSlotByForm('myFormSlot');
+                    return getSlotsByForm('myFormSlot');
                 }
             }
 
@@ -513,9 +296,7 @@
                 /* Load all plugin instances. */
                 getPluginInstances().then(function(cnt) {
                     if (0 < cnt) {
-                        setupSlots($("#pluginUidSlot").val()).then(function() {
-                            getSlotByForm('myFormSlot');
-                        });
+                        updateForms();
                     }
                 });
             });

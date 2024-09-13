@@ -46,8 +46,10 @@
 #include "./internal/View.h"
 
 #include <stdint.h>
-#include <Plugin.hpp>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
+#include <FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -60,7 +62,7 @@
 /**
  * Shows multiple separate icons, depended on the available display size.
  */
-class MultiIconPlugin : public Plugin
+class MultiIconPlugin : public PluginWithConfig
 {
 public:
 
@@ -71,11 +73,11 @@ public:
      * @param[in] uid   Unique id.
      */
     MultiIconPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_view(),
         m_slots(),
-        m_isUploadError(false),
-        m_mutex()
+        m_mutex(),
+        m_hasTopicSlotsChanged(false)
     {
         (void)m_mutex.create();
     }
@@ -165,17 +167,6 @@ public:
     bool hasTopicChanged(const String& topic) final;
     
     /**
-     * Is a upload request accepted or rejected?
-     * 
-     * @param[in] topic         The topic which the upload belongs to.
-     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
-     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
-     * 
-     * @return If accepted it will return true otherwise false.
-     */
-    bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
-
-    /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
@@ -204,118 +195,90 @@ public:
     void update(YAGfx& gfx) final;
 
     /**
-     * Get the id of the active icon in a slot.
+     * Get the file id of the given slot.
      *
      * @param[in] iconId    The slot id.
      *
-     * @return The active icon id.
+     * @return The icon file id.
      */  
-    uint8_t getActiveIconId(uint8_t slotId) const;
+    uint8_t getIconFileId(uint8_t slotId) const;
 
     /**
-     * Set the active icon in a slot by id.
+     * Load the icon in a slot by file id.
      *
      * @param[in] slotId    The slot id.
-     * @param[in] iconId    The icon Id.
+     * @param[in] fileId    The icon file id.
      * 
      * @return If successful it will return true otherwise false.
      */  
-    bool setActiveIconId(uint8_t slotId, uint8_t iconId);
+    bool loadIcon(uint8_t slotId, FileMgrService::FileId fileId);
 
     /**
      * Clear icon from view and remove it from filesytem.
      * 
      * @param[in] slotId    The slot id.
-     * @param[in] iconId    The icon id. 
      */
-    void clearIcon(uint8_t slotId, uint8_t iconId);
-
-    /**
-     * Get icon file path by slot id and icon id.
-     * 
-     * @param[in]   slotId      The slot id.
-     * @param[in]   iconId      The icon id. 
-     * @param[out]  fullPath    Path to icon file.
-     * 
-     * @return If successful it will return true otherwise false.
-     */
-    bool getIconFilePath(uint8_t slotId, uint8_t iconId, String& fullPath) const;
-
-    /**
-     * Set icon file path by slot id and icon id.
-     * 
-     * @param[in]   slotId      The slot id.
-     * @param[in]   iconId      The icon id. 
-     * @param[out]  fullPath    Path to icon file.
-     * 
-     * @return If successful it will return true otherwise false.
-     */
-    bool setIconFilePath(uint8_t slotId, uint8_t iconId, const String& fullPath);
+    void clearIcon(uint8_t slotId);
 
 private:
 
     /**
-     * Max. number of icons in a slot.
+     * Plugin topic, used to control which icon is shown in which slot or
+     * to change a icon in a slot.
      */
-    static const uint8_t    MAX_ICONS_PER_SLOT  = 2U;
+    static const char*          TOPIC_SLOT;
 
     /**
-     * Plugin topic, used for icon upload and control.
+     * Plugin topic, used to get the number of slots and their configuration.
+     * Can be used to set a complete configuration too.
      */
-    static const char*      TOPIC_BITMAP;
-
-    /**
-     * Plugin topic, used to control which icon is shown in which slot.
-     */
-    static const char*      TOPIC_SLOT;
-
-    /**
-     * Plugin topic, used to get the number of slots.
-     */
-    static const char*      TOPIC_SLOTS;
-
-    /**
-     * File extension used for temporary files.
-     */
-    static const char*      FILE_EXT_TMP;
+    static const char*          TOPIC_SLOTS;
 
     /**
      * The slot data required for management.
      */
-    typedef struct
+    struct IconSlot
     {
-        String  icons[MAX_ICONS_PER_SLOT];  /**< The full path's of the slot icons. */
-        uint8_t activeIconId;               /**< Icon id of the active icon. */
-        bool    hasSlotChanged;             /**< Has slot changed since last time? */
+        FileMgrService::FileId  fileId;         /**< File id of the icon. */
+        bool                    hasSlotChanged; /**< Has slot changed since last time? */
 
-    } IconSlot;
+        /**
+         * Construct icon slot.
+         */
+        IconSlot() :
+            fileId(FileMgrService::FILE_ID_INVALID),
+            hasSlotChanged(false)
+        {
+        }
 
-    _MultiIconPlugin::View      m_view;                                             /**< View with all widgets. */
-    IconSlot                    m_slots[_MultiIconPlugin::View::MAX_ICON_SLOTS];    /**< Icon slots. */
-    bool                        m_isUploadError;                                    /**< Flag to signal a upload error. */
-    mutable MutexRecursive      m_mutex;                                            /**< Mutex to protect against concurrent access. */
+        /**
+         * Destroy icon slot.
+         */
+        ~IconSlot()
+        {
+        }
+    };
+
+    _MultiIconPlugin::View  m_view;                                             /**< View with all widgets. */
+    IconSlot                m_slots[_MultiIconPlugin::View::MAX_ICON_SLOTS];    /**< Icon slots. */
+    mutable MutexRecursive  m_mutex;                                            /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicSlotsChanged;                             /**< Has the topic content changed? Used to notify the TopicHandlerService about changes. */
 
     /**
-     * Get image filename with path.
+     * Get persistent configuration in JSON.
      * 
-     * @param[in] slotId    The slot id.
-     * @param[in] iconId    The icon id.
-     * @param[in] ext       File extension.
-     * 
-     * @return Image filename with path.
+     * @param[out] cfg  Configuration
      */
-    String getFileName(uint8_t slotId, uint8_t iconId, const String& ext) const;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
-     * Checks whether the given filen is owned by the plugin or not.
+     * Set persistent configuration in JSON.
      * 
-     * @param[in] filename  The name of the file.
-     * @param[in] slotId    The slot id.
-     * @param[in] iconId    The icon id.
+     * @param[in] cfg   Configuration
      * 
-     * @return If plugin owns the file, it will return true otherwise false:
+     * @return If successful set, it will return true otherwise false.
      */
-    bool isFileOwnedByPlugin(const String& filename, uint8_t slotId, uint8_t iconId) const;
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
      * Get slot id from topic.
