@@ -257,7 +257,7 @@ void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
     }
 }
 
-void BTCQuotePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+void BTCQuotePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
     JsonVariantConst    jsonBpi     = jsonDoc["bpi"];
     JsonVariantConst    jsonUsd     = jsonBpi["USD"];

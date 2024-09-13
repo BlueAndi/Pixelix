@@ -261,7 +261,7 @@ private:
      * 
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
 
     /**
      * Clear the task proxy queue.

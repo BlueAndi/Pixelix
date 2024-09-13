@@ -470,7 +470,7 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
     }
 }
 
-void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
     JsonVariantConst    jsonStatus  = jsonDoc["status"];
     JsonVariantConst    jsonTitle   = jsonDoc["title"];

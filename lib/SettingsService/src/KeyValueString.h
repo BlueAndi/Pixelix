@@ -105,7 +105,7 @@ public:
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueString()
+    ~KeyValueString()
     {
     }
 

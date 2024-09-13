@@ -90,7 +90,7 @@ public:
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueJson()
+    ~KeyValueJson()
     {
     }
 

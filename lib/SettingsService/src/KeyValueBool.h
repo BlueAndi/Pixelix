@@ -85,7 +85,7 @@ public:
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueBool()
+    ~KeyValueBool()
     {
     }
 

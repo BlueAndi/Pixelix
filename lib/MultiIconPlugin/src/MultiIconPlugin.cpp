@@ -229,7 +229,6 @@ bool MultiIconPlugin::hasTopicChanged(const String& topic)
     }
     else if (true == topic.equals(TOPIC_SLOTS))
     {
-        uint8_t                     slotId;
         MutexGuard<MutexRecursive>  guard(m_mutex);
 
         hasTopicChanged         = m_hasTopicSlotsChanged;
@@ -430,37 +429,6 @@ bool MultiIconPlugin::getSlotIdFromTopic(uint8_t& slotId, const String& topic) c
         {
             slotId          = slotIdTmp;
             isSuccessful    = true;
-        }
-    }
-
-    return isSuccessful;
-}
-
-bool MultiIconPlugin::getSlotIdAndIconIdFromTopic(uint8_t& slotId, uint8_t& iconId, const String& topic) const
-{
-    bool    isSuccessful        = false;
-    int32_t indexBeginIconId    = topic.lastIndexOf("/");
-
-    if (0 <= indexBeginIconId)
-    {
-        int32_t indexBeginSlotId = topic.lastIndexOf("/", indexBeginIconId - 1);
-
-        if (0 <= indexBeginSlotId)
-        {
-            String  iconIdStr       = topic.substring(indexBeginIconId + 1);
-            String  slotIdStr       = topic.substring(indexBeginSlotId + 1, indexBeginIconId);
-            uint8_t iconIdTmp;
-            uint8_t slotIdTmp;
-            bool    statusIconId    = Util::strToUInt8(iconIdStr, iconIdTmp);
-            bool    statusSlotId    = Util::strToUInt8(slotIdStr, slotIdTmp);
-
-            if ((true == statusIconId) &&
-                (true == statusSlotId))
-            {
-                slotId          = slotIdTmp;
-                iconId          = iconIdTmp;
-                isSuccessful    = true;
-            }
         }
     }
 

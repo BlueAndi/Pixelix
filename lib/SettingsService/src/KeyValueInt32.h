@@ -79,7 +79,7 @@ public:
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueInt32()
+    ~KeyValueInt32()
     {
     }
 
