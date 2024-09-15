@@ -95,7 +95,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
         JsonVariantConst    jsonMethod              = value["method"];
         JsonVariantConst    jsonUrl                 = value["url"];
         JsonVariantConst    jsonFilter              = value["filter"];
-        JsonVariantConst    jsonIconPath            = value["iconPath"];
+        JsonVariantConst    jsonIconFileId          = value["iconFileId"];
         JsonVariantConst    jsonFormat              = value["format"];
         JsonVariantConst    jsonMultiplier          = value["multiplier"];
         JsonVariantConst    jsonOffset              = value["offset"];
@@ -148,9 +148,9 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             }
         }
 
-        if (false == jsonIconPath.isNull())
+        if (false == jsonIconFileId.isNull())
         {
-            jsonCfg["iconPath"] = jsonIconPath.as<String>();
+            jsonCfg["iconFileId"] = jsonIconFileId.as<FileMgrService::FileId>();
             isSuccessful = true;
         }
 
@@ -209,9 +209,21 @@ void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
 
     PluginWithConfig::start(width, height);
 
-    if (false == m_iconPath.isEmpty())
+    if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
     {
-        if (true == m_view.loadIcon(m_iconPath))
+        String iconFullPath;
+
+        if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+        {
+            LOG_WARNING("Unknown file id %u.", m_iconFileId);
+            m_view.setupTextOnly();
+        }
+        else if (false == m_view.loadIcon(iconFullPath))
+        {
+            LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+            m_view.setupTextOnly();
+        }
+        else
         {
             m_view.setupBitmapAndText();
         }
@@ -352,7 +364,7 @@ void GrabViaRestPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["method"]       = m_method;
     jsonCfg["url"]          = m_url;
     jsonCfg["filter"]       = m_filter;
-    jsonCfg["iconPath"]     = m_iconPath;
+    jsonCfg["iconFileId"]   = m_iconFileId;
     jsonCfg["format"]       = m_format;
     jsonCfg["multiplier"]   = m_multiplier;
     jsonCfg["offset"]       = m_offset;
@@ -364,7 +376,7 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     JsonVariantConst    jsonMethod      = jsonCfg["method"];
     JsonVariantConst    jsonUrl         = jsonCfg["url"];
     JsonVariantConst    jsonFilter      = jsonCfg["filter"];
-    JsonVariantConst    jsonIconPath    = jsonCfg["iconPath"];
+    JsonVariantConst    jsonIconFileId  = jsonCfg["iconFileId"];
     JsonVariantConst    jsonFormat      = jsonCfg["format"];
     JsonVariantConst    jsonMultiplier  = jsonCfg["multiplier"];
     JsonVariantConst    jsonOffset      = jsonCfg["offset"];
@@ -381,9 +393,9 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON filter not found or invalid type.");
     }
-    else if (false == jsonIconPath.is<String>())
+    else if (false == jsonIconFileId.is<FileMgrService::FileId>())
     {
-        LOG_WARNING("JSON icon path not found or invalid type.");
+        LOG_WARNING("JSON icon file id not found or invalid type.");
     }
     else if (false == jsonFormat.is<String>())
     {
@@ -402,7 +414,7 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         bool                        reqIcon = false;
         MutexGuard<MutexRecursive>  guard(m_mutex);
 
-        if (m_iconPath != jsonIconPath.as<String>())
+        if (m_iconFileId != jsonIconFileId.as<FileMgrService::FileId>())
         {
             reqIcon = true;
         }
@@ -410,7 +422,7 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         m_method        = jsonMethod.as<String>();
         m_url           = jsonUrl.as<String>();
         m_filter        = jsonFilter.as<JsonObjectConst>();
-        m_iconPath      = jsonIconPath.as<String>();
+        m_iconFileId    = jsonIconFileId.as<FileMgrService::FileId>();
         m_format        = jsonFormat.as<String>();
         m_multiplier    = jsonMultiplier.as<float>();
         m_offset        = jsonOffset.as<float>();
@@ -421,9 +433,24 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         /* Load icon immediately */
         if (true == reqIcon)
         {
-            if (true == m_view.loadIcon(m_iconPath))
+            if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
             {
-                m_view.setupBitmapAndText();
+                String iconFullPath;
+
+                if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+                {
+                    LOG_WARNING("Unknown file id %u.", m_iconFileId);
+                    m_view.setupTextOnly();
+                }
+                else if (false == m_view.loadIcon(iconFullPath))
+                {
+                    LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+                    m_view.setupTextOnly();
+                }
+                else
+                {
+                    m_view.setupBitmapAndText();
+                }
             }
             else
             {

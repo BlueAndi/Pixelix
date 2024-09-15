@@ -49,6 +49,7 @@
 #include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
+#include<FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -76,7 +77,7 @@ public:
         m_view(),
         m_path(),
         m_filter(1024U),
-        m_iconPath(),
+        m_iconFileId(FileMgrService::FILE_ID_INVALID),
         m_format("%s"),
         m_multiplier(1.0f),
         m_offset(0.0f),
@@ -245,7 +246,7 @@ private:
     _GrabViaMqttPlugin::View    m_view;             /**< View with all widgets. */
     String                      m_path;             /**< MQTT topic path */
     DynamicJsonDocument         m_filter;           /**< Filter used for the response in JSON format. */
-    String                      m_iconPath;         /**< Icon filename with path. */
+    FileMgrService::FileId      m_iconFileId;       /**< Icon file id. */
     String                      m_format;           /**< Format used to embed the retrieved filtered value. */
     float                       m_multiplier;       /**< If grabbed value is a number, it will be multiplied with the multiplier. */
     float                       m_offset;           /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */

@@ -39,15 +39,15 @@
                 <h3>Get configuration</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig</code></pre>
                 <h3>Set configuration</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconFileId=&lt;ICON-FILE-ID&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconFileId=&lt;ICON-FILE-ID&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>METHOD: HTTP method, supported are "GET" and "POST".</li>
                     <li>URL: REST API URL.</li>
                     <li>FILTER: Filter to identify the value in the JSON response. See the details here: <a href="https://arduinojson.org/news/2020/03/22/version-6-15-0/" target="_blank">ArduinoJson 6.15: Filtering done right</a></li>
-                    <li>ICON-PATH: Filename of the icon including the path.</li>
+                    <li>ICON-FILE-ID: File id of the icon.</li>
                     <li>FORMAT: Format specifier, e.g. "%s" for strings or "%f" for numbers.</li>
                     <li>MULTIPLIER: Number which is multiplied with a number value. Not used for string values.</li>
                     <li>OFFSET: Number which is added to a number value. Not used for string values.</li>
@@ -75,8 +75,9 @@
                             <input class="form-control" type="text" id="filter" name="filter" value="null" size="80" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="iconPath">ICON path:</label>
-                            <input class="form-control" type="text" id="iconPath" name="iconPath" value="" size="80"/>
+                            <label class="form-label" for="iconFileId">Icon file id:</label>
+                            <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
+                            <small class="form-text text-muted">Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="format">Format:</label>
@@ -177,7 +178,7 @@
                     $("#method").val(rsp.data.method);
                     $("#url").val(rsp.data.url);
                     $("#filter").val(JSON.stringify(rsp.data.filter));
-                    $("#iconPath").val(rsp.data.iconPath);
+                    $("#iconFileId").val(rsp.data.iconFileId);
                     $("#format").val(rsp.data.format);
                     $("#multiplier").val(rsp.data.multiplier);
                     $("#offset").val(rsp.data.offset);
@@ -199,7 +200,7 @@
                         method:  $("#method").val(),
                         url:  $("#url").val(),
                         filter: $("#filter").val(),
-                        iconPath: $("#iconPath").val(),
+                        iconFileId: $("#iconFileId").val(),
                         format: $("#format").val(),
                         multiplier: $("#multiplier").val(),
                         offset: $("#offset").val()
