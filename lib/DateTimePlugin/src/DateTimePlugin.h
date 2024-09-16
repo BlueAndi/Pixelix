@@ -91,6 +91,7 @@ public:
         m_timeFormat(TIME_FORMAT_DEFAULT),
         m_dateFormat(DATE_FORMAT_DEFAULT),
         m_timeZone(),
+        m_startOfWeek(START_OF_WEEK),
         m_dayOnColor(DAY_ON_COLOR),
         m_dayOffColor(DAY_OFF_COLOR),
         m_slotInterf(nullptr),
@@ -284,6 +285,9 @@ private:
     /** Default date format according to strftime(). */
     static const char*      DATE_FORMAT_DEFAULT;
 
+    /** Start of the week shown in the week bar (0 = Sunday) */
+    static const uint8_t    START_OF_WEEK;
+
     /** Color of the current day shown in the day of the week bar. */
     static const Color      DAY_ON_COLOR;
 
@@ -318,6 +322,7 @@ private:
     String                  m_timeFormat;               /**< Time format according to strftime(). */
     String                  m_dateFormat;               /**< Date format according to strftime(). */
     String                  m_timeZone;                 /**< Timezone of the time to show. If empty, the local time is used. */
+    uint8_t                 m_startOfWeek;              /**< Index of first day of week (0 = Sunday). */
     Color                   m_dayOnColor;               /**< Color of current day in the day of the week bar. */
     Color                   m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */

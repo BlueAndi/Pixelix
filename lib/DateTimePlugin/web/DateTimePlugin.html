@@ -99,6 +99,18 @@
                         <input type="text" id="timeZone" name="timeZone" value="" />    
                     </div>
                     <div class="form-group">
+                        <label for="startOfWeek">Start of week:</label>
+                        <select id="startOfWeek">
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="timeFormat">Color of actual day:</label>
                         <input type="text" id="dayOnColor" name="dayOnColor" value="" />    
                     </div>
@@ -192,6 +204,7 @@
                     $("#timeFormat").val(rsp.data.timeFormat);
                     $("#dateFormat").val(rsp.data.dateFormat);
                     $("#timeZone").val(rsp.data.timeZone);
+                    $("#startOfWeek").val(rsp.data.startOfWeek);
                     $("#dayOnColor").val(rsp.data.dayOnColor);
                     $("#dayOffColor").val(rsp.data.dayOffColor);
                 }).catch(function(rsp) {
@@ -212,6 +225,7 @@
                         timeFormat: $("#timeFormat").val(),
                         dateFormat: $("#dateFormat").val(),
                         timeZone: $("#timeZone").val(),
+                        startOfWeek: $("#startOfWeek").val(),
                         dayOnColor: $("#dayOnColor").val(),
                         dayOffColor: $("#dayOffColor").val()
                     }

@@ -67,6 +67,9 @@ const char* DateTimePlugin::TIME_FORMAT_DEFAULT = "%I:%M %p";
 /* Initialize default date format. */
 const char* DateTimePlugin::DATE_FORMAT_DEFAULT = "%m/%d";
 
+/** Start of the week shown in the week bar (0 = Sunday) */
+const uint8_t DateTimePlugin::START_OF_WEEK     = 1U;
+
 /* Initialize the color of the actual day. */
 const Color DateTimePlugin::DAY_ON_COLOR        = ColorDef::LIGHTGRAY;
 
@@ -108,6 +111,7 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         JsonVariantConst    jsonTimeFormat          = value["timeFormat"];
         JsonVariantConst    jsonDateFormat          = value["dateFormat"];
         JsonVariantConst    jsonTimeZone            = value["timeZone"];
+        JsonVariantConst    jsonStartOfWeek         = value["startOfWeek"];
         JsonVariantConst    jsonDayOnColor          = value["dayOnColor"];
         JsonVariantConst    jsonDayOffColor         = value["dayOffColor"];
 
@@ -143,6 +147,12 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         if (false == jsonTimeZone.isNull())
         {
             jsonCfg["timeZone"] = jsonTimeZone.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonStartOfWeek.isNull())
+        {
+            jsonCfg["startOfWeek"] = jsonStartOfWeek.as<uint8_t>();
             isSuccessful = true;
         }
         
@@ -393,6 +403,7 @@ void DateTimePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["timeFormat"]   = m_timeFormat;
     jsonCfg["dateFormat"]   = m_dateFormat;
     jsonCfg["timeZone"]     = m_timeZone;
+    jsonCfg["startOfWeek"]  = m_startOfWeek;
     jsonCfg["dayOnColor"]   = colorToHtml(m_dayOnColor);
     jsonCfg["dayOffColor"]  = colorToHtml(m_dayOffColor);
 }
@@ -404,6 +415,7 @@ bool DateTimePlugin::setConfiguration(JsonObjectConst& jsonCfg)
     JsonVariantConst jsonTimeFormat     = jsonCfg["timeFormat"];
     JsonVariantConst jsonDateFormat     = jsonCfg["dateFormat"];
     JsonVariantConst jsonTimeZone       = jsonCfg["timeZone"];
+    JsonVariantConst jsonStartOfWeek    = jsonCfg["startOfWeek"];
     JsonVariantConst jsonDayOnColor     = jsonCfg["dayOnColor"];
     JsonVariantConst jsonDayOffColor    = jsonCfg["dayOffColor"];
 
@@ -424,6 +436,10 @@ bool DateTimePlugin::setConfiguration(JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON timezone not found or invalid type.");
     }
+    else if (false == jsonStartOfWeek.is<uint8_t>())
+    {
+        LOG_WARNING("JSON start of week not found or invalid type.");
+    }
     else if (false == jsonDayOnColor.is<String>())
     {
         LOG_WARNING("JSON day on color not found or invalid type.");
@@ -440,6 +456,7 @@ bool DateTimePlugin::setConfiguration(JsonObjectConst& jsonCfg)
         m_timeFormat    = jsonTimeFormat.as<String>();
         m_dateFormat    = jsonDateFormat.as<String>();
         m_timeZone      = jsonTimeZone.as<String>();
+        m_startOfWeek   = jsonStartOfWeek.as<uint8_t>();
         m_dayOnColor    = colorFromHtml(jsonDayOnColor.as<String>());
         m_dayOffColor   = colorFromHtml(jsonDayOffColor.as<String>());
 
@@ -597,20 +614,18 @@ void DateTimePlugin::updateDateTime(bool force)
 
 void DateTimePlugin::setWeekdayIndicator(tm timeInfo)
 {
-    /* tm_wday starts at sunday, first lamp indicates monday.*/
-    uint8_t activeLamp = (0U < timeInfo.tm_wday) ? (timeInfo.tm_wday - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
+    uint8_t activeIndex;
 
-    /* Last active lamp has to be deactivated. */
-    uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
+    // tm_wday starts with 0 for Sunday.
+    activeIndex = timeInfo.tm_wday - m_startOfWeek;
+    if (7U < activeIndex) // may have wrapped around
+        activeIndex += 7U;
 
-    if (DateTimePlugin::MAX_LAMPS > activeLamp)
+    for(uint8_t index = 0U; index < MAX_LAMPS; ++index)
     {
-        m_lampWidgets[activeLamp].setOnState(true);
-    }
-
-    if (DateTimePlugin::MAX_LAMPS > lampToDeactivate)
-    {
-        m_lampWidgets[lampToDeactivate].setOnState(false);
+        m_lampWidgets[index].setColorOn(m_dayOnColor);
+        m_lampWidgets[index].setColorOff(m_dayOffColor);
+        m_lampWidgets[index].setOnState(activeIndex == index);
     }
 }
 
