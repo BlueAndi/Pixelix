@@ -68,20 +68,18 @@ void DateTimeView32x8::setCurrentTime(const tm& now)
 {
     /* update lamp widgets */
 
-    /* tm_wday starts at sunday, first lamp indicates monday.*/
-    uint8_t activeLamp = (0U < now.tm_wday) ? (now.tm_wday - 1U) : (MAX_LAMPS - 1U);
-
-    /* Last active lamp has to be deactivated. */
-    uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);
-
-    if (MAX_LAMPS > activeLamp)
+    /* tm_wday starts at sunday, first lamp specified via m_startOfWeek.*/
+    uint8_t activeLamp = now.tm_wday - m_startOfWeek;
+    if (MAX_LAMPS < activeLamp)
     {
-        m_lampWidgets[activeLamp].setOnState(true);
+        activeLamp += 7U;
     }
 
-    if (MAX_LAMPS > lampToDeactivate)
+    uint8_t index;
+
+    for(index = 0U; index < MAX_LAMPS; ++index)
     {
-        m_lampWidgets[lampToDeactivate].setOnState(false);
+        m_lampWidgets[index].setOnState(index == activeLamp);
     }
 }
 

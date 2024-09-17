@@ -78,6 +78,7 @@ public:
                       {LAMP_WIDTH, LAMP_HEIGHT, LAMP_4_X , LAMP_Y},
                       {LAMP_WIDTH, LAMP_HEIGHT, LAMP_5_X , LAMP_Y},
                       {LAMP_WIDTH, LAMP_HEIGHT, LAMP_6_X , LAMP_Y}},
+        m_startOfWeek(START_OF_WEEK),
         m_dayOnColor(DAY_ON_COLOR),
         m_dayOffColor(DAY_OFF_COLOR),
         m_now()
@@ -176,6 +177,26 @@ public:
     void setFormatText(const String& formatText) override
     {
         m_textWidget.setFormatStr(formatText);
+    }
+
+    /**
+     * Get the start of week configuration (Sunday = 0).
+     *
+     * @return uint8_t
+     */
+    uint8_t getStartOfWeek() const override
+    {
+        return m_startOfWeek;
+    }
+
+    /**
+     * Set the start of week configuration (Sunday = 0).
+     *
+     * @param[in] startOfWeek uint8_t offset for starting of week
+     */
+    void setStartOfWeek(uint8_t startOfWeek) override
+    {
+        m_startOfWeek = startOfWeek;
     }
 
     /**
@@ -288,6 +309,9 @@ protected:
      */
     static const int16_t    TEXT_Y          = 0;
 
+    /** Start of week offset for the week bar (Sunday = 0). */
+    static const uint8_t    START_OF_WEEK   = 1U;
+
     /** Color of the current day shown in the day of the week bar. */
     static const Color      DAY_ON_COLOR;
 
@@ -297,6 +321,7 @@ protected:
     Fonts::FontType m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget      m_textWidget;               /**< Text widget, used for showing the text. */
     LampWidget      m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
+    uint8_t         m_startOfWeek;              /**< Start of week offset for the week bar (Sunday = 0). */
     Color           m_dayOnColor;               /**< Color of current day in the day of the week bar. */
     Color           m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
     tm              m_now;                      /**< Latest time update */

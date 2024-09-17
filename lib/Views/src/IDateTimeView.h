@@ -117,6 +117,20 @@ public:
     virtual void setFormatText(const String& formatText) = 0;
 
     /**
+     * Get the start of week configuration (Sunday = 0).
+     *
+     * @return uint8_t
+     */
+    virtual uint8_t getStartOfWeek() const = 0;
+
+    /**
+     * Set the start of week configuration (Sunday = 0).
+     *
+     * @param[in] startOfWeek uint8_t offset for starting of week
+     */
+    virtual void setStartOfWeek(uint8_t startOfWeek) = 0;
+
+    /**
      * Get the color to show the actual day.
      * 
      * @return Color
