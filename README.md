@@ -138,6 +138,8 @@ Connect PIXELIX with your PC via usb and start a terminal. Use the following com
   * A status of 0 means everything is ok.
   * Other than 0, see their meaning in the low [low level error code table](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean). Note, the status of 1 is equal to E1 in the error code table and etc.
 
+Enter ```help``` to get a list of all supported commands.
+
 ## PIXELIX Is Ready
 After configuration, restart again and voila, PIXELIX will be available in your wifi network.
 
