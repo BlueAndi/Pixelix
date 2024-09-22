@@ -127,8 +127,10 @@ public:
      * Set the start of week configuration (Sunday = 0).
      *
      * @param[in] startOfWeek uint8_t offset for starting of week
+     *
+     * @return bool success
      */
-    virtual void setStartOfWeek(uint8_t startOfWeek) = 0;
+    virtual bool setStartOfWeek(uint8_t startOfWeek) = 0;
 
     /**
      * Get the color to show the actual day.

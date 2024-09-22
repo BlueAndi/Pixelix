@@ -48,6 +48,7 @@
 #include <LampWidget.h>
 #include <TextWidget.h>
 #include <Util.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Macros
@@ -192,10 +193,18 @@ public:
      * Set the start of week configuration (Sunday = 0).
      *
      * @param[in] startOfWeek uint8_t offset for starting of week
+     *
+     * @return bool success
      */
-    void setStartOfWeek(uint8_t startOfWeek) override
+    bool setStartOfWeek(uint8_t startOfWeek) override
     {
+        if (MAX_LAMPS <= startOfWeek)
+        {
+            LOG_WARNING("Illegal start of week value (%hhu).", startOfWeek);
+            return false;
+        }
         m_startOfWeek = startOfWeek;
+        return true;
     }
 
     /**

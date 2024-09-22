@@ -322,13 +322,11 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         m_dateFormat    = jsonDateFormat.as<String>();
         m_timeZone      = jsonTimeZone.as<String>();
 
-        m_view.setStartOfWeek(jsonStartOfWeek.as<uint8_t>());
+        status = m_view.setStartOfWeek(jsonStartOfWeek.as<uint8_t>());
         m_view.setDayOnColor(colorFromHtml(jsonDayOnColor.as<String>()));
         m_view.setDayOffColor(colorFromHtml(jsonDayOffColor.as<String>()));
 
         m_hasTopicChanged = true;
-
-        status = true;
     }
 
     return status;

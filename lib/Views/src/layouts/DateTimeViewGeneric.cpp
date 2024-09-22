@@ -72,9 +72,12 @@ void DateTimeViewGeneric::setCurrentTime(const tm& now)
 
     /* tm_wday starts at sunday, first lamp specified via m_startOfWeek.*/
     uint8_t activeLamp = m_now.tm_wday - m_startOfWeek;
+
+    /* the above subtraction may underflow, so detect and correct for that.
+     * this is more efficient than integer remainder on xtensa cores. */
     if (MAX_LAMPS < activeLamp)
     {
-        activeLamp += 7U;
+        activeLamp += MAX_LAMPS;
     }
 
     uint8_t index;
