@@ -70,20 +70,21 @@ void DateTimeViewGeneric::setCurrentTime(const tm& now)
 
     /* update lamp widgets */
 
-    /* tm_wday starts at sunday, first lamp indicates monday.*/
-    uint8_t activeLamp = (0U < m_now.tm_wday) ? (m_now.tm_wday - 1U) : (MAX_LAMPS - 1U);
+    /* tm_wday starts at sunday, first lamp specified via m_startOfWeek.*/
+    uint8_t activeLamp = m_now.tm_wday - m_startOfWeek;
 
-    /* Last active lamp has to be deactivated. */
-    uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);
-
-    if (MAX_LAMPS > activeLamp)
+    /* the above subtraction may underflow, so detect and correct for that.
+     * this is more efficient than integer remainder on xtensa cores. */
+    if (MAX_LAMPS < activeLamp)
     {
-        m_lampWidgets[activeLamp].setOnState(true);
+        activeLamp += MAX_LAMPS;
     }
 
-    if (MAX_LAMPS > lampToDeactivate)
+    uint8_t index;
+
+    for(index = 0U; index < MAX_LAMPS; ++index)
     {
-        m_lampWidgets[lampToDeactivate].setOnState(false);
+        m_lampWidgets[index].setOnState(index == activeLamp);
     }
 }
 
