@@ -41,9 +41,7 @@
 
 #include "InitState.h"
 #include "RestartState.h"
-#include "TaskMon.h"
 #include "MemMon.h"
-#include "ResetMon.h"
 #include "MiniTerminal.h"
 
 #include "ButtonDrv.h"
@@ -146,9 +144,6 @@ static const uint32_t                       HWCDC_TX_TIMEOUT    = 4U;
  */
 void setup()
 {
-    /* Start the reset monitor as early as possible to avoid loosing information. */
-    ResetMon::getInstance().begin();
-
     /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
     
@@ -199,14 +194,8 @@ void setup()
  */
 void loop()
 {
-    /* Reset monitor */
-    ResetMon::getInstance().process();
-
     /* Process system state machine */
     gSysStateMachine.process();
-
-    /* Task monitor */
-    TaskMon::getInstance().process();
 
     /* Memory monitor */
     MemMon::getInstance().process();
