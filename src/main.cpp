@@ -188,7 +188,7 @@ void setup()
     }
     while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
 
-    /* Observer button state changes and derrive actions.
+    /* Observe button state changes and derrive actions.
      * Do this after init state!
      */
     ButtonDrv::getInstance().registerObserver(gButtonHandler);
