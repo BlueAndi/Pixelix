@@ -113,7 +113,6 @@ public:
      */
     struct CmdTableEntry {
         const char *cmdStr;                           /**< Command string.           */
-        size_t cmdLen;                                /**< Length of command string. */
         void (MiniTerminal::*handler)(const char *);  /**< Command handler function. */
     };
 
@@ -155,13 +154,6 @@ private:
     void executeCommand(const char* cmdLine);
 
     /**
-     * Ping command.
-     * 
-     * @param[in] par   Parameter
-     */
-    void cmdPing(const char* par);
-
-    /**
      * Reset the device.
      * 
      * @param[in] par   Parameter
@@ -197,7 +189,7 @@ private:
     void cmdGetStatus(const char* par);
 
     /**
-     * print command help message.
+     * Print command help message.
      * 
      * @param[in] par   Parameter
      */

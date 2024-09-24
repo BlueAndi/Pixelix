@@ -61,9 +61,6 @@
  * Local Variables
  *****************************************************************************/
 
-/** Command: ping */
-static const char     PING[]                     = "ping";
-
 /** Command: reset */
 static const char     RESET[]                    = "reset";
 
@@ -83,13 +80,12 @@ static const char     GET_STATUS[]               = "get status";
 static const char     HELP[]                     = "help";
 
 const MiniTerminal::CmdTableEntry MiniTerminal::m_cmdTable[] = {
-    { PING,                     sizeof(PING) - 1U,                   &MiniTerminal::cmdPing  },
-    { RESET,                    sizeof(RESET) - 1U,                  &MiniTerminal::cmdReset },
-    { WRITE_WIFI_PASSPHRASE,    sizeof(WRITE_WIFI_PASSPHRASE) - 1U,  &MiniTerminal::cmdWriteWifiPassphrase },
-    { WRITE_WIFI_SSID,          sizeof(WRITE_WIFI_SSID) - 1U,        &MiniTerminal::cmdWriteWifiSSID },
-    { GET_IP,                   sizeof(GET_IP) - 1U,                 &MiniTerminal::cmdGetIPAddress },
-    { GET_STATUS,               sizeof(GET_STATUS) - 1U,             &MiniTerminal::cmdGetStatus },
-    { HELP,                     sizeof(HELP) - 1U,                   &MiniTerminal::cmdHelp },
+    { RESET,                    &MiniTerminal::cmdReset },
+    { WRITE_WIFI_PASSPHRASE,    &MiniTerminal::cmdWriteWifiPassphrase },
+    { WRITE_WIFI_SSID,          &MiniTerminal::cmdWriteWifiSSID },
+    { GET_IP,                   &MiniTerminal::cmdGetIPAddress },
+    { GET_STATUS,               &MiniTerminal::cmdGetStatus },
+    { HELP,                     &MiniTerminal::cmdHelp },
 };
 
 /******************************************************************************
@@ -133,7 +129,7 @@ void MiniTerminal::process()
         {
             if (0 < m_writeIndex)
             {
-                char removeSeq[] =
+                static char removeSeq[] =
                 {
                     ASCII_BS,
                     ASCII_SP,
@@ -151,7 +147,8 @@ void MiniTerminal::process()
             if ((' ' <= currentChar) &&
                 ('~' >= currentChar))
             {
-                m_input[m_writeIndex++] = currentChar;
+                m_input[m_writeIndex] = currentChar;
+                ++m_writeIndex;
                 (void)m_stream.write(currentChar);
             }
         }
@@ -194,11 +191,12 @@ void MiniTerminal::executeCommand(const char* cmdLine)
 
     for (idx = 0U; UTIL_ARRAY_NUM(m_cmdTable) > idx; ++idx)
     {
-        const CmdTableEntry& entry(m_cmdTable[idx]);
+        const CmdTableEntry entry = m_cmdTable[idx];
+        const size_t len = strlen(entry.cmdStr);
 
-        if (0 == strncmp(cmdLine, entry.cmdStr, entry.cmdLen))
+        if (0 == strncmp(cmdLine, entry.cmdStr, len))
         {
-            (this->*entry.handler)(&cmdLine[entry.cmdLen]);
+            (this->*entry.handler)(&cmdLine[len]);
             break;
         }
     }
@@ -207,12 +205,6 @@ void MiniTerminal::executeCommand(const char* cmdLine)
     {
         writeError("Unknown command.\n");
     }
-}
-
-void MiniTerminal::cmdPing(const char* par)
-{
-    UTIL_NOT_USED(par);
-    writeSuccessful("pong\n");
 }
 
 void MiniTerminal::cmdReset(const char* par)
@@ -268,37 +260,35 @@ void MiniTerminal::cmdWriteWifiSSID(const char* par)
 
 void MiniTerminal::cmdGetIPAddress(const char* par)
 {
-    if (nullptr != par)
+    UTIL_NOT_USED(par);
+
+    String result;
+
+    if (WIFI_MODE_AP == WiFi.getMode())
     {
-        String result;
-
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            result = WiFi.softAPIP().toString();
-        }
-        else
-        {
-            result = WiFi.localIP().toString();
-        }
-
-        result += "\n";
-
-        writeSuccessful(result.c_str());
+        result = WiFi.softAPIP().toString();
     }
+    else
+    {
+        result = WiFi.localIP().toString();
+    }
+
+    result += "\n";
+
+    writeSuccessful(result.c_str());
 }
 
 void MiniTerminal::cmdGetStatus(const char* par)
 {
-    if (nullptr != par)
-    {
-        ErrorState::ErrorId status  = ErrorState::getInstance().getErrorId();
-        String              result;
+    UTIL_NOT_USED(par);
 
-        result += static_cast<int32_t>(status);
-        result += "\n";
+    ErrorState::ErrorId status  = ErrorState::getInstance().getErrorId();
+    String              result;
 
-        writeSuccessful(result.c_str());
-    }
+    result += static_cast<int32_t>(status);
+    result += "\n";
+
+    writeSuccessful(result.c_str());
 }
 
 void MiniTerminal::cmdHelp(const char* par)

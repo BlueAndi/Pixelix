@@ -129,7 +129,6 @@ Use the following default credentials to get access to the PIXELIX web interface
 
 ## Variant 2: Configure wifi station SSID and passphrase with the terminal
 Connect PIXELIX with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
-* Test: ```ping```
 * Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
 * Write wifi SSID: ```write wifi ssid <your-ssid>```
 * Restart PIXELIX: ```reset```
