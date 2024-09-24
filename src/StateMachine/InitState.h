@@ -110,7 +110,12 @@ private:
      * How long shall the logo be shown in ms.
      * As long as it is shown, stay in this state!
      */
-    const uint32_t SHOW_LOGO_DURATION   = 2000U;
+    static const uint32_t   SHOW_LOGO_DURATION          = 2000U;
+
+    /**
+     * The max. number of open files in the filesystem.
+     */
+    static const uint8_t    FILESYSTEM_MAX_OPEN_FILES   = 10U;
 
     bool        m_isQuiet;              /**< Is quite mode active? */
     bool        m_isApModeRequested;    /**< Is wifi AP mode requested? */

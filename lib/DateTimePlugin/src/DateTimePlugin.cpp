@@ -102,6 +102,7 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         JsonVariantConst    jsonTimeFormat          = value["timeFormat"];
         JsonVariantConst    jsonDateFormat          = value["dateFormat"];
         JsonVariantConst    jsonTimeZone            = value["timeZone"];
+        JsonVariantConst    jsonStartOfWeek         = value["startOfWeek"];
         JsonVariantConst    jsonDayOnColor          = value["dayOnColor"];
         JsonVariantConst    jsonDayOffColor         = value["dayOffColor"];
 
@@ -137,6 +138,12 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         if (false == jsonTimeZone.isNull())
         {
             jsonCfg["timeZone"] = jsonTimeZone.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonStartOfWeek.isNull())
+        {
+            jsonCfg["startOfWeek"] = jsonStartOfWeek.as<uint8_t>();
             isSuccessful = true;
         }
         
@@ -261,6 +268,7 @@ void DateTimePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["timeFormat"]   = m_timeFormat;
     jsonCfg["dateFormat"]   = m_dateFormat;
     jsonCfg["timeZone"]     = m_timeZone;
+    jsonCfg["startOfWeek"]  = m_view.getStartOfWeek();
     jsonCfg["dayOnColor"]   = colorToHtml(m_view.getDayOnColor());
     jsonCfg["dayOffColor"]  = colorToHtml(m_view.getDayOffColor());
 }
@@ -272,6 +280,7 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     JsonVariantConst jsonTimeFormat     = jsonCfg["timeFormat"];
     JsonVariantConst jsonDateFormat     = jsonCfg["dateFormat"];
     JsonVariantConst jsonTimeZone       = jsonCfg["timeZone"];
+    JsonVariantConst jsonStartOfWeek    = jsonCfg["startOfWeek"];
     JsonVariantConst jsonDayOnColor     = jsonCfg["dayOnColor"];
     JsonVariantConst jsonDayOffColor    = jsonCfg["dayOffColor"];
 
@@ -292,6 +301,10 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON timezone not found or invalid type.");
     }
+    else if (false == jsonStartOfWeek.is<uint8_t>())
+    {
+        LOG_WARNING("JSON start of week not found or invalid type.");
+    }
     else if (false == jsonDayOnColor.is<String>())
     {
         LOG_WARNING("JSON day on color not found or invalid type.");
@@ -309,12 +322,11 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         m_dateFormat    = jsonDateFormat.as<String>();
         m_timeZone      = jsonTimeZone.as<String>();
 
+        status = m_view.setStartOfWeek(jsonStartOfWeek.as<uint8_t>());
         m_view.setDayOnColor(colorFromHtml(jsonDayOnColor.as<String>()));
         m_view.setDayOffColor(colorFromHtml(jsonDayOffColor.as<String>()));
 
         m_hasTopicChanged = true;
-
-        status = true;
     }
 
     return status;
