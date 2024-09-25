@@ -129,7 +129,7 @@ void MiniTerminal::process()
         {
             if (0 < m_writeIndex)
             {
-                static char removeSeq[] =
+                static const char removeSeq[] =
                 {
                     ASCII_BS,
                     ASCII_SP,
