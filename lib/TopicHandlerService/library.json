@@ -10,6 +10,8 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Logging"
+    }, {
         "name": "Service"
     }, {
         "name": "ITopicHandler"

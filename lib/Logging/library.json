@@ -1,7 +1,7 @@
 {
-    "name": "IconTextLampPlugin",
+    "name": "Logging",
     "version": "0.1.0",
-    "description": "....",
+    "description": "Log functionality",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -11,14 +11,6 @@
     "license": "MIT",
     "dependencies": [{
         "name": "Logging"
-    }, {
-        "name": "FileMgrService"
-    }, {
-        "name": "Plugin"
-    }, {
-        "name": "Views"
-    }, {
-        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"
