@@ -68,22 +68,22 @@ const YAFont&   TextWidget::DEFAULT_FONT    =  Fonts::getFontByType(Fonts::FONT_
 /* Initialize keyword list 1: These keywords are only handled once at the begin, before printing the text. */
 const TextWidget::FormatKeywordRow  TextWidget::FORMAT_KEYWORD_TABLE_1[] =
 {
-    "{vt}",     &TextWidget::verticalTopAligned,
-    "{vc}",     &TextWidget::verticalCenterAligned,
-    "{vb}",     &TextWidget::verticalBottomAligned
+    {   "{vt}",     &TextWidget::verticalTopAligned         },
+    {   "{vc}",     &TextWidget::verticalCenterAligned      },
+    {   "{vb}",     &TextWidget::verticalBottomAligned      }
 };
 
 /* Initialize keyword list 2: These keywords are handled during printing the text. */
 const TextWidget::FormatKeywordRow  TextWidget::FORMAT_KEYWORD_TABLE_2[] =
 {
-    "{hl}",     &TextWidget::horizontalLeftAligned,
-    "{hc}",     &TextWidget::horizontalCenterAligned,
-    "{hr}",     &TextWidget::horizontalRightAligned,
+    {   "{hl}",     &TextWidget::horizontalLeftAligned      },
+    {   "{hc}",     &TextWidget::horizontalCenterAligned    },
+    {   "{hr}",     &TextWidget::horizontalRightAligned     },
 
-    "{#*}",     &TextWidget::handleColor,
+    {   "{#*}",     &TextWidget::handleColor                },
 
-    "{hm *}",   &TextWidget::horizontalMove,
-    "{vm *}",   &TextWidget::verticalMove
+    {   "{hm *}",   &TextWidget::horizontalMove             },
+    {   "{vm *}",   &TextWidget::verticalMove               }
 };
 
 /* Set default scroll pause in ms. */
