@@ -18,9 +18,9 @@
         "name": "TFT_eSPI",
         "version": "~2.5.31"
     }, {
-        "name": "Utilities"
-    }, {
         "name": "YAGfx"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

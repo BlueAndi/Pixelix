@@ -18,6 +18,8 @@
     }, {
         "name": "Sensors"
     }, {
+        "name": "Utilities"
+    }, {
         "name": "Views"
     }],
     "frameworks": "*",

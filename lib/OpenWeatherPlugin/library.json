@@ -17,6 +17,8 @@
         "name": "Plugin"
     }, {
         "name": "Views"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

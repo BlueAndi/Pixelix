@@ -17,6 +17,8 @@
         "name": "LittleFS"
     }, {
         "name": "Plugin"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

@@ -35,7 +35,6 @@
 #include "ClockDrv.h"
 #include "CountdownPlugin.h"
 
-#include <Util.h>
 #include <ArduinoJson.h>
 #include <Logging.h>
 

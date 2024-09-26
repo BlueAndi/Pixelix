@@ -17,6 +17,8 @@
         "name": "ITopicHandler"
     }, {
         "name": "Plugin"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

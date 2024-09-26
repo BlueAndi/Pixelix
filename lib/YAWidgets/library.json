@@ -19,6 +19,8 @@
         "version": "~6.21.5"
     }, {
         "name": "Fonts"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

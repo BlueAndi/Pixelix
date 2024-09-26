@@ -12,6 +12,8 @@
     "dependencies": [{
         "name": "Fonts"
     }, {
+        "name": "Utilities"
+    }, {
         "name": "YAGfx"
     }],
     "frameworks": "*",

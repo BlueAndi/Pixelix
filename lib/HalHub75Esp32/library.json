@@ -14,13 +14,13 @@
     }, {
         "name": "SPI"
     }, {
-        "name": "Utilities"
-    }, {
         "name": "YAGfx"
     }, {
         "owner": "mrfaptastic",
         "name": "ESP32 HUB75 LED MATRIX PANEL DMA Display",
         "version": "~3.0.11"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

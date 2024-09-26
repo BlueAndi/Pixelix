@@ -35,7 +35,6 @@
 #include "DDPPlugin.h"
 
 #include <Logging.h>
-#include <Util.h>
 #include <WiFi.h>
 
 /******************************************************************************

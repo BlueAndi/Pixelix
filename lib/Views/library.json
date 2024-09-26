@@ -14,6 +14,8 @@
     }, {
         "name": "IRtc"
     }, {
+        "name": "Utilities"
+    }, {
         "name": "YAWidgets"
     }],
     "frameworks": "*",

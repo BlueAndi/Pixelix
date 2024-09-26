@@ -19,8 +19,6 @@
         "owner": "kosme",
         "name": "arduinoFFT",
         "version": "~2.0.0"
-    }, {
-        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"
