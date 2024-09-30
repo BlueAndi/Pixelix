@@ -9,6 +9,7 @@
 * [Purpose](#purpose)
 * [OpenWeatherPlugin](#openweatherplugin)
   * [Color Intense](#color-intense)
+  * [Colorless](#colorless)
   * [Animated](#animated)
 * [BTCQuotePlugin](#btcquoteplugin)
 * [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
@@ -37,7 +38,22 @@ In the following you find all available alternative icons classified according t
 
 Find them here: [./images/icons/OpenWeatherPluginColorIntense/](./images/icons/OpenWeatherPluginColorIntense/)
 
+Notes:
+* Only 8x8 icons available.
+
 Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
+
+## Colorless
+
+|  |  |  |  |
+| -------- | -------- | -------- | -------- |
+|![01d](./../doc/images/icons/OpenWeatherPluginColorLess/preview/01d.png)|![01n](./../doc/images/icons/OpenWeatherPluginColorLess/preview/01n.png)|![02d](./../doc/images/icons/OpenWeatherPluginColorLess/preview/02d.png)|![02n](./../doc/images/icons/OpenWeatherPluginColorLess/preview/02n.png)|
+|![04](./../doc/images/icons/OpenWeatherPluginColorLess/preview/04.png)|![09](./../doc/images/icons/OpenWeatherPluginColorLess/preview/09.png)|![10d](./../doc/images/icons/OpenWeatherPluginColorLess/preview/10d.png)|![10n](./../doc/images/icons/OpenWeatherPluginColorLess/preview/10n.png)|
+|![11](./../doc/images/icons/OpenWeatherPluginColorLess/preview/11.png)|![13](./../doc/images/icons/OpenWeatherPluginColorLess/preview/13.png)|![50](./../doc/images/icons/OpenWeatherPluginColorLess/preview/50.png)||
+
+Find them here: [./images/icons/OpenWeatherPluginColorLess](./images/icons/OpenWeatherPluginColorLess/)
+
+Designed by [BlueAndi](https://github.com/BlueAndi)
 
 ## Animated
 
@@ -48,6 +64,9 @@ Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
 |![11](./../doc/images/icons/OpenWeatherPluginAnimated/preview/11.gif)|![13](./../doc/images/icons/OpenWeatherPluginAnimated/preview/13.gif)|![50](./../doc/images/icons/OpenWeatherPluginAnimated/preview/50.gif)||
 
 Find them here: [./images/icons/OpenWeatherPluginAnimated/](./images/icons/OpenWeatherPluginAnimated/)
+
+Notes:
+* Only 8x8 icons available.
 
 Designed by [ddijanic](https://github.com/ddijanic)
 
