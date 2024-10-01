@@ -109,7 +109,7 @@ bool LzwDecoder::decode(const ReadFromInStream& readFromInStreamFunc, const Writ
             {
                 clear();
             }
-            /* Continuoue decompression. */
+            /* Continue decompression. */
             else if (false == decompress(code, writeToOutStreamFunc))
             {
                 isSuccessful = false;

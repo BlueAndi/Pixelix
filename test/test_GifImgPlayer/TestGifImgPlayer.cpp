@@ -199,13 +199,13 @@ static void testGifImgPlayerAnimated()
     FS              fileSystem;
     
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif"));
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-    usleep(200000);
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-    usleep(200000);
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-    usleep(200000);
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+
+    while(false == gifImgPlayer.isTrailerFound())
+    {
+        TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+        usleep(200000);
+    }
+
     gifImgPlayer.close();
 }
 
@@ -267,12 +267,12 @@ static void testGifImgPlayerMemAnimated()
     FS              fileSystem;
     
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif", true));
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-    usleep(200000);
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-    usleep(200000);
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-    usleep(200000);
-    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+
+    while(false == gifImgPlayer.isTrailerFound())
+    {
+        TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+        usleep(200000);
+    }
+
     gifImgPlayer.close();
 }

@@ -57,11 +57,19 @@
 #if GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE
 
 /** Debug log macro. */
-#define GIF_IMG_PLAYER_LOG_DEBUG(...)   printf(__VA_ARGS__)
+#define GIF_IMG_PLAYER_LOG_DEBUG(...)       printf(__VA_ARGS__)
+
+/** Reset the frame counter to zero. */
+#define GIF_IMG_PLAYER_RESET_FRAME_COUNT()  do{ gFrameCnt = 0u; }while(0)
+
+/** Increase the frame counter by one. */
+#define GIF_IMG_PLAYER_INC_FRAME_COUNT()    do{ ++gFrameCnt; }while(0)
 
 #else /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
 
 #define GIF_IMG_PLAYER_LOG_DEBUG(...)
+#define GIF_IMG_PLAYER_RESET_FRAME_COUNT()
+#define GIF_IMG_PLAYER_INC_FRAME_COUNT()
 
 #endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
 
@@ -201,9 +209,18 @@ typedef struct _ApplicationExtension
  * Prototypes
  *****************************************************************************/
 
+#if GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE
+static const char* getDisposalMethodAsString(uint8_t disposalMethod);
+#endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+#if GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE
+/** Frame counter (counts the image descriptor) */
+static uint32_t gFrameCnt = 0U;
+#endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
 
 /******************************************************************************
  * Public Methods
@@ -295,6 +312,8 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, bool toMem)
             else
             {
                 /* Reset */
+                m_disposalMethod        = DISPOSAL_METHOD_NO_ACTION;
+                m_isTrailerFound        = false;
                 m_loopCount             = 0U;
                 m_delay                 = 0U;
                 m_isTransparencyEnabled = false;
@@ -348,6 +367,9 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
 {
     bool isSuccessful = true;
 
+    /* Reset trailer status. */
+    m_isTrailerFound = false;
+
     /* No GIF image opened? */
     if ((nullptr == m_gifLoader) ||
         (false == (*m_gifLoader)))
@@ -373,7 +395,7 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
         BlockId blockId         = BLOCK_ID_EXTENSION;
 
         /* Walk through all blocks in the GIF image. */
-        while((BLOCK_ID_TRAILER != blockId) && (false == isImageShown) && (true == isSuccessful))
+        while((BLOCK_ID_TRAILER != blockId) && (false == isImageShown) && (true == isSuccessful) && (false == m_isTrailerFound))
         {
             /* Read block id. */
             if (false == m_gifLoader->read(&blockId, sizeof(blockId)))
@@ -407,6 +429,13 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
             else if (BLOCK_ID_TRAILER == blockId)
             {
                 GIF_IMG_PLAYER_LOG_DEBUG("Trailer\n");
+                GIF_IMG_PLAYER_RESET_FRAME_COUNT();
+
+                /* Notify about the trailer. */
+                m_isTrailerFound = true;
+
+                /* Redraw last scene. */
+                gfx.drawBitmap(x, y, m_bitmap);
 
                 /* Animation running? */
                 if (true == m_isAnimation)
@@ -438,7 +467,7 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
                         }
                         else
                         {
-                            /* Force to continuoue until a scene is shown. */
+                            /* Force to continue until a scene is shown. */
                             blockId = BLOCK_ID_EXTENSION;
                         }
                     }
@@ -626,7 +655,8 @@ bool GifImgPlayer::parseImageDescriptor()
     }
     else
     {
-        GIF_IMG_PLAYER_LOG_DEBUG("Image descriptor\n");
+        GIF_IMG_PLAYER_INC_FRAME_COUNT();
+        GIF_IMG_PLAYER_LOG_DEBUG("Image descriptor (%u)\n", gFrameCnt);
         GIF_IMG_PLAYER_LOG_DEBUG("\tImage left  : %u\n", imageDescriptor.imageLeft);
         GIF_IMG_PLAYER_LOG_DEBUG("\tImage top   : %u\n", imageDescriptor.imageTop);
         GIF_IMG_PLAYER_LOG_DEBUG("\tImage width : %u\n", imageDescriptor.imageWidth);
@@ -677,6 +707,9 @@ bool GifImgPlayer::parseImageDescriptor()
                 ;
             }
         }
+
+        /* Apply disposal method after the canvas is set for the related area. */
+        applyDisposalMethod();
 
         /* Process image data */
         if (true == isSuccessful)
@@ -739,6 +772,48 @@ bool GifImgPlayer::parseImageDescriptor()
     return isSuccessful;
 }
 
+void GifImgPlayer::applyDisposalMethod()
+{
+    switch(m_disposalMethod)
+    {
+    case DISPOSAL_METHOD_NO_ACTION:
+        /* The decoder is not required to take any action. */
+        break;
+    
+    case DISPOSAL_METHOD_NO_DISPOSE:
+        /* Leave the image in place and draw the next image on top of it. */
+        break;
+    
+    case DISPOSAL_METHOD_RESTORE_TO_BACKGROUND:
+        /* The area used by the graphic must be restored to the background color. */
+
+        /* If no global color table is available, treat the background as transparent. */
+        if (nullptr == m_globalColorTable)
+        {
+            /* Transparency not supported, therefore use black color. */
+            m_canvas.fillScreen(ColorDef::BLACK);
+        }
+        /* If global color table is available, but transparency flag is enabled, treat the background as transparent. */
+        else if (true == m_isTransparencyEnabled)
+        {
+            /* Transparency not supported, therefore use black color. */
+            m_canvas.fillScreen(ColorDef::BLACK);
+        }
+        else
+        {
+            PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
+            Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
+
+            m_canvas.fillScreen(bgColor);
+        }
+        break;
+    
+    default:
+        /* Not defined by GIF specification. */
+        break;
+    }
+}
+
 bool GifImgPlayer::parseGraphicControlExentsion()
 {
     bool                    isSuccessful    = true;
@@ -772,7 +847,7 @@ bool GifImgPlayer::parseGraphicControlExentsion()
         GIF_IMG_PLAYER_LOG_DEBUG("\tPacked field\n");
         GIF_IMG_PLAYER_LOG_DEBUG("\t\tTransparent color flag: %u\n", gce.packedField.transparentColorFlag);
         GIF_IMG_PLAYER_LOG_DEBUG("\t\tUser input flag       : %u\n", gce.packedField.userInputFlag);
-        GIF_IMG_PLAYER_LOG_DEBUG("\t\tDisposal method       : %u\n", gce.packedField.disposalMethod);
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tDisposal method       : %u - %s\n", gce.packedField.disposalMethod, getDisposalMethodAsString(gce.packedField.disposalMethod));
         GIF_IMG_PLAYER_LOG_DEBUG("\tDelay time             : %u * 1/100 s\n", gce.delayTime);
         GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color index: %u\n", gce.transparentColorIndex);
 
@@ -807,45 +882,8 @@ bool GifImgPlayer::parseGraphicControlExentsion()
             m_isTransparencyEnabled = true;
         }
 
-        /* Leave the image in place and draw the next image on top of it? */
-        if (1U == gce.packedField.disposalMethod)
-        {
-            /* Nothing to do. */
-            ;
-        }
-        /* The canvas should be restored to the background color?*/
-        else if (2U == gce.packedField.disposalMethod)
-        {
-            /* If no global color table is available, treat the background as transparent. */
-            if (nullptr == m_globalColorTable)
-            {
-                /* Transparency not supported, therefore use black color. */
-                m_bitmap.fillScreen(ColorDef::BLACK);
-            }
-            /* If global color table is available, but transparency flag is enabled, treat the background as transparent. */
-            else if (true == m_isTransparencyEnabled)
-            {
-                /* Transparency not supported, therefore use black color. */
-                m_bitmap.fillScreen(ColorDef::BLACK);
-            }
-            else
-            {
-                PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
-                Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
-
-                m_bitmap.fillScreen(bgColor);
-            }
-        }
-        /* The decoder should restore the canvas to its previous state before the current image was drawn. */
-        else if (3U == gce.packedField.disposalMethod)
-        {
-            /* Not supported. */
-            ;
-        }
-        else
-        {
-            /* No disposal method is applied. */
-        }
+        /* The disposal method will be applied during next image descriptor handling. */
+        m_disposalMethod = static_cast<DisposalMethod>(gce.packedField.disposalMethod);
     }
 
     return isSuccessful;
@@ -1090,3 +1128,43 @@ bool GifImgPlayer::writeToIndexStream(uint8_t data)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+#if GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE
+
+/**
+ * Get user friendly description of the disposal method.
+ * 
+ * @param[in] disposalMethod    The disposal method.
+ * 
+ * @return Description as string
+ */
+static const char* getDisposalMethodAsString(uint8_t disposalMethod)
+{
+    const char* disposalMethodStr = "To be defined.";
+
+    switch(disposalMethod)
+    {
+    case 0U:
+        disposalMethodStr = "No disposal specified.";
+        break;
+    
+    case 1U:
+        disposalMethodStr = "Do not dispose. Leave graphic in place.";
+        break;
+
+    case 2U:
+        disposalMethodStr = "Restore to background color.";
+        break;
+
+    case 3U:
+        disposalMethodStr = "Restore to previous.";
+        break;
+
+    default:
+        break;
+    }
+
+    return disposalMethodStr;
+}
+
+#endif  /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */

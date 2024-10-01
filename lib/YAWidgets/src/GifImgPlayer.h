@@ -84,6 +84,7 @@ public:
         m_globalColorTableLength(0U),
         m_localColorTable(nullptr),
         m_localColorTableLength(0U),
+        m_disposalMethod(DISPOSAL_METHOD_NO_ACTION),
         m_imageDataBlock(nullptr),
         m_imageDataBlockLength(0U),
         m_imageDataBlockIdx(0U),
@@ -91,6 +92,7 @@ public:
         m_posY(0),
         m_isTransparencyEnabled(false),
         m_transparentColorIndex(0U),
+        m_isTrailerFound(false),
         m_restartFilePos(0U),
         m_loopCount(0U),
         m_delay(0U),
@@ -154,6 +156,19 @@ public:
     bool play(YAGfx& gfx, int16_t x = 0, int16_t y = 0);
 
     /**
+     * Is one complete frame loop cycle done?
+     * If the trailer is found in the GIF data stream, it means its the end.
+     * Animations will automatically start again, depended on the loop counter value,
+     * which is part of the GIF stream.
+     * 
+     * @return If one complete frame loop cycle is done, it will return true otherwise false.
+     */
+    bool isTrailerFound() const
+    {
+        return m_isTrailerFound;
+    }
+
+    /**
      * Get image width.
      * Note, the GIF must be opened, otherwise it will return 0.
      * 
@@ -193,6 +208,18 @@ private:
 
     } __attribute__ ((packed)) PaletteColor;
 
+    /**
+     * The disposal method indicates the way in which the graphic is to
+     * be treated after being displayed.
+     */
+    enum DisposalMethod
+    {
+        DISPOSAL_METHOD_NO_ACTION = 0,          /**< No disposal specified. The decoder is not required to take any action. */
+        DISPOSAL_METHOD_NO_DISPOSE,             /**< Do not dispose. The graphic is to be left in place. */
+        DISPOSAL_METHOD_RESTORE_TO_BACKGROUND,  /**< Restore to background color. The area used by the graphic must be restored to the background color. */
+        DISPOSAL_METHOD_RESTORE_TO_PREVIOUS     /**< Restore to previous. The decoder is required to restore the area overwritten by the graphic with what was there prior to rendering the graphic. */
+    };
+
     YAGfxDynamicBitmap  m_bitmap;                   /**< The bitmap contains the last drawn scene. */
     IGifLoader*         m_gifLoader;                /**< GIF file loader used to read the file. */
     YAGfxCanvas         m_canvas;                   /**< Canvas used for drawing each scene. Its position and size follows the image descriptor. */
@@ -201,6 +228,7 @@ private:
     size_t              m_globalColorTableLength;   /**< Number of palette colors in the global color table. */
     PaletteColor*       m_localColorTable;          /**< Local color table. */
     size_t              m_localColorTableLength;    /**< Number of palette colors in the local color table. */
+    DisposalMethod      m_disposalMethod;           /**< Disposal method of the last graphic control extension block.  */
     uint8_t*            m_imageDataBlock;           /**< Image data block buffer. See IMAGE_DATA_BLOCK_SIZE for fixed size in byte. */
     size_t              m_imageDataBlockLength;     /**< Image data block length in bytes (fill level). */
     size_t              m_imageDataBlockIdx;        /**< Read index to the image data block. */
@@ -208,6 +236,7 @@ private:
     int16_t             m_posY;                     /**< Current y-coordinate in the canvas, used inside the LZW decoder callback. */
     bool                m_isTransparencyEnabled;    /**< Is transparency enabled or not? */
     uint8_t             m_transparentColorIndex;    /**< Index of the transparent color. */
+    bool                m_isTrailerFound;           /**< Is the trailer found? */
     
     /* Only animation relevant variables. */
     size_t          m_restartFilePos;           /**< File position used to restart the animation. */
@@ -253,6 +282,11 @@ private:
      * @return If successful, it will return true otherwise false.
      */
     bool parseImageDescriptor();
+
+    /**
+     * Apply the disposal method.
+     */
+    void applyDisposalMethod();
 
     /**
      * Parse graphic control extension.
