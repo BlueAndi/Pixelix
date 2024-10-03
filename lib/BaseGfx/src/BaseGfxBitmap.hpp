@@ -353,8 +353,8 @@ public:
                 (0U < bitmap.m_width) &&
                 (0U < bitmap.m_height))
             {
-                if ((nullptr == m_pixels) ||
-                    (m_width != bitmap.m_width) ||
+                /* If image sizes are different, release the pixel buffer. */
+                if ((m_width != bitmap.m_width) ||
                     (m_height != bitmap.m_height))
                 {
                     releasePixels(m_pixels);
@@ -362,11 +362,22 @@ public:
                     m_height    = 0U;
                 }
 
-                m_pixels = allocatePixels(bitmap.m_width, bitmap.m_height);
+                /* If pixel buffer is released, allocate with the appropriate size. */
+                if (nullptr == m_pixels)
+                {
+                    m_pixels = allocatePixels(bitmap.m_width, bitmap.m_height);
 
+                    if (nullptr != m_pixels)
+                    {
+                        m_width     = bitmap.m_width;
+                        m_height    = bitmap.m_height;
+                    }
+                }
+
+                /* If pixel buffer is available, copy the values from the source bitmap. */
                 if (nullptr != m_pixels)
                 {
-                    const size_t    PIXEL_BUFFER_SIZE   = bitmap.m_width * bitmap.m_height;
+                    const size_t    PIXEL_BUFFER_SIZE   = m_width * m_height;
                     size_t          idx                 = 0U;
 
                     while(PIXEL_BUFFER_SIZE > idx)
@@ -375,9 +386,6 @@ public:
 
                         ++idx;
                     }
-
-                    m_width     = bitmap.m_width;
-                    m_height    = bitmap.m_height;
                 }
             }
         }
