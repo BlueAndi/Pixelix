@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include <unity.h>
-#include <unistd.h>
 #include <GifImgPlayer.h>
 #include <Util.h>
 #include <FS.h>
@@ -203,7 +202,6 @@ static void testGifImgPlayerAnimated()
     while(false == gifImgPlayer.isTrailerFound())
     {
         TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-        usleep(200000);
     }
 
     gifImgPlayer.close();
@@ -271,7 +269,6 @@ static void testGifImgPlayerMemAnimated()
     while(false == gifImgPlayer.isTrailerFound())
     {
         TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
-        usleep(200000);
     }
 
     gifImgPlayer.close();
