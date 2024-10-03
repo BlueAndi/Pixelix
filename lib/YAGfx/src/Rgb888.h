@@ -166,6 +166,30 @@ public:
     }
 
     /**
+     * Compare color for equality.
+     * 
+     * @param[in] other Other color to compare with.
+     * 
+     * @return If both colors are equal, it will return true otherwise false.
+     */
+    bool operator==(const Rgb888& other)
+    {
+        return (m_red == other.m_red) && (m_green == other.m_green) && (m_blue == other.m_blue) && (m_intensity == other.m_intensity);
+    }
+
+    /**
+     * Compare color for non-equality.
+     * 
+     * @param[in] other Other color to compare with.
+     * 
+     * @return If both colors are not equal, it will return true otherwise false.
+     */
+    bool operator!=(const Rgb888& other)
+    {
+        return (m_red != other.m_red) || (m_green != other.m_green) || (m_blue != other.m_blue) || (m_intensity != other.m_intensity);
+    }
+
+    /**
      * Convert to RGB24 uint32_t value.
      */
     operator uint32_t() const
