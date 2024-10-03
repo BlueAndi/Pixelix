@@ -294,10 +294,10 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, bool toMem)
             GIF_IMG_PLAYER_LOG_DEBUG("\tCanvas width           : %u\n", logicalScreenDescriptor.canvasWidth);
             GIF_IMG_PLAYER_LOG_DEBUG("\tCanvas height          : %u\n", logicalScreenDescriptor.canvasHeight);
             GIF_IMG_PLAYER_LOG_DEBUG("\tPacked field\n");
-            GIF_IMG_PLAYER_LOG_DEBUG("\t\tGlocal color table size exponent: %u\n", logicalScreenDescriptor.packedField.globalColorTableSizeExp);
+            GIF_IMG_PLAYER_LOG_DEBUG("\t\tGlobal color table size exponent: %u\n", logicalScreenDescriptor.packedField.globalColorTableSizeExp);
             GIF_IMG_PLAYER_LOG_DEBUG("\t\tSort flag                       : %u\n", logicalScreenDescriptor.packedField.sortFlag);
             GIF_IMG_PLAYER_LOG_DEBUG("\t\tColor resolution                : %u\n", logicalScreenDescriptor.packedField.colorResolution);
-            GIF_IMG_PLAYER_LOG_DEBUG("\t\tGlocal color table flag         : %u\n", logicalScreenDescriptor.packedField.globalColorTableFlag);
+            GIF_IMG_PLAYER_LOG_DEBUG("\t\tGlobal color table flag         : %u\n", logicalScreenDescriptor.packedField.globalColorTableFlag);
             GIF_IMG_PLAYER_LOG_DEBUG("\tBackground color index : %u\n", logicalScreenDescriptor.bgColorIndex);
             GIF_IMG_PLAYER_LOG_DEBUG("\tPixel aspect ratio     : %u\n", logicalScreenDescriptor.pixelAspectRatio);
             GIF_IMG_PLAYER_LOG_DEBUG("\tGlobal color table size: %u colors\n", calcColorTableSize(logicalScreenDescriptor.packedField.globalColorTableSizeExp) / 3U);
@@ -776,29 +776,27 @@ void GifImgPlayer::applyDisposalMethod()
 {
     switch(m_disposalMethod)
     {
+    /* GIF 89a specification: No disposal specified. The decoder is not required to take any action. */
     case DISPOSAL_METHOD_NO_ACTION:
-        /* The decoder is not required to take any action. */
         break;
     
+    /* GIF 89a specification: Do not dispose. The graphic is to be left in place. */
     case DISPOSAL_METHOD_NO_DISPOSE:
-        /* Leave the image in place and draw the next image on top of it. */
         break;
     
+    /* GIF 89a specification: Restore to background color. The area used by the graphic must be restored to the background color. */
     case DISPOSAL_METHOD_RESTORE_TO_BACKGROUND:
-        /* The area used by the graphic must be restored to the background color. */
-
-        /* If no global color table is available, treat the background as transparent. */
+        /* If no global color table is available, the background color index is invalid and the background will be treated as transparent. */
         if (nullptr == m_globalColorTable)
         {
-            /* Transparency not supported, therefore use black color. */
             m_canvas.fillScreen(ColorDef::BLACK);
         }
-        /* If global color table is available, but transparency flag is enabled, treat the background as transparent. */
+        /* If global color table is available, but transparency flag is enabled, treat the background color index as transparent color index. */
         else if (true == m_isTransparencyEnabled)
         {
-            /* Transparency not supported, therefore use black color. */
             m_canvas.fillScreen(ColorDef::BLACK);
         }
+        /* Restore to background color. Only valid because global color table is available. */
         else
         {
             PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
@@ -808,8 +806,26 @@ void GifImgPlayer::applyDisposalMethod()
         }
         break;
     
+    /* GIF 89a specification: Restore to previous. The decoder is required to restore the area overwritten by the graphic with what was there prior to rendering the graphic. */
+    case DISPOSAL_METHOD_RESTORE_TO_PREVIOUS:
+        {
+            PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
+            Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
+
+            /* GIF 89a specification:
+             * The mode Restore To Previous is intended to be used in small sections of the graphic; the use of this mode imposes
+             * severe demands on the decoder to store the section of the graphic that needs to be saved. For this reason, this mode should be used
+             * sparingly.  This mode is not intended to save an entire graphic or large areas of a graphic; when this is the case, the encoder should
+             * make every attempt to make the sections of the graphic to be restored be separate graphics in the data stream. In the case where
+             * a decoder is not capable of saving an area of a graphic marked as Restore To Previous, it is recommended that a decoder restore to
+             * the background color.
+             */
+            m_canvas.fillScreen(bgColor);
+        }
+        break;
+
     default:
-        /* Not defined by GIF specification. */
+        /* Not defined by GIF 89a specification. */
         break;
     }
 }
@@ -870,7 +886,7 @@ bool GifImgPlayer::parseGraphicControlExentsion()
             }
         }
 
-        m_delay                 = gce.delayTime * 10U;
+        m_delay                 = gce.delayTime * 10U; /* 0.1 ms --> ms */
         m_transparentColorIndex = gce.transparentColorIndex;
 
         if (0U == gce.packedField.transparentColorFlag)
@@ -1094,13 +1110,18 @@ bool GifImgPlayer::writeToIndexStream(uint8_t data)
     PaletteColor*   colorTable          = (nullptr != m_localColorTable) ? m_localColorTable : m_globalColorTable;
     size_t          colorTableLength    = (nullptr != m_localColorTable) ? m_localColorTableLength : m_globalColorTableLength;
 
+    /* Color table must be available and
+     * the color index must be part of it.
+     */
     if ((nullptr != colorTable) &&
         (colorTableLength > data))
     {
+        /* If transparency is not enabled or
+         * it is enabled and the color index is not transparent,
+         * the pixel will be drawn.
+         */
         if ((false == m_isTransparencyEnabled) ||
-            (   (true == m_isTransparencyEnabled) &&
-                (m_transparentColorIndex != data)
-            ))
+            ((true == m_isTransparencyEnabled) && (m_transparentColorIndex != data)))
         {
             PaletteColor*   paletteColor = &colorTable[data];
             Color           color(paletteColor->red, paletteColor->green, paletteColor->blue);
