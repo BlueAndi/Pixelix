@@ -45,7 +45,7 @@
 #include <YAGfx.h>
 #include <Fonts.h>
 #include <WString.h>
-#include <limits.h>
+#include <limits>
 
 /******************************************************************************
  * Macros
