@@ -68,9 +68,6 @@ using YAGfxStaticBitmap = BaseGfxStaticBitmap<Color, width, height>;
 /** GFX dynamic bitmap with concrete color. */
 using YAGfxDynamicBitmap = BaseGfxDynamicBitmap<Color>;
 
-/** GFX overlay bitmap with concrete color. */
-using YAGfxOverlayBitmap = BaseGfxOverlayBitmap<Color>;
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
