@@ -102,11 +102,6 @@ public:
 private:
 
     /**
-     * The PWM channel which to use for the tone generation.
-     */
-    static const uint8_t    TONE_PWM_CHANNEL            = 0U;
-
-    /**
      * Frequency in Hz used to initialize the PWM. Has no influence on a tone.
      * Its just required for initialization.
      */

@@ -10,7 +10,7 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "https://github.com/BlueAndi/AsyncTCPSock"
+        "name": "https://github.com/BlueAndi/AsyncTCPSock#feature/Arduino3.x.x"
     }, {
         "name": "Os"
     }, {

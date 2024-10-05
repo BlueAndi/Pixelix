@@ -301,7 +301,7 @@ bool AudioDrv::initI2S()
         .use_apll               = false,                        /* Higher accuracy with APLL is not necessary. */
         .tx_desc_auto_clear     = false,                        /* In underflow condition, the tx descriptor shall not be cleared automatically. */
         .fixed_mclk             = 0,                            /* No fixed MCLK output. */
-        .mclk_multiple          = I2S_MCLK_MULTIPLE_DEFAULT,
+        .mclk_multiple          = I2S_MCLK_MULTIPLE_256,
         .bits_per_chan          = I2S_BITS_PER_CHAN_DEFAULT
     };
     i2s_pin_config_t    pinConfig   =

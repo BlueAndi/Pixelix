@@ -65,8 +65,8 @@ void BuzzerDrv::stop()
     {
         if (true == m_isInit)
         {
-            (void)ledcWriteTone(TONE_PWM_CHANNEL, 0U); /* Off */
-            ledcDetachPin(Board::buzzerOut.getPinNo());
+            (void)ledcWriteTone(Board::buzzerOut.getPinNo(), 0U); /* Off */
+            ledcDetach(Board::buzzerOut.getPinNo());
 
             m_isInit = false;
         }
@@ -79,14 +79,13 @@ void BuzzerDrv::play(uint32_t freq)
     {
         if (false == m_isInit)
         {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(Board::buzzerOut.getPinNo(), TONE_PWM_CHANNEL);
+            (void)ledcAttach(Board::buzzerOut.getPinNo(), INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
 
             m_isInit = true;
         }
 
-        (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle); /* Change duty cycle immediately. */
+        (void)ledcWriteTone(Board::buzzerOut.getPinNo(), freq); /* Note, it will set duty cycle 50%. */
+        ledcWrite(Board::buzzerOut.getPinNo(), m_dutyCycle); /* Change duty cycle immediately. */
     }
 }
 
@@ -98,14 +97,13 @@ void BuzzerDrv::play(uint32_t freq, uint8_t dc)
 
         if (false == m_isInit)
         {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(Board::buzzerOut.getPinNo(), TONE_PWM_CHANNEL);
+            (void)ledcAttach(Board::buzzerOut.getPinNo(), INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
 
             m_isInit = true;
         }
 
-        (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle); /* Change duty cycle immediately. */
+        (void)ledcWriteTone(Board::buzzerOut.getPinNo(), freq); /* Note, it will set duty cycle 50%. */
+        ledcWrite(Board::buzzerOut.getPinNo(), m_dutyCycle); /* Change duty cycle immediately. */
     }
 }
 
@@ -117,13 +115,12 @@ void BuzzerDrv::changeDutyCycle(uint8_t dc)
 
         if (false == m_isInit)
         {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(Board::buzzerOut.getPinNo(), TONE_PWM_CHANNEL);
+            (void)ledcAttach(Board::buzzerOut.getPinNo(), INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
 
             m_isInit = true;
         }
 
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);
+        ledcWrite(Board::buzzerOut.getPinNo(), m_dutyCycle);
     }
 }
 

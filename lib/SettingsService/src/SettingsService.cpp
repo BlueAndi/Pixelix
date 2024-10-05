@@ -377,33 +377,49 @@ void SettingsService::cleanUp()
     /* Clean up is only necessary, if settings version is different. */
     if (VERSION != storedVersion)
     {
-        nvs_iterator_t it = nvs_entry_find(NVS_DEFAULT_PART_NAME, PREF_NAMESPACE, NVS_TYPE_ANY);
-
-        while (nullptr != it)
+        nvs_iterator_t  it;
+        esp_err_t       err = nvs_entry_find(NVS_DEFAULT_PART_NAME, PREF_NAMESPACE, NVS_TYPE_ANY, &it);
+        
+        if (ESP_ERR_NVS_NOT_FOUND == err)
         {
-            nvs_entry_info_t info;
-
-            nvs_entry_info(it, &info);
-            it = nvs_entry_next(it);
-
-            /* Obsolete setting?
-             * m_version key must be handled separate, because its not part of the settings list.
-             */
-            if ((0 != strcmp(m_version.getKey(), info.key)) &&
-                (nullptr == getSettingByKey(info.key)))
+            /* It seems to be the initial setup and there are no settings yet. */
+        }
+        else if (ESP_OK != err)
+        {
+            LOG_WARNING("Settings cleanup failed: %d", err);
+        }
+        else
+        {
+            while (ESP_OK == err)
             {
-                LOG_WARNING("Obsolete key %s removed from settings.", info.key);
+                nvs_entry_info_t info;
 
-                if (false == m_preferences.remove(info.key))
+                err = nvs_entry_info(it, &info);
+
+                if (ESP_OK == err)
                 {
-                    LOG_ERROR("Failed to remove key %s removed from settings.", info.key);
+                    /* Obsolete setting?
+                     * m_version key must be handled separate, because its not part of the settings list.
+                     */
+                    if ((0 != strcmp(m_version.getKey(), info.key)) &&
+                        (nullptr == getSettingByKey(info.key)))
+                    {
+                        LOG_WARNING("Obsolete key %s removed from settings.", info.key);
+
+                        if (false == m_preferences.remove(info.key))
+                        {
+                            LOG_ERROR("Failed to remove key %s removed from settings.", info.key);
+                        }
+                    }
+                    else
+                    {
+                        LOG_INFO("Settings key %s is valid.", info.key);
+                    }
+
+                    err = nvs_entry_next(&it);
                 }
-            }
-            else
-            {
-                LOG_INFO("SettingsService key %s is valid.", info.key);
-            }
-        };
+            };
+        }
 
         /* Update version */
         m_version.setValue(VERSION);
