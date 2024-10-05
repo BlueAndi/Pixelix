@@ -39,6 +39,7 @@
 #include "DisplayMgr.h"
 #include "RestApi.h"
 #include "PluginList.h"
+#include "WiFiUtil.h"
 
 #include <WiFi.h>
 #include <Esp.h>
@@ -52,6 +53,7 @@
 #include <HttpStatus.h>
 
 #include <mbedtls/version.h>
+#include <freertos/task.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -137,6 +139,7 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FLASH_CHIP_MODE",      tmpl::getFlashChipMode,
     "FLASH_CHIP_SIZE",      []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); },
     "FLASH_CHIP_SPEED",     []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); },
+    "FREERTOS_VERSION",     []() -> String { return tskKERNEL_VERSION_NUMBER; },
     "FS_SIZE",              []() -> String { return String(FILESYSTEM.totalBytes()); },
     "FS_SIZE_USED",         []() -> String { return String(FILESYSTEM.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
@@ -658,18 +661,12 @@ namespace tmpl
      */
     static String getEspChipId()
     {
-        String          result;
-        uint64_t        chipId              = ESP.getEfuseMac();
-        uint32_t        highPart            = (chipId >> 32U) & 0x0000ffffU;
-        uint32_t        lowPart             = (chipId >>  0U) & 0xffffffffU;
-        const size_t    CHIP_ID_STR_SIZE    = 13U;
-        char            chipIdStr[CHIP_ID_STR_SIZE];
+        String chipId;
 
-        (void)snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
+        /* Chip id is the same as the factory programmed wifi MAC address. */
+        WiFiUtil::getChipId(chipId);
 
-        result = chipIdStr;
-
-        return result;
+        return chipId;
     }
 
     /**

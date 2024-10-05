@@ -125,7 +125,7 @@ void InitState::entry(StateMachine& sm)
     showStartupInfoOnSerial();
 
     /* To avoid name clashes, add a unqiue id to some of the default values. */
-    WiFiUtil::addDeviceUniqueId(uniqueId);
+    getDeviceUniqueId(uniqueId);
     settings.getWifiApSSID().setUniqueId(uniqueId);
     settings.getHostname().setUniqueId(uniqueId);
 
@@ -490,6 +490,10 @@ void InitState::exit(StateMachine& sm)
 
 void InitState::showStartupInfoOnSerial()
 {
+    String macAddr;
+
+    WiFiUtil::getEFuseMAC(macAddr);
+
     LOG_INFO("PIXELIX starts up ...");
     LOG_INFO("Target: %s", Version::TARGET);
     LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
@@ -498,7 +502,7 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
     LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
     delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("Wifi MAC: %s", WiFi.macAddress().c_str());
+    LOG_INFO("Wifi efuse MAC: %s", macAddr.c_str());
     LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
     delay(20U); /* To avoid missing log messages on the console */
 }
@@ -611,6 +615,17 @@ bool InitState::mountFilesystem()
     }
 
     return isSuccessful;
+}
+
+void InitState::getDeviceUniqueId(String& deviceUniqueId)
+{
+    /* Use the last 4 bytes of the factory programmed wifi MAC address to generate a unique id. */
+    String chipId;
+
+    WiFiUtil::getChipId(chipId);
+
+    deviceUniqueId += "-";
+    deviceUniqueId += chipId.substring(4U);
 }
 
 /******************************************************************************

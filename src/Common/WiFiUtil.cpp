@@ -101,17 +101,34 @@ extern uint8_t WiFiUtil::getSignalQuality(int8_t rssi)
     return signalQuality;
 }
 
-extern void WiFiUtil::addDeviceUniqueId(String& dst)
+extern void WiFiUtil::getEFuseMAC(String& macAddr)
 {
-    /* Use the last 4 bytes of the wifi MAC address to generate a unique id. */
-    String uniqueId = WiFi.macAddress();
+    uint64_t    efuseMAC        = ESP.getEfuseMac();
+    uint8_t     byte1           = (efuseMAC >> 40U) & 0xffU;
+    uint8_t     byte2           = (efuseMAC >> 32U) & 0xffU;
+    uint8_t     byte3           = (efuseMAC >> 24U) & 0xffU;
+    uint8_t     byte4           = (efuseMAC >> 16U) & 0xffU;
+    uint8_t     byte5           = (efuseMAC >>  8U) & 0xffU;
+    uint8_t     byte6           = (efuseMAC >>  0U) & 0xffU;
+    size_t      BUFFER_SIZE     = 18U;
+    char        buffer[BUFFER_SIZE];
 
-    uniqueId.replace(":", "");
-    uniqueId.toLowerCase();
-    uniqueId.remove(0U, 4U);
+    (void)snprintf(buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X", byte6, byte5, byte4, byte3, byte2, byte1);
 
-    dst += "-";
-    dst += uniqueId;
+    macAddr = buffer;
+}
+
+extern void WiFiUtil::getChipId(String& chipId)
+{
+    uint64_t    efuseMAC        = ESP.getEfuseMac();
+    int32_t     highPart        = (efuseMAC >> 8U) & 0x0000ffffU;
+    int32_t     lowPart         = (efuseMAC >> 0U) & 0xffffffffU;
+    size_t      BUFFER_SIZE     = 13U;
+    char        buffer[BUFFER_SIZE];
+
+    (void)snprintf(buffer, sizeof(buffer), "%04X%08X", highPart, lowPart);
+
+    chipId = buffer;
 }
 
 /******************************************************************************

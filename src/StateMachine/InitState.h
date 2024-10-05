@@ -179,6 +179,14 @@ private:
      * @return If successful mounted, it will return true otherwise false.
      */
     bool mountFilesystem();
+
+    /**
+     * Get device unique ID as string.
+     * The device unique ID is derived from factory programmed wifi MAC address.
+     * 
+     * @param[out] deviceUniqueId   The device unique id.
+     */
+    void getDeviceUniqueId(String& deviceUniqueId);
 };
 
 /******************************************************************************
