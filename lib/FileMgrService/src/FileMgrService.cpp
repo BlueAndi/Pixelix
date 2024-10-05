@@ -200,7 +200,11 @@ bool FileMgrService::getFileFullPathById(String& fullPath, FileId fileId)
 
     if (nullptr != entry)
     {
-        if (false == entry->fullPath.isEmpty())
+        if (true == entry->fullPath.isEmpty())
+        {
+            entry = nullptr;
+        }
+        else
         {
             fullPath = entry->fullPath;
         }
