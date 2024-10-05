@@ -53,6 +53,21 @@
 /** The number of sensor topics: temperature, humidity, illuminance and battery */
 #define SENSOR_TOPICS_COUNT (4U)
 
+/** Defines the extra configuration for the homeassistant support. */
+#define EXTRA_HOMEASSISTANT(_component, _name, _unit, _icon, _deviceClass)  \
+    "{"                                                     \
+        "\"ha\": {"                                         \
+            "\"component\": \"" _component "\","            \
+            "\"discovery\": {"                              \
+                "\"name\": \"" _name "\","                  \
+                "\"unit_of_meas\": \"" _unit "\","          \
+                "\"ic\": \"" _icon "\","                    \
+                "\"dev_cla\": \"" _deviceClass "\","        \
+                "\"val_tpl\": \"{{ value_json.value }}\""   \
+            "}"                                             \
+        "}"                                                 \
+    "}"
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -90,66 +105,22 @@ static const SensorTopic gSensorTopics[SENSOR_TOPICS_COUNT] =
 {
     {
         ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS,
-        "{"                                                     \
-            "\"ha\": {"                                         \
-                "\"component\": \"sensor\","                    \
-                "\"discovery\": {"                              \
-                    "\"name\": \"Temperature\","                \
-                    "\"unit_of_meas\": \"°C\","                 \
-                    "\"ic\": \"mdi:thermometer\","              \
-                    "\"dev_cla\": \"temperature\","             \
-                    "\"val_tpl\": \"{{ value_json.value }}\""   \
-                "}"                                             \
-            "}"                                                 \
-        "}",
+        EXTRA_HOMEASSISTANT("sensor", "Temperature", "°C", "mdi:thermometer", "temperature"),
         30000U
     },
     {
         ISensorChannel::TYPE_HUMIDITY_PERCENT,
-        "{"                                                     \
-            "\"ha\": {"                                         \
-                "\"component\": \"sensor\","                    \
-                "\"discovery\": {"                              \
-                    "\"name\": \"Humidity\","                   \
-                    "\"unit_of_meas\": \"%\","                  \
-                    "\"ic\": \"mdi:water-percent\","            \
-                    "\"dev_cla\": \"humidity\","                \
-                    "\"val_tpl\": \"{{ value_json.value }}\""   \
-                "}"                                             \
-            "}"                                                 \
-        "}",
+        EXTRA_HOMEASSISTANT("sensor", "Humidity", "%", "mdi:water-percent", "humidity"),
         30000U
     },
     {
         ISensorChannel::TYPE_ILLUMINANCE_LUX,
-        "{"                                                     \
-            "\"ha\": {"                                         \
-                "\"component\": \"sensor\","                    \
-                "\"discovery\": {"                              \
-                    "\"name\": \"Illuminance\","                \
-                    "\"unit_of_meas\": \"lx\","                 \
-                    "\"ic\": \"mdi:sun-wireless\","             \
-                    "\"dev_cla\": \"illuminance\","             \
-                    "\"val_tpl\": \"{{ value_json.value }}\""   \
-                "}"                                             \
-            "}"                                                 \
-        "}",
+        EXTRA_HOMEASSISTANT("sensor", "Illuminance", "lx", "mdi:sun-wireless", "illuminance"),
         10000U
     },
     {
         ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT,
-        "{"                                                     \
-            "\"ha\": {"                                         \
-                "\"component\": \"sensor\","                    \
-                "\"discovery\": {"                              \
-                    "\"name\": \"Battery\","                    \
-                    "\"unit_of_meas\": \"%\","                  \
-                    "\"ic\": \"mdi:battery-90\","               \
-                    "\"dev_cla\": \"battery\","                 \
-                    "\"val_tpl\": \"{{ value_json.value }}\""   \
-                "}"                                             \
-            "}"                                                 \
-        "}",
+        EXTRA_HOMEASSISTANT("sensor", "Battery", "%", "mdi:battery-90", "battery"),
         10000U
     }
 };
