@@ -51,6 +51,10 @@
 #include "ThreeButtonCtrl.hpp"
 #include <UpdateMgr.h>
 
+#if (configCHECK_FOR_STACK_OVERFLOW > 0)
+#include "freertos/task.h"
+#endif /* (configCHECK_FOR_STACK_OVERFLOW > 0) */
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -225,3 +229,23 @@ void loop()
 /******************************************************************************
  * Local functions
  *****************************************************************************/
+
+#if (configCHECK_FOR_STACK_OVERFLOW > 0)
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    /* Inform via serial and avoid the logging feature, because it may never show up. */
+    Serial.write("Task stack overflow detected: ");
+    Serial.write(pcTaskName);
+    Serial.write("\n");
+    Serial.flush();
+
+    /* Trigger watchdog reset. */
+    while(1)
+    {
+        /* Waiting for watchdog reset. */
+        ;
+    }
+}
+
+#endif /* (configCHECK_FOR_STACK_OVERFLOW > 0) */
