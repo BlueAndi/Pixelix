@@ -56,8 +56,10 @@
 
 /**
  * The OpenWeather source for One-Call API
- * v2.5 see https://openweathermap.org/api/one-call-api
  * v3.0 see https://openweathermap.org/api/one-call-3
+ * 
+ * Note: The One Call API 2.5 has been deprecated on June 2024.
+ *       https://openweathermap.org/api/one-call-api
  */
 class OpenWeatherOneCallForecast : public IOpenWeatherForecast
 {
@@ -66,7 +68,7 @@ public:
     /**
      * Constructs the OpenWeather source.
      * 
-     * @param[in] oneCallApiVersion Version of the One-Call API to use. Supported: "2.5" and "3.0"
+     * @param[in] oneCallApiVersion Version of the One-Call API to use. Supported: "3.0"
      */
     OpenWeatherOneCallForecast(const String& oneCallApiVersion) :
         IOpenWeatherForecast(),
