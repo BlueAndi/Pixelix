@@ -300,36 +300,43 @@
                         dialog.show("Restore", "<p>Please wait, restore is in progress.</p>").then(function() {
                             return zip.loadAsync(file);
                         }).then(function(zipObj) {
-                            var files = Object.keys(zipObj.files);
-                            var promiseChain = Promise.resolve();
-
-                            files.forEach(function(filename) {
-                                var fileType = "text";
-                                var mimeType = "text/plain";
-
-                                if (true === filename.endsWith(".json")) {
-                                    fileType = "text";
-                                    mimeType = "text/plain";
-                                } else if (true === filename.endsWith(".bmp")) {
-
-                                    if (JSZip.support.blob) {
-                                        fileType = "blob";
-                                        mimeType = "application/octet-stream";
-                                    } else if (JSZip.support.uint8array) {
-                                        fileType = "uint8array";
-                                        mimeType = "application/octet-stream";
+                            return new Promise(function(resolve, reject) {
+                                var files = Object.keys(zipObj.files);
+                                var progressPerFile = (90 - progress) / files.length;
+                                var promiseChain = Promise.resolve();
+    
+                                files.forEach(function(filename) {
+                                    var fileType = "text";
+                                    var mimeType = "text/plain";
+    
+                                    if (true === filename.endsWith(".json")) {
+                                        fileType = "text";
+                                        mimeType = "text/plain";
+                                    } else if ((true === filename.endsWith(".bmp")) ||
+                                               (true === filename.endsWith(".gif"))) {
+    
+                                        if (JSZip.support.blob) {
+                                            fileType = "blob";
+                                            mimeType = "application/octet-stream";
+                                        } else if (JSZip.support.uint8array) {
+                                            fileType = "uint8array";
+                                            mimeType = "application/octet-stream";
+                                        }
                                     }
-                                }
+    
+                                    promiseChain = promiseChain.then(zipObj.file(filename).async(fileType)).then(function(data) {
 
-                                progress += 2;
-                                updateProgressBar("progressBarRestore", progress);
-
-                                zipObj.file(filename).async(fileType).then(function(data) {
-                                    promiseChain = promiseChain.then(restClient.writeFile("/configuration/" + filename, data, mimeType));
+                                        progress += progressPerFile;
+                                        updateProgressBar("progressBarRestore", progress);
+    
+                                        return restClient.writeFile("/configuration/" + filename, data, mimeType);
+                                    });
+                                });
+                                
+                                return promiseChain.then(function() {
+                                    resolve();
                                 });
                             });
-
-                            return promiseChain;
                         }).then(function() {
                             progress = 90;
                             updateProgressBar("progressBarRestore", progress);
