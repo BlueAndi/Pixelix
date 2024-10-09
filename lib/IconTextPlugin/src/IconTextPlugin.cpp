@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_TEXT = "/text";
+const char* IconTextPlugin::TOPIC_TEXT = "/iconText";
 
 /******************************************************************************
  * Public Methods

@@ -50,15 +50,15 @@
                 <p>If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.</p>
                 <h2>REST API</h2>
                 <h3>Get text</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/iconText</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/iconText</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3>Set text</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;&amp;iconFileId=&lt;ICON-FILE-ID&gt;&amp;storeFlag=&lt;STORE-FLAG&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;&amp;iconFileId=&lt;ICON-FILE-ID&gt;&amp;storeFlag=&lt;STORE-FLAG&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/iconText?text=&lt;TEXT&gt;&amp;iconFileId=&lt;ICON-FILE-ID&gt;&amp;storeFlag=&lt;STORE-FLAG&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/iconText?text=&lt;TEXT&gt;&amp;iconFileId=&lt;ICON-FILE-ID&gt;&amp;storeFlag=&lt;STORE-FLAG&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -203,7 +203,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/iconText",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var justTextInput = document.getElementById(justTextId);
@@ -229,7 +229,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/iconText",
                     isJsonResponse: true,
                     parameter: {
                         text: justText,
