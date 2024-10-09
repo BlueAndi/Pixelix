@@ -123,22 +123,104 @@ public:
     virtual void drawPixel(int16_t x, int16_t y, const TColor& color) = 0;
 
     /**
-     * Copy framebuffer content.
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    virtual TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) = 0;
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    virtual const TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const = 0;
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    virtual TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) = 0;
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    virtual const TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const = 0;
+
+    /**
+     * Copy from source, starting at upper left corner (0, 0).
+     * 
+     * If the source size is lower or equal than the destination, the
+     * source will be copied complete.
+     * 
+     * If the source size is greater than the destination, the source
+     * will be copied partly.
      *
-     * @param[in] gfx   Graphics interface of framebuffer source
+     * @param[in] gfx   Graphics interface of source
      */
     void copy(const BaseGfx<TColor>& gfx)
     {
-        uint16_t    canvasWidth     = getWidth();
-        uint16_t    canvasHeight    = getHeight();
-        int16_t     x;
-        int16_t     y;
+        uint16_t    minWidth    = std::min(getWidth(), gfx.getWidth());
+        uint16_t    minHeight   = std::min(getHeight(), gfx.getHeight());
 
-        for(y = 0; y < canvasHeight; ++y)
+        /* For better performance choose larger side for the internal
+         * copy operation.
+         */
+        if (minWidth >= minHeight)
         {
-            for(x = 0; x < canvasWidth; ++x)
+            int16_t y;
+
+            for(y = 0; y < minHeight; ++y)
             {
-                drawPixel(x, y, gfx.getColor(x, y));
+                internalCopyX(0, y, minWidth, gfx, 0, y);
+            }
+        }
+        else
+        {
+            int16_t x;
+
+            for(x = 0; x < minWidth; ++x)
+            {
+                internalCopyY(x, 0, minHeight, gfx, x, 0);
             }
         }
     }
@@ -154,13 +236,24 @@ public:
      */
     void drawVLine(int16_t x, int16_t y, uint16_t height, const TColor& color)
     {
-        uint16_t idx;
+        adaptCoordAndLength(y, height, getHeight());
 
-        height = std::min(height, getHeight());
-
-        for(idx = 0U; idx < height; ++idx)
+        /* Anything to draw? */
+        if (0U < height)
         {
-            drawPixel(x, y + idx, color);
+            uint16_t    dstOffset   = 0U;
+            TColor*     dstAddress  = getFrameBufferYAddr(x, y, height, dstOffset);
+
+            if (nullptr != dstAddress)
+            {
+                uint16_t idx = 0U;
+
+                while(height > idx)
+                {
+                    dstAddress[idx * dstOffset] = color;
+                    ++idx;
+                }
+            }
         }
     }
 
@@ -175,13 +268,24 @@ public:
      */
     void drawHLine(int16_t x, int16_t y, uint16_t width, const TColor& color)
     {
-        uint16_t idx;
+        adaptCoordAndLength(x, width, getWidth());
 
-        width = std::min(width, getWidth());
-
-        for(idx = 0U; idx < width; ++idx)
+        /* Anything to draw? */
+        if (0U < width)
         {
-            drawPixel(x + idx, y, color);
+            uint16_t    dstOffset   = 0U;
+            TColor*     dstAddress  = getFrameBufferXAddr(x, y, width, dstOffset);
+
+            if (nullptr != dstAddress)
+            {
+                uint16_t idx = 0U;
+
+                while(width > idx)
+                {
+                    dstAddress[idx * dstOffset] = color;
+                    ++idx;
+                }
+            }
         }
     }
 
@@ -243,8 +347,8 @@ public:
     {
         drawHLine(x1, y1, width, color);
         drawHLine(x1, y1 + height - 1, width, color);
-        drawVLine(x1, y1 + 1, height - 2, color);
-        drawVLine(x1 + width - 1, y1 + 1, height -2, color);
+        drawVLine(x1, y1 + 1, height - 2U, color);
+        drawVLine(x1 + width - 1, y1 + 1, height - 2U, color);
     }
 
     /**
@@ -306,17 +410,33 @@ public:
      */
     void fillRect(int16_t x, int16_t y, uint16_t width, uint16_t height, const TColor& color)
     {
-        int16_t xIndex;
-        int16_t yIndex;
+        adaptCoordAndLength(x, width, getWidth());
+        adaptCoordAndLength(y, height, getHeight());
 
-        width = std::min(width, getWidth());
-        height = std::min(height, getHeight());
-
-        for(yIndex = 0; yIndex < height; ++yIndex)
+        /* Anything to draw? */
+        if ((0U < width) &&
+            (0U < height))
         {
-            for(xIndex = 0; xIndex < width; ++xIndex)
+            /* For better performance choose larger side for the draw
+             * operation.
+             */
+            if (width >= height)
             {
-                drawPixel(x + xIndex, y + yIndex, color);
+                int16_t yIndex;
+
+                for(yIndex = 0; yIndex < height; ++yIndex)
+                {
+                    drawHLine(x, y + yIndex, width, color);
+                }
+            }
+            else
+            {
+                int16_t xIndex;
+
+                for(xIndex = 0; xIndex < height; ++xIndex)
+                {
+                    drawVLine(x + xIndex, y, height, color);
+                }
             }
         }
     }
@@ -371,7 +491,13 @@ public:
     }
 
     /**
-     * Draw bitmap at specified location (upper left point).
+     * Draw bitmap at specified location by given upper left point.
+     * 
+     * If the bitmap size is lower or equal than the destination, the
+     * bitmap will be copied complete.
+     * 
+     * If the bitmap size is greater than the destination, the bitmap
+     * will be copied partly.
      *
      * @param[in] x         x-coordinate of upper left point
      * @param[in] y         y-coordinate of upper left point
@@ -379,16 +505,36 @@ public:
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap)
     {
-        uint16_t    canvasWidth     = bitmap.getWidth();
-        uint16_t    canvasHeight    = bitmap.getHeight();
-        int16_t     xIndex          = 0;
-        int16_t     yIndex          = 0;
+        uint16_t    minWidth    = std::min(bitmap.getWidth(), getWidth());
+        uint16_t    minHeight   = std::min(bitmap.getHeight(), getHeight());
 
-        for(yIndex = 0; yIndex < canvasHeight; ++yIndex)
+        adaptCoordAndLength(x, minWidth, getWidth());
+        adaptCoordAndLength(y, minHeight, getHeight());
+
+        /* Anything to draw? */
+        if ((0U < minWidth) &&
+            (0U < minHeight))
         {
-            for(xIndex = 0; xIndex < canvasWidth; ++xIndex)
+            /* For better performance choose larger side for the internal
+             * copy operation.
+             */
+            if (minWidth >= minHeight)
             {
-                drawPixel(x + xIndex, y + yIndex, bitmap.getColor(xIndex, yIndex));
+                int16_t yIndex;
+
+                for(yIndex = 0; yIndex < minHeight; ++yIndex)
+                {
+                    internalCopyX(x, y + yIndex, minWidth, bitmap, 0, yIndex);
+                }
+            }
+            else
+            {
+                int16_t xIndex;
+
+                for(xIndex = 0; xIndex < minWidth; ++xIndex)
+                {
+                    internalCopyY(x + xIndex, y, minHeight, bitmap, xIndex, 0);
+                }
             }
         }
     }
@@ -402,6 +548,117 @@ protected:
 
 private:
 
+    /**
+     * Adapts the coordinate and the length for a axis to ensure that
+     * the coordinate is inside the valid canvas border and
+     * the length, calculated from the coord on, will be inside the valid canvas too.
+     * 
+     * Example for x-axis:
+     *      Line shall be drawn from -10 with a length of 80.
+     *      The canvas width is 32.
+     *      After adaption, the x-coordinate will be 0 and the length will be 32.
+     * 
+     * @param[in,out] coord     x- or y-coordinate, depends on the choosen axis.
+     * @param[in,out] length    Width or height which is requested, starting from coord.
+     * @param[in] maxLength     Max. length of the choosen axis.
+     */
+    void adaptCoordAndLength(int16_t& coord, uint16_t& length, uint16_t maxLength)
+    {
+        /* Positive? */
+        if (0 <= coord)
+        {
+            /* Out of bounds? */
+            if (maxLength < coord)
+            {
+                length  = 0U;
+                coord   = 0;
+            }
+            else
+            {
+                maxLength -= static_cast<uint16_t>(coord);
+                length = std::min(length, maxLength);
+            }
+        }
+        /* Negative */
+        else
+        {
+            length = std::min(length, maxLength);
+
+            /* Out of bounds? */
+            if (static_cast<uint16_t>(-coord) > length)
+            {
+                length  = 0U;
+                coord   = 0;
+            }
+            else
+            {
+                length  -= static_cast<uint16_t>(-coord);
+                coord   = 0;
+            }
+        }
+    }
+
+    /**
+     * Copies pixels along the x-axis from a source at given coordinates to the
+     * destination at given coordinates.
+     * 
+     * @param[in] x         Destination x-coordinate.
+     * @param[in] y         Destination y-coordinate.
+     * @param[in] width     Number of pixels which to copy.
+     * @param[in] src       Source to copy from.
+     * @param[in] srcX      Source x-coordinate.
+     * @param[in] srcY      Source y-coordinate.
+     */
+    void internalCopyX(int16_t x, int16_t y, uint16_t width, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY)
+    {
+        uint16_t        dstOffset   = 0U;
+        uint16_t        srcOffset   = 0U;
+        TColor*         dstAddress  = getFrameBufferXAddr(x, y, width, dstOffset);
+        const TColor*   srcAddress  = src.getFrameBufferXAddr(srcX, srcY, width, srcOffset);
+
+        if ((nullptr != dstAddress) &&
+            (nullptr != srcAddress))
+        {
+            uint16_t idx = 0U;
+
+            while(width > idx)
+            {
+                dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                ++idx;
+            }
+        }
+    }
+
+    /**
+     * Copies pixels along the y-axis from a source at given coordinates to the
+     * destination at given coordinates.
+     * 
+     * @param[in] x         Destination x-coordinate.
+     * @param[in] y         Destination y-coordinate.
+     * @param[in] height    Number of pixels which to copy.
+     * @param[in] src       Source to copy from.
+     * @param[in] srcX      Source x-coordinate.
+     * @param[in] srcY      Source y-coordinate.
+     */
+    void internalCopyY(int16_t x, int16_t y, uint16_t height, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY)
+    {
+        uint16_t        dstOffset   = 0U;
+        uint16_t        srcOffset   = 0U;
+        TColor*         dstAddress  = getFrameBufferYAddr(x, y, height, dstOffset);
+        const TColor*   srcAddress  = src.getFrameBufferYAddr(srcX, srcY, height, srcOffset);
+
+        if ((nullptr != dstAddress) &&
+            (nullptr != srcAddress))
+        {
+            uint16_t idx = 0U;
+
+            while(height > idx)
+            {
+                dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                ++idx;
+            }
+        }
+    }
 };
 
 /******************************************************************************

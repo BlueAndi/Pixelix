@@ -213,6 +213,82 @@ public:
         m_bitmap.drawPixel(x, y, color);
     }
 
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
+    {
+        return m_bitmap.getFrameBufferXAddr(x, y, length, offset);
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    const Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
+    {
+        return m_bitmap.getFrameBufferXAddr(x, y, length, offset);
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
+    {
+        return m_bitmap.getFrameBufferYAddr(x, y, length, offset);
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    const Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
+    {
+        return m_bitmap.getFrameBufferYAddr(x, y, length, offset);
+    }
+
     /** Widget type string */
     static const char*      WIDGET_TYPE;
 
