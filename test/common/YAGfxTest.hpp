@@ -323,8 +323,128 @@ public:
         return;
     }
 
-    static const uint16_t   WIDTH   = 32;   /**< Drawing area width in pixel */
-    static const uint16_t   HEIGHT  = 8;    /**< Drawing area height in pixel */
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
+    {
+        Color* addr = nullptr;
+
+        if ((0 <= x) &&
+            (0 <= y) &&
+            (WIDTH >= (x + length)) &&
+            (HEIGHT > y))
+        {
+            addr    = &m_buffer[x + y * WIDTH];
+            offset  = 1U;
+        }
+
+        return addr;
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    const Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
+    {
+        const Color* addr = nullptr;
+
+        if ((0 <= x) &&
+            (0 <= y) &&
+            (WIDTH >= (x + length)) &&
+            (HEIGHT > y))
+        {
+            addr    = &m_buffer[x + y * WIDTH];
+            offset  = 1U;
+        }
+
+        return addr;
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
+    {
+        Color* addr = nullptr;
+
+        if ((0 <= x) &&
+            (0 <= y) &&
+            (WIDTH > x) &&
+            (HEIGHT >= (y + length)))
+        {
+            addr    = &m_buffer[x + y * WIDTH];
+            offset  = WIDTH;
+        }
+
+        return addr;
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    const Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
+    {
+        const Color* addr = nullptr;
+
+        if ((0 <= x) &&
+            (0 <= y) &&
+            (WIDTH > x) &&
+            (HEIGHT >= (y + length)))
+        {
+            addr    = &m_buffer[x + y * WIDTH];
+            offset  = WIDTH;
+        }
+
+        return addr;
+    }
+
+    static const uint16_t   WIDTH   = 32U;  /**< Drawing area width in pixel */
+    static const uint16_t   HEIGHT  = 8U;   /**< Drawing area height in pixel */
 
 private:
 

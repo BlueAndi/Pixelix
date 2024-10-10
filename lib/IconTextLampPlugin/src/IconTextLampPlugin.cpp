@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT      = "/text";
+const char* IconTextLampPlugin::TOPIC_TEXT      = "/iconText";
 
 /* Initialize plugin topic. */
 const char* IconTextLampPlugin::TOPIC_LAMPS     = "/lamps";

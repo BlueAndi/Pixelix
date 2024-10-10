@@ -309,6 +309,126 @@ public:
         }
     }
 
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
+    {
+        TColor* addr = nullptr;
+
+        if ((nullptr != m_parentGfx) &&
+            (m_width >= (x + length)))
+        {
+            int16_t absX = x + m_offsX;
+            int16_t absY = y + m_offsY;
+
+            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+        }
+
+        return addr;
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the x-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on x-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    const TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
+    {
+        const TColor* addr = nullptr;
+
+        if ((nullptr != m_parentGfx) &&
+            (m_width >= (x + length)))
+        {
+            int16_t absX = x + m_offsX;
+            int16_t absY = y + m_offsY;
+
+            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+        }
+
+        return addr;
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
+    {
+        TColor* addr = nullptr;
+
+        if ((nullptr != m_parentGfx) &&
+            (m_height >= (y + length)))
+        {
+            int16_t absX = x + m_offsX;
+            int16_t absY = y + m_offsY;
+
+            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+        }
+
+        return addr;
+    }
+
+    /**
+     * Get the address inside the framebuffer at certain coordinates.
+     * If the requested length is not available, it will return nullptr.
+     * 
+     * To address pixel by pixel on the y-axis, the returned offset shall be considered.
+     * Otherwise its not guaranteed to address out of bounds!
+     * 
+     * @param[in] x         x-coordinate
+     * @param[in] y         y-coordinate
+     * @param[in] length    Requested number of colors on y-axis.
+     * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
+     * 
+     * @return Address in the framebuffer or nullptr.
+     */
+    const TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
+    {
+        const TColor* addr = nullptr;
+
+        if ((nullptr != m_parentGfx) &&
+            (m_height >= (y + length)))
+        {
+            int16_t absX = x + m_offsX;
+            int16_t absY = y + m_offsY;
+
+            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+        }
+
+        return addr;
+    }
+
 private:
 
     BaseGfx<TColor>*    m_parentGfx;    /**< The parent graphic operations. */

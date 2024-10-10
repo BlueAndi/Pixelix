@@ -364,10 +364,6 @@ void OpenWeatherPlugin::createOpenWeatherCurrentSource(OpenWeatherSource id)
         m_sourceCurrent = new(std::nothrow) OpenWeatherCurrent();
         break;
 
-    case OPENWEATHER_SOURCE_ONE_CALL_25:
-        m_sourceCurrent = new(std::nothrow) OpenWeatherOneCallCurrent("2.5");
-        break;
-
     case OPENWEATHER_SOURCE_ONE_CALL_30:
         m_sourceCurrent = new(std::nothrow) OpenWeatherOneCallCurrent("3.0");
         break;
@@ -385,10 +381,6 @@ void OpenWeatherPlugin::createOpenWeatherForecastSource(OpenWeatherSource id)
     {
     case OPENWEATHER_SOURCE_CURRENT_FORECAST:
         m_sourceForecast = new(std::nothrow) OpenWeatherForecast();
-        break;
-
-    case OPENWEATHER_SOURCE_ONE_CALL_25:
-        m_sourceForecast = new(std::nothrow) OpenWeatherOneCallForecast("2.5");
         break;
 
     case OPENWEATHER_SOURCE_ONE_CALL_30:

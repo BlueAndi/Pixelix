@@ -75,7 +75,6 @@ public:
     enum OpenWeatherSource
     {
         OPENWEATHER_SOURCE_CURRENT_FORECAST = 0,    /**< Current/Forecast weather data */
-        OPENWEATHER_SOURCE_ONE_CALL_25,             /**< OpenWeather One-Call API v2.5 */
         OPENWEATHER_SOURCE_ONE_CALL_30,             /**< OpenWeather One-Call API v3.0 */
     };
 
@@ -88,7 +87,7 @@ public:
     OpenWeatherPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
         m_view(),
-        m_sourceId(OPENWEATHER_SOURCE_ONE_CALL_25),
+        m_sourceId(OPENWEATHER_SOURCE_ONE_CALL_30),
         m_updatePeriod(UPDATE_PERIOD),
         m_sourceCurrent(nullptr),
         m_sourceForecast(nullptr),
