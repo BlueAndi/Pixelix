@@ -104,7 +104,14 @@ public:
             {
                 Color& color = m_ledMatrix.getColor(x, y);
 
+#if CONFIG_DISPLAY_ROTATE180 != 0
+                m_panel.drawPixelRGB888(
+                    Board::LedMatrix::width - x - 1, 
+                    Board::LedMatrix::height - y - 1,
+                    color.getRed(), color.getGreen(), color.getBlue());
+#else
                 m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
+#endif
             }
         }
     }
