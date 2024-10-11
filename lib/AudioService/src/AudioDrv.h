@@ -40,7 +40,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <driver/i2s.h>
+#include <driver/i2s_std.h>
 #include <Mutex.hpp>
 
 /******************************************************************************
@@ -196,16 +196,6 @@ private:
     static const UBaseType_t            TASK_PRIORITY           = 1U;
 
     /**
-     * The I2S port, which to use for the audio input.
-     */
-    static const i2s_port_t             I2S_PORT                = I2S_NUM_0;
-
-    /**
-     * I2S event queue size in number of events.
-     */
-    static const size_t                 I2S_EVENT_QUEUE_SIZE    = 4U;
-
-    /**
      * I2S bits per sample.
      * If you change this, consider to change the sample datatypes at the
      * place where i2s_read() is used.
@@ -214,24 +204,24 @@ private:
      * 32 clock cycles. This means we have to configure here a 32 bit
      * sample and shift it down after its received.
      */
-    static const i2s_bits_per_sample_t  I2S_BITS_PER_SAMPLE     = I2S_BITS_PER_SAMPLE_32BIT;
+    static const i2s_data_bit_width_t   I2S_BITS_PER_SAMPLE     = I2S_DATA_BIT_WIDTH_32BIT;
 
     /**
      * The INMP441 microphone provides 24-bit sample with MSB first by
      * 32 clock cycles. This means we have to configure here a 32 bit
      * sample and shift it down after its received.
      */
-    static const uint32_t               I2S_SAMPLE_SHIFT        = 8U;
+    static const int32_t                I2S_SAMPLE_SHIFT        = 8;
 
     /**
      * I2S DMA block size in bytes.
      */
-    static const int32_t                DMA_BLOCK_SIZE          = 256;
+    static const uint32_t               DMA_BLOCK_SIZE          = 256U;
 
     /**
      * I2S DMA number of blocks.
      */
-    static const int32_t                DMA_BLOCKS              = 4;
+    static const uint32_t               DMA_BLOCKS              = 4U;
 
     /**
      * Calculated number of samples per DMA block.
@@ -248,15 +238,17 @@ private:
      */
     static const uint32_t               MAX_OBSERVERS           = 3U;
 
-    mutable Mutex       m_mutex;                    /**< Mutex used for concurrent access protection. */
-    TaskHandle_t        m_taskHandle;               /**< Task handle */
-    bool                m_taskExit;                 /**< Flag to signal the task to exit. */
-    SemaphoreHandle_t   m_xSemaphore;               /**< Binary semaphore used to signal the task exit. */
-    QueueHandle_t       m_i2sEventQueueHandle;      /**< The I2S event queue handle, used for rx done notification. Note, the queue is created by I2S driver. */
-    bool                m_isMicAvailable;           /**< Is a microphone as input device available? */
-    int32_t             m_sampleBuffer[SAMPLES];    /**< Sample buffer */
-    uint16_t            m_sampleWriteIndex;         /**< The current sample write index to the input buffer. */
-    IAudioObserver*     m_observers[MAX_OBSERVERS]; /**< A list of registered audio observers. */
+    mutable Mutex       m_mutex;                            /**< Mutex used for concurrent access protection. */
+    TaskHandle_t        m_taskHandle;                       /**< Task handle */
+    bool                m_taskExit;                         /**< Flag to signal the task to exit. */
+    SemaphoreHandle_t   m_xSemaphore;                       /**< Binary semaphore used to signal the task exit. */
+    bool                m_isMicAvailable;                   /**< Is a microphone as input device available? */
+    i2s_chan_handle_t   m_i2sRxChannelHandle;               /**< I2S RX channel handle. */
+    uint8_t             m_dmaBlockBuffer[DMA_BLOCK_SIZE];   /**< DMA block buffer, used to increase performance. */
+    size_t              m_dmaBlockBufferWriteIndex;         /**< Current DMA block buffer write index. */
+    int32_t             m_sampleBuffer[SAMPLES];            /**< Sample buffer */
+    uint16_t            m_sampleWriteIndex;                 /**< The current sample write index to the input buffer. */
+    IAudioObserver*     m_observers[MAX_OBSERVERS];         /**< A list of registered audio observers. */
 
     /**
      * Constructs the audio driver instance.
@@ -266,8 +258,10 @@ private:
         m_taskHandle(nullptr),
         m_taskExit(false),
         m_xSemaphore(nullptr),
-        m_i2sEventQueueHandle(nullptr),
         m_isMicAvailable(false),
+        m_i2sRxChannelHandle(nullptr),
+        m_dmaBlockBuffer(),
+        m_dmaBlockBufferWriteIndex(0U),
         m_sampleBuffer(),
         m_sampleWriteIndex(0U),
         m_observers()

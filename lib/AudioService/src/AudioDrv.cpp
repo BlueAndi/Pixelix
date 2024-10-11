@@ -45,23 +45,6 @@
  * Macros
  *****************************************************************************/
 
-#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 4)
-
-/**
- * Only the left channel is supported.
- * Workaround, see https://github.com/espressif/arduino-esp32/issues/7177
- */
-#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_RIGHT 
-
-#else
-
-/**
- * Only the left channel is supported.
- */
-#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_LEFT
-
-#endif  
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -189,7 +172,7 @@ void AudioDrv::processTask(void* parameters)
 
         if (true == tthis->initI2S())
         {
-            LOG_INFO("I2S driver installed.");
+            LOG_INFO("I2S channel allocated.");
 
             while(false == tthis->m_taskExit)
             {
@@ -198,7 +181,7 @@ void AudioDrv::processTask(void* parameters)
 
             tthis->deInitI2S();
 
-            LOG_INFO("I2S driver uninstalled.");
+            LOG_INFO("I2S channel released.");
         }
         else
         {
@@ -213,73 +196,61 @@ void AudioDrv::processTask(void* parameters)
 
 void AudioDrv::process()
 {
-    i2s_event_t i2sEvt;
+    size_t      bytesRead           = 0U;
+    uint8_t*    dmaBlockBufferAddr  = &m_dmaBlockBuffer[m_dmaBlockBufferWriteIndex];
+    size_t      dmaBlockBufferSize  = sizeof(m_dmaBlockBuffer) - m_dmaBlockBufferWriteIndex;
 
-    /* Handle all ready DMA blocks. */
-    while(pdPASS == xQueueReceive(m_i2sEventQueueHandle, &i2sEvt, DMA_BLOCK_TIMEOUT * portTICK_PERIOD_MS))
+    if (ESP_OK == i2s_channel_read(m_i2sRxChannelHandle, dmaBlockBufferAddr, dmaBlockBufferSize, &bytesRead, DMA_BLOCK_TIMEOUT))
     {
-        /* Any DMA error? */
-        if (I2S_EVENT_DMA_ERROR == i2sEvt.type)
+        m_dmaBlockBufferWriteIndex += bytesRead;
+
+        /* One DMA block read? */
+        if (sizeof(m_dmaBlockBuffer) <= m_dmaBlockBufferWriteIndex)
         {
-            LOG_WARNING("DMA error");
-        }
-        /* One DMA block finished? */
-        else if (I2S_EVENT_RX_DONE == i2sEvt.type)
-        {
-            uint16_t            sampleIdx       = 0U;
+            uint16_t            sampleIdx;
+            void*               vDmaBlockBuffer = static_cast<void*>(m_dmaBlockBuffer);
+            int32_t*            samples         = static_cast<int32_t*>(vDmaBlockBuffer);
             MutexGuard<Mutex>   guard(m_mutex);
 
-            /* Read the whole DMA block. */
             for(sampleIdx = 0U; sampleIdx < SAMPLES_PER_DMA_BLOCK; ++sampleIdx)
             {
-                int32_t sample      = 0U;   /* Attention, this datatype must correlate to the configuration, see bits per sample! */
-                size_t  bytesRead   = 0;
+                /* Down shift to get the real value. */
+                int32_t sample24bit = samples[sampleIdx] >> I2S_SAMPLE_SHIFT;
 
-                (void)i2s_read(I2S_PORT, &sample, sizeof(sample), &bytesRead, portMAX_DELAY);
+                m_sampleBuffer[m_sampleWriteIndex] = sample24bit;
+                ++m_sampleWriteIndex;
 
-                if (sizeof(sample) == bytesRead)
+                /* Check for ext. microphone */
+                if (false == m_isMicAvailable)
                 {
-                    /* Down shift to get the real value. */
-                    sample >>= I2S_SAMPLE_SHIFT;
-
-                    m_sampleBuffer[m_sampleWriteIndex] = sample;
-                    ++m_sampleWriteIndex;
-
-                    /* Check for ext. microphone */
-                    if (false == m_isMicAvailable)
+                    if (0 != sample24bit)
                     {
-                        if (0 != sample)
-                        {
-                            m_isMicAvailable = true;
-                        }
+                        m_isMicAvailable = true;
                     }
+                }
 
-                    /* All samples read? */
-                    if (SAMPLES <= m_sampleWriteIndex)
+                /* All samples read? */
+                if (SAMPLES <= m_sampleWriteIndex)
+                {
+                    uint32_t observerIndex = 0U;
+
+                    m_sampleWriteIndex = 0U;
+
+                    while(observerIndex < MAX_OBSERVERS)
                     {
-                        uint32_t observerIndex = 0U;
+                        IAudioObserver* observer = m_observers[observerIndex];
 
-                        m_sampleWriteIndex = 0U;
-
-                        while(observerIndex < MAX_OBSERVERS)
+                        if (nullptr != observer)
                         {
-                            IAudioObserver* observer = m_observers[observerIndex];
-
-                            if (nullptr != observer)
-                            {
-                                observer->notify(m_sampleBuffer, SAMPLES);
-                            }
-
-                            ++observerIndex;
+                            observer->notify(m_sampleBuffer, SAMPLES);
                         }
+
+                        ++observerIndex;
                     }
                 }
             }
-        }
-        else
-        {
-            /* Should never happen. */
-            ;
+
+            m_dmaBlockBufferWriteIndex = 0U;
         }
     }
 }
@@ -288,60 +259,74 @@ bool AudioDrv::initI2S()
 {
     bool                isSuccessful    = false;
     esp_err_t           i2sRet          = ESP_OK;
-    i2s_config_t        i2sConfig       =
+    i2s_chan_config_t   i2sChanConfig   =
     {
-        .mode                   = static_cast<i2s_mode_t>(I2S_MODE_MASTER | I2S_MODE_RX),
-        .sample_rate            = SAMPLE_RATE,
-        .bits_per_sample        = I2S_BITS_PER_SAMPLE,
-        .channel_format         = I2S_MIC_CHANNEL,              /* Is is assumed, that the I2S device supports the left audio channel only. */
-        .communication_format   = I2S_COMM_FORMAT_STAND_I2S,    /* I2S_COMM_FORMAT_I2S is necessary for Philips Standard format. */
-        .intr_alloc_flags       = ESP_INTR_FLAG_LEVEL1,
-        .dma_buf_count          = DMA_BLOCKS,
-        .dma_buf_len            = DMA_BLOCK_SIZE,
-        .use_apll               = false,                        /* Higher accuracy with APLL is not necessary. */
-        .tx_desc_auto_clear     = false,                        /* In underflow condition, the tx descriptor shall not be cleared automatically. */
-        .fixed_mclk             = 0,                            /* No fixed MCLK output. */
-        .mclk_multiple          = I2S_MCLK_MULTIPLE_256,
-        .bits_per_chan          = I2S_BITS_PER_CHAN_DEFAULT
-    };
-    i2s_pin_config_t    pinConfig   =
-    {
-        .mck_io_num     = I2S_PIN_NO_CHANGE,
-        .bck_io_num     = Board::Pin::i2sSerialClock,
-        .ws_io_num      = Board::Pin::i2sWordSelect,
-        .data_out_num   = I2S_PIN_NO_CHANGE,
-        .data_in_num    = Board::Pin::i2sSerialDataIn
+        I2S_NUM_AUTO,
+        I2S_ROLE_MASTER,
+        DMA_BLOCKS,
+        DMA_BLOCK_SIZE,
+        false /* Automatic clearing of DMA tx buffer not necessary, because only used for receiving. */
     };
 
-    i2sRet = i2s_driver_install(I2S_PORT, &i2sConfig, I2S_EVENT_QUEUE_SIZE, &m_i2sEventQueueHandle);
+    i2sRet = i2s_new_channel(&i2sChanConfig, nullptr, &m_i2sRxChannelHandle);
 
     if (ESP_OK != i2sRet)
     {
-        LOG_ERROR("Failed to install I2S driver: %d", i2sRet);
+        LOG_ERROR("Failed to allocate I2S channel: %s", esp_err_to_name(i2sRet));
     }
     else
     {
-        i2sRet = i2s_set_pin(I2S_PORT, &pinConfig);
+        i2s_std_config_t    i2sStdConfig    =
+        {
+            I2S_STD_CLK_DEFAULT_CONFIG(SAMPLE_RATE),
+            I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_BITS_PER_SAMPLE, I2S_SLOT_MODE_MONO),
+            {
+                I2S_GPIO_UNUSED,
+                static_cast<gpio_num_t>(Board::Pin::i2sSerialClock),
+                static_cast<gpio_num_t>(Board::Pin::i2sWordSelect),
+                I2S_GPIO_UNUSED,
+                static_cast<gpio_num_t>(Board::Pin::i2sSerialDataIn),
+                {
+                    0, /* Do not invert MCLK output. */
+                    0, /* Do not invert BCLK input/output. */
+                    0 /* Do not invert the WS input/output. */
+                }
+            }
+        };
+
+        /* Default is only receiving left slot in mono mode,
+         * therefore update here for using the right slot.
+         */
+        /* i2sStdConfig.slot_cfg.slot_mask = I2S_STD_SLOT_RIGHT; */
+
+        i2sRet = i2s_channel_init_std_mode(m_i2sRxChannelHandle, &i2sStdConfig);
 
         if (ESP_OK != i2sRet)
         {
-            LOG_ERROR("Failed set I2S pins: %d", i2sRet);
-
-            (void)i2s_driver_uninstall(I2S_PORT);
+            LOG_ERROR("Failed to initialize I2S channel to standard mode.: %s", esp_err_to_name(i2sRet));
+            deInitI2S();
+        }
+        else if (ESP_OK != i2s_channel_enable(m_i2sRxChannelHandle))
+        {
+            deInitI2S();
         }
         else
         {
             isSuccessful = true;
         }
     }
-
+    
     return isSuccessful;
 }
 
 void AudioDrv::deInitI2S()
 {
-    (void)i2s_driver_uninstall(I2S_PORT);
-    m_i2sEventQueueHandle = nullptr;
+    if (nullptr != m_i2sRxChannelHandle)
+    {
+        (void)i2s_channel_disable(m_i2sRxChannelHandle);
+        (void)i2s_del_channel(m_i2sRxChannelHandle);
+        m_i2sRxChannelHandle = nullptr;
+    }
 }
 
 /******************************************************************************
