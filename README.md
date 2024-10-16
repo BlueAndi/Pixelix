@@ -308,7 +308,8 @@ build_flags =
 
 | Library | Description | License |
 | - | - | - |
-| [Arduino](https://github.com/platformio/platform-espressif32) | ESP32 Arduino framework | Apache-2.0 |
+| [Arduino](https://github.com/platformio/platform-espressif32) | ESP32 Arduino framework v2.x.x | Apache-2.0 |
+| [PlatformIO](https://platformio.org) | PlatformIO is a cross-platform, cross-architecture, multiple framework, professional tool for embedded systems engineers and for software developers who write applications for embedded products. | Apache-2.0 |
 | [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) | Controlling the LED matrix with hardware support (I2S) | LGPL-3.0 |
 | [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) | Webserver | LGPL-2.1 |
 | [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock) | TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets | MIT |
