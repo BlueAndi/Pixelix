@@ -88,7 +88,7 @@ The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed f
 * [Pinning](../../config/board.ini)
 
 # Issues, Ideas And Bugs <!-- omit in toc -->
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
 # License <!-- omit in toc -->
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).

@@ -1,6 +1,6 @@
 /**
 
-@mainpage Manual of esp-rgb-led-matrix
+@mainpage Manual of Pixelix
 Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 <hr>
 

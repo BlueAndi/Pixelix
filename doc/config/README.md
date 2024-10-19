@@ -21,14 +21,14 @@
 The SW configuration management document provides a general overview about what is configured and how it is done.
 
 # Scope
-The SW configuration management document is valid for the [PIXELIX](https://github.com/BlueAndi/esp-rgb-led-matrix) project.
+The SW configuration management document is valid for the [PIXELIX](https://github.com/BlueAndi/Pixelix) project.
 
 # PlatformIO
 The SW build environment is based on [PlatformIO](https://platformio.org/). The ```platformio.ini``` is the central configuration file in the root folder and contains all related build environments (targets).
 
 ## Logical Configuration Hierarchy And Dependencies
 
-![pio-env-dependencies](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/config/uml/pio-env-dependencies.wsd)
+![pio-env-dependencies](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/config/uml/pio-env-dependencies.wsd)
 
 # Version Numbers
 The concept behind the version number follows the [semantic versioning](https://semver.org/).
@@ -59,7 +59,7 @@ The concept behind the version number follows the [semantic versioning](https://
 11. Release version on github.
 
 # Issues, Ideas And Bugs
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
