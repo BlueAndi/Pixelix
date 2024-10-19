@@ -49,7 +49,7 @@ The recommeded way how to program the software to the board depends on the skill
 # Update possibilities
 
 ## Use Espressif Flash Download Tool (Windows only)
-1. Download binaries (```esp-rgb-led-matrix-v6.0.0.zip```) from the [latest release](https://github.com/BlueAndi/esp-rgb-led-matrix/releases).
+1. Download binaries (```Pixelix-v6.0.0.zip```) from the [latest release](https://github.com/BlueAndi/Pixelix/releases).
 2. Unzip to a local folder.
 3. Download the [Espressif Flash Download Tool](https://www.espressif.com/en/support/download/other-tools).
 4. Unzip to a local folder.
@@ -150,7 +150,7 @@ Steps:
 | adafruit_feathrer_esp32_v2 | 8 | 0x670000 |
 
 # Issues, Ideas And Bugs
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).

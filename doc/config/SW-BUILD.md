@@ -16,7 +16,7 @@
 
 Open a console (windows: git bash) and get the project via
 ```
-$ git clone https://github.com/BlueAndi/esp-rgb-led-matrix
+$ git clone https://github.com/BlueAndi/Pixelix
 ```
 
 Example:
@@ -47,7 +47,7 @@ Note, the default project is esp32 DevKit v1 board, programming via USB.
 The toolchain is working and the firmware gets built. [Next step](SW-UPDATE.md) is now to build it specific for your target and upload it.
 
 # Issues, Ideas And Bugs
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
