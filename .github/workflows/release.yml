@@ -68,7 +68,7 @@ jobs:
       run: platformio run --environment ${{ matrix.environment }}
     
     - name: Deploy ${{ matrix.environment }} firmware
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.environment }}_firmware
         path: |
@@ -81,7 +81,7 @@ jobs:
       run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
     - name: Deploy ${{ matrix.environment }} filesystem image
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.environment }}_filesystem
         path: |
@@ -96,7 +96,7 @@ jobs:
     needs: [build]
     steps:
     - name: Download release artifacts
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4
       with:
         path: ${{ github.workspace }}/artifacts
 

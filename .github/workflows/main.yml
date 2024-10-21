@@ -74,7 +74,7 @@ jobs:
 
     - name: Deploy ${{ matrix.environment }}
       if: startsWith(github.ref_type, 'refs/tags/v')
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.environment }}
         path: |
@@ -210,7 +210,7 @@ jobs:
     needs: [build, check, doc]
     steps:
     - name: Deploy release artifacts
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4
       with:
         path: ${{ github.workspace }}/artifacts
 
