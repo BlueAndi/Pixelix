@@ -1,6 +1,6 @@
 {
     "method": "GET",
-    "url": "https://api.github.com/repos/BlueAndi/esp-rgb-led-matrix",
+    "url": "https://api.github.com/repos/BlueAndi/Pixelix",
     "filter": {
       "stargazers_count": true
     },

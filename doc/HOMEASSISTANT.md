@@ -39,7 +39,7 @@ You need to replace the IP `192.168.178.10` with your Pixelix instance IP.
 ## Import Blueprint
 You can use this link to add the wrapper to your Home Assistant installation.
 
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FBlueAndi%2Fesp-rgb-led-matrix%2Fblob%2Fmaster%2Fdoc%2Fhomeassistant%2Fpixelix-justtext.yaml)
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FBlueAndi%2FPixelix%2Fblob%2Fmaster%2Fdoc%2Fhomeassistant%2Fpixelix-justtext.yaml)
 
 As an alternative you can copy the yaml to  `/config/blueprints/automation/homeassistant/`.
 You can find the raw YAML file [here](./homeassistant/pixelix-justtext.yaml "here")
@@ -78,7 +78,7 @@ Pixelix will be shown as device with its entities. Every installed plugin will b
 [More technical details about MQTT](./MQTT.md)
 
 # Issues, Ideas And Bugs
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
