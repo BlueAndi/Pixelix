@@ -25,18 +25,19 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command get slots information
+ * @brief  Websocket command set slot properties
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdSlots.h"
+#include "WsCmdSlot.h"
 #include "DisplayMgr.h"
 #include "SlotList.h"
 
 #include <Util.h>
+#include <PluginMgr.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -62,7 +63,7 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
+void WsCmdSlot::execute(AsyncWebSocket* server, uint32_t clientId)
 {
     if (nullptr == server)
     {
@@ -77,35 +78,79 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String      msg;
-        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        uint8_t     stickySlot  = displayMgr.getStickySlot();
-        uint8_t     slotId;
-        uint8_t     maxSlots    = displayMgr.getMaxSlots();
+        DisplayMgr& displayMgr          = DisplayMgr::getInstance();
+        bool        isSlotConfigDirty   = false;
 
-        preparePositiveResponse(msg);
-
-        msg += displayMgr.getMaxSlots();
-
-        /* Provides for every slot:
-         * - Name of plugin.
-         * - Plugin UID.
-         * - Plugin alias name.
-         * - Information about whether the slot is locked or not.
-         * - Information about whether the slot is sticky or not.
-         * - Information about whether the slot is disabled or not.
-         * - Slot duration in ms.
-         */
-        for(slotId = 0U; slotId < maxSlots; ++slotId)
+        if (FLAG_STATUS_NA != m_stickyFlag)
         {
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
+            /* Clear sticky flag? */
+            if (FLAG_STATUS_FALSE == m_stickyFlag)
+            {
+                /* Clear it only if its set to this slot. */
+                if (m_slotId == displayMgr.getStickySlot())
+                {
+                    displayMgr.clearSticky();
+                    isSlotConfigDirty = true;
+                }
+            }
+            /* Set sticky flag. */
+            else
+            {
+                if (m_slotId != displayMgr.getStickySlot())
+                {
+                    if (false == displayMgr.setSlotSticky(m_slotId))
+                    {
+                        m_isError = true;
+                    }
+                    else
+                    {
+                        isSlotConfigDirty = true;
+                    }
+                }
+            }
+        }
+
+        /* If no error happened, continuoue with handling the slot status. */
+        if ((false == m_isError) &&
+            (FLAG_STATUS_NA != m_isDisabled))
+        {
+            if (FLAG_STATUS_FALSE == m_isDisabled)
+            {
+                displayMgr.enableSlot(m_slotId);
+                isSlotConfigDirty = true;
+            }
+            else
+            {
+                if (false == displayMgr.disableSlot(m_slotId))
+                {
+                    m_isError = true;
+                }
+                else
+                {
+                    isSlotConfigDirty = true;
+                }
+            }
+        }
+
+        if (true == m_isError)
+        {
+            sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
+        }
+        else
+        {
+            uint8_t             stickySlot  = displayMgr.getStickySlot();
+            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(m_slotId);
             const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
             uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
             String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked    = displayMgr.isSlotLocked(slotId);
-            bool                isSticky    = (stickySlot == slotId) ? true : false;
-            bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
+            bool                isLocked    = displayMgr.isSlotLocked(m_slotId);
+            bool                isSticky    = (stickySlot == m_slotId) ? true : false;
+            bool                isDisabled  = displayMgr.isSlotDisabled(m_slotId);
+            uint32_t            duration    = displayMgr.getSlotDuration(m_slotId);
 
+            preparePositiveResponse(msg);
+
+            msg += m_slotId;
             msg += DELIMITER;
             msg += "\"";
             msg += name;
@@ -124,19 +169,65 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
             msg += (false == isDisabled) ? "0" : "1";
             msg += DELIMITER;
             msg += duration;
+
+            if (true == isSlotConfigDirty)
+            {
+                /* Ensure that the changes will be available after power-up. */
+                PluginMgr::getInstance().save();
+            }
         }
 
         sendResponse(server, clientId, msg);
     }
 
-    m_isError = false;
+    m_isError   = false;
+    m_parCnt    = 0U;
 }
 
-void WsCmdSlots::setPar(const char* par)
+void WsCmdSlot::setPar(const char* par)
 {
-    UTIL_NOT_USED(par);
+    uint8_t tmp;
 
-    m_isError = true;
+    switch(m_parCnt)
+    {
+    /* Slot id*/
+    case 0U:
+        if (false == Util::strToUInt16(par, m_slotId))
+        {
+            m_isError = true;
+        }
+        break;
+
+    /* Sticky flag */
+    case 1U:
+        if (false == Util::strToUInt8(par, tmp))
+        {
+            m_isError = true;
+        }
+        else
+        {
+            m_stickyFlag = static_cast<FlagStatus>(tmp);
+        }
+        break;
+
+    /* Slot status */
+    case 2U:
+        if (false == Util::strToUInt8(par, tmp))
+        {
+            m_isError = true;
+        }
+        else
+        {
+            m_isDisabled = static_cast<FlagStatus>(tmp);
+        }
+        break;
+
+    default:
+        m_isError = true;
+        break;
+    }
+
+    ++m_parCnt;
 }
 
 /******************************************************************************

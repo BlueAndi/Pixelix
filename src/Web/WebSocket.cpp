@@ -46,6 +46,7 @@
 #include "WsCmdPlugins.h"
 #include "WsCmdReset.h"
 #include "WsCmdSlotDuration.h"
+#include "WsCmdSlot.h"
 #include "WsCmdSlots.h"
 #include "WsCmdUninstall.h"
 
@@ -75,6 +76,9 @@
 
 /** Websocket get display command */
 static WsCmdGetDisp         gWsCmdGetDisp;
+
+/** Websocket slot command */
+static WsCmdSlot            gWsCmdSlot;
 
 /** Websocket slots command */
 static WsCmdSlots           gWsCmdSlots;
@@ -123,6 +127,7 @@ static WsCmdAlias           gWsCmdAlias;
 static WsCmd*       gWsCommands[] =
 {
     &gWsCmdGetDisp,
+    &gWsCmdSlot,
     &gWsCmdSlots,
     &gWsCmdPlugins,
     &gWsCmdInstall,

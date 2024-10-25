@@ -112,7 +112,7 @@ void WsCmdUninstall::setPar(const char* par)
     {
         if (SlotList::SLOT_ID_INVALID == m_slotId)
         {
-            if (false == Util::strToUInt8(String(par), m_slotId))
+            if (false == Util::strToUInt8(par, m_slotId))
             {
                 LOG_ERROR("Conversion failed: %s", par);
                 m_isError = true;

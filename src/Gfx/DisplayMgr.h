@@ -208,7 +208,7 @@ public:
      * Set slot sticky. Only one slot can be sticky!
      * If a different slot is already sticky, the sticky flag will be moved.
      * 
-     * If slot is empty or the plugin is disabled, it will fail.
+     * If slot is empty or disabled, it will fail.
      * 
      * Use SLOT_ID_INVALID to clear the sticky flag. Recommended: clearSticky()
      * 
@@ -286,6 +286,31 @@ public:
      * @return If slot is locked, it will return true otherwise false.
      */
     bool isSlotLocked(uint8_t slotId);
+
+    /**
+     * Enale slot.
+     *
+     * @param[in] slotId    Id of slot, which shall be enabled.
+     */
+    void enableSlot(uint8_t slotId);
+
+    /**
+     * Disable slot.
+     * 
+     * A sticky slot can't be disabled.
+     *
+     * @param[in] slotId    Id of slot, which shall be disabled.
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
+    bool disableSlot(uint8_t slotId);
+
+    /**
+     * Is slot disabled?
+     *
+     * @return If slot is disabled, it will return true otherwise false.
+     */
+    bool isSlotDisabled(uint8_t slotId);
 
     /**
      * Get slot duration in ms, how long the given plugin will be shown.
@@ -458,7 +483,7 @@ private:
     DisplayMgr& operator=(const DisplayMgr& mgr);
 
     /**
-     * Schedule next slot with a installed and enabled plugin.
+     * Schedule next enbeld slot with a installed and enabled plugin.
      *
      * @param[in] slotId    Id of current slot
      *
@@ -467,7 +492,7 @@ private:
     uint8_t nextSlot(uint8_t slotId);
 
     /**
-     * Schedule previous slot with a installed and enabled plugin.
+     * Schedule previous enabled slot with a installed and enabled plugin.
      *
      * @param[in] slotId    Id of current slot
      *

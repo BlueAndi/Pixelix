@@ -212,13 +212,15 @@ void PluginMgr::save()
     JsonArray           jsonSlots           = jsonDoc.createNestedArray("slotConfiguration");
     JsonFile            jsonFile(FILESYSTEM);
     String              fullConfigFileName  = Plugin::CONFIG_PATH;
+    DisplayMgr&         displayMgr          = DisplayMgr::getInstance();
+    uint8_t             stickySlotId        = displayMgr.getStickySlot();
 
     fullConfigFileName += "/";
     fullConfigFileName += CONFIG_FILE_NAME;
 
-    for(slotId = 0; slotId < DisplayMgr::getInstance().getMaxSlots(); ++slotId)
+    for(slotId = 0; slotId < displayMgr.getMaxSlots(); ++slotId)
     {
-        IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+        IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
         JsonObject          jsonSlot    = jsonSlots.createNestedObject();
 
         if (nullptr == plugin)
@@ -227,7 +229,6 @@ void PluginMgr::save()
             jsonSlot["uid"]         = 0;
             jsonSlot["alias"]       = "";
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
-            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
         else
         {
@@ -235,8 +236,20 @@ void PluginMgr::save()
             jsonSlot["uid"]         = plugin->getUID();
             jsonSlot["alias"]       = plugin->getAlias();
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(plugin->getFontType());
-            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
+
+        jsonSlot["duration"]    = displayMgr.getSlotDuration(slotId);
+        
+        if (stickySlotId == slotId)
+        {
+            jsonSlot["isSticky"] = true;
+        }
+        else
+        {
+            jsonSlot["isSticky"] = false;
+        }
+
+        jsonSlot["isDisabled"]  = displayMgr.isSlotDisabled(slotId);
     }
 
     if (true == jsonDoc.overflowed())
@@ -270,47 +283,60 @@ void PluginMgr::createPluginConfigDirectory()
 
 void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jsonSlot)
 {
-    bool                isKeyValuePairMissing   = false;
-    JsonVariantConst    jsonName                = jsonSlot["name"];
-    JsonVariantConst    jsonUid                 = jsonSlot["uid"];
-    JsonVariantConst    jsonAlias               = jsonSlot["alias"];
-    JsonVariantConst    jsonFontType            = jsonSlot["fontType"];
-    JsonVariantConst    jsonDuration            = jsonSlot["duration"];
+    JsonVariantConst    jsonName        = jsonSlot["name"];
+    JsonVariantConst    jsonUid         = jsonSlot["uid"];
+    JsonVariantConst    jsonAlias       = jsonSlot["alias"];
+    JsonVariantConst    jsonFontType    = jsonSlot["fontType"];
+    JsonVariantConst    jsonDuration    = jsonSlot["duration"];
+    JsonVariantConst    jsonIsSticky    = jsonSlot["isSticky"];
+    JsonVariantConst    jsonIsDisabled  = jsonSlot["isDisabled"];
 
     if (false == jsonName.is<String>())
     {
-        LOG_WARNING("Slot %u: Name is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Name is missing.", slotId);
     }
-
-    if (false == jsonUid.is<uint16_t>())
+    else if (false == jsonUid.is<uint16_t>())
     {
-        LOG_WARNING("Slot %u: UID is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: UID is missing.", slotId);
     }
-
-    if (false == jsonAlias.is<String>())
+    else if (false == jsonAlias.is<String>())
     {
-        LOG_WARNING("Slot %u: Alias is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Alias is missing.", slotId);
     }
-
-    if (false == jsonFontType.is<String>())
+    else if (false == jsonFontType.is<String>())
     {
-        LOG_WARNING("Slot %u: Font type is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Font type is missing.", slotId);
     }
-
-    if (false == jsonDuration.is<uint32_t>())
+    else if (false == jsonDuration.is<uint32_t>())
     {
-        LOG_WARNING("Slot %u: Slot duration is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Slot duration is missing.", slotId);
     }
-
-    if (false == isKeyValuePairMissing)
+    else
     {
+        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
         const char* name        = jsonName.as<const char*>();
         uint32_t    duration    = jsonDuration.as<uint32_t>();
+        bool        isSticky    = false;
+        bool        isDisabled  = false;
+
+        /* Optional */
+        if (false == jsonIsSticky.is<bool>())
+        {
+            LOG_WARNING("Slot %u: Is sticky flag is missing.", slotId);
+        }
+        else
+        {
+            isSticky = jsonIsSticky.as<bool>();
+        }
+
+        if (false == jsonIsDisabled.is<bool>())
+        {
+            LOG_WARNING("Slot %u: Is disabled flag is missing.", slotId);
+        }
+        else
+        {
+            isDisabled = jsonIsDisabled.as<bool>();
+        }
 
         /* Name available? */
         if ('\0' != name[0])
@@ -355,7 +381,21 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
             }
         }
 
-        DisplayMgr::getInstance().setSlotDuration(slotId, duration);
+        displayMgr.setSlotDuration(slotId, duration);
+        
+        if (true == isSticky)
+        {
+            displayMgr.setSlotSticky(slotId);
+        }
+
+        if (false == isDisabled)
+        {
+            displayMgr.enableSlot(slotId);
+        }
+        else
+        {
+            displayMgr.disableSlot(slotId);
+        }
     }
 }
 

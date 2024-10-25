@@ -97,7 +97,7 @@ void WsCmdEffect::setPar(const char* par)
 {
     if (0U == m_parCnt)
     {
-        if (false == Util::strToUInt8(String(par), m_fadeEffect))
+        if (false == Util::strToUInt8(par, m_fadeEffect))
         {
             m_isError = true;
         }

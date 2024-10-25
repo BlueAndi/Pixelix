@@ -104,17 +104,15 @@ void WsCmdSlotDuration::setPar(const char* par)
     switch(m_parCnt)
     {
     case 0:
-        if (false == Util::strToUInt8(String(par), m_slotId))
+        if (false == Util::strToUInt8(par, m_slotId))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;
 
     case 1:
-        if (false == Util::strToUInt32(String(par), m_slotDuration))
+        if (false == Util::strToUInt32(par, m_slotDuration))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;

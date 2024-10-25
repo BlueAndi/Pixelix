@@ -101,7 +101,7 @@ void WsCmdAlias::setPar(const char* par)
     switch(m_parCnt)
     {
     case 0:
-        if (false == Util::strToUInt16(String(par), m_pluginUid))
+        if (false == Util::strToUInt16(par, m_pluginUid))
         {
             LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;

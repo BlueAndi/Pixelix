@@ -420,6 +420,8 @@
                     var $inputGroupAlias = null;
                     var $divDuration = null;
                     var $inputDuration = null;
+                    var $buttonSlotStatus = null;
+                    var $buttonStickyFlag = null;
                     var $divDuration = null;
                     var $durationUnit = null;
                     var $dragableSlot = null;
@@ -448,7 +450,7 @@
                             if (false === rsp.slots[index].isSticky) {
                                 $divSlot.attr("class", "divSlot locked");
                             } else {
-                                $divSlot.attr("class", "divSlot lockedAndsticky");
+                                $divSlot.attr("class", "divSlot lockedAndSticky");
                             }
                         }
 
@@ -470,10 +472,25 @@
                             .attr("class", "input-group-text")
                             .append("[s]");
 
+                        $buttonStickyFlag = $("<button>")
+                            .attr("class", "btn btn-dark")
+                            .attr("id", "sticky" + index)
+                            .attr("onclick", "handleStickySlot(" + index + ")")
+                            .text((false === rsp.slots[index].isSticky) ? "-" : "S");
+
+                        $buttonSlotStatus = $("<button>")
+                            .attr("class", "btn btn-dark")
+                            .attr("id", "slotStatus" + index)
+                            .attr("type", "button")
+                            .attr("onclick", "handleSlotStatus(" + index + ")")
+                            .text((false === rsp.slots[index].isDisabled) ? "✓" : "-");
+
                         $divDuration = $("<div>")
                             .attr("class", "input-group")
                             .append($inputDuration)
-                            .append($durationUnit);
+                            .append($durationUnit)
+                            .append($buttonStickyFlag)
+                            .append($buttonSlotStatus);
 
                         $header.append($divDuration);
 
@@ -589,6 +606,48 @@
                         $divSlot.append($divUninstall);
 
                     $divSlots.append($divSlot);
+                });
+            }
+
+            function handleSlotStatus(slotId) {
+                var statusStr = $("#slotStatus" + slotId).text();
+                var isDisabled = ("✓" === statusStr) ? true : false;
+
+                disableUI();
+                
+                return wsClient.setSlot({
+                    slotId: slotId,
+                    isDisabled: isDisabled
+                }).then(function(rsp) {
+                    return updateSlotInfo();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    return dialog.showError("<p>Failed.</p>");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function handleStickySlot(slotId) {
+                var stickyStr = $("#sticky" + slotId).text();
+                var sticky = ("-" === stickyStr) ? true : false;
+
+                disableUI();
+                
+                return wsClient.setSlot({
+                    slotId: slotId,
+                    sticky: sticky
+                }).then(function(rsp) {
+                    return updateSlotInfo();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    return dialog.showError("<p>Failed.</p>");
+                }).finally(function() {
+                    enableUI();
                 });
             }
 

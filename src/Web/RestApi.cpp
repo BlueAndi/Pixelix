@@ -115,6 +115,7 @@ private:
 
 static void handleButton(AsyncWebServerRequest* request);
 static void handleFadeEffect(AsyncWebServerRequest* request);
+static void getSlotInfo(JsonObject& slot, uint16_t slotId);
 static void handleSlots(AsyncWebServerRequest* request);
 static void handleSlot(AsyncWebServerRequest* request);
 static void handlePluginInstall(AsyncWebServerRequest* request);
@@ -318,6 +319,42 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
 }
 
 /**
+ * Get slot info in JSON format.
+ * 
+ * @param[out] slot     Slot information
+ * @param[in]  slotId   Slot id
+ */
+static void getSlotInfo(JsonObject& slot, uint16_t slotId)
+{
+    DisplayMgr&         displayMgr  = DisplayMgr::getInstance();
+    uint8_t             stickySlot  = displayMgr.getStickySlot();
+    IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
+    const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
+    uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
+    String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
+    bool                isLocked    = displayMgr.isSlotLocked(slotId);
+    uint32_t            duration    = displayMgr.getSlotDuration(slotId);
+    bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
+
+    slot["name"]        = name;
+    slot["uid"]         = uid;
+    slot["alias"]       = alias;
+
+    if (stickySlot != slotId)
+    {
+        slot["isSticky"] = false;
+    }
+    else
+    {
+        slot["isSticky"] = true;
+    }
+
+    slot["isLocked"]    = isLocked;
+    slot["duration"]    = duration;
+    slot["isDisabled"]  = isDisabled;
+}
+
+/**
  * Get number of slots and which plugin is installed.
  * GET \c "/api/v1/display/slots"
  *
@@ -353,29 +390,9 @@ static void handleSlots(AsyncWebServerRequest* request)
         /* Add which plugin's are installed. */
         for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
         {
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked    = displayMgr.isSlotLocked(slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
-            JsonObject          slot        = slotArray.createNestedObject();
+            JsonObject slot = slotArray.createNestedObject();
 
-            slot["name"]        = name;
-            slot["uid"]         = uid;
-            slot["alias"]       = alias;
-
-            if (stickySlot != slotId)
-            {
-                slot["isSticky"] = false;
-            }
-            else
-            {
-                slot["isSticky"] = true;
-            }
-
-            slot["isLocked"]    = isLocked;
-            slot["duration"]    = duration;
+            getSlotInfo(slot, slotId);
         }
     }
 
@@ -399,7 +416,8 @@ static void handleSlot(AsyncWebServerRequest* request)
         return;
     }
 
-    if (HTTP_POST != request->method())
+    if ((HTTP_POST != request->method()) &&
+        (HTTP_GET != request->method()))
     {
         RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
         httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
@@ -424,60 +442,23 @@ static void handleSlot(AsyncWebServerRequest* request)
                 RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
                 httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
             }
-            /* Only activate a slot? */
-            else if (false == request->hasArg("sticky"))
+            /* GET request? */
+            else if (HTTP_GET != request->method())
             {
-                if (false == DisplayMgr::getInstance().activateSlot(slotId))
-                {
-                    RestUtil::prepareRspError(jsonDoc, "Request rejected.");
-                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
-                }
-                else
-                {
-                    JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+                JsonObject dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
-                    UTIL_NOT_USED(dataObj);
-                }
+                getSlotInfo(dataObj, slotId);
             }
-            /* Consider sticky flag. */
+            /* POST request */
             else
             {
-                const String&   stickyFlagStr   = request->arg("sticky");
-                bool            stickyFlag      = false;
+                DisplayMgr& displayMgr = DisplayMgr::getInstance();
 
-                if (stickyFlagStr == "true")
+                /* Activate a slot (no arguments)? */
+                if ((false == request->hasArg("sticky")) &&
+                    (false == request->hasArg("disable")))
                 {
-                    stickyFlag = true;
-                }
-                else if (stickyFlagStr == "false")
-                {
-                    stickyFlag = false;
-                }
-                else
-                {
-                    RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
-                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
-                }
-
-                if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
-                {
-                    if (false == stickyFlag)
-                    {
-                        if (slotId != DisplayMgr::getInstance().getStickySlot())
-                        {
-                            RestUtil::prepareRspError(jsonDoc, "Slot is not sticky.");
-                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
-                        }
-                        else
-                        {
-                            JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
-
-                            DisplayMgr::getInstance().clearSticky();
-
-                            UTIL_NOT_USED(dataObj);
-                        }
-                    }
-                    else if (false == DisplayMgr::getInstance().setSlotSticky(slotId))
+                    if (false == displayMgr.activateSlot(slotId))
                     {
                         RestUtil::prepareRspError(jsonDoc, "Request rejected.");
                         httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
@@ -487,6 +468,123 @@ static void handleSlot(AsyncWebServerRequest* request)
                         JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
                         UTIL_NOT_USED(dataObj);
+                    }
+                }
+                /* Arguments are available, check them. */
+                else
+                {
+                    bool isSlotConfigDirty = false;
+
+                    /* Handle sticky flag. */
+                    if (true == request->hasArg("sticky"))
+                    {
+                        const String&   stickyFlagStr   = request->arg("sticky");
+                        bool            stickyFlag      = false;
+
+                        if (stickyFlagStr == "true")
+                        {
+                            stickyFlag = true;
+                        }
+                        else if (stickyFlagStr == "false")
+                        {
+                            stickyFlag = false;
+                        }
+                        else
+                        {
+                            RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
+                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                        }
+
+                        if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                        {
+                            /* Remove sticky flag? */
+                            if (false == stickyFlag)
+                            {
+                                if (slotId != displayMgr.getStickySlot())
+                                {
+                                    RestUtil::prepareRspError(jsonDoc, "Slot is not sticky.");
+                                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                                }
+                                else
+                                {
+                                    displayMgr.clearSticky();
+                                    isSlotConfigDirty = true;
+                                }
+                            }
+                            else if (false == displayMgr.setSlotSticky(slotId))
+                            {
+                                RestUtil::prepareRspError(jsonDoc, "Slot is empty or disabled.");
+                                httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                            }
+                            else
+                            {
+                                /* Sticky flag successful set. */
+                                isSlotConfigDirty = true;
+                            }
+                        }
+                    }
+
+                    /* Handle disable flag. */
+                    if ((HttpStatus::STATUS_CODE_OK == httpStatusCode) &&
+                        (true == request->hasArg("disable")))
+                    {
+                        const String&   disableFlagStr  = request->arg("disable");
+                        bool            disableFlag     = false;
+
+                        if (disableFlagStr == "true")
+                        {
+                            disableFlag = true;
+                        }
+                        else if (disableFlagStr == "false")
+                        {
+                            disableFlag = false;
+                        }
+                        else
+                        {
+                            RestUtil::prepareRspError(jsonDoc, "Invalid disable flag.");
+                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                        }
+
+                        if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                        {
+                            bool slotIsDisabled = displayMgr.isSlotDisabled(slotId);
+
+                            if (slotIsDisabled != disableFlag)
+                            {
+                                /* Enable slot? */
+                                if (false == disableFlag)
+                                {
+                                    displayMgr.enableSlot(slotId);
+                                    isSlotConfigDirty = true;
+                                }
+                                /* Disable slot. */
+                                else
+                                {
+                                    if (false == displayMgr.disableSlot(slotId))
+                                    {
+                                        RestUtil::prepareRspError(jsonDoc, "Slot is sticky.");
+                                        httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                                    }
+                                    else
+                                    {
+                                        isSlotConfigDirty = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                    {
+                        JsonObject dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                        getSlotInfo(dataObj, slotId);
+
+                        if (true == isSlotConfigDirty)
+                        {
+                            /* Ensure that the changes will be available after power-up. */
+                            PluginMgr::getInstance().save();
+                        }
                     }
                 }
             }

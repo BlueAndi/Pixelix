@@ -195,7 +195,7 @@ void WsCmdIperf::setPar(const char* par)
             }
             else
             {
-                bool status = Util::strToUInt32(String(par), m_cfg.interval);
+                bool status = Util::strToUInt32(par, m_cfg.interval);
 
                 if (false == status)
                 {
@@ -211,7 +211,7 @@ void WsCmdIperf::setPar(const char* par)
             }
             else
             {
-                bool status = Util::strToUInt32(String(par), m_cfg.time);
+                bool status = Util::strToUInt32(par, m_cfg.time);
 
                 if (false == status)
                 {

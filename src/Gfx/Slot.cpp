@@ -61,7 +61,8 @@
 Slot::Slot() :
     m_plugin(nullptr),
     m_duration(DURATION_DEFAULT),
-    m_isLocked(false)
+    m_isLocked(false),
+    m_isDisabled(false)
 {
 }
 
@@ -145,6 +146,21 @@ void Slot::unlock()
 bool Slot::isLocked() const
 {
     return m_isLocked;
+}
+
+void Slot::enable()
+{
+    m_isDisabled = false;
+}
+
+void Slot::disable()
+{
+    m_isDisabled = true;
+}
+
+bool Slot::isDisabled() const
+{
+    return m_isDisabled;
 }
 
 /******************************************************************************

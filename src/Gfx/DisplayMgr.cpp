@@ -358,7 +358,7 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
         if (true == m_slotList.isSlotIdValid(slotId))
         {
-            if (false == m_slotList.isSlotLocked(slotId))
+            if (false == m_slotList.isLocked(slotId))
             {
                 /* Is this plugin selected at the moment? */
                 if (m_selectedPlugin == plugin)
@@ -506,13 +506,21 @@ bool DisplayMgr::activateSlot(uint8_t slotId)
 
     if (true == m_slotList.isSlotIdValid(slotId))
     {
+        /* A disabled slot, can not be activated. */
+        if (true == m_slotList.isDisabled(slotId))
+        {
+            /* Activation not possible */
+            ;
+        }
         /* Slot already active? */
-        if (slotId == m_selectedSlotId)
+        else if (slotId == m_selectedSlotId)
         {
             m_requestedPlugin   = nullptr;
             isSuccessful        = true;
         }
-        /* No slot is sticky? */
+        /* No other slot is sticky? The slot itself can't be sticky, otherwise
+         * the check for being already active would be true.
+         */
         else if (SlotList::SLOT_ID_INVALID == m_slotList.getStickySlot())
         {
             m_requestedPlugin   = m_slotList.getPlugin(slotId);
@@ -634,9 +642,32 @@ void DisplayMgr::unlockSlot(uint8_t slotId)
 bool DisplayMgr::isSlotLocked(uint8_t slotId)
 {
     MutexGuard<MutexRecursive>  guard(m_mutexInterf);
-    bool                        isLocked = m_slotList.isSlotLocked(slotId);
+    bool                        isLocked = m_slotList.isLocked(slotId);
 
     return isLocked;
+}
+
+void DisplayMgr::enableSlot(uint8_t slotId)
+{
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+
+    m_slotList.enable(slotId);
+}
+
+bool DisplayMgr::disableSlot(uint8_t slotId)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    bool                        isSuccessful = m_slotList.disable(slotId);
+
+    return isSuccessful;
+}
+
+bool DisplayMgr::isSlotDisabled(uint8_t slotId)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    bool                        isDisabled = m_slotList.isDisabled(slotId);
+
+    return isDisabled;
 }
 
 uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
@@ -789,37 +820,37 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
     {
         slotId = 0U;
     }
-    else
-    {
-        ++slotId;
-        slotId %= m_slotList.getMaxSlots();
-    }
 
-    /* Set next slot active, precondition is a installed plugin which is enabled.  */
+    /* Set next slot active, precondition is
+     * - the slot is not disabled and
+     * - the slot is not empty and
+     * - the installed plugin is enabled.
+     */
     do
     {
-        Slot* slot = m_slotList.getSlot(slotId);
+        Slot* slot;
+        
+        ++slotId;
+        slotId %= m_slotList.getMaxSlots();
+
+        slot = m_slotList.getSlot(slotId);
 
         if (nullptr != slot)
         {
-            /* Plugin installed? */
-            if (false == slot->isEmpty())
+            /* Slot must be enabled with a installed plugin, which is enabled too. */
+            if ((false == slot->isDisabled()) &&
+                (false == slot->isEmpty()) &&
+                (true == slot->getPlugin()->isEnabled()))
             {
-                /* Plugin enabled? */
-                if (true == slot->getPlugin()->isEnabled())
-                {
-                    break;
-                }
+                break;
             }
         }
-
-        ++slotId;
-        slotId %= m_slotList.getMaxSlots();
 
         ++count;
     }
     while (m_slotList.getMaxSlots() > count);
 
+    /* Not slot found, which can be activated? */
     if (m_slotList.getMaxSlots() <= count)
     {
         slotId = SlotList::SLOT_ID_INVALID;
@@ -836,36 +867,12 @@ uint8_t DisplayMgr::previousSlot(uint8_t slotId)
     {
         slotId = 0U;
     }
-    else
-    {
-        if (0U == slotId)
-        {
-            slotId = m_slotList.getMaxSlots() - 1U;
-        }
-        else
-        {
-            --slotId;
-        }
-    }
 
     /* Set previous slot active, precondition is a installed plugin which is enabled.  */
     do
     {
-        Slot* slot = m_slotList.getSlot(slotId);
-
-        if (nullptr != slot)
-        {
-            /* Plugin installed? */
-            if (false == slot->isEmpty())
-            {
-                /* Plugin enabled? */
-                if (true == slot->getPlugin()->isEnabled())
-                {
-                    break;
-                }
-            }
-        }
-
+        Slot* slot;
+        
         if (0U == slotId)
         {
             slotId = m_slotList.getMaxSlots() - 1U;
@@ -873,12 +880,26 @@ uint8_t DisplayMgr::previousSlot(uint8_t slotId)
         else
         {
             --slotId;
+        }
+
+        slot = m_slotList.getSlot(slotId);
+
+        if (nullptr != slot)
+        {
+            /* Slot must be enabled with a installed plugin, which is enabled too. */
+            if ((false == slot->isDisabled()) &&
+                (false == slot->isEmpty()) &&
+                (true == slot->getPlugin()->isEnabled()))
+            {
+                break;
+            }
         }
 
         ++count;
     }
     while (m_slotList.getMaxSlots() > count);
 
+    /* Not slot found, which can be activated? */
     if (m_slotList.getMaxSlots() <= count)
     {
         slotId = SlotList::SLOT_ID_INVALID;
@@ -984,6 +1005,17 @@ void DisplayMgr::process()
         else
         {
             m_requestedPlugin = m_slotList.getPlugin(stickySlot);
+        }
+    }
+
+    /* Check whether active slot is disabled. */
+    if (SlotList::SLOT_ID_INVALID != m_selectedSlotId)
+    {
+        if (true == m_slotList.isDisabled(m_selectedSlotId))
+        {
+            /* Remove selected plugin, which forces to select the requested one in the next step. */
+            m_selectedPlugin->inactive();
+            m_selectedPlugin = nullptr;
         }
     }
 

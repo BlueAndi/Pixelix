@@ -109,18 +109,16 @@ void WsCmdMove::setPar(const char* par)
 {
     switch(m_parCnt)
     {
-    case 0:
-        if (false == Util::strToUInt16(String(par), m_uid))
+    case 0U:
+        if (false == Util::strToUInt16(par, m_uid))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;
 
-    case 1:
-        if (false == Util::strToUInt8(String(par), m_slotId))
+    case 1U:
+        if (false == Util::strToUInt8(par, m_slotId))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;

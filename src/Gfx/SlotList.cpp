@@ -250,7 +250,7 @@ void SlotList::unlock(uint8_t slotId)
     }
 }
 
-bool SlotList::isSlotLocked(uint8_t slotId) const
+bool SlotList::isLocked(uint8_t slotId) const
 {
     bool isLocked = false;
 
@@ -260,6 +260,46 @@ bool SlotList::isSlotLocked(uint8_t slotId) const
     }
 
     return isLocked;
+}
+
+void SlotList::enable(uint8_t slotId)
+{
+    if (true == isSlotIdValid(slotId))
+    {
+        m_slots[slotId].enable();
+    }
+}
+
+bool SlotList::disable(uint8_t slotId)
+{
+    bool isSuccessful = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        Slot& slot = m_slots[slotId];
+
+        /* A sticky slot can't be disabled. */
+        if (m_stickySlot != slotId)
+        {
+            m_slots[slotId].disable();
+
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
+
+bool SlotList::isDisabled(uint8_t slotId) const
+{
+    bool isDisabled = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        isDisabled = m_slots[slotId].isDisabled();
+    }
+
+    return isDisabled;
 }
 
 bool SlotList::isSlotEmptyAndUnlocked(uint8_t slotId)
@@ -313,38 +353,24 @@ uint8_t SlotList::getStickySlot() const
     return m_stickySlot;
 }
 
-/**
- * Set slot sticky. Only one slot can be sticky!
- * If a different slot is already sticky, the sticky flag will be moved.
- * 
- * If slot is empty or the plugin is disabled, it will fail.
- * 
- * @param[in] slotId    The id of the slot which to set sticky.
- * 
- * @return If successful it will return true otherwise false.
- */
 bool SlotList::setSlotSticky(uint8_t slotId)
 {
     bool isSuccessful = false;
 
     if (true == isSlotIdValid(slotId))
     {
-        if (false == m_slots[slotId].isEmpty())
+        /* A empty or disabled slot can't be set sticky. */
+        if ((false == m_slots[slotId].isEmpty()) &&
+            (false == m_slots[slotId].isDisabled()))
         {
-            if (true == m_slots[slotId].getPlugin()->isEnabled())
-            {
-                m_stickySlot    = slotId;
-                isSuccessful    = true;
-            }
+            m_stickySlot    = slotId;
+            isSuccessful    = true;
         }
     }
 
     return isSuccessful;
 }
 
-/**
- * Removes the sticky flag.
- */
 void SlotList::clearSticky()
 {
     m_stickySlot = SLOT_ID_INVALID;
