@@ -324,13 +324,14 @@
                                         }
                                     }
     
-                                    promiseChain = promiseChain.then(zipObj.file(filename).async(fileType)).then(function(data) {
-
-                                        progress += progressPerFile;
-                                        updateProgressBar("progressBarRestore", progress);
-    
-                                        return restClient.writeFile("/configuration/" + filename, data, mimeType);
-                                    });
+                                    promiseChain = promiseChain.then(function() {
+                                        return zipObj.file(filename).async(fileType).then(function(data) {
+                                            progress += progressPerFile;
+                                            updateProgressBar("progressBarRestore", progress);
+        
+                                            return restClient.writeFile("/configuration/" + filename, data, mimeType);
+                                        }.bind(zipObj))
+                                    }.bind(zipObj));
                                 });
                                 
                                 return promiseChain.then(function() {
