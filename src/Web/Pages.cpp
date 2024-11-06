@@ -159,7 +159,9 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "TARGET",               []() -> String { return Version::TARGET; },
     "WS_ENDPOINT",          []() -> String { return WebConfig::WEBSOCKET_PATH; },
     "WS_PORT",              []() -> String { return String(WebConfig::WEBSOCKET_PORT); },
-    "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; }
+    "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; },
+    "DISPLAY_HEIGHT",       []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); },
+    "DISPLAY_WIDTH",        []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); }
 };
 
 /******************************************************************************

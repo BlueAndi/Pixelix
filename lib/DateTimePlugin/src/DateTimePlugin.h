@@ -279,7 +279,7 @@ private:
     /**
      * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC_CONFIG;
+    static const char      TOPIC_CONFIG[];
 
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_UPDATE_PERIOD     = SIMPLE_TIMER_SECONDS(1U);
@@ -288,10 +288,13 @@ private:
     static const uint32_t   MS_TO_SEC_DIVIDER       = 1000U;
 
     /** Default time format according to strftime(). */
-    static const char*      TIME_FORMAT_DEFAULT;
+    static const char       TIME_FORMAT_DEFAULT[];
 
     /** Default date format according to strftime(). */
-    static const char*      DATE_FORMAT_DEFAULT;
+    static const char       DATE_FORMAT_DEFAULT[];
+
+    /** Color key names for the analog clock configuration. */
+    static const char*      ANALOG_CLOCK_COLOR_KEYS[IDateTimeView::ANA_CLK_COL_MAX];
 
     /**
      * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
@@ -359,7 +362,7 @@ private:
      * 
      * @return Color in HTML format
      */
-    String colorToHtml(const Color& color) const;
+    static String colorToHtml(const Color& color);
 
     /**
      * Convert color from HTML format.
@@ -368,7 +371,18 @@ private:
      * 
      * @return Color
      */
-    Color colorFromHtml(const String& htmlColor) const;
+    static Color colorFromHtml(const String& htmlColor);
+ 
+    /**
+     * Check if analog cfg is valid when present.
+     * 
+     * @param jsonCfg[in]  The json configuration, may be isNull(). 
+     * @param cfg[out]     The parsed config data if json present and valid.
+     * @return true        If no configuration or valid json values.
+     */
+    static bool checkAnalogClockConfig(
+        JsonVariantConst& jsonCfg,
+        IDateTimeView::AnalogClockConfig & cfg);
 };
 
 /******************************************************************************

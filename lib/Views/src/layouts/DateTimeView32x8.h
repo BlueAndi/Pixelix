@@ -250,6 +250,51 @@ public:
     }
 
     /**
+     * Get the view mode (analog, digital or both).
+     * 
+     * @return ViewMode 
+     */
+    ViewMode getViewMode() const override
+    {
+        return ViewMode::DIGITAL_ONLY;  /* 32X8 layout can only do digital.*/
+    }
+
+    /**
+     * Set the view mode (analog, digital or both).
+     * 
+     * @return ViewMode 
+     */
+    bool setViewMode(ViewMode mode) override
+    {
+        if (ViewMode::DIGITAL_ONLY != mode)
+        {
+            LOG_WARNING("Illegal DateTime view mode for 32X8: (%hhu)", mode);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Get the analog clock seconds display mode (none, ring, hand or both).
+     * 
+     * @return SecondsDisplayMode pointer or nullptr if unsupported. 
+     */
+    const AnalogClockConfig* getAnalogClockConfig() const override
+    {
+        return nullptr; /* 32X8 layout can only do digital.*/
+    }
+
+    /**
+     * Set the analog clock seconds display mode (none, ring, hand or both).
+     * 
+     * @return success of failure
+     */
+    bool setAnalogClockConfig(const AnalogClockConfig& cfg) override
+    {
+        return true;  /* No analog clock in 32x8 layout, ignore request. */
+    }
+
+    /**
      * @brief Update current time values in view.
      * 
      * @param[in] now current time

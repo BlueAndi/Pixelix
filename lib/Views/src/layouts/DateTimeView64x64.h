@@ -70,7 +70,18 @@ public:
      */
     DateTimeView64x64() :
         DateTimeViewGeneric(),
-        m_secondsDisplayMode(SECOND_DISP_RING),
+        m_mode(ViewMode::DIGITAL_AND_ANALOG),
+        m_analogClockCfg( 
+            { 
+                SECOND_DISP_RING,
+                {
+                    ColorDef::WHITE,
+                    ColorDef::GRAY,
+                    ColorDef::YELLOW,
+                    ColorDef::BLUE,
+                    ColorDef::YELLOW
+                } 
+            }),
         m_lastUpdateSecondVal(-1)
     {
         /* Disable fade effect in case the user required to show seconds,
@@ -101,36 +112,68 @@ public:
     void update(YAGfx& gfx) override;
 
 
+    /**
+     * Get the view mode (analog, digital or both).
+     * 
+     * @return ViewMode 
+     */
+    ViewMode getViewMode() const override
+    {
+        return m_mode;
+    }
 
+    /**
+     * Set the view mode (analog, digital or both).
+     * 
+     * @return success or failure
+     */
+    bool setViewMode(ViewMode mode) override
+    {
+        bool ret = false;
+
+        if (ViewMode::VIEW_MODE_MAX <= mode)
+        {
+            LOG_WARNING("Illegal DateTime view mode (%hhu)", mode);
+        }
+        else
+        {
+            m_mode = mode;
+            ret    = true;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get the analog clock configuration.
+     * 
+     * @return SecondsDisplayMode 
+     */
+    const AnalogClockConfig* getAnalogClockConfig() const override
+    {
+        return &m_analogClockCfg;
+    }
+
+    /**
+     * Set the analog clock configuration.
+     * 
+     * @return success of failure
+     */
+    bool setAnalogClockConfig(const AnalogClockConfig& cfg) override
+    {
+        if (SecondsDisplayMode::SECONDS_DISP_MAX <= cfg.m_secondsMode)
+        {
+            LOG_WARNING("Illegal Seconds Display mode (%hhu)", cfg.m_secondsMode);
+            return false;
+        }
+
+        m_analogClockCfg = cfg;
+        return true;
+    }
 protected:
 
-    /** Options for displaying seconds in analog clock
-     */
-    enum SecondsDisplayMode
-    {
-        SECOND_DISP_OFF = 0U,  /**< No second indicator display. */
-        SECOND_DISP_HAND = 1U, /**< Draw second clock hand. */
-        SECOND_DISP_RING = 2U, /**< Show passed seconds on minute tick ring. */
-        SECOND_DISP_BOTH = 3U, /**< Show hand and on ring. */
-    };
-
-    SecondsDisplayMode m_secondsDisplayMode; /**< How to visualize seconds in analog clock. */
-
-
-    /**
-     * Center x-coordinate of analog clock
-     */
-    static const int16_t ANALOG_CENTER_X     = 32;
-
-    /**
-     * Center y-coordinate of analog clock
-     */
-    static const int16_t ANALOG_CENTER_Y     = 31;
-
-    /**
-     * Anaolog Clock radius
-     */
-    static const int16_t ANALOG_RADIUS       = 31;
+    ViewMode           m_mode;               /**< Used View mode analog, digital or both.  */
+    AnalogClockConfig  m_analogClockCfg;     /**< The clock drawing configuration options. */
 
     /**
      * Seconds value of last display update. Used to avoid unecessary redrawing.
