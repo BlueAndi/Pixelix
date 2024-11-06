@@ -37,7 +37,6 @@
 #include "Version.h"
 #include "UpdateMgr.h"
 #include "DisplayMgr.h"
-#include "Display.h"
 #include "RestApi.h"
 #include "PluginList.h"
 #include "WiFiUtil.h"
