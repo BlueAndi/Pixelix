@@ -279,7 +279,7 @@ public:
      * 
      * @return SecondsDisplayMode pointer or nullptr if unsupported. 
      */
-    virtual const AnalogClockConfig* getAnalogClockConfig() const override
+    const AnalogClockConfig* getAnalogClockConfig() const override
     {
         return nullptr; /* 32X8 layout can only do digital.*/
     }
@@ -289,7 +289,7 @@ public:
      * 
      * @return success of failure
      */
-    virtual bool setAnalogClockConfig(const AnalogClockConfig& cfg) override
+    bool setAnalogClockConfig(const AnalogClockConfig& cfg) override
     {
         return true;  /* No analog clock in 32x8 layout, ignore request. */
     }

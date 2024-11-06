@@ -175,22 +175,6 @@ protected:
     ViewMode           m_mode;               /**< Used View mode analog, digital or both.  */
     AnalogClockConfig  m_analogClockCfg;     /**< The clock drawing configuration options. */
 
-
-    /**
-     * Center x-coordinate of analog clock
-     */
-    static const int16_t ANALOG_CENTER_X     = 32;
-
-    /**
-     * Center y-coordinate of analog clock
-     */
-    static const int16_t ANALOG_CENTER_Y     = 31;
-
-    /**
-     * Anaolog Clock radius
-     */
-    static const int16_t ANALOG_RADIUS       = 31;
-
     /**
      * Seconds value of last display update. Used to avoid unecessary redrawing.
      */

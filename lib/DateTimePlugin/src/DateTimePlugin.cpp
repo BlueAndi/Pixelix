@@ -301,7 +301,8 @@ void DateTimePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["dayOnColor"]   = colorToHtml(m_view.getDayOnColor());
     jsonCfg["dayOffColor"]  = colorToHtml(m_view.getDayOffColor());
 
-    if (nullptr != (analogClockCfg = m_view.getAnalogClockConfig()))
+    analogClockCfg          = m_view.getAnalogClockConfig();
+    if (nullptr != analogClockCfg)
     {
         /* View supports analog clock, add the additinal config elements for it.
          */
@@ -365,8 +366,9 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         LOG_WARNING("JSON day off color not found or invalid type.");
     }
     else if (false == checkAnalogClockConfig(jsonAnalogClock, analogClockConfig))
-        /* Error printed in checkAnalogClockConfig() already. */
-        ;
+    {
+        /* Error printed inside checkAnalogClockConfig() already. */
+    }
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);

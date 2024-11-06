@@ -161,8 +161,8 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "WS_ENDPOINT",          []() -> String { return WebConfig::WEBSOCKET_PATH; },
     "WS_PORT",              []() -> String { return String(WebConfig::WEBSOCKET_PORT); },
     "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; },
-    "DISPLAY_HEIGHT",       []() -> String { return String(Display::getInstance().getHeight()); },
-    "DISPLAY_WIDTH",        []() -> String { return String(Display::getInstance().getWidth()); }
+    "DISPLAY_HEIGHT",       []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); },
+    "DISPLAY_WIDTH",        []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); }
 };
 
 /******************************************************************************
