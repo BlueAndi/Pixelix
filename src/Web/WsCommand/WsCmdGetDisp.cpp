@@ -78,7 +78,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         constexpr size_t fbLength    = CONFIG_LED_MATRIX_WIDTH * CONFIG_LED_MATRIX_HEIGHT;
-         uint32_t*       framebuffer = new(std::nothrow) uint32_t[fbLength];
+        uint32_t*        framebuffer = new (std::nothrow) uint32_t[fbLength];
 
         if (nullptr == framebuffer)
         {
@@ -86,13 +86,14 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
         }
         else
         {
-            String      msg;
-            uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
+            String        msg;
+            uint8_t       slotId     = SlotList::SLOT_ID_INVALID;
 
-            uint32_t    lastColor   = 0U;          /* The color that started a repeat sequence. */
-            uint32_t    color       = 0U;          /* Actual color in read order.               */
-            size_t      index       = 1U;          /* Next value from framebuffer to used.      */
-            uint8_t     repeat      = 0U;          /* Repeat count for current color.           */
+            uint32_t      lastColor  = 0U;    /* The color that started a repeat sequence. */
+            uint32_t      color      = 0U;    /* Actual color in read order.               */
+            size_t        index      = 1U;    /* Next value from framebuffer to used.      */
+            uint8_t       repeat     = 0U;    /* Repeat count for current color.           */
+            const uint8_t REPEAT_MAX = 0xFFU; /* Maximum repeat color counter value.       */
 
             DisplayMgr::getInstance().getFBCopy(framebuffer, fbLength, &slotId);
 
@@ -104,17 +105,17 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
              * The repeat counter indicates how often the same color shall be used
              * in subsequent pixels. Use a small state machine calculate the repeat
              * counts.
-             * 
-             * Example: 
-             * A black only 32x8 framebuffer would be send as a single 0xFF000000 value. 
-             * 
+             *
+             * Example:
+             * A black only 32x8 framebuffer would be send as a single 0xFF000000 value.
+             *
              */
-            enum 
-            { 
-                STATE_GETDISP_COLLECT=0,  /* Collect sequences of same color. */
-                STATE_GETDISP_SEND,       /* Send current color sequence.     */
-                STATE_GETDISP_FINISH      /* Terminate state machine          */
-            } state = STATE_GETDISP_COLLECT;
+            enum
+            {
+                STATE_GETDISP_COLLECT = 0, /* Collect sequences of same color. */
+                STATE_GETDISP_SEND,        /* Send current color sequence.     */
+                STATE_GETDISP_FINISH       /* Terminate state machine          */
+            } state   = STATE_GETDISP_COLLECT;
 
             lastColor = framebuffer[0];
 
@@ -133,7 +134,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
                         else
                         {
                             ++repeat;
-                            if (0xFFU == repeat)
+                            if (REPEAT_MAX == repeat)
                             {
                                 /* 8-bit repeat counter maximum reached, send color sequence. */
                                 state = STATE_GETDISP_SEND;
@@ -150,7 +151,9 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
                 else /* STATE_GETDISP_SEND */
                 {
                     msg += DELIMITER;
-                    msg += Util::uint32ToHex(lastColor | (repeat << 24));
+
+                    /* Lower 24 bits is RGB, upper 8 bits repeat count. */
+                    msg += Util::uint32ToHex(lastColor | (static_cast<uint32_t>(repeat) << 24));
 
                     if (index < fbLength)
                     {
@@ -167,7 +170,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
             }
 
             delete[] framebuffer;
-            
+
             sendResponse(server, clientId, msg);
         }
     }

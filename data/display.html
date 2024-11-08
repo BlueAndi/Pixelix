@@ -175,8 +175,8 @@
                     /* If necessary, resize the canvas. */
                     var $canvas = $("#canvas");
                     var ctx = $canvas[0].getContext('2d');
-                    var width = (32 + 1) * pixelWidth + 1;
-                    var height = (8 + 1) * pixelWidth + 1;
+                    var width = (~DISPLAY_WIDTH~) * pixelWidth + (~DISPLAY_WIDTH~) + 1;
+                    var height = (~DISPLAY_HEIGHT~) * pixelWidth + (~DISPLAY_HEIGHT~) + 1;
 
                     if ((ctx.canvas.width != width) || (ctx.canvas.height != height)) {
                         ctx.canvas.width = width;
@@ -184,20 +184,21 @@
                     }
                     
 
-                    /* Handle display data */
+                    /* Handle display data <repeat>:<R>:<G>:<B> */
                     while (index < rsp.data.length) {
                         color   = rsp.data[index];
-                        repeat  = (color & 0xFF000000) >> 24;
-                        red     = (color & 0x00FF0000) >> 16;
-                        green   = (color & 0x0000FF00) >> 8;
-                        blue    = (color & 0x000000FF) >> 0;
+                        repeat  = (color & 0xFF000000) >>> 24;
+                        red     = (color & 0x00FF0000) >>> 16;
+                        green   = (color & 0x0000FF00) >>> 8;
+                        blue    = (color & 0x000000FF) >>> 0;
                         colFmt  = "rgb(" + red + ", " + green + ", " + blue + ")";
 
                         do {
-                            plot(pixel % 32 , Math.floor(pixel / 32), colFmt);
+                            plot(pixel % ~DISPLAY_WIDTH~ , Math.floor(pixel / ~DISPLAY_WIDTH~), colFmt);
                             --repeat;
                             ++pixel;
                         } while (repeat >= 0);
+                        
                         ++index;
                     }
                     
