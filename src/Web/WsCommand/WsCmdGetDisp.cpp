@@ -103,8 +103,8 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
             /* RGB data is send in a "compressed" format using a repeat counter in
              * the upper 8 bits. The send values are <rep>:<r>:<g>:<b>.
              * The repeat counter indicates how often the same color shall be used
-             * in subsequent pixels. Use a small state machine calculate the repeat
-             * counts.
+             * in subsequent pixels. Use a small state machine to calculate the
+             * repeat counter.
              *
              * Example:
              * A black only 32x8 framebuffer would be send as a single 0xFF000000 value.
