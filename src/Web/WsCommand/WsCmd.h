@@ -105,13 +105,13 @@ public:
 protected:
 
     /** Delimiter of websocket parameters */
-    static const char*    DELIMITER;
+    static const char    DELIMITER[];
 
     /** Positive response code */
-    static const char*    ACK;
+    static const char    ACK[];
 
     /** Negative response code. */
-    static const char*    NACK;
+    static const char    NACK[];
 
     /**
      * Prepare a positive response message.

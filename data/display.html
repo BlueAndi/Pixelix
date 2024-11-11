@@ -50,6 +50,9 @@
                 <h1 class="mt-5">Display</h1>
                 <p>Slot: <span id="slotId">-</span></p>
                 <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
+                <p>
+                    <button id="updateDisplayButton" class="btn btn-light" type="button" onclick="updateDisplay()" disabled>Enable auto. display update</button>
+                </p>
                 <p>Note, you can move the plugins with drag'n drop to other slots.</p>
                 <div id="divSlots">
                 </div>
@@ -62,7 +65,6 @@
                 <p>
                     <button class="btn btn-light" type="button" onclick="prevSlot()" disabled>Previous slot</button>
                     <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
-                    <button id="updateDisplayButton" class="btn btn-light" type="button" onclick="updateDisplay()" disabled>Enable auto. display update</button>
                 </p>
                 <p>Currently active fade effect: <span id="lableFadeEffect"> Linear</span></p>
                 <p><button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button></p>
@@ -117,8 +119,6 @@
         <!-- Custom javascript -->
         <script>
             var ctx                 = null;     // Canvas context
-            var pixelWidth          = 10;       // Width of a single LED in pixels
-            var pixelHeight         = 10;       // Height of a single LED in pixels
             var isDisplayUpdateOn   = false;
             var timerId             = 0;        // Timer id
             var period              = 400;      // Display refresh period in ms
@@ -128,6 +128,14 @@
             var autoBrightnessCtrl  = false;    // Is automatic brightness control enabled or disabled?
             var brightness          = 0;        // Brightness [0; 255]
             var currentFadeEffect   = 0         // Fade effect [1;3]
+            
+            const PIXEL_WIDTH       = 10;               // Width of a single LED in pixels
+            const PIXEL_HEIGTH      = 10;               // Height of a single LED in pixels
+            const DISPLAY_WIDTH     = ~DISPLAY_WIDTH~;  // Width in pixels (Updated by webserver on send)
+            const DISPLAY_HEIGHT    = ~DISPLAY_HEIGHT~; // Height in pixels (Updated by webserver on send)
+
+            const CANVAS_WIDTH      = (DISPLAY_WIDTH) * PIXEL_WIDTH + (DISPLAY_WIDTH) + 1;
+            const CANVAS_HEIGHT     = (DISPLAY_HEIGHT) * PIXEL_HEIGTH + (DISPLAY_HEIGHT) + 1;
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -157,43 +165,47 @@
                     ctx.lineWidth   = "1";
                     ctx.strokeStyle = color;
                     ctx.fillStyle   = color;
-                    ctx.fillRect(x * pixelWidth + x + 1, y * pixelHeight + y + 1, pixelWidth, pixelHeight);
+                    ctx.fillRect(x * PIXEL_WIDTH + x + 1, y * PIXEL_HEIGTH + y + 1, PIXEL_WIDTH, PIXEL_HEIGTH);
                 }
             }
 
             function getDisplayContent() {
                 wsClient.getDisplayContent().then(function(rsp) {
-                    var x       = 0;
-                    var y       = 0;
-                    var index   = 0;
-                    var color   = 0;
-
+                    let index   = 0;              // Index in input sequence.
+                    let pixelIndex = 0;           // Index as pixel offset from framebuffer start.
+                    
                     $("#slotId").text(rsp.slotId);
 
                     /* If necessary, resize the canvas. */
                     var $canvas = $("#canvas");
                     var ctx = $canvas[0].getContext('2d');
-                    var width = rsp.width * pixelWidth + rsp.width + 1;
-                    var height = rsp.height * pixelWidth + rsp.height + 1;
 
-                    if ((ctx.canvas.width != width) || (ctx.canvas.height != height)) {
-                        ctx.canvas.width = width;
-                        ctx.canvas.height = height;
-                    }
+                    if ((ctx.canvas.width != CANVAS_WIDTH) || (ctx.canvas.height != CANVAS_HEIGHT)) {
+                        ctx.canvas.width = CANVAS_WIDTH;
+                        ctx.canvas.height = CANVAS_HEIGHT;
+                    }                  
 
                     /* Handle display data */
-                    for(y = 0; y < rsp.height; ++y) {
-                        for(x = 0; x < rsp.width; ++x) {
-                            if (rsp.data.length > index) {
-                                color   = rsp.data[index];
-                                red     = (color & 0xff0000) >> 16;
-                                green   = (color & 0x00ff00) >> 8;
-                                blue    = (color & 0x0000ff) >> 0;
-                                plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
-                                ++index;
-                            }
-                        }
+                    while (index < rsp.data.length) {
+                        let color   = rsp.data[index];
+                        let repeat  = (color & 0xFF000000) >>> 24;
+                        let red     = (color & 0x00FF0000) >>> 16;
+                        let green   = (color & 0x0000FF00) >>> 8;
+                        let blue    = (color & 0x000000FF) >>> 0;
+                        let colFmt  = "rgb(" + red + ", " + green + ", " + blue + ")";
+
+                        do {
+                            let x = pixelIndex % DISPLAY_WIDTH;
+                            let y = Math.floor(pixelIndex / DISPLAY_WIDTH);
+                            
+                            plot(x, y, colFmt);
+
+                            --repeat;
+                            ++pixelIndex;
+                        } while (repeat >= 0);
+                        ++index;
                     }
+                    
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);

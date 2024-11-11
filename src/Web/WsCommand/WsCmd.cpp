@@ -55,13 +55,13 @@
  *****************************************************************************/
 
 /* Delimiter of websocket parameters */
-const char*    WsCmd::DELIMITER = ";";
+const char   WsCmd::DELIMITER[] = ";";
 
 /* Positive response code */
-const char*    WsCmd::ACK       = "ACK";
+const char    WsCmd::ACK[]       = "ACK";
 
 /* Negative response code. */
-const char*    WsCmd::NACK      = "NACK";
+const char    WsCmd::NACK[]      = "NACK";
 
 /******************************************************************************
  * Public Methods

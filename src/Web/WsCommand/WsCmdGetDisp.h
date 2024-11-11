@@ -95,6 +95,20 @@ private:
 
     bool    m_isError;  /**< Any error happened during parameter reception? */
 
+    /**
+     * RGB data calculation states.
+     * 
+     * The RGB data is send in a "compressed" format using a repeat counter.
+     * The algorithm to calculate the format is implemented as a small state
+     * machine that creates sequences of repeated colors from the frame buffer.
+     */
+    enum GetDispState
+    {
+        STATE_GETDISP_COLLECT = 0, /**< Collect sequences of same color. */
+        STATE_GETDISP_SEND,        /**< Send current color sequence.     */
+        STATE_GETDISP_FINISH       /**< Terminate state machine.         */
+    };
+
     WsCmdGetDisp(const WsCmdGetDisp& cmd);
     WsCmdGetDisp& operator=(const WsCmdGetDisp& cmd);
 };
