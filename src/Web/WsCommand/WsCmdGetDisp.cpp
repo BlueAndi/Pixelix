@@ -86,14 +86,15 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
         }
         else
         {
-            String        msg;
-            uint8_t       slotId     = SlotList::SLOT_ID_INVALID;
+            String         msg;
+            uint8_t        slotId = SlotList::SLOT_ID_INVALID;
 
-            uint32_t      lastColor  = 0U;    /* The color that started a repeat sequence. */
-            uint32_t      color      = 0U;    /* Actual color in read order.               */
-            size_t        index      = 1U;    /* Next value from framebuffer to used.      */
-            uint8_t       repeat     = 0U;    /* Repeat count for current color.           */
-            const uint8_t REPEAT_MAX = 0xFFU; /* Maximum repeat color counter value.       */
+            uint32_t       lastColor;          /* The color that started a repeat sequence.   */
+            uint32_t       color      = 0U;    /* Actual color in read order.                 */
+            size_t         index      = 1U;    /* Next value from framebuffer to used.        */
+            uint32_t       repeat     = 0U;    /* Repeat count for current color.             */
+            const uint32_t REPEAT_MAX = 0xFFU; /* Maximum repeat color counter value.         */
+            GetDispState   state      = STATE_GETDISP_COLLECT; /* Frame buffer reading state. */
 
             DisplayMgr::getInstance().getFBCopy(framebuffer, fbLength, &slotId);
 
@@ -110,13 +111,6 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
              * A black only 32x8 framebuffer would be send as a single 0xFF000000 value.
              *
              */
-            enum
-            {
-                STATE_GETDISP_COLLECT = 0, /* Collect sequences of same color. */
-                STATE_GETDISP_SEND,        /* Send current color sequence.     */
-                STATE_GETDISP_FINISH       /* Terminate state machine          */
-            } state   = STATE_GETDISP_COLLECT;
-
             lastColor = framebuffer[0];
 
             while (state != STATE_GETDISP_FINISH)
@@ -153,7 +147,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
                     msg += DELIMITER;
 
                     /* Lower 24 bits is RGB, upper 8 bits repeat count. */
-                    msg += Util::uint32ToHex(lastColor | (static_cast<uint32_t>(repeat) << 24));
+                    msg += Util::uint32ToHex(lastColor | (repeat << 24U));
 
                     if (index < fbLength)
                     {
