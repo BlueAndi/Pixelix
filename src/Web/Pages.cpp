@@ -76,21 +76,21 @@ struct TmplKeyWordFunc
     String      (*func)(void);  /**< Function to call */
 };
 
+/**
+ * Single HTML page route.
+ */
+struct HtmlPageRoute
+{
+    const char*                 page;               /**< Page in the filesystem. */
+    WebRequestMethodComposite   reqMethodComposite; /**< Request method composite */
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
 static String tmplPageProcessor(const String& var);
-
-static void aboutPage(AsyncWebServerRequest* request);
-static void debugPage(AsyncWebServerRequest* request);
-static void displayPage(AsyncWebServerRequest* request);
-static void editPage(AsyncWebServerRequest* request);
-static void iconsPage(AsyncWebServerRequest* request);
-static void indexPage(AsyncWebServerRequest* request);
-static void infoPage(AsyncWebServerRequest* request);
-static void settingsPage(AsyncWebServerRequest* request);
-static void updatePage(AsyncWebServerRequest* request);
+static void htmlPage(AsyncWebServerRequest* request);
 static void uploadPage(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 
@@ -125,7 +125,7 @@ static bool             gIsUploadError                  = false;
  * List of all used template keywords and the function how to retrieve the information.
  * The list is alphabetic sorted in ascending order.
  */
-static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
+static const TmplKeyWordFunc    gTmplKeyWordToFunc[]    =
 {
     "ARDUINO_IDF_BRANCH",   []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; },
     "BOOTLOADER_FILENAME",  []() -> String { return BOOTLOADER_FILENAME; },
@@ -162,6 +162,32 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; },
     "DISPLAY_HEIGHT",       []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); },
     "DISPLAY_WIDTH",        []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); }
+};
+
+/**
+ * Standard HTML page routes.
+ */
+static const HtmlPageRoute  gHtmlPageRoutes[]           =
+{
+    {   "/about.html",      HTTP_GET                },
+    {   "/debug.html",      HTTP_GET                },
+    {   "/display.html",    HTTP_GET                },
+    {   "/edit.html",       HTTP_GET                },
+    {   "/icons.html",      HTTP_GET                },
+    {   "/index.html",      HTTP_GET                },
+    {   "/info.html",       HTTP_GET                },
+    {   "/settings.html",   HTTP_GET | HTTP_POST    }
+};
+
+/**
+ * Static routes to files with enabled cache.
+ */
+static const char*          gStaticRoutesWithCache[]    =
+{
+    "/favicon.png",
+    "/images/",
+    "/js/",
+    "/style/"
 };
 
 /******************************************************************************
@@ -202,27 +228,22 @@ void Pages::init(AsyncWebServer& srv)
         settings.close();
     }
 
-    (void)srv.on("/about.html", HTTP_GET, aboutPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/debug.html", HTTP_GET, debugPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/display.html", HTTP_GET, displayPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/edit.html", HTTP_GET, editPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/icons.html", HTTP_GET, iconsPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/index.html", HTTP_GET, indexPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/info.html", HTTP_GET, infoPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/update.html", HTTP_GET, updatePage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    /* Serve standard HTML pages. */
+    while(UTIL_ARRAY_NUM(gHtmlPageRoutes) > idx)
+    {
+        const HtmlPageRoute& route = gHtmlPageRoutes[idx];
+
+        (void)srv.on(route.page, route.reqMethodComposite, htmlPage)
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+        ++idx;
+    }
+
+    /* Serve HTML pages with upload functionality. */
     (void)srv.on("/upload.html", HTTP_POST, uploadPage, uploadHandler)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
+    /* Redirect root folder access to index.html page. */
     (void)srv.on("/", [](AsyncWebServerRequest* request) {
         if (nullptr != request)
         {
@@ -237,16 +258,19 @@ void Pages::init(AsyncWebServer& srv)
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesystem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    idx = 0U;
+    while(UTIL_ARRAY_NUM(gStaticRoutesWithCache) > idx)
+    {
+        const char* route = gStaticRoutesWithCache[idx];
+
+        (void)srv.serveStatic(route, FILESYSTEM, route, "max-age=3600")
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+        ++idx;
+    }
 
     /* Add one page per plugin. */
+    idx = 0U;
     while(pluginTypeListLength > idx)
     {
         const PluginList::Element*  elem    = &pluginTypeList[idx];
@@ -324,138 +348,18 @@ static String tmplPageProcessor(const String& var)
 }
 
 /**
- * About page, showing the log output on demand.
+ * Standard HTML page with template page processor applied.
  *
  * @param[in] request   HTTP request
  */
-static void aboutPage(AsyncWebServerRequest* request)
+static void htmlPage(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
         return;
     }
 
-    request->send(FILESYSTEM, "/about.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Debug page, showing the log output on demand.
- *
- * @param[in] request   HTTP request
- */
-static void debugPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/debug.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Display page, showing current display content.
- *
- * @param[in] request   HTTP request
- */
-static void displayPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/display.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * File edit page.
- *
- * @param[in] request   HTTP request
- */
-static void editPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Icons page for managing icons.
- *
- * @param[in] request   HTTP request
- */
-static void iconsPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/icons.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Index page on root path ("/").
- *
- * @param[in] request   HTTP request
- */
-static void indexPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/index.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Info page shows general informations.
- *
- * @param[in] request   HTTP request
- */
-static void infoPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/info.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Settings page to show and store settings.
- *
- * @param[in] request   HTTP request
- */
-static void settingsPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/settings.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Page for software update.
- *
- * @param[in] request   HTTP request
- */
-static void updatePage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/update.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, request->url(), "text/html", false, tmplPageProcessor);
 }
 
 /**
