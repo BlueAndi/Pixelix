@@ -310,7 +310,7 @@ void MqttService::disconnectedState()
             /* Connect anonymous */
             else
             {
-                LOG_INFO("Connect anyonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
+                LOG_INFO("Connect anonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
 
                 isConnected = m_mqttClient.connect(m_hostname.c_str(), nullptr, nullptr, willTopic.c_str(), 0, true, "offline");
             }
