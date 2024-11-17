@@ -47,6 +47,8 @@
 #include <WString.h>
 #include <cerrno>
 
+#include <YAColor.h>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -214,6 +216,23 @@ constexpr T max(T valA, T valB)
     return (valA > valB) ? valA : valB;
 }
 
+/**
+ * Convert color to HTML format.
+ * 
+ * @param[in] color Color
+ * 
+ * @return Color in HTML format
+ */
+extern String colorToHtml(const Color& color);
+
+/**
+ * Convert color from HTML format.
+ * 
+ * @param[in] htmlColor Color in HTML format
+ * 
+ * @return Color
+ */
+extern Color colorFromHtml(const String& htmlColor);
 }
 
 #endif  /* UTILITY_H */

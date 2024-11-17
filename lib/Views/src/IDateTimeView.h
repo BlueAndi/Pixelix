@@ -47,6 +47,8 @@
 #include <WString.h>
 #include <time.h>
 
+#include "IJsonConfig.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -58,7 +60,7 @@
 /**
  * Interface for a view with date and time.
  */
-class IDateTimeView
+class IDateTimeView : public IJsonConfig
 {
 public:
 
@@ -79,38 +81,6 @@ public:
         ANALOG_ONLY,             /**< Show only the date */
         DIGITAL_AND_ANALOG,      /**< Show only the time */
         VIEW_MODE_MAX            /**< Number of configurations */
-    };
-
-    /** 
-     * Options for displaying seconds in analog clock.
-     */
-    enum SecondsDisplayMode
-    {
-        SECOND_DISP_OFF = 0U,  /**< No second indicator display. */
-        SECOND_DISP_HAND = 1U, /**< Draw second clock hand. */
-        SECOND_DISP_RING = 2U, /**< Show passed seconds on minute tick ring. */
-        SECOND_DISP_BOTH = 3U, /**< Show hand and on ring. */
-        SECONDS_DISP_MAX       /**< Number of configurations. */
-    };
-
-    /** 
-     * Color array indexes for the analog clock drawing.
-     */
-    enum AnalogClockColor
-    {
-        ANA_CLK_COL_HAND_HOUR = 0U, /**< Hour clock hand color. */
-        ANA_CLK_COL_HAND_MIN,       /**< Minutes clock hand color. */
-        ANA_CLK_COL_HAND_SEC,       /**< Seconds colock hand color */
-        ANA_CLK_COL_RING_MIN5_MARK, /**< Ring five minute marks color. */
-        ANA_CLK_COL_RING_MIN_DOT,   /**< Ring minut dots color. */
-        ANA_CLK_COL_MAX             /**< Number of colors. */
-    };
-
-    /** Analog clock appearance configuration. */
-    struct AnalogClockConfig
-    {
-        SecondsDisplayMode m_secondsMode;              /**< Seconds visualisation mode. */
-        Color              m_colors[ANA_CLK_COL_MAX];  /**< Clock colors to use.        */
     };
 
     /**
@@ -217,22 +187,6 @@ public:
      * @return bool success of failure 
      */
     virtual bool setViewMode(ViewMode mode) = 0;
-
-    /**
-     * Get the analog clock clonfiguration.
-     * 
-     * @return AnalogClockConfig or nullptr if unsupported.
-     */
-    virtual const AnalogClockConfig* getAnalogClockConfig() const = 0;
-
-    /**
-     * Set the analog clock configuration.
-     * 
-     * @param[in] cfg The new configuration to apply.
-     * 
-     * @return success or failure
-     */
-    virtual bool setAnalogClockConfig(const AnalogClockConfig& cfg) = 0;
 
     /**
      * @brief Update current time values in view.

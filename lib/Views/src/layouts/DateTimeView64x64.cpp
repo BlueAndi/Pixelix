@@ -83,6 +83,16 @@ static const int16_t SECOND_HAND_LENGTH   = ANALOG_RADIUS - 2;
 /** Clock hand distance from clock center. */
 static const int16_t HAND_CENTER_DISTANCE = 3;
 
+/* Color key names for the analog clock configuration. */
+const char* DateTimeView64x64::ANALOG_CLOCK_COLOR_KEYS[DateTimeView64x64::ANA_CLK_COL_MAX] =
+{
+    "handHourCol",
+    "handMinCol",
+    "handSecCol",
+    "ringFiveMinCol",
+    "ringMinDotCol"
+};
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -179,7 +189,7 @@ void DateTimeView64x64::update(YAGfx& gfx)
 
         if ((ViewMode::DIGITAL_AND_ANALOG == m_mode) || (ViewMode::ANALOG_ONLY == m_mode))
         {
-            uint32_t centerRingCol = m_analogClockCfg.m_colors[ANA_CLK_COL_HAND_MIN];
+            uint32_t centerRingCol = m_analogColors[ANA_CLK_COL_HAND_MIN];
 
             /* Draw analog clock minute circle. */
             drawAnalogClockBackground(gfx);
@@ -189,17 +199,17 @@ void DateTimeView64x64::update(YAGfx& gfx)
                 gfx,
                 m_now.tm_min,
                 MINUTE_HAND_LENGTH,
-                m_analogClockCfg.m_colors[ANA_CLK_COL_HAND_MIN]);
+                m_analogColors[ANA_CLK_COL_HAND_MIN]);
 
             drawAnalogClockHand(gfx,
                 getHourHandDestination(m_now.tm_hour, m_now.tm_min),
                 HOUR_HAND_LENGTH,
-                m_analogClockCfg.m_colors[ANA_CLK_COL_HAND_HOUR]);
+                m_analogColors[ANA_CLK_COL_HAND_HOUR]);
 
-            if (0U != (m_analogClockCfg.m_secondsMode & SECOND_DISP_HAND))
+            if (0U != (m_secondsMode & SECOND_DISP_HAND))
             {
                 /* Use second hand color also for the middle ring if this hand is enabled. */
-                centerRingCol = m_analogClockCfg.m_colors[ANA_CLK_COL_HAND_SEC];
+                centerRingCol = m_analogColors[ANA_CLK_COL_HAND_SEC];
                 drawAnalogClockHand(
                     gfx,
                     m_now.tm_sec,
@@ -256,14 +266,14 @@ void DateTimeView64x64::drawAnalogClockBackground(YAGfx& gfx)
             const int16_t xe = ANALOG_CENTER_X + (dx * HOUR_MARK_LENGTH) / SINUS_VAL_SCALE;
             const int16_t ye = ANALOG_CENTER_Y + (dy * HOUR_MARK_LENGTH) / SINUS_VAL_SCALE;
 
-            gfx.drawLine(xs, ys, xe, ye, m_analogClockCfg.m_colors[ANA_CLK_COL_RING_MIN5_MARK]);
+            gfx.drawLine(xs, ys, xe, ye, m_analogColors[ANA_CLK_COL_RING_MIN5_MARK]);
         }
 
-        Color tickMarkCol = m_analogClockCfg.m_colors[ANA_CLK_COL_RING_MIN_DOT];
-        if ((0U != (SECOND_DISP_RING & m_analogClockCfg.m_secondsMode)) && (angle <= secondAngle))
+        Color tickMarkCol = m_analogColors[ANA_CLK_COL_RING_MIN_DOT];
+        if ((0U != (SECOND_DISP_RING & m_secondsMode)) && (angle <= secondAngle))
         {
             /* Draw minute tick marks with passed seconds highlighting. */
-            tickMarkCol = m_analogClockCfg.m_colors[ANA_CLK_COL_HAND_SEC];
+            tickMarkCol = m_analogColors[ANA_CLK_COL_HAND_SEC];
         }
         gfx.drawPixel(xs, ys, tickMarkCol);
     }
@@ -284,6 +294,74 @@ void DateTimeView64x64::drawAnalogClockHand(YAGfx& gfx, int16_t minute, int16_t 
         ANALOG_CENTER_X + (radius * dx) / SINUS_VAL_SCALE,
         ANALOG_CENTER_Y + (radius * dy) / SINUS_VAL_SCALE,
         col);
+}
+
+
+void DateTimeView64x64::getConfiguration(JsonObject& jsonCfg) const
+{
+    JsonObject jsonAnalogClock = jsonCfg.createNestedObject("analogClock");
+
+    jsonAnalogClock["secondsMode"] = m_secondsMode;
+
+    for (uint32_t index = 0U;  index < ANA_CLK_COL_MAX; ++index)
+    {
+        jsonAnalogClock[ANALOG_CLOCK_COLOR_KEYS[index]]= Util::colorToHtml(m_analogColors[index]);
+    }
+}
+
+bool DateTimeView64x64::setConfiguration(const JsonObjectConst& jsonCfg)
+{
+    bool result = true;
+    JsonObjectConst jsonAnalogClock = jsonCfg["analogClock"];
+
+    if (false == jsonAnalogClock.isNull())
+    {
+        JsonVariantConst jsonSecondsMode = jsonAnalogClock["secondsMode"];
+
+        if ((false == jsonSecondsMode.is<uint8_t>()) &&
+            (SECONDS_DISP_MAX <= jsonSecondsMode.as<uint8_t>()))
+        {
+            LOG_WARNING("JSON seconds mode not found or invalid type.");
+            result = false;
+        } 
+        else
+        {
+            m_secondsMode = static_cast<SecondsDisplayMode>(jsonSecondsMode.as<uint8_t>());
+
+            for (uint32_t idx = 0U; idx < ANA_CLK_COL_MAX; ++ idx)
+            {
+                JsonVariantConst color = jsonAnalogClock[ANALOG_CLOCK_COLOR_KEYS[idx]];
+
+                if (false == color.is<String>())
+                {
+                    LOG_WARNING(
+                        "JSON attribute %s not found or invalid type.", 
+                        ANALOG_CLOCK_COLOR_KEYS[idx]);
+                    result = false;
+                }
+                else
+                {
+                    m_analogColors[idx] = Util::colorFromHtml(color);
+                }
+            }
+        }
+    }
+    
+    return result;
+}
+
+bool DateTimeView64x64::mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource)
+{
+    bool            result          = false;
+    JsonObjectConst jsonAnalogClock = jsonSource["analogClock"];
+
+    if (false == jsonAnalogClock.isNull())
+    {
+        jsonMerged["analogClock"] = jsonAnalogClock;
+        result                    = true;
+    }
+
+    return result;
 }
 
 /******************************************************************************

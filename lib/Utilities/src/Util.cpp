@@ -247,6 +247,27 @@ extern uint32_t Util::hexToUInt32(const String& str)
     return value;
 }
 
+String Util::colorToHtml(const Color& color)
+{
+    char buffer[8]; /* '#' + 3x byte in hex + '\0' */
+
+    (void)snprintf(buffer, sizeof(buffer), "#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
+
+    return String(buffer);
+}
+
+Color Util::colorFromHtml(const String& htmlColor)
+{
+    Color color;
+
+    if ('#' == htmlColor[0])
+    {
+        color = Util::hexToUInt32(htmlColor.substring(1U));
+    }
+
+    return color;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
