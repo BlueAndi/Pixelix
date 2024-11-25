@@ -42,12 +42,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include <ArduinoJson.h>
 #include <YAGfx.h>
 #include <Fonts.h>
 #include <WString.h>
 #include <time.h>
-
-#include "IJsonConfig.h"
 
 /******************************************************************************
  * Macros
@@ -60,7 +59,7 @@
 /**
  * Interface for a view with date and time.
  */
-class IDateTimeView : public IJsonConfig
+class IDateTimeView
 {
 public:
 
@@ -194,6 +193,36 @@ public:
      * @param[in] now current time
      */
     virtual void setCurrentTime(const tm& now) = 0;
+
+        /**
+     * Get current active configuration in JSON format.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    virtual void getConfiguration(JsonObject& jsonCfg) const = 0;
+
+    /**
+     * Apply configuration from JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    virtual bool setConfiguration(const JsonObjectConst& jsonCfg) = 0;
+
+     /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    virtual bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) = 0;
 
 protected:
 

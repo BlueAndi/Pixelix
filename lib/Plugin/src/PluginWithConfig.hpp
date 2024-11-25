@@ -44,7 +44,6 @@
  * Includes
  *****************************************************************************/
 #include "Plugin.hpp"
-#include "IJsonConfig.h"
 
 #include <SimpleTimer.hpp>
 #include <JsonFile.h>
@@ -65,7 +64,7 @@
  * Attention: Every derived class must call start(), stop() and process()
  * of this base class to get the configuration file handling working!
  */
-class PluginWithConfig : public Plugin, IJsonConfig
+class PluginWithConfig : public Plugin
 {
 public:
 
@@ -190,6 +189,22 @@ protected:
         m_reloadConfigReq(false)
     {
     }
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    virtual void getConfiguration(JsonObject& cfg) const = 0;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    virtual bool setConfiguration(const JsonObjectConst& cfg) = 0;
 
     /**
      * Request to store configuration to persistent memory.
@@ -317,14 +332,6 @@ private:
     SimpleTimer m_cfgReloadTimer;               /**< Timer is used to cyclic reload the configuration from persistent memory. */
     bool        m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
     bool        m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
-
-    /*TODO REMOVE if all plugins have it. Right now only in DateTimePlugin. */
-    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource)
-    {
-        return true;
-    }
-
-
 };
 
 /******************************************************************************

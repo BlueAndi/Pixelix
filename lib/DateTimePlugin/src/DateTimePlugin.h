@@ -342,7 +342,7 @@ private:
      * @return     true        Keys needed merging.
      * @return     false       Nothing needed merging.
      */
-    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) final;
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource);
 
     /**
      * Get current date/time and update the text, which to be displayed.
