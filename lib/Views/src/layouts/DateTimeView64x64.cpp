@@ -357,8 +357,28 @@ bool DateTimeView64x64::mergeConfiguration(JsonObject& jsonMerged, const JsonObj
 
     if (false == jsonAnalogClock.isNull())
     {
-        jsonMerged["analogClock"] = jsonAnalogClock;
-        result                    = true;
+        /* Analog clock data present in jsonSource, patch it into JsonMerged.
+         * Note: Not all paramters may be present in jsonSoure, test for all individually.
+         */
+
+        JsonObject      jsonMergedAnalogClock = jsonMerged["analogClock"];
+
+        JsonVariantConst jsonSecondsMode       = jsonAnalogClock["secondsMode"];
+        if (true == jsonSecondsMode.is<String>())
+        {
+            jsonMergedAnalogClock["secondsMode"] = jsonSecondsMode;
+            result                               = true;
+        }
+
+        for (uint32_t index = 0U;  index < ANA_CLK_COL_MAX; ++index)
+        {
+            JsonVariantConst jsonColor = jsonAnalogClock[ANALOG_CLOCK_COLOR_KEYS[index]];
+            if (true == jsonColor.is<String>())
+            {
+                jsonMergedAnalogClock[ANALOG_CLOCK_COLOR_KEYS[index]] = jsonColor;
+                result                                                = true;
+            }
+        }
     }
 
     return result;
