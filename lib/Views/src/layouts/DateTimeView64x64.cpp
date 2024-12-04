@@ -321,7 +321,7 @@ bool DateTimeView64x64::setConfiguration(const JsonObjectConst& jsonCfg)
         if ((false == jsonSecondsMode.is<uint8_t>()) &&
             (SECONDS_DISP_MAX <= jsonSecondsMode.as<uint8_t>()))
         {
-            LOG_WARNING("JSON seconds mode not found or invalid type.");
+            LOG_WARNING("JSON attribute %s not found or invalid type.", "secondsMode");
             result = false;
         } 
         else
@@ -345,6 +345,11 @@ bool DateTimeView64x64::setConfiguration(const JsonObjectConst& jsonCfg)
                 }
             }
         }
+    }
+    else
+    {
+        LOG_WARNING("JSON attribute %s not found or invalid type.", "analogClock");
+        result = false; 
     }
     
     return result;
