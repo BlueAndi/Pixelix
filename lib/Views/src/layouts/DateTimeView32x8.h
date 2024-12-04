@@ -275,23 +275,47 @@ public:
     }
 
     /**
-     * Get the analog clock seconds display mode (none, ring, hand or both).
+     * Get current active configuration in JSON format.
      * 
-     * @return SecondsDisplayMode pointer or nullptr if unsupported. 
+     * @param[out] cfg  Configuration
      */
-    const AnalogClockConfig* getAnalogClockConfig() const override
+    void getConfiguration(JsonObject& jsonCfg) const final
     {
-        return nullptr; /* 32X8 layout can only do digital.*/
+        (void)jsonCfg;  /* No configuration for 32x8 */
     }
 
     /**
-     * Set the analog clock seconds display mode (none, ring, hand or both).
+     * Apply configuration from JSON.
      * 
-     * @return success of failure
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
      */
-    bool setAnalogClockConfig(const AnalogClockConfig& cfg) override
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final
     {
-        return true;  /* No analog clock in 32x8 layout, ignore request. */
+        (void)jsonCfg;
+
+        return true;
+    }
+
+    /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) final
+    {
+        (void)jsonMerged;
+        (void)jsonSource;
+
+        return false; /* Nothing to merge. */
     }
 
     /**

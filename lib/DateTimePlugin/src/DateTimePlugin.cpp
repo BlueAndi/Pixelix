@@ -67,16 +67,6 @@ const char DateTimePlugin::TIME_FORMAT_DEFAULT[] = "%I:%M %p";
 /* Initialize default date format. */
 const char DateTimePlugin::DATE_FORMAT_DEFAULT[] = "%m/%d";
 
-/* Color key names for the analog clock configuration. */
-const char* DateTimePlugin::ANALOG_CLOCK_COLOR_KEYS[IDateTimeView::ANA_CLK_COL_MAX] =
-{
-    "handHourCol",
-    "handMinCol",
-    "handSecCol",
-    "ringFiveMinCol",
-    "ringMinDotCol"
-};
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -105,87 +95,11 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const IDateTimeView::AnalogClockConfig* analogClockCfg = nullptr;
-
-        const size_t        JSON_DOC_SIZE           = 768U;
+        const size_t        JSON_DOC_SIZE = 768U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonMode                = value["mode"];
-        JsonVariantConst    jsonViewMode            = value["viewMode"];
-        JsonVariantConst    jsonTimeFormat          = value["timeFormat"];
-        JsonVariantConst    jsonDateFormat          = value["dateFormat"];
-        JsonVariantConst    jsonTimeZone            = value["timeZone"];
-        JsonVariantConst    jsonStartOfWeek         = value["startOfWeek"];
-        JsonVariantConst    jsonDayOnColor          = value["dayOnColor"];
-        JsonVariantConst    jsonDayOffColor         = value["dayOffColor"];
-        JsonObjectConst     jsonAnalogClock         = value["analogClock"];
-       
-         /* The received configuration may not contain all single key/value pair.
-         * Therefore read first the complete internal configuration and
-         * overwrite them with the received ones.
-         */
-        getConfiguration(jsonCfg);
+        JsonObject          jsonCfg         = jsonDoc.to<JsonObject>();
 
-        /* Note:
-         * Check only for the key/value pair availability.
-         * The type check will follow in the setConfiguration().
-         */
-
-        if (false == jsonMode.isNull())
-        {
-            jsonCfg["mode"] = jsonMode.as<uint8_t>();
-            isSuccessful = true;
-        }
-
-        if (false == jsonViewMode.isNull())
-        {
-            jsonCfg["viewMode"] = jsonViewMode.as<uint8_t>();
-            isSuccessful = true;
-        }
-
-        if (false == jsonTimeFormat.isNull())
-        {
-            jsonCfg["timeFormat"] = jsonTimeFormat.as<String>();
-            isSuccessful = true;
-        }
-
-        if (false == jsonDateFormat.isNull())
-        {
-            jsonCfg["dateFormat"] = jsonDateFormat.as<String>();
-            isSuccessful = true;
-        }
-
-        if (false == jsonTimeZone.isNull())
-        {
-            jsonCfg["timeZone"] = jsonTimeZone.as<String>();
-            isSuccessful = true;
-        }
-
-        if (false == jsonStartOfWeek.isNull())
-        {
-            jsonCfg["startOfWeek"] = jsonStartOfWeek.as<uint8_t>();
-            isSuccessful = true;
-        }
-        
-        if (false == jsonDayOnColor.isNull())
-        {
-            jsonCfg["dayOnColor"] = jsonDayOnColor.as<String>();
-            isSuccessful = true;
-        }
-
-        if (false == jsonDayOffColor.isNull())
-        {
-            jsonCfg["dayOffColor"] = jsonDayOffColor.as<String>();
-            isSuccessful = true;
-        }
-        
-        if (false == jsonAnalogClock.isNull())
-        {
-            jsonCfg["analogClock"] = jsonAnalogClock;
-            isSuccessful = true;
-        }
-
-        if (true == isSuccessful)
+        if (true == mergeConfiguration(jsonCfg, value))
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
@@ -203,8 +117,8 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
 bool DateTimePlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -221,7 +135,7 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
 
@@ -230,7 +144,7 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
 
 void DateTimePlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     PluginWithConfig::stop();
 }
@@ -274,7 +188,7 @@ void DateTimePlugin::inactive()
 void DateTimePlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
-    
+
     m_view.update(gfx);
 }
 
@@ -288,48 +202,31 @@ void DateTimePlugin::update(YAGfx& gfx)
 
 void DateTimePlugin::getConfiguration(JsonObject& jsonCfg) const
 {
-    const IDateTimeView::AnalogClockConfig* analogClockCfg = nullptr;
-
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["mode"]         = m_mode;
-    jsonCfg["viewMode"]     = m_view.getViewMode();
-    jsonCfg["timeFormat"]   = m_timeFormat;
-    jsonCfg["dateFormat"]   = m_dateFormat;
-    jsonCfg["timeZone"]     = m_timeZone;
-    jsonCfg["startOfWeek"]  = m_view.getStartOfWeek();
-    jsonCfg["dayOnColor"]   = colorToHtml(m_view.getDayOnColor());
-    jsonCfg["dayOffColor"]  = colorToHtml(m_view.getDayOffColor());
+    jsonCfg["mode"]        = m_mode;
+    jsonCfg["viewMode"]    = m_view.getViewMode();
+    jsonCfg["timeFormat"]  = m_timeFormat;
+    jsonCfg["dateFormat"]  = m_dateFormat;
+    jsonCfg["timeZone"]    = m_timeZone;
+    jsonCfg["startOfWeek"] = m_view.getStartOfWeek();
+    jsonCfg["dayOnColor"]  = Util::colorToHtml(m_view.getDayOnColor());
+    jsonCfg["dayOffColor"] = Util::colorToHtml(m_view.getDayOffColor());
 
-    analogClockCfg          = m_view.getAnalogClockConfig();
-    if (nullptr != analogClockCfg)
-    {
-        /* View supports analog clock, add the additinal config elements for it.
-         */
-        JsonObject jsonAnalogClock = jsonCfg.createNestedObject("analogClock");
-        jsonAnalogClock["secondsMode"] = analogClockCfg->m_secondsMode;
-        for (uint32_t index = 0U;  index < IDateTimeView::ANA_CLK_COL_MAX; ++index)
-        {
-            jsonAnalogClock[ANALOG_CLOCK_COLOR_KEYS[index]]= colorToHtml(analogClockCfg->m_colors[index]);
-        }
-    }
-
+    m_view.getConfiguration(jsonCfg);
 }
 
 bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status             = false;
-    JsonVariantConst jsonMode           = jsonCfg["mode"];
-    JsonVariantConst jsonViewMode       = jsonCfg["viewMode"];
-    JsonVariantConst jsonTimeFormat     = jsonCfg["timeFormat"];
-    JsonVariantConst jsonDateFormat     = jsonCfg["dateFormat"];
-    JsonVariantConst jsonTimeZone       = jsonCfg["timeZone"];
-    JsonVariantConst jsonStartOfWeek    = jsonCfg["startOfWeek"];
-    JsonVariantConst jsonDayOnColor     = jsonCfg["dayOnColor"];
-    JsonVariantConst jsonDayOffColor    = jsonCfg["dayOffColor"];
-    JsonVariantConst jsonAnalogClock    = jsonCfg["analogClock"];
-
-    IDateTimeView::AnalogClockConfig analogClockConfig;
+    bool             status          = false;
+    JsonVariantConst jsonMode        = jsonCfg["mode"];
+    JsonVariantConst jsonViewMode    = jsonCfg["viewMode"];
+    JsonVariantConst jsonTimeFormat  = jsonCfg["timeFormat"];
+    JsonVariantConst jsonDateFormat  = jsonCfg["dateFormat"];
+    JsonVariantConst jsonTimeZone    = jsonCfg["timeZone"];
+    JsonVariantConst jsonStartOfWeek = jsonCfg["startOfWeek"];
+    JsonVariantConst jsonDayOnColor  = jsonCfg["dayOnColor"];
+    JsonVariantConst jsonDayOffColor = jsonCfg["dayOffColor"];
 
     if ((false == jsonMode.is<uint8_t>()) &&
         (MODE_MAX <= jsonMode.as<uint8_t>()))
@@ -337,7 +234,7 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         LOG_WARNING("JSON mode not found or invalid type.");
     }
     else if ((false == jsonViewMode.is<uint8_t>()) &&
-        (IDateTimeView::VIEW_MODE_MAX <= jsonViewMode.as<uint8_t>()))
+             (IDateTimeView::VIEW_MODE_MAX <= jsonViewMode.as<uint8_t>()))
     {
         LOG_WARNING("JSON view mode not found or invalid type.");
     }
@@ -365,28 +262,23 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON day off color not found or invalid type.");
     }
-    else if (false == checkAnalogClockConfig(jsonAnalogClock, analogClockConfig))
+    else if (false == m_view.setConfiguration(jsonCfg))
     {
-        /* Error printed inside checkAnalogClockConfig() already. */
+        /* Error printed inside m_view.setConfiguration() already. */
     }
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_mode          = static_cast<Mode>(jsonMode.as<uint8_t>());
-        m_timeFormat    = jsonTimeFormat.as<String>();
-        m_dateFormat    = jsonDateFormat.as<String>();
-        m_timeZone      = jsonTimeZone.as<String>();
+        m_mode       = static_cast<Mode>(jsonMode.as<uint8_t>());
+        m_timeFormat = jsonTimeFormat.as<String>();
+        m_dateFormat = jsonDateFormat.as<String>();
+        m_timeZone   = jsonTimeZone.as<String>();
 
-        status = m_view.setStartOfWeek(jsonStartOfWeek.as<uint8_t>());
-        m_view.setDayOnColor(colorFromHtml(jsonDayOnColor.as<String>()));
-        m_view.setDayOffColor(colorFromHtml(jsonDayOffColor.as<String>()));
+        status       = m_view.setStartOfWeek(jsonStartOfWeek.as<uint8_t>());
+        m_view.setDayOnColor(Util::colorFromHtml(jsonDayOnColor.as<String>()));
+        m_view.setDayOffColor(Util::colorFromHtml(jsonDayOffColor.as<String>()));
         m_view.setViewMode(static_cast<IDateTimeView::ViewMode>(jsonViewMode.as<uint8_t>()));
-
-        if (false == jsonAnalogClock.isNull())
-        {
-            m_view.setAnalogClockConfig(analogClockConfig);
-        }
 
         m_hasTopicChanged = true;
     }
@@ -394,11 +286,91 @@ bool DateTimePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     return status;
 }
 
+bool DateTimePlugin::mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource)
+{
+    bool             isSuccessful    = false;
+    JsonVariantConst jsonMode        = jsonSource["mode"];
+    JsonVariantConst jsonViewMode    = jsonSource["viewMode"];
+    JsonVariantConst jsonTimeFormat  = jsonSource["timeFormat"];
+    JsonVariantConst jsonDateFormat  = jsonSource["dateFormat"];
+    JsonVariantConst jsonTimeZone    = jsonSource["timeZone"];
+    JsonVariantConst jsonStartOfWeek = jsonSource["startOfWeek"];
+    JsonVariantConst jsonDayOnColor  = jsonSource["dayOnColor"];
+    JsonVariantConst jsonDayOffColor = jsonSource["dayOffColor"];
+
+    /* The received configuration may not contain all single key/value pair.
+     * Therefore read first the complete internal configuration and
+     * overwrite them with the received ones.
+     */
+    getConfiguration(jsonMerged);
+
+    /* Note:
+     * Check only for the key/value pair availability.
+     * The type check will follow in the setConfiguration().
+     */
+
+    if (false == jsonMode.isNull())
+    {
+        jsonMerged["mode"] = jsonMode.as<uint8_t>();
+        isSuccessful       = true;
+    }
+
+    if (false == jsonViewMode.isNull())
+    {
+        jsonMerged["viewMode"] = jsonViewMode.as<uint8_t>();
+        isSuccessful           = true;
+    }
+
+    if (false == jsonTimeFormat.isNull())
+    {
+        jsonMerged["timeFormat"] = jsonTimeFormat.as<String>();
+        isSuccessful             = true;
+    }
+
+    if (false == jsonDateFormat.isNull())
+    {
+        jsonMerged["dateFormat"] = jsonDateFormat.as<String>();
+        isSuccessful             = true;
+    }
+
+    if (false == jsonTimeZone.isNull())
+    {
+        jsonMerged["timeZone"] = jsonTimeZone.as<String>();
+        isSuccessful           = true;
+    }
+
+    if (false == jsonStartOfWeek.isNull())
+    {
+        jsonMerged["startOfWeek"] = jsonStartOfWeek.as<uint8_t>();
+        isSuccessful              = true;
+    }
+
+    if (false == jsonDayOnColor.isNull())
+    {
+        jsonMerged["dayOnColor"] = jsonDayOnColor.as<String>();
+        isSuccessful             = true;
+    }
+
+    if (false == jsonDayOffColor.isNull())
+    {
+        jsonMerged["dayOffColor"] = jsonDayOffColor.as<String>();
+        isSuccessful              = true;
+    }
+
+    /* Check if view configuration needed merging */
+    if (true == m_view.mergeConfiguration(jsonMerged, jsonSource))
+    {
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
 void DateTimePlugin::updateDateTime(bool force)
 {
-    ClockDrv&   clockDrv            = ClockDrv::getInstance();
-    struct tm   timeInfo            = { 0 };
-    bool        isClockAvailable    = false;
+    ClockDrv& clockDrv         = ClockDrv::getInstance();
+    struct tm timeInfo         = { 0 };
+    bool      isClockAvailable = false;
 
     /* If no other timezone is given, the local time shall be used. */
     if (true == m_timeZone.isEmpty())
@@ -409,67 +381,66 @@ void DateTimePlugin::updateDateTime(bool force)
     {
         isClockAvailable = clockDrv.getTzTime(m_timeZone.c_str(), timeInfo);
     }
-    
+
     if (true == isClockAvailable)
     {
-        bool    showDate    = false;
-        bool    showTime    = false;
+        bool showDate = false;
+        bool showTime = false;
 
         /* Decide what to show. */
-        switch(m_mode)
+        switch (m_mode)
         {
-        case MODE_DATE_TIME:
+        case MODE_DATE_TIME: {
+            uint32_t duration          = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
+            uint8_t  halfDurationTicks = 0U;
+            uint8_t  fullDurationTicks = 0U;
+
+            /* If infinite duration was set, switch between time and date with a fix period. */
+            if (0U == duration)
             {
-                uint32_t    duration            = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
-                uint8_t     halfDurationTicks   = 0U;
-                uint8_t     fullDurationTicks   = 0U;
-
-                /* If infinite duration was set, switch between time and date with a fix period. */
-                if (0U == duration)
-                {
-                    duration = DURATION_DEFAULT;
-                }
-
-                halfDurationTicks   = (duration / (2U * MS_TO_SEC_DIVIDER));
-                fullDurationTicks   = 2U * halfDurationTicks;
-
-                /* The time shall be shown in the first half slot duration. */
-                if ((halfDurationTicks >= m_durationCounter) ||
-                    (fullDurationTicks < m_durationCounter))
-                {
-                    showTime = true;
-                }
-                else
-                {
-                    showDate = true;
-                }
-
-                /* Reset duration counter after a complete plugin slot duration is finished. */
-                if (fullDurationTicks < m_durationCounter)
-                {
-                    m_durationCounter = 0U;
-                }
-
-                /* Force the update in case it changes from time to date or vice versa.
-                 * This must be done, because we can not rely on the comparison whether
-                 * the date/time changed and a update is necessary anyway.
-                 */
-                if ((0U == m_durationCounter) ||
-                    ((halfDurationTicks + 1U) == m_durationCounter))
-                {
-                    force = true;
-                }
+                duration = DURATION_DEFAULT;
             }
-            break;
+
+            halfDurationTicks = (duration / (2U * MS_TO_SEC_DIVIDER));
+            fullDurationTicks = 2U * halfDurationTicks;
+
+            /* The time shall be shown in the first half slot duration. */
+            if ((halfDurationTicks >= m_durationCounter) ||
+                (fullDurationTicks < m_durationCounter))
+            {
+                showTime = true;
+            }
+            else
+            {
+                showDate = true;
+            }
+
+            /* Reset duration counter after a complete plugin slot duration is finished. */
+            if (fullDurationTicks < m_durationCounter)
+            {
+                m_durationCounter = 0U;
+            }
+
+            /* Force the update in case it changes from time to date or vice versa.
+             * This must be done, because we can not rely on the comparison whether
+             * the date/time changed and a update is necessary anyway.
+             */
+            if ((0U == m_durationCounter) ||
+                ((halfDurationTicks + 1U) == m_durationCounter))
+            {
+                force = true;
+            }
+        }
+        break;
 
         case MODE_DATE_ONLY:
             showDate = true;
             break;
-        
+
         case MODE_TIME_ONLY:
             showTime = true;
             break;
-        
+
         default:
             /* Should never happen. */
             m_mode = MODE_DATE_TIME;
@@ -492,15 +463,15 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownSecond != timeInfo.tm_sec))
             {
-                String  extTimeFormat   = "{hc}" + m_timeFormat;
-                String  timeAsStr;
-                
+                String extTimeFormat = "{hc}" + m_timeFormat;
+                String timeAsStr;
+
                 if (true == getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
                 {
                     m_view.setFormatText(timeAsStr);
 
                     m_shownSecond = timeInfo.tm_sec;
-                } 
+                }
             }
         }
         else if (true == showDate)
@@ -512,15 +483,15 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownDayOfTheYear != timeInfo.tm_yday))
             {
-                String  extDateFormat   = "{hc}" + m_dateFormat;
-                String  dateAsStr;
-                
+                String extDateFormat = "{hc}" + m_dateFormat;
+                String dateAsStr;
+
                 if (true == getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
                 {
                     m_view.setFormatText(dateAsStr);
 
                     m_shownDayOfTheYear = timeInfo.tm_yday;
-                }              
+                }
             }
         }
         else
@@ -531,18 +502,18 @@ void DateTimePlugin::updateDateTime(bool force)
     }
     else
     {
-        if(true == force)
+        if (true == force)
         {
             m_view.setFormatText("{hc}?");
         }
     }
 }
 
-bool DateTimePlugin::getTimeAsString(String& time, const String& format, const tm *currentTime)
+bool DateTimePlugin::getTimeAsString(String& time, const String& format, const tm* currentTime)
 {
-    bool        isSuccessful    = false;
-    tm          timeStruct;
-    const tm*   timeStructPtr   = nullptr;
+    bool      isSuccessful = false;
+    tm        timeStruct;
+    const tm* timeStructPtr = nullptr;
 
     if (nullptr == currentTime)
     {
@@ -560,78 +531,17 @@ bool DateTimePlugin::getTimeAsString(String& time, const String& format, const t
 
     if (nullptr != timeStructPtr)
     {
-        const uint32_t  MAX_TIME_BUFFER_SIZE = 128U;
-        char            buffer[MAX_TIME_BUFFER_SIZE];
+        const uint32_t MAX_TIME_BUFFER_SIZE = 128U;
+        char           buffer[MAX_TIME_BUFFER_SIZE];
 
         if (0U != strftime(buffer, sizeof(buffer), format.c_str(), currentTime))
         {
-            time = buffer;
+            time         = buffer;
             isSuccessful = true;
         }
     }
 
     return isSuccessful;
-}
-
-String DateTimePlugin::colorToHtml(const Color& color)
-{
-    char buffer[8]; /* '#' + 3x byte in hex + '\0' */
-
-    (void)snprintf(buffer, sizeof(buffer), "#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
-
-    return String(buffer);
-}
-
-Color DateTimePlugin::colorFromHtml(const String& htmlColor)
-{
-    Color color;
-
-    if ('#' == htmlColor[0])
-    {
-        color = Util::hexToUInt32(htmlColor.substring(1U));
-    }
-
-    return color;
-}
-
-bool DateTimePlugin::checkAnalogClockConfig(JsonVariantConst& jsonCfg, IDateTimeView::AnalogClockConfig & cfg)
-{
-    bool result = true;
-
-    if (false == jsonCfg.isNull())
-    {
-        JsonVariantConst jsonSecondsMode = jsonCfg["secondsMode"];
-
-        if ((false == jsonSecondsMode.is<uint8_t>()) &&
-            (IDateTimeView::SECONDS_DISP_MAX <= jsonSecondsMode.as<uint8_t>()))
-        {
-            LOG_WARNING("JSON seconds mode not found or invalid type.");
-            result = false;
-        } 
-        else
-        {
-            cfg.m_secondsMode = static_cast<IDateTimeView::SecondsDisplayMode>(jsonSecondsMode.as<uint8_t>());
-
-            for (uint32_t idx = 0U; idx < IDateTimeView::ANA_CLK_COL_MAX; ++ idx)
-            {
-                JsonVariantConst color = jsonCfg[ANALOG_CLOCK_COLOR_KEYS[idx]];
-
-                if (false == color.is<String>())
-                {
-                    LOG_WARNING(
-                        "JSON attribute %s not found or invalid type.",
-                        ANALOG_CLOCK_COLOR_KEYS[idx]);
-                    result = false;
-                }
-                else
-                {
-                    cfg.m_colors[idx] = colorFromHtml(color);
-                }
-            }
-        }
-    }
-
-    return result;
 }
 
 /******************************************************************************
