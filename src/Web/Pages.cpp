@@ -176,7 +176,8 @@ static const HtmlPageRoute  gHtmlPageRoutes[]           =
     {   "/icons.html",      HTTP_GET                },
     {   "/index.html",      HTTP_GET                },
     {   "/info.html",       HTTP_GET                },
-    {   "/settings.html",   HTTP_GET | HTTP_POST    }
+    {   "/settings.html",   HTTP_GET | HTTP_POST    },
+    {   "/update.html",     HTTP_GET                }
 };
 
 /**
