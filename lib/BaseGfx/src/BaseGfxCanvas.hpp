@@ -393,7 +393,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+            addr = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
         }
 
         return addr;
@@ -423,7 +423,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+            addr = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
         }
 
         return addr;
