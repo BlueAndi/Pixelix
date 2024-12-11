@@ -99,9 +99,10 @@ protected:
     /**
      * Execute action by button action id.
      * 
-     * @param[in] id    Button action id
+     * @param[in] id        Button action id
+     * @param[in] firstTime First time the action will be executed in a cycle.
      */
-    void executeAction(ButtonActionId id);
+    void executeAction(ButtonActionId id, bool firstTime);
 
     /**
      * Is switch off requested?

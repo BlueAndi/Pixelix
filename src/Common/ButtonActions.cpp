@@ -66,7 +66,7 @@
  * Protected Methods
  *****************************************************************************/
 
-void ButtonActions::executeAction(ButtonActionId id)
+void ButtonActions::executeAction(ButtonActionId id, bool firstTime)
 {
     switch(id)
     {
@@ -87,11 +87,19 @@ void ButtonActions::executeAction(ButtonActionId id)
         break;
 
     case BUTTON_ACTION_ID_SHOW_IP_ADDRESS:
-        showIpAddress();
+        /* Show once and avoid cylic flickering of the text. */
+        if (true == firstTime)
+        {
+            showIpAddress();
+        }
         break;
 
     case BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON:
-        toggleDisplayOffOn();
+        /* Toggle once to avoid cyclic on/off. */
+        if (true == firstTime)
+        {
+            toggleDisplayOffOn();
+        }
         break;
 
     case BUTTON_ACTION_ID_SWEEP_BRIGHTNESS:
