@@ -10,6 +10,7 @@ To find out which part shall be connected to which pin of your development board
 
 * [Development Boards](#development-boards)
   * [Adafruit ESP32 Feather V2](#adafruit-esp32-feather-v2)
+  * [Adafruit MatrixPortal ESP32-S3](#adafruit-matrixportal-esp32-s3)
   * [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
   * [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
   * [DOIT ESP32 DEVKIT V1 - HUB75 panel](#doit-esp32-devkit-v1---hub75-panel)
@@ -27,41 +28,48 @@ To find out which part shall be connected to which pin of your development board
 # Development Boards
 
 ## Adafruit ESP32 Feather V2
-* Manufacturer: [Adafruit](https://learn.adafruit.com/adafruit-esp32-feather-v2/overview)
+* Manufacturer: [Adafruit](https://learn.adafruit.com/adafruit-esp32-feather-v2)
 * Pinning:
-  * Board: [board:adafruit_feather_esp32_v2](../../config/board.ini)
+  * Board: [board:adafruit_feather_esp32_v2-LED-32x8](../../config/board.ini)
   * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
 * Compatible with Pixelix boards.
+
+## Adafruit MatrixPortal ESP32-S3
+* Manufacturer: [Adafruit](https://learn.adafruit.com/adafruit-matrixportal-s3)
+* Pinning:
+  * Board: [board:adafruit_matrixportal_s3-HUB75-64x64](../../config/board.ini)
+  * Display: [display:hub75-adafruit-matrixportal-esp32s3](../../config/display.ini)
+* Not compatible with Pixelix boards.
 
 ## AZ-Delivery ESP-32 Dev Kit C V4
 * Manufacturer: [AZ-Delivery](https://www.az-delivery.de/products/esp-32-dev-kit-c-v4)
 * Pinning:
-  * Board: [board:az-delivery-devkit-v4](../../config/board.ini)
+  * Board: [board:az-delivery-devkit-v4-LED-32x8](../../config/board.ini)
   * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
 * Compatible with Pixelix boards.
 
 ## DOIT ESP32 DEVKIT V1
 * Pinning:
-  * Board: [board:az-delivery-devkit-v1](../../config/board.ini)
+  * Board: [board:esp32doit-devkit-v1-LED-32x8](../../config/board.ini)
   * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
 * Compatible with Pixelix boards.
 
 ## DOIT ESP32 DEVKIT V1 - HUB75 panel
 * Pinning:
-  * Board: [board:esp32doit-devkit-v1-hub75](../../config/board.ini)
+  * Board: [board:esp32doit-devkit-v1-HUB75-64x64](../../config/board.ini)
   * Display: [display:hub75-esp32](../../config/display.ini)
 * Pixelix boards doesn't support HUB75 panels.
 
 ## ESP32-S3 DEVKITC-1-N16R8V
 * Reference design: [ESP32-S3-DevKitC-1](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitc-1-v1.0.html)
 * Pinning:
-  * Board: [board:esp32-s3-devkitc-1-n16r8v](../../config/board.ini)
+  * Board: [board:esp32-s3-devkitc-1-n16r8v-LED-32x8](../../config/board.ini)
   * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
 * Not compatible with Pixelix boards.
 
 ## ESP32 NodeMCU
 * Pinning:
-  * Board: [board:esp32-nodemcu](../../config/board.ini)
+  * Board: [board:esp32-nodemcu-LED-32x8](../../config/board.ini)
   * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
 * Compatible with Pixelix boards.
 
@@ -70,7 +78,7 @@ The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, be
 
 * Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
 * Pinning:
-  * Board: [board:lilygo-ttgo-t-display](../../config/board.ini)
+  * Board: [board:lilygo-ttgo-t-display-TFT-32x8](../../config/board.ini)
   * Display: [display:lilygo_ttgo_tdisplay](../../config/display.ini)
 * Not compatible with Pixelix boards.
 
@@ -79,21 +87,21 @@ The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, beca
 
 * Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
 * Pinning:
-  * Board: [board:lilygo-t-display-s3](../../config/board.ini)
+  * Board: [board:lilygo-t-display-s3-TFT-32x8](../../config/board.ini)
   * Display: [display:lilygo_tdisplay-s3](../../config/display.ini)
 * Not compatible with Pixelix boards.
 
 ## M5Stack Core ESP32 WiFi and Bluetooth Module Development Board
 * Manufacturer: [M5Stack](https://m5stack.com/)
 * Pinning:
-  * Board: [board:m5stack_core](../../config/board.ini)
+  * Board: [board:m5stack_core-TFT-32x8](../../config/board.ini)
   * Display: [display:m5stack_core](../../config/display.ini)
 * Not compatible with Pixelix boards.
 
 ## WEMOS Lolin S2 Mini
 * Manufacturer: [WEMOS](https://www.wemos.cc/en/latest/s2/s2_mini.html)
 * Pinning:
-  * Board: [board:wemos_lolin_s2_mini](../../config/board.ini)
+  * Board: [board:wemos_lolin_s2_mini-LED-32x8](../../config/board.ini)
   * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
 * Not compatible with Pixelix boards.
 
@@ -124,7 +132,7 @@ The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed f
 # Ulanzi TC001 smart pixel clock
 * Manufacturer: [Ulanzi](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882)
 * Pinning:
-  * Board: [board:ulanzi-tc001](../../config/board.ini)
+  * Board: [board:ulanzi-tc001-LED-32x8](../../config/board.ini)
   * Display: [display:led_matrix_row_major_alternating](../../config/display.ini)
 
 # Issues, Ideas And Bugs <!-- omit in toc -->
