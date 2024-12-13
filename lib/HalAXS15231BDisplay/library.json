@@ -1,0 +1,27 @@
+{
+    "name": "HalAXS15231BDisplay",
+    "version": "0.1.0",
+    "description": "HAL for TTGO T-Display S3-long.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Common"
+    }, {
+        "name": "SPI"
+    }, {
+        "owner": "0ooYoo0",
+        "name": "GFX Library for Arduino",
+        "version": "https://github.com/0ooYoo0/Arduino_GFX/archive/refs/heads/master.zip"
+    }, {
+        "name": "YAGfx"
+    }, {
+        "name": "Utilities"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}
