@@ -256,7 +256,7 @@ public:
      */
     ViewMode getViewMode() const override
     {
-        return ViewMode::DIGITAL_ONLY;  /* 32X8 layout can only do digital.*/
+        return ViewMode::DIGITAL_ONLY;  /* 32X8 layout can only do digital. */
     }
 
     /**
@@ -266,22 +266,32 @@ public:
      */
     bool setViewMode(ViewMode mode) override
     {
+        bool isSuccessful = true;
+
         if (ViewMode::DIGITAL_ONLY != mode)
         {
             LOG_WARNING("Illegal DateTime view mode for 32X8: (%hhu)", mode);
-            return false;
+            isSuccessful = false;
         }
-        return true;
+
+        return isSuccessful;
     }
+
+    /**
+     * @brief Update current time values in view.
+     * 
+     * @param[in] now current time
+     */
+    virtual void setCurrentTime(const tm& now) override;
 
     /**
      * Get current active configuration in JSON format.
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& jsonCfg) const final
+    void getConfiguration(JsonObject& jsonCfg) const override
     {
-        (void)jsonCfg;  /* No configuration for 32x8 */
+        (void)jsonCfg;  /* No configuration for 32x8. */
     }
 
     /**
@@ -291,7 +301,7 @@ public:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(const JsonObjectConst& jsonCfg) final
+    bool setConfiguration(const JsonObjectConst& jsonCfg) override
     {
         (void)jsonCfg;
 
@@ -310,20 +320,13 @@ public:
      * @return     true        Keys needed merging.
      * @return     false       Nothing needed merging.
      */
-    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) final
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) override
     {
         (void)jsonMerged;
         (void)jsonSource;
 
         return false; /* Nothing to merge. */
     }
-
-    /**
-     * @brief Update current time values in view.
-     * 
-     * @param[in] now current time
-     */
-    virtual void setCurrentTime(const tm& now) override;
 
     /** Max. number of lamps. One lamp per day in a week. */
     static const uint8_t    MAX_LAMPS       = 7U;
