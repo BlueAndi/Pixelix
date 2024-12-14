@@ -51,6 +51,11 @@
 /** Scaling factor numerator: 256 * (3/4)^(8/height) */
 static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 192U;
 
+#elif 16U == CONFIG_LED_MATRIX_HEIGHT
+
+/** Scaling factor numerator: 256 * (3/4)^(8/height) */
+static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 222U;
+
 #elif 32U == CONFIG_LED_MATRIX_HEIGHT
 
 /** Scaling factor numerator: 256 * (3/4)^(8/height) */
