@@ -64,7 +64,10 @@ TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(const TWAbstractSyntaxTree
     {
         m_tokenTrash = other.m_tokenTrash;
 
+        /* Release first the own tokens. */
         clear();
+
+        /* Copy other tokens after the own ones were released! */
         copy(other.m_tokens);
     }
 
@@ -76,8 +79,12 @@ TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(TWAbstractSyntaxTree&& oth
     if (this != &other)
     {
         m_tokenTrash = other.m_tokenTrash;
-        m_tokens     = std::move(other.m_tokens);
-        other.m_tokens.clear();
+
+        /* Release first the own tokens. */
+        clear();
+
+        /* Move other tokens after the own ones were released! */
+        m_tokens = std::move(other.m_tokens);
     }
 
     return *this;
