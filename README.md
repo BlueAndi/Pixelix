@@ -8,8 +8,14 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![Release](https://img.shields.io/github/release/BlueAndi/Pixelix.svg)](https://github.com/BlueAndi/Pixelix/releases)
 [![Build Status](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml/badge.svg)](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml)
 
-[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/0.jpg)](https://www.youtube.com/watch?v=dik8Rm6f3o0 "Pixelix")
-[![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/0.jpg)](https://www.youtube.com/watch?v=UCjJCI5JShY "Pixelix - Remote Button")
+[![pixelix](https://img.youtube.com/vi/u1W9nlzJOI4/1.jpg)](https://youtu.be/u1W9nlzJOI4 "Pixelix & Friends")
+[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/1.jpg)](https://youtu.be/dik8Rm6f3o0 "Pixelix")
+[![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/1.jpg)](https://youtu.be/UCjJCI5JShY "Pixelix - Remote Button")
+
+Click on the preview to see the video.
+___
+
+# Table of Content <!-- omit in toc -->
 
 * [Motivation](#motivation)
 * [Introduction](#introduction)
