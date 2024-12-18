@@ -87,6 +87,13 @@ public:
          * which will continuously trigger the fading effect.
          */
         m_textWidget.disableFadeEffect();
+
+        /* Keep text (default font) in the middle, which means one empty
+         * pixel row at the top and one between the text and the day lamps.
+         * Don't use text widget alignment feature, because it will calculate
+         * a 0 as optimum.
+         */
+        m_textWidget.move(0, 1);
     }
 
     /**
