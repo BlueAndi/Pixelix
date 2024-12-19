@@ -293,9 +293,6 @@ private:
     /** Default date format according to strftime(). */
     static const char       DATE_FORMAT_DEFAULT[];
 
-    /** Color key names for the analog clock configuration. */
-    static const char*      ANALOG_CLOCK_COLOR_KEYS[IDateTimeView::ANA_CLK_COL_MAX];
-
     /**
      * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
      * for toggling between time and date on the display.
@@ -334,6 +331,20 @@ private:
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource);
+
+    /**
      * Get current date/time and update the text, which to be displayed.
      * The update takes only place, if the date changed.
      *
@@ -355,34 +366,6 @@ private:
      */
     bool getTimeAsString(String& time, const String& format, const tm *currentTime = nullptr);
 
-    /**
-     * Convert color to HTML format.
-     * 
-     * @param[in] color Color
-     * 
-     * @return Color in HTML format
-     */
-    static String colorToHtml(const Color& color);
-
-    /**
-     * Convert color from HTML format.
-     * 
-     * @param[in] htmlColor Color in HTML format
-     * 
-     * @return Color
-     */
-    static Color colorFromHtml(const String& htmlColor);
- 
-    /**
-     * Check if analog cfg is valid when present.
-     * 
-     * @param jsonCfg[in]  The json configuration, may be isNull(). 
-     * @param cfg[out]     The parsed config data if json present and valid.
-     * @return true        If no configuration or valid json values.
-     */
-    static bool checkAnalogClockConfig(
-        JsonVariantConst& jsonCfg,
-        IDateTimeView::AnalogClockConfig & cfg);
 };
 
 /******************************************************************************

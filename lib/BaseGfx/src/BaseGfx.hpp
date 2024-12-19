@@ -433,7 +433,7 @@ public:
             {
                 int16_t xIndex;
 
-                for(xIndex = 0; xIndex < height; ++xIndex)
+                for(xIndex = 0; xIndex < width; ++xIndex)
                 {
                     drawVLine(x + xIndex, y, height, color);
                 }

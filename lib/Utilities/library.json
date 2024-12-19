@@ -18,6 +18,8 @@
         "name": "ArduinoJson",
         "version": "~6.21.5"
     }, {
+        "name": "YAGfx"
+    }, {
         "name": "FS"
     }, {
         "name": "LittleFS"

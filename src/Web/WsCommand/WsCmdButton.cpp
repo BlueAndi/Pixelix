@@ -75,7 +75,7 @@ void WsCmdButton::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        executeAction(m_actionId);
+        executeAction(m_actionId, true);
 
         sendPositiveResponse(server, clientId);
     }

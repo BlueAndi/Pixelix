@@ -332,7 +332,6 @@ private:
     SimpleTimer m_cfgReloadTimer;               /**< Timer is used to cyclic reload the configuration from persistent memory. */
     bool        m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
     bool        m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
-
 };
 
 /******************************************************************************

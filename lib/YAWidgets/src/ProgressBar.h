@@ -134,9 +134,9 @@ public:
      */
     void setProgress(uint8_t progress)
     {
-        if (100 < progress)
+        if (100U < progress)
         {
-            m_progress = 100;
+            m_progress = 100U;
         }
         else
         {

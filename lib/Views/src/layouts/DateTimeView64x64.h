@@ -71,17 +71,15 @@ public:
     DateTimeView64x64() :
         DateTimeViewGeneric(),
         m_mode(ViewMode::DIGITAL_AND_ANALOG),
-        m_analogClockCfg( 
-            { 
-                SECOND_DISP_RING,
+        m_secondsMode(SECOND_DISP_RING),
+        m_analogColors(
                 {
                     ColorDef::WHITE,
                     ColorDef::GRAY,
                     ColorDef::YELLOW,
                     ColorDef::BLUE,
                     ColorDef::YELLOW
-                } 
-            }),
+                }),
         m_lastUpdateSecondVal(-1)
     {
         /* Disable fade effect in case the user required to show seconds,
@@ -145,35 +143,68 @@ public:
     }
 
     /**
-     * Get the analog clock configuration.
+     * Get current active configuration in JSON format.
      * 
-     * @return SecondsDisplayMode 
+     * @param[out] cfg  Configuration
      */
-    const AnalogClockConfig* getAnalogClockConfig() const override
-    {
-        return &m_analogClockCfg;
-    }
+    void getConfiguration(JsonObject& jsonCfg) const override;
 
     /**
-     * Set the analog clock configuration.
+     * Apply configuration from JSON.
      * 
-     * @return success of failure
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
      */
-    bool setAnalogClockConfig(const AnalogClockConfig& cfg) override
-    {
-        if (SecondsDisplayMode::SECONDS_DISP_MAX <= cfg.m_secondsMode)
-        {
-            LOG_WARNING("Illegal Seconds Display mode (%hhu)", cfg.m_secondsMode);
-            return false;
-        }
+    bool setConfiguration(const JsonObjectConst& jsonCfg) override;
 
-        m_analogClockCfg = cfg;
-        return true;
-    }
+     /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) override;
+
 protected:
 
-    ViewMode           m_mode;               /**< Used View mode analog, digital or both.  */
-    AnalogClockConfig  m_analogClockCfg;     /**< The clock drawing configuration options. */
+    /** 
+     * Options for displaying seconds in analog clock.
+     */
+    enum SecondsDisplayMode
+    {
+        SECOND_DISP_OFF = 0U,  /**< No second indicator display. */
+        SECOND_DISP_HAND = 1U, /**< Draw second clock hand. */
+        SECOND_DISP_RING = 2U, /**< Show passed seconds on minute tick ring. */
+        SECOND_DISP_BOTH = 3U, /**< Show hand and on ring. */
+        SECONDS_DISP_MAX       /**< Number of configurations. */
+    };
+
+    /** 
+     * Color array indexes for the analog clock drawing.
+     */
+    enum AnalogClockColor
+    {
+        ANA_CLK_COL_HAND_HOUR = 0U, /**< Hour clock hand color. */
+        ANA_CLK_COL_HAND_MIN,       /**< Minutes clock hand color. */
+        ANA_CLK_COL_HAND_SEC,       /**< Seconds colock hand color */
+        ANA_CLK_COL_RING_MIN5_MARK, /**< Ring five minute marks color. */
+        ANA_CLK_COL_RING_MIN_DOT,   /**< Ring minut dots color. */
+        ANA_CLK_COL_MAX             /**< Number of colors. */
+    };
+
+    /** Color key names for the analog clock configuration. */
+    static const char*      ANALOG_CLOCK_COLOR_KEYS[ANA_CLK_COL_MAX];
+
+    ViewMode           m_mode;                           /**< Used View mode analog, digital or both.  */
+    SecondsDisplayMode m_secondsMode;                    /**< Seconds visualisation mode. */
+    Color              m_analogColors[ANA_CLK_COL_MAX];  /**< Clock colors to use.        */
 
     /**
      * Seconds value of last display update. Used to avoid unecessary redrawing.
