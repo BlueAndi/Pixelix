@@ -251,11 +251,83 @@ public:
     }
 
     /**
+     * Get the view mode (analog, digital or both).
+     * 
+     * @return ViewMode 
+     */
+    ViewMode getViewMode() const override
+    {
+        return ViewMode::DIGITAL_ONLY;  /* Generic layout can only do digital. */
+    }
+
+    /**
+     * Set the view mode (analog, digital or both).
+     * 
+     * @return ViewMode 
+     */
+    bool setViewMode(ViewMode mode) override
+    {
+        bool isSuccessful = true;
+
+        if (ViewMode::DIGITAL_ONLY != mode)
+        {
+            LOG_WARNING("Illegal DateTime view mode for generic: (%hhu)", mode);
+            isSuccessful = false;
+        }
+
+        return isSuccessful;
+    }
+
+    /**
      * @brief Update current time values in view
      * 
      * @param now current time
      */
     virtual void setCurrentTime(const tm& now) override;
+
+    /**
+     * Get current active configuration in JSON format.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& jsonCfg) const override
+    {
+        (void)jsonCfg;  /* No configuration for generic. */
+    }
+
+    /**
+     * Apply configuration from JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(const JsonObjectConst& jsonCfg) override
+    {
+        (void)jsonCfg;
+
+        return true;
+    }
+
+    /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) override
+    {
+        (void)jsonMerged;
+        (void)jsonSource;
+
+        return false; /* Nothing to merge. */
+    }
 
     /** Max. number of lamps. One lamp per day in a week. */
     static const uint8_t    MAX_LAMPS       = 7U;

@@ -69,13 +69,20 @@
 /* Set a minimum of 8 digits for the passphrase. It shall not be lower than 8 digits! */
 const uint8_t   APState::WIFI_AP_PASSPHRASE_MIN_LEN     = 8U;
 
-/** Set access point local address */
-const IPAddress APState::LOCAL_IP(192U, 168U, 4U, 1U);
+/**
+ * Set access point local address.
+ * 
+ * The ip-address shall be from a public ip-address space and not from a private one,
+ * like 192.168.0.0/16 or 172.16.0.0/12. This is required to get a pop-up notification
+ * on Samsung mobile devices (Android OS) after wifi connection, which routes the
+ * user to the captive portal.
+ */
+const IPAddress APState::LOCAL_IP(192U, 169U, 4U, 1U);
 
-/* Set access point gateway address */
-const IPAddress APState::GATEWAY(192U, 168U, 4U, 1U);
+/* Set access point gateway address. */
+const IPAddress APState::GATEWAY(192U, 169U, 4U, 1U);
 
-/* Set access point subnet mask */
+/* Set access point subnet mask. */
 const IPAddress APState::SUBNET(255U, 255U, 255U, 0U);
 
 /* Set DNS port */

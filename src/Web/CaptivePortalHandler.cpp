@@ -37,6 +37,7 @@
 #include "FileSystem.h"
 
 #include <SettingsService.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -67,6 +68,20 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
     if (nullptr == request)
     {
         return;
+    }
+
+    /* Log the requested URL to determine how the connected device behaves,
+     * which is required to trigger the dialog on the device which notifies
+     * the user that further settings might be necessary and will jump to
+     * our captive portal.
+     */
+    {
+        const String&   host            = request->host();
+        const String&   requestedUrl    = request->url();
+        const char*     method          = request->methodToString();
+
+        LOG_DEBUG("Request from: %s", host.c_str());
+        LOG_DEBUG("Request for : %s %s", method, requestedUrl.c_str());
     }
 
     if (HTTP_POST == request->method())

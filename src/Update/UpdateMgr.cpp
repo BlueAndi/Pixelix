@@ -164,7 +164,7 @@ void UpdateMgr::beginProgress()
         DisplayMgr::getInstance().end();
 
         m_updateIsRunning   = true;
-        m_progress          = UINT8_MAX; // Force update
+        m_progress          = UINT8_MAX; /* Force update. */
         m_textWidget.setFormatStr("Update");
 
         /* Show user update status */

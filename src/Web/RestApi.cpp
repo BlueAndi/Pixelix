@@ -102,7 +102,7 @@ public:
      */
     void executeAction(ButtonActionId id)
     {
-        ButtonActions::executeAction(id);
+        ButtonActions::executeAction(id, true);
     }
 
 private:

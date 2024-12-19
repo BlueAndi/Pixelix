@@ -488,6 +488,9 @@
                             .attr("class", "btn btn-dark")
                             .attr("id", "sticky" + index)
                             .attr("onclick", "handleStickySlot(" + index + ")")
+                            .attr("data-toggle", "tooltip")
+                            .attr("data-placement", "top")
+                            .attr("title", "If the sticky flag is set, the slot scheduler will be disabled and the slot with the sticky flag will be shown.")
                             .text((false === rsp.slots[index].isSticky) ? "-" : "S");
 
                         $buttonSlotStatus = $("<button>")
@@ -495,6 +498,9 @@
                             .attr("id", "slotStatus" + index)
                             .attr("type", "button")
                             .attr("onclick", "handleSlotStatus(" + index + ")")
+                            .attr("data-toggle", "tooltip")
+                            .attr("data-placement", "top")
+                            .attr("title", "Every enabled slot will be shown during slot scheduling, except there is a sticky slot. Disabled slots are skipped by the slot scheduler.")
                             .text((false === rsp.slots[index].isDisabled) ? "✓" : "-");
 
                         $divDuration = $("<div>")

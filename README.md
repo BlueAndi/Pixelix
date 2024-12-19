@@ -8,8 +8,14 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![Release](https://img.shields.io/github/release/BlueAndi/Pixelix.svg)](https://github.com/BlueAndi/Pixelix/releases)
 [![Build Status](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml/badge.svg)](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml)
 
-[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/0.jpg)](https://www.youtube.com/watch?v=dik8Rm6f3o0 "Pixelix")
-[![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/0.jpg)](https://www.youtube.com/watch?v=UCjJCI5JShY "Pixelix - Remote Button")
+[![pixelix](https://img.youtube.com/vi/u1W9nlzJOI4/1.jpg)](https://youtu.be/u1W9nlzJOI4 "Pixelix & Friends")
+[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/1.jpg)](https://youtu.be/dik8Rm6f3o0 "Pixelix")
+[![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/1.jpg)](https://youtu.be/UCjJCI5JShY "Pixelix - Remote Button")
+
+Click on the preview to see the video.
+___
+
+# Table of Content <!-- omit in toc -->
 
 * [Motivation](#motivation)
 * [Introduction](#introduction)
@@ -83,6 +89,7 @@ The following shows the absolute minimal wiring setup e.g. for the ESP32 DevKitV
 # Supported Development Boards
 
 In the meantime several other boards are supported as well. You can find them in the [list of boards](./doc/boards/README.md).
+If your board is not listed in the main branch, please have a look in the [Development branch](https://github.com/BlueAndi/Pixelix/tree/Development) too.
 
 With the [Ulanzi TC001 smart pixel clock](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882) you even don't need to assemble the electronic and mechanic together.
 
@@ -121,7 +128,7 @@ Restart the device and **keep the button pressed** until it shows the SSID of th
 * SSID: **pixelix-&lt;DEVICE-ID&gt;**
 * Passphrase: **Luke, I am your father.**
 
-Depended on the type of device you are using for connecting to PIXELIX, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
+Depended on the type of device you are using for connecting to PIXELIX, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.169.4.1 in the browser address field.
 
 Use the following default credentials to get access to the PIXELIX web interface:
 * User: **luke**
@@ -205,7 +212,7 @@ Keyword   | Description
 {vb}      | Vertical alignment bottom
 
 **Notes**
-- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.5.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.  
 
 **Examples**

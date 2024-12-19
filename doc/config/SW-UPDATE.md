@@ -19,6 +19,9 @@
 * [Update via USB](#update-via-usb)
 * [Use the browser](#use-the-browser)
 * [Flash Layout Information](#flash-layout-information)
+  * [esp32 / esp32-s2](#esp32--esp32-s2)
+  * [esp32-s3](#esp32-s3)
+  * [Filesystem](#filesystem)
 * [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 * [License](#license)
 * [Contribution](#contribution)
@@ -133,21 +136,39 @@ Steps:
 
 # Flash Layout Information
 
+## esp32 / esp32-s2
+
 | Binary | Address (hex) |
 | ------ | ------------- |
 | bootloader.bin | 0x1000 |
 | partitions.bin | 0x8000 |
-| firmware.bin | 0x10000 |
-| littlefs.bin | see next table |
+| firmware.bin | 0x10000 (ota_0) |
+| littlefs.bin | see filesystem table |
 
-| Development Board | Flash size in MByte | Address (hex) of littlefs.bin |
-| ----------------- | ------------------------ | ----------------------------- |
-| esp32doit-devkit-v1 | 4 | 0x2b0000 |
-| esp32-nodemcu | 4 | 0x2b0000 |
-| az-delivery-devkit-v4 | 4 | 0x2b0000 |
-| lilygo-ttgo-t-display | 8 | 0x670000 |
-| lilygo-t-display-s3 | 16 | 0xc90000 |
-| adafruit_feathrer_esp32_v2 | 8 | 0x670000 |
+## esp32-s3
+
+| Binary | Address (hex) |
+| ------ | ------------- |
+| bootloader.bin | 0x0000 |
+| partitions.bin | 0x8000 |
+| firmware.bin | 0x10000 (ota_0) |
+| littlefs.bin | see filesystem table |
+
+## Filesystem
+
+| Development Board | Flash size in MByte | Address (hex) of littlefs.bin | Partition table |
+| ----------------- | ------------------- | ----------------------------- | --------------- |
+| adafruit_feather_esp32_v2 | 8 | 0x670000 | default_8MB.csv |
+| adafruit_matrixportal_s3 | 8 | 0x450000 | partitions-8MB-tinyuf2.csv |
+| az-delivery-devkit-v4 | 4 | 0x2d0000 | custom_4MB_no_coredump.csv |
+| esp32doit-devkit-v1 | 4 | 0x2d0000 | custom_4MB_no_coredump.csv |
+| esp32-s3-devkitc-1-n16r8v | 16 | 0xc90000 | default_16MB.csv |
+| esp32-nodemcu | 4 | 0x2d0000 | custom_4MB_no_coredump.csv |
+| lilygo-ttgo-t-display | 8 | 0x670000 | default_8MB.csv |
+| lilygo-t-display-s3 | 16 | 0xc90000 | default_16MB.csv |
+| m5stack_core | 16 | 0xc90000 | default_16MB.csv |
+| ulanzi-tc001 | 4 | 0x2d0000 | custom_4MB_no_coredump.csv |
+| wemos_lolin_s2_mini | 4 | 0x2d0000 | custom_4MB_no_coredump.csv |
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

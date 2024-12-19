@@ -131,10 +131,10 @@
                                             <label class="btn btn-outline-secondary" for="viewMode0">Digital</label>
     
     
-                                            <input type="radio" class="btn-check" id="viewMode1" name="viewMode" value="1" checked />
+                                            <input type="radio" class="btn-check" id="viewMode1" name="viewMode" value="1" />
                                             <label class="btn btn-outline-secondary" for="viewMode1">Analog</label>
     
-                                            <input type="radio" class="btn-check" id="viewMode2" name="viewMode" value="2" checked />
+                                            <input type="radio" class="btn-check" id="viewMode2" name="viewMode" value="2" />
                                             <label class="btn btn-outline-secondary" for="viewMode2">Both</label>
                                         </div>
                                     </div>
@@ -149,13 +149,13 @@
                                             <label class="btn btn-outline-secondary" for="secondsMode0">Off</label>
     
     
-                                            <input type="radio" class="btn-check" id="secondsMode1" name="secondsMode" value="1" checked />
+                                            <input type="radio" class="btn-check" id="secondsMode1" name="secondsMode" value="1" />
                                             <label class="btn btn-outline-secondary" for="secondsMode1">Clock Hand</label>
     
-                                            <input type="radio" class="btn-check" id="secondsMode2" name="secondsMode" value="2" checked />
+                                            <input type="radio" class="btn-check" id="secondsMode2" name="secondsMode" value="2" />
                                             <label class="btn btn-outline-secondary" for="secondsMode2">Dial Dots</label>
                                             
-                                            <input type="radio" class="btn-check" id="secondsMode3" name="secondsMode" value="3" checked />
+                                            <input type="radio" class="btn-check" id="secondsMode3" name="secondsMode" value="3" />
                                             <label class="btn btn-outline-secondary" for="secondsMode3">Dial and Hand</label>
                                         </div>
                                     </div>
@@ -318,9 +318,7 @@
                         startOfWeek: $("#startOfWeek").val(),
                         dayOnColor: $("#dayOnColor").val(),
                         dayOffColor: $("#dayOffColor").val(),
-                        handHourCol: $("#handHourCol").val(),
                         viewMode: $('input[name=viewMode]:checked').val()
-
                     };
 
                 if ((64 <= ~DISPLAY_HEIGHT~) && (64 <= ~DISPLAY_WIDTH~))

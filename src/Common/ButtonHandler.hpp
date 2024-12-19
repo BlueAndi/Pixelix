@@ -178,7 +178,8 @@ public:
                     }
                     else if (BUTTON_STATE_PRESSED == m_lastButtonInfo[buttonIdx].state)
                     {
-                        handlePressed(static_cast<ButtonId>(buttonIdx));
+                        handlePressed(static_cast<ButtonId>(buttonIdx), m_lastButtonInfo[buttonIdx].firstTime);
+                        m_lastButtonInfo[buttonIdx].firstTime = false;
                     }
                     else
                     {
@@ -207,11 +208,13 @@ private:
     {
         ButtonId    buttonId;   /**< The id of the button. */
         ButtonState state;      /**< Button state. */
+        bool        firstTime;  /**< First time in the state. */
         uint32_t    timestamp;  /**< Timestamp about button state reception in ms. */
 
         ButtonInfo() :
             buttonId(BUTTON_ID_CNT),
             state(BUTTON_STATE_NC),
+            firstTime(true),
             timestamp(0U)
         {
         }
@@ -234,6 +237,7 @@ private:
 
         info.buttonId   = buttonId;
         info.state      = state;
+        info.firstTime  = true;
         info.timestamp  = millis();
 
         (void)m_stateQueue.sendToBack(info, portMAX_DELAY);
@@ -248,18 +252,19 @@ private:
     void handleTriggers(ButtonId buttonId, uint32_t triggerCnt)
     {
         ButtonActionId action = ButtonCtrl::handleTriggers(buttonId, triggerCnt);
-        executeAction(action);
+        executeAction(action, true);
     }
 
     /**
      * Handle button pressed and executing the corresponding action.
      * 
-     * @param buttonId  The button id.
+     * @param[in] buttonId  The button id.
+     * @param[in] firstTime First time the button is pressed or not.
      */
-    void handlePressed(ButtonId buttonId)
+    void handlePressed(ButtonId buttonId, bool firstTime)
     {
         ButtonActionId action = ButtonCtrl::handlePressed(buttonId);
-        executeAction(action);
+        executeAction(action, firstTime);
     }
 };
 
