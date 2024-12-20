@@ -495,10 +495,10 @@ void InitState::showStartupInfoOnSerial()
     WiFiUtil::getEFuseMAC(macAddr);
 
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO("Target: %s", Version::TARGET);
-    LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
+    LOG_INFO("Target: %s", Version::getTargetName());
+    LOG_INFO("SW version: %s", Version::getSoftwareVersion());
     delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("SW revision: %s", Version::SOFTWARE_REV);
+    LOG_INFO("SW revision: %s", Version::getSoftwareRevision());
     LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
     LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
     delay(20U); /* To avoid missing log messages on the console */
@@ -524,7 +524,7 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
         sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
 
         /* Show sw version (short) */
-        sysMsg.show(String(Version::SOFTWARE_VER), DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+        sysMsg.show(String(Version::getSoftwareVersion()), DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
         /* Clear and wait */
         sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
@@ -574,7 +574,7 @@ bool InitState::isFsCompatible()
         if (false == jsonVersion.isNull())
         {
             String fileSystemVersion    = jsonVersion.as<String>();
-            String firmwareVersion      = Version::SOFTWARE_VER;
+            String firmwareVersion      = Version::getSoftwareVersion();
 
             /* Note that the firmware version may have a additional postfix.
              * Example: v4.1.2:b or v4.1.2:b:lc
