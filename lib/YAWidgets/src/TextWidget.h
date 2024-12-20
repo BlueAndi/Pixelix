@@ -517,13 +517,13 @@ private:
     void paint(YAGfx& gfx) override;
 
     /**
-     * Walks throught the AST and integrates the character code keywords.
-     * Thats means the token will be converted to a text token and its
-     * string will be the character code.
+     * Walks throught the AST and integrates the special character code
+     * keywords. Thats means the token will be converted to a text token and
+     * its string will be the character code.
      * 
      * @param[in, out] ast  The abstract syntax tree (AST)
      */
-    void characterCodeKeywordToText(TWAbstractSyntaxTree& ast);
+    void specialCharacterCodeKeywordToText(TWAbstractSyntaxTree& ast);
 
     /**
      * Get only the text from abstract syntax tree.

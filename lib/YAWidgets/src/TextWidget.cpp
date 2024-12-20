@@ -229,7 +229,10 @@ void TextWidget::setFormatStr(const String& formatStr)
             m_prepareNewText    = true;
             m_astNew            = std::move(ast);
 
-            characterCodeKeywordToText(m_astNew);
+            /* Convert special character codes here to avoid that they need
+             * later always special handling.
+             */
+            specialCharacterCodeKeywordToText(m_astNew);
         }
     }
 }
@@ -675,7 +678,7 @@ void TextWidget::paint(YAGfx& gfx)
     }
 }
 
-void TextWidget::characterCodeKeywordToText(TWAbstractSyntaxTree& ast)
+void TextWidget::specialCharacterCodeKeywordToText(TWAbstractSyntaxTree& ast)
 {
     uint32_t    astLength   = ast.length();
     uint32_t    idx;
