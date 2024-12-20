@@ -222,6 +222,7 @@ private:
     String                  m_user;                 /**< MQTT authentication: user name */
     String                  m_password;             /**< MQTT authentication: password */
     String                  m_hostname;             /**< MQTT hostname */
+    uint16_t                m_port;                 /**< MQTT port */
     WiFiClient              m_wifiClient;           /**< WiFi client */
     PubSubClient            m_mqttClient;           /**< MQTT client */
     State                   m_state;                /**< Connection state */
@@ -238,6 +239,7 @@ private:
         m_user(),
         m_password(),
         m_hostname(),
+        m_port(MQTT_PORT),
         m_wifiClient(),
         m_mqttClient(m_wifiClient),
         m_state(STATE_DISCONNECTED),
