@@ -66,6 +66,84 @@
  * Private Methods
  *****************************************************************************/
 
+uint8_t MultiIconView32x8::getActiveIconSlots()
+{
+    uint8_t cnt = 0U;
+    uint8_t idx = 0U;
+
+    while (MAX_ICON_SLOTS > idx)
+    {
+        BitmapWidget& bitmapWidget = m_bitmapWidgets[idx];
+
+        if (false == bitmapWidget.isEmpty())
+        {
+            ++cnt;
+        }
+
+        ++idx;
+    }
+
+    return cnt;
+}
+
+void MultiIconView32x8::reorder()
+{
+    uint8_t cnt = getActiveIconSlots();
+
+    /*      +-------------------------------+
+     *      |                               |
+     *      |               0               |
+     *      |                               |
+     *      +-------------------------------+
+     */
+
+    /*      +---------------+---------------+
+     *      |               |               |
+     *      |       0       |       1       |
+     *      |               |               |
+     *      +---------------+---------------+
+     */
+
+    /*      +---------+----------+----------+
+     *      |         |          |          |
+     *      |    0    |     1    |    2     |
+     *      |         |          |          |
+     *      +---------+----------+----------+
+     */
+
+    /*      +-------+-------+-------+-------+
+     *      |       |       |       |       |
+     *      |   0   |   1   |   2   |   3   |
+     *      |       |       |       |       |
+     *      +-------+-------+-------+-------+
+     */
+
+    applyLayout(cnt);
+}
+
+void MultiIconView32x8::applyLayout(uint8_t widgetCnt)
+{
+    uint8_t        cnt          = 0U;
+    uint8_t        idx          = 0U;
+    const uint16_t WIDGET_WIDTH = (0U < widgetCnt) ? (CONFIG_LED_MATRIX_WIDTH / widgetCnt) : 0U;
+
+    while ((MAX_ICON_SLOTS > idx) && (widgetCnt > cnt))
+    {
+        BitmapWidget& bitmapWidget = m_bitmapWidgets[idx];
+
+        if (false == bitmapWidget.isEmpty())
+        {
+            bitmapWidget.move(cnt * WIDGET_WIDTH, 0);
+            bitmapWidget.setWidth(WIDGET_WIDTH);
+            bitmapWidget.setHeight(CONFIG_LED_MATRIX_HEIGHT);
+
+            ++cnt;
+        }
+
+        ++idx;
+    }
+}
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/
