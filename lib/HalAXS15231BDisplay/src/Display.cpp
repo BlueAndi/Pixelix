@@ -69,9 +69,9 @@
 
 Display::Display() :
     IDisplay(),
-    m_bus(new Arduino_ESP32QSPI(TFT_QSPI_CS /* CS */, TFT_QSPI_SCK /* SCK */, TFT_QSPI_D0 /* SDIO0 */, TFT_QSPI_D1 /* SDIO1 */, TFT_QSPI_D2 /* SDIO2 */, TFT_QSPI_D3 /* SDIO3 */)),
-    m_g(new Arduino_AXS15231B(m_bus, TFT_QSPI_RST /* RST */, 0 /* rotation */,false /* IPS */, TFT_WIDTH, TFT_HEIGHT)),
-    m_gfx(new Arduino_Canvas(TFT_WIDTH /* width */, TFT_HEIGHT /* height */, m_g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */)),
+    m_bus(TFT_QSPI_CS /* CS */, TFT_QSPI_SCK /* SCK */, TFT_QSPI_D0 /* SDIO0 */, TFT_QSPI_D1 /* SDIO1 */, TFT_QSPI_D2 /* SDIO2 */, TFT_QSPI_D3 /* SDIO3 */),
+    m_g(&m_bus, TFT_QSPI_RST /* RST */, 0 /* rotation */,false /* IPS */, TFT_WIDTH, TFT_HEIGHT),
+    m_gfx(TFT_WIDTH /* width */, TFT_HEIGHT /* height */, &m_g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */),
     m_ledMatrix(),
     m_brightness(DEFAULT_BRIGHTNESS),
     m_isOn(false)
@@ -104,16 +104,16 @@ void Display::show()
             intensity /= 256U;
             brightnessAdjustedColor.setIntensity(static_cast<uint8_t>(intensity));
             
-            m_gfx->fillRect(xNative, yNative, PIXEL_HEIGHT, PIXEL_WIDTH, brightnessAdjustedColor.to565());
+            m_gfx.fillRect(xNative, yNative, PIXEL_HEIGHT, PIXEL_WIDTH, brightnessAdjustedColor.to565());
        }
     }
     
-     m_gfx->flush();
+     m_gfx.flush();
 }
 
 void Display::off()
 {
-    m_gfx->displayOff(); 
+    m_gfx.displayOff(); 
 
 #if defined (TFT_BL) && defined (TFT_BACKLIGHT_ON)
 
@@ -136,7 +136,7 @@ void Display::off()
 
 void Display::on()
 {
-    m_gfx->displayOn(); 
+    m_gfx.displayOn(); 
 
 #if defined (TFT_BL) && defined (TFT_BACKLIGHT_ON)
 
