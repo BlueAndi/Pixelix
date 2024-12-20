@@ -57,48 +57,6 @@ namespace Version
  * Macros
  *****************************************************************************/
 
-#ifndef SW_VERSION
-
-/**
- * Software version number.
- */
-#define SW_VERSION  "Unknown"
-
-#endif  /* SW_VERSION */
-
-#ifndef SW_REV
-
-/**
- * Software revision number (git SHA-1).
- */
-#define SW_REV      "Unknown"
-
-#endif  /* SW_REV */
-
-#ifndef SW_REV_SHORT
-
-/**
- * Software revision number (git SHA-1) in short.
- */
-#define SW_REV_SHORT    "Unknown"
-
-#endif  /* SW_REV_SHORT */
-
-#ifndef SW_BRANCH
-
-/**
- * Software branch, the software was built from.
- */
-#define SW_BRANCH "Unknown"
-
-#endif  /* SW_BRANCH */
-
-/** Stringizing the value. */
-#define Q(x) #x
-
-/** Quote the given value to get a string literal. */
-#define QUOTE(x) Q(x)
-
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
@@ -107,22 +65,43 @@ namespace Version
  * Functions
  *****************************************************************************/
 
-    /** Software revision */
-    static const char   SOFTWARE_REV[]          = QUOTE(SW_REV);
+/**
+ * Get software revision.
+ * 
+ * @return Software revision
+ */
+const char* getSoftwareRevision();
 
-    /** Software revision short */
-    static const char   SOFTWARE_REV_SHORT[]    = QUOTE(SW_REV_SHORT);
+/**
+ * Get short software revision.
+ * 
+ * @return Short software revision
+ */
+const char* getSoftwareRevisionShort();
 
-    /** Software version */
-    static const char   SOFTWARE_VER[]          = QUOTE(SW_VERSION);
+/**
+ * Get software version.
+ * 
+ * @return Software version
+ */
+const char* getSoftwareVersion();
 
-    /** Software branch, the software was built from. */
-    static const char   SOFTWARE_BRANCH[]       = QUOTE(SW_BRANCH);
+/**
+ * Get software branch name, the software was built from.
+ * 
+ * @return Software branch name
+ */
+const char* getSoftwareBranchName();
 
-    /** The target of this build. */
-    static const char   TARGET[]                = QUOTE(PIO_ENV);
-}
+/**
+ * Get target name.
+ * 
+ * @return Target name
+ */
+const char* getTargetName();
 
-#endif  /* VERSION_H */
+} /* namespace Version */
+
+#endif /* VERSION_H */
 
 /** @} */
