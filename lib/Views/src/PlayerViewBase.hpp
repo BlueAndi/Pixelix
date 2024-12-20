@@ -45,6 +45,7 @@
 #include "Layouts.h"
 #include "./layouts/PlayerViewGeneric.h"
 #include "./layouts/PlayerView32x8.h"
+#include "./layouts/PlayerView32x16.h"
 #include "./layouts/PlayerView64x64.h"
 
 /******************************************************************************
@@ -75,6 +76,19 @@ public:
  */
 template<>
 class PlayerView<LAYOUT_32X8> : public PlayerView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~PlayerView() = default;
+};
+
+/**
+ * View for icon, text and progress bar for 32x16 display.
+ */
+template<>
+class PlayerView<LAYOUT_32X16> : public PlayerView32x16
 {
 public:
     /**

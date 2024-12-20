@@ -45,6 +45,7 @@
 #include "Layouts.h"
 #include "./layouts/IconTextLampViewGeneric.h"
 #include "./layouts/IconTextLampView32x8.h"
+#include "./layouts/IconTextLampView32x16.h"
 #include "./layouts/IconTextLampView64x64.h"
 
 /******************************************************************************
@@ -75,6 +76,19 @@ public:
  */
 template<>
 class IconTextLampView<LAYOUT_32X8> : public IconTextLampView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~IconTextLampView() = default;
+};
+
+/**
+ * View for icon, text and lamps for 32x16 display.
+ */
+template<>
+class IconTextLampView<LAYOUT_32X16> : public IconTextLampView32x16
 {
 public:
     /**

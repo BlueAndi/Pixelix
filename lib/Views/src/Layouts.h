@@ -44,6 +44,11 @@
 /** Layout type derived by LED matrix width and height. */
 #define LAYOUT_TYPE LAYOUT_32X8
 
+#elif (32U == CONFIG_LED_MATRIX_WIDTH) && (16U == CONFIG_LED_MATRIX_HEIGHT)
+
+/** Layout type derived by LED matrix width and height. */
+#define LAYOUT_TYPE LAYOUT_32X16
+
 #elif (64U == CONFIG_LED_MATRIX_WIDTH) && (64U == CONFIG_LED_MATRIX_HEIGHT)
 
 /** Layout type derived by LED matrix width and height. */
@@ -75,6 +80,7 @@ typedef enum
 {
     LAYOUT_GENERIC = 0, /**< Generic layout, used in case there is no specific one. */
     LAYOUT_32X8,        /**< Layout for 32x8 pixel displays. */
+    LAYOUT_32X16,       /**< Layout for 32x16 pixel displays. */
     LAYOUT_64X64        /**< Layout for 64x64 pixel displays. */
 
 } Layout;

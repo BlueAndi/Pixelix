@@ -45,6 +45,7 @@
 #include "Layouts.h"
 #include "./layouts/MultiIconViewGeneric.h"
 #include "./layouts/MultiIconView32x8.h"
+#include "./layouts/MultiIconView32x16.h"
 #include "./layouts/MultiIconView64x64.h"
 
 /******************************************************************************
@@ -75,6 +76,19 @@ public:
  */
 template<>
 class MultiIconView<LAYOUT_32X8> : public MultiIconView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~MultiIconView() = default;
+};
+
+/**
+ * View for multiple icons for 32x16 display.
+ */
+template<>
+class MultiIconView<LAYOUT_32X16> : public MultiIconView32x16
 {
 public:
     /**

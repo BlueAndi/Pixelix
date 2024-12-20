@@ -63,8 +63,12 @@ To find out which part shall be connected to which pin of your development board
 ## ESP32-S3 DEVKITC-1-N16R8V
 * Reference design: [ESP32-S3-DevKitC-1](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitc-1-v1.0.html)
 * Pinning:
-  * Board: [board:esp32-s3-devkitc-1-n16r8v-LED-32x8](../../config/board.ini)
-  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+  * LED matrix 32x8
+    * Board: [board:esp32-s3-devkitc-1-n16r8v-LED-32x8](../../config/board.ini)
+    * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+  * LED matrix 32x16
+    * Board: [board:esp32-s3-devkitc-1-n16r8v-LED-32x16](../../config/board.ini)
+    * Display: [display:led_matrix_32x16_column_major_alternating](../../config/display.ini)
 * Not compatible with Pixelix boards.
 
 ## ESP32 NodeMCU

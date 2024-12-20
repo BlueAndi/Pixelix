@@ -45,6 +45,7 @@
 #include "Layouts.h"
 #include "./layouts/CanvasTextViewGeneric.h"
 #include "./layouts/CanvasTextView32x8.h"
+#include "./layouts/CanvasTextView32x16.h"
 #include "./layouts/CanvasTextView64x64.h"
 
 /******************************************************************************
@@ -75,6 +76,19 @@ public:
  */
 template<>
 class CanvasTextView<LAYOUT_32X8> : public CanvasTextView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~CanvasTextView() = default;
+};
+
+/**
+ * View for canvas and text for 32x16 display.
+ */
+template<>
+class CanvasTextView<LAYOUT_32X16> : public CanvasTextView32x16
 {
 public:
     /**

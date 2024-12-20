@@ -45,6 +45,7 @@
 #include "Layouts.h"
 //#include "./layouts/OpenWeatherViewGeneric.h"
 #include "./layouts/OpenWeatherView32x8.h"
+#include "./layouts/OpenWeatherView32x16.h"
 #include "./layouts/OpenWeatherView64x64.h"
 
 /******************************************************************************
@@ -75,6 +76,19 @@ public:
  */
 template<>
 class OpenWeatherView<LAYOUT_32X8> : public OpenWeatherView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~OpenWeatherView() = default;
+};
+
+/**
+ * View for OpenWeather for 32x16 display.
+ */
+template<>
+class OpenWeatherView<LAYOUT_32X16> : public OpenWeatherView32x16
 {
 public:
     /**

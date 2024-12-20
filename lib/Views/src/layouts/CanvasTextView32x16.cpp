@@ -25,98 +25,51 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Base class for view with date and time.
+ * @brief  View for 32x16 LED matrix with canvas and text for LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
- *
- * @{
  */
-
-#ifndef DATE_TIME_VIEW_BASE_HPP
-#define DATE_TIME_VIEW_BASE_HPP
-
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Layouts.h"
-#include "./layouts/DateTimeViewGeneric.h"
-#include "./layouts/DateTimeView32x8.h"
-#include "./layouts/DateTimeView32x16.h"
-#include "./layouts/DateTimeView64x64.h"
+#include "CanvasTextView32x16.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
-
-/**
- * View for date and time.
- * 
- * @tparam option   Layout which to choose
- */
-template< Layout option >
-class DateTimeView : public DateTimeViewGeneric
-{
-public:
-    /**
-     * Destroys the view.
-     */
-    virtual ~DateTimeView() = default;
-};
-
-/**
- * View for date and time for 32x8 display.
- */
-template<>
-class DateTimeView<LAYOUT_32X8> : public DateTimeView32x8
-{
-public:
-    /**
-     * Destroys the view.
-     */
-    virtual ~DateTimeView() = default;
-};
-
-/**
- * View for date and time for 32x16 display.
- */
-template<>
-class DateTimeView<LAYOUT_32X16> : public DateTimeView32x16
-{
-public:
-    /**
-     * Destroys the view.
-     */
-    virtual ~DateTimeView() = default;
-};
-
-/**
- * View for date and time for 64x64 display.
- */
-template<>
-class DateTimeView<LAYOUT_64X64> : public DateTimeView64x64
-{
-public:
-    /**
-     * Destroys the view.
-     */
-    virtual ~DateTimeView() = default;
-};
-
-/** View for date and time, considering the display size. */
-using DateTimeViewBase = DateTimeView<LAYOUT_TYPE>;
 
 /******************************************************************************
- * Functions
+ * Prototypes
  *****************************************************************************/
 
-#endif  /* DATE_TIME_VIEW_BASE_HPP */
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
 
-/** @} */
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

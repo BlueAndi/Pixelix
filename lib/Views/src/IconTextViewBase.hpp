@@ -45,6 +45,7 @@
 #include "Layouts.h"
 #include "./layouts/IconTextViewGeneric.h"
 #include "./layouts/IconTextView32x8.h"
+#include "./layouts/IconTextView32x16.h"
 #include "./layouts/IconTextView64x64.h"
 
 /******************************************************************************
@@ -75,6 +76,19 @@ public:
  */
 template<>
 class IconTextView<LAYOUT_32X8> : public IconTextView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~IconTextView() = default;
+};
+
+/**
+ * View for canvas and text for 32x16 display.
+ */
+template<>
+class IconTextView<LAYOUT_32X16> : public IconTextView32x16
 {
 public:
     /**
