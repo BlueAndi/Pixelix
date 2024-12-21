@@ -39,6 +39,7 @@
 #include <Display.h>
 #include <SettingsService.h>
 
+#include "Services.h"
 #include "FileSystem.h"
 #include "MyWebServer.h"
 #include "DisplayMgr.h"
@@ -163,6 +164,9 @@ void UpdateMgr::beginProgress()
         /* Stop display manager */
         DisplayMgr::getInstance().end();
 
+        /* Stop services */
+        Services::stopAll();
+
         m_updateIsRunning   = true;
         m_progress          = UINT8_MAX; /* Force update. */
         m_textWidget.setFormatStr("Update");
@@ -207,6 +211,9 @@ void UpdateMgr::endProgress()
 {
     if (true == m_isInitialized)
     {
+        /* Start services */
+        Services::startAll();
+
         /* Start display manager */
         if (false == DisplayMgr::getInstance().begin())
         {
