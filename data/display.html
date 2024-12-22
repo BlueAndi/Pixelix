@@ -98,7 +98,7 @@
                         <div class="form-group">
                             <label class="form-label" for="minBrightness">Min. brightness soft limit:</label>
                             <div class="text-primary" id="minBrightnessValue">?</div>
-                            <input type="range" class="form-range" id="minBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#minBrightness').text(calcPercentage(this.value) + ' %')" disabled />
+                            <input type="range" class="form-range" id="minBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#minBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="maxBrightness">Max. brightness soft limit:</label>
