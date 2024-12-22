@@ -113,7 +113,7 @@ The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, beca
 This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
 * [Hardware description](./pixelix/v1.5/ELECTRONIC.md)
 * [Bill of material](./pixelix/v1.5/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Pinning](../../lib/HalLedMatrix/src/Board.h)
 * [Schematic](./pixelix/v1.5/schematics/)
 * [PCB](./pixelix/v1.5/pcb/)
 * [Housing Part 1](https://www.thingiverse.com/thing:2791276)
@@ -123,14 +123,14 @@ This board was original developed with a ESP32 DevKit V1 development board as pi
 The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
 * [Hardware description](./pixelix/v2.0/ELECTRONIC.md)
 * [Bill of material](./pixelix/v2.0/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Pinning](../../lib/HalLedMatrix/src/Board.h)
 * [Housing](./pixelix/housing/)
 
 # Pixelix Board v2.1
 The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
 * [Hardware description](./pixelix/v2.1/ELECTRONIC.md)
 * [Bill of material](./pixelix/v2.1/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Pinning](../../lib/HalLedMatrix/src/Board.h)
 * [Housing](./pixelix/housing/)
 
 # Ulanzi TC001 smart pixel clock
