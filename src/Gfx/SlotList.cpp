@@ -146,6 +146,18 @@ IPluginMaintenance* SlotList::getPlugin(uint8_t slotId)
     return plugin;
 }
 
+const IPluginMaintenance* SlotList::getPlugin(uint8_t slotId) const
+{
+    const IPluginMaintenance* plugin = nullptr;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        plugin = m_slots[slotId].getPlugin();
+    }
+
+    return plugin;
+}
+
 bool SlotList::setPlugin(uint8_t slotId, IPluginMaintenance* plugin)
 {
     bool isSuccessful = false;
@@ -320,7 +332,7 @@ bool SlotList::isSlotEmptyAndUnlocked(uint8_t slotId)
     return isEmptyAndUnlocked;
 }
 
-uint8_t SlotList::getSlotIdByPluginUID(uint16_t pluginUid)
+uint8_t SlotList::getSlotIdByPluginUID(uint16_t pluginUid) const
 {
     uint8_t slotId = 0U;
 

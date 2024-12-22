@@ -94,6 +94,13 @@ public:
     IPluginMaintenance* getPlugin();
 
     /**
+     * Get plugin which is plugged in.
+     *
+     * @return Plugin
+     */
+    const IPluginMaintenance* getPlugin() const;
+
+    /**
      * Set plugin to slot.
      * If slot is locked, unlock it first!
      * Remove plugin from slot, use nullptr as argument.

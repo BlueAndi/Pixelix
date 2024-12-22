@@ -94,6 +94,11 @@ IPluginMaintenance* Slot::getPlugin()
     return m_plugin;
 }
 
+const IPluginMaintenance* Slot::getPlugin() const
+{
+    return m_plugin;
+}
+
 bool Slot::setPlugin(IPluginMaintenance* plugin)
 {
     bool status = false;

@@ -163,6 +163,15 @@ public:
     IPluginMaintenance* getPlugin(uint8_t slotId);
 
     /**
+     * Get plugin which is plugged into the slot.
+     * 
+     * @param[in] slotId    The id of the slot.
+     *
+     * @return Plugin
+     */
+    const IPluginMaintenance* getPlugin(uint8_t slotId) const;
+
+    /**
      * Set plugin to slot.
      * 
      * If slot is locked, it will fail.
@@ -280,7 +289,7 @@ public:
      * 
      * @return If plugin slot is found, it will return its slot id otherwise SLOT_ID_INVALID.
      */
-    uint8_t getSlotIdByPluginUID(uint16_t pluginUid);
+    uint8_t getSlotIdByPluginUID(uint16_t pluginUid) const;
 
     /**
      * Get slot which is marked sticky.
