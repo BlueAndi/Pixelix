@@ -124,7 +124,7 @@ public:
      *
      * @return If enabled, it will return true otherwise false.
      */
-    bool getAutoBrightnessAdjustment(void);
+    bool getAutoBrightnessAdjustment(void) const;
 
     /**
      * Set display brightness in digits [0; 255].
@@ -138,7 +138,23 @@ public:
      *
      * @return Display brightness in digits
      */
-    uint8_t getBrightness(void);
+    uint8_t getBrightness(void) const;
+
+    /**
+     * Set the soft brightness limits.
+     * 
+     * @param[in] minBrightness The minimum brightness level in digits [0; 255].
+     * @param[in] maxBrightness The maximum brightness level in digits [0; 255].
+     */
+    void setBrightnessSoftLimits(uint8_t minBrightness, uint8_t maxBrightness);
+
+    /**
+     * Get the soft brightness limits.
+     * 
+     * @param[out] minBrightness The minimum brightness level in digits [0; 255].
+     * @param[out] maxBrightness The maximum brightness level in digits [0; 255].
+     */
+    void getBrightnessSoftLimits(uint8_t& minBrightness, uint8_t& maxBrightness) const;
 
     /**
      * Install plugin to slot. If the slot contains already a plugin, it will fail.
@@ -168,7 +184,7 @@ public:
      * @param[in] uid   Plugin UID
      * @return The plugin alias name.
      */
-    String getPluginAliasName(uint16_t uid);
+    String getPluginAliasName(uint16_t uid) const;
 
     /**
      * Set the alias name of a plugin.
@@ -186,7 +202,7 @@ public:
      *
      * @return Slot id
      */
-    uint8_t getSlotIdByPluginUID(uint16_t uid);
+    uint8_t getSlotIdByPluginUID(uint16_t uid) const;
 
     /**
      * Get plugin from slot.

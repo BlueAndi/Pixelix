@@ -243,7 +243,7 @@ static const size_t     MIN_VALUE_WEB_LOGIN_PASSWORD    = 4U;
 /** Hostname min. length */
 static const size_t     MIN_VALUE_HOSTNAME              = 1U;
 
-/** Brightness min. value in % */
+/** Brightness min. value in %. Its a hard limit. The soft limit can be adjusted by the user. */
 static const uint8_t    MIN_VALUE_BRIGHTNESS            = 10U;
 
 /*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
@@ -291,7 +291,7 @@ static const size_t     MAX_VALUE_WEB_LOGIN_PASSWORD    = 32U;
 /** Hostname max. length */
 static const size_t     MAX_VALUE_HOSTNAME              = 63U;
 
-/** Brightness max. value in % */
+/** Brightness max. value in %. Its a hard limit. The soft limit can be adjusted by the user. */
 static const uint8_t    MAX_VALUE_BRIGHTNESS            = 100U;
 
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */

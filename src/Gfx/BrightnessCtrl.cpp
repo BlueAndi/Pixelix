@@ -62,16 +62,18 @@
  * Public Methods
  *****************************************************************************/
 
-void BrightnessCtrl::init(IDisplay& display, uint8_t minBrightness, uint8_t maxBrightness)
+void BrightnessCtrl::init(IDisplay& display, uint8_t minBrightnessHardLimit, uint8_t maxBrightnessHardLimit)
 {
-    SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
-    uint8_t             sensorIdx       = 0U;
-    uint8_t             channelIdx      = 0U;
-    
-    m_display           = &display;
-    m_minBrightness     = minBrightness;
-    m_maxBrightness     = maxBrightness;
-    m_brightnessGoal    = minBrightness;
+    SensorDataProvider& sensorDataProv = SensorDataProvider::getInstance();
+    uint8_t             sensorIdx      = 0U;
+    uint8_t             channelIdx     = 0U;
+
+    m_display                          = &display;
+    m_minBrightnessHardLimit           = (minBrightnessHardLimit < maxBrightnessHardLimit) ? minBrightnessHardLimit : maxBrightnessHardLimit;
+    m_maxBrightnessHardLimit           = (maxBrightnessHardLimit > minBrightnessHardLimit) ? maxBrightnessHardLimit : minBrightnessHardLimit;
+    m_minBrightnessSoftLimit           = m_minBrightnessHardLimit;
+    m_maxBrightnessSoftLimit           = m_maxBrightnessHardLimit;
+    m_brightnessGoal                   = m_minBrightnessHardLimit;
 
     /* Find a sensor channel, which provides the current illuminance. */
     if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_ILLUMINANCE_LUX, ISensorChannel::DATA_TYPE_FLOAT32))
@@ -225,13 +227,61 @@ void BrightnessCtrl::process()
     }
 }
 
+void BrightnessCtrl::setSoftLimits(uint8_t minBrightnessSoftLimit, uint8_t maxBrightnessSoftLimit)
+{
+    m_minBrightnessSoftLimit = (minBrightnessSoftLimit < maxBrightnessSoftLimit) ? minBrightnessSoftLimit : maxBrightnessSoftLimit;
+    m_maxBrightnessSoftLimit = (maxBrightnessSoftLimit > minBrightnessSoftLimit) ? maxBrightnessSoftLimit : minBrightnessSoftLimit;
+
+    /* Lower than the hard limit is not allowed. */
+    if (m_minBrightnessSoftLimit < m_minBrightnessHardLimit)
+    {
+        m_minBrightnessSoftLimit = m_minBrightnessHardLimit;
+    }
+
+    /* Greater than the hard limit is not allowed. */
+    if (m_maxBrightnessSoftLimit > m_maxBrightnessHardLimit)
+    {
+        m_maxBrightnessSoftLimit = m_maxBrightnessHardLimit;
+    }
+
+    /* If the current brightness goal is outside the soft limits, it will adjusted. */
+    if (m_brightnessGoal < m_minBrightnessSoftLimit)
+    {
+        m_brightnessGoal = m_minBrightnessSoftLimit;
+    }
+    else if (m_brightnessGoal > m_maxBrightnessSoftLimit)
+    {
+        m_brightnessGoal = m_maxBrightnessSoftLimit;
+    }
+    else
+    {
+        ;
+    }
+
+    /* Apply soft limits. */
+    setBrightness(m_brightness);
+    updateBrightnessGoal();
+}
+
+void BrightnessCtrl::getSoftLimits(uint8_t& minBrightness, uint8_t& maxBrightness) const
+{
+    minBrightness = m_minBrightnessSoftLimit;
+    maxBrightness = m_maxBrightnessSoftLimit;
+}
+
 void BrightnessCtrl::setBrightness(uint8_t level)
 {
+    /* Automatic brightness adjustment disabled? */
     if (false == isEnabled())
     {
-        if (m_minBrightness > level)
+        /* Ensure that the level is inside the limits. */
+        if (m_minBrightnessSoftLimit > level)
         {
-            m_brightness = m_minBrightness;
+            m_brightness = m_minBrightnessSoftLimit;
+        }
+        else if (m_maxBrightnessSoftLimit < level)
+        {
+            m_brightness = m_maxBrightnessSoftLimit;
         }
         else
         {
@@ -258,8 +308,10 @@ BrightnessCtrl::BrightnessCtrl() :
     m_illuminanceChannel(nullptr),
     m_autoBrightnessTimer(),
     m_brightness(0U),
-    m_minBrightness(0U),
-    m_maxBrightness(0U),
+    m_minBrightnessHardLimit(0U),
+    m_maxBrightnessHardLimit(0U),
+    m_minBrightnessSoftLimit(0U),
+    m_maxBrightnessSoftLimit(0U),
     m_recentShortTermAverage(SHORT_TERM_AVG_LIGHT_TIME_CONST, 0.0F),
     m_recentLongTermAverage(LONG_TERM_AVG_LIGHT_TIME_CONST, 0.0F),
     m_brighteningThreshold(0.0F),
@@ -277,13 +329,13 @@ BrightnessCtrl::~BrightnessCtrl()
 
 float BrightnessCtrl::getNormalizedLight()
 {
-    float lightNormalized   = 0.0F;
+    float lightNormalized = 0.0F;
 
     if (nullptr != m_illuminanceChannel)
     {
         float illuminance = m_illuminanceChannel->getValue();
-        
-        lightNormalized = AmbientLight::normalizeIlluminance(illuminance);
+
+        lightNormalized   = AmbientLight::normalizeIlluminance(illuminance);
     }
 
     return lightNormalized;
@@ -291,9 +343,9 @@ float BrightnessCtrl::getNormalizedLight()
 
 void BrightnessCtrl::setAmbientLight(float light)
 {
-    m_ambientLight          = light;
-    m_brighteningThreshold  = m_ambientLight * (1.0F + BRIGHTENING_LIGHT_HYSTERESIS);
-    m_darkeningThreshold    = m_ambientLight * (1.0F - DARKENING_LIGHT_HYSTERESIS);
+    m_ambientLight         = light;
+    m_brighteningThreshold = m_ambientLight * (1.0F + BRIGHTENING_LIGHT_HYSTERESIS);
+    m_darkeningThreshold   = m_ambientLight * (1.0F - DARKENING_LIGHT_HYSTERESIS);
 
     LOG_DEBUG("Light: %0.3f (b-thr %0.3f < x < d-thr %0.3f)", m_ambientLight, m_brighteningThreshold, m_darkeningThreshold);
 }
@@ -309,8 +361,8 @@ void BrightnessCtrl::applyLightSensorMeasurement(uint32_t dTime, float light)
 void BrightnessCtrl::updateBrightnessGoal()
 {
     float   fCorrectedBrightness    = powf(m_ambientLight, 1.0F / GAMMA);
-    float   fBrightnessDynamicRange = static_cast<float>(m_maxBrightness - m_minBrightness);
-    float   fMinBrightness          = static_cast<float>(m_minBrightness);
+    float   fBrightnessDynamicRange = static_cast<float>(m_maxBrightnessSoftLimit - m_minBrightnessSoftLimit);
+    float   fMinBrightness          = static_cast<float>(m_minBrightnessSoftLimit);
     float   fBrightness             = fMinBrightness + (fBrightnessDynamicRange * fCorrectedBrightness);
 
     m_brightnessGoal = static_cast<uint8_t>(fBrightness);

@@ -178,7 +178,9 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this._pendingCmd.resolve(rsp);
             } else if ("BRIGHTNESS" === this._pendingCmd.name) {
                 rsp.brightness = parseInt(data[0]);
-                rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
+                rsp.minBrightness = parseInt(data[1]);
+                rsp.maxBrightness = parseInt(data[2]);
+                rsp.automaticBrightnessControl = (1 === parseInt(data[3])) ? true : false;
                 this._pendingCmd.resolve(rsp);
             } else if ("BUTTON" === this._pendingCmd.name) {
                 this._pendingCmd.resolve(rsp);
@@ -325,14 +327,21 @@ pixelix.ws.Client.prototype.setBrightness = function(options) {
             reject();
         } else if ("number" !== typeof options.brightness) {
             reject();
+        } else if ("number" !== typeof options.minBrightness) {
+            reject();
+        } else if ("number" !== typeof options.maxBrightness) {
+            reject();
+        } else if ("boolean" !== typeof options.automaticBrightnessControl) {
+            reject();
         } else {
 
             par += options.brightness;
-
-            if ("boolean" === typeof options.automaticBrightnessControl) {
-                par += ";";
-                par += (false == options.automaticBrightnessControl) ? 0 : 1;
-            }
+            par += ";";
+            par += options.minBrightness;
+            par += ";";
+            par += options.maxBrightness;
+            par += ";";
+            par += (false == options.automaticBrightnessControl) ? 0 : 1;
 
             this._sendCmd({
                 name: "BRIGHTNESS",
