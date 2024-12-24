@@ -56,12 +56,12 @@ def _generate_cpp_service(service_list_full_path, service_list):
     stop_calls = ""
     process_calls = ""
 
+    # Handle includes, start and process calls.
     for idx, service_name in enumerate(service_list):
 
         if idx > 0:
             includes += "\n"
             start_calls += "\n"
-            stop_calls += "\n"
             process_calls += "\n"
 
         includes += f"#include <{service_name}.h>"
@@ -71,9 +71,15 @@ def _generate_cpp_service(service_list_full_path, service_list):
         start_calls +=  "        isSuccessful = false;\n"
         start_calls +=  "    }\n"
 
-        stop_calls += f"    {service_name}::getInstance().stop();"
-
         process_calls += f"    {service_name}::getInstance().process();"
+
+    # Handle stop calls in reverse order.
+    for idx, service_name in enumerate(reversed(service_list)):
+
+        if idx > 0:
+            stop_calls += "\n"
+
+        stop_calls += f"    {service_name}::getInstance().stop();"
 
     data = {
         "INCLUDES": includes,
