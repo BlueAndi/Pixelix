@@ -489,7 +489,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         else
         {
             /* Use UpdateMgr to show the user the update status.
-             * Note, the display manager will be completey stopped during this,
+             * Note, the display manager will be completely stopped during this,
              * to avoid artifacts on the display, because of long writes to flash.
              */
             UpdateMgr::getInstance().beginProgress();
