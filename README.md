@@ -8,8 +8,14 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![Release](https://img.shields.io/github/release/BlueAndi/Pixelix.svg)](https://github.com/BlueAndi/Pixelix/releases)
 [![Build Status](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml/badge.svg)](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml)
 
-[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/0.jpg)](https://www.youtube.com/watch?v=dik8Rm6f3o0 "Pixelix")
-[![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/0.jpg)](https://www.youtube.com/watch?v=UCjJCI5JShY "Pixelix - Remote Button")
+[![pixelix](https://img.youtube.com/vi/u1W9nlzJOI4/1.jpg)](https://youtu.be/u1W9nlzJOI4 "Pixelix & Friends")
+[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/1.jpg)](https://youtu.be/dik8Rm6f3o0 "Pixelix")
+[![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/1.jpg)](https://youtu.be/UCjJCI5JShY "Pixelix - Remote Button")
+
+Click on the preview to see the video.
+___
+
+# Table of Content <!-- omit in toc -->
 
 * [Motivation](#motivation)
 * [Introduction](#introduction)
@@ -51,7 +57,7 @@ The PIXELIX firmware is for ESP32 boards that controls a RGB LED matrix. It can 
 
 # Features
 * Supports 32x8 LED matrix size out of the box. Its possible to cascade another matrix to have a longer display.
-* Can display static or scrolling text, as well as static or animated icons.
+* Can display static or scrolling text, as well as static (BMP and GIF) or animated icons (GIF).
 * Includes a web interface for configuring and controlling the LED matrix.
 * Supports REST API and MQTT for remote control and integration with other systems, like [Home Assistant](https://www.home-assistant.io/).
 * Can be extended with custom effects and animations. See list of [plugins](./doc/PLUGINS.md).
@@ -83,6 +89,7 @@ The following shows the absolute minimal wiring setup e.g. for the ESP32 DevKitV
 # Supported Development Boards
 
 In the meantime several other boards are supported as well. You can find them in the [list of boards](./doc/boards/README.md).
+If your board is not listed in the main branch, please have a look in the [Development branch](https://github.com/BlueAndi/Pixelix/tree/Development) too.
 
 With the [Ulanzi TC001 smart pixel clock](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882) you even don't need to assemble the electronic and mechanic together.
 
@@ -94,6 +101,7 @@ If you assemble your own Pixelix hardware, its recommended to use a development 
 Additional supported variants, which were original not in focus:
 * [LILYGO&reg; TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
 * [LILYGO&reg; T-Display ESP32-S3 1.9 inch ST7789 LCD Display Touch Screen Development Board](https://www.lilygo.cc/products/t-display-s3)
+* Limited HUB75 panel support, configured as an example for the ESP32-DoIt DevKit v1 development board.
 
 Although PIXELIX was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
 * Temperature and humidity sensors DHTx
@@ -120,7 +128,7 @@ Restart the device and **keep the button pressed** until it shows the SSID of th
 * SSID: **pixelix-&lt;DEVICE-ID&gt;**
 * Passphrase: **Luke, I am your father.**
 
-Depended on the type of device you are using for connecting to PIXELIX, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
+Depended on the type of device you are using for connecting to PIXELIX, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.169.4.1 in the browser address field.
 
 Use the following default credentials to get access to the PIXELIX web interface:
 * User: **luke**
@@ -128,11 +136,15 @@ Use the following default credentials to get access to the PIXELIX web interface
 
 ## Variant 2: Configure wifi station SSID and passphrase with the terminal
 Connect PIXELIX with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
-* Test: ```ping```
 * Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
 * Write wifi SSID: ```write wifi ssid <your-ssid>```
 * Restart PIXELIX: ```reset```
 * Get IP-address: ```get ip```
+* Get status: ```get status```
+  * A status of 0 means everything is ok.
+  * Other than 0, see their meaning in the low [low level error code table](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean). Note, the status of 1 is equal to E1 in the error code table and etc.
+
+Enter ```help``` to get a list of all supported commands.
 
 ## PIXELIX Is Ready
 After configuration, restart again and voila, PIXELIX will be available in your wifi network.
@@ -186,28 +198,30 @@ Adapt in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LE
 
 ## How to change text properties?
 Text properties can be changed using different keywords added to the string to be displayed.  
-In order to be able to use these keywords, they must be prefixed by a backslash, otherwise they will only be treated as text.
+In order to be able to use these keywords, they must be inside curly braces, otherwise they will only be treated as text.
 
 The following keywords are available:
 Keyword   | Description
 ----------|---------------------------------
-\\#RRGGBB | Change text color (RRGGBB in hex)
-\lalign   | Alignment left
-\ralign   | Alignment right
-\calign   | Alignment center
+{#RRGGBB} | Change text color (RRGGBB in hex)
+{hl}      | Horizontal alignment left
+{hc}      | Horizontal alignment right
+{hr}      | Horizontal alignment center
+{vt}      | Vertical alignment top
+{vc}      | Vertical alignment center
+{vb}      | Vertical alignment bottom
 
-**Note**
-- If theses keywords are used within the sourcecode they have to be prefixed with two backslashes (one additional for escaping).
-- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+**Notes**
+- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.5.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.  
 
 **Examples**
 
-Sourcecode   | URL   | Result
-----------|--------------------|-------------
-\\\lalign\\\\#ff0000Hi! | %5Clalign%23ff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
-\\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
-\\\ralign\\#ff0000Hi! | %5Cralign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
+Sourcecode       | URL               | Result
+-----------------|-------------------|-------------
+{hl}{#ff0000}Hi! | %7Bcl%7Dff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
+{hc}{#ff0000}Hi! | %7Bhc%7Dff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
+{hr}{#ff0000}Hi! | %7Bhr%7Dff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
 
 ## The display only shows a error code, like "E4". What does that mean?
 
@@ -222,9 +236,12 @@ This is a low level error code. Please have a look into the following table.
 | E5 | The display manager didn't start up. |
 | E6 | The system message handler didn't start up. |
 | E7 | The update manager didn't start up. |
+| E8 | One of the services failed to start. |
 
 ## How can I use animated icons?
-Upload **first** the bitmap texture image (.bmp) and **afterwards** the sprite sheet file (.sprite). See the details [here](./doc/SPRITESHEET.md). The order is important, because if a bitmap is uploaded, it is assumed that an existing spritesheet is obsolete and will be removed.
+Use animated GIF images to get animated icons. The sprite sheet support (< v8.0.0) was replaced with the GIF images.
+
+If you like to create animated GIFs by yourself, the [Piskel](https://www.piskelapp.com/) editor is recommended. Piskel is a free online editor for animated sprites & pixel art.
 
 ## How do I know that my sensor is recognized?
 
@@ -298,7 +315,8 @@ build_flags =
 
 | Library | Description | License |
 | - | - | - |
-| [Arduino](https://github.com/platformio/platform-espressif32) | ESP32 Arduino framework | Apache-2.0 |
+| [Arduino](https://github.com/platformio/platform-espressif32) | ESP32 Arduino framework v2.x.x | Apache-2.0 |
+| [PlatformIO](https://platformio.org) | PlatformIO is a cross-platform, cross-architecture, multiple framework, professional tool for embedded systems engineers and for software developers who write applications for embedded products. | Apache-2.0 |
 | [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) | Controlling the LED matrix with hardware support (I2S) | LGPL-3.0 |
 | [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) | Webserver | LGPL-2.1 |
 | [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock) | TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets | MIT |

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -119,11 +119,11 @@ extern void tearDown(void)
  */
 static void testProgressBar()
 {
-    YAGfxTest   testGfx;
-    ProgressBar progressBar;
-    const char* WIDGET_NAME = "progressBarName";
-    int16_t     posX        = 2;
-    int16_t     posY        = 2;
+    YAGfxTest       testGfx;
+    const int16_t   POS_X       = 2;
+    const int16_t   POS_Y       = 2;
+    ProgressBar     progressBar(YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    const char*     WIDGET_NAME = "progressBarName";
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(ProgressBar::WIDGET_TYPE, progressBar.getType());
@@ -167,10 +167,12 @@ static void testProgressBar()
     testGfx.fill(ColorDef::BLACK);
 
     /* Widget must be moveable */
-    progressBar.move(posX, posY);
+    progressBar.move(POS_X, POS_Y);
+    progressBar.setWidth(testGfx.getWidth() - POS_X);
+    progressBar.setHeight(testGfx.getHeight() - POS_Y);
     progressBar.setProgress(100U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(posX, posY, testGfx.getWidth() - posX, testGfx.getHeight() - posY, ColorDef::RED));
+    TEST_ASSERT_TRUE(testGfx.verify(POS_X, POS_Y, testGfx.getWidth() - POS_X, testGfx.getHeight() - POS_Y, ColorDef::RED));
     progressBar.move(0, 0);
 
     /* Test algorithm: progress pixel wise */
@@ -180,6 +182,9 @@ static void testProgressBar()
     testGfx.fill(ColorDef::BLACK);
 
     /* Set progress bar to 0% */
+    progressBar.move(0, 0);
+    progressBar.setWidth(testGfx.getWidth());
+    progressBar.setHeight(testGfx.getHeight());
     progressBar.setProgress(0U);
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::BLACK));
@@ -199,11 +204,11 @@ static void testProgressBar()
     testGfx.fill(ColorDef::BLACK);
 
     /* Widget must be moveable */
-    progressBar.move(posX, posY);
+    progressBar.move(POS_X, POS_Y);
+    progressBar.setWidth(testGfx.getWidth() - POS_X);
+    progressBar.setHeight(testGfx.getHeight() - POS_Y);
     progressBar.setProgress(100U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(posX, posY, testGfx.getWidth() - posX, testGfx.getHeight() - posY, ColorDef::RED));
+    TEST_ASSERT_TRUE(testGfx.verify(POS_X, POS_Y, testGfx.getWidth() - POS_X, testGfx.getHeight() - POS_Y, ColorDef::RED));
     progressBar.move(0, 0);
-    
-    return;
 }

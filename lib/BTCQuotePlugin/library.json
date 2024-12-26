@@ -10,6 +10,8 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Logging"
+    }, {
         "name": "AsyncHttpClient"
     }, {
         "name": "LittleFS"
@@ -20,7 +22,7 @@
     }, {
         "name": "YAWidgets"
     }, {
-        "name": "Utilities"
+        "name": "Views"
     }],
     "frameworks": "*",
     "platforms": "*"

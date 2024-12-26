@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,14 +74,14 @@ public:
 
     /**
      * Constructs a slot by copy.
-     * 
+     *
      * @param[in] slot  The slot which to copy.
      */
     Slot(const Slot& slot);
 
     /**
      * Assign a slot.
-     * 
+     *
      * @param[in] slot  The slot which to assign.
      */
     Slot& operator=(const Slot& slot);
@@ -92,6 +92,13 @@ public:
      * @return Plugin
      */
     IPluginMaintenance* getPlugin();
+
+    /**
+     * Get plugin which is plugged in.
+     *
+     * @return Plugin
+     */
+    const IPluginMaintenance* getPlugin() const;
 
     /**
      * Set plugin to slot.
@@ -142,20 +149,38 @@ public:
      */
     bool isLocked() const;
 
+    /**
+     * Enable slot for scheduling.
+     */
+    void enable();
+
+    /**
+     * Disable slot for scheduling.
+     */
+    void disable();
+
+    /**
+     * Is slot disabled?
+     * 
+     * @return If slot is disabled, it will return true otherwise false.
+     */
+    bool isDisabled() const;
+
     /** Default duration in ms */
-    static const uint32_t DURATION_DEFAULT  = 30000U;
+    static const uint32_t DURATION_DEFAULT = 30000U;
 
 private:
 
-    IPluginMaintenance* m_plugin;   /**< Plugged in slot */
-    uint32_t            m_duration; /**< Duration in ms, how long the plugin shall be active. */
-    bool                m_isLocked; /**< Is slot locked or not. */
+    IPluginMaintenance* m_plugin;     /**< Plugged in slot */
+    uint32_t            m_duration;   /**< Duration in ms, how long the plugin shall be active. */
+    bool                m_isLocked;   /**< Is slot locked or not. */
+    bool                m_isDisabled; /**< Is slot disabled? */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SLOT_H */
+#endif /* SLOT_H */
 
 /** @} */

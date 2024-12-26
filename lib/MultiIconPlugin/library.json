@@ -1,0 +1,25 @@
+{
+    "name": "MultiIconPlugin",
+    "version": "0.1.0",
+    "description": "....",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Logging"
+    }, {
+        "name": "LittleFS"
+    }, {
+        "name": "Plugin"
+    }, {
+        "name": "Views"
+    }, {
+        "name": "Utilities"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

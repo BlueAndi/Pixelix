@@ -10,10 +10,13 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "ITopicHandler",
-        "version": "~0.1.0"
+        "name": "Logging"
     }, {
-        "name": "LittleFS"
+        "name": "AsyncHttpClient"
+    }, {
+        "name": "ITopicHandler"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

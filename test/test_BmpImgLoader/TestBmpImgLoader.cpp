@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -156,6 +156,4 @@ static void testBmpImgLoader()
 
     /* Load valid bitmap file. */
     TEST_ASSERT_EQUAL(BmpImgLoader::RET_OK, loader.load(localFileSystem, "./test/test_BmpImgLoader/test24bpp.bmp", bitmap));
-
-    return;
 }

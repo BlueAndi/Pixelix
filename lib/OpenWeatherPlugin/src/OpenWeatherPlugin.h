@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,14 +43,13 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
-#include "AsyncHttpClient.h"
-#include "IOpenWeatherSource.h"
+#include "./internal/View.h"
+#include "IOpenWeatherCurrent.h"
+#include "IOpenWeatherForecast.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
+#include <AsyncHttpClient.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
@@ -66,7 +65,7 @@
 /**
  * Shows weather informations provided by OpenWeather: https://openweathermap.org/
  */
-class OpenWeatherPlugin : public Plugin, private PluginConfigFsHandler
+class OpenWeatherPlugin : public PluginWithConfig
 {
 public:
 
@@ -75,63 +74,40 @@ public:
      */
     enum OpenWeatherSource
     {
-        OPENWEATHER_SOURCE_CURRENT = 0, /**< Current weather data */
-        OPENWEATHER_SOURCE_ONE_CALL_25, /**< OpenWeather One-Call API v2.5 */
-        OPENWEATHER_SOURCE_ONE_CALL_30, /**< OpenWeather One-Call API v3.0 */
-    };
-
-    /**
-     * Enumeration to choose an additional weather information to be displayed.
-     */
-    enum OtherWeatherInformation
-    {
-        OTHER_WEATHER_INFO_UVI = 0,     /**< Display UV Index as additional information. */
-        OTHER_WEATHER_INFO_HUMIDITY,    /**< Display humidity in % as additional information. */
-        OTHER_WEATHER_INFO_WIND,        /**< Display windspeed in m/s as additional information. */
-        OTHER_WEATHER_INFO_OFF          /**< Display only general weather information. */
+        OPENWEATHER_SOURCE_CURRENT_FORECAST = 0,    /**< Current/Forecast weather data */
+        OPENWEATHER_SOURCE_ONE_CALL_30,             /**< OpenWeather One-Call API v3.0 */
     };
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    OpenWeatherPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_bitmapWidget(),
-        m_textWidget("\\calign?"),
-        m_sourceId(OPENWEATHER_SOURCE_ONE_CALL_25),
+    OpenWeatherPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
+        m_view(),
+        m_sourceId(OPENWEATHER_SOURCE_ONE_CALL_30),
         m_updatePeriod(UPDATE_PERIOD),
-        m_source(nullptr),
-        m_additionalInformation(OTHER_WEATHER_INFO_OFF),
+        m_sourceCurrent(nullptr),
+        m_sourceForecast(nullptr),
         m_configurationFilename(),
         m_client(),
+        m_weatherReqStatus(WEATHER_REQUEST_STATUS_IDLE),
         m_requestTimer(),
-        m_updateContentTimer(),
         m_mutex(),
         m_isConnectionError(false),
-        m_currentTemp("\\calign?"),
-        m_currentWeatherIconFullPath(IMAGE_PATH_STD_ICON),
-        m_currentUvIndex("\\calign?"),
-        m_currentHumidity("\\calign?"),
-        m_currentWindspeed("\\calign?"),
-        m_hasWeatherIconChanged(true),
         m_slotInterf(nullptr),
-        m_durationCounter(0u),
-        m_isUpdateAvailable(false),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
-        createOpenWeatherSource(m_sourceId); /* Default */
+        createOpenWeatherCurrentSource(m_sourceId); /* Default */
+
+        if (true == _OpenWeatherPlugin::View::isWeatherForecastSupported())
+        {
+            createOpenWeatherForecastSource(m_sourceId); /* Default */
+        }
     }
 
     /**
@@ -149,7 +125,12 @@ public:
         m_client.end();
         
         clearQueue();
-        destroyOpenWeatherSource();
+        destroyOpenWeatherCurrentSource();
+
+        if (true == _OpenWeatherPlugin::View::isWeatherForecastSupported())
+        {
+            destroyOpenWeatherForecastSource();
+        }
         
         m_mutex.destroy();
     }
@@ -157,12 +138,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow)OpenWeatherPlugin(name, uid);
     }
@@ -174,7 +155,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -188,8 +169,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -287,16 +267,6 @@ public:
     void stop() final;
 
     /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     * 
-     * @param[in] isConnected   The network connection status. If network
-     *                          connection is established, it will be true otherwise false.
-     */
-    void process(bool isConnected) final;
-
-    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
@@ -311,6 +281,16 @@ public:
     void inactive() final;
 
     /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     * 
+     * @param[in] isConnected   The network connection status. If network
+     *                          connection is established, it will be true otherwise false.
+     */
+    void process(bool isConnected) final;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
@@ -318,112 +298,16 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get OpenWeather API key.
-     * 
-     * @return OpenWeather API key
-     */
-    String getApiKey() const;
-
-    /**
-     * Set OpenWeather API key.
-     * 
-     * @param[in] apiKey    OpenWeather API key
-     */
-    void setApiKey(const String& apiKey);
-
-    /**
-     * Get the latitude.
-     * 
-     * @return latitude
-     */
-    String getLatitude() const;
-
-    /**
-     * Set the latitude.
-     * 
-     * @param[in] latitude    The latitude
-     */
-    void setLatitude(const String& latitude);
-
-   /**
-     * Get the longitude.
-     * 
-     * @return longitude
-     */
-    String getLongitude() const;
-
-    /**
-     * Set the longitude.
-     * 
-     * @param[in] longitude    The longitude
-     */
-    void setLongitude(const String& longitude);
-
-     /**
-     * Get the additional weather information.
-     * 
-     * @return The configured additional weather information.
-     */
-    OtherWeatherInformation getAdditionalInformation() const;
-
-    /**
-     * Set the additional weather information.
-     * 
-     * @param[in] additionalInformation     The additional weather information.
-     */
-    void setAdditionalInformation(const OtherWeatherInformation& additionalInformation);
-
-    /**
-     * Get the configured unist.
-     * 
-     * @return The units.
-     */
-    String getUnits() const;
-
-    /**
-     * Get the units.
-     * 
-     * @param[in] units The units
-     */
-    void setUnits(const String& units);
-
 private:
 
-    /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH          = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT         = 8U;
-
-    /**
-     * Image path within the filesystem to standard icon.
-     */
-    static const char*      IMAGE_PATH_STD_ICON;
-
-    /**
-     * Image path within the filesystem to UV index icon.
-     */
-    static const char*      IMAGE_PATH_UVI_ICON;
-
-    /**
-     * Image path within the filesystem to humidity icon.
-     */
-    static const char*      IMAGE_PATH_HUMIDITY_ICON;
-
-    /**
-     * Image path within the filesystem to windspeed icon.
-     */
-    static const char*      IMAGE_PATH_WIND_ICON;
-
-    /**
-     * Image path within the filesystem to weather condition icons.
-     */
-    static const char*      IMAGE_PATH;
+    /** Weather request status */
+    enum WeatherRequestStatus
+    {
+        WEATHER_REQUEST_STATUS_IDLE = 0,        /**< No weather request is running. */
+        WEATHER_REQUEST_STATUS_CURRENT_PENDING, /**< Current weather request is pending. */
+        WEATHER_REQUEST_STATUS_FORECAST_REQ,    /**< Forecast weather request is requested. */
+        WEATHER_REQUEST_STATUS_FORECAST_PENDING /**< Forecast weather request is pending. */
+    };
 
     /**
      * OpenWeather API base URI
@@ -434,16 +318,6 @@ private:
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
-
-    /**
-     * Filename extension of bitmap image file.
-     */
-    static const char*      FILE_EXT_BITMAP;
-
-    /**
-     * Filename extension of sprite sheet parameter file.
-     */
-    static const char*      FILE_EXT_SPRITE_SHEET;
 
     /**
      * Period in ms for requesting data from server.
@@ -462,41 +336,19 @@ private:
     /** Time for duration tick period in ms */
     static const uint32_t   DURATION_TICK_PERIOD    = SIMPLE_TIMER_SECONDS(1U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-    
-    Fonts::FontType             m_fontType;                     /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup                 m_textCanvas;                   /**< Canvas used for the text widget. */
-    WidgetGroup                 m_iconCanvas;                   /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;                 /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;                   /**< Text widget, used for showing the text. */
-    OpenWeatherSource           m_sourceId;                     /**< OpenWeather source id. */
-    uint32_t                    m_updatePeriod;                 /**< Period in ms for requesting data from server. This is used in case the last request to the server was successful. */
-    IOpenWeatherSource*         m_source;                       /**< OpenWeather source to use to retrieve weather information. */
-    OtherWeatherInformation     m_additionalInformation;        /**< The configured additional weather information. */
-    String                      m_configurationFilename;        /**< String used for specifying the configuration filename. */
-    AsyncHttpClient             m_client;                       /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestTimer;                 /**< Timer used for cyclic request of new data. */
-    SimpleTimer                 m_updateContentTimer;           /**< Timer used for duration ticks in [s]. */
-    mutable MutexRecursive      m_mutex;                        /**< Mutex to protect against concurrent access. */
-    bool                        m_isConnectionError;            /**< Is connection error happened? */
-    String                      m_currentTemp;                  /**< The current temperature. */
-    String                      m_currentWeatherIconFullPath;   /**< The current weather condition icon full path. */
-    String                      m_currentUvIndex;               /**< The current UV index. */
-    String                      m_currentHumidity;              /**< The current humidity. */
-    String                      m_currentWindspeed;             /**< The current wind speed. */
-    bool                        m_hasWeatherIconChanged;        /**< Has weather icon changed? If yes, it will be updated otherwise skipped to not disturb running animations. */
-    const ISlotPlugin*          m_slotInterf;                   /**< Slot interface */
-    uint8_t                     m_durationCounter;              /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
-    bool                        m_isUpdateAvailable;            /**< Flag to indicate an updated date value. */
-    SimpleTimer                 m_cfgReloadTimer;               /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                        m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
-    bool                        m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
-    bool                        m_hasTopicChanged;              /**< Has the topic content changed? */
+    _OpenWeatherPlugin::View    m_view;                     /**< View with all widgets. */
+    OpenWeatherSource           m_sourceId;                 /**< OpenWeather source id. */
+    uint32_t                    m_updatePeriod;             /**< Period in ms for requesting data from server. This is used in case the last request to the server was successful. */
+    IOpenWeatherCurrent*        m_sourceCurrent;            /**< OpenWeather source to use to retrieve current weather information. */
+    IOpenWeatherForecast*       m_sourceForecast;           /**< OpenWeather source to use to retrieve forecast weather information. */
+    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
+    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
+    WeatherRequestStatus        m_weatherReqStatus;         /**< The weather request status. */
+    SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
+    mutable MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
+    bool                        m_isConnectionError;        /**< Is connection error happened? */
+    const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
+    bool                        m_hasTopicChanged;          /**< Has the topic content changed? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -533,28 +385,35 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
-     * Create OpenWeather source according to id.
+     * Create OpenWeather current source according to id.
      * 
      * @param[in] id    OpenWeather source id
      */
-    void createOpenWeatherSource(OpenWeatherSource id);
+    void createOpenWeatherCurrentSource(OpenWeatherSource id);
 
     /**
-     * Destroy OpenWeatherSource.
+     * Create OpenWeather forecast source according to id.
+     * 
+     * @param[in] id    OpenWeather source id
      */
-    void destroyOpenWeatherSource();
+    void createOpenWeatherForecastSource(OpenWeatherSource id);
 
     /**
-     * Request to store configuration to persistent memory.
+     * Destroy OpenWeather current source.
      */
-    void requestStoreToPersistentMemory();
+    void destroyOpenWeatherCurrentSource();
+
+    /**
+     * Destroy OpenWeather forecast source.
+     */
+    void destroyOpenWeatherForecastSource();
 
     /**
      * Get configuration in JSON.
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& cfg) const final;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
@@ -563,12 +422,7 @@ private:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(JsonObjectConst& cfg) final;
-
-    /**
-     * Map the UV index value to a color corresponding the the icon.
-    */
-    const char* uvIndexToColor(uint8_t uvIndex);
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
      * Updates the text and icon, which to be displayed.
@@ -580,9 +434,11 @@ private:
     /**
      * Request new data.
      * 
+     * @param[in] source    Request source
+     * 
      * @return If successful it will return true otherwise false.
      */
-    bool startHttpRequest(void);
+    bool startHttpRequest(const IOpenWeatherGeneric* source);
 
     /**
      * Register callback function on response reception.
@@ -605,14 +461,22 @@ private:
     void handleWebResponse(const DynamicJsonDocument& jsonDoc);
 
     /**
-     * Prepares the data to show from the OpenWeather source data.
-     */
-    void prepareDataToShow();
-
-    /**
      * Clear the task proxy queue.
      */
     void clearQueue();
+
+    /**
+     * Get the weather source depended on the current weather request status.
+     * 
+     * @return If weather request status is invalid, it will return nullptr otherwise the source.
+     */
+    IOpenWeatherGeneric* getWeatherSourceByStatus();
+
+    /**
+     * Signals that a HTTP request was started and will maintain the internal
+     * weather request status.
+     */
+    void weatherRequestStarted();
 };
 
 /******************************************************************************

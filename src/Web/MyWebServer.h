@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,19 +76,24 @@ void init(bool initCaptivePortal);
 /**
  * Start web server, which is running in a separate task.
  */
-void begin(void);
+void begin();
 
 /**
  * Stop web server and its task.
  */
-void end(void);
+void end();
+
+/**
+ * Process web server.
+ */
+void process();
 
 /**
  * Get webserver instance.
  *
  * @return Webserver instance.
  */
-AsyncWebServer& getInstance(void);
+AsyncWebServer& getInstance();
 
 }
 

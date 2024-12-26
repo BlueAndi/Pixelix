@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,10 +62,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdBrightness::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -73,59 +72,88 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
+    }
+    else if ((0U != m_parCnt) &&
+             (4U != m_parCnt))
+    {
+        sendNegativeResponse(server, clientId, "\"Parameter missing.\"");
     }
     else
     {
-        String msg;
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        uint8_t     brightness;
+        uint8_t     minBrightnessSoftLimit;
+        uint8_t     maxBrightnessSoftLimit;
+        bool        isAutomaticBrightnessCtrlEnabled;
+        String      msg;
 
-        if (1U == m_parCnt)
+        if (4U == m_parCnt)
         {
-            DisplayMgr::getInstance().setBrightness(m_brightness);
-        }
-        else if (2U == m_parCnt)
-        {
-            DisplayMgr::getInstance().setBrightness(m_brightness);
-            DisplayMgr::getInstance().setAutoBrightnessAdjustment(m_isEnabled);
-        }
-        else
-        {
-            ;
+            displayMgr.setBrightnessSoftLimits(m_minBrightness, m_maxBrightness);
+            displayMgr.setAutoBrightnessAdjustment(m_isAutomaticBrightnessCtrlEnabled);
+
+            /* Set brightness after possible adjusted soft limits. */
+            displayMgr.setBrightness(m_brightness);
         }
 
         preparePositiveResponse(msg);
 
-        msg += DisplayMgr::getInstance().getBrightness();
-        msg += DELIMITER;
-        msg += (true == DisplayMgr::getInstance().getAutoBrightnessAdjustment()) ? 1 : 0;
+        brightness                       = displayMgr.getBrightness();
+        isAutomaticBrightnessCtrlEnabled = displayMgr.getAutoBrightnessAdjustment();
+        displayMgr.getBrightnessSoftLimits(minBrightnessSoftLimit, maxBrightnessSoftLimit);
 
-        sendResponse(server, client, msg);
+        msg += brightness;
+        msg += DELIMITER;
+        msg += minBrightnessSoftLimit;
+        msg += DELIMITER;
+        msg += maxBrightnessSoftLimit;
+        msg += DELIMITER;
+        msg += (true == isAutomaticBrightnessCtrlEnabled) ? 1 : 0;
+
+        sendResponse(server, clientId, msg);
     }
 
     m_isError = false;
-    m_parCnt = 0U;
+    m_parCnt  = 0U;
 }
 
 void WsCmdBrightness::setPar(const char* par)
 {
-    switch(m_parCnt)
+    switch (m_parCnt)
     {
-    case 0:
-        if (false == Util::strToUInt8(String(par), m_brightness))
+    case 0U:
+        if (false == Util::strToUInt8(par, m_brightness))
         {
             LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;
 
-    case 1:
+    case 1U:
+        if (false == Util::strToUInt8(par, m_minBrightness))
+        {
+            LOG_ERROR("Conversion failed: %s", par);
+            m_isError = true;
+        }
+        break;
+
+    case 2U:
+        if (false == Util::strToUInt8(par, m_maxBrightness))
+        {
+            LOG_ERROR("Conversion failed: %s", par);
+            m_isError = true;
+        }
+        break;
+
+    case 3U:
         if (0 == strcmp(par, "0"))
         {
-            m_isEnabled = false;
+            m_isAutomaticBrightnessCtrlEnabled = false;
         }
         else if (0 == strcmp(par, "1"))
         {
-            m_isEnabled = true;
+            m_isAutomaticBrightnessCtrlEnabled = true;
         }
         else
         {

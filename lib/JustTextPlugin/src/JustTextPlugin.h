@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,11 +43,12 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -61,20 +62,20 @@
  * Shows text over the whole display.
  * If the text is too long for the display width, it automatically scrolls.
  */
-class JustTextPlugin : public Plugin
+class JustTextPlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    JustTextPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textWidget(),
+    JustTextPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
+        m_view(),
+        m_formatTextStored(),
         m_mutex(),
         m_hasTopicChanged(false)
     {
@@ -92,12 +93,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow)JustTextPlugin(name, uid);
     }
@@ -116,7 +117,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -130,8 +131,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -216,7 +216,7 @@ public:
      * Stop the plugin. This is called only once during plugin lifetime.
      */
     void stop() final;
-    
+
     /**
      * Update the display.
      * The scheduler will call this method periodically.
@@ -236,8 +236,9 @@ public:
      * Set text, which may contain format tags.
      *
      * @param[in] formatText    Text, which may contain format tags.
+     * @param[in] storeFlag     Store the text persistent or not.
      */
-    void setText(const String& formatText);
+    void setText(const String& formatText, bool storeFlag);
 
 private:
 
@@ -246,10 +247,43 @@ private:
      */
     static const char*  TOPIC_TEXT;
 
-    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    _JustTextPlugin::View   m_view;             /**< View with all widgets. */
+    String                  m_formatTextStored; /**< It contains the format text, which is persistent stored. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
+    bool                    m_hasTopicChanged;  /**< Has the topic content changed? Used to notify the TopicHandlerService about changes. */
+
+    /**
+     * Get actual configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getActualConfiguration(JsonObject& cfg) const;
+
+    /**
+     * Set actual configuration in JSON.
+     * It will not be stored to configuration file.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setActualConfiguration(const JsonObjectConst& jsonCfg);
+
+    /**
+     * Get persistent configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& jsonCfg) const final;
+
+    /**
+     * Set persistent configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 };
 
 /******************************************************************************

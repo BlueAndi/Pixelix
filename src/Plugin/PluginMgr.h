@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -92,7 +92,7 @@ public:
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    IPluginMaintenance* install(const String& name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
+    IPluginMaintenance* install(const char* name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
 
     /**
      * Uninstall plugin.
@@ -167,15 +167,6 @@ private:
 
     PluginMgr(const PluginMgr& fab);
     PluginMgr& operator=(const PluginMgr& fab);
-
-    /**
-     * Check dynamic JSON document for overflow and log a corresponding message,
-     * otherwise log its document size.
-     * 
-     * @param[in] jsonDoc   Dynamic JSON document, which to check.
-     * @param[in] line      Line number where the document is handled in the module.
-     */
-    void checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line);
 
     /**
      * If configuration directory doesn't exists, it will be created.

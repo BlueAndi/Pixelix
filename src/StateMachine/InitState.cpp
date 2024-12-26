@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -91,21 +91,21 @@
 /**
  * The filename of the version information file.
  */
-static const char* VERSION_FILE_NAME        = "/version.json";
+static const char VERSION_FILE_NAME[]        = "/version.json";
 
 /**
  * Plugin type of the welcome plugin. This is used to install it in the very
  * first startup. In further startups it is used in addition to the plugin
  * alias whether to show the welcome icon and message.
  */
-static const char*  WELCOME_PLUGIN_TYPE     = "IconTextPlugin";
+static const char WELCOME_PLUGIN_TYPE[]     = "IconTextPlugin";
 
 /**
  * The alias of the welcome plugin. This is used to determine in addition to
  * the plugin type whether to show the welcome icon and message after a reboot
  * again.
  */
-static const char*  WELCOME_PLUGIN_ALIAS    = "_welcome";
+static const char WELCOME_PLUGIN_ALIAS[]    = "_welcome";
 
 /******************************************************************************
  * Public Methods
@@ -125,7 +125,7 @@ void InitState::entry(StateMachine& sm)
     showStartupInfoOnSerial();
 
     /* To avoid name clashes, add a unqiue id to some of the default values. */
-    WiFiUtil::addDeviceUniqueId(uniqueId);
+    getDeviceUniqueId(uniqueId);
     settings.getWifiApSSID().setUniqueId(uniqueId);
     settings.getHostname().setUniqueId(uniqueId);
 
@@ -151,7 +151,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Mounting the filesystem. */
-    else if (false == FILESYSTEM.begin())
+    else if (false == mountFilesystem())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         errorId = ErrorState::ERROR_ID_BAD_FS;
@@ -274,7 +274,7 @@ void InitState::entry(StateMachine& sm)
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (false == isFsCompatible())
         {
-            const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+            const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
             const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
             const uint32_t  DURATION_PAUSE          = 500U; /* ms */
             const uint32_t  SCROLLING_NO_REPEAT     = 0U;
@@ -308,7 +308,17 @@ void InitState::entry(StateMachine& sm)
 
 void InitState::process(StateMachine& sm)
 {
-    ButtonState buttonState = ButtonDrv::getInstance().getState(BUTTON_ID_OK);
+    ButtonState buttonState = BUTTON_STATE_RELEASED;
+
+    /* Check all buttons to detect a user AP mode request during startup. */
+    for (uint8_t btnId = BUTTON_ID_OK; btnId < BUTTON_ID_CNT; ++btnId)
+    {
+        if (BUTTON_STATE_PRESSED == ButtonDrv::getInstance().getState(static_cast<ButtonId>(btnId)))
+        {
+            buttonState = BUTTON_STATE_PRESSED;
+            break;
+        }
+    }
 
     /* Connect to a remote wifi network? */
     if (BUTTON_STATE_RELEASED == buttonState)
@@ -354,20 +364,17 @@ void InitState::exit(StateMachine& sm)
         SettingsService&    settings    = SettingsService::getInstance();
         wifi_mode_t         wifiMode    = WIFI_MODE_NULL;
         String              hostname;
-        bool                isQuiet     = false;
 
-        /* Get hostname. */
+        /* Get hostname for mDNS. */
         if (false == settings.open(true))
         {
             LOG_WARNING("Use default hostname.");
             
-            hostname    = settings.getHostname().getDefault();
-            isQuiet     = settings.getQuietMode().getDefault();
+            hostname = settings.getHostname().getDefault();
         }
         else
         {
-            hostname    = settings.getHostname().getValue();
-            isQuiet     = settings.getQuietMode().getValue();
+            hostname = settings.getHostname().getValue();
 
             settings.close();
         }
@@ -412,7 +419,7 @@ void InitState::exit(StateMachine& sm)
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
             {
-                if (false == isQuiet)
+                if (false == m_isQuiet)
                 {
                     const uint32_t MIN_WAIT_TIME = 500U; /* Min. wait time in ms to avoid splash screen. */
 
@@ -450,7 +457,7 @@ void InitState::exit(StateMachine& sm)
                     {
                         if (0 == strcmp(WELCOME_PLUGIN_TYPE,  pluginInSlot1->getName()))
                         {
-                            if (0U != pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
+                            if (true == pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
                             {
                                 welcome(pluginInSlot1);
                             }
@@ -483,29 +490,33 @@ void InitState::exit(StateMachine& sm)
 
 void InitState::showStartupInfoOnSerial()
 {
+    String macAddr;
+
+    WiFiUtil::getEFuseMAC(macAddr);
+
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO("Target: %s", Version::TARGET);
-    LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
+    LOG_INFO("Target: %s", Version::getTargetName());
+    LOG_INFO("SW version: %s", Version::getSoftwareVersion());
     delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("SW revision: %s", Version::SOFTWARE_REV);
+    LOG_INFO("SW revision: %s", Version::getSoftwareRevision());
     LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
     LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
     delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("Wifi MAC: %s", WiFi.macAddress().c_str());
+    LOG_INFO("Wifi efuse MAC: %s", macAddr.c_str());
     LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
     delay(20U); /* To avoid missing log messages on the console */
 }
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
 {
-    const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
+    const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
     const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
     const uint32_t  DURATION_PAUSE          = 500U; /* ms */
     const uint32_t  SCROLLING_NO_REPEAT     = 0U;
     SysMsg&         sysMsg                  = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FFFFFF.:\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X\\#FFFFFF:.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    sysMsg.show("{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}{vm 1}:{vm -1}.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
 
     if (false == isQuietEnabled)
     {
@@ -513,7 +524,7 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
         sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
 
         /* Show sw version (short) */
-        sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+        sysMsg.show(String(Version::getSoftwareVersion()), DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
         /* Clear and wait */
         sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
@@ -539,8 +550,13 @@ void InitState::welcome(IPluginMaintenance* plugin)
 
     if (nullptr != welcomePlugin)
     {
-        (void)welcomePlugin->loadBitmap("/images/smiley.bmp");
-        welcomePlugin->setText("Hello World!");
+        FileMgrService::FileId iconFileId = FileMgrService::getInstance().getFileIdByName("smiley");
+
+        if (FileMgrService::FILE_ID_INVALID != iconFileId)
+        {
+            (void)welcomePlugin->loadIcon(iconFileId, false);
+        }
+        welcomePlugin->setText("{hc}Hello World!", false);
     }
 }
 
@@ -558,7 +574,7 @@ bool InitState::isFsCompatible()
         if (false == jsonVersion.isNull())
         {
             String fileSystemVersion    = jsonVersion.as<String>();
-            String firmwareVersion      = Version::SOFTWARE_VER;
+            String firmwareVersion      = Version::getSoftwareVersion();
 
             /* Note that the firmware version may have a additional postfix.
              * Example: v4.1.2:b or v4.1.2:b:lc
@@ -572,6 +588,44 @@ bool InitState::isFsCompatible()
     }
 
     return isCompatible;
+}
+
+bool InitState::mountFilesystem()
+{
+    bool        isSuccessful                = false;
+    bool        formatOnFail                = false;
+    const char* BASE_PATH                   = "/littlefs";
+    const char* PARTITION_LABEL_DEFAULT     = "spiffs"; /* Default for most of the partitions, defined by Platformio. */
+    const char* PARTITION_LABEL_ALTERNATIVE = "ffat";   /* Sometimes its different, than the default in Platformio. */
+
+    /* Mount filesytem with default partition label. If it fails, use alternative. */
+    if (false == FILESYSTEM.begin(formatOnFail, BASE_PATH, FILESYSTEM_MAX_OPEN_FILES, PARTITION_LABEL_DEFAULT))
+    {
+        /* Try to mount with alternative partition label. */
+        if (true == FILESYSTEM.begin(formatOnFail, BASE_PATH, FILESYSTEM_MAX_OPEN_FILES, PARTITION_LABEL_ALTERNATIVE))
+        {
+            /* Successful mounted with alternative partition label. */
+            isSuccessful = true;
+        }
+    }
+    /* Successful mounted with default partition label. */
+    else
+    {
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+void InitState::getDeviceUniqueId(String& deviceUniqueId)
+{
+    /* Use the last 4 bytes of the factory programmed wifi MAC address to generate a unique id. */
+    String chipId;
+
+    WiFiUtil::getChipId(chipId);
+
+    deviceUniqueId += "-";
+    deviceUniqueId += chipId.substring(4U);
 }
 
 /******************************************************************************

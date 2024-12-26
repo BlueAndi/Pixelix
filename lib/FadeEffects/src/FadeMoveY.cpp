@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,8 +75,8 @@ bool FadeMoveY::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 bool FadeMoveY::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
     bool    isFinished  = false;
-    int16_t x           = 0;
-    int16_t y           = 0;
+    int16_t x;
+    int16_t y;
 
     if (FADE_STATE_OUT != m_state)
     {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,6 @@
 #else /* CONFIG_RTC == 1 */
 #include "RtcNoneDrv.h"
 #endif /* CONFIG_RTC == 1 */
-
 
 /******************************************************************************
  * Macros
@@ -111,7 +110,12 @@ private:
      * How long shall the logo be shown in ms.
      * As long as it is shown, stay in this state!
      */
-    const uint32_t SHOW_LOGO_DURATION   = 2000U;
+    static const uint32_t   SHOW_LOGO_DURATION          = 2000U;
+
+    /**
+     * The max. number of open files in the filesystem.
+     */
+    static const uint8_t    FILESYSTEM_MAX_OPEN_FILES   = 10U;
 
     bool        m_isQuiet;              /**< Is quite mode active? */
     bool        m_isApModeRequested;    /**< Is wifi AP mode requested? */
@@ -168,6 +172,21 @@ private:
      * @return If filesystem content is compatible, it will return true otherwise false.
      */
     bool isFsCompatible();
+
+    /**
+     * Mount the filesystem.
+     * 
+     * @return If successful mounted, it will return true otherwise false.
+     */
+    bool mountFilesystem();
+
+    /**
+     * Get device unique ID as string.
+     * The device unique ID is derived from factory programmed wifi MAC address.
+     * 
+     * @param[out] deviceUniqueId   The device unique id.
+     */
+    void getDeviceUniqueId(String& deviceUniqueId);
 };
 
 /******************************************************************************

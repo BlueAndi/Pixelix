@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,10 +33,10 @@
  * Includes
  *****************************************************************************/
 #include "BitmapWidget.h"
+#include "BmpImgLoader.h"
 
 #include <YAColor.h>
 #include <Logging.h>
-#include <BmpImgLoader.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,7 +59,13 @@
  *****************************************************************************/
 
 /* Initialize bitmap widget type. */
-const char* BitmapWidget::WIDGET_TYPE = "bitmap";
+const char* BitmapWidget::WIDGET_TYPE       = "bitmap";
+
+/* Initialize bitmap image filename extension. */
+const char* BitmapWidget::FILE_EXT_BITMAP   = ".bmp";
+
+/* Initialize GIF image filename extension. */
+const char* BitmapWidget::FILE_EXT_GIF      = ".gif";
 
 /******************************************************************************
  * Public Methods
@@ -71,26 +77,51 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
+        m_imgType       = widget.m_imgType;
         m_bitmap        = widget.m_bitmap;
-        m_spriteSheet   = widget.m_spriteSheet;
-        m_timer         = widget.m_timer;
-        m_duration      = widget.m_duration;
+        m_gifPlayer     = widget.m_gifPlayer;
+        m_hAlign        = widget.m_hAlign;
+        m_vAlign        = widget.m_vAlign;
+        m_hAlignPosX    = widget.m_hAlignPosX;
+        m_vAlignPosY    = widget.m_vAlignPosY;
     }
 
     return *this;
 }
 
+void BitmapWidget::set(const YAGfxBitmap& bitmap)
+{
+    /* Release unused memory. */
+    m_bitmap.release();
+    m_gifPlayer.close();
+
+    if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
+    {
+        m_bitmap.copy(bitmap);
+        m_imgType = IMG_TYPE_BMP;
+
+        alignWidget();
+    }
+}
+
 void BitmapWidget::clear(const Color& color)
 {
-    if (true == m_spriteSheet.isEmpty())
+    (void)color; /* Not used. */
+
+    if (IMG_TYPE_BMP == m_imgType)
     {
-        m_bitmap.fillScreen(color);
+        m_bitmap.release();
+    }
+    else if (IMG_TYPE_GIF == m_imgType)
+    {
+        m_gifPlayer.close();
     }
     else
     {
-        m_spriteSheet.release();
-        m_timer.stop();
+        ;
     }
+
+    m_imgType = IMG_TYPE_NO_IMAGE;
 }
 
 bool BitmapWidget::load(FS& fs, const String& filename)
@@ -103,93 +134,37 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        BmpImgLoader        loader;
-        BmpImgLoader::Ret   ret = loader.load(fs, filename, m_bitmap);
+        int32_t index = filename.lastIndexOf(".");
 
-        if (BmpImgLoader::RET_OK != ret)
+        /* File extension found? */
+        if (0 <= index)
         {
-            if (BmpImgLoader::RET_FILE_NOT_FOUND == ret)
+            String fileExt = filename.substring(index);
+
+            /* BMP image? */
+            if (true == fileExt.equalsIgnoreCase(FILE_EXT_BITMAP))
             {
-                LOG_ERROR("Failed to open file %s.", filename.c_str());
+                isSuccessful = loadBMP(fs, filename);
             }
-            else if (BmpImgLoader::RET_FILE_FORMAT_INVALID == ret)
+            /* GIF image? */
+            else if (true == fileExt.equalsIgnoreCase(FILE_EXT_GIF))
             {
-                LOG_ERROR("File %s has invalid format.", filename.c_str());
-            }
-            else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
-            {
-                LOG_ERROR("File %s has unsupported format.", filename.c_str());
-            }
-            else if (BmpImgLoader::RET_IMG_TOO_BIG == ret)
-            {
-                LOG_ERROR("File %s is too big.", filename.c_str());
+                isSuccessful = loadGIF(fs, filename);
             }
             else
             {
-                LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+                /* Not supported. */
+                ;
+            }
+
+            if (true == isSuccessful)
+            {
+                alignWidget();
             }
         }
-        else
-        {
-            /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
-             * shall be shown or the single bitmap image.
-             */
-            m_spriteSheet.release();
-            m_timer.stop();
-
-            isSuccessful = true;
-        }
     }
 
     return isSuccessful;
-}
-
-bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName)
-{
-    bool isSuccessful = false;
-
-    if (false == fs.exists(spriteSheetFileName))
-    {
-        LOG_WARNING("File %s doesn't exists.", spriteSheetFileName.c_str());
-    }
-    else if (false == fs.exists(textureFileName))
-    {
-        LOG_WARNING("File %s doesn't exists.", textureFileName.c_str());
-    }
-    else if (true == m_spriteSheet.load(fs, spriteSheetFileName, textureFileName))
-    {
-        /* Calculate duration per frame. */
-        m_duration = 1000U / m_spriteSheet.getFPS();
-
-        /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
-         * shall be shown or the single bitmap image.
-         */
-        m_bitmap.release();        
-
-        isSuccessful = true;
-    }
-
-    return isSuccessful;
-}
-
-bool BitmapWidget::isSpriteSheetForward() const
-{
-    return m_spriteSheet.isForward();
-}
-
-void BitmapWidget::setSpriteSheetForward(bool forward)
-{
-    m_spriteSheet.setForward(forward);
-}
-
-bool BitmapWidget::isSpriteSheetRepeatInfinite() const
-{
-    return m_spriteSheet.isRepeatedInfinite();
-}
-
-void BitmapWidget::setSpriteSheetRepeatInfinite(bool repeat)
-{
-    m_spriteSheet.repeatInfinite(repeat);
 }
 
 /******************************************************************************
@@ -199,6 +174,166 @@ void BitmapWidget::setSpriteSheetRepeatInfinite(bool repeat)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void BitmapWidget::alignWidget()
+{
+    uint16_t imageWidth     = 0U;
+    uint16_t imageHeight    = 0U;
+
+    switch(m_imgType)
+    {
+    case IMG_TYPE_NO_IMAGE:
+        break;
+
+    case IMG_TYPE_BMP:
+        imageWidth  = m_bitmap.getWidth();
+        imageHeight = m_bitmap.getHeight();
+        break;
+
+    case IMG_TYPE_GIF:
+        imageWidth  = m_gifPlayer.getWidth();
+        imageHeight = m_gifPlayer.getHeight();
+        break;
+
+    default:
+        break;
+    }
+
+    switch(m_hAlign)
+    {
+    case Alignment::Horizontal::HORIZONTAL_LEFT:
+        m_hAlignPosX = 0;
+        break;
+
+    case Alignment::Horizontal::HORIZONTAL_CENTER:
+        m_hAlignPosX = (m_canvas.getWidth() - imageWidth) / 2;
+        break;
+
+    case Alignment::Horizontal::HORIZONTAL_RIGHT:
+        m_hAlignPosX = m_canvas.getWidth() - imageWidth;
+        break;
+
+    default:
+        break;
+    }
+
+    switch(m_vAlign)
+    {
+    case Alignment::Vertical::VERTICAL_TOP:
+        m_vAlignPosY = 0;
+        break;
+
+    case Alignment::Vertical::VERTICAL_CENTER:
+        m_vAlignPosY = (m_canvas.getHeight() - imageHeight) / 2;
+        break;
+
+    case Alignment::Vertical::VERTICAL_BOTTOM:
+        m_vAlignPosY = m_canvas.getHeight() - imageHeight;
+        break;
+    
+    default:
+        break;
+    }
+}
+
+bool BitmapWidget::loadBMP(FS& fs, const String& filename)
+{
+    bool                isSuccessful    = false;
+    BmpImgLoader        loader;
+    BmpImgLoader::Ret   ret             = loader.load(fs, filename, m_bitmap);
+
+    if (BmpImgLoader::RET_OK != ret)
+    {
+        if (BmpImgLoader::RET_FILE_NOT_FOUND == ret)
+        {
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
+        }
+        else if (BmpImgLoader::RET_FILE_FORMAT_INVALID == ret)
+        {
+            LOG_ERROR("File %s has invalid format.", filename.c_str());
+        }
+        else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
+        {
+            LOG_ERROR("File %s has unsupported format.", filename.c_str());
+        }
+        else if (BmpImgLoader::RET_IMG_TOO_BIG == ret)
+        {
+            LOG_ERROR("File %s is too big.", filename.c_str());
+        }
+        else
+        {
+            LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+        }
+    }
+    else
+    {
+        /* Release unused memory. */
+        m_gifPlayer.close();
+
+        /* Select image type. */
+        m_imgType = IMG_TYPE_BMP;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+bool BitmapWidget::loadGIF(FS& fs, const String& filename)
+{
+    bool                isSuccessful    = false;
+    GifImgPlayer::Ret   ret;
+
+    /* A already opened GIF image shall be closed first. */
+    m_gifPlayer.close();
+
+    /* Open GIF image and keep it opened as long its shown.
+     *
+     * Note: The file is kept in memory, because the application will be able
+     *       to remove or replace the file in the filesystem.
+     */
+    ret = m_gifPlayer.open(fs, filename, true);
+
+    if (GifImgPlayer::RET_OK != ret)
+    {
+        if (GifImgPlayer::RET_FILE_NOT_FOUND == ret)
+        {
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_FILE_ALREADY_OPENED == ret)
+        {
+            LOG_ERROR("File %s already opened.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_FILE_FORMAT_INVALID == ret)
+        {
+            LOG_ERROR("File %s has invalid format.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_FILE_FORMAT_UNSUPPORTED == ret)
+        {
+            LOG_ERROR("File %s has unsupported format.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_IMG_TOO_BIG == ret)
+        {
+            LOG_ERROR("File %s is too big.", filename.c_str());
+        }
+        else
+        {
+            LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+        }
+    }
+    else
+    {
+        /* Release unused memory. */
+        m_bitmap.release();
+
+        /* Select image type. */
+        m_imgType = IMG_TYPE_GIF;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;   
+}
 
 /******************************************************************************
  * External Functions

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -94,8 +94,8 @@ void FirePlugin::inactive()
 
 void FirePlugin::update(YAGfx& gfx)
 {
-    int16_t x       = 0;
-    int16_t y       = 0;
+    int16_t x;
+    int16_t y;
 
     if (nullptr == m_heat)
     {
@@ -183,7 +183,7 @@ Color FirePlugin::heatColor(uint8_t temperature)
     /* Scale 'heat' down from 0-255 to 0-191, which can then be easily divided
      * into three equal 'thirds' of 64 units each.
      */
-    uint8_t t192        = static_cast<uint32_t>(temperature) * 191U / 255U;
+    uint8_t t192        = (static_cast<uint16_t>(temperature) * 191U) >> 8U;
 
     /* Calculate a value that ramps up from zero to 255 in each 'third' of the scale. */
     uint8_t heatRamp    = t192 & 0x3fU; /* 0..63 */

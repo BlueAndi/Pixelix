@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,9 +58,9 @@
  *****************************************************************************/
 
 /* Initialize MQTT service variables */
-const char* MqttService::KEY_MQTT_BROKER_URL        = "mqtt_broker_url";
-const char* MqttService::NAME_MQTT_BROKER_URL       = "MQTT broker URL";
-const char* MqttService::DEFAULT_MQTT_BROKER_URL    = "";
+const char* MqttService::KEY_MQTT_BROKER_URL     = "mqtt_broker_url";
+const char* MqttService::NAME_MQTT_BROKER_URL    = "MQTT broker URL";
+const char* MqttService::DEFAULT_MQTT_BROKER_URL = "";
 
 /******************************************************************************
  * Public Methods
@@ -68,8 +68,8 @@ const char* MqttService::DEFAULT_MQTT_BROKER_URL    = "";
 
 bool MqttService::start()
 {
-    bool                isSuccessful    = true;
-    SettingsService&    settings        = SettingsService::getInstance();
+    bool             isSuccessful = true;
+    SettingsService& settings     = SettingsService::getInstance();
 
     if (false == settings.registerSetting(&m_mqttBrokerUrlSetting))
     {
@@ -94,7 +94,7 @@ bool MqttService::start()
 
         if (false == m_url.isEmpty())
         {
-            (void)m_mqttClient.setServer(m_url.c_str(), MQTT_PORT);
+            (void)m_mqttClient.setServer(m_url.c_str(), m_port);
             (void)m_mqttClient.setCallback([this](char* topic, uint8_t* payload, uint32_t length) {
                 this->rxCallback(topic, payload, length);
             });
@@ -134,7 +134,7 @@ void MqttService::stop()
 
 void MqttService::process()
 {
-    switch(m_state)
+    switch (m_state)
     {
     case STATE_DISCONNECTED:
         disconnectedState();
@@ -182,7 +182,7 @@ bool MqttService::subscribe(const char* topic, TopicCallback callback)
         SubscriberList::const_iterator it;
 
         /* Register a topic only once! */
-        for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
+        for (it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
         {
             if (nullptr != (*it))
             {
@@ -195,12 +195,12 @@ bool MqttService::subscribe(const char* topic, TopicCallback callback)
 
         if (it == m_subscriberList.end())
         {
-            Subscriber* subscriber = new(std::nothrow) Subscriber;
+            Subscriber* subscriber = new (std::nothrow) Subscriber;
 
             if (nullptr != subscriber)
             {
-                subscriber->topic       = topic;
-                subscriber->callback    = callback;
+                subscriber->topic    = topic;
+                subscriber->callback = callback;
 
                 if (false == m_mqttClient.connected())
                 {
@@ -243,7 +243,7 @@ void MqttService::unsubscribe(const char* topic)
     {
         SubscriberList::iterator it = m_subscriberList.begin();
 
-        while(m_subscriberList.end() != it)
+        while (m_subscriberList.end() != it)
         {
             if (nullptr != (*it))
             {
@@ -251,7 +251,7 @@ void MqttService::unsubscribe(const char* topic)
                 {
                     Subscriber* subscriber = *it;
 
-                    m_mqttClient.unsubscribe(subscriber->topic.c_str());
+                    (void)m_mqttClient.unsubscribe(subscriber->topic.c_str());
 
                     (void)m_subscriberList.erase(it);
                     delete subscriber;
@@ -297,8 +297,8 @@ void MqttService::disconnectedState()
 
         if (true == connectNow)
         {
-            bool    isConnected = false;
-            String  willTopic   = m_hostname + "/status";
+            bool   isConnected = false;
+            String willTopic   = m_hostname + "/status";
 
             /* Authentication necessary? */
             if (false == m_user.isEmpty())
@@ -310,7 +310,7 @@ void MqttService::disconnectedState()
             /* Connect anonymous */
             else
             {
-                LOG_INFO("Connect anyonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
+                LOG_INFO("Connect anonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
 
                 isConnected = m_mqttClient.connect(m_hostname.c_str(), nullptr, nullptr, willTopic.c_str(), 0, true, "offline");
             }
@@ -331,7 +331,7 @@ void MqttService::disconnectedState()
 
                 /* Provide online status */
                 (void)m_mqttClient.publish(willTopic.c_str(), "online", true);
-                
+
                 resubscribe();
             }
         }
@@ -360,7 +360,7 @@ void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 {
     SubscriberList::const_iterator it;
 
-    for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
+    for (it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
     {
         if (nullptr != (*it))
         {
@@ -379,7 +379,7 @@ void MqttService::resubscribe()
 {
     SubscriberList::const_iterator it;
 
-    for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
+    for (it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
     {
         if (nullptr != (*it))
         {
@@ -398,9 +398,9 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
     int32_t idx = mqttBrokerUrl.indexOf("://");
 
     /* The MQTT broker URL format:
-     * [mqtt://][<USER>:<PASSWORD>@]<BROKER-URL>
+     * [mqtt://][<USER>:<PASSWORD>@]<BROKER-URL>[:<PORT>]
      */
-    m_url = mqttBrokerUrl;
+    m_url       = mqttBrokerUrl;
 
     /* Remove protocol, we don't care about. */
     if (0 <= idx)
@@ -436,6 +436,24 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
         }
 
         m_url.remove(0U, idx + 1);
+    }
+
+    /* Port */
+    idx = m_url.indexOf(":");
+
+    m_port = MQTT_PORT;
+
+    if (0 <= idx)
+    {
+        String  portStr = m_url.substring(idx + 1);
+        int32_t port    = portStr.toInt();
+
+        if (0 <= port)
+        {
+            m_port = static_cast<uint16_t>(port);
+        }
+
+        m_url.remove(idx);
     }
 }
 

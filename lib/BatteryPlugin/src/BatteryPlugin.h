@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,13 +42,13 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
+#include <stdint.h>
+#include <Plugin.hpp>
 #include <SimpleTimer.hpp>
 #include <ISensorChannel.hpp>
 #include <Mutex.hpp>
-#include <YAGfxBitmap.h>
 
 /******************************************************************************
  * Macros
@@ -68,20 +68,16 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    BatteryPlugin(const String& name, uint16_t uid) :
+    BatteryPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_batterySymbol(),
+        m_view(),
         m_mutex(),
         m_sensorUpdateTimer(),
         m_socSensorCh(nullptr),
-        m_stateOfCharge(0U),
-        m_socBarX(0),
-        m_socBarY(0),
-        m_socBarWidth(0),
-        m_socBarHeight(0)
+        m_stateOfCharge(0U)
     {
         (void)m_mutex.create();
     }
@@ -101,19 +97,18 @@ public:
      */
     ~BatteryPlugin()
     {
-        m_batterySymbol.release();
         m_mutex.destroy();
     }
 
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow) BatteryPlugin(name, uid);
     }
@@ -166,32 +161,11 @@ private:
      */
     static const uint32_t   SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(10U);
 
-    YAGfxDynamicBitmap      m_batterySymbol;        /**< The battery symbol. */
+    _BatteryPlugin::View    m_view;                 /**< View with all widgets. */
     MutexRecursive          m_mutex;                /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_sensorUpdateTimer;    /**< Time used for cyclic sensor reading. */
     ISensorChannel*         m_socSensorCh;          /**< Battery sensor SOC channel. */
     uint32_t                m_stateOfCharge;        /**< Last read state of charge in [0; 100] %. */
-    int16_t                 m_socBarX;              /**< x-coordinate of graphical state of charge bar. */
-    int16_t                 m_socBarY;              /**< y-coordinate of graphical state of charge bar. */
-    int16_t                 m_socBarWidth;          /**< Width in pixel of state of charge bar. */
-    int16_t                 m_socBarHeight;         /**< Height in pixel of state of charge bar. */
-
-    /**
-     * Divide and round up.
-     * 
-     * @param[in]   dividend    The dividend.
-     * @param[in]   divisor     The divisor.
-     * 
-     * @return The result of the divison.
-     */
-    uint16_t divideAndRound(uint16_t dividend, uint16_t divisor);
-
-    /**
-     * Draw the state of charge on the display.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void drawStateOfCharge(YAGfx& gfx);
 };
 
 /******************************************************************************

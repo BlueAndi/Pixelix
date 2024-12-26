@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -81,7 +81,7 @@ public:
      */
     TColor getColor() const
     {
-        return m_pen;
+        return m_color;
     }
 
     /**
@@ -91,7 +91,7 @@ public:
      */
     void setColor(const TColor& color)
     {
-        m_pen = color;
+        m_color = color;
     }
 
     /**
@@ -157,7 +157,7 @@ protected:
     /**
      * Constructs a base graphics pen.
      */
-    BaseGfxPen(BaseGfx& gfx) :
+    BaseGfxPen(BaseGfx<TColor>& gfx) :
         m_gfx(gfx),
         m_color(),
         m_x(0),

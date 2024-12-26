@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -124,7 +124,7 @@ public:
      *
      * @return If enabled, it will return true otherwise false.
      */
-    bool getAutoBrightnessAdjustment(void);
+    bool getAutoBrightnessAdjustment(void) const;
 
     /**
      * Set display brightness in digits [0; 255].
@@ -138,7 +138,23 @@ public:
      *
      * @return Display brightness in digits
      */
-    uint8_t getBrightness(void);
+    uint8_t getBrightness(void) const;
+
+    /**
+     * Set the soft brightness limits.
+     * 
+     * @param[in] minBrightness The minimum brightness level in digits [0; 255].
+     * @param[in] maxBrightness The maximum brightness level in digits [0; 255].
+     */
+    void setBrightnessSoftLimits(uint8_t minBrightness, uint8_t maxBrightness);
+
+    /**
+     * Get the soft brightness limits.
+     * 
+     * @param[out] minBrightness The minimum brightness level in digits [0; 255].
+     * @param[out] maxBrightness The maximum brightness level in digits [0; 255].
+     */
+    void getBrightnessSoftLimits(uint8_t& minBrightness, uint8_t& maxBrightness) const;
 
     /**
      * Install plugin to slot. If the slot contains already a plugin, it will fail.
@@ -168,7 +184,7 @@ public:
      * @param[in] uid   Plugin UID
      * @return The plugin alias name.
      */
-    String getPluginAliasName(uint16_t uid);
+    String getPluginAliasName(uint16_t uid) const;
 
     /**
      * Set the alias name of a plugin.
@@ -186,7 +202,7 @@ public:
      *
      * @return Slot id
      */
-    uint8_t getSlotIdByPluginUID(uint16_t uid);
+    uint8_t getSlotIdByPluginUID(uint16_t uid) const;
 
     /**
      * Get plugin from slot.
@@ -208,7 +224,7 @@ public:
      * Set slot sticky. Only one slot can be sticky!
      * If a different slot is already sticky, the sticky flag will be moved.
      * 
-     * If slot is empty or the plugin is disabled, it will fail.
+     * If slot is empty or disabled, it will fail.
      * 
      * Use SLOT_ID_INVALID to clear the sticky flag. Recommended: clearSticky()
      * 
@@ -255,6 +271,7 @@ public:
      * @return the currently active fadeEffect.
      */
     FadeEffect getFadeEffect();
+    
     /**
      * Move plugin to a different slot.
      *
@@ -285,6 +302,31 @@ public:
      * @return If slot is locked, it will return true otherwise false.
      */
     bool isSlotLocked(uint8_t slotId);
+
+    /**
+     * Enale slot.
+     *
+     * @param[in] slotId    Id of slot, which shall be enabled.
+     */
+    void enableSlot(uint8_t slotId);
+
+    /**
+     * Disable slot.
+     * 
+     * A sticky slot can't be disabled.
+     *
+     * @param[in] slotId    Id of slot, which shall be disabled.
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
+    bool disableSlot(uint8_t slotId);
+
+    /**
+     * Is slot disabled?
+     *
+     * @return If slot is disabled, it will return true otherwise false.
+     */
+    bool isSlotDisabled(uint8_t slotId);
 
     /**
      * Get slot duration in ms, how long the given plugin will be shown.
@@ -457,7 +499,7 @@ private:
     DisplayMgr& operator=(const DisplayMgr& mgr);
 
     /**
-     * Schedule next slot with a installed and enabled plugin.
+     * Schedule next enbeld slot with a installed and enabled plugin.
      *
      * @param[in] slotId    Id of current slot
      *
@@ -466,7 +508,7 @@ private:
     uint8_t nextSlot(uint8_t slotId);
 
     /**
-     * Schedule previous slot with a installed and enabled plugin.
+     * Schedule previous enabled slot with a installed and enabled plugin.
      *
      * @param[in] slotId    Id of current slot
      *

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,6 @@
  *****************************************************************************/
 #include "ClockDrv.h"
 #include "CountdownPlugin.h"
-#include "Util.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
@@ -59,9 +58,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path. */
-const char* CountdownPlugin::IMAGE_PATH     = "/plugins/CountdownPlugin/countdown.bmp";
-
 /* Initialize plugin topic. */
 const char* CountdownPlugin::TOPIC_CONFIG   = "/countdown";
 
@@ -78,7 +74,7 @@ bool CountdownPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -91,7 +87,7 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -176,109 +172,25 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_view.init(width, height);
 
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
-
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 
     calculateRemainingDays();
 }
 
 void CountdownPlugin::stop()
 {
-    String                      configurationFilename   = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_cfgReloadTimer.stop();
-
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void CountdownPlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    PLUGIN_NOT_USED(isConnected);
-
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
 
     calculateRemainingDays();
 }
@@ -287,9 +199,7 @@ void CountdownPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -299,13 +209,6 @@ void CountdownPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void CountdownPlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
 
 void CountdownPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
@@ -318,7 +221,7 @@ void CountdownPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["descSingular"] = m_targetDateInformation.singular;
 }
 
-bool CountdownPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool CountdownPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status              = false;
     JsonVariantConst    jsonDay             = jsonCfg["day"];
@@ -406,10 +309,10 @@ void CountdownPlugin::calculateRemainingDays()
         }
         else
         {
-            m_remainingDays = "ELAPSED!";
+            m_remainingDays = "{hc}ELAPSED!";
         }
 
-        m_textWidget.setFormatStr(m_remainingDays);
+        m_view.setFormatText(m_remainingDays);
     }
 }
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,9 +59,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path. */
-const char* GruenbeckPlugin::IMAGE_PATH     = "/plugin/GruenbeckPlugin/gruenbeck.bmp";
-
 /* Initialize plugin topic. */
 const char* GruenbeckPlugin::TOPIC_CONFIG   = "/ipAddress";
 
@@ -78,7 +75,7 @@ bool GruenbeckPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -91,7 +88,7 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -149,69 +146,20 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_view.init(width, height);
     
-    /* Load all icons from filesystem now, to prevent filesystem
-     * access during active/inactive/update methods.
-     */
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
-
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 
     initHttpClient();
 }
 
 void GruenbeckPlugin::stop()
 {
-    String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_cfgReloadTimer.stop();
     m_requestTimer.stop();
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void GruenbeckPlugin::process(bool isConnected)
@@ -219,42 +167,7 @@ void GruenbeckPlugin::process(bool isConnected)
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
 
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
@@ -266,7 +179,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -293,7 +206,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -327,7 +240,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (true == m_isConnectionError)
             {
                 /* If a request fails, show a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -350,9 +263,7 @@ void GruenbeckPlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 void GruenbeckPlugin::inactive()
@@ -364,18 +275,7 @@ void GruenbeckPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false != m_httpResponseReceived)
-    {
-        m_textWidget.setFormatStr("\\calign" + m_relevantResponsePart + "%");
-        
-        gfx.fillScreen(ColorDef::BLACK);
-        m_iconCanvas.update(gfx);
-        m_textCanvas.update(gfx);
-
-        m_relevantResponsePart = "";
-
-        m_httpResponseReceived = false;
-    }
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -386,13 +286,6 @@ void GruenbeckPlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-void GruenbeckPlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
-
 void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
@@ -400,7 +293,7 @@ void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["ipAddress"] = m_ipAddress;
 }
 
-bool GruenbeckPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status          = false;
     JsonVariantConst    jsonIpAddress   = jsonCfg["ipAddress"];
@@ -509,6 +402,7 @@ void GruenbeckPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             /* Length of relevant data */
             const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
 
+            bool            isSuccessful                    = false;
             size_t          payloadSize                     = 0U;
             const void*     vPayload                        = rsp.getPayload(payloadSize);
             const char*     payload                         = static_cast<const char*>(vPayload);
@@ -532,7 +426,9 @@ void GruenbeckPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             msg.type    = MSG_TYPE_RSP;
             msg.rsp     = jsonDoc;
 
-            if (false == this->m_taskProxy.send(msg))
+            isSuccessful = this->m_taskProxy.send(msg);
+
+            if (false == isSuccessful)
             {
                 delete jsonDoc;
                 jsonDoc = nullptr;
@@ -551,8 +447,12 @@ void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        m_relevantResponsePart = jsonRestCapacity.as<String>();
-        m_httpResponseReceived = true;
+        String restCapacity = "{hc}";
+
+        restCapacity += jsonRestCapacity.as<String>();
+        restCapacity += "%";
+
+        m_view.setFormatText(restCapacity);
     }
 }
 

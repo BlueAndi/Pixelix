@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,20 +62,7 @@
 
 void WifiStatusPlugin::start(uint16_t width, uint16_t height)
 {
-    PLUGIN_NOT_USED(height);
-
-    m_iconCanvas.setPosAndSize(0, 0, WIFI_ICON_WIDTH, WIFI_ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_alertWidget);
-
-    m_textCanvas.setPosAndSize(WIFI_ICON_WIDTH + 1, 0, width - WIFI_ICON_WIDTH - 1U, WIFI_ICON_HEIGHT);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    m_alertWidget.move(0, 1);
-    m_alertWidget.setFormatStr("");
-    m_alertWidget.setTextColor(ColorDef::ORANGE);
-
-    m_textWidget.move(0, 1);
-    m_textWidget.setFormatStr("\\calignWiFi");
+    m_view.init(width, height);
 }
 
 void WifiStatusPlugin::stop()
@@ -115,29 +102,28 @@ void WifiStatusPlugin::update(YAGfx& gfx)
 
         quality = WiFiUtil::getSignalQuality(rssi);
 
+        /* Disconnected? */
         if (WL_CONNECTED != connectionStatus)
         {
             if (false == m_toggle)
             {
-                m_alertWidget.setFormatStr("");
+                m_view.setFormatText("");
                 m_toggle = true;
             }
             else
             {
-                m_alertWidget.setFormatStr("\\calign!");
+                m_view.setFormatText("{#FFA500}{hc}!");
                 m_toggle = false;
             }
         }
         else
         {
-            m_alertWidget.setFormatStr("");
+            m_view.setFormatText("{hc}WiFi");
             m_toggle = true;
         }
 
-        gfx.fillScreen(ColorDef::BLACK);
-        updateWifiStatus(gfx, quality);
-        m_iconCanvas.update(gfx);
-        m_textCanvas.update(gfx);
+        m_view.updateWifiStatus(quality);
+        m_view.update(gfx);
 
         /* Restart period */
         m_timer.start(PERIOD);
@@ -151,37 +137,6 @@ void WifiStatusPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void WifiStatusPlugin::updateWifiStatus(YAGfx& gfx, uint8_t quality)
-{
-    uint8_t index = 0U;
-
-    /* Draw signal strength bar steps:
-     *          ##
-     *       ## ##
-     *    ## ## ##
-     * ## ## ## ##
-     */
-    for(index = 0U; index < WIFI_BARS; ++index)
-    {
-        uint8_t     qualityRangeMin = (100U / WIFI_BARS) * index;
-        int16_t     height          = WIFI_BAR_HEIGHT * (index + 1U);
-        int16_t     x               = (WIFI_BAR_WIDTH * index) + (index * WIFI_BAR_SPACE_WIDTH);
-        int16_t     y               = (WIFI_BARS - index - 1) * WIFI_BAR_HEIGHT;
-        Color       color           = ColorDef::BLACK;
-
-        if (qualityRangeMin < quality)
-        {
-            color = ColorDef::GREEN;
-        }
-        else
-        {
-            color = ColorDef::GRAY;
-        }
-
-        gfx.fillRect(x, y, WIFI_BAR_WIDTH, height, color);
-    }
-}
 
 /******************************************************************************
  * External Functions

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -94,7 +94,7 @@ bool SoundReactivePlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -107,7 +107,7 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& v
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -165,8 +165,6 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
     SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    PLUGIN_NOT_USED(width);
-
     if (nullptr != spectrumAnalyzer)
     {
         m_freqBins = new(std::nothrow) float[spectrumAnalyzer->getFreqBinsLen()];
@@ -180,33 +178,13 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
     m_decayPeakTimer.start(DECAY_PEAK_PERIOD);
     m_maxHeight = height;
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 }
 
 void SoundReactivePlugin::stop()
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      configurationFilename   = getFullPathToConfiguration();
 
-    m_cfgReloadTimer.stop();
     m_decayPeakTimer.stop();
 
     if (nullptr != m_freqBins)
@@ -215,10 +193,7 @@ void SoundReactivePlugin::stop()
         m_freqBins = nullptr;
     }
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void SoundReactivePlugin::process(bool isConnected)
@@ -226,44 +201,7 @@ void SoundReactivePlugin::process(bool isConnected)
     SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    PLUGIN_NOT_USED(isConnected);
-
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
 
     decayPeak();
 
@@ -271,8 +209,7 @@ void SoundReactivePlugin::process(bool isConnected)
     {
         if (true == spectrumAnalyzer->areFreqBinsReady())
         {
-            uint8_t         bandIdx     = 0U;
-            const size_t    freqBinLen  = spectrumAnalyzer->getFreqBinsLen();
+            const size_t freqBinLen = spectrumAnalyzer->getFreqBinsLen();
 
             if (nullptr != m_freqBins)
             {
@@ -339,12 +276,6 @@ void SoundReactivePlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-void SoundReactivePlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
 
 void SoundReactivePlugin::getConfiguration(JsonObject& jsonCfg) const
 {
@@ -353,7 +284,7 @@ void SoundReactivePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["freqBandLen"] = m_numOfFreqBands;
 }
 
-bool SoundReactivePlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool SoundReactivePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status          = false;
     JsonVariantConst    jsonFreqBandLen = jsonCfg["freqBandLen"];

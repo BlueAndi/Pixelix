@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -163,9 +163,22 @@ public:
     IPluginMaintenance* getPlugin(uint8_t slotId);
 
     /**
+     * Get plugin which is plugged into the slot.
+     * 
+     * @param[in] slotId    The id of the slot.
+     *
+     * @return Plugin
+     */
+    const IPluginMaintenance* getPlugin(uint8_t slotId) const;
+
+    /**
      * Set plugin to slot.
-     * If slot is locked, unlock it first!
-     * Remove plugin from slot, use nullptr as argument.
+     * 
+     * If slot is locked, it will fail.
+     * 
+     * Remove plugin from slot by using nullptr as argument.
+     * If the plugin is removed and the slot is sticky, the sticky flag will
+     * be cleared.
      *
      * @param[in] slotId    The id of the slot.
      * @param[in] plugin    Plugin to set.
@@ -237,7 +250,28 @@ public:
      *
      * @return The lock status of the slot. If slot id is invalid, it will return false.
      */
-    bool isSlotLocked(uint8_t slotId) const;
+    bool isLocked(uint8_t slotId) const;
+
+    /**
+     * Enable slot for scheduling.
+     */
+    void enable(uint8_t slotId);
+
+    /**
+     * Disable slot for scheduling.
+     * 
+     * A sticky slot can't be disabled.
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
+    bool disable(uint8_t slotId);
+
+    /**
+     * Is slot disabled?
+     * 
+     * @return If slot is disabled, it will return true otherwise false.
+     */
+    bool isDisabled(uint8_t slotId) const;
 
     /**
      * Is slot empty (no plugin plugged in) and unlocked?
@@ -255,7 +289,7 @@ public:
      * 
      * @return If plugin slot is found, it will return its slot id otherwise SLOT_ID_INVALID.
      */
-    uint8_t getSlotIdByPluginUID(uint16_t pluginUid);
+    uint8_t getSlotIdByPluginUID(uint16_t pluginUid) const;
 
     /**
      * Get slot which is marked sticky.

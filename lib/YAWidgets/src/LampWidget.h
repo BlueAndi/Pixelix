@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,30 +64,17 @@ public:
 
     /**
      * Constructs a lamp widget, being black in off state and white in on state.
+     * 
+     * @param[in] width     Widget width in pixel.
+     * @param[in] height    Widget height in pixel.
+     * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    LampWidget() :
-        Widget(WIDGET_TYPE),
+    LampWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
+        Widget(WIDGET_TYPE, width, height, x, y),
         m_isOn(false),
         m_colorOff(ColorDef::BLACK),
-        m_colorOn(ColorDef::RED),
-        m_width(DEFAULT_WIDTH)
-    {
-    }
-
-    /**
-     * Constructs a lamp widget.
-     *
-     * @param[in] isOn      Initial on state
-     * @param[in] colorOff  Lamp color in off state
-     * @param[in] colorOn   Lamp color in on state
-     * @param[in] width     Lamp width in pixel
-     */
-    LampWidget(bool isOn, const Color& colorOff, const Color& colorOn, uint16_t width) :
-        Widget(WIDGET_TYPE),
-        m_isOn(isOn),
-        m_colorOff(colorOff),
-        m_colorOn(colorOn),
-        m_width(width)
+        m_colorOn(ColorDef::RED)
     {
     }
 
@@ -97,11 +84,10 @@ public:
      * @param[in] widget Lamp widget, which to copy
      */
     LampWidget(const LampWidget& widget) :
-        Widget(WIDGET_TYPE),
+        Widget(widget),
         m_isOn(widget.m_isOn),
         m_colorOff(widget.m_colorOff),
-        m_colorOn(widget.m_colorOn),
-        m_width(widget.m_width)
+        m_colorOn(widget.m_colorOn)
     {
     }
 
@@ -126,7 +112,6 @@ public:
             m_isOn      = widget.m_isOn;
             m_colorOff  = widget.m_colorOff;
             m_colorOn   = widget.m_colorOn;
-            m_width     = widget.m_width;
         }
 
         return *this;
@@ -192,41 +177,14 @@ public:
         return m_colorOn;
     }
 
-     /**
-     * Set the width of the lamp.
-     *
-     * @param[in] width width of the lamp
-     */
-    void setWidth(uint16_t width)
-    {
-        m_width = width;
-    }
-
-    /**
-     * Get the width of the lamp.
-     *
-     * @return width
-     */
-    uint16_t getWidth() const
-    {
-        return m_width;
-    }
-
     /** Widget type string */
-    static const char*      WIDGET_TYPE;
-
-    /** Lamp width in pixel */
-    static const uint16_t   DEFAULT_WIDTH   = 4U;
-
-    /** Lamp height in pixel */
-    static const uint16_t   HEIGHT          = 1U;
+    static const char*  WIDGET_TYPE;
 
 private:
 
-    bool        m_isOn;     /**< Lamp on state */
-    Color       m_colorOff; /**< Lamp color in off state */
-    Color       m_colorOn;  /**< Lamp color in on state */
-    uint16_t    m_width;    /**< Lamp width in pixel */
+    bool    m_isOn;     /**< Lamp on state */
+    Color   m_colorOff; /**< Lamp color in off state */
+    Color   m_colorOn;  /**< Lamp color in on state */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -242,7 +200,7 @@ private:
             color = m_colorOff;
         }
 
-        gfx.fillRect(m_posX, m_posY, m_width, HEIGHT, color);
+        gfx.fillScreen(color);
     }
 
 };

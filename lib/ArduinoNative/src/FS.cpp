@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,6 +57,26 @@
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+size_t File::size() const
+{
+    size_t  fileSize    = 0U;
+    size_t  currPos     = ftell(m_fd);
+    
+    if (0 == fseek(m_fd, 0, SEEK_END))
+    {
+        long pos = ftell(m_fd);
+
+        if (0 <= pos)
+        {
+            fileSize = pos;
+        }
+
+        (void)fseek(m_fd, currPos, SEEK_SET);
+    }
+
+    return fileSize;
+}
 
 /******************************************************************************
  * Protected Methods

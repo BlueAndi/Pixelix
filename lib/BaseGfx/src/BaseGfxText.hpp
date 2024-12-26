@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -184,6 +184,26 @@ public:
     }
 
     /**
+     * Set cursor x-position.
+     *
+     * @param[in] x Cursor x-position
+     */
+    void setTextCursorPosX(int16_t x)
+    {
+        m_cursorX = x;
+    }
+
+    /**
+     * Set cursor y-position.
+     *
+     * @param[in] y Cursor y-position
+     */
+    void setTextCursorPosY(int16_t y)
+    {
+        m_cursorY = y;
+    }
+
+    /**
      * Get text color.
      *
      * @return Text color
@@ -235,6 +255,16 @@ public:
      * @return Font which is used.
      */
     BaseFont<TColor>& getFont()
+    {
+        return m_font;
+    }
+
+    /**
+     * Get font.
+     *
+     * @return Font which is used.
+     */
+    const BaseFont<TColor>& getFont() const
     {
         return m_font;
     }
@@ -387,7 +417,7 @@ public:
     {
         size_t idx = 0U;
 
-        if (nullptr == m_font)
+        if (nullptr == m_font.getGfxFont())
         {
             return;
         }

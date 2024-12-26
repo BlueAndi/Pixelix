@@ -25,11 +25,10 @@
     * [Software update](./config/SW-UPDATE.md)
 * [Plugins](PLUGINS.md)
 * [Plugin Development](PLUGIN-DEV.md)
-* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0)
+* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.5.0)
 * [MQTT](MQTT.md)
 * [Home Assistant REST Wrapper](HOMEASSISTANT.md)
 * [Websocket API description](WEBSOCKET.md)
-* [Sprite sheet](SPRITESHEET.md)
 * [Alternative icons](ICONS.md)
 * [Configuration examples for GrabViaMqttPlugin and GrabViaRestPlugin.](./grabConfigs/README.md)
 

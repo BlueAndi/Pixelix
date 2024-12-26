@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@
 #include "SysMsg.h"
 #include "Services.h"
 #include "SensorDataProvider.h"
+#include "MyWebServer.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -123,10 +124,10 @@ void ConnectingState::process(StateMachine& sm)
     /* No retry mechanism is running? */
     if (false == m_retryTimer.isTimerRunning())
     {
-        const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
+        const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
         const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
-        wl_status_t status      = WL_IDLE_STATUS;
-        String      infoStr     = "Connecting to ";
+        wl_status_t     status                  = WL_IDLE_STATUS;
+        String          infoStr                 = "Connecting to ";
 
         infoStr += m_wifiSSID;
         infoStr += ".";
@@ -180,6 +181,7 @@ void ConnectingState::process(StateMachine& sm)
         }
     }
 
+    MyWebServer::process();
     Services::processAll();
     SensorDataProvider::getInstance().process();
 }

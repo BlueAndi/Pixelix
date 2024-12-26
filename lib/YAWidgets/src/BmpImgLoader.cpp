@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -172,7 +172,9 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
         }
         /* Supported image size is limited. */
         else if ((UINT16_MAX < dibHeader.infoHeader.imageWidth) ||
-                 (UINT16_MAX < dibHeader.infoHeader.imageHeight))
+                 (-UINT16_MAX > dibHeader.infoHeader.imageWidth) ||
+                 (UINT16_MAX < dibHeader.infoHeader.imageHeight) ||
+                 (-UINT16_MAX > dibHeader.infoHeader.imageHeight))
         {
             ret = RET_IMG_TOO_BIG;
         }
@@ -189,7 +191,6 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
             }
             else
             {
-                uint32_t    pos             = 0;
                 uint32_t    rowSize         = 0;
                 int16_t     y               = 0;
                 bool        isTopToBottom   = false;
@@ -213,7 +214,8 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
 
                     while((bitmap.getWidth() > x) && (RET_OK == ret))
                     {
-                        uint8_t lineBuffer[bytePerPixel];
+                        uint8_t     lineBuffer[bytePerPixel];
+                        uint32_t    pos;
 
                         if (false == isTopToBottom)
                         {

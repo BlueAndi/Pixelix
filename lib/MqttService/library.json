@@ -10,6 +10,8 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Logging"
+    }, {
         "name": "Service"
     }, {
         "name": "SettingsService"
@@ -17,6 +19,8 @@
         "owner": "knolleary",
         "name": "PubSubClient",
         "version": "~2.8"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

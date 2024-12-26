@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,6 +84,7 @@ void RestartState::process(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
+    MyWebServer::process();
     UpdateMgr::getInstance().process();
 
     if ((true == m_timer.isTimerRunning()) &&

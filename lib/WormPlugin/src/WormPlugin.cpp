@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,12 +64,14 @@ const Color WormPlugin::MEAL_COLOR      = ColorDef::WHITE;
 
 void WormPlugin::start(uint16_t width, uint16_t height)
 {
-    m_wormMaxLen    = width * height * MAX_WORM_LENGTH / 100U;
-    m_worms         = new(std::nothrow) Pos[MAX_WORMS * m_wormMaxLen];
+    UTIL_NOT_USED(width);
+    UTIL_NOT_USED(height);
+
+    m_worms = new(std::nothrow) Pos[MAX_WORMS * MAX_WORM_LENGTH];
 
     if (nullptr != m_worms)
     {
-        createAllWorms(width, height);
+        createAllWorms(VDISPLAY_WIDTH, VDISPLAY_HEIGHT);
     }
 }
 
@@ -116,13 +118,13 @@ void WormPlugin::update(YAGfx& gfx)
             /* If no meal for the worm is available, some meal will be placed. */
             if (0U == m_mealLen)
             {
-                placeMealRandom(gfx.getWidth(), gfx.getHeight());
+                placeMealRandom(VDISPLAY_WIDTH, VDISPLAY_HEIGHT);
             }
 
             drawMeal(gfx);
 
             /* Move worms. It may happen a worm eats something and is getting larger. */
-            if (false == moveAllWormsRandom(gfx.getWidth(), gfx.getHeight()))
+            if (false == moveAllWormsRandom(VDISPLAY_WIDTH, VDISPLAY_HEIGHT))
             {
                 /* Force update */
                 m_timer.start(0U);
@@ -136,9 +138,7 @@ void WormPlugin::update(YAGfx& gfx)
         }
         else
         {
-            const uint16_t  WIDTH           = gfx.getWidth();
-            const uint16_t  HEIGHT          = gfx.getHeight();
-            uint16_t        maxDisplayLen   = (WIDTH >= HEIGHT) ? WIDTH : HEIGHT;
+            uint16_t maxDisplayLen = (VDISPLAY_WIDTH >= VDISPLAY_HEIGHT) ? VDISPLAY_WIDTH : VDISPLAY_HEIGHT;
 
             if (0U == m_explosionRadius)
             {
@@ -147,7 +147,7 @@ void WormPlugin::update(YAGfx& gfx)
             }
             else if ((maxDisplayLen / 2U) < m_explosionRadius)
             {
-                createAllWorms(WIDTH, HEIGHT);
+                createAllWorms(VDISPLAY_WIDTH, VDISPLAY_HEIGHT);
 
                 m_isExplosion       = false;
                 m_explosionRadius   = 0U;
@@ -176,7 +176,7 @@ void WormPlugin::placeMealRandom(uint16_t width, uint16_t height)
 
     while(MAX_MEALS > count)
     {
-        m_meal[mealIndex] = { static_cast<int16_t>(random(width)), static_cast<int16_t>(random(height)) };
+        m_meal[mealIndex] = { static_cast<int16_t>(random(width - MEAL_SIZE)), static_cast<int16_t>(random(height - MEAL_SIZE)) };
 
         if (false == isCollision(m_meal[mealIndex]))
         {
@@ -189,7 +189,7 @@ void WormPlugin::placeMealRandom(uint16_t width, uint16_t height)
     m_mealLen = mealIndex;
 }
 
-void WormPlugin::eatMeal(uint16_t width, uint16_t height, uint8_t mealIndex)
+void WormPlugin::eatMeal(uint8_t mealIndex)
 {
     if (0U < m_mealLen)
     {
@@ -230,8 +230,8 @@ void WormPlugin::createWorm(uint8_t wormId, uint16_t width, uint16_t height)
             do
             {
                 /* Worm shall not be overlapping the display border. */
-                pos.x = static_cast<int16_t>(random(width - 2U) + 1U);
-                pos.y = static_cast<int16_t>(random(height - 2U) + 1U);
+                pos.x = static_cast<int16_t>(random(width - 2 * WORM_SIZE) + WORM_SIZE);
+                pos.y = static_cast<int16_t>(random(height - 2 * WORM_SIZE) + WORM_SIZE);
             }
             while(true == isCollision(pos));
 
@@ -427,11 +427,11 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
 
             if (true == isMealFound(possibleMovements[possibilityIndex], mealIndex))
             {
-                eatMeal(width, height, mealIndex);
+                eatMeal(mealIndex);
 
                 ++m_wormLen[wormId];
 
-                if (m_wormMaxLen <= m_wormLen[wormId])
+                if (MAX_WORM_LENGTH <= m_wormLen[wormId])
                 {
                     m_isExplosion = true;
                 }
@@ -486,8 +486,8 @@ void WormPlugin::drawWorm(uint8_t wormId, YAGfx& gfx)
         Color       bodyColor       = m_wormBodyColor[wormId];
         uint8_t     brightnessDelta = UINT8_MAX / (m_wormLen[wormId] - 1U); /* Consider only the body without head. */
 
-        /* Draw worm head */       
-        gfx.drawPixel(m_worms[wormPos + 0U].x,  m_worms[wormPos + 0U].y, WORM_HEAD_COLOR);
+        /* Draw worm head */
+        gfx.fillRect(m_worms[wormPos + 0U].x * WORM_SIZE,  m_worms[wormPos + 0U].y * WORM_SIZE, WORM_SIZE, WORM_SIZE, WORM_HEAD_COLOR);
 
         /* Draw worm body */
         while(m_wormLen[wormId] > idx)
@@ -495,7 +495,7 @@ void WormPlugin::drawWorm(uint8_t wormId, YAGfx& gfx)
             /* The body gets darker till the end. */
             bodyColor.setIntensity(UINT8_MAX - brightnessDelta * (idx - 1U));
 
-            gfx.drawPixel(m_worms[wormPos + idx].x,  m_worms[wormPos + idx].y, bodyColor);
+            gfx.fillRect(m_worms[wormPos + idx].x * WORM_SIZE,  m_worms[wormPos + idx].y * WORM_SIZE, WORM_SIZE, WORM_SIZE, bodyColor);
             ++idx;
         }
     }
@@ -518,7 +518,7 @@ void WormPlugin::drawMeal(YAGfx& gfx)
 
     while(m_mealLen > idx)
     {
-        gfx.drawPixel(m_meal[idx].x,  m_meal[idx].y, MEAL_COLOR);
+        gfx.fillRect(m_meal[idx].x * MEAL_SIZE,  m_meal[idx].y * MEAL_SIZE, MEAL_SIZE, MEAL_SIZE, MEAL_COLOR);
         ++idx;
     }
 }

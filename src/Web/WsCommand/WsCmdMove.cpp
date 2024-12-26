@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,10 +63,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdMove::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdMove::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -74,7 +73,7 @@ void WsCmdMove::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -83,22 +82,22 @@ void WsCmdMove::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         if (SlotList::SLOT_ID_INVALID == srcSlotId)
         {
-            sendNegativeResponse(server, client, "\"Plugin UID not found.\"");
+            sendNegativeResponse(server, clientId, "\"Plugin UID not found.\"");
         }
         else if (nullptr == plugin)
         {
-            sendNegativeResponse(server, client, "\"Plugin not found.\"");
+            sendNegativeResponse(server, clientId, "\"Plugin not found.\"");
         }
         else if (false == DisplayMgr::getInstance().movePluginToSlot(plugin, m_slotId))
         {
-            sendNegativeResponse(server, client, "\"Move failed.\"");
+            sendNegativeResponse(server, clientId, "\"Move failed.\"");
         }
         else
         {
             /* Save new location of plugin in persistent memory. */
             PluginMgr::getInstance().save();
 
-            sendPositiveResponse(server, client);
+            sendPositiveResponse(server, clientId);
         }
     }
 
@@ -110,18 +109,16 @@ void WsCmdMove::setPar(const char* par)
 {
     switch(m_parCnt)
     {
-    case 0:
-        if (false == Util::strToUInt16(String(par), m_uid))
+    case 0U:
+        if (false == Util::strToUInt16(par, m_uid))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;
 
-    case 1:
-        if (false == Util::strToUInt8(String(par), m_slotId))
+    case 1U:
+        if (false == Util::strToUInt8(par, m_slotId))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;

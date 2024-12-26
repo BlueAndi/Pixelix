@@ -228,3 +228,30 @@ pixelix.rest.Client.prototype.setSetting = function(key, value) {
 
     return promise;
 };
+
+pixelix.rest.Client.prototype.reset = function() {
+    return utils.makeRequest({
+        method: "GET",
+        url: "/rest/api/v1/reset",
+        isJsonResponse: true
+    });
+};
+
+pixelix.rest.Client.prototype.fileMgrRemoveFile = function(fileId) {
+    var promise = null;
+
+    if ("number" !== typeof fileId) {
+        promise = Promise.reject();
+    } else {
+        promise = utils.makeRequest({
+            method: "POST",
+            url: this._hostname + this._baseUri + "/files/remove",
+            isJsonResponse: true,
+            parameter: {
+                fileId: fileId
+            }
+        });
+    }
+
+    return promise;
+};

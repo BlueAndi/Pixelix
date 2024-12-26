@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,9 +41,7 @@
 
 #include "InitState.h"
 #include "RestartState.h"
-#include "TaskMon.h"
 #include "MemMon.h"
-#include "ResetMon.h"
 #include "MiniTerminal.h"
 
 #include "ButtonDrv.h"
@@ -52,6 +50,10 @@
 #include "TwoButtonCtrl.hpp"
 #include "ThreeButtonCtrl.hpp"
 #include <UpdateMgr.h>
+
+#if (configCHECK_FOR_STACK_OVERFLOW > 0)
+#include "freertos/task.h"
+#endif /* (configCHECK_FOR_STACK_OVERFLOW > 0) */
 
 /******************************************************************************
  * Macros
@@ -146,9 +148,6 @@ static const uint32_t                       HWCDC_TX_TIMEOUT    = 4U;
  */
 void setup()
 {
-    /* Start the reset monitor as early as possible to avoid loosing information. */
-    ResetMon::getInstance().begin();
-
     /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
     
@@ -188,7 +187,7 @@ void setup()
     }
     while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
 
-    /* Observer button state changes and derrive actions.
+    /* Observe button state changes and derrive actions.
      * Do this after init state!
      */
     ButtonDrv::getInstance().registerObserver(gButtonHandler);
@@ -199,14 +198,8 @@ void setup()
  */
 void loop()
 {
-    /* Reset monitor */
-    ResetMon::getInstance().process();
-
     /* Process system state machine */
     gSysStateMachine.process();
-
-    /* Task monitor */
-    TaskMon::getInstance().process();
 
     /* Memory monitor */
     MemMon::getInstance().process();
@@ -236,3 +229,23 @@ void loop()
 /******************************************************************************
  * Local functions
  *****************************************************************************/
+
+#if (configCHECK_FOR_STACK_OVERFLOW > 0)
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    /* Inform via serial and avoid the logging feature, because it may never show up. */
+    Serial.write("Task stack overflow detected: ");
+    Serial.write(pcTaskName);
+    Serial.write("\n");
+    Serial.flush();
+
+    /* Trigger watchdog reset. */
+    while(1)
+    {
+        /* Waiting for watchdog reset. */
+        ;
+    }
+}
+
+#endif /* (configCHECK_FOR_STACK_OVERFLOW > 0) */

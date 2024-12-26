@@ -12,13 +12,13 @@
     "dependencies": [{
         "name": "Common"
     }, {
-        "name": "Utilities"
-    }, {
         "name": "YAGfx"
     }, {
         "owner": "makuna",
         "name": "NeoPixelBus",
-        "version": "~2.8.0"
+        "version": "~2.8.1"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

@@ -1,0 +1,33 @@
+{
+    "pixelix": {
+        "type": "plugin",
+        "name": "CountdownPlugin",
+        "web": {
+            "files": [
+                "./web/CountdownPlugin.html",
+                "./web/CountdownPlugin.jpg"
+            ],
+            "layouts": [{
+                "name": "LAYOUT_GENERIC",
+                "files": [
+                    "./web/icon8x8/countdown.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X8",
+                "files": [
+                    "./web/icon8x8/countdown.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X16",
+                "files": [
+                    "./web/icon8x8/countdown.gif"
+                ]
+            }, {
+                "name": "LAYOUT_64X64",
+                "files": [
+                    "./web/icon16x16/countdown.gif"
+                ]
+            }]
+        }
+    }
+}

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,9 +53,9 @@
  * Macros
  *****************************************************************************/
 
-#define FILE_READ       "r"
-#define FILE_WRITE      "w"
-#define FILE_APPEND     "a"
+#define FILE_READ       "rb"
+#define FILE_WRITE      "wb"
+#define FILE_APPEND     "ab"
 
 /******************************************************************************
  * Types and Classes
@@ -70,7 +70,7 @@ enum SeekMode {
 class File
 {
 public:
-    File(FILE* fd) :
+    File(FILE* fd = nullptr) :
         m_fd(fd)
     {
     }
@@ -110,7 +110,7 @@ public:
 
     size_t readBytes(char *buffer, size_t length)
     {
-        return read((uint8_t*)buffer, length);
+        return read(reinterpret_cast<uint8_t*>(buffer), length);
     }
 
     bool seek(uint32_t pos, SeekMode mode)
@@ -151,8 +151,6 @@ public:
 private:
 
     FILE*   m_fd;
-
-    File();
 };
 
 class FS

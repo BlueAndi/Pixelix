@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,11 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <TextWidget.h>
+#include <stdint.h>
+#include <Plugin.hpp>
 #include <SimpleTimer.hpp>
 
 /******************************************************************************
@@ -68,15 +67,12 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    WifiStatusPlugin(const String& name, uint16_t uid) :
+    WifiStatusPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_iconCanvas(),
-        m_textCanvas(),
-        m_textWidget(),
-        m_alertWidget(),
+        m_view(),
         m_timer(),
         m_toggle(true)
     {
@@ -92,14 +88,38 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow)WifiStatusPlugin(name, uid);
+    }
+
+    /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    Fonts::FontType getFontType() const final
+    {
+        return m_view.getFontType();
+    }
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    void setFontType(Fonts::FontType fontType) final
+    {
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -152,53 +172,11 @@ private:
     /**
      * Period in ms which is used to update the status information.
      */
-    const uint32_t  PERIOD                  = 500U;
+    const uint32_t  PERIOD  = 1000U;
 
-    /**
-     * Width in pixel of a single signal strength bar.
-     */
-    const uint16_t  WIFI_BAR_WIDTH          = 2U;
-
-    /**
-     * Width in pixel of a single signal strength bar.
-     */
-    const uint16_t  WIFI_BAR_SPACE_WIDTH    = 1U;
-
-    /**
-     * Height in pixel of the lowest signal strength bar.
-     */
-    const uint16_t  WIFI_BAR_HEIGHT         = 2U;
-
-    /**
-     * Number of signal signal strength bars.
-     */
-    const uint8_t   WIFI_BARS               = 4U;
-
-    /**
-     * Width in pixel of the whole signal strength icon.
-     * Between each bar is a short space.
-     */
-    const uint16_t  WIFI_ICON_WIDTH         = (WIFI_BARS * WIFI_BAR_WIDTH) + ((WIFI_BARS - 1U) * WIFI_BAR_SPACE_WIDTH);
-
-    /**
-     * Height in pixel of the whole signal strength icon.
-     */
-    const uint16_t  WIFI_ICON_HEIGHT        = 8U;
-
-    WidgetGroup m_iconCanvas;       /**< Drawing area of the wifi icon */
-    WidgetGroup m_textCanvas;       /**< Drawing area of the text */
-    TextWidget  m_textWidget;       /**< Text widget, used for showing the text. */
-    TextWidget  m_alertWidget;      /**< Text widget, used for showing alert (wifi disconnected). */
-    SimpleTimer m_timer;            /**< Timer for periodic stuff */
-    bool        m_toggle;           /**< Toggles the alert in case wifi is disconnected */
-
-    /**
-     * Update wifi status on display.
-     *
-     * @param[in] gfx       Graphic operations
-     * @param[in] quality   Signal quality in percent [0; 100].
-     */
-    void updateWifiStatus(YAGfx& gfx, uint8_t quality);
+    _WifiStatusPlugin::View m_view;     /**< View with all widgets. */
+    SimpleTimer             m_timer;    /**< Timer for periodic stuff */
+    bool                    m_toggle;   /**< Toggles the alert in case wifi is disconnected */
 };
 
 /******************************************************************************

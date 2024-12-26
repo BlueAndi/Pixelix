@@ -1,0 +1,33 @@
+{
+    "pixelix": {
+        "type": "plugin",
+        "name": "GruenbeckPlugin",
+        "web": {
+            "files": [
+                "./web/GruenbeckPlugin.html",
+                "./web/GruenbeckPlugin.jpg"
+            ],
+            "layouts": [{
+                "name": "LAYOUT_GENERIC",
+                "files": [
+                    "./web/icon8x8/gruenbeck.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X8",
+                "files": [
+                    "./web/icon8x8/gruenbeck.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X16",
+                "files": [
+                    "./web/icon8x8/gruenbeck.gif"
+                ]
+            }, {
+                "name": "LAYOUT_64X64",
+                "files": [
+                    "./web/icon16x16/gruenbeck.gif"
+                ]
+            }]
+        }
+    }
+}

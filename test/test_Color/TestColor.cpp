@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -179,6 +179,4 @@ static void testColor()
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getBlue());
-
-    return;
 }

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -170,7 +170,8 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 String topicUriReadable;
                 String topicUriWriteable;
 
-                if (nullptr != topicState->getTopicFunc)
+                if ((nullptr != topicState->getTopicFunc) &&
+                    (true == m_isMqttConnected))
                 {
                     topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
 

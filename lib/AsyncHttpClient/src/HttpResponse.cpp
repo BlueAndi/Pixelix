@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,8 +63,6 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
 {
     if (this != &rsp)
     {
-        DLinkedListConstIterator<HttpHeader*>   it(rsp.m_headers);
-
         m_httpVersion   = rsp.m_httpVersion;
         m_statusCode    = rsp.m_statusCode;
         m_reasonPhrase  = rsp.m_reasonPhrase;
@@ -90,19 +88,24 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
 
         clearHeaders();
 
-        if (true == it.first())
+        if (0U < rsp.m_headers.size())
         {
-            do
-            {
-                HttpHeader* header = new(std::nothrow) HttpHeader;
+            ListOfHeaders::const_iterator it = rsp.m_headers.begin();
 
-                if (nullptr != header)
+            while(it != rsp.m_headers.end())
+            {
+                if (nullptr != (*it))
                 {
-                    *header = **it.current();
-                    (void)m_headers.append(header);
+                    HttpHeader* header = new(std::nothrow) HttpHeader(**it);
+
+                    if (nullptr != header)
+                    {
+                        m_headers.push_back(header);
+                    }
                 }
+
+                ++it;
             }
-            while(true == it.next());
         }
     }
 
@@ -158,7 +161,7 @@ void HttpResponse::addHeader(const String& line)
 
     if (nullptr != header)
     {
-        m_headers.append(header);
+        m_headers.push_back(header);
     }
 }
 
@@ -218,27 +221,28 @@ String HttpResponse::getReasonPhrase() const
 
 String HttpResponse::getHeader(const String& name)
 {
-    String                              value;
-    DLinkedListIterator<HttpHeader*>    it(m_headers);
+    String value;
 
-    if (true == it.first())
+    if (0U < m_headers.size())
     {
-        HttpHeader* hdr     = nullptr;
-        bool        isFound = false;
+        ListOfHeaders::const_iterator   it      = m_headers.begin();
+        bool                            isFound = false;
 
-        do
+        while((it != m_headers.end()) && (false == isFound))
         {
-            hdr = *it.current();
+            const HttpHeader* header = *it;
 
-            if ((nullptr != hdr) &&
-                (0U != hdr->getName().equalsIgnoreCase(name)))
+            if (nullptr != header)
             {
-                value = hdr->getValue();
-                isFound = true;
+                if (true == header->getName().equalsIgnoreCase(name))
+                {
+                    value   = header->getValue();
+                    isFound = true;
+                }
             }
+
+            ++it;
         }
-        while((false == isFound) &&
-                (true == it.next()));
     }
 
     return value;
@@ -260,14 +264,21 @@ const uint8_t* HttpResponse::getPayload(size_t& size) const
 
 void HttpResponse::clearHeaders()
 {
-    DLinkedListIterator<HttpHeader*> it(m_headers);
-
-    while(true == it.first())
+    if (0U < m_headers.size())
     {
-        HttpHeader* header = *it.current();
+        ListOfHeaders::iterator it = m_headers.begin();
 
-        it.remove();
-        delete header;
+        while(it != m_headers.end())
+        {
+            HttpHeader* header = *it;
+
+            it = m_headers.erase(it);
+
+            if (nullptr != header)
+            {
+                delete header;
+            }
+        }
     }
 }
 

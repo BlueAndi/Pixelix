@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,10 +61,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdButton::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdButton::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -72,13 +71,13 @@ void WsCmdButton::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
-        executeAction(m_actionId);
+        executeAction(m_actionId, true);
 
-        sendPositiveResponse(server, client);
+        sendPositiveResponse(server, clientId);
     }
 
     m_isError = false;

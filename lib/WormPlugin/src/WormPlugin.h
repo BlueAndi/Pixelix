@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,9 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
-
+#include <Plugin.hpp>
 #include <SimpleTimer.hpp>
+#include <Util.h>
 
 /******************************************************************************
  * Macros
@@ -70,12 +70,11 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    WormPlugin(const String& name, uint16_t uid) :
+    WormPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_wormMaxLen(0U),
         m_wormLen(),
         m_worms(nullptr),
         m_wormBodyColor(),
@@ -97,12 +96,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow)WormPlugin(name, uid);
     }
@@ -163,7 +162,7 @@ private:
      * Max. worm length in %.
      * It means the worm can have a X % length of the number of available display pixels.
      */
-    static const uint8_t    MAX_WORM_LENGTH = 80U / MAX_WORMS;
+    static const uint8_t    MAX_WORM_LENGTH_PERCENT = 80U / MAX_WORMS;
 
     /**
      * Min. worm length of the head and one part of the body.
@@ -173,7 +172,7 @@ private:
     /**
      * Max. number of meals wich are placed at once.
      */
-    static const uint8_t    MAX_MEALS       = 6U;
+    static const uint8_t    MAX_MEALS       = Util::max(CONFIG_LED_MATRIX_WIDTH * CONFIG_LED_MATRIX_HEIGHT / 32U, 1U);
 
     /**
      * Worm velocity in ms to move one pixel forward.
@@ -191,7 +190,37 @@ private:
     static const Color      MEAL_COLOR;
 
     /**
-     * Pixel position on the display.
+     * The worm square size in pixel.
+     * Min. width is 1 pixel.
+     * Every 32 pixel, the width increases by 1 pixel.
+     */
+    static const uint16_t   WORM_SIZE   = Util::max(Util::min(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT) / 32U, 1U);
+
+    /**
+     * The meal square size in pixel. Shall always have the same size than the
+     * worm square.
+     */
+    static const uint16_t   MEAL_SIZE   = WORM_SIZE;
+
+    /**
+     * Virtual display width in pixel.
+     */
+    static const uint16_t   VDISPLAY_WIDTH  = CONFIG_LED_MATRIX_WIDTH / WORM_SIZE;
+
+    /**
+     * Virtual display height in pixel.
+     */
+    static const uint16_t   VDISPLAY_HEIGHT = CONFIG_LED_MATRIX_HEIGHT / WORM_SIZE;
+
+    /**
+     * Max. worm length in pixel.
+     */
+    static const size_t     MAX_WORM_LENGTH = VDISPLAY_WIDTH * VDISPLAY_HEIGHT * MAX_WORM_LENGTH_PERCENT / 100U;
+
+    /**
+     * Position on the virtual display.
+     * The virtual display size is calculated by the display size divided by
+     * worm square size.
      */
     struct Pos
     {
@@ -199,7 +228,6 @@ private:
         int16_t y;  /**< y-coordinate */
     };
 
-    size_t          m_wormMaxLen;               /**< The max. length a worm can have. */
     size_t          m_wormLen[MAX_WORMS];       /**< The length of each worm. */
     Pos*            m_worms;                    /**< The worms itself and their head and body positions. */
     Color           m_wormBodyColor[MAX_WORMS]; /**< The colors of each worm body. */
@@ -220,11 +248,9 @@ private:
     /**
      * A worm eat the meal. Remove it from the available ones.
      * 
-     * @param[in]       width     Display width in pixel
-     * @param[in]       height    Display height in pixel
      * @param[in,out]   mealIndex Index of the meal, which to remove.
      */
-    void eatMeal(uint16_t width, uint16_t height, uint8_t mealIndex);
+    void eatMeal(uint8_t mealIndex);
 
     /**
      * Get the worm position in the array by worm id.
@@ -235,7 +261,7 @@ private:
      */
     size_t inline wormPosInArray(uint8_t wormId)
     {
-        return wormId * m_wormMaxLen;
+        return wormId * MAX_WORM_LENGTH;
     }
 
     /**

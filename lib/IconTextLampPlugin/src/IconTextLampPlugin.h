@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,15 +43,13 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
-#include <FS.h>
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
-#include <LampWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
+#include <FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -62,30 +60,26 @@
  *****************************************************************************/
 
 /**
- * Shows an icon (bitmap) on the left side in 8 x 8, text on the right side and
+ * Shows an icon on the left side in 8 x 8, text on the right side and
  * under the text a bar with lamps.
  * If the text is too long for the display width, it automatically scrolls.
  */
-class IconTextLampPlugin : public Plugin
+class IconTextLampPlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    IconTextLampPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        m_iconCanvas(),
-        m_textCanvas(),
-        m_lampCanvas(),
-        m_bitmapWidget(),
-        m_textWidget(),
-        m_iconPath(),
-        m_spriteSheetPath(),
-        m_lampWidgets(),
+    IconTextLampPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
+        m_view(),
+        m_iconFileId(FileMgrService::FILE_ID_INVALID),
+        m_formatTextStored(),
+        m_iconFileIdStored(FileMgrService::FILE_ID_INVALID),
         m_mutex(),
         m_hasTopicTextChanged(false),
         m_hasTopicLampsChanged(false),
@@ -105,12 +99,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow)IconTextLampPlugin(name, uid);
     }
@@ -179,17 +173,6 @@ public:
     bool hasTopicChanged(const String& topic) final;
 
     /**
-     * Is a upload request accepted or rejected?
-     * 
-     * @param[in] topic         The topic which the upload belongs to.
-     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
-     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
-     * 
-     * @return If accepted it will return true otherwise false.
-     */
-    bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
-
-    /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
@@ -228,52 +211,27 @@ public:
      * Set text, which may contain format tags.
      *
      * @param[in] formatText    Text, which may contain format tags.
+     * @param[in] storeFlag     Store the text persistent or not.
      */
-    void setText(const String& formatText);
+    void setText(const String& formatText, bool storeFlag);
 
     /**
-     * Load bitmap image from filesystem. If a sprite sheet is available, the
-     * bitmap will be automatically used as texture for animation.
+     * Load icon by file id.
      *
-     * @param[in] filename  Bitmap image filename
-     *
-     * @return If successul, it will return true otherwise false.
-     */
-    bool loadBitmap(const String& filename);
-
-    /**
-     * Load sprite sheet from filesystem. If a bitmap is available, it will
-     * be automatically used as texture for animation.
-     *
-     * @param[in] filename  Sprite sheet filename
+     * @param[in] fileId    File id
+     * @param[in] storeFlag Store the text persistent or not.
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadSpriteSheet(const String& filename);
+    bool loadIcon(FileMgrService::FileId fileId, bool storeFlag);
 
     /**
-     * Clear bitmap icon.
-     */
-    void clearBitmap();
-
-    /**
-     * Clear sprite sheet.
-     */
-    void clearSpriteSheet();
-
-    /**
-     * Get icon file path.
+     * Clear icon from view and remove it from filesytem.
      * 
-     * @param[out] Path to icon file.
+     * @param[in] storeFlag Store the text persistent or not.
      */
-    void getIconFilePath(String& fullPath) const;
+    void clearIcon(bool storeFlag);
 
-    /**
-     * Get sprite sheet file path.
-     * 
-     * @param[out] Path to sprite sheet file.
-     */
-    void getSpriteSheetFilePath(String& fullPath) const;
 
     /**
      * Get lamp state (true = on / false = off).
@@ -309,76 +267,48 @@ private:
      */
     static const char*      TOPIC_LAMP;
 
-    /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_ICON;
+
+    _IconTextLampPlugin::View   m_view;                 /**< View with all widgets. */
+    FileMgrService::FileId      m_iconFileId;           /**< Icon file id, used to retrieve the full path to the icon from the file manager. */
+    String                      m_formatTextStored;     /**< It contains the format text, which is persistent stored. */
+    FileMgrService::FileId      m_iconFileIdStored;     /**< Icon file id, which is persistent stored. */
+    mutable MutexRecursive      m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                        m_hasTopicTextChanged;  /**< Has the topic text content changed? Used to notify the TopicHandlerService about changes. */
+    bool                        m_hasTopicLampsChanged; /**< Has the topic lamps content changed? Used to notify the TopicHandlerService about changes. */
+    bool                        m_hasTopicLampChanged[_IconTextLampPlugin::View::MAX_LAMPS];  /**< Has the topic lamp content changed? Used to notify the TopicHandlerService about changes. */
 
     /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_SPRITESHEET;
-
-    /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH  = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT = 8U;
-
-    /**
-     * Filename extension of bitmap image file.
-     */
-    static const char*      FILE_EXT_BITMAP;
-
-    /**
-     * Filename extension of sprite sheet parameter file.
-     */
-    static const char*      FILE_EXT_SPRITE_SHEET;
-
-    /**
-     * Max. number of lamps.
-     */
-    static const uint8_t    MAX_LAMPS   = 4U;
-
-    WidgetGroup             m_iconCanvas;                       /**< Canvas used for the bitmap widget. */
-    WidgetGroup             m_textCanvas;                       /**< Canvas used for the text widget. */
-    WidgetGroup             m_lampCanvas;                       /**< Canvas used for the lamp widget. */
-    BitmapWidget            m_bitmapWidget;                     /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;                       /**< Text widget, used for showing the text. */
-    String                  m_iconPath;                         /**< Full path to icon. */
-    String                  m_spriteSheetPath;                  /**< Full path to spritesheet. */
-    LampWidget              m_lampWidgets[MAX_LAMPS];           /**< Lamp widgets, used to signal different things. */
-    mutable MutexRecursive  m_mutex;                            /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicTextChanged;              /**< Has the topic text content changed? */
-    bool                    m_hasTopicLampsChanged;             /**< Has the topic lamps content changed? */
-    bool                    m_hasTopicLampChanged[MAX_LAMPS];   /**< Has the topic lamp content changed? */
-
-    /**
-     * Get filename with path.
+     * Get actual configuration in JSON.
      * 
-     * @param[in] ext   File extension
-     *
-     * @return Filename with path.
+     * @param[out] cfg  Configuration
      */
-    String getFileName(const String& ext);
+    void getActualConfiguration(JsonObject& cfg) const;
 
     /**
-     * Calculates the optimal layout for several elements, which shall be aligned.
+     * Set actual configuration in JSON.
+     * It will not be stored to configuration file.
      * 
-     * @param[in]   width           Max. available width in pixel.
-     * @param[in]   cnt             Number of elements in a row.
-     * @param[in]   minDistance     The minimal distance in pixel between each element.
-     * @param[in]   minBorder       The minimal border left and right of all elements.
-     * @param[out]  elementWidth    The calculated optimal element width in pixel.
-     * @param[out]  elementDistance The calculated optimal element distance in pixel.
+     * @param[in] cfg   Configuration
      * 
-     * @return If the calculation is successful, it will return true otherwise false.
+     * @return If successful set, it will return true otherwise false.
      */
-    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
+    bool setActualConfiguration(const JsonObjectConst& jsonCfg);
+
+    /**
+     * Get persistent configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& jsonCfg) const final;
+
+    /**
+     * Set persistent configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 };
 
 /******************************************************************************

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@
 #include "Services.h"
 #include "SensorDataProvider.h"
 #include "PluginMgr.h"
+#include "MyWebServer.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -142,6 +143,9 @@ void ConnectedState::entry(StateMachine& sm)
 
 void ConnectedState::process(StateMachine& sm)
 {
+    /* Handle webserver. */
+    MyWebServer::process();
+
     /* Handle update, there may be one in the background. */
     UpdateMgr::getInstance().process();
 
@@ -220,19 +224,20 @@ void ConnectedState::pushUrl(const String& pushUrl)
     /* If a push URL is set, notify about the online status. */
     if (false == pushUrl.isEmpty())
     {
-        String      url         = pushUrl;
-        const char* GET_CMD     = "get ";
-        const char* POST_CMD    = "post ";
-        bool        isGet       = true;
+        String      url             = pushUrl;
+        const char* GET_CMD         = "get ";
+        const char* POST_CMD        = "post ";
+        bool        isGet           = true;
+        bool        isSuccessful    = false;
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
-        if (0U != url.startsWith(GET_CMD))
+        if (true == url.startsWith(GET_CMD))
         {
             url = url.substring(strlen(GET_CMD));
             isGet = true;
         }
-        else if (0U != url.startsWith(POST_CMD))
+        else if (true == url.startsWith(POST_CMD))
         {
             url = url.substring(strlen(POST_CMD));
             isGet = false;
@@ -244,11 +249,30 @@ void ConnectedState::pushUrl(const String& pushUrl)
 
         if (true == m_client.begin(url))
         {
-            if (false == m_client.GET())
+            if (false == isGet)
             {
-                LOG_WARNING("GET %s failed.", url.c_str());
+                if (false == m_client.POST())
+                {
+                    LOG_WARNING("POST %s failed.", url.c_str());
+                }
+                else
+                {
+                    isSuccessful = true;
+                }
             }
             else
+            {
+                if (false == m_client.GET())
+                {
+                    LOG_WARNING("GET %s failed.", url.c_str());
+                }
+                else
+                {
+                    isSuccessful = true;
+                }
+            }
+
+            if (false == isSuccessful)
             {
                 LOG_INFO("Notification triggered.");
             }

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@
 #include "FileSystem.h"
 
 #include <SettingsService.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,6 +70,20 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
         return;
     }
 
+    /* Log the requested URL to determine how the connected device behaves,
+     * which is required to trigger the dialog on the device which notifies
+     * the user that further settings might be necessary and will jump to
+     * our captive portal.
+     */
+    {
+        const String&   host            = request->host();
+        const String&   requestedUrl    = request->url();
+        const char*     method          = request->methodToString();
+
+        LOG_DEBUG("Request from: %s", host.c_str());
+        LOG_DEBUG("Request for : %s %s", method, requestedUrl.c_str());
+    }
+
     if (HTTP_POST == request->method())
     {
         if ((true == request->hasArg("ssid")) &&
@@ -78,8 +93,8 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
 
             if (true == settings.open(false))
             {
-                const String& ssid              = request->arg("ssid");
-                const String& passphrase        = request->arg("passphrase");
+                const String&   ssid            = request->arg("ssid");
+                const String&   passphrase      = request->arg("passphrase");
                 KeyValueString& kvSSID          = settings.getWifiSSID();
                 KeyValueString& kvPassphrase    = settings.getWifiPassphrase();
 
@@ -96,7 +111,7 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
             }
         }
         else if ((true == request->hasArg("restart")) &&
-                (0 != request->arg("restart").equals("now")))
+                (true == request->arg("restart").equals("now")))
         {
             if (nullptr == m_resetReqHandler)
             {

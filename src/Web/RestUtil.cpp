@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -99,10 +99,6 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
     if (true == jsonDoc.overflowed())
     {
         LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_DEBUG("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     if (nullptr != request)

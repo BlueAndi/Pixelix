@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,10 +61,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdEffect::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -72,7 +71,7 @@ void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -87,7 +86,7 @@ void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         msg += DisplayMgr::getInstance().getFadeEffect();
 
-        sendResponse(server, client, msg);
+        sendResponse(server, clientId, msg);
     }
 
     m_isError = false;
@@ -98,7 +97,7 @@ void WsCmdEffect::setPar(const char* par)
 {
     if (0U == m_parCnt)
     {
-        if (false == Util::strToUInt8(String(par), m_fadeEffect))
+        if (false == Util::strToUInt8(par, m_fadeEffect))
         {
             m_isError = true;
         }

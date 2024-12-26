@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,13 +32,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "BatteryPlugin.h"
-#include "FileSystem.h"
-#include "SensorDataProvider.h"
-
+#include <BatteryPlugin.h>
+#include <FileSystem.h>
+#include <SensorDataProvider.h>
 #include <Board.h>
 #include <SensorChannelType.hpp>
-#include <YAColor.h>
 #include <Logging.h>
 
 /******************************************************************************
@@ -67,26 +65,12 @@
 
 void BatteryPlugin::start(uint16_t width, uint16_t height)
 {
-    uint8_t                     sensorIdx           = 0U;
-    uint8_t                     channelIdx          = 0U;
-    uint16_t                    spaceLeftRight      = divideAndRound(width, 8U); /* 12.5 % */
-    uint16_t                    spaceTopBottom      = divideAndRound(height, 8U); /* 12.5 % */
-    uint16_t                    batteryBorder       = 1U;
-    uint16_t                    batteryPoleWidth    = divideAndRound(width, 20U); /*  5 % */
-    uint16_t                    batteryPoleHeight   = height - 2U * (spaceTopBottom + 2U * batteryBorder);
-    uint16_t                    batteryWdith        = width - 2U * spaceLeftRight - batteryPoleWidth;
-    uint16_t                    batteryHeight       = height - 2U * spaceTopBottom;
+    uint8_t                     sensorIdx       = 0U;
+    uint8_t                     channelIdx      = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    SensorDataProvider&         sensorDataProv      = SensorDataProvider::getInstance();
+    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
 
-    m_batterySymbol.create(width, height);
-    m_batterySymbol.drawRectangle(spaceLeftRight + batteryPoleWidth, spaceTopBottom, batteryWdith, batteryHeight, ColorDef::WHITE);
-    m_batterySymbol.fillRect(spaceLeftRight, spaceTopBottom + 2U * batteryBorder, batteryPoleWidth, batteryPoleHeight, ColorDef::WHITE);
-
-    m_socBarX       = spaceLeftRight + batteryPoleWidth + batteryBorder;
-    m_socBarY       = spaceTopBottom + batteryBorder;
-    m_socBarWidth   = batteryWdith - 2U * batteryBorder;
-    m_socBarHeight  = batteryHeight - 2U * batteryBorder;
+    m_view.init(width, height);
 
     /* Use just the first found sensor for battery state of charge. */
     if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT, ISensorChannel::DATA_TYPE_UINT32))
@@ -99,7 +83,6 @@ void BatteryPlugin::stop()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_batterySymbol.release();
     m_sensorUpdateTimer.stop();
 }
 
@@ -131,8 +114,8 @@ void BatteryPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.drawBitmap(0, 0, m_batterySymbol);
-    drawStateOfCharge(gfx);
+    m_view.setStateOfCharge(m_stateOfCharge);
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -142,49 +125,6 @@ void BatteryPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-uint16_t BatteryPlugin::divideAndRound(uint16_t dividend, uint16_t divisor)
-{
-    uint32_t rest   = (static_cast<uint32_t>(dividend) * 10U / static_cast<uint32_t>(divisor)) % 10U;
-    uint16_t result = dividend / divisor;
-
-    if (5U <= rest)
-    {
-        result += 1U;
-    }
-
-    return result;
-}
-
-void BatteryPlugin::drawStateOfCharge(YAGfx& gfx)
-{
-    uint16_t    widthDependedOnSOC  = (m_socBarWidth * m_stateOfCharge) / 100U;
-    int16_t     barXDependedOnSOC   = m_socBarX + m_socBarWidth - widthDependedOnSOC;
-    Color       color;
-
-    /* SOC > 70 % */
-    if (70U < m_stateOfCharge)
-    {
-        color = ColorDef::LIGHTGREEN;
-    }
-    /* SOC > 40 % */
-    else if (40U < m_stateOfCharge)
-    {
-        color = ColorDef::GREEN;
-    }
-    /* SOC > 10 % */
-    else if (10U > m_stateOfCharge)
-    {
-        color = ColorDef::ORANGE;
-    }
-    /* SOC <= 10 % */
-    else
-    {
-        color = ColorDef::RED;
-    }
-
-    gfx.fillRect(barXDependedOnSOC, m_socBarY, widthDependedOnSOC, m_socBarHeight, color);
-}
 
 /******************************************************************************
  * External Functions

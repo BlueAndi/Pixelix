@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2019 - 2023 Andreas Merkle (web@blue-andi.de)
+# Copyright (c) 2019 - 2024 Andreas Merkle (web@blue-andi.de)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,10 @@
 # Imports
 ################################################################################
 from configure import configure
+from determine_layout import determine_layout
+
+# pylint: disable=undefined-variable
+Import("env") # type: ignore
 
 ################################################################################
 # Variables
@@ -43,4 +47,7 @@ from configure import configure
 # Main
 ################################################################################
 
-configure("./config/configSmall.ini")
+# pylint: disable=undefined-variable
+layout = determine_layout(env["BUILD_FLAGS"]) # type: ignore
+
+configure("./config/configSmall.ini", layout)

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -262,40 +262,40 @@ void DDPServer::notifyDownState()
 
 uint16_t DDPServer::getValueInLE(uint16_t valueBE)
 {
-    uint8_t*    byteStream  = reinterpret_cast<uint8_t*>(&valueBE);
-    uint16_t    b0          = byteStream[0U];
-    uint16_t    b1          = byteStream[1U];
+    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueBE);
+    uint16_t        b0          = byteStream[0U];
+    uint16_t        b1          = byteStream[1U];
 
     return (b0 << 8U) | (b1 << 0U);
 }
 
 uint32_t DDPServer::getValueInLE(uint32_t valueBE)
 {
-    uint8_t*    byteStream  = reinterpret_cast<uint8_t*>(&valueBE);
-    uint32_t    b0          = byteStream[0U];
-    uint32_t    b1          = byteStream[1U];
-    uint32_t    b2          = byteStream[2U];
-    uint32_t    b3          = byteStream[3U];
+    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueBE);
+    uint32_t        b0          = byteStream[0U];
+    uint32_t        b1          = byteStream[1U];
+    uint32_t        b2          = byteStream[2U];
+    uint32_t        b3          = byteStream[3U];
 
     return (b0 << 24U) | (b1 << 16U) | (b2 << 8U) | (b3 << 0U);
 }
 
 uint16_t DDPServer::getValueInBE(uint16_t valueLE)
 {
-    uint8_t*    byteStream  = reinterpret_cast<uint8_t*>(&valueLE);
-    uint16_t    b0          = byteStream[0U];
-    uint16_t    b1          = byteStream[1U];
+    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueLE);
+    uint16_t        b0          = byteStream[0U];
+    uint16_t        b1          = byteStream[1U];
 
     return (b0 << 0U) | (b1 << 8U);
 }
 
 uint32_t DDPServer::getValueInBE(uint32_t valueLE)
 {
-    uint8_t*    byteStream  = reinterpret_cast<uint8_t*>(&valueLE);
-    uint32_t    b0          = byteStream[0U];
-    uint32_t    b1          = byteStream[1U];
-    uint32_t    b2          = byteStream[2U];
-    uint32_t    b3          = byteStream[3U];
+    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueLE);
+    uint32_t        b0          = byteStream[0U];
+    uint32_t        b1          = byteStream[1U];
+    uint32_t        b2          = byteStream[2U];
+    uint32_t        b3          = byteStream[3U];
 
     return (b0 << 0U) | (b1 << 8U) | (b2 << 16U) | (b3 << 24U);
 }

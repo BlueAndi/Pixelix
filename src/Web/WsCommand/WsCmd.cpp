@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,13 +55,13 @@
  *****************************************************************************/
 
 /* Delimiter of websocket parameters */
-const char*    WsCmd::DELIMITER = ";";
+const char   WsCmd::DELIMITER[] = ";";
 
 /* Positive response code */
-const char*    WsCmd::ACK       = "ACK";
+const char    WsCmd::ACK[]       = "ACK";
 
 /* Negative response code. */
-const char*    WsCmd::NACK      = "NACK";
+const char    WsCmd::NACK[]      = "NACK";
 
 /******************************************************************************
  * Public Methods
@@ -71,10 +71,9 @@ const char*    WsCmd::NACK      = "NACK";
  * Protected Methods
  *****************************************************************************/
 
-void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg)
+void WsCmd::sendPositiveResponse(AsyncWebSocket* server, uint32_t clientId, const char* msg)
 {
-    if ((nullptr != server) &&
-        (nullptr != client))
+    if (nullptr != server)
     {
         String rsp = ACK;
 
@@ -85,19 +84,18 @@ void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* c
             rsp += msg;
         }
 
-        server->text(client->id(), rsp);
+        server->text(clientId, rsp);
     }
 }
 
-void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmd::sendPositiveResponse(AsyncWebSocket* server, uint32_t clientId)
 {
-    sendPositiveResponse(server, client, nullptr);
+    sendPositiveResponse(server, clientId, nullptr);
 }
 
-void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg)
+void WsCmd::sendNegativeResponse(AsyncWebSocket* server, uint32_t clientId, const char* msg)
 {
-    if ((nullptr != server) &&
-        (nullptr != client))
+    if (nullptr != server)
     {
         String rsp = NACK;
 
@@ -113,7 +111,7 @@ void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* c
             rsp += "\"Unknown.\"";
         }
 
-        server->text(client->id(), rsp);
+        server->text(clientId, rsp);
     }
 }
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -35,72 +35,86 @@
                 <h1 class="mt-5">OpenWeatherPlugin</h1>
                 <p><img src="OpenWeatherPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows the current weather condition (icon and temperature) and one aditional information (see configuration below) provided by https://openweathermap.org/.</p>
-                <h2 class="mt-1">REST API</h2>
-                <h3 class="mt-1">Get the OpenWeather related configuration .</h3>
+                <h2>REST API</h2>
+                <h3>Get the OpenWeather related configuration .</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
-                <h3 class="mt-1">Set OpenWeather related configuration.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
+                <h3>Set OpenWeather related configuration.</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&weatherInfo=&lt;WEATHER-INFO&gt;&units=&lt;UNITS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&weatherInfo=&lt;WEATHER-INFO&gt;&units=&lt;UNITS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>SOURCE-ID: The OpenWeather source id - 0: Current weather / 1: One-Call API v2.5 / 2: One-Call API v3.0</li>
+                    <li>SOURCE-ID: The OpenWeather source id - 0: Current weather / 1: One-Call API v3.0</li>
                     <li>UPDATE-PERIOD: The period in minutes for updating the weather information. Please consider your limits, see <a href="https://m.openweathermap.org/price" target="_blank">professional collections price table</a>.</li>
-                    <li>API-KEY: The OpenWeather api key.</li>
+                    <li>API-KEY: The OpenWeather API key.</li>
                     <li>LATITUDE: The latitude of the location.</li>
                     <li>LONGITUDE: The longitude of the location.</li>
                     <li>UNITS: <code>metric</code> or <code>imperial</code></li>
-                    <li>OTHER: <code>uvIndex</code> or <code>humidity</code> or <code>windspeed</code> or <code>off</code></li>
-
+                    <li>WEATHER-INFO: Sum the number up of the info you like to see.
+                        <ul>
+                            <li>1: Temperature</li>
+                            <li>2: Humidity</li>
+                            <li>4: Wind speed</li>
+                            <li>8: UV-index</li>
+                        </ul>
+                    </li>
                 </ul>
-                <h3 class="mt-2">Configuration</h3>
+                <h2>Configuration</h2>
                 <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                     <div class="form-group">
-                        <label for="pluginUid">Plugin UID:</label>
-                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <label class="form-label" for="pluginUid">Plugin UID:</label>
+                        <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="sourceId">OpenWeather source id:</label>
-                        <select id="sourceId" size="1">
+                        <label class="form-label" for="sourceId">OpenWeather source id:</label>
+                        <select class="form-select" id="sourceId" size="1">
                             <option value="0">Current weather</option>
-                            <option value="1">One-Call API v2.5</option>
-                            <option value="2">One-Call API v3.0</option>
+                            <option value="1">One-Call API v3.0</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="updatePeriod">Update period in minutes:</label>
-                        <input type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
+                        <label class="form-label" for="updatePeriod">Update period in minutes:</label>
+                        <input class="form-control" type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
                     </div>
                     <div class="form-group">
-                        <label for="apiKey">API key:</label>
-                        <input type="text" id="apiKey" name="apiKey" value="Your API key" />
+                        <label class="form-label" for="apiKey">API key:</label>
+                        <input class="form-control" type="text" id="apiKey" name="apiKey" value="Your API key" />
                     </div>
                     <div class="form-group">
-                        <label for="latitude">Latitude:</label>
-                        <input type="text" id="latitude" name="latitude" value="The latitude" />
+                        <label class="form-label" for="latitude">Latitude:</label>
+                        <input class="form-control" type="text" id="latitude" name="latitude" value="The latitude" />
                     </div>
                     <div class="form-group">
-                        <label for="longitude">Longitude:</label>
-                        <input type="text" id="longitude" name="longitude" value="The longitude" />
+                        <label class="form-label" for="longitude">Longitude:</label>
+                        <input class="form-control" type="text" id="longitude" name="longitude" value="The longitude" />
                     </div>
                     <div class="form-group">
-                        <label for="other">Additional information:</label>
-                        <select id="other" size="1">
-                            <option value="0">uvIndex</option>
-                            <option value="1">humidity</option>
-                            <option value="2">windspeed</option>
-                            <option value="3">off</option>
-                        </select>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="temperature" name="weatherInfo" value="1" />
+                            <label class="form-label" for="temperature">Temperature</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="humidity" name="weatherInfo" value="2" />
+                            <label class="form-label" for="humidity">Humidity</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="windSpeed" name="weatherInfo" value="4" />
+                            <label class="form-label" for="windSpeed">Wind speed</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="uvIndex" name="weatherInfo" value="8" />
+                            <label class="form-label" for="uvIndex">UV-index</label>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="units">Units:</label>
-                        <select id="units" size="1">
+                        <label class="form-label" for="units">Units:</label>
+                        <select class="form-select" id="units" size="1">
                             <option value="metric">metric</option>
                             <option value="imperial">imperial</option>
                         </select>
@@ -114,13 +128,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
@@ -181,6 +195,34 @@
                 });
             };
 
+            function setWeatherInfo(value) {
+                var idx;
+
+                if (value & 0x01) {
+                    $("#temperature").prop('checked', true);
+                } else {
+                    $("#temperature").prop('checked', false);
+                }
+
+                if (value & 0x02) {
+                    $("#humidity").prop('checked', true);
+                } else {
+                    $("#humidity").prop('checked', false);
+                }
+
+                if (value & 0x04) {
+                    $("#windSpeed").prop('checked', true);
+                } else {
+                    $("#windSpeed").prop('checked', false);
+                }
+
+                if (value & 0x08) {
+                    $("#uvIndex").prop('checked', true);
+                } else {
+                    $("#uvIndex").prop('checked', false);
+                }
+            }
+
             function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
@@ -193,13 +235,24 @@
                     $("#apiKey").val(rsp.data.apiKey);
                     $("#latitude").val(rsp.data.latitude);
                     $("#longitude").val(rsp.data.longitude);
-                    $("#other").val(rsp.data.other);
                     $("#units").val(rsp.data.units);
+                    setWeatherInfo(rsp.data.weatherInfo);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
                     enableUI();
                 });
+            }
+
+            function getWeatherInfo() {
+                var weatherInfo = 0;
+                var $boxes = $('input[name=weatherInfo]:checked');
+
+                $boxes.each(function() {
+                    weatherInfo += parseInt(this.value);
+                });
+
+                return weatherInfo;
             }
 
             function setConfig(pluginUid) {
@@ -215,7 +268,7 @@
                         apiKey: $("#apiKey").val(),
                         latitude: $("#latitude").val(),
                         longitude: $("#longitude").val(),
-                        other: $("#other").val(),
+                        weatherInfo: getWeatherInfo(),
                         units: $("#units").val()
                     }
                 }).then(function(rsp) {

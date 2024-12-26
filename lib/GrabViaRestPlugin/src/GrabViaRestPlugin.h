@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,16 +43,15 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
-#include "AsyncHttpClient.h"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
+#include <AsyncHttpClient.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
+#include<FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -65,40 +64,30 @@
 /**
  * Capture information from a remote server by using REST API.
  */
-class GrabViaRestPlugin : public Plugin, private PluginConfigFsHandler
+class GrabViaRestPlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    GrabViaRestPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_layoutRight(),
-        m_layoutLeft(),
-        m_layoutTextOnly(),
-        m_iconWidget(),
-        m_textWidgetRight("\\calign?"),
-        m_textWidgetTextOnly("\\calign?"),
+    GrabViaRestPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
+        m_view(),
         m_method("GET"),
         m_url(),
         m_filter(1024U),
         m_client(),
-        m_iconPath(),
+        m_iconFileId(FileMgrService::FILE_ID_INVALID),
         m_format("%s"),
         m_multiplier(1.0f),
         m_offset(0.0f),
         m_requestTimer(),
         m_mutex(),
         m_isConnectionError(false),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false),
         m_taskProxy()
     {
@@ -127,12 +116,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow)GrabViaRestPlugin(name, uid);
     }
@@ -144,7 +133,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -158,8 +147,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -269,16 +257,6 @@ public:
 private:
 
     /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH          = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT         = 8U;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
@@ -295,35 +273,19 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
-    Fonts::FontType         m_fontType;             /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup             m_layoutRight;          /**< Canvas used for the text widget in a layout with icon on the left side. */
-    WidgetGroup             m_layoutLeft;           /**< Canvas used for the bitmap widget in a layout with text on the right side. */
-    WidgetGroup             m_layoutTextOnly;       /**< Canvas used in case only text is shown. */
-    BitmapWidget            m_iconWidget;           /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidgetRight;      /**< Text widget, used in layout with icon. */
-    TextWidget              m_textWidgetTextOnly;   /**< Text widget, used in layout without icon. */
-    String                  m_method;               /**< HTTP method. */
-    String                  m_url;                  /**< REST URL. */
-    DynamicJsonDocument     m_filter;               /**< Filter used for the response in JSON format. */
-    AsyncHttpClient         m_client;               /**< Asynchronous HTTP client. */
-    String                  m_iconPath;             /**< Icon filename with path. */
-    String                  m_format;               /**< Format used to embed the retrieved filtered value. */
-    float                   m_multiplier;           /**< If grabbed value is a number, it will be multiplied with the multiplier. */
-    float                   m_offset;               /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
-    SimpleTimer             m_requestTimer;         /**< Timer used for cyclic request of new data. */
-    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
-    bool                    m_isConnectionError;    /**< Is connection error happened? */
-    SimpleTimer             m_cfgReloadTimer;       /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;       /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;      /**< Is requested to reload the configuration from persistent memory? */
-    bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
+    _GrabViaRestPlugin::View    m_view;                 /**< View with all widgets. */
+    String                      m_method;               /**< HTTP method. */
+    String                      m_url;                  /**< REST URL. */
+    DynamicJsonDocument         m_filter;               /**< Filter used for the response in JSON format. */
+    AsyncHttpClient             m_client;               /**< Asynchronous HTTP client. */
+    FileMgrService::FileId      m_iconFileId;           /**< Icon file id. */
+    String                      m_format;               /**< Format used to embed the retrieved filtered value. */
+    float                       m_multiplier;           /**< If grabbed value is a number, it will be multiplied with the multiplier. */
+    float                       m_offset;               /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
+    SimpleTimer                 m_requestTimer;         /**< Timer used for cyclic request of new data. */
+    mutable MutexRecursive      m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                        m_isConnectionError;    /**< Is connection error happened? */
+    bool                        m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -360,16 +322,11 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
-
-    /**
      * Get configuration in JSON.
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& cfg) const final;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
@@ -378,7 +335,7 @@ private:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(JsonObjectConst& cfg) final;
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
      * Request new data.

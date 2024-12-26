@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,6 @@
 #include "HttpStatus.h"
 
 #include <Logging.h>
-#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -63,7 +62,7 @@
 const char*     SignalDetectorPlugin::TOPIC_CONFIG      = "/signalDetector";
 
 /* Initialize the default text which will be shown if signal is detected. */
-const char*     SignalDetectorPlugin::DEFAULT_TEXT      = "\\calignSignal!";
+const char*     SignalDetectorPlugin::DEFAULT_TEXT      = "{hc}Signal!";
 
 /******************************************************************************
  * Public Methods
@@ -94,7 +93,7 @@ bool SignalDetectorPlugin::getTopic(const String& topic, JsonObject& value) cons
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -107,7 +106,7 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& 
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -216,44 +215,13 @@ void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    PLUGIN_NOT_USED(width);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget is left aligned on x-axis and aligned to the center
-     * of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
+    m_view.setFormatText(DEFAULT_TEXT);
 
     /* Clear */
     m_isDetected = false;
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 
     initHttpClient();
 }
@@ -261,22 +229,13 @@ void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
 void SignalDetectorPlugin::stop()
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      configurationFilename   = getFullPathToConfiguration();
 
-    m_cfgReloadTimer.stop();
-
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void SignalDetectorPlugin::active(YAGfx& gfx)
 {
-    /* Request display update. In principle only necessary once, except
-     * that the text changes during active phase.
-     */
-    m_isUpdateReq = true;
+    /* Nothing to do. */
 }
 
 void SignalDetectorPlugin::inactive()
@@ -297,8 +256,6 @@ void SignalDetectorPlugin::process(bool isConnected)
      * previous call. This clears the detection flag in the audio service.
      */
     bool                        isDetected = isSignalDetected();
-
-    PLUGIN_NOT_USED(isConnected);
 
     if (true == isDetected)
     {
@@ -333,56 +290,14 @@ void SignalDetectorPlugin::process(bool isConnected)
         }
     }
 
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
 }
 
 void SignalDetectorPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* Update display only if requested. */
-    if (true == m_isUpdateReq)
-    {
-        gfx.fillScreen(ColorDef::BLACK);
-        m_textWidget.update(gfx);
-
-        m_isUpdateReq = false;
-    }
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -392,13 +307,6 @@ void SignalDetectorPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void SignalDetectorPlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
 
 void SignalDetectorPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
@@ -422,11 +330,11 @@ void SignalDetectorPlugin::getConfiguration(JsonObject& jsonCfg) const
         ++idx;
     }
 
-    jsonCfg["text"]     = m_textWidget.getFormatStr();
+    jsonCfg["text"]     = m_view.getFormatText();
     jsonCfg["pushUrl"]  = m_pushUrl;
 }
 
-bool SignalDetectorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool SignalDetectorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status      = false;
     JsonArrayConst      jsonTones   = jsonCfg["tones"];
@@ -498,7 +406,7 @@ bool SignalDetectorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
             }
         }
 
-        m_textWidget.setFormatStr(jsonText.as<String>());
+        m_view.setFormatText(jsonText.as<String>());
         m_pushUrl = jsonPushUrl.as<String>();
 
         m_hasTopicChanged = true;
@@ -520,12 +428,12 @@ bool SignalDetectorPlugin::startHttpRequest()
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
-        if (0U != url.startsWith(GET_CMD))
+        if (true == url.startsWith(GET_CMD))
         {
             url = url.substring(strlen(GET_CMD));
             isGet = true;
         }
-        else if (0U != url.startsWith(POST_CMD))
+        else if (true == url.startsWith(POST_CMD))
         {
             url = url.substring(strlen(POST_CMD));
             isGet = false;

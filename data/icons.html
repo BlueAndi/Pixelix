@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body" id="dialogBody">
+                        </div>
+                        <div class="modal-footer" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
+            <div class="container">
+                <h1 class="mt-5">Icons</h1>
+                <h2>Upload</h2>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                    <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(icon.files)">
+                        <div class="form-group">
+                            <label class="form-label" for="icon">Icon:</label>
+                            <input class="form-control" id="icon" type="file" accept=".bmp,.gif" />    
+                        </div>
+                        <input name="submit" type="submit" value="Update" />
+                    </form>
+                </div>
+                <p>Supported are bitmap (.bmp) and GIF (.gif) files.</p>
+                <p>The bitmap files are limited to:</p>
+                <ul>
+                    <li>24 or 32 bits per pixel.</li>
+                    <li>1 plane.</li>
+                    <li>No compression.</li>
+                </ul>
+                <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
+                <ul>
+                    <li>Compatibility options: Don't write color informations.</li>
+                    <li>Extended options: Select 24 bit per pixel.</li>
+                </ul>
+                <h2>Overview</h2>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="overview">
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <script type="text/javascript" src="/js/dialog.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+            var restClient = new pixelix.rest.Client();
+
+            function enableUI() {
+                utils.enableForm("myFormIcon", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myFormIcon", false);
+            }
+
+            function uploadIcon(files) {
+                var promise;
+
+                disableUI();
+
+                if (0 === files.length) {
+                    promise = Promise.reject("No file selected.");
+                
+                } else if (true === files[0].name.toLowerCase().endsWith(".bmp")) {
+                    promise = utils.checkBMPFile(files[0]);
+
+                } else {
+                    promise = Promise.resolve();
+                }
+
+                return promise.then(function() {
+                    return utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/files/upload",
+                        isJsonResponse: true,
+                        parameter: {
+                            file: files[0]
+                        },
+                        headers: {
+                            "X-File-Size": files[0].size
+                        }
+                    });
+                }).then(function(rsp) {
+                    return dialog.showInfo("<p>Ok.</p>");
+                }).then(function(rsp) {
+                    $("#overview").text("");
+                    return downloadFileList("overview");
+                }).catch(function(rsp) {
+                    var alertMsg = "";
+
+                    if (typeof rsp === "string") {
+                        alertMsg = rsp;
+                    } else {
+                        alertMsg = rsp.error.msg;
+                    }
+
+                    return dialog.showError("<p>" + alertMsg + "</p>").then(function() {
+                        return Promise.reject();
+                    });
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function downloadFileList(id) {
+                restClient.readFile("/configuration/fileMgr.json").then(function(rsp) {
+                    var $overview = $("#" + id);
+                    var $div;
+                    var $fileId;
+                    var $img;
+                    var $name;
+                    var $actionRemove;
+                    var idx;
+                    var jsonRsp = JSON.parse(rsp);
+
+                    for(idx = 0; idx < jsonRsp.fileTable.length; ++idx) {
+                        if (0 < jsonRsp.fileTable[idx].fullPath.length) {
+                            $fileId = $("<p>")
+                                .text("[" + idx + "]");
+                            $img = $("<img>")
+                                .attr("src", jsonRsp.fileTable[idx].fullPath)
+                                .attr("alt", "Preview");
+                            $name = $("<p>")
+                                .text(jsonRsp.fileTable[idx].fullPath.replace(/^.*[\\\/]/, ''));
+                            $div = $("<div>")
+                                .attr("class", "bg-body text-center m-2 p-2 bd-highlight");
+                            $actionRemove = $("<button>")
+                                .attr("type", "button")
+                                .attr("class", "btn btn-secondary")
+                                .attr("onclick", "removeFile(" + idx + ", " + "\"" + jsonRsp.fileTable[idx].fullPath + "\")")
+                                .text("Remove");
+
+                            $div.append($fileId);
+                            $div.append($img);
+                            $div.append($name);
+                            $div.append($actionRemove);
+
+                            $overview.append($div);
+                        }
+                    }
+
+                    return Promise.resolve();
+
+                }).catch(function(rsp) {
+                    var alertMsg = "";
+
+                    if (typeof rsp === "string") {
+                        alertMsg = rsp;
+                    } else {
+                        alertMsg = rsp.error.msg;
+                    }
+
+                    return dialog.showError("<p>" + alertMsg + "</p>").then(function() {
+                        return Promise.reject();
+                    });
+                });
+            }
+
+            function removeFile(fileId, fullPath) {
+                return restClient.fileMgrRemoveFile(fileId).then(function(rsp) {
+                    return dialog.showInfo("<p>File " + fullPath + " removed.</p>");
+
+                }).then(function(rsp) {
+                    $("#overview").text("");
+                    return downloadFileList("overview");
+
+                }).catch(function(rsp) {
+                    return dialog.showError("<p>" + rsp.error.msg + "</p>");
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.create("menu", menu.data);
+
+                downloadFileList("overview");
+            });
+        </script>
+    </body>
+</html>

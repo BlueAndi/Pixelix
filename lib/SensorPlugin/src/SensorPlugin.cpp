@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,7 +75,7 @@ bool SensorPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -88,7 +88,7 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -156,41 +156,9 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    PLUGIN_NOT_USED(width);
+    m_view.init(width, height);
 
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget is left aligned on x-axis and aligned to the center
-     * of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
-
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 
     m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
 
@@ -200,59 +168,16 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 
 void SensorPlugin::stop()
 {
-    String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_cfgReloadTimer.stop();
-
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void SensorPlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    PLUGIN_NOT_USED(isConnected);
-
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
 }
 
 void SensorPlugin::update(YAGfx& gfx)
@@ -265,8 +190,7 @@ void SensorPlugin::update(YAGfx& gfx)
         m_updateTimer.start(UPDATE_PERIOD);
     }
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_textWidget.update(gfx);
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -276,13 +200,6 @@ void SensorPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void SensorPlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
 
 void SensorPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
@@ -294,7 +211,7 @@ void SensorPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["isAvailable"]  = isAvailable;
 }
 
-bool SensorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool SensorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status              = false;
     JsonVariantConst    jsonSensorIndex     = jsonCfg["sensorIndex"];
@@ -331,7 +248,7 @@ void SensorPlugin::update()
 
     if (nullptr == m_sensorChannel)
     {
-        text = "\\calign-";
+        text = "{hc}-";
     }
     else
     {
@@ -339,13 +256,13 @@ void SensorPlugin::update()
          * aligned looks better, because the unit stays at the same
          * position and only the number seems to be updated.
          */
-        text  = "\\ralign";
+        text  = "{hr}";
         text += m_sensorChannel->getValueAsString(PRECISION);
         text += " ";
         text += ISensorChannel::channelTypeToUnit(m_sensorChannel->getType());
     }
 
-    m_textWidget.setFormatStr(text);
+    m_view.setFormatText(text);
 }
 
 ISensorChannel* SensorPlugin::getChannel(uint8_t sensorIdx, uint8_t channelIdx)

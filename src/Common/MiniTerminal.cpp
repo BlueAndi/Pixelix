@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@
 #include <SettingsService.h>
 #include <StateMachine.hpp>
 #include <WiFi.h>
+#include <ErrorState.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,35 +61,32 @@
  * Local Variables
  *****************************************************************************/
 
-/** Command: ping */
-static const char*     PING                         = "ping";
-
-/** Command length: ping */
-static const size_t    PING_LEN                     = strlen(PING);
-
 /** Command: reset */
-static const char*     RESET                        = "reset";
-
-/** Command length: reset */
-static const size_t    RESET_LEN                    = strlen(RESET);
+static const char     RESET[]                    = "reset";
 
 /** Command: write wifi passphrase */
-static const char*     WRITE_WIFI_PASSPHRASE        = "write wifi passphrase ";
-
-/** Command length: write wifi passphrase */
-static const size_t    WRITE_WIFI_PASSPHRASE_LEN    = strlen(WRITE_WIFI_PASSPHRASE);
+static const char     WRITE_WIFI_PASSPHRASE[]    = "write wifi passphrase ";
 
 /** Command: write wifi ssid */
-static const char*     WRITE_WIFI_SSID              = "write wifi ssid ";
-
-/** Command length: write wifi ssid */
-static const size_t    WRITE_WIFI_SSID_LEN 	        = strlen(WRITE_WIFI_SSID);
+static const char     WRITE_WIFI_SSID[]          = "write wifi ssid ";
 
 /** Command: get ip */
-static const char*     GET_IP                       = "get ip";
+static const char     GET_IP[]                   = "get ip";
 
-/** Command length: get ipaddress */
-static const size_t    GET_IP_LEN 	                = strlen(GET_IP);
+/** Command: status */
+static const char     GET_STATUS[]               = "get status";
+
+/** Command: help */
+static const char     HELP[]                     = "help";
+
+const MiniTerminal::CmdTableEntry MiniTerminal::m_cmdTable[] = {
+    { RESET,                    &MiniTerminal::cmdReset },
+    { WRITE_WIFI_PASSPHRASE,    &MiniTerminal::cmdWriteWifiPassphrase },
+    { WRITE_WIFI_SSID,          &MiniTerminal::cmdWriteWifiSSID },
+    { GET_IP,                   &MiniTerminal::cmdGetIPAddress },
+    { GET_STATUS,               &MiniTerminal::cmdGetStatus },
+    { HELP,                     &MiniTerminal::cmdHelp },
+};
 
 /******************************************************************************
  * Public Methods
@@ -103,15 +101,15 @@ void MiniTerminal::process()
     /* Process the read input data. */
     while(read > idx)
     {
-        bool echoOn = false;
+        char currentChar = buffer[idx];
 
         /* Command finished? */
-        if (ASCII_LF == buffer[idx])
+        if (ASCII_LF == currentChar)
         {
             /* Don't echo mechanism, because its too late in case the
                 * command may write a result too.
                 */
-            (void)m_stream.write(buffer[idx]);
+            (void)m_stream.write(currentChar);
 
             m_input[m_writeIndex] = '\0';
 
@@ -126,12 +124,12 @@ void MiniTerminal::process()
             m_input[m_writeIndex] = '\0';
         }
         /* Remove the last character from command line? */
-        else if ((ASCII_DEL == buffer[idx]) ||
-                 (ASCII_BS == buffer[idx]))
+        else if ((ASCII_DEL == currentChar) ||
+                 (ASCII_BS == currentChar))
         {
             if (0 < m_writeIndex)
             {
-                char removeSeq[] =
+                static const char removeSeq[] =
                 {
                     ASCII_BS,
                     ASCII_SP,
@@ -146,19 +144,13 @@ void MiniTerminal::process()
         else if (INPUT_BUFFER_SIZE > (m_writeIndex + 1U))
         {
             /* Valid character? */
-            if ((' ' <= buffer[idx]) &&
-                ('~' >= buffer[idx]))
+            if ((' ' <= currentChar) &&
+                ('~' >= currentChar))
             {
-                m_input[m_writeIndex] = buffer[idx];
+                m_input[m_writeIndex] = currentChar;
                 ++m_writeIndex;
-
-                echoOn = true;
+                (void)m_stream.write(currentChar);
             }
-        }
-
-        if (true == echoOn)
-        {
-            (void)m_stream.write(buffer[idx]);
         }
 
         ++idx;
@@ -195,36 +187,24 @@ void MiniTerminal::writeError(const char* result)
 
 void MiniTerminal::executeCommand(const char* cmdLine)
 {
-    if (0 == strcmp(cmdLine, PING))
+    uint32_t idx = 0U;
+
+    for (idx = 0U; UTIL_ARRAY_NUM(m_cmdTable) > idx; ++idx)
     {
-        cmdPing(&cmdLine[PING_LEN]);
+        const CmdTableEntry entry = m_cmdTable[idx];
+        const size_t len = strlen(entry.cmdStr);
+
+        if (0 == strncmp(cmdLine, entry.cmdStr, len))
+        {
+            (this->*entry.handler)(&cmdLine[len]);
+            break;
+        }
     }
-    else if (0 == strcmp(cmdLine, RESET))
-    {
-        cmdReset(&cmdLine[RESET_LEN]);
-    }
-    else if (0 == strncmp(cmdLine, WRITE_WIFI_PASSPHRASE, WRITE_WIFI_PASSPHRASE_LEN))
-    {
-        cmdWriteWifiPassphrase(&cmdLine[WRITE_WIFI_PASSPHRASE_LEN]);
-    }
-    else if (0 == strncmp(cmdLine, WRITE_WIFI_SSID, WRITE_WIFI_SSID_LEN))
-    {
-        cmdWriteWifiSSID(&cmdLine[WRITE_WIFI_SSID_LEN]);
-    }
-    else if (0 == strncmp(cmdLine, GET_IP, GET_IP_LEN))
-    {
-        cmdGetIPAddress(&cmdLine[GET_IP_LEN]);
-    }
-    else
+
+    if (UTIL_ARRAY_NUM(m_cmdTable) == idx)
     {
         writeError("Unknown command.\n");
     }
-}
-
-void MiniTerminal::cmdPing(const char* par)
-{
-    UTIL_NOT_USED(par);
-    writeSuccessful("pong\n");
 }
 
 void MiniTerminal::cmdReset(const char* par)
@@ -280,23 +260,51 @@ void MiniTerminal::cmdWriteWifiSSID(const char* par)
 
 void MiniTerminal::cmdGetIPAddress(const char* par)
 {
-    if (nullptr != par)
+    UTIL_NOT_USED(par);
+
+    String result;
+
+    if (WIFI_MODE_AP == WiFi.getMode())
     {
-        String result;
-
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            result = WiFi.softAPIP().toString();
-        }
-        else
-        {
-            result = WiFi.localIP().toString();
-        }
-
-        result += "\n";
-
-        writeSuccessful(result.c_str());
+        result = WiFi.softAPIP().toString();
     }
+    else
+    {
+        result = WiFi.localIP().toString();
+    }
+
+    result += "\n";
+
+    writeSuccessful(result.c_str());
+}
+
+void MiniTerminal::cmdGetStatus(const char* par)
+{
+    UTIL_NOT_USED(par);
+
+    ErrorState::ErrorId status  = ErrorState::getInstance().getErrorId();
+    String              result;
+
+    result += static_cast<int32_t>(status);
+    result += "\n";
+
+    writeSuccessful(result.c_str());
+}
+
+void MiniTerminal::cmdHelp(const char* par)
+{
+    UTIL_NOT_USED(par);
+
+    m_stream.write("Supported commands:\n");
+
+    for (size_t idx = 0U; UTIL_ARRAY_NUM(m_cmdTable) > idx; ++idx)
+    {
+        (void)m_stream.write("    ");
+        (void)m_stream.write(m_cmdTable[idx].cmdStr);
+        (void)m_stream.write("\n");
+    }
+
+    writeSuccessful();
 }
 
 /******************************************************************************

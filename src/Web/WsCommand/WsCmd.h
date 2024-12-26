@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -91,9 +91,9 @@ public:
      * Execute command.
      * 
      * @param[in] server    Websocket server
-     * @param[in] client    Websocket client
+     * @param[in] clientId  Websocket client ID
      */
-    virtual void execute(AsyncWebSocket* server, AsyncWebSocketClient* client) = 0;
+    virtual void execute(AsyncWebSocket* server, uint32_t clientId) = 0;
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.
@@ -105,13 +105,13 @@ public:
 protected:
 
     /** Delimiter of websocket parameters */
-    static const char*    DELIMITER;
+    static const char    DELIMITER[];
 
     /** Positive response code */
-    static const char*    ACK;
+    static const char    ACK[];
 
     /** Negative response code. */
-    static const char*    NACK;
+    static const char    NACK[];
 
     /**
      * Prepare a positive response message.
@@ -141,40 +141,40 @@ protected:
      * Send a response to the client.
      * 
      * @param[in] server    Websocket server which is used to send a message to the client.
-     * @param[in] client    The client the message belongs to.
+     * @param[in] clientId  The client id the message belongs to.
      * @param[in] msg       The response messsage.
      */
-    void sendResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg)
+    void sendResponse(AsyncWebSocket* server, uint32_t clientId, const String& msg)
     {
-        server->text(client->id(), msg);
+        server->text(clientId, msg);
     }
 
     /**
      * Send positive response to the client.
      * 
      * @param[in] server    Websocket server which is used to send a message to the client.
-     * @param[in] client    The client the message belongs to.
+     * @param[in] clientId  The client id the message belongs to.
      * @param[in] msg       The negative response messsage.
      */
-    void sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg);
+    void sendPositiveResponse(AsyncWebSocket* server, uint32_t clientId, const char* msg);
 
     /**
      * Send negative response to the client.
      * 
      * @param[in] server    Websocket server which is used to send a message to the client.
-     * @param[in] client    The client the message belongs to.
+     * @param[in] clientId  The client id the message belongs to.
      * @param[in] msg       The negative response messsage.
      */
-    void sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client);
+    void sendPositiveResponse(AsyncWebSocket* server, uint32_t clientId);
 
     /**
      * Send negative response to the client.
      * 
      * @param[in] server    Websocket server which is used to send a message to the client.
-     * @param[in] client    The client the message belongs to.
+     * @param[in] clientId  The client id the message belongs to.
      * @param[in] msg       The negative response messsage.
      */
-    void sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg);
+    void sendNegativeResponse(AsyncWebSocket* server, uint32_t clientId, const char* msg);
 
 private:
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -36,11 +36,11 @@
                 <p><img src="SoundReactivePlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows octave frequency bands, depended on the environment sound.</p>
                 <p>Required: A digital microphone (INMP441) is required, connected to the I2S port.</p>
-                <h2 class="mt-1">REST API</h2>
-                <h3 class="mt-1">Get configuration about how many frequency bands are shown.</h3>
+                <h2>REST API</h2>
+                <h3>Get configuration about how many frequency bands are shown.</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
-                <h3 class="mt-1">Set configuration about how many frequency bands shall be shown.</h3>
+                <h3>Set configuration about how many frequency bands shall be shown.</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
                 <ul>
@@ -53,23 +53,25 @@
                         </ul>
                     </li>
                 </ul>
-                <h2 class="mt-2">Configuration</h2>
-                <h3 class="mt-1">Number of frequency bands</h3>
-                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                    <div class="form-group">
-                        <label for="pluginUid">Plugin UID:</label>
-                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label for="freqBandLen">Configuration:</label>
-                        <select id="freqBandLen">
-                            <option value="8">Show 8 frequency bands.</option>
-                            <option value="16">Show 16 frequency bands.</option>
-                        </select>    
-                    </div>
-                    <input name="submit" type="submit" value="Update"/>
-                </form>   
+                <h2>Configuration</h2>
+                <h3>Number of frequency bands</h3>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <div class="form-group">
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                            </select>    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="freqBandLen">Configuration:</label>
+                            <select class="form-select" id="freqBandLen">
+                                <option value="8">Show 8 frequency bands.</option>
+                                <option value="16">Show 16 frequency bands.</option>
+                            </select>    
+                        </div>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
             </div>
         </main>
   
@@ -77,13 +79,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>

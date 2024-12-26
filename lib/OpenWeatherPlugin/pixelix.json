@@ -1,0 +1,108 @@
+{
+    "pixelix": {
+        "type": "plugin",
+        "name": "OpenWeatherPlugin",
+        "web": {
+            "files": [
+                "./web/OpenWeatherPlugin.html",
+                "./web/OpenWeatherPlugin.jpg"
+            ],
+            "layouts": [{
+                "name": "LAYOUT_GENERIC",
+                "files": [
+                    "./web/icon8x8/01d.bmp",
+                    "./web/icon8x8/01n.bmp",
+                    "./web/icon8x8/02d.bmp",
+                    "./web/icon8x8/02n.bmp",
+                    "./web/icon8x8/03.bmp",
+                    "./web/icon8x8/04.bmp",
+                    "./web/icon8x8/09.bmp",
+                    "./web/icon8x8/10d.bmp",
+                    "./web/icon8x8/10n.bmp",
+                    "./web/icon8x8/11.bmp",
+                    "./web/icon8x8/13.bmp",
+                    "./web/icon8x8/50.bmp",
+                    "./web/icon8x8/hum.bmp",
+                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/uvi.bmp",
+                    "./web/icon8x8/wind.bmp"
+                ]
+            }, {
+                "name": "LAYOUT_32X8",
+                "files": [
+                    "./web/icon8x8/01d.bmp",
+                    "./web/icon8x8/01n.bmp",
+                    "./web/icon8x8/02d.bmp",
+                    "./web/icon8x8/02n.bmp",
+                    "./web/icon8x8/03.bmp",
+                    "./web/icon8x8/04.bmp",
+                    "./web/icon8x8/09.bmp",
+                    "./web/icon8x8/10d.bmp",
+                    "./web/icon8x8/10n.bmp",
+                    "./web/icon8x8/11.bmp",
+                    "./web/icon8x8/13.bmp",
+                    "./web/icon8x8/50.bmp",
+                    "./web/icon8x8/hum.bmp",
+                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/uvi.bmp",
+                    "./web/icon8x8/wind.bmp"
+                ]
+            }, {
+                "name": "LAYOUT_32X16",
+                "files": [
+                    "./web/icon8x8/01d.bmp",
+                    "./web/icon8x8/01n.bmp",
+                    "./web/icon8x8/02d.bmp",
+                    "./web/icon8x8/02n.bmp",
+                    "./web/icon8x8/03.bmp",
+                    "./web/icon8x8/04.bmp",
+                    "./web/icon8x8/09.bmp",
+                    "./web/icon8x8/10d.bmp",
+                    "./web/icon8x8/10n.bmp",
+                    "./web/icon8x8/11.bmp",
+                    "./web/icon8x8/13.bmp",
+                    "./web/icon8x8/50.bmp",
+                    "./web/icon8x8/hum.bmp",
+                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/uvi.bmp",
+                    "./web/icon8x8/wind.bmp"
+                ]
+            }, {
+                "name": "LAYOUT_64X64",
+                "files": [
+                    "./web/icon8x8/01d.bmp",
+                    "./web/icon8x8/01n.bmp",
+                    "./web/icon8x8/02d.bmp",
+                    "./web/icon8x8/02n.bmp",
+                    "./web/icon8x8/03.bmp",
+                    "./web/icon8x8/04.bmp",
+                    "./web/icon8x8/09.bmp",
+                    "./web/icon8x8/10d.bmp",
+                    "./web/icon8x8/10n.bmp",
+                    "./web/icon8x8/11.bmp",
+                    "./web/icon8x8/13.bmp",
+                    "./web/icon8x8/50.bmp",
+                    "./web/icon8x8/openWeather.bmp",
+
+                    "./web/icon16x16/01d_16x16.gif",
+                    "./web/icon16x16/01n_16x16.gif",
+                    "./web/icon16x16/02d_16x16.gif",
+                    "./web/icon16x16/02n_16x16.gif",
+                    "./web/icon16x16/03_16x16.gif",
+                    "./web/icon16x16/04_16x16.gif",
+                    "./web/icon16x16/09_16x16.gif",
+                    "./web/icon16x16/10d_16x16.gif",
+                    "./web/icon16x16/10n_16x16.gif",
+                    "./web/icon16x16/11_16x16.gif",
+                    "./web/icon16x16/13_16x16.gif",
+                    "./web/icon16x16/50_16x16.gif",
+
+                    "./web/icon16x16/hum_16x16.gif",
+                    "./web/icon16x16/openWeather_16x16.gif",
+                    "./web/icon16x16/uvi_16x16.gif",
+                    "./web/icon16x16/wind_16x16.gif"
+                ]
+            }]
+        }
+    }
+}

@@ -10,11 +10,17 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Logging"
+    }, {
         "name": "AudioService"
     }, {
         "name": "LittleFS"
     }, {
         "name": "Plugin"
+    }, {
+        "name": "Utilities"
+    }, {
+        "name": "Views"
     }],
     "frameworks": "*",
     "platforms": "*"

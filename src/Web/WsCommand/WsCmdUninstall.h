@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,9 +82,9 @@ public:
      * Execute command.
      *
      * @param[in] server    Websocket server
-     * @param[in] client    Websocket client
+     * @param[in] clientId  Websocket client ID
      */
-    void execute(AsyncWebSocket* server, AsyncWebSocketClient* client) final;
+    void execute(AsyncWebSocket* server, uint32_t clientId) final;
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -39,15 +39,15 @@
                 <p>As long as nothing is detected, the plugin will disable itself.</p>
                 <p>If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection.</p>
                 <p>Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."</p>
-                <h2 class="mt-1">REST API</h2>
-                <h3 class="mt-1">Get configuration</h3>
+                <h2>REST API</h2>
+                <h3>Get configuration</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/signalDetector</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/signalDetector</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
-                <h3 class="mt-1">Set configuration</h3>
+                <h3>Set configuration</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/signalDetector?text=&lt;TEXT&gt;&pushUrl=&lt;PUSH-URL&gt;&frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/signalDetector?text=&lt;TEXT&gt;&pushUrl=&lt;PUSH-URL&gt;&frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
                 <ul>
@@ -60,53 +60,55 @@
                     <li>MIN-DURATION: The min. duration in ms the frequency must be detected.</li>
                     <li>THRESHOLD: The frequency must be over this threshold to be able to detect it. Usually good values are above 2000.</li>
                 </ul>
-                <h2 class="mt-2">Configuration</h2>
-                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                    <div class="form-group">
-                        <label for="pluginUid">Plugin UID:</label>
-                        <select id="pluginUid" name="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUidText.selectedIndex].value)">
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="text">Text:</label>
-                        <input type="text" id="text" name="text" value="" size="20" />
-                    </div>
-                    <div class="form-group">
-                        <label for="pushUrl">URL:</label>
-                        <input type="text" id="pushUrl" name="pushUrl" value="" size="20" />
-                    </div>
-                    <fieldset class="form-group">
-                        <legend>Tone 1</legend>
+                <h2>Configuration</h2>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                         <div class="form-group">
-                            <label for="freq_0">Frequency [Hz]:</label>
-                            <input id="freq_0" type="number" min="0" max="20000"/>
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUid" name="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUidText.selectedIndex].value)">
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label for="minDuration_0">Min. duration [ms]:</label>
-                            <input id="minDuration_0" type="number" min="0" max="10000"/>
+                            <label class="form-label" for="text">Text:</label>
+                            <input class="form-control" type="text" id="text" name="text" value="" size="20" />
                         </div>
                         <div class="form-group">
-                            <label for="threshold_0">Threshold:</label>
-                            <input id="threshold_0" type="number" min="0" max="40000"/>
+                            <label class="form-label" for="pushUrl">URL:</label>
+                            <input class="form-control" type="text" id="pushUrl" name="pushUrl" value="" size="20" />
                         </div>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Tone 2</legend>
-                        <div class="form-group">
-                            <label for="freq_1">Frequency [Hz]:</label>
-                            <input id="freq_1" type="number" min="0" max="20000"/>    
-                        </div>
-                        <div class="form-group">
-                            <label for="minDuration_1">Min. duration [ms]:</label>
-                            <input id="minDuration_1" type="number" min="0" max="10000"/>    
-                        </div>
-                        <div class="form-group">
-                            <label for="threshold_1">Threshold:</label>
-                            <input id="threshold_1" type="number" min="0" max="40000"/>    
-                        </div>
-                    </fieldset>
-                    <input name="submit" type="submit" value="Update"/>
-                </form>
+                        <fieldset class="form-group">
+                            <legend>Tone 1</legend>
+                            <div class="form-group">
+                                <label class="form-label" for="freq_0">Frequency [Hz]:</label>
+                                <input class="form-control" id="freq_0" type="number" min="0" max="20000"/>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="minDuration_0">Min. duration [ms]:</label>
+                                <input class="form-control" id="minDuration_0" type="number" min="0" max="10000"/>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="threshold_0">Threshold:</label>
+                                <input class="form-control" id="threshold_0" type="number" min="0" max="40000"/>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Tone 2</legend>
+                            <div class="form-group">
+                                <label class="form-label" for="freq_1">Frequency [Hz]:</label>
+                                <input class="form-control" id="freq_1" type="number" min="0" max="20000"/>    
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="minDuration_1">Min. duration [ms]:</label>
+                                <input class="form-control" id="minDuration_1" type="number" min="0" max="10000"/>    
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="threshold_1">Threshold:</label>
+                                <input class="form-control" id="threshold_1" type="number" min="0" max="40000"/>    
+                            </div>
+                        </fieldset>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
             </div>
         </main>
   
@@ -114,13 +116,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
@@ -152,30 +154,30 @@
                     var $option     = null;
                     var optionText  = ""
 
-                    for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                        for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
-                            if (rsp.data.slots[slotIndex].name === pluginName) {
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+                            
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
 
-                                optionText = rsp.data.slots[slotIndex].uid;
-                                optionText += " (";
-                                
-                                if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                    optionText += "-"
-                                } else {
-                                    optionText += rsp.data.slots[slotIndex].alias
-                                }
+                            optionText += ")";
 
-                                optionText += ")";
+                            for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                                 $option = $("<option>")
                                         .attr("value", "" + rsp.data.slots[slotIndex].uid)
                                         .text(optionText);
                                 
                                 $(elements[elemIndex]).append($option);
-
-                                ++cnt;
                             }
+
+                            ++cnt;
                         }
                     }
 

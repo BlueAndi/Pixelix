@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -32,15 +32,15 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <!-- Dialog -->
-            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header" id="dialogHeader">
                             <h5 class="modal-title" id="dialogTitle"></h5>
                         </div>
-                        <div class="modal-body text-dark" id="dialogBody">
+                        <div class="modal-body" id="dialogBody">
                         </div>
-                        <div class="modal-footer text-dark" id="dialogFooter">
+                        <div class="modal-footer" id="dialogFooter">
                         </div>
                     </div>
                 </div>
@@ -50,6 +50,9 @@
                 <h1 class="mt-5">Display</h1>
                 <p>Slot: <span id="slotId">-</span></p>
                 <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
+                <p>
+                    <button id="updateDisplayButton" class="btn btn-light" type="button" onclick="updateDisplay()" disabled>Enable auto. display update</button>
+                </p>
                 <p>Note, you can move the plugins with drag'n drop to other slots.</p>
                 <div id="divSlots">
                 </div>
@@ -59,25 +62,51 @@
                     <li>Yellow shaded: Slot is sticky. Slot scheduling is stopped.</li>
                     <li>Red/Yellow shaded: Slot is sticky and locked.</li>
                 </ul>
-                <p>
-                    <button class="btn btn-light" type="button" onclick="prevSlot()" disabled>Previous slot</button>
-                    <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
-                    <button id="updateDisplayButton" class="btn btn-light" type="button" onclick="updateDisplay()" disabled>Enable auto. display update</button>
-                </p>
-                <p>Currently active fade effect: <span id="lableFadeEffect"> Linear</span></p>
-                <p><button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button></p>
-                <p>
-                    <select id="pluginToInstall" size="1">
-                    </select>
-                    <br />
-                    <button class="btn btn-light" type="button" onclick="install()" disabled>Install</button>
-                </p>
-                <p>
-                    <ul class="list-group">
-                        <li class="list-group-item text-dark">Automatic brightness control: <span id="autoBrightnessCtrl">?</span> <button id="bAutoBrightnessCtrl" type="button" onclick="changeAutoBrightnessCtrl()" disabled>?</button></li>
-                        <li class="list-group-item text-dark">Brightness: <span id="brightness">?</span> <input type="range" id="sliderBrightness" min="25" max="255" onchange="changeBrightness()" disabled /></li>
-                    </ul>
-                </p>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3 mt-2">
+                    <form>
+                        <div class="form-group">
+                            <button class="btn btn-light" type="button" onclick="prevSlot()" disabled>Previous slot</button>
+                            <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bNextEffect">Currently active fade effect: <span id="lableFadeEffect"> Linear</span></label>
+                            <button class="btn btn-light" id="bNextEffect" type="button" onclick="nextEffect()" disabled>Next fade effect</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3 mt-2">
+                    <form>
+                        <div class="form-group">
+                            <select class="form-select" id="pluginToInstall" size="1">
+                            </select>
+                            <br />
+                            <button class="btn btn-light" type="button" onclick="install()" disabled>Install</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3 mt-2">
+                    <form>
+                        <div class="form-group">
+                            <label class="form-label" for="bAutoBrightnessCtrl">Automatic brightness control:</label>
+                            <button class="btn btn-light" id="bAutoBrightnessCtrl" type="button" value="false" onclick="triggerAutoBrightnessCtrl();changeBrightness();" disabled>?</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="currentBrightness">Current Brightness:</label>
+                            <div class="text-primary" id="currentBrightnessValue">?</div>
+                            <input type="range" class="form-range" id="currentBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#currentBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="minBrightness">Min. brightness soft limit:</label>
+                            <div class="text-primary" id="minBrightnessValue">?</div>
+                            <input type="range" class="form-range" id="minBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#minBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="maxBrightness">Max. brightness soft limit:</label>
+                            <div class="text-primary" id="maxBrightnessValue">?</div>
+                            <input type="range" class="form-range" id="maxBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#maxBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+                        </div>
+                    </form>
+                </div>
             </div>
         </main>
 
@@ -85,13 +114,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
@@ -107,16 +136,21 @@
         <!-- Custom javascript -->
         <script>
             var ctx                 = null;     // Canvas context
-            var pixelWidth          = 10;       // Width of a single LED in pixels
-            var pixelHeight         = 10;       // Height of a single LED in pixels
+            var isDisplayUpdateOn   = false;
             var timerId             = 0;        // Timer id
             var period              = 400;      // Display refresh period in ms
             var wsClient            = new pixelix.ws.Client();
             var isPageUnload        = false;
             var plugins             = [];       // List of all available plugins
-            var autoBrightnessCtrl  = false;    // Is automatic brightness control enabled or disabled?
-            var brightness          = 0;        // Brightness [0; 255]
             var currentFadeEffect   = 0         // Fade effect [1;3]
+            
+            const PIXEL_WIDTH       = 10;               // Width of a single LED in pixels
+            const PIXEL_HEIGTH      = 10;               // Height of a single LED in pixels
+            const DISPLAY_WIDTH     = ~DISPLAY_WIDTH~;  // Width in pixels (Updated by webserver on send)
+            const DISPLAY_HEIGHT    = ~DISPLAY_HEIGHT~; // Height in pixels (Updated by webserver on send)
+
+            const CANVAS_WIDTH      = (DISPLAY_WIDTH) * PIXEL_WIDTH + (DISPLAY_WIDTH) + 1;
+            const CANVAS_HEIGHT     = (DISPLAY_HEIGHT) * PIXEL_HEIGTH + (DISPLAY_HEIGHT) + 1;
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -126,8 +160,14 @@
 
             /* Enable all UI elements. */
             function enableUI() {
+                var automaticBrightnessControl = $("#bAutoBrightnessCtrl").val() === "true";
+
                 $("main :button").prop("disabled", false);
                 $("main :input").prop("disabled", false);
+
+                if (true == automaticBrightnessControl) {
+                    $("#currentBrightness").prop("disabled", true);
+                }
             }
 
             /* If websocket connection is unexpectedly closed, clean up. */
@@ -146,50 +186,56 @@
                     ctx.lineWidth   = "1";
                     ctx.strokeStyle = color;
                     ctx.fillStyle   = color;
-                    ctx.fillRect(x * pixelWidth + x + 1, y * pixelHeight + y + 1, pixelWidth, pixelHeight);
+                    ctx.fillRect(x * PIXEL_WIDTH + x + 1, y * PIXEL_HEIGTH + y + 1, PIXEL_WIDTH, PIXEL_HEIGTH);
                 }
             }
 
             function getDisplayContent() {
                 wsClient.getDisplayContent().then(function(rsp) {
-                    var x       = 0;
-                    var y       = 0;
-                    var index   = 0;
-                    var color   = 0;
-
+                    let index   = 0;              // Index in input sequence.
+                    let pixelIndex = 0;           // Index as pixel offset from framebuffer start.
+                    
                     $("#slotId").text(rsp.slotId);
 
                     /* If necessary, resize the canvas. */
                     var $canvas = $("#canvas");
                     var ctx = $canvas[0].getContext('2d');
-                    var width = rsp.width * pixelWidth + rsp.width + 1;
-                    var height = rsp.height * pixelWidth + rsp.height + 1;
 
-                    if ((ctx.canvas.width != width) || (ctx.canvas.height != height)) {
-                        ctx.canvas.width = width;
-                        ctx.canvas.height = height;
-                    }
+                    if ((ctx.canvas.width != CANVAS_WIDTH) || (ctx.canvas.height != CANVAS_HEIGHT)) {
+                        ctx.canvas.width = CANVAS_WIDTH;
+                        ctx.canvas.height = CANVAS_HEIGHT;
+                    }                  
 
                     /* Handle display data */
-                    for(y = 0; y < rsp.height; ++y) {
-                        for(x = 0; x < rsp.width; ++x) {
-                            if (rsp.data.length > index) {
-                                color   = rsp.data[index];
-                                red     = (color & 0xff0000) >> 16;
-                                green   = (color & 0x00ff00) >> 8;
-                                blue    = (color & 0x0000ff) >> 0;
-                                plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
-                                ++index;
-                            }
-                        }
+                    while (index < rsp.data.length) {
+                        let color   = rsp.data[index];
+                        let repeat  = (color & 0xFF000000) >>> 24;
+                        let red     = (color & 0x00FF0000) >>> 16;
+                        let green   = (color & 0x0000FF00) >>> 8;
+                        let blue    = (color & 0x000000FF) >>> 0;
+                        let colFmt  = "rgb(" + red + ", " + green + ", " + blue + ")";
+
+                        do {
+                            let x = pixelIndex % DISPLAY_WIDTH;
+                            let y = Math.floor(pixelIndex / DISPLAY_WIDTH);
+                            
+                            plot(x, y, colFmt);
+
+                            --repeat;
+                            ++pixelIndex;
+                        } while (repeat >= 0);
+                        ++index;
                     }
+                    
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
                 }).finally(function() {
-                    /* Start next update timer. */
-                    timerId = window.setTimeout(getDisplayContent, period);
+                    if (true === isDisplayUpdateOn) {
+                        /* Start next update timer. */
+                        timerId = window.setTimeout(getDisplayContent, period);
+                    }
                 });
 
                 return;
@@ -299,13 +345,14 @@
                 disableUI();
 
                 /* Currently off? */
-                if (0 === timerId) {
+                if (false === isDisplayUpdateOn) {
                     timerId = window.setTimeout(getDisplayContent, period);
                     $("#updateDisplayButton").text("Disable auto. display update");
+                    isDisplayUpdateOn = true;
                 } else {
                     window.clearTimeout(timerId);
-                    timerId = 0;
                     $("#updateDisplayButton").text("Enable auto. display update");
+                    isDisplayUpdateOn = false;
                 }
 
                 enableUI();
@@ -401,10 +448,21 @@
                     var $divSlots = $("#divSlots");
                     var $divSlot = null;
                     var $header = null;
+                    var $spanAlias = null;
                     var $inputAlias = null;
+                    var $inputGroupAlias = null;
+                    var $divDuration = null;
                     var $inputDuration = null;
+                    var $buttonSlotStatus = null;
+                    var $buttonStickyFlag = null;
+                    var $divDuration = null;
+                    var $durationUnit = null;
                     var $dragableSlot = null;
+                    var dragableSlotId = "";
+                    var pluginName = "";
+                    var pluginUid = "";
                     var pluginAlias = "";
+                    var inputAliasDisabled = false;
 
                     $divSlots.empty();
                     for(index = 0; index < rsp.slots.length; ++index) {
@@ -425,7 +483,7 @@
                             if (false === rsp.slots[index].isSticky) {
                                 $divSlot.attr("class", "divSlot locked");
                             } else {
-                                $divSlot.attr("class", "divSlot lockedAndsticky");
+                                $divSlot.attr("class", "divSlot lockedAndSticky");
                             }
                         }
 
@@ -435,15 +493,45 @@
                         $header.append("Slot " + index + "<br />");
 
                         $inputDuration = $("<input>")
+                            .attr("class", "form-control")
                             .attr("id", "duration" + index)
                             .attr("type", "number")
                             .attr("value", rsp.slots[index].duration / 1000)
                             .attr("min", "1")
                             .attr("max", "3600")
                             .attr("onchange", "setDuration(" + index + ")");
+                        
+                        $durationUnit = $("<span>")
+                            .attr("class", "input-group-text")
+                            .append("[s]");
 
-                        $header.append($inputDuration);
-                        $header.append("[s]");
+                        $buttonStickyFlag = $("<button>")
+                            .attr("class", "btn btn-dark")
+                            .attr("id", "sticky" + index)
+                            .attr("onclick", "handleStickySlot(" + index + ")")
+                            .attr("data-toggle", "tooltip")
+                            .attr("data-placement", "top")
+                            .attr("title", "If the sticky flag is set, the slot scheduler will be disabled and the slot with the sticky flag will be shown.")
+                            .text((false === rsp.slots[index].isSticky) ? "-" : "S");
+
+                        $buttonSlotStatus = $("<button>")
+                            .attr("class", "btn btn-dark")
+                            .attr("id", "slotStatus" + index)
+                            .attr("type", "button")
+                            .attr("onclick", "handleSlotStatus(" + index + ")")
+                            .attr("data-toggle", "tooltip")
+                            .attr("data-placement", "top")
+                            .attr("title", "Every enabled slot will be shown during slot scheduling, except there is a sticky slot. Disabled slots are skipped by the slot scheduler.")
+                            .text((false === rsp.slots[index].isDisabled) ? "✓" : "-");
+
+                        $divDuration = $("<div>")
+                            .attr("class", "input-group")
+                            .append($inputDuration)
+                            .append($durationUnit)
+                            .append($buttonStickyFlag)
+                            .append($buttonSlotStatus);
+
+                        $header.append($divDuration);
 
                         $divSlot.append($header);
 
@@ -458,32 +546,84 @@
                         }
 
                         if (0 == rsp.slots[index].name.length) {
-                            $dragableSlot.attr("id", "A" + index);
-                            $dragableSlot.append("-<br />UID -<br />Alias -");
+                            dragableSlotId = "A" + index;
+                            inputAliasId = "aliasA" + index;
+                            pluginName = "-";
+                            pluginUid = "-";
+                            pluginAlias = "-";
+
                         } else {
-                            $dragableSlot.attr("id", rsp.slots[index].uid);
-                            $dragableSlot.append(rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid);
+                            dragableSlotId = rsp.slots[index].uid;
+                            inputAliasId = "alias" + rsp.slots[index].uid;
+                            pluginName = rsp.slots[index].name;
+                            pluginUid = rsp.slots[index].uid;
+                            pluginAlias = "-";
 
                             if (0 === rsp.slots[index].alias.length) {
                                 pluginAlias = "";
                             } else {
                                 pluginAlias = rsp.slots[index].alias;
                             }
+                        }
 
+                        $dragableSlot.attr("id", dragableSlotId);
+
+                        $spanAlias = $("<span>")
+                            .attr("class", "input-group-text")
+                            .append("Alias:");
+
+                        if (0 == rsp.slots[index].name.length) {
+                            $inputAlias = $("<span>")
+                                .attr("class", "input-group-text")
+                                .attr("style", "width: 8em;")
+                                .append(pluginAlias)
+
+                        } else {
                             $inputAlias = $("<input>")
-                                .attr("id", "alias" + rsp.slots[index].uid)
+                                .attr("class", "form-control")
+                                .attr("id", inputAliasId)
                                 .attr("type", "text")
                                 .attr("value", pluginAlias)
                                 .attr("size", "8")
                                 .attr("minlength", "0")
                                 .attr("maxlength", "8")
-                                .attr("onchange", "setAlias(" + rsp.slots[index].uid + ")");
-
-                                $dragableSlot.append("<br />Alias ");
-                                $dragableSlot.append($inputAlias);
+                                .attr("onchange", "setAlias(" + pluginUid + ")");
                         }
-                        $divSlot.append($dragableSlot);
 
+                        $inputGroupAlias = $("<div>")
+                            .attr("class", "input-group")
+                            .append($spanAlias)
+                            .append($inputAlias);
+                        
+                        var $divCol11 = $("<div>")
+                            .attr("class", "col")
+                            .append(pluginName);
+                        var $divCol21 = $("<div>")
+                            .attr("class", "col")
+                            .append("UID: " + pluginUid);
+                        var $divCol31 = $("<div>")
+                            .attr("class", "col")
+                            .append($inputGroupAlias);
+
+                        var $divRow1 = $("<div>")
+                            .attr("class", "row")
+                            .append($divCol11);
+                        var $divRow2 = $("<div>")
+                            .attr("class", "row")
+                            .append($divCol21);
+                        var $divRow3 = $("<div>")
+                            .attr("class", "row")
+                            .append($divCol31);
+
+                        var $divContainer = $("<div>")
+                            .attr("class", "container text-center")
+                            .append($divRow1)
+                            .append($divRow2)
+                            .append($divRow3);
+
+                        $dragableSlot.append($divContainer);
+
+                        $divSlot.append($dragableSlot);
                         $divSlots.append($divSlot);
                     }
 
@@ -498,60 +638,128 @@
 
                     $divSlot.append($header);
 
+                    var $divUninstall = $("<p>")
+                        .attr("class", "dragableSlot")
+                        .text("Drop the plugin here to uninstall it.");
+
+                        $divSlot.append($divUninstall);
+
                     $divSlots.append($divSlot);
                 });
             }
 
-            function updateBrightness() {
-                $("#brightness").text((brightness * 100 / 255).toFixed(2));
-                $("#sliderBrightness").val(brightness);
-            }
+            function handleSlotStatus(slotId) {
+                var statusStr = $("#slotStatus" + slotId).text();
+                var isDisabled = ("✓" === statusStr) ? true : false;
 
-            function changeBrightness() {
                 disableUI();
-
-                wsClient.setBrightness({
-                    brightness: parseInt(document.getElementById("sliderBrightness").value)
+                
+                return wsClient.setSlot({
+                    slotId: slotId,
+                    isDisabled: isDisabled
                 }).then(function(rsp) {
-                    brightness = rsp.brightness;
-                    autoBrightnessCtrl = rsp.automaticBrightnessControl;
-                    updateAutoBrightnessCtrl();
-                    updateBrightness();
+                    return updateSlotInfo();
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    updateBrightness();
-                    return dialog.showError("<p>Changing brightness failed.</p>");
+                    return dialog.showError("<p>Failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
             }
 
-            function updateAutoBrightnessCtrl() {
-                if (false === autoBrightnessCtrl) {
-                    $("#autoBrightnessCtrl").text("Disabled");
-                    $("#bAutoBrightnessCtrl").text("Enable");
-                } else {
-                    $("#autoBrightnessCtrl").text("Enabled");
-                    $("#bAutoBrightnessCtrl").text("Disable");
-                }
-            }
+            function handleStickySlot(slotId) {
+                var stickyStr = $("#sticky" + slotId).text();
+                var sticky = ("-" === stickyStr) ? true : false;
 
-            function changeAutoBrightnessCtrl() {
-                wsClient.setBrightness({
-                    brightness: brightness,
-                    automaticBrightnessControl: (false == autoBrightnessCtrl) ? true : false
+                disableUI();
+                
+                return wsClient.setSlot({
+                    slotId: slotId,
+                    sticky: sticky
                 }).then(function(rsp) {
-                    brightness = rsp.brightness;
-                    autoBrightnessCtrl = rsp.automaticBrightnessControl;
-                    updateAutoBrightnessCtrl();
-                    updateBrightness();
+                    return updateSlotInfo();
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    return dialog.showError("<p>Changing automatic brightness control failed.</p>");
+                    return dialog.showError("<p>Failed.</p>");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function calcPercentage(value) {
+                return (value * 100 / 255).toFixed(1);
+            }
+
+            function updateCurrentBrightness(brightness) {
+                var brightnessInPercent = calcPercentage(brightness);
+                $("#currentBrightnessValue").text("" + brightnessInPercent + " %");
+                $("#currentBrightness").val(brightness);
+            }
+
+            function updateMinBrightness(minBrightness) {
+                var minBrightnessInPercent = calcPercentage(minBrightness);
+                $("#minBrightnessValue").text("" + minBrightnessInPercent + " %");
+                $("#minBrightness").val(minBrightness);
+            }
+
+            function updateMaxBrightness(maxBrightness) {
+                var maxBrightnessInPercent = calcPercentage(maxBrightness);
+                $("#maxBrightnessValue").text("" + maxBrightnessInPercent + " %");
+                $("#maxBrightness").val(maxBrightness);
+            }
+
+            function updateAutoBrightnessCtrl(autoBrightnessCtrl) {
+                if (false === autoBrightnessCtrl) {
+                    $("#bAutoBrightnessCtrl").text("Enable");
+                    $("#bAutoBrightnessCtrl").val("false");
+                    $("#currentBrightness").prop("disabled", false);
+                } else {
+                    $("#bAutoBrightnessCtrl").text("Disable");
+                    $("#bAutoBrightnessCtrl").val("true");
+                    $("#currentBrightness").prop("disabled", true);
+                }
+            }
+
+            function triggerAutoBrightnessCtrl() {
+                var autoBrightnessCtrl = $("#bAutoBrightnessCtrl").val() === "true";
+
+                if (false === autoBrightnessCtrl) {
+                    $("#bAutoBrightnessCtrl").text("Disable");
+                    $("#bAutoBrightnessCtrl").val("true");
+                } else {
+                    $("#bAutoBrightnessCtrl").text("Enable");
+                    $("#bAutoBrightnessCtrl").val("false");
+                }
+            }
+
+            function changeBrightness() {
+                var currentBrightness = parseInt($("#currentBrightness").val());
+                var minBrightness = parseInt($("#minBrightness").val());
+                var maxBrightness = parseInt($("#maxBrightness").val());
+                var autoBrightnessCtrl = $("#bAutoBrightnessCtrl").val() === "true";
+
+                disableUI();
+                wsClient.setBrightness({
+                    brightness: currentBrightness,
+                    minBrightness: minBrightness,
+                    maxBrightness: maxBrightness,
+                    automaticBrightnessControl: autoBrightnessCtrl
+                }).then(function(rsp) {
+                    updateCurrentBrightness(rsp.brightness);
+                    updateMinBrightness(rsp.minBrightness);
+                    updateMaxBrightness(rsp.maxBrightness);
+                    updateAutoBrightnessCtrl(rsp.automaticBrightnessControl);
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    return dialog.showError("<p>Changing brightness failed.</p>");
+                }).finally(function() {
+                    enableUI();
                 });
             }
 
@@ -590,10 +798,10 @@
                     /* Get brightness information */
                     return wsClient.getBrightness();
                 }).then(function(rsp) {
-                    brightness          = rsp.brightness;
-                    autoBrightnessCtrl  = rsp.automaticBrightnessControl;
-                    updateAutoBrightnessCtrl();
-                    updateBrightness();
+                    updateCurrentBrightness(rsp.brightness);
+                    updateMinBrightness(rsp.minBrightness);
+                    updateMaxBrightness(rsp.maxBrightness);
+                    updateAutoBrightnessCtrl(rsp.automaticBrightnessControl);
                 }).then(function(rsp) {
                     /* Get fadeEffect information */
                     return wsClient.getFadeEffect();

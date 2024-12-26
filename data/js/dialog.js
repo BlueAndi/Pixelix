@@ -1,17 +1,33 @@
 var dialog = window.dialog || {};
 
-dialog._show = function(title, message) {
+dialog._show = function(title, message, isBlocking) {
     return new Promise(function(resolve, reject) {
+
+        var waitOnClick = false;
+
+        if (("boolean" === typeof isBlocking) &&
+            (true == isBlocking)) {
+            waitOnClick = true;
+        }
 
         $("#dialogTitle").text(title);
         $("#dialogBody").html(message);
 
         $("#modalDialog").on("shown.bs.modal", function() {
             $("#modalDialog").off("shown.bs.modal");
-            resolve();
+
+            if (false === waitOnClick) {
+                resolve();
+            }
         });
 
         $("#modalDialog").modal("show");
+
+        if (true === waitOnClick) {
+            $("#modalDialog .btn-secondary").click(function() {
+                resolve();
+            });
+        }
     });
 }
 
@@ -27,11 +43,11 @@ dialog.hide = function() {
     });
 }
 
-dialog.showInfo = function(message) {
+dialog.showInfo = function(message, isBlocking) {
     var $btnClose = $("<button>")
                     .attr("type", "button")
                     .attr("class", "btn btn-secondary")
-                    .attr("data-dismiss", "modal")
+                    .attr("data-bs-dismiss", "modal")
                     .text("Ok")
 
     $("#dialogHeader").removeClass();
@@ -40,30 +56,30 @@ dialog.showInfo = function(message) {
     $("#dialogHeader").addClass("modal-header bg-primary text-white");
     $("#dialogFooter").append($btnClose);
 
-    return dialog._show("Info", message);
+    return dialog._show("Info", message, isBlocking);
 }
 
-dialog.showWarning = function(message) {
+dialog.showWarning = function(message, isBlocking) {
     var $btnClose = $("<button>")
                     .attr("type", "button")
                     .attr("class", "btn btn-secondary")
-                    .attr("data-dismiss", "modal")
+                    .attr("data-bs-dismiss", "modal")
                     .text("Ok")
 
     $("#dialogHeader").removeClass();
     $("#dialogFooter").empty();
 
-    $("#dialogHeader").addClass("modal-header bg-warning text-dark");
+    $("#dialogHeader").addClass("modal-header bg-warning");
     $("#dialogFooter").append($btnClose);
 
-    return dialog._show("Warning", message);
+    return dialog._show("Warning", message, isBlocking);
 }
 
-dialog.showError = function(message) {
+dialog.showError = function(message, isBlocking) {
     var $btnClose = $("<button>")
                     .attr("type", "button")
                     .attr("class", "btn btn-secondary")
-                    .attr("data-dismiss", "modal")
+                    .attr("data-bs-dismiss", "modal")
                     .text("Ok")
 
     $("#dialogHeader").removeClass();
@@ -72,14 +88,14 @@ dialog.showError = function(message) {
     $("#dialogHeader").addClass("modal-header bg-danger text-white");
     $("#dialogFooter").append($btnClose);
 
-    return dialog._show("Error", message);
+    return dialog._show("Error", message, isBlocking);
 }
 
-dialog.show = function(title, message) {
+dialog.show = function(title, message, isBlocking) {
     $("#dialogHeader").removeClass();
     $("#dialogFooter").empty();
 
     $("#dialogHeader").addClass("modal-header bg-dark text-white");
 
-    return dialog._show(title, message);
+    return dialog._show(title, message, isBlocking);
 }

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,9 +74,14 @@ public:
 
     /**
      * Constructs a progress bar widget.
+     * 
+     * @param[in] width     Widget width in pixel.
+     * @param[in] height    Widget height in pixel.
+     * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    ProgressBar() :
-        Widget(WIDGET_TYPE),
+    ProgressBar(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
+        Widget(WIDGET_TYPE, width, height, x, y),
         m_progress(0U),
         m_color(ColorDef::RED),
         m_algorithm(ALGORITHM_PROGRESS_BAR)
@@ -89,7 +94,7 @@ public:
      * @param[in] widget Progress bar, which to assign.
      */
     ProgressBar(const ProgressBar& widget) :
-        Widget(WIDGET_TYPE),
+        Widget(widget),
         m_progress(widget.m_progress),
         m_color(widget.m_color),
         m_algorithm(widget.m_algorithm)
@@ -129,9 +134,9 @@ public:
      */
     void setProgress(uint8_t progress)
     {
-        if (100 < progress)
+        if (100U < progress)
         {
-            m_progress = 100;
+            m_progress = 100U;
         }
         else
         {
@@ -147,7 +152,6 @@ public:
     void setColor(const Color& color)
     {
         m_color = color;
-        return;
     }
 
     /**

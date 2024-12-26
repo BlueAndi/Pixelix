@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,7 +90,7 @@ void PluginMgr::begin()
     createPluginConfigDirectory();
 }
 
-IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
+IPluginMaintenance* PluginMgr::install(const char* name, uint8_t slotId)
 {
     IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
 
@@ -167,7 +167,7 @@ bool PluginMgr::load()
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              fullConfigFileName      = PluginConfigFsHandler::CONFIG_PATH;
+    String              fullConfigFileName      = Plugin::CONFIG_PATH;
 
     fullConfigFileName += "/";
     fullConfigFileName += CONFIG_FILE_NAME;
@@ -177,13 +177,16 @@ bool PluginMgr::load()
         LOG_WARNING("Failed to load file %s.", fullConfigFileName.c_str());
         isSuccessful = false;
     }
+    else if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+        isSuccessful = false;
+    }
     else
     {
         JsonArray       jsonSlots   = jsonDoc["slotConfiguration"].as<JsonArray>();
         uint8_t         slotId      = 0;
         const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
-
-        checkJsonDocOverflow(jsonDoc, __LINE__);
 
         for(JsonObject jsonSlot: jsonSlots)
         {
@@ -208,14 +211,16 @@ void PluginMgr::save()
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonArray           jsonSlots           = jsonDoc.createNestedArray("slotConfiguration");
     JsonFile            jsonFile(FILESYSTEM);
-    String              fullConfigFileName  = PluginConfigFsHandler::CONFIG_PATH;
+    String              fullConfigFileName  = Plugin::CONFIG_PATH;
+    DisplayMgr&         displayMgr          = DisplayMgr::getInstance();
+    uint8_t             stickySlotId        = displayMgr.getStickySlot();
 
     fullConfigFileName += "/";
     fullConfigFileName += CONFIG_FILE_NAME;
 
-    for(slotId = 0; slotId < DisplayMgr::getInstance().getMaxSlots(); ++slotId)
+    for(slotId = 0; slotId < displayMgr.getMaxSlots(); ++slotId)
     {
-        IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+        IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
         JsonObject          jsonSlot    = jsonSlots.createNestedObject();
 
         if (nullptr == plugin)
@@ -224,7 +229,6 @@ void PluginMgr::save()
             jsonSlot["uid"]         = 0;
             jsonSlot["alias"]       = "";
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
-            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
         else
         {
@@ -232,13 +236,27 @@ void PluginMgr::save()
             jsonSlot["uid"]         = plugin->getUID();
             jsonSlot["alias"]       = plugin->getAlias();
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(plugin->getFontType());
-            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
+
+        jsonSlot["duration"]    = displayMgr.getSlotDuration(slotId);
+        
+        if (stickySlotId == slotId)
+        {
+            jsonSlot["isSticky"] = true;
+        }
+        else
+        {
+            jsonSlot["isSticky"] = false;
+        }
+
+        jsonSlot["isDisabled"]  = displayMgr.isSlotDisabled(slotId);
     }
 
-    checkJsonDocOverflow(jsonDoc, __LINE__);
-
-    if (false == jsonFile.save(fullConfigFileName, jsonDoc))
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
         LOG_ERROR("Couldn't save slot configuration.");
     }
@@ -252,81 +270,76 @@ void PluginMgr::save()
  * Private Methods
  *****************************************************************************/
 
-/**
- * Check dynamic JSON document for overflow and log a corresponding message,
- * otherwise log its document size.
- * 
- * @param[in] jsonDoc   Dynamic JSON document, which to check.
- * @param[in] line      Line number where the document is handled in the module.
- */
-void PluginMgr::checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line)
-{
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document @%d has less memory available.", line);
-    }
-    else
-    {
-        LOG_INFO("JSON document @%d size: %u", line, jsonDoc.memoryUsage());
-    }
-}
-
 void PluginMgr::createPluginConfigDirectory()
 {
-    if (false == FILESYSTEM.exists(PluginConfigFsHandler::CONFIG_PATH))
+    if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
     {
-        if (false == FILESYSTEM.mkdir(PluginConfigFsHandler::CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
         {
-            LOG_WARNING("Couldn't create directory: %s", PluginConfigFsHandler::CONFIG_PATH);
+            LOG_WARNING("Couldn't create directory: %s", Plugin::CONFIG_PATH);
         }
     }
 }
 
 void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jsonSlot)
 {
-    bool                isKeyValuePairMissing   = false;
-    JsonVariantConst    jsonName                = jsonSlot["name"];
-    JsonVariantConst    jsonUid                 = jsonSlot["uid"];
-    JsonVariantConst    jsonAlias               = jsonSlot["alias"];
-    JsonVariantConst    jsonFontType            = jsonSlot["fontType"];
-    JsonVariantConst    jsonDuration            = jsonSlot["duration"];
+    JsonVariantConst    jsonName        = jsonSlot["name"];
+    JsonVariantConst    jsonUid         = jsonSlot["uid"];
+    JsonVariantConst    jsonAlias       = jsonSlot["alias"];
+    JsonVariantConst    jsonFontType    = jsonSlot["fontType"];
+    JsonVariantConst    jsonDuration    = jsonSlot["duration"];
+    JsonVariantConst    jsonIsSticky    = jsonSlot["isSticky"];
+    JsonVariantConst    jsonIsDisabled  = jsonSlot["isDisabled"];
 
     if (false == jsonName.is<String>())
     {
-        LOG_WARNING("Slot %u: Name is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Name is missing.", slotId);
     }
-
-    if (false == jsonUid.is<uint16_t>())
+    else if (false == jsonUid.is<uint16_t>())
     {
-        LOG_WARNING("Slot %u: UID is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: UID is missing.", slotId);
     }
-
-    if (false == jsonAlias.is<String>())
+    else if (false == jsonAlias.is<String>())
     {
-        LOG_WARNING("Slot %u: Alias is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Alias is missing.", slotId);
     }
-
-    if (false == jsonFontType.is<String>())
+    else if (false == jsonFontType.is<String>())
     {
-        LOG_WARNING("Slot %u: Font type is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Font type is missing.", slotId);
     }
-
-    if (false == jsonDuration.is<uint32_t>())
+    else if (false == jsonDuration.is<uint32_t>())
     {
-        LOG_WARNING("Slot %u: Slot duration is missing.", slotId);
-        isKeyValuePairMissing = true;
+        LOG_ERROR("Slot %u: Slot duration is missing.", slotId);
     }
-
-    if (false == isKeyValuePairMissing)
+    else
     {
-        String      name        = jsonName.as<String>();
+        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
+        const char* name        = jsonName.as<const char*>();
         uint32_t    duration    = jsonDuration.as<uint32_t>();
+        bool        isSticky    = false;
+        bool        isDisabled  = false;
 
-        if (false == name.isEmpty())
+        /* Optional */
+        if (false == jsonIsSticky.is<bool>())
+        {
+            LOG_WARNING("Slot %u: Is sticky flag is missing.", slotId);
+        }
+        else
+        {
+            isSticky = jsonIsSticky.as<bool>();
+        }
+
+        if (false == jsonIsDisabled.is<bool>())
+        {
+            LOG_WARNING("Slot %u: Is disabled flag is missing.", slotId);
+        }
+        else
+        {
+            isDisabled = jsonIsDisabled.as<bool>();
+        }
+
+        /* Name available? */
+        if ('\0' != name[0])
         {
             IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
@@ -341,7 +354,7 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
             
                 if (nullptr == plugin)
                 {
-                    LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                    LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name, uid, slotId);
                 }
                 else
                 {
@@ -355,7 +368,7 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
 
                     if (false == install(plugin, slotId))
                     {
-                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name, uid, slotId);
 
                         m_pluginFactory.destroyPlugin(plugin);
                         plugin = nullptr;
@@ -368,7 +381,21 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
             }
         }
 
-        DisplayMgr::getInstance().setSlotDuration(slotId, duration);
+        displayMgr.setSlotDuration(slotId, duration);
+        
+        if (true == isSticky)
+        {
+            displayMgr.setSlotSticky(slotId);
+        }
+
+        if (false == isDisabled)
+        {
+            displayMgr.enableSlot(slotId);
+        }
+        else
+        {
+            displayMgr.disableSlot(slotId);
+        }
     }
 }
 

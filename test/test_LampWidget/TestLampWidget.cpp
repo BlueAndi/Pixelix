@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,10 +122,11 @@ static void testLampWidget()
     const Color     COLOR_OFF   = 0x111111;
     const Color     COLOR_ON    = 0x222222;
     const char*     WIDGET_NAME = "lampWidgetName";
-    const uint8_t   WIDTH =  4u;
+    const uint16_t  WIDTH       =  4U;
+    const uint16_t  HEIGHT      = 1U;
 
     YAGfxTest       testGfx;
-    LampWidget      lampWidget(false, COLOR_OFF, COLOR_ON, WIDTH);
+    LampWidget      lampWidget(WIDTH, HEIGHT);
     int16_t         posX        = 0;
     int16_t         posY        = 0;
 
@@ -151,12 +152,14 @@ static void testLampWidget()
     TEST_ASSERT_EQUAL_PTR(&lampWidget, lampWidget.find(WIDGET_NAME));
 
     /* Draw widget in off state and verify */
+    lampWidget.setColorOn(COLOR_ON);
+    lampWidget.setColorOff(COLOR_OFF);
     lampWidget.update(testGfx);
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::DEFAULT_WIDTH,
-                                    LampWidget::HEIGHT,
+                                    WIDTH,
+                                    HEIGHT,
                                     COLOR_OFF));
 
     /* Draw widget in on state and verify */
@@ -165,8 +168,8 @@ static void testLampWidget()
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::DEFAULT_WIDTH,
-                                    LampWidget::HEIGHT,
+                                    WIDTH,
+                                    HEIGHT,
                                     COLOR_ON));
 
     /* Draw widget in off state and verify */
@@ -175,8 +178,8 @@ static void testLampWidget()
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::DEFAULT_WIDTH,
-                                    LampWidget::HEIGHT,
+                                    WIDTH,
+                                    HEIGHT,
                                     COLOR_OFF));
 
     /* Move widget and draw in off state again. */
@@ -186,9 +189,7 @@ static void testLampWidget()
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::DEFAULT_WIDTH,
-                                    LampWidget::HEIGHT,
+                                    WIDTH,
+                                    HEIGHT,
                                     COLOR_OFF));
-
-    return;
 }

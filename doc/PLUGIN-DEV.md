@@ -6,6 +6,7 @@
 # Plugin development <!-- omit in toc -->
 
 * [What must be done?](#what-must-be-done)
+* [Optional](#optional)
 * [Rules](#rules)
 * [Recommendations](#recommendations)
 * [Typical use cases](#typical-use-cases)
@@ -29,13 +30,48 @@
       * ```web```: Contains all web relevant files, including icons the plugin may need.
    3. Create a ```library.json``` with the library meta information.
 2. The plugin sources (.h/.cpp) shall be in ```/lib/<plugin-name>/src``` folder.
-3. The plugin shall be registered in one or more configurations in ```/config/config-<type>.ini``` like PlatformIO libraries.
+3. The plugin shall be added in all configurations in ```/config/config-<type>.ini``` like PlatformIO libraries. Please add it in alphabetic order. To skip it in a config file, because e.g. there is not enough space in the flash, comment it out there via ";".
 4. A short plugin description shall be in ```/doc/PLUGINS.md```.
 5. A plugin specific HTML page shall be in ```/lib/<plugin-name>/web```.
 6. Place a plugin screenshot as image in ```/lib/<plugin-name>/web```, using the plugin name and the file extension. It shall be shown in the HTML page.
 7. If the plugin spawns a REST API:
    1. The HTML page must be able to get/set the corresponding information via REST API.
    2. The [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix) shall be extended. Ask the owner to do this via issue or pull-request.
+
+# Optional
+If the plugin supports different display sizes, you might want to copy display size depended icons to the filesystem. This can be achieved by adding a ```pixelix.json``` to the folder ```/lib/<plugin-name>```.
+
+Example:
+```json
+{
+    "pixelix": {
+        "type": "plugin",
+        "name": "OpenWeatherPlugin",
+        "web": {
+            "files": [
+                "./web/OpenWeatherPlugin.html"
+            ],
+            "layouts": [{
+                "name": "LAYOUT_GENERIC",
+                "files": [
+                    "./web/generic/01.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X8",
+                "files": [
+                    "./web/32x8/01.gif"
+                ]
+            }, {
+                "name": "LAYOUT_64X64",
+                "files": [
+                    "./web/64x64/01.gif"
+                ]
+            }]
+        }
+    }
+}
+```
+Note, the file paths are relative from ```/lib/<plugin-name>```.
 
 # Rules
 * Follow the [boy scout rule](https://biratkirat.medium.com/step-8-the-boy-scout-rule-robert-c-martin-uncle-bob-9ac839778385#:~:text=The%20Boy%20Scouts%20have%20a,not%20add%20more%20smelling%20code.), especially for coding style. Check other plugins or sourcecode in the repository, to know how to do it right.
@@ -49,7 +85,7 @@
   * ```$ exiv2 rm image.jpg```
 
 # Recommendations
-* Update the display only, if the content changed.
+* Update the display always to support animated GIFs and scrolling texts.
 
 # Typical use cases
 

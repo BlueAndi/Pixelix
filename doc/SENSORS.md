@@ -42,10 +42,7 @@ The photoresistor pin 2 needs additional a pull-down.
 # Temperature and humidity sensors
 
 ## DHTx (Proprietary one-wire)
-Different DHT sensors are supported. Out of the box the DHT11 is configured. It can be changed in the source code, see /lib/Sensors/Sensors.cpp:
-```cpp
-static SensorDhtX       gDht11(SensorDhtX::MODEL_DHT11);
-```
+Different DHT sensors are supported. Out of the box the DHT11 is configured. It can be changed in the [board.ini](../config/board.ini), see ```CONFIG_SENSOR_DHT_X_TYPE``` there.
 
 * DHT11 (Proprietary one-wire)
 * DHT12 (Proprietary one-wire)

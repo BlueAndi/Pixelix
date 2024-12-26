@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,20 +58,8 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path for standard icon. */
-const char* VolumioPlugin::IMAGE_PATH_STD_ICON      = "/plugins/VolumioPlugin/volumio.bmp";
-
-/* Initialize image path for "stop" icon. */
-const char* VolumioPlugin::IMAGE_PATH_STOP_ICON     = "/plugins/VolumioPlugin/volumioStop.bmp";
-
-/* Initialize image path for "play" icon. */
-const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/plugins/VolumioPlugin/volumioPlay.bmp";
-
-/* Initialize image path for "pause" icon. */
-const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/plugins/VolumioPlugin/volumioPause.bmp";
-
 /* Initialize plugin topic. */
-const char* VolumioPlugin::TOPIC_CONFIG             = "/host";
+const char* VolumioPlugin::TOPIC_CONFIG = "/host";
 
 /******************************************************************************
  * Public Methods
@@ -86,7 +74,7 @@ bool VolumioPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         getConfiguration(value);
         isSuccessful = true;
@@ -99,7 +87,7 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CONFIG))
+    if (true == topic.equals(TOPIC_CONFIG))
     {
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -154,66 +142,11 @@ bool VolumioPlugin::hasTopicChanged(const String& topic)
 
 void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
-    uint16_t                    tcHeight        = 0U;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    m_view.init(width, height);
 
-    (void)m_iconCanvas.addWidget(m_stdIconWidget);
-    (void)m_iconCanvas.addWidget(m_stopIconWidget);
-    (void)m_iconCanvas.addWidget(m_playIconWidget);
-    (void)m_iconCanvas.addWidget(m_pauseIconWidget);
-
-    /* Load all icons from filesystem now, to prevent filesystem
-     * access during active/inactive/update methods.
-     */
-    (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-    (void)m_stopIconWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
-    (void)m_playIconWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
-    (void)m_pauseIconWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
-
-    /* Disable all, except the standard icon. */
-    m_stopIconWidget.disable();
-    m_playIconWidget.disable();
-    m_pauseIconWidget.disable();
-
-    /* The text canvas is left aligned to the icon canvas and aligned to the
-     * top. Consider that below the text canvas the music position is shown.
-     */
-    tcHeight = height - 2U;
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, tcHeight);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (tcHeight > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
-
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 
     initHttpClient();
 
@@ -222,17 +155,12 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 
 void VolumioPlugin::stop()
 {
-    String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_cfgReloadTimer.stop();
     m_offlineTimer.stop();
     m_requestTimer.stop();
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void VolumioPlugin::process(bool isConnected)
@@ -240,42 +168,7 @@ void VolumioPlugin::process(bool isConnected)
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
     
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
@@ -288,7 +181,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -316,7 +209,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -351,7 +244,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -381,21 +274,10 @@ void VolumioPlugin::process(bool isConnected)
 
 void VolumioPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    int16_t                     tcX         = 0;
-    int16_t                     tcY         = 0;
-    uint16_t                    posWidth    = m_textCanvas.getWidth() * m_pos / 100U;
-    Color                       posColor    = ColorDef::RED;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-
-    m_textCanvas.getPos(tcX, tcY);
-    m_textCanvas.update(gfx);
-
-    /* Draw a nice line to represent the current music position. */
-    gfx.drawHLine(tcX, gfx.getHeight() - 1, posWidth, posColor);
-    PLUGIN_NOT_USED(tcY);
+    m_view.setProgress(m_pos);
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -406,13 +288,6 @@ void VolumioPlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-void VolumioPlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
-
 void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
@@ -420,7 +295,7 @@ void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["host"] = m_volumioHost;
 }
 
-bool VolumioPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
     bool                status      = false;
     JsonVariantConst    jsonHost    = jsonCfg["host"];
@@ -448,49 +323,27 @@ bool VolumioPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 
 void VolumioPlugin::changeState(VolumioState state)
 {
-    /* Disable current icon */
-    switch(m_state)
-    {
-    case STATE_UNKNOWN:
-        m_stdIconWidget.disable();
-        break;
-
-    case STATE_STOP:
-        m_stopIconWidget.disable();
-        break;
-
-    case STATE_PLAY:
-        m_playIconWidget.disable();
-        break;
-
-    case STATE_PAUSE:
-        m_pauseIconWidget.disable();
-        break;
-
-    default:
-        break;
-    }
-
-    /* Enable new icon */
     switch(state)
     {
     case STATE_UNKNOWN:
-        m_stdIconWidget.enable();
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_STD);
         break;
 
     case STATE_STOP:
-        m_stopIconWidget.enable();
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_STOP);
         break;
 
     case STATE_PLAY:
-        m_playIconWidget.enable();
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_PLAY);
         break;
 
     case STATE_PAUSE:
-        m_pauseIconWidget.enable();
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_PAUSE);
         break;
         
     default:
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_STD);
+        state = STATE_UNKNOWN;
         break;
     }
 
@@ -566,20 +419,21 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
 
         if (nullptr != jsonDoc)
         {
-            size_t                          payloadSize = 0U;
-            const void*                     vPayload    = rsp.getPayload(payloadSize);
-            const char*                     payload     = static_cast<const char*>(vPayload);
-            const size_t                    FILTER_SIZE = 128U;
-            StaticJsonDocument<FILTER_SIZE> filter;
+            bool                            isSuccessful    = false;
+            size_t                          payloadSize     = 0U;
+            const void*                     vPayload        = rsp.getPayload(payloadSize);
+            const char*                     payload         = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE     = 128U;
+            StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
-            filter["artist"]    = true;
-            filter["duration"]  = true;
-            filter["seek"]      = true;
-            filter["service"]   = true;
-            filter["status"]    = true;
-            filter["title"]     = true;
+            jsonFilterDoc["artist"]     = true;
+            jsonFilterDoc["duration"]   = true;
+            jsonFilterDoc["seek"]       = true;
+            jsonFilterDoc["service"]    = true;
+            jsonFilterDoc["status"]     = true;
+            jsonFilterDoc["title"]      = true;
             
-            if (true == filter.overflowed())
+            if (true == jsonFilterDoc.overflowed())
             {
                 LOG_ERROR("Less memory for filter available.");
             }
@@ -590,7 +444,7 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             }
             else
             {
-                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
 
                 if (DeserializationError::Ok != error.code())
                 {
@@ -603,18 +457,20 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
                     msg.type    = MSG_TYPE_RSP;
                     msg.rsp     = jsonDoc;
 
-                    if (false == this->m_taskProxy.send(msg))
-                    {
-                        delete jsonDoc;
-                        jsonDoc = nullptr;
-                    }
+                    isSuccessful = this->m_taskProxy.send(msg);
                 }
+            }
+
+            if (false == isSuccessful)
+            {
+                delete jsonDoc;
+                jsonDoc = nullptr;
             }
         }
     }
 }
 
-void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
     JsonVariantConst    jsonStatus  = jsonDoc["status"];
     JsonVariantConst    jsonTitle   = jsonDoc["title"];
@@ -658,7 +514,7 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
         if (true == title.isEmpty())
         {
-            title = "\\calign-";
+            title = "{hc}-";
         }
 
         if (service == "mpd")
@@ -740,7 +596,7 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         }
 
         changeState(state);
-        m_textWidget.setFormatStr(infoOnDisplay);
+        m_view.setFormatText(infoOnDisplay);
 
         m_pos = static_cast<uint8_t>(pos);
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * Includes
  *****************************************************************************/
 #include "IconTextPlugin.h"
-#include "FileSystem.h"
 
+#include <FileSystem.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
 
@@ -59,19 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_TEXT              = "/text";
-
-/* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_ICON              = "/bitmap";
-
-/* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_SPRITESHEET       = "/spritesheet";
-
-/* Initialize bitmap image filename extension. */
-const char* IconTextPlugin::FILE_EXT_BITMAP         = ".bmp";
-
-/* Initialize sprite sheet parameter filename extension. */
-const char* IconTextPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
+const char* IconTextPlugin::TOPIC_TEXT = "/iconText";
 
 /******************************************************************************
  * Public Methods
@@ -83,7 +71,7 @@ bool IconTextPlugin::isEnabled() const
 
     /* The plugin shall only be scheduled if its enabled and text is set. */
     if ((true == m_isEnabled) &&
-        (false == m_textWidget.getStr().isEmpty()))
+        (false == m_view.getText().isEmpty()))
     {
         isEnabled = true;
     }
@@ -93,11 +81,9 @@ bool IconTextPlugin::isEnabled() const
 
 void IconTextPlugin::getTopics(JsonArray& topics) const
 {
-    JsonObject  jsonText        = topics.createNestedObject();
-    JsonObject  jsonIcon        = topics.createNestedObject();
-    JsonObject  jsonSpriteSheet = topics.createNestedObject();
+    JsonObject  jsonText    = topics.createNestedObject();
 
-    jsonText["name"]            = TOPIC_TEXT;
+    jsonText["name"]    = TOPIC_TEXT;
 
     /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
     jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
@@ -105,31 +91,15 @@ void IconTextPlugin::getTopics(JsonArray& topics) const
     jsonText["ha"]["discovery"]["cmd_tpl"]  = "{\"text\": \"{{ value }}\" }";   /* Command template */
     jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
     jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
-
-    jsonIcon["name"]            = TOPIC_ICON;
-    jsonIcon["access"]          = "w"; /* Only icon upload is supported. */
-
-    jsonSpriteSheet["name"]     = TOPIC_SPRITESHEET;
-    jsonSpriteSheet["access"]   = "w"; /* Only sprite sheet upload is supported. */
 }
 
 bool IconTextPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_TEXT))
+    if (true == topic.equals(TOPIC_TEXT))
     {
-        String  formattedText       = getText();
-        String  iconFullPath;
-        String  spriteSheetFullPath;
-
-        getIconFilePath(iconFullPath);
-        getSpriteSheetFilePath(spriteSheetFullPath);
-
-        value["text"]                   = formattedText;
-        value["iconFullPath"]           = iconFullPath;
-        value["spriteSheetFullPath"]    = spriteSheetFullPath;
-
+        getActualConfiguration(value);
         isSuccessful = true;
     }
 
@@ -140,85 +110,63 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_TEXT))
+    if (true == topic.equals(TOPIC_TEXT))
     {
+        bool                storeFlag               = false;
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonIconFileId          = value["iconFileId"];
         JsonVariantConst    jsonText                = value["text"];
-        JsonVariantConst    jsonIconFullPath        = value["iconFullPath"];
-        JsonVariantConst    jsonSpriteSheetFullPath = value["spriteSheetFullPath"];
+        JsonVariantConst    jsonStoreFlag           = value["storeFlag"];
+    
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getActualConfiguration(jsonCfg);
 
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
+
+        if (false == jsonIconFileId.isNull())
+        {
+            jsonCfg["iconFileId"] = jsonIconFileId.as<FileMgrService::FileId>();
+            isSuccessful = true;
+        }
+        
         if (false == jsonText.isNull())
         {
-            String text = jsonText.as<String>();
-
-            setText(text);
-
+            jsonCfg["text"] = jsonText.as<String>();
             isSuccessful = true;
         }
 
-        if (false == jsonIconFullPath.isNull())
+        /* Note: The store flag is not part of the stored configuration, its just
+         * used by the user to force that the text is stored persistent. By default
+         * text is not stored to avoid too many flash write cycles.
+         */
+        if (false == jsonStoreFlag.isNull())
         {
-            String iconFullPath = jsonIconFullPath.as<String>();
+            storeFlag = jsonStoreFlag.as<bool>();
+            isSuccessful = true;
+        }
 
-            if (true == iconFullPath.isEmpty())
+        if (true == isSuccessful)
+        {
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            if (false == storeFlag)
             {
-                clearBitmap();
+                isSuccessful = setActualConfiguration(jsonCfgConst);
             }
             else
             {
-                loadBitmap(iconFullPath);
+                isSuccessful = setConfiguration(jsonCfgConst);
+                requestStoreToPersistentMemory();
             }
-
-            isSuccessful = true;
         }
-
-        if (false == jsonSpriteSheetFullPath.isNull())
-        {
-            String spriteSheetFullPath = jsonSpriteSheetFullPath.as<String>();
-
-            if (true == spriteSheetFullPath.isEmpty())
-            {
-                clearSpriteSheet();
-            }
-            else
-            {
-                loadSpriteSheet(spriteSheetFullPath);
-            }
-
-            isSuccessful = true;
-        }
-    }
-    else if (0U != topic.equals(TOPIC_ICON))
-    {
-        JsonVariantConst jsonFullPath = value["fullPath"];
-
-        /* File upload? */
-        if (false == jsonFullPath.isNull())
-        {
-            String fullPath = jsonFullPath.as<String>();
-
-            isSuccessful = loadBitmap(fullPath);
-        }
-    }
-    else if (0U != topic.equals(TOPIC_SPRITESHEET))
-    {
-        JsonVariantConst jsonFullPath = value["fullPath"];
-
-        /* File upload? */
-        if (false == jsonFullPath.isNull())
-        {
-            String fullPath = jsonFullPath.as<String>();
-
-            /* Don't use the return value, because there may be no bitmap
-             * available.
-             */
-            (void)loadSpriteSheet(fullPath);
-
-            isSuccessful = true;
-        }
-    }
-    else
-    {
-        ;
     }
 
     return isSuccessful;
@@ -226,239 +174,141 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
 bool IconTextPlugin::hasTopicChanged(const String& topic)
 {
-    bool hasTopicChanged = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
 
-    if (0U != topic.equals(TOPIC_TEXT))
-    {
-        MutexGuard<MutexRecursive> guard(m_mutex);
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
 
-        hasTopicChanged = m_hasTopicChanged;
-
-        m_hasTopicChanged = false;
-    }
+    m_hasTopicChanged = false;
 
     return hasTopicChanged;
 }
 
-bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
-{
-    bool isAccepted = false;
-
-    if (0U != topic.equals(TOPIC_ICON))
-    {
-        /* Accept upload of bitmap file. */
-        if (0U != srcFilename.endsWith(FILE_EXT_BITMAP))
-        {
-            dstFilename = getFileName(FILE_EXT_BITMAP);
-
-            isAccepted = true;
-        }
-    }
-    else if (0U != topic.equals(TOPIC_SPRITESHEET))
-    {
-        /* Accept upload of a sprite sheet file. */
-        if (0U != srcFilename.endsWith(FILE_EXT_SPRITE_SHEET))
-        {
-            dstFilename = getFileName(FILE_EXT_SPRITE_SHEET);
-
-            isAccepted = true;
-        }
-    }
-    else
-    {
-        ;
-    }
-
-    return isAccepted;
-}
-
 void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
-    String                      bitmapFullPath      = getFileName(FILE_EXT_BITMAP);
-    String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
+    String                      iconFullPath;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_view.init(width, height);
 
-    /* If there is an icon in the filesystem with the plugin UID as filename,
-     * it will be loaded. First check whether it is a animated sprite sheet
-     * and if not, try to load just a bitmap image.
-     */
-    m_iconPath.clear();
-    m_spriteSheetPath.clear();
+    PluginWithConfig::start(width, height);
 
-    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
+    m_view.setFormatText(m_formatTextStored);
+
+    if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
     {
-        if (true == m_bitmapWidget.load(FILESYSTEM, bitmapFullPath))
+        if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
         {
-            m_iconPath = bitmapFullPath;
+            LOG_WARNING("Unknown file id %u.", m_iconFileId);
         }
-    }
-    else
-    {
-        m_iconPath          = bitmapFullPath;
-        m_spriteSheetPath   = spriteSheetFullPath;
-    }
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
+        else if (false == m_view.loadIcon(iconFullPath))
+        {
+            LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+        }
+        else
+        {
+            ;
+        }
     }
 }
 
 void IconTextPlugin::stop()
 {
-    String                      bitmapFullPath       = getFileName(FILE_EXT_BITMAP);
-    String                      spriteSheetFullPath  = getFileName(FILE_EXT_SPRITE_SHEET);
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* Remove icon which is specific for the plugin instance. */
-    if (false != FILESYSTEM.remove(bitmapFullPath))
-    {
-        LOG_INFO("File %s removed", bitmapFullPath.c_str());
-    }
-
-    /* Remove spritesheet which is specific for the plugin instance. */
-    if (false != FILESYSTEM.remove(spriteSheetFullPath))
-    {
-        LOG_INFO("File %s removed", spriteSheetFullPath.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void IconTextPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 String IconTextPlugin::getText() const
 {
-    String                      formattedText;
     MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    formattedText = m_textWidget.getFormatStr();
+    String                      formattedText   = m_view.getFormatText();
 
     return formattedText;
 }
 
-void IconTextPlugin::setText(const String& formatText)
+void IconTextPlugin::setText(const String& formatText, bool storeFlag)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (m_textWidget.getFormatStr() != formatText)
+    if (m_view.getFormatText() != formatText)
     {
-        m_textWidget.setFormatStr(formatText);
+        m_view.setFormatText(formatText);
+
+        if (true == storeFlag)
+        {
+            m_formatTextStored = formatText;
+            requestStoreToPersistentMemory();
+        }
 
         m_hasTopicChanged = true;
     }
 }
 
-bool IconTextPlugin::loadBitmap(const String& filename)
+bool IconTextPlugin::loadIcon(FileMgrService::FileId fileId, bool storeFlag)
 {
-    bool                        status = false;
+    bool                        isSuccessful    = false;
+    String                      iconFullPath;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (m_iconPath != filename)
+    if (m_iconFileId != fileId)
     {
-        m_iconPath = filename;
+        m_iconFileId        = fileId;
+        m_hasTopicChanged   = true;
 
-        m_hasTopicChanged = true;
+        if (true == storeFlag)
+        {
+            m_iconFileIdStored = m_iconFileId;
+            requestStoreToPersistentMemory();
+        }
     }
 
-    if (false == m_spriteSheetPath.isEmpty())
+    if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
     {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
+        m_view.clearIcon();
+    }
+    else if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+    {
+        LOG_WARNING("Unknown file id %u.", m_iconFileId);
+        m_view.clearIcon();
+    }
+    else
+    {
+        /* Load the icon always again, as the path might be the same, but
+         * the icon file changed.
+         */
+        isSuccessful = m_view.loadIcon(iconFullPath);
     }
     
-    if (false == status)
-    {
-        status = m_bitmapWidget.load(FILESYSTEM, m_iconPath);
-    }
-
-    return status;
+    return isSuccessful;
 }
 
-bool IconTextPlugin::loadSpriteSheet(const String& filename)
-{
-    bool                        status = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (m_spriteSheetPath != filename)
-    {
-        m_spriteSheetPath = filename;
-
-        m_hasTopicChanged = true;
-    }
-
-    if (false == m_iconPath.isEmpty())
-    {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
-    }
-
-    return status;
-}
-
-void IconTextPlugin::clearBitmap()
+void IconTextPlugin::clearIcon(bool storeFlag)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false == m_iconPath.isEmpty())
+    if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
     {
-        m_iconPath.clear();
-        m_bitmapWidget.clear(ColorDef::BLACK);
+        /* Clear icon first in the view (will close file). */
+        m_view.clearIcon();
 
-        m_hasTopicChanged = true;
+        m_iconFileId        = FileMgrService::FILE_ID_INVALID;
+        m_hasTopicChanged   = true;
+
+        if (true == storeFlag)
+        {
+            m_iconFileIdStored = m_iconFileId;
+            requestStoreToPersistentMemory();
+        }
     }
-}
-
-void IconTextPlugin::clearSpriteSheet()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (false == m_spriteSheetPath.isEmpty())
-    {
-        m_spriteSheetPath.clear();
-
-        m_hasTopicChanged = true;
-    }
-
-    if (false == m_iconPath.isEmpty())
-    {
-        (void)m_bitmapWidget.load(FILESYSTEM, m_iconPath);
-    }
-}
-
-void IconTextPlugin::getIconFilePath(String& fullPath) const
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    fullPath = m_iconPath;
-}
-
-void IconTextPlugin::getSpriteSheetFilePath(String& fullPath) const
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    fullPath = m_spriteSheetPath;
 }
 
 /******************************************************************************
@@ -469,9 +319,95 @@ void IconTextPlugin::getSpriteSheetFilePath(String& fullPath) const
  * Private Methods
  *****************************************************************************/
 
-String IconTextPlugin::getFileName(const String& ext)
+void IconTextPlugin::getActualConfiguration(JsonObject& jsonCfg) const
 {
-    return PluginConfigFsHandler::generateFullPath(getUID(), ext);
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["iconFileId"]   = m_iconFileId;
+    jsonCfg["text"]         = m_view.getFormatText();
+}
+
+bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
+{
+    bool             status         = false;
+    JsonVariantConst jsonIconFileId = jsonCfg["iconFileId"];
+    JsonVariantConst jsonText       = jsonCfg["text"];
+
+    if (false == jsonIconFileId.is<FileMgrService::FileId>())
+    {
+        LOG_WARNING("JSON icon file id not found or invalid type.");
+    }
+    else if (false == jsonText.is<String>())
+    {
+        LOG_WARNING("JSON text not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive>  guard(m_mutex);
+        FileMgrService::FileId      newIconFileId   = jsonIconFileId.as<FileMgrService::FileId>();
+        String                      newFormatText   = jsonText.as<String>();
+
+        if (m_iconFileId != newIconFileId)
+        {
+            m_iconFileId = newIconFileId;
+
+            if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
+            {
+                m_view.clearIcon();
+            }
+            else
+            {
+                String iconFullPath;
+
+                if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+                {
+                    LOG_WARNING("Unknown file id %u.", m_iconFileId);
+                    m_view.clearIcon();
+                }
+                else
+                {
+                    if (false == m_view.loadIcon(iconFullPath))
+                    {
+                        LOG_WARNING("Couldn't load icon: %s", iconFullPath.c_str());
+                    }
+                }
+            }
+
+            m_hasTopicChanged = true;
+        }
+
+        if (m_view.getFormatText() != newFormatText)
+        {
+            m_view.setFormatText(newFormatText);
+
+            m_hasTopicChanged = true;
+        }
+
+        status = true;
+    }
+
+    return status;
+}
+
+void IconTextPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["iconFileId"]   = m_iconFileIdStored;
+    jsonCfg["text"]         = m_formatTextStored;
+}
+
+bool IconTextPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
+{
+    bool status = setActualConfiguration(jsonCfg);
+
+    if (true == status)
+    {
+        m_iconFileIdStored  = m_iconFileId;
+        m_formatTextStored  = m_view.getFormatText();
+    }
+
+    return status;
 }
 
 /******************************************************************************

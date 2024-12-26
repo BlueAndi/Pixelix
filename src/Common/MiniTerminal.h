@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -107,19 +107,30 @@ public:
         return isRestartRequested;
     }
 
+    /**
+     * @brief Table entry for known terminal commands
+     * 
+     */
+    struct CmdTableEntry {
+        const char *cmdStr;                           /**< Command string.           */
+        void (MiniTerminal::*handler)(const char *);  /**< Command handler function. */
+    };
+
 private:
 
     static const char   ASCII_BS            = 8;    /**< ASCII backspace value */
     static const char   ASCII_LF            = 10;   /**< ASCII line feed value */
     static const char   ASCII_SP            = 32;   /**< ASCII space value */
     static const char   ASCII_DEL           = 127;  /**< ASCII delete value */
-    static const size_t LOCAL_BUFFER_SIZE   = 10U;  /**< Buffer size in byte to read during processing. */
+    static const size_t LOCAL_BUFFER_SIZE   = 12U;  /**< Buffer size in byte to read during processing. */
     static const size_t INPUT_BUFFER_SIZE   = 80U;  /**< Buffer size of one input command line in byte. */
 
     Stream& m_stream;                   /**< In/Out-stream. */
     char    m_input[INPUT_BUFFER_SIZE]; /**< Input command line buffer. */
     size_t  m_writeIndex;               /**< Write index to the command line buffer. */
     bool    m_isRestartRequested;       /**< Restart requested? */
+
+    static const CmdTableEntry m_cmdTable[]; /**< Table with supported commands. */
 
     /**
      * Write successful response.
@@ -141,13 +152,6 @@ private:
      * @param[in] cmdLine   Command line
      */
     void executeCommand(const char* cmdLine);
-
-    /**
-     * Ping command.
-     * 
-     * @param[in] par   Parameter
-     */
-    void cmdPing(const char* par);
 
     /**
      * Reset the device.
@@ -176,6 +180,20 @@ private:
      * @param[in] par   Parameter
      */
     void cmdGetIPAddress(const char* par);
+
+    /**
+     * Get the status (error id).
+     * 
+     * @param[in] par   Parameter
+     */
+    void cmdGetStatus(const char* par);
+
+    /**
+     * Print command help message.
+     * 
+     * @param[in] par   Parameter
+     */
+    void cmdHelp(const char* par);
 };
 
 /******************************************************************************

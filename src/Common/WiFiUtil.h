@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,13 +74,18 @@ namespace WiFiUtil
 extern uint8_t getSignalQuality(int8_t rssi);
 
 /**
- * Add a device unique ID to the destination string.
- * The device unique ID is derived fromt the wifi
- * MAC address.
+ * Get the factory programmed wifi MAC address.
  * 
- * @param[in, out] dst  Destination
+ * @param[out] macAddr  MAC address in "00:00:00:00:00:00" syntax.
  */
-extern void addDeviceUniqueId(String& dst);
+extern void getEFuseMAC(String& macAddr);
+
+/**
+ * Get the unique chip id.
+ * 
+ * @param[out] chipId   Chip id
+ */
+extern void getChipId(String& chipId);
 }
 
 #endif  /* WIFI_UTIL_H */

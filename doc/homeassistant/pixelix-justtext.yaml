@@ -14,19 +14,19 @@ blueprint:
           mode: box
     align:
       name: Align
-      description: 'The align of the text'
+      description: 'The alignment of the text.'
       selector:
         select:
           options:
             - label: Left
-              value: lalign
+              value: hl
             - label: Center
-              value: calign
+              value: hc
             - label: Right
-              value: ralign
+              value: hr
     color:
       name: Color
-      description: 'The color of the text'
+      description: 'The color of the text.'
       selector:
         text:
             type: color
@@ -103,61 +103,61 @@ action:
               {% if use_coloring == true %}
                 {% if is_state_attr(sensor, 'unit_of_measurement', '%') and is_number(state) %}
                   {% if state | float > 85.7  %}
-                    {% set s_color = '\#ff0000' %}
+                    {% set s_color = '{#ff0000}' %}
                   {% elif state | float > 71.4 %}
-                    {% set s_color = '\#ff5c00' %}
+                    {% set s_color = '{#ff5c00}' %}
                   {% elif state | float > 57.1  %}
-                    {% set s_color = '\#ffae00' %}
+                    {% set s_color = '{#ffae00}' %}
                   {% elif state | float > 42.8  %}
-                    {% set s_color = '\#ffeb00' %}
+                    {% set s_color = '{#ffeb00}' %}
                   {% elif state | float > 28.5  %}
-                    {% set s_color = '\#b0ff00' %}
+                    {% set s_color = '{#b0ff00}' %}
                   {% elif state | float > 14.2  %}
-                    {% set s_color = '\#5fff00' %}
+                    {% set s_color = '{#5fff00}' %}
                   {% else %}
-                    {% set s_color = '\#00ff00' %}
+                    {% set s_color = '{#00ff00}' %}
                   {% endif %}
                 {% elif is_state_attr(sensor, 'unit_of_measurement', '°C') and is_number(state) %}
                   {% if is_room_temp == true %}
                     {% if state | float > 33 %}
-                      {% set s_color = '\#ff0000' %}
+                      {% set s_color = '{#ff0000}' %}
                     {% elif state | float > 29 %}
-                      {% set s_color = '\#ff5c00' %}
+                      {% set s_color = '{#ff5c00}' %}
                     {% elif state | float > 26 %}
-                      {% set s_color = '\#ffff00' %}
+                      {% set s_color = '{#ffff00}' %}
                     {% elif state | float > 23 %}
-                      {% set s_color = '\#99ff00' %}
+                      {% set s_color = '{#99ff00}' %}
                     {% elif state | float > 20 %}
-                      {% set s_color = '\#00ff8e' %}
+                      {% set s_color = '{#00ff8e}' %}
                     {% elif state | float > 18 %}
-                      {% set s_color = '\#00c1ff' %}
+                      {% set s_color = '{#00c1ff}' %}
                     {% else %}
-                      {% set s_color = '\#001eff' %}
+                      {% set s_color = '{#001eff}' %}
                     {% endif %}
                   {% else %}
                     {% if state | float > 90 %}
-                      {% set s_color = '\#ff0000' %}
+                      {% set s_color = '{#ff0000}' %}
                     {% elif state | float > 80 %}
-                      {% set s_color = '\#ff5c00' %}
+                      {% set s_color = '{#ff5c00}' %}
                     {% elif state | float > 70 %}
-                      {% set s_color = '\#ffff00' %}
+                      {% set s_color = '{#ffff00}' %}
                     {% elif state | float > 60 %}
-                      {% set s_color = '\#99ff00' %}
+                      {% set s_color = '{#99ff00}' %}
                     {% elif state | float > 50 %}
-                      {% set s_color = '\#00ff8e' %}
+                      {% set s_color = '{#00ff8e}' %}
                     {% elif state | float > 40 %}
-                      {% set s_color = '\#00c1ff' %}
+                      {% set s_color = '{#00c1ff}' %}
                     {% else %}
-                      {% set s_color = '\#001eff' %}
+                      {% set s_color = '{#001eff}' %}
                     {% endif %}
                   {% endif %}
                 {% else %}
-                  {% set s_color = '\#ffffff' %}
+                  {% set s_color = '{#ffffff}' %}
                 {% endif %}
                 {% if loop.last %}
                   {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + s_color + state + state_attr(sensor, 'unit_of_measurement') | replace('°', '')  %}
                 {% else %}
-                  {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + s_color + state + state_attr(sensor, 'unit_of_measurement') | replace('°', '') + '\\' + color + sensor_text.delimiter %}
+                  {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + s_color + state + state_attr(sensor, 'unit_of_measurement') | replace('°', '') + '{' + color + '}' + sensor_text.delimiter %}
                 {% endif %}
               {% else %}
                 {% if loop.last %}
@@ -181,6 +181,6 @@ action:
             {% endif %}
           {% endif %}
         {% endfor %}
-        {{ ('\\' + align + prefix + ' ' + sensor_text.text + ' ' + suffix) | urlencode }}
+        {{ ('{' + align + '}' + prefix + ' ' + sensor_text.text + ' ' + suffix) | urlencode }}
 
 mode: single

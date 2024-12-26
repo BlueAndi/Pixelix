@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,23 +71,58 @@
  * External Functions
  *****************************************************************************/
 
+extern bool Util::strToUInt8(const char* str, uint8_t& value)
+{
+    bool success = false;
+
+    if (nullptr != str)
+    {
+        char*           endPtr  = nullptr;
+        unsigned long   tmp     = 0UL;
+
+        errno = 0;
+        tmp = strtoul(str, &endPtr, 0);
+
+        if ((0 == errno) &&
+            (nullptr != endPtr) &&
+            ('\0' == *endPtr) &&
+            (str != endPtr) &&
+            (UINT8_MAX >= tmp))
+        {
+            value = static_cast<uint8_t>(tmp);
+            success = true;
+        }
+    }
+
+    return success;
+}
+
 extern bool Util::strToUInt8(const String& str, uint8_t& value)
 {
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    unsigned long   tmp     = 0UL;
+    return strToUInt8(str.c_str(), value);
+}
 
-    errno = 0;
-    tmp = strtoul(str.c_str(), &endPtr, 0);
+extern bool Util::strToUInt16(const char* str, uint16_t& value)
+{
+    bool success = false;
 
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (UINT8_MAX >= tmp))
+    if (nullptr != str)
     {
-        value = static_cast<uint8_t>(tmp);
-        success = true;
+        char*           endPtr  = nullptr;
+        unsigned long   tmp     = 0UL;
+
+        errno = 0;
+        tmp = strtoul(str, &endPtr, 0);
+
+        if ((0 == errno) &&
+            (nullptr != endPtr) &&
+            ('\0' == *endPtr) &&
+            (str != endPtr) &&
+            (UINT16_MAX >= tmp))
+        {
+            value = static_cast<uint16_t>(tmp);
+            success = true;
+        }
     }
 
     return success;
@@ -95,21 +130,30 @@ extern bool Util::strToUInt8(const String& str, uint8_t& value)
 
 extern bool Util::strToUInt16(const String& str, uint16_t& value)
 {
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    unsigned long   tmp     = 0UL;
+    return strToUInt16(str.c_str(), value);
+}
 
-    errno = 0;
-    tmp = strtoul(str.c_str(), &endPtr, 0);
+extern bool Util::strToInt32(const char* str, int32_t& value)
+{
+    bool success = false;
 
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (UINT16_MAX >= tmp))
+    if (nullptr != str)
     {
-        value = static_cast<uint16_t>(tmp);
-        success = true;
+        char*   endPtr  = nullptr;
+        long    tmp     = 0L;
+
+        errno = 0;
+        tmp = strtol(str, &endPtr, 0);
+
+        if ((0 == errno) &&
+            (nullptr != endPtr) &&
+            ('\0' == *endPtr) &&
+            (str != endPtr) &&
+            (INT32_MAX >= tmp))
+        {
+            value = static_cast<int32_t>(tmp);
+            success = true;
+        }
     }
 
     return success;
@@ -117,21 +161,30 @@ extern bool Util::strToUInt16(const String& str, uint16_t& value)
 
 extern bool Util::strToInt32(const String& str, int32_t& value)
 {
-    bool    success = false;
-    char*   endPtr  = nullptr;
-    long    tmp     = 0L;
+    return strToInt32(str.c_str(), value);
+}
 
-    errno = 0;
-    tmp = strtol(str.c_str(), &endPtr, 0);
+extern bool Util::strToUInt32(const char* str, uint32_t& value)
+{
+    bool success = false;
 
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (INT32_MAX >= tmp))
+    if (nullptr != str)
     {
-        value = static_cast<int32_t>(tmp);
-        success = true;
+        char*           endPtr  = nullptr;
+        unsigned long   tmp     = 0UL;
+
+        errno = 0;
+        tmp = strtoul(str, &endPtr, 0);
+
+        if ((0 == errno) &&
+            (nullptr != endPtr) &&
+            ('\0' == *endPtr) &&
+            (str != endPtr) &&
+            (UINT32_MAX >= tmp))
+        {
+            value = static_cast<uint32_t>(tmp);
+            success = true;
+        }
     }
 
     return success;
@@ -139,24 +192,7 @@ extern bool Util::strToInt32(const String& str, int32_t& value)
 
 extern bool Util::strToUInt32(const String& str, uint32_t& value)
 {
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    unsigned long   tmp     = 0UL;
-
-    errno = 0;
-    tmp = strtoul(str.c_str(), &endPtr, 0);
-
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (UINT32_MAX >= tmp))
-    {
-        value = static_cast<uint32_t>(tmp);
-        success = true;
-    }
-
-    return success;
+    return strToUInt32(str.c_str(), value);
 }
 
 extern String Util::uint32ToHex(uint32_t value)
@@ -174,8 +210,8 @@ extern uint32_t Util::hexToUInt32(const String& str)
     uint32_t    idx     = 0U;
     bool        isError = false;
 
-    if ((0U != str.startsWith("0x")) ||
-        (0U != str.startsWith("0X")))
+    if ((true == str.startsWith("0x")) ||
+        (true == str.startsWith("0X")))
     {
         idx = 2U;
     }
@@ -209,6 +245,27 @@ extern uint32_t Util::hexToUInt32(const String& str)
     }
 
     return value;
+}
+
+String Util::colorToHtml(const Color& color)
+{
+    char buffer[8]; /* '#' + 3x byte in hex + '\0' */
+
+    (void)snprintf(buffer, sizeof(buffer), "#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
+
+    return String(buffer);
+}
+
+Color Util::colorFromHtml(const String& htmlColor)
+{
+    Color color;
+
+    if ('#' == htmlColor[0])
+    {
+        color = Util::hexToUInt32(htmlColor.substring(1U));
+    }
+
+    return color;
 }
 
 /******************************************************************************

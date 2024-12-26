@@ -10,11 +10,15 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Logging"
+    }, {
         "name": "LittleFS"
     }, {
         "name": "Plugin"
     }, {
         "name": "IRtc"
+    }, {
+        "name": "Views"
     }],
     "frameworks": "*",
     "platforms": "*"

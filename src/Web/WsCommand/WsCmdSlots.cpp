@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,10 +62,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -73,14 +72,15 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
         String      msg;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
         uint8_t     stickySlot  = displayMgr.getStickySlot();
+        uint8_t     slotId;
+        uint8_t     maxSlots    = displayMgr.getMaxSlots();
 
         preparePositiveResponse(msg);
 
@@ -92,9 +92,10 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
          * - Plugin alias name.
          * - Information about whether the slot is locked or not.
          * - Information about whether the slot is sticky or not.
+         * - Information about whether the slot is disabled or not.
          * - Slot duration in ms.
          */
-        for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
+        for(slotId = 0U; slotId < maxSlots; ++slotId)
         {
             IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
             const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
@@ -102,6 +103,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
             bool                isLocked    = displayMgr.isSlotLocked(slotId);
             bool                isSticky    = (stickySlot == slotId) ? true : false;
+            bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
             uint32_t            duration    = displayMgr.getSlotDuration(slotId);
 
             msg += DELIMITER;
@@ -119,10 +121,12 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             msg += DELIMITER;
             msg += (false == isSticky) ? "0" : "1";
             msg += DELIMITER;
+            msg += (false == isDisabled) ? "0" : "1";
+            msg += DELIMITER;
             msg += duration;
         }
 
-        sendResponse(server, client, msg);
+        sendResponse(server, clientId, msg);
     }
 
     m_isError = false;

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,8 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "IOpenWeatherSource.h"
-#include <limits.h>
+#include "IOpenWeatherCurrent.h"
+#include <limits>
 
 /******************************************************************************
  * Macros
@@ -58,7 +58,7 @@
  * The OpenWeather source for current weather data.
  * https://openweathermap.org/current
  */
-class OpenWeatherCurrent : public IOpenWeatherSource
+class OpenWeatherCurrent : public IOpenWeatherCurrent
 {
 public:
 
@@ -66,7 +66,7 @@ public:
      * Constructs the OpenWeather source.
      */
     OpenWeatherCurrent() :
-        IOpenWeatherSource(),
+        IOpenWeatherCurrent(),
         m_apiKey(),
         m_latitude(DEFAULT_LATITUDE),
         m_longitude(DEFAULT_LONGITUDE),

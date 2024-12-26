@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -145,7 +145,6 @@ public:
         m_blue(color.m_blue),
         m_intensity(color.m_intensity)
     {
-        return;
     }
 
     /**
@@ -164,6 +163,30 @@ public:
         }
 
         return *this;
+    }
+
+    /**
+     * Compare color for equality.
+     * 
+     * @param[in] other Other color to compare with.
+     * 
+     * @return If both colors are equal, it will return true otherwise false.
+     */
+    bool operator==(const Rgb888& other)
+    {
+        return (m_red == other.m_red) && (m_green == other.m_green) && (m_blue == other.m_blue) && (m_intensity == other.m_intensity);
+    }
+
+    /**
+     * Compare color for non-equality.
+     * 
+     * @param[in] other Other color to compare with.
+     * 
+     * @return If both colors are not equal, it will return true otherwise false.
+     */
+    bool operator!=(const Rgb888& other)
+    {
+        return (m_red != other.m_red) || (m_green != other.m_green) || (m_blue != other.m_blue) || (m_intensity != other.m_intensity);
     }
 
     /**
@@ -193,7 +216,6 @@ public:
         red     = applyIntensity(m_red);
         green   = applyIntensity(m_green);
         blue    = applyIntensity(m_blue);
-        return;
     }
 
     /**

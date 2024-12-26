@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -154,8 +154,8 @@ void GameOfLifePlugin::update(YAGfx& gfx)
     if ((true == isInit) &&
         (true == m_displayTimer.isTimeout()))
     {
-        int32_t cellX           = 0;
-        int32_t cellY           = 0;
+        int32_t cellX;
+        int32_t cellY;
         uint8_t inactiveGrid    = (m_activeGrid + 1U) % GRIDS;
         bool    isStable        = true;
 

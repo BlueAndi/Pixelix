@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,6 +64,9 @@ static void error(AsyncWebServerRequest* request);
 /** Web server */
 static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
 
+/** Is captive portal enabled? */
+static bool             gIsCaptivePortalEnabled = false;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -97,6 +100,8 @@ void MyWebServer::init(bool initCaptivePortal)
     {
         CaptivePortal::init(gWebServer);
     }
+
+    gIsCaptivePortalEnabled = initCaptivePortal;
 }
 
 void MyWebServer::begin()
@@ -109,6 +114,14 @@ void MyWebServer::end()
 {
     /* Stop webserver */
     gWebServer.end();
+}
+
+void MyWebServer::process()
+{
+    if (false == gIsCaptivePortalEnabled)
+    {
+        WebSocketSrv::getInstance().process();
+    }
 }
 
 AsyncWebServer& MyWebServer::getInstance()
@@ -133,7 +146,7 @@ static void error(AsyncWebServerRequest* request)
     }
 
     /* REST request? */
-    if (request->url().startsWith(RestApi::BASE_URI))
+    if (true == request->url().startsWith(RestApi::BASE_URI))
     {
         RestApi::error(request);
     }

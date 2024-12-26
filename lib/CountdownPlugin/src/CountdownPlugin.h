@@ -1,7 +1,7 @@
 
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,13 +44,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Plugin.hpp"
-#include "time.h"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
+#include <time.h>
+#include <PluginWithConfig.hpp>
 #include <stdint.h>
-#include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
@@ -70,7 +68,7 @@
  * in the filesystem, where the target date has to be configured.
  *
  */
-class CountdownPlugin : public Plugin, private PluginConfigFsHandler
+class CountdownPlugin : public PluginWithConfig
 {
 public:
 
@@ -173,31 +171,23 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    CountdownPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_bitmapWidget(),
-        m_textWidget("\\calign?"),
+    CountdownPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
+        m_view(),
         m_currentDate(),
         m_targetDate(),
         m_targetDateInformation(),
         m_remainingDays(""),
         m_mutex(),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         /* Example data, used to generate the very first configuration file. */
         m_targetDate.day                    = 1U;
         m_targetDate.month                  = 8U;
-        m_targetDate.year                   = 2023U;
+        m_targetDate.year                   = 2024U;
         m_targetDateInformation.plural      = "DAYS";
         m_targetDateInformation.singular    = "DAY";
 
@@ -215,12 +205,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow) CountdownPlugin(name, uid);
     }
@@ -232,7 +222,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -246,8 +236,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -357,21 +346,6 @@ public:
 private:
 
     /**
-     * Icon width in pixels.
-     */
-    static const int16_t    ICON_WIDTH     = 8;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const int16_t    ICON_HEIGHT    = 8;
-
-    /**
-     * Image path within the filesystem.
-     */
-    static const char*      IMAGE_PATH;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
@@ -388,39 +362,20 @@ private:
     */
     static const int16_t    TM_OFFSET_YEAR  = 1900;
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
-    Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    _CountdownPlugin::View  m_view;                     /**< View with all widgets. */
     DateDMY                 m_currentDate;              /**< Date structure to hold the current date. */
     DateDMY                 m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
     TargetDayDescription    m_targetDateInformation;    /**< String used for configured additional target date information. */
     String                  m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& cfg) const final;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
@@ -429,7 +384,7 @@ private:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(JsonObjectConst& cfg) final;
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
      * Calculates the remaining days between m_targetTime and m_currentTime in days and

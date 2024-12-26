@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,7 @@
  * Protected Methods
  *****************************************************************************/
 
-void ButtonActions::executeAction(ButtonActionId id)
+void ButtonActions::executeAction(ButtonActionId id, bool firstTime)
 {
     switch(id)
     {
@@ -87,11 +87,19 @@ void ButtonActions::executeAction(ButtonActionId id)
         break;
 
     case BUTTON_ACTION_ID_SHOW_IP_ADDRESS:
-        showIpAddress();
+        /* Show once and avoid cylic flickering of the text. */
+        if (true == firstTime)
+        {
+            showIpAddress();
+        }
         break;
 
     case BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON:
-        toggleDisplayOffOn();
+        /* Toggle once to avoid cyclic on/off. */
+        if (true == firstTime)
+        {
+            toggleDisplayOffOn();
+        }
         break;
 
     case BUTTON_ACTION_ID_SWEEP_BRIGHTNESS:

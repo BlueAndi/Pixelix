@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,13 +43,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include "./internal/View.h"
+
 #include <stdint.h>
 #include <time.h>
-#include "Plugin.hpp"
-
-#include <LampWidget.h>
-#include <TextWidget.h>
-#include <WidgetGroup.h>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
 
@@ -65,39 +63,29 @@
  * Shows the current data and time (alternately) over the whole display.
  * It can be configured to show only the date or only the time as well.
  */
-class DateTimePlugin : public Plugin, private PluginConfigFsHandler
+class DateTimePlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    DateTimePlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
-        m_textWidget("\\calignNo NTP"),
-        m_textCanvas(),
-        m_lampCanvas(),
-        m_lampWidgets(),
+    DateTimePlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
+        m_view(),
         m_mode(MODE_DATE_TIME),
         m_checkUpdateTimer(),
         m_durationCounter(0u),
         m_shownSecond(-1),
         m_shownDayOfTheYear(-1),
-        m_isUpdateAvailable(false),
         m_timeFormat(TIME_FORMAT_DEFAULT),
         m_dateFormat(DATE_FORMAT_DEFAULT),
         m_timeZone(),
-        m_dayOnColor(DAY_ON_COLOR),
-        m_dayOffColor(DAY_OFF_COLOR),
         m_slotInterf(nullptr),
         m_mutex(),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
@@ -114,14 +102,38 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow) DateTimePlugin(name, uid);
+    }
+
+    /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    Fonts::FontType getFontType() const final
+    {
+        return m_view.getFontType();
+    }
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    void setFontType(Fonts::FontType fontType) final
+    {
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -267,10 +279,7 @@ private:
     /**
      * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC_CONFIG;
-
-    /** Max. number of lamps. */
-    static const uint8_t    MAX_LAMPS               = 7U;
+    static const char      TOPIC_CONFIG[];
 
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_UPDATE_PERIOD     = SIMPLE_TIMER_SECONDS(1U);
@@ -279,16 +288,10 @@ private:
     static const uint32_t   MS_TO_SEC_DIVIDER       = 1000U;
 
     /** Default time format according to strftime(). */
-    static const char*      TIME_FORMAT_DEFAULT;
+    static const char       TIME_FORMAT_DEFAULT[];
 
     /** Default date format according to strftime(). */
-    static const char*      DATE_FORMAT_DEFAULT;
-
-    /** Color of the current day shown in the day of the week bar. */
-    static const Color      DAY_ON_COLOR;
-
-    /** Color of the other days (not the current one) shown in the day of the week bar. */
-    static const Color      DAY_OFF_COLOR;
+    static const char       DATE_FORMAT_DEFAULT[];
 
     /**
      * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
@@ -298,46 +301,25 @@ private:
      */
     static const uint32_t   DURATION_DEFAULT        = SIMPLE_TIMER_SECONDS(30U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD       = SIMPLE_TIMER_SECONDS(30U);
-
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
-    Mode                    m_mode;                     /**< Display mode about what shall be shown. */
-    SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessary. */
-    uint8_t                 m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
-    int                     m_shownSecond;              /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
-    int                     m_shownDayOfTheYear;        /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
-    bool                    m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
-    String                  m_timeFormat;               /**< Time format according to strftime(). */
-    String                  m_dateFormat;               /**< Date format according to strftime(). */
-    String                  m_timeZone;                 /**< Timezone of the time to show. If empty, the local time is used. */
-    Color                   m_dayOnColor;               /**< Color of current day in the day of the week bar. */
-    Color                   m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
-    const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
-    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
+    _DateTimePlugin::View   m_view;                 /**< The layout with all used widgets. */
+    Mode                    m_mode;                 /**< Display mode about what shall be shown. */
+    SimpleTimer             m_checkUpdateTimer;     /**< Timer, used for cyclic check if date/time update is necessary. */
+    uint8_t                 m_durationCounter;      /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
+    int                     m_shownSecond;          /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
+    int                     m_shownDayOfTheYear;    /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
+    String                  m_timeFormat;           /**< Time format according to strftime(). */
+    String                  m_dateFormat;           /**< Date format according to strftime(). */
+    String                  m_timeZone;             /**< Timezone of the time to show. If empty, the local time is used. */
+    const ISlotPlugin*      m_slotInterf;           /**< Slot interface */
+    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
      * Get configuration in JSON.
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& cfg) const final;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
@@ -346,7 +328,21 @@ private:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(JsonObjectConst& cfg) final;
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
+
+    /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource);
 
     /**
      * Get current date/time and update the text, which to be displayed.
@@ -355,28 +351,6 @@ private:
      * @param[in] force Force update independent of date.
      */
     void updateDateTime(bool force);
-
-    /**
-     * Set weekday indicator depended on the given time info.
-     *
-     *
-     * @param[in] timeInfo the current time info.
-     */
-    void setWeekdayIndicator(tm timeInfo);
-
-    /**
-     * Calculates the optimal layout for several elements, which shall be aligned.
-     * 
-     * @param[in]   width           Max. available width in pixel.
-     * @param[in]   cnt             Number of elements in a row.
-     * @param[in]   minDistance     The minimal distance in pixel between each element.
-     * @param[in]   minBorder       The minimal border left and right of all elements.
-     * @param[out]  elementWidth    The calculated optimal element width in pixel.
-     * @param[out]  elementDistance The calculated optimal element distance in pixel.
-     * 
-     * @return If the calculation is successful, it will return true otherwise false.
-     */
-    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
 
     /**
      * Get the current time as formatted string.
@@ -392,23 +366,6 @@ private:
      */
     bool getTimeAsString(String& time, const String& format, const tm *currentTime = nullptr);
 
-    /**
-     * Convert color to HTML format.
-     * 
-     * @param[in] color Color
-     * 
-     * @return Color in HTML format
-     */
-    String colorToHtml(const Color& color) const;
-
-    /**
-     * Convert color from HTML format.
-     * 
-     * @param[in] htmlColor Color in HTML format
-     * 
-     * @return Color
-     */
-    Color colorFromHtml(const String& htmlColor) const;
 };
 
 /******************************************************************************

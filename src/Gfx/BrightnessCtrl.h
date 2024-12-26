@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -169,11 +169,11 @@ public:
     /**
      * Initialize brightness controller and set initial display brightness.
      * 
-     * @param[in] display       The display, which to control.
-     * @param[in] minBrightness The minimal brightness in digits [0; 255].
-     * @param[in] maxBrightness The maximal brightness in digits [0; 255].
+     * @param[in] display                   The display, which to control.
+     * @param[in] minBrightnessHardLinit    The minimal brightness hard limit in digits [0; 255].
+     * @param[in] maxBrightnessHardLimit    The maximal brightness hard limit in digits [0; 255].
      */
-    void init(IDisplay& display, uint8_t minBrightness, uint8_t maxBrightness);
+    void init(IDisplay& display, uint8_t minBrightnessHardLimit, uint8_t maxBrightnessHardLimit);
 
     /**
      * Enable/Disable automatic brightness adjustment.
@@ -198,7 +198,24 @@ public:
     void process();
 
     /**
+     * Set brightness soft limits, used for dynamic brightness adjustment.
+     * 
+     * @param[in] minBrightnessSoftLinit    The minimal brightness soft limit in digits [0; 255].
+     * @param[in] maxBrightnessSoftLimit    The maximal brightness soft limit in digits [0; 255].
+     */
+    void setSoftLimits(uint8_t minBrightnessSoftLimit, uint8_t maxBrightnessSoftLimit);
+
+    /**
+     * Get the soft brightness limits.
+     * 
+     * @param[in] minBrightness The minimum brightness level in digits [0; 255].
+     * @param[in] maxBrightness The maximum brightness level in digits [0; 255].
+     */
+    void getSoftLimits(uint8_t& minBrightness, uint8_t& maxBrightness) const;
+
+    /**
      * Set display brightness level in digits.
+     * If automatic brightness adjustment is enabled, the requested brightness level won't be set.
      *
      * @param[in] level Brightness level in digits [0; 255].
      */
@@ -261,6 +278,11 @@ public:
      */
     static constexpr float  DARKENING_LIGHT_HYSTERESIS      = 0.2F;
 
+    /**
+     * Gamma correction factor.
+     */
+    static constexpr float  GAMMA                           = 2.2F;
+
 private:
 
     /** Direction of ambient light changes. */
@@ -282,11 +304,17 @@ private:
     /** Display brightness in digits [0; 255]. */
     uint8_t                     m_brightness;
 
-    /** Min. brightness level in digits [0; 255]. */
-    uint8_t                     m_minBrightness;
+    /** Min. brightness hard limit level in digits [0; 255]. */
+    uint8_t                     m_minBrightnessHardLimit;
 
-    /** Max. brightness level in digits [0; 255]. */
-    uint8_t                     m_maxBrightness;
+    /** Max. brightness hard limit level in digits [0; 255]. */
+    uint8_t                     m_maxBrightnessHardLimit;
+
+    /** Min. brightness soft limit level in digits [0; 255]. */
+    uint8_t                     m_minBrightnessSoftLimit;
+
+    /** Max. brightness soft limit level in digits [0; 255]. */
+    uint8_t                     m_maxBrightnessSoftLimit;
 
     /** Short-term moving average of light (normalized) [0.0; 1.0]. */
     RecursiveAverageIIR<float>  m_recentShortTermAverage;

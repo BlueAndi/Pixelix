@@ -10,7 +10,11 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Logging"
+    }, {
         "name": "Plugin"
+    }, {
+        "name": "Views"
     }],
     "frameworks": "*",
     "platforms": "*"

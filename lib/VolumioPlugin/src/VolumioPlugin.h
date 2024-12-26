@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,13 +43,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
-#include "AsyncHttpClient.h"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
+#include <AsyncHttpClient.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
@@ -67,26 +65,19 @@
  * If the VOLUMIO server is offline, the plugin gets automatically disabled,
  * otherwise enabled.
  */
-class VolumioPlugin : public Plugin, private PluginConfigFsHandler
+class VolumioPlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    VolumioPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_stdIconWidget(),
-        m_stopIconWidget(),
-        m_playIconWidget(),
-        m_pauseIconWidget(),
-        m_textWidget("\\calign?"),
+    VolumioPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
+        m_view(),
         m_volumioHost("volumio.fritz.box"),
         m_urlIcon(),
         m_urlText(),
@@ -98,9 +89,6 @@ public:
         m_lastSeekValue(0U),
         m_pos(0U),
         m_state(STATE_UNKNOWN),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false),
         m_taskProxy()
     {
@@ -129,12 +117,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow)VolumioPlugin(name, uid);
     }
@@ -267,26 +255,6 @@ private:
     static const uint16_t   ICON_HEIGHT         = 8U;
 
     /**
-     * Image path within the filesystem to standard icon.
-     */
-    static const char*      IMAGE_PATH_STD_ICON;
-
-    /**
-     * Image path within the filesystem to "stop" icon.
-     */
-    static const char*      IMAGE_PATH_STOP_ICON;
-
-    /**
-     * Image path within the filesystem to "play" icon.
-     */
-    static const char*      IMAGE_PATH_PLAY_ICON;
-
-    /**
-     * Image path within the filesystem to "pause" icon.
-     */
-    static const char*      IMAGE_PATH_PAUSE_ICON;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
@@ -311,20 +279,7 @@ private:
      */
     static const uint32_t   OFFLINE_PERIOD      = SIMPLE_TIMER_SECONDS(60U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
-    WidgetGroup             m_textCanvas;           /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;           /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_stdIconWidget;        /**< Bitmap widget, used to show the standard icon. */
-    BitmapWidget            m_stopIconWidget;       /**< Bitmap widget, used to show the stop icon. */
-    BitmapWidget            m_playIconWidget;       /**< Bitmap widget, used to show the play icon. */
-    BitmapWidget            m_pauseIconWidget;      /**< Bitmap widget, used to show the pause icon. */
-    TextWidget              m_textWidget;           /**< Text widget, used for showing the text. */
+     _VolumioPlugin::View   m_view;                 /**< View with all widgets. */
     String                  m_volumioHost;          /**< Host address of the VOLUMIO server. */
     String                  m_urlIcon;              /**< REST API URL for updating the icon */
     String                  m_urlText;              /**< REST API URL for updating the text */
@@ -336,9 +291,6 @@ private:
     uint32_t                m_lastSeekValue;        /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
     uint8_t                 m_pos;                  /**< Current music position in percent. */
     VolumioState            m_state;                /**< Volumio player state */
-    SimpleTimer             m_cfgReloadTimer;       /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;       /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;      /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
@@ -376,16 +328,11 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
-
-    /**
      * Get configuration in JSON.
      * 
      * @param[out] cfg  Configuration
      */
-    void getConfiguration(JsonObject& cfg) const final;
+    void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
@@ -394,7 +341,7 @@ private:
      * 
      * @return If successful set, it will return true otherwise false.
      */
-    bool setConfiguration(JsonObjectConst& cfg) final;
+    bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
      * Change Volumio player state.
@@ -429,7 +376,7 @@ private:
      * 
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
 
     /**
      * Clear the task proxy queue.

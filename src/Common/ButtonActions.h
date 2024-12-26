@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -99,9 +99,10 @@ protected:
     /**
      * Execute action by button action id.
      * 
-     * @param[in] id    Button action id
+     * @param[in] id        Button action id
+     * @param[in] firstTime First time the action will be executed in a cycle.
      */
-    void executeAction(ButtonActionId id);
+    void executeAction(ButtonActionId id, bool firstTime);
 
     /**
      * Is switch off requested?

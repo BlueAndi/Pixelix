@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,7 @@ public:
      * The drawing pen color is set to black.
      */
     TestWidget() :
-        Widget(WIDGET_TYPE, 0, 0),
+        Widget(WIDGET_TYPE, WIDTH, HEIGHT, 0, 0),
         m_color(0U)
     {
     }
@@ -99,8 +99,8 @@ public:
         return;
     }
 
-    static const uint16_t           WIDTH       = 10U;  /**< Widget width in pixel */
-    static const uint16_t           HEIGHT      = 5U;   /**< Widget height in pixel */
+    static const uint16_t           WIDTH       = 10U;      /**< Widget width in pixel */
+    static const uint16_t           HEIGHT      = 5U;       /**< Widget height in pixel */
     static constexpr const char*    WIDGET_TYPE = "test";   /**< Widget type string */
 
 private:
@@ -114,14 +114,14 @@ private:
      */
     void paint(YAGfx& gfx)
     {
-        int16_t x = 0;
-        int16_t y = 0;
+        int16_t x;
+        int16_t y;
 
         for(y = 0; y < HEIGHT; ++y)
         {
             for(x = 0; x < WIDTH; ++x)
             {
-                gfx.drawPixel(m_posX + x, m_posY + y, m_color);
+                gfx.drawPixel(x, y, m_color);
             }
         }
 

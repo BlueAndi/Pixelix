@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -83,9 +83,9 @@ public:
     };
 
     /**
-     * Get the audio service instance.
+     * Get the MQTT service instance.
      * 
-     * @return Audio service instance
+     * @return MQTT service instance
      */
     static MqttService& getInstance()
     {
@@ -222,6 +222,7 @@ private:
     String                  m_user;                 /**< MQTT authentication: user name */
     String                  m_password;             /**< MQTT authentication: password */
     String                  m_hostname;             /**< MQTT hostname */
+    uint16_t                m_port;                 /**< MQTT port */
     WiFiClient              m_wifiClient;           /**< WiFi client */
     PubSubClient            m_mqttClient;           /**< MQTT client */
     State                   m_state;                /**< Connection state */
@@ -238,6 +239,7 @@ private:
         m_user(),
         m_password(),
         m_hostname(),
+        m_port(MQTT_PORT),
         m_wifiClient(),
         m_mqttClient(m_wifiClient),
         m_state(STATE_DISCONNECTED),

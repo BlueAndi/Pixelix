@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,10 +45,10 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <FS.h>
-#include <SimpleTimer.hpp>
 
 #include "Widget.hpp"
-#include "SpriteSheet.h"
+#include "GifImgPlayer.h"
+#include "Alignment.h"
 
 /******************************************************************************
  * Macros
@@ -60,6 +60,9 @@
 
 /**
  * Bitmap widget, showing a simple bitmap.
+ * Supported are the following formats:
+ * - Bitmap (.bmp)
+ * - GIF image (.gif)
  */
 class BitmapWidget : public Widget
 {
@@ -67,13 +70,21 @@ public:
 
     /**
      * Constructs a bitmap widget, which is empty.
+     * 
+     * @param[in] width     Widget width in pixel.
+     * @param[in] height    Widget height in pixel.
+     * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    BitmapWidget() :
-        Widget(WIDGET_TYPE),
+    BitmapWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
+        Widget(WIDGET_TYPE, width, height, x, y),
+        m_imgType(IMG_TYPE_NO_IMAGE),
         m_bitmap(),
-        m_spriteSheet(),
-        m_timer(),
-        m_duration(0U)
+        m_gifPlayer(),
+        m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
+        m_vAlign(Alignment::Vertical::VERTICAL_TOP),
+        m_hAlignPosX(0),
+        m_vAlignPosY(0)
     {
     }
 
@@ -83,18 +94,21 @@ public:
      * @param[in] widget Bitmap widge, which to copy
      */
     BitmapWidget(const BitmapWidget& widget) :
-        Widget(WIDGET_TYPE),
+        Widget(widget),
+        m_imgType(widget.m_imgType),
         m_bitmap(widget.m_bitmap),
-        m_spriteSheet(widget.m_spriteSheet),
-        m_timer(widget.m_timer),
-        m_duration(widget.m_duration)
+        m_gifPlayer(widget.m_gifPlayer),
+        m_hAlign(widget.m_hAlign),
+        m_vAlign(widget.m_vAlign),
+        m_hAlignPosX(widget.m_hAlignPosX),
+        m_vAlignPosY(widget.m_vAlignPosY)
     {
     }
 
     /**
      * Destroys the bitmap widget.
      */
-    ~BitmapWidget()
+    virtual ~BitmapWidget()
     {
     }
 
@@ -106,22 +120,25 @@ public:
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
-     * Set a bitmap.
-     *
-     * @param[in] bitmap    Bitmap
+     * Set widget width.
+     * 
+     * @param[in] width Width in pixel
      */
-    void set(const YAGfxBitmap& bitmap)
+    void setWidth(uint16_t width) override
     {
-        if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
-        {
-            m_bitmap.copy(bitmap);
-        }
+        Widget::setWidth(width);
+        alignWidget();
+    }
 
-        /* Release sprite sheet to avoid wasting memory. The widget can
-         * only show one of them.
-         */
-        m_spriteSheet.release();
-        m_timer.stop();
+    /**
+     * Set widget height.
+     * 
+     * @param[in] height Height in pixel
+     */
+    void setHeight(uint16_t height) override
+    {
+        Widget::setHeight(height);
+        alignWidget();
     }
 
     /**
@@ -135,15 +152,27 @@ public:
     }
 
     /**
-     * Clear the bitmap.
+     * Set a bitmap.
+     * 
+     * The canvas width and height won't be updated. If required, update them
+     * explicit.
+     * 
+     * @param[in] bitmap    Bitmap
+     */
+    void set(const YAGfxBitmap& bitmap);
+
+    /**
+     * Clear the image.
      * 
      * @param[in] color Color used for clearing.
      */
     void clear(const Color& color);
 
     /**
-     * Load bitmap image from filesystem.
-     * If a sprite sheet is active, it will be disabled.
+     * Load image from filesystem.
+     * 
+     * The canvas width and height won't be updated. If required, update them
+     * explicit.
      *
      * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
@@ -153,53 +182,69 @@ public:
     bool load(FS& fs, const String& filename);
 
     /**
-     * Load sprite sheet file (.sprite) from filesystem.
-     *
-     * @param[in] fs                    Filesystem
-     * @param[in] spriteSheetFileName   Name of the sprite sheet file in the filesystem
-     * @param[in] textureFileName       Name of the texture image file in the filesystem
-     *
-     * @return If successful loaded it will return true otherwise false.
+     * Set the horizontal alignment.
+     * 
+     * @param[in] align The horizontal aligment.
      */
-    bool loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName);
+    void setHorizontalAlignment(Alignment::Horizontal align)
+    {
+        m_hAlign = align;
+        alignWidget();
+    }
 
     /**
-     * Get the animation control flag FORWARD of a sprite sheet.
+     * Set the vertical alignment.
      * 
-     * @return If forward, it will return true otherwise false.
+     * @param[in] align The vertical aligment.
      */
-    bool isSpriteSheetForward() const;
+    void setVerticalAlignment(Alignment::Vertical align)
+    {
+        m_vAlign = align;
+        alignWidget();
+    }
 
     /**
-     * Set the animation control flag FORWARD of a sprite sheet.
+     * Is bitmap widget empty, means no image is shown?
      * 
-     * @param[in] forward The state to be set.
+     * @return If empty, it will return true otherwise false.
      */
-    void setSpriteSheetForward(bool forward);
+    bool isEmpty() const
+    {
+        return IMG_TYPE_NO_IMAGE == m_imgType;
+    }
 
-    /**
-     * Get the animation control flag REPEAT of a sprite sheet.
-     * 
-     * @return If its repeated, it will return true otherwise false.
-     */
-    bool isSpriteSheetRepeatInfinite() const;
-
-    /**
-     * Set the animation control flag REPEAT of a sprite sheet.
-     * 
-     * @param[in] repeat The repeat flat to be set.
-     */
-    void setSpriteSheetRepeatInfinite(bool repeat);
-    
     /** Widget type string */
-    static const char* WIDGET_TYPE;
+    static const char*  WIDGET_TYPE;
+
+    /**
+     * Filename extension of bitmap image file.
+     */
+    static const char*  FILE_EXT_BITMAP;
+
+    /**
+     * Filename extension of GIF image file.
+     */
+    static const char*  FILE_EXT_GIF;
 
 private:
 
-    YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image which is shown if no sprite sheet is loaded. */
-    SpriteSheet         m_spriteSheet;  /**< Sprite sheet for animation with texture. */
-    SimpleTimer         m_timer;        /**< Timer used for sprite sheet. */
-    uint32_t            m_duration;     /**< Duration of one frame in ms. */
+    /**
+     * Supported image types.
+     */
+    enum ImgType
+    {
+        IMG_TYPE_NO_IMAGE = 0,  /**< No image */
+        IMG_TYPE_BMP,           /**< BMP image */
+        IMG_TYPE_GIF            /**< GIF image */
+    };
+
+    ImgType                 m_imgType;      /**< Current image type. */
+    YAGfxDynamicBitmap      m_bitmap;       /**< Bitmap image. */
+    GifImgPlayer            m_gifPlayer;    /**< GIF image player. */
+    Alignment::Horizontal   m_hAlign;       /**< Horizontal alignment. */
+    Alignment::Vertical     m_vAlign;       /**< Vertical alignment. */
+    int16_t                 m_hAlignPosX;   /**< x-coordinate derived from horizontal alignment. */
+    int16_t                 m_vAlignPosY;   /**< y-coordinate derived from vertical alignment. */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -208,33 +253,46 @@ private:
      */
     void paint(YAGfx& gfx) override
     {
-        if (true == m_spriteSheet.isEmpty())
+        if (IMG_TYPE_BMP == m_imgType)
         {
-            gfx.drawBitmap(m_posX, m_posY, m_bitmap);
+            gfx.drawBitmap(m_hAlignPosX, m_vAlignPosY, m_bitmap);
+        }
+        else if (IMG_TYPE_GIF == m_imgType)
+        {
+            (void)m_gifPlayer.play(gfx, m_hAlignPosX, m_vAlignPosY);
         }
         else
         {
-            gfx.drawBitmap(m_posX, m_posY, m_spriteSheet.getFrame());
-
-            /* If timer is not running, start it. */
-            if (false == m_timer.isTimerRunning())
-            {
-                m_timer.start(m_duration);
-            }
-            /* If the timer has a timeout, select next sprite and restart timer. */
-            else if (true == m_timer.isTimeout())
-            {
-                m_spriteSheet.next();
-                m_timer.start(m_duration);
-            }
-            else
-            {
-                /* Nothing to do. */
-                ;
-            }
+            ;
         }
     }
-    
+
+    /**
+     * Align the widget dependend on the bitmap size.
+     * It will adapt the m_hAlignPosX and m_vAlignPosY.
+     */
+    void alignWidget();
+
+    /**
+     * Load BMP image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadBMP(FS& fs, const String& filename);
+
+    /**
+     * Load GIF image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadGIF(FS& fs, const String& filename);
+
 };
 
 /******************************************************************************

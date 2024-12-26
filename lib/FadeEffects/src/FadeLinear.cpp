@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -135,8 +135,8 @@ void FadeLinear::dimBitmap(YAGfxBitmap& bitmap, uint8_t intensity)
 {
     uint16_t    width   = bitmap.getWidth();
     uint16_t    height  = bitmap.getHeight();
-    int16_t     x       = 0;
-    int16_t     y       = 0;
+    int16_t     x;
+    int16_t     y;
 
     for(y = 0; y < height; ++y)
     {

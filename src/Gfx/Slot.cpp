@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,8 @@
 Slot::Slot() :
     m_plugin(nullptr),
     m_duration(DURATION_DEFAULT),
-    m_isLocked(false)
+    m_isLocked(false),
+    m_isDisabled(false)
 {
 }
 
@@ -89,6 +90,11 @@ Slot& Slot::operator=(const Slot& slot)
 }
 
 IPluginMaintenance* Slot::getPlugin()
+{
+    return m_plugin;
+}
+
+const IPluginMaintenance* Slot::getPlugin() const
 {
     return m_plugin;
 }
@@ -145,6 +151,21 @@ void Slot::unlock()
 bool Slot::isLocked() const
 {
     return m_isLocked;
+}
+
+void Slot::enable()
+{
+    m_isDisabled = false;
+}
+
+void Slot::disable()
+{
+    m_isDisabled = true;
+}
+
+bool Slot::isDisabled() const
+{
+    return m_isDisabled;
 }
 
 /******************************************************************************

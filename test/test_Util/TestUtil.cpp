@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -244,6 +244,4 @@ static void testUtil(void)
     TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
     hexStr = "0y5";
     TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
-
-    return;
 }

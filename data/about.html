@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -33,6 +33,7 @@
         <main role="main" class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">About</h1>
+                <h2>General</h2>
                 <p>Author: <a href="https://github.com/BlueAndi">BlueAndi</a></p>
                 <p>Project: <a href="https://github.com/BlueAndi/Pixelix">PIXELIX</a></p>
                 <p>Thanks to all contributors:</p>
@@ -48,29 +49,125 @@
                     <li><a href="https://github.com/nhjschulz">Norbert Schulz</a></li>
                     <li><a href="https://github.com/ddijanic">ddijanic</a></li>
                     <li><a href="https://github.com/captFuture">Chris Tarantl</a></li>
+                    <li><a href="https://github.com/marianomd">Mariano Dupont</a></li>
+                    <li><a href="https://github.com/ryannevell">Ryan Nevell</a></li>
+                    <li><a href="https://www.darc.de/">DG7MGY</a></li>
+                    <li><a href="https://github.com/emmanuel-ferdman">Emmanuel Ferdman</a></li>
                 </ul>
-                <p>Used third party libraries:</p>
-                <ul>
-                    <li><a href="https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino">ESP32 Arduino Framework - Apache-2.0 License</a></li>
-                    <li><a href="https://github.com/Makuna/NeoPixelBus">NeoPixelBus - LGPL-3.0 License</a></li>
-                    <li><a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer - LGPL-2.1 License</a></li>
-                    <li><a href="https://github.com/yubox-node-org/AsyncTCPSock">AsyncTCPSock - LGPL-3.0 License</a></li>
-                    <li><a href="https://arduinojson.org">ArduinoJson - JSON handling - MIT License</a></li>
-                    <li><a href="https://github.com/bblanchon/ArduinoStreamUtils">StreamUtils - MIT License</a></li>
-                    <li><a href="https://getbootstrap.com/">Boostrap - MIT License</a></li>
-                    <li><a href="https://popper.js.org/">POPPER JS - MIT License</a></li>
-                    <li><a href="https://jquery.com/">jQuery - MIT License</a></li>
-                    <li><a href="https://github.com/adafruit/Adafruit_Sensor">A unified sensor abstraction layer. - Apache License 2.0 License</a></li>
-                    <li><a href="https://github.com/adafruit/DHT-sensor-library">An Arduino library for the DHT series of low-cost temperature/humidity sensors. - MIT License</a></li>
-                    <li><a href="https://github.com/Sensirion/arduino-sht">arduino-sht - An Arduino library for reading the SHT3x family of temperature and humidity sensors. - BSD-3-Clause License</a></li>
-                    <li><a href="https://github.com/Bodmer/TFT_eSPI">Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips - Mixed licenses: MIT, BSD, FreeBSD</a></li>
-                    <li><a href="https://github.com/kosme/arduinoFFT">Fast Fourier Transform for Arduino. - GPL 3.0 License</a></li>
-                    <li><a href="https://github.com/muwerk/mufonts">A collection of fonts compatible with Adafruit GFX library. These fonts were developed when creating various samples for mupplet display code. - MIT License</a></li>
-                    <li><a href="https://github.com/Stuk/jszip">A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API. - MIT License</a></li>
-                    <li><a href="https://github.com/Stuk/jszip-utils">A collection of cross-browser utilities to go along with JSZip. - MIT License</a></li>
-                    <li><a href="https://github.com/eligrey/FileSaver.js">FileSaver.js is the solution to saving files on the client-side. - MIT License</a></li>
-                    <li><a href="https://github.com/knolleary/pubsubclient">This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT. - MIT License</a></li>
-                </ul>
+                <h2>Used third party libraries</h2>
+                <div class="table-responsive">
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th>Library</th>
+                                <th>Description</th>
+                                <th>License</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><a href="https://github.com/platformio/platform-espressif32">ESP32 Arduino Framework v2.x.x</a></td>
+                                <td>ESP32 Arduino Framework</td>
+                                <td>Apache-2.0 License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://platformio.org">PlatformIO</a></td>
+                                <td>PlatformIO</td>
+                                <td>Apache-2.0 License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/Makuna/NeoPixelBus">NeoPixelBus</a></td>
+                                <td>NeoPixelBus</td>
+                                <td>LGPL-3.0 License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a></td>
+                                <td>ESPAsyncWebServer</td>
+                                <td>LGPL-2.1 License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/yubox-node-org/AsyncTCPSock">AsyncTCPSock</a></td>
+                                <td>AsyncTCPSock</td>
+                                <td>LGPL-3.0 License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://arduinojson.org">ArduinoJson</a></td>
+                                <td>JSON handling</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/bblanchon/ArduinoStreamUtils">StreamUtils</a></td>
+                                <td>StreamUtils</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://getbootstrap.com/">Boostrap</a></td>
+                                <td>Boostrap</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://popper.js.org/">POPPER JS</a></td>
+                                <td>POPPER JS</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://jquery.com/">jQuery</a></td>
+                                <td>jQuery</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/adafruit/Adafruit_Sensor">Adafruit Sensor</a></td>
+                                <td>A unified sensor abstraction layer</td>
+                                <td>Apache License 2.0 License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/adafruit/DHT-sensor-library">DHT-sensor-library</a></td>
+                                <td>An Arduino library for the DHT series of low-cost temperature/humidity sensors.</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/Sensirion/arduino-sht">arduino-sht</a></td>
+                                <td>An Arduino library for reading the SHT3x family of temperature and humidity sensors.</td>
+                                <td>BSD-3-Clause License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/Bodmer/TFT_eSPI">TFT_eSPI</a></td>
+                                <td>Arduino and PlatformIO IDE compatible TFT library.</td>
+                                <td>Mixed licenses: MIT, BSD, FreeBSD</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/kosme/arduinoFFT">arduinoFFT</a></td>
+                                <td>Fast Fourier Transform for Arduino.</td>
+                                <td>GPL 3.0 License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/muwerk/mufonts">mufonts</a></td>
+                                <td>A collection of fonts compatible with Adafruit GFX library.</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/Stuk/jszip">JSZip</a></td>
+                                <td>A library for creating, reading and editing .zip files with JavaScript.</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/Stuk/jszip-utils">JSZip-utils</a></td>
+                                <td>A collection of cross-browser utilities to go along with JSZip.</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/eligrey/FileSaver.js">FileSaver.js</a></td>
+                                <td>FileSaver.js is the solution to saving files on the client-side.</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/knolleary/pubsubclient">PubSubClient</a></td>
+                                <td>This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT.</td>
+                                <td>MIT License</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
 
@@ -78,13 +175,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>

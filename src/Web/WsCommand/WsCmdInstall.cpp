@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,10 +62,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdInstall::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -73,16 +72,16 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
         String              msg;
-        IPluginMaintenance* plugin  = PluginMgr::getInstance().install(m_pluginName);
+        IPluginMaintenance* plugin  = PluginMgr::getInstance().install(m_pluginName.c_str());
 
         if (nullptr == plugin)
         {
-            sendNegativeResponse(server, client, "\"Plugin not found.\"");
+            sendNegativeResponse(server, clientId, "\"Plugin not found.\"");
         }
         else
         {
@@ -97,7 +96,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             /* Save current installed plugins to persistent memory. */
             PluginMgr::getInstance().save();
 
-            sendResponse(server, client, msg);
+            sendResponse(server, clientId, msg);
         }
     }
 

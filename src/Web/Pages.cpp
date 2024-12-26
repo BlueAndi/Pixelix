@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,14 +33,13 @@
  * Includes
  *****************************************************************************/
 #include "Pages.h"
-#include "HttpStatus.h"
 #include "WebConfig.h"
 #include "Version.h"
 #include "UpdateMgr.h"
 #include "DisplayMgr.h"
 #include "RestApi.h"
 #include "PluginList.h"
-#include "FileSystem.h"
+#include "WiFiUtil.h"
 
 #include <WiFi.h>
 #include <Esp.h>
@@ -50,8 +49,11 @@
 #include <ArduinoJson.h>
 #include <lwip/init.h>
 #include <SettingsService.h>
+#include <FileSystem.h>
+#include <HttpStatus.h>
 
 #include <mbedtls/version.h>
+#include <freertos/task.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -74,20 +76,21 @@ struct TmplKeyWordFunc
     String      (*func)(void);  /**< Function to call */
 };
 
+/**
+ * Single HTML page route.
+ */
+struct HtmlPageRoute
+{
+    const char*                 page;               /**< Page in the filesystem. */
+    WebRequestMethodComposite   reqMethodComposite; /**< Request method composite */
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
 static String tmplPageProcessor(const String& var);
-
-static void aboutPage(AsyncWebServerRequest* request);
-static void debugPage(AsyncWebServerRequest* request);
-static void displayPage(AsyncWebServerRequest* request);
-static void editPage(AsyncWebServerRequest* request);
-static void indexPage(AsyncWebServerRequest* request);
-static void infoPage(AsyncWebServerRequest* request);
-static void settingsPage(AsyncWebServerRequest* request);
-static void updatePage(AsyncWebServerRequest* request);
+static void htmlPage(AsyncWebServerRequest* request);
 static void uploadPage(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 
@@ -109,11 +112,11 @@ namespace tmpl
 /** Firmware binary filename, used for update. */
 static const char*      FIRMWARE_FILENAME               = "firmware.bin";
 
+/** Bootloader binary filename, used for update. */
+static const char*      BOOTLOADER_FILENAME             = "bootloader.bin";
+
 /** Path to the plugin webpages. */
 static const String     PLUGIN_PAGE_PATH                = "/plugins/";
-
-/** SPIFFS limits the max. filename length, which includes the path as well. */
-static const uint32_t   SPIFFS_FILENAME_LENGTH_LIMIT    = 32U;
 
 /** Flag used to signal any kind of file upload error. */
 static bool             gIsUploadError                  = false;
@@ -122,9 +125,10 @@ static bool             gIsUploadError                  = false;
  * List of all used template keywords and the function how to retrieve the information.
  * The list is alphabetic sorted in ascending order.
  */
-static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
+static const TmplKeyWordFunc    gTmplKeyWordToFunc[]    =
 {
     "ARDUINO_IDF_BRANCH",   []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; },
+    "BOOTLOADER_FILENAME",  []() -> String { return BOOTLOADER_FILENAME; },
     "ESP_CHIP_ID",          tmpl::getEspChipId,
     "ESP_CHIP_REV",         []() -> String { return String(ESP.getChipRevision()); },
     "ESP_CPU_FREQ",         []() -> String { return String(ESP.getCpuFreqMHz()); },
@@ -135,6 +139,7 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FLASH_CHIP_MODE",      tmpl::getFlashChipMode,
     "FLASH_CHIP_SIZE",      []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); },
     "FLASH_CHIP_SPEED",     []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); },
+    "FREERTOS_VERSION",     []() -> String { return tskKERNEL_VERSION_NUMBER; },
     "FS_SIZE",              []() -> String { return String(FILESYSTEM.totalBytes()); },
     "FS_SIZE_USED",         []() -> String { return String(FILESYSTEM.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
@@ -148,13 +153,42 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "MAC_ADDR",             []() -> String { return WiFi.macAddress(); },
     "RSSI",                 tmpl::getRSSI,
     "SSID",                 tmpl::getSSID,
-    "SW_BRANCH",            []() -> String { return Version::SOFTWARE_BRANCH; },
-    "SW_REVISION",          []() -> String { return Version::SOFTWARE_REV; },
-    "SW_VERSION",           []() -> String { return Version::SOFTWARE_VER; },
-    "TARGET",               []() -> String { return Version::TARGET; },
+    "SW_BRANCH",            []() -> String { return Version::getSoftwareBranchName(); },
+    "SW_REVISION",          []() -> String { return Version::getSoftwareRevision(); },
+    "SW_VERSION",           []() -> String { return Version::getSoftwareVersion(); },
+    "TARGET",               []() -> String { return Version::getTargetName(); },
     "WS_ENDPOINT",          []() -> String { return WebConfig::WEBSOCKET_PATH; },
     "WS_PORT",              []() -> String { return String(WebConfig::WEBSOCKET_PORT); },
-    "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; }
+    "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; },
+    "DISPLAY_HEIGHT",       []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); },
+    "DISPLAY_WIDTH",        []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); }
+};
+
+/**
+ * Standard HTML page routes.
+ */
+static const HtmlPageRoute  gHtmlPageRoutes[]           =
+{
+    {   "/about.html",      HTTP_GET                },
+    {   "/debug.html",      HTTP_GET                },
+    {   "/display.html",    HTTP_GET                },
+    {   "/edit.html",       HTTP_GET                },
+    {   "/icons.html",      HTTP_GET                },
+    {   "/index.html",      HTTP_GET                },
+    {   "/info.html",       HTTP_GET                },
+    {   "/settings.html",   HTTP_GET | HTTP_POST    },
+    {   "/update.html",     HTTP_GET                }
+};
+
+/**
+ * Static routes to files with enabled cache.
+ */
+static const char*          gStaticRoutesWithCache[]    =
+{
+    "/favicon.png",
+    "/images/",
+    "/js/",
+    "/style/"
 };
 
 /******************************************************************************
@@ -195,25 +229,22 @@ void Pages::init(AsyncWebServer& srv)
         settings.close();
     }
 
-    (void)srv.on("/about.html", HTTP_GET, aboutPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/debug.html", HTTP_GET, debugPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/display.html", HTTP_GET, displayPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/edit.html", HTTP_GET, editPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/index.html", HTTP_GET, indexPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/info.html", HTTP_GET, infoPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.on("/update.html", HTTP_GET, updatePage)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    /* Serve standard HTML pages. */
+    while(UTIL_ARRAY_NUM(gHtmlPageRoutes) > idx)
+    {
+        const HtmlPageRoute& route = gHtmlPageRoutes[idx];
+
+        (void)srv.on(route.page, route.reqMethodComposite, htmlPage)
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+        ++idx;
+    }
+
+    /* Serve HTML pages with upload functionality. */
     (void)srv.on("/upload.html", HTTP_POST, uploadPage, uploadHandler)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
+    /* Redirect root folder access to index.html page. */
     (void)srv.on("/", [](AsyncWebServerRequest* request) {
         if (nullptr != request)
         {
@@ -221,23 +252,26 @@ void Pages::init(AsyncWebServer& srv)
         }
     });
 
-    /* Serve files with static content with disabled cache control. */
+    /* Serve files with volatile content with disabled cache control. */
     (void)srv.serveStatic("/configuration/", FILESYSTEM, "/configuration/")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesystem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    idx = 0U;
+    while(UTIL_ARRAY_NUM(gStaticRoutesWithCache) > idx)
+    {
+        const char* route = gStaticRoutesWithCache[idx];
+
+        (void)srv.serveStatic(route, FILESYSTEM, route, "max-age=3600")
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+        ++idx;
+    }
 
     /* Add one page per plugin. */
+    idx = 0U;
     while(pluginTypeListLength > idx)
     {
         const PluginList::Element*  elem    = &pluginTypeList[idx];
@@ -315,123 +349,18 @@ static String tmplPageProcessor(const String& var)
 }
 
 /**
- * About page, showing the log output on demand.
+ * Standard HTML page with template page processor applied.
  *
  * @param[in] request   HTTP request
  */
-static void aboutPage(AsyncWebServerRequest* request)
+static void htmlPage(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
         return;
     }
 
-    request->send(FILESYSTEM, "/about.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Debug page, showing the log output on demand.
- *
- * @param[in] request   HTTP request
- */
-static void debugPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/debug.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Display page, showing current display content.
- *
- * @param[in] request   HTTP request
- */
-static void displayPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/display.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * File edit page.
- *
- * @param[in] request   HTTP request
- */
-static void editPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Index page on root path ("/").
- *
- * @param[in] request   HTTP request
- */
-static void indexPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/index.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Info page shows general informations.
- *
- * @param[in] request   HTTP request
- */
-static void infoPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/info.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Settings page to show and store settings.
- *
- * @param[in] request   HTTP request
- */
-static void settingsPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/settings.html", "text/html", false, tmplPageProcessor);
-}
-
-/**
- * Page for software update.
- *
- * @param[in] request   HTTP request
- */
-static void updatePage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    request->send(FILESYSTEM, "/update.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, request->url(), "text/html", false, tmplPageProcessor);
 }
 
 /**
@@ -491,30 +420,36 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             LOG_WARNING("Pending upload aborted.");
         }
 
-        /* Upload firmware or filesystem? */
-        int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
-
-        if (U_FLASH == cmd)
+        /* Upload firmware, bootloader or filesystem? */
+        int             cmd             = U_FLASH;
+        AsyncWebHeader* headerXFileSize = nullptr;
+        
+        if (filename == FIRMWARE_FILENAME)
         {
-            AsyncWebHeader* headerXFileSizeFirmware = request->getHeader("X-File-Size-Firmware");
-
-            /* Firmware file size available? */
-            if (nullptr != headerXFileSizeFirmware)
-            {
-                /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
-                (void)Util::strToUInt32(headerXFileSizeFirmware->value(), fileSize);
-            }
+            cmd = U_FLASH;
+            headerXFileSize = request->getHeader("X-File-Size-Firmware");
         }
-        else if (U_SPIFFS == cmd)
+        else if (filename == BOOTLOADER_FILENAME)
         {
-            AsyncWebHeader* headerXFileSizeFilesystem = request->getHeader("X-File-Size-Filesystem");
+            cmd = U_FLASH;
+            headerXFileSize = request->getHeader("X-File-Size-Bootloader");
+        }
+        else if (filename == FILESYSTEM_FILENAME)
+        {
+            cmd = U_SPIFFS;
+            headerXFileSize = request->getHeader("X-File-Size-Filesystem");
+        }
+        else
+        {
+            /* Unknown. */
+            ;
+        }
 
-            /* Firmware file size available? */
-            if (nullptr != headerXFileSizeFilesystem)
-            {
-                /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
-                (void)Util::strToUInt32(headerXFileSizeFilesystem->value(), fileSize);
-            }
+        /* File size available? */
+        if (nullptr != headerXFileSize)
+        {
+            /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
+            (void)Util::strToUInt32(headerXFileSize->value(), fileSize);
         }
 
         if (UPDATE_SIZE_UNKNOWN == fileSize)
@@ -554,7 +489,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         else
         {
             /* Use UpdateMgr to show the user the update status.
-             * Note, the display manager will be completey stopped during this,
+             * Note, the display manager will be completely stopped during this,
              * to avoid artifacts on the display, because of long writes to flash.
              */
             UpdateMgr::getInstance().beginProgress();
@@ -633,18 +568,12 @@ namespace tmpl
      */
     static String getEspChipId()
     {
-        String          result;
-        uint64_t        chipId              = ESP.getEfuseMac();
-        uint32_t        highPart            = (chipId >> 32U) & 0x0000ffffU;
-        uint32_t        lowPart             = (chipId >>  0U) & 0xffffffffU;
-        const size_t    CHIP_ID_STR_SIZE    = 13U;
-        char            chipIdStr[CHIP_ID_STR_SIZE];
+        String chipId;
 
-        (void)snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
+        /* Chip id is the same as the factory programmed wifi MAC address. */
+        WiFiUtil::getChipId(chipId);
 
-        result = chipIdStr;
-
-        return result;
+        return chipId;
     }
 
     /**

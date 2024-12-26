@@ -12,9 +12,15 @@
     "dependencies": [{
         "name": "Common"
     }, {
+        "name": "SPI"
+    }, {
+        "owner": "bodmer",
+        "name": "TFT_eSPI",
+        "version": "~2.5.31"
+    }, {
         "name": "YAGfx"
     }, {
-        "name": "bodmer/TFT_eSPI"
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@
 #include "AudioDrv.h"
 
 #include <Logging.h>
+#include <Board.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,7 +67,16 @@ bool AudioService::start()
     bool        isSuccessful    = true;
     AudioDrv&   audioDrv        = AudioDrv::getInstance();
 
-    if (false == audioDrv.start())
+    if ((IoPin::NC == CONFIG_PIN_I2S_WS) ||
+        (IoPin::NC == CONFIG_PIN_I2S_SC) ||
+        (IoPin::NC == CONFIG_PIN_I2S_DI))
+    {
+        LOG_WARNING("Audio service not supported.");
+        /* Return success to avoid that the program aborts because the
+         * service failed to start.
+         */
+    }
+    else if (false == audioDrv.start())
     {
         LOG_ERROR("Couldn't start the audio driver.");
         isSuccessful = false;

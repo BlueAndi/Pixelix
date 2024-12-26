@@ -7,6 +7,9 @@ file "platformio.ini" as filePlatformio
 package "scripts" {
     file "configure_small.py" as fileConfigureSmall
     file "configure_normal.py" as fileConfigureNormal
+    file "configure_small_hub75.py" as fileConfigureSmallHub75
+    file "configure_small_no_i2s.py" as fileConfigureSmallNoI2s
+    file "configure_small_ulanzi.py" as fileConfigureSmallUlanzi
 }
 
 package "data" as pckgData {
@@ -24,12 +27,39 @@ package "data" as pckgData {
 package "config" as pckgConfig {
     file "configSmall.ini" as fileConfigSmall
     file "configNormal.ini" as fileConfigNormal
+    file "configSmallHub75.ini" as fileConfigSmallHub75
+    file "configSmallNoI2s.ini" as fileConfigSmallNoI2s
+    file "configSmallUlanzi.ini" as fileConfigSmallUlanzi
+
+    note top of fileConfigSmall
+        For development boards with 4 MB flash.
+    end note
+
+    note top of fileConfigNormal
+        For development boards with 8 MB flash or more.
+    end note
+
+    note top of fileConfigSmallHub75
+        For development boards with 4 MB flash with
+        attached HUB75 panel.
+    end note
+
+    note top of fileConfigSmallNoI2s
+        For development boards with 4 MB flash and only
+        one core.
+    end note
+
+    note top of fileConfigSmallUlanzi
+        For the Ulanzi TC001 device, which has only
+        4 MB flash.
+    end note
 }
 
 package "lib" as pckgLib {
 
     package "<plugin-name>Plugin" as pckgLibPlugin {
         file "library.json" as filePluginLibrary
+        file "pixelix.json" <<optional>> as filePixelix
 
         package "src" as pckgLibPluginSrc {
             file "<plugin-name>Plugin.h" as filePluginHeader
@@ -52,15 +82,19 @@ package "src" as src {
     }
 }
 
-fileConfigureSmall .u.> pluginList: <<generate>>
-fileConfigureSmall .u.> pcgkPlugin: <<create>>\n<<copy to>>
-fileConfigureSmall .u.> fileMenu: <<generate>>
+fileConfigureSmall ...> pluginList: <<generate>>
+fileConfigureSmall ...> pcgkPlugin: <<create>>\n<<copy to>>
+fileConfigureSmall ...> fileMenu: <<generate>>
+fileConfigureSmall ......> pckgLibPluginWeb: <<copy from>>
 
-filePlatformio ..> pckgConfig: extra_configs
-filePlatformio .....> fileConfigureSmall: extra_scripts = pre:<script>
+filePlatformio ..> pckgConfig: extra_configs contains a list with all configurations
 
-fileConfigSmall .....> pckgLibPlugin
-fileConfigSmall ...> fileConfigureSmall: extra_scripts = pre:<script>
+fileConfigSmall .....> pckgLibPlugin: lists all used plugins
+fileConfigSmall ....> fileConfigureSmall: extra_scripts = pre:<script>
+fileConfigNormal ....> fileConfigureNormal: extra_scripts = pre:<script>
+fileConfigSmallHub75 ....> fileConfigureSmallHub75: extra_scripts = pre:<script>
+fileConfigSmallNoI2s ....> fileConfigureSmallNoI2s: extra_scripts = pre:<script>
+fileConfigSmallUlanzi ....> fileConfigureSmallUlanzi: extra_scripts = pre:<script>
 
 note top of pckgData
     Contains the data which is generated
@@ -70,14 +104,6 @@ end note
 note top of src
     Everything in the source code folder
     will be automatically compiled in.
-end note
-
-note top of fileConfigSmall
-    For development boards with 4 MB flash.
-end note
-
-note top of fileConfigNormal
-    For development boards with 8 MB flash or more.
 end note
 
 @enduml

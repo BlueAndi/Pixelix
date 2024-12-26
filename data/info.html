@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="Pixelix" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -33,7 +33,7 @@
         <main role="main" class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">Info</h1>
-                <h2 class="mt-1">Software</h2>
+                <h2>Software</h2>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead class="thead-light">
@@ -68,6 +68,10 @@
                                 <td><a href="https://github.com/espressif/esp-idf/tree/~ARDUINO_IDF_BRANCH~">~ARDUINO_IDF_BRANCH~</a></td>
                             </tr>
                             <tr>
+                                <td>freeRTOS Version</td>
+                                <td>~FREERTOS_VERSION~</td>
+                            </tr>
+                            <tr>
                                 <td>LwIP Version</td>
                                 <td>~LWIP_VERSION~</td>
                             </tr>
@@ -78,7 +82,7 @@
                         </tbody>
                     </table>
                 </div>
-                <h3 class="mt-1">Heap</h3>
+                <h3>Heap</h3>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead class="thead-light">
@@ -104,7 +108,7 @@
                     </table>
                 </div>
                 <canvas id="canvasChartHeap" width="240" height="240"></canvas>
-                <h3 class="mt-1">PSRAM</h3>
+                <h3>PSRAM</h3>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead class="thead-light">
@@ -130,7 +134,7 @@
                     </table>
                 </div>
                 <canvas id="canvasChartPsram" width="240" height="240"></canvas>
-                <h2 class="mt-1">MCU</h2>
+                <h2>MCU</h2>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead class="thead-light">
@@ -172,7 +176,7 @@
                         </tbody>
                     </table>
                 </div>
-                <h2 class="mt-1">Network</h2>
+                <h2>Network</h2>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead class="thead-light">
@@ -205,7 +209,7 @@
                         </tbody>
                     </table>
                 </div>
-                <h2 class="mt-1">Filesystem</h2>
+                <h2>Filesystem</h2>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead class="thead-light">
@@ -238,13 +242,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>

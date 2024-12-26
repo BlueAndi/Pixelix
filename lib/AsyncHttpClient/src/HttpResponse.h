@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <WString.h>
-#include <LinkedList.hpp>
+#include <vector>
 
 #include "HttpHeader.h"
 
@@ -184,13 +184,16 @@ public:
 
 private:
 
-    String                      m_httpVersion;  /**< HTTP version */
-    uint16_t                    m_statusCode;   /**< Status code */
-    String                      m_reasonPhrase; /**< Reason phrase */
-    DLinkedList<HttpHeader*>    m_headers;      /**< List of headers */
-    uint8_t*                    m_payload;      /**< Payload */
-    size_t                      m_size;         /**< Payload size in byte */
-    size_t                      m_wrIndex;      /**< Payload write index */
+    /** This type defines a list of HTTP headers. */
+    typedef std::vector<HttpHeader*> ListOfHeaders;
+
+    String          m_httpVersion;  /**< HTTP version */
+    uint16_t        m_statusCode;   /**< Status code */
+    String          m_reasonPhrase; /**< Reason phrase */
+    ListOfHeaders   m_headers;      /**< List of headers */
+    uint8_t*        m_payload;      /**< Payload */
+    size_t          m_size;         /**< Payload size in byte */
+    size_t          m_wrIndex;      /**< Payload write index */
 
     /**
      * Clear headers.

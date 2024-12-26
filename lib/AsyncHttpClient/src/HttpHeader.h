@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -91,6 +91,17 @@ public:
         m_value()
     {
         parse(line);
+    }
+
+    /**
+     * Constructs a header by copying an existing one.
+     * 
+     * @param[in] other The header which to copy.
+     */
+    HttpHeader(const HttpHeader& other) :
+        m_name(other.m_name),
+        m_value(other.m_value)
+    {
     }
 
     /**

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,12 +74,13 @@ size_t Print::write(const char *str)
     if(str == nullptr) {
         return 0;
     }
-    return write((const uint8_t *) str, strlen(str));
+
+    return write(reinterpret_cast<const uint8_t *>(str), strlen(str));
 }
 
 size_t Print::write(const char *buffer, size_t size)
 {
-    return write((const uint8_t *) buffer, size);
+    return write(reinterpret_cast<const uint8_t *>(buffer), size);
 }
 
 size_t Print::print(const String &s)

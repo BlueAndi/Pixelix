@@ -11,6 +11,10 @@
     "license": "MIT",
     "dependencies": [{
         "name": "Plugin"
+    }, {
+        "name": "Utilities"
+    }, {
+        "name": "Views"
     }],
     "frameworks": "*",
     "platforms": "*"

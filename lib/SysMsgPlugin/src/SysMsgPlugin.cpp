@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,21 +62,7 @@
 
 void SysMsgPlugin::start(uint16_t width, uint16_t height)
 {
-    PLUGIN_NOT_USED(width);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget is left aligned on x-axis and aligned to the center
-     * of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 }
 
 void SysMsgPlugin::stop()
@@ -98,7 +84,7 @@ void SysMsgPlugin::inactive()
      * caused by scrolling feature of the underlying text widget or by the
      * queued system messages.
      */
-    m_textWidget.clear();
+    m_view.clear();
     m_rdIndex = m_wrIndex;
 }
 
@@ -108,8 +94,7 @@ void SysMsgPlugin::update(YAGfx& gfx)
     uint32_t    scrollingCnt        = 0U;
     bool        status              = false;
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_textWidget.update(gfx);
+    m_view.update(gfx);
 
     if (true == m_isSignalEnabled)
     {
@@ -122,7 +107,7 @@ void SysMsgPlugin::update(YAGfx& gfx)
         gfx.drawPixel(xMax, yMax, ColorDef::YELLOW);
     }
 
-    status = m_textWidget.getScrollInfo(isScrollingEnabled, scrollingCnt);
+    status = m_view.getScrollInfo(isScrollingEnabled, scrollingCnt);
 
     /* In initialization phase? */
     if (true == m_isInit)
@@ -157,13 +142,17 @@ void SysMsgPlugin::update(YAGfx& gfx)
     /* Shall scrolling text be shown a specific number of times? */
     else if (0U < m_max)
     {
-        /* Show next message after specific number of times, the text was shown. */
-        if (m_max < scrollingCnt)
+        /* Is the scroll info ready? */
+        if (true == status)
         {
-            /* If no message is available anymore, the plugin will be disabled. */
-            if (false == nextMessage())
+            /* Show next message after specific number of times, the text was shown. */
+            if (m_max < scrollingCnt)
             {
-                disable();
+                /* If no message is available anymore, the plugin will be disabled. */
+                if (false == nextMessage())
+                {
+                    disable();
+                }
             }
         }
     }
@@ -218,7 +207,7 @@ bool SysMsgPlugin::nextMessage()
     {
         SysMsg& sysMsg = m_messages[m_rdIndex];
 
-        m_textWidget.setFormatStr(sysMsg.msg);
+        m_view.setFormatText(sysMsg.msg);
         m_duration  = sysMsg.duration;
         m_max       = sysMsg.max;
         m_isInit    = true;

@@ -1,0 +1,17 @@
+{
+    "name": "Logging",
+    "version": "0.1.0",
+    "description": "Log functionality",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Logging"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

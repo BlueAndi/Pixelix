@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,7 @@
 #include "RestUtil.h"
 #include "SlotList.h"
 #include "ButtonActions.h"
+#include "UpdateMgr.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -101,7 +102,7 @@ public:
      */
     void executeAction(ButtonActionId id)
     {
-        ButtonActions::executeAction(id);
+        ButtonActions::executeAction(id, true);
     }
 
 private:
@@ -114,11 +115,13 @@ private:
 
 static void handleButton(AsyncWebServerRequest* request);
 static void handleFadeEffect(AsyncWebServerRequest* request);
+static void getSlotInfo(JsonObject& slot, uint16_t slotId);
 static void handleSlots(AsyncWebServerRequest* request);
 static void handleSlot(AsyncWebServerRequest* request);
 static void handlePluginInstall(AsyncWebServerRequest* request);
 static void handlePluginUninstall(AsyncWebServerRequest* request);
 static void handlePlugins(AsyncWebServerRequest* request);
+static void handleReset(AsyncWebServerRequest* request);
 static void handleSensors(AsyncWebServerRequest* request);
 static void handleSettings(AsyncWebServerRequest* request);
 static void handleSetting(AsyncWebServerRequest* request);
@@ -148,9 +151,6 @@ static const ContentTypeElem    contentTypeTable[] =
     { ".gif",   "image/gif"                 },
     { ".jpg",   "image/jpg"                 },
     { ".ico",   "image/x-icon"              },
-    { ".xml",   "text/xml"                  },
-    { ".pdf",   "application/x-pdf"         },
-    { ".zip",   "application/x-zip"         },
     { ".gz",    "application/x-gzip"        }
 };
 
@@ -179,6 +179,7 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
+    (void)srv.on("/rest/api/v1/reset", handleReset);
     (void)srv.on("/rest/api/v1/sensors", handleSensors);
     (void)srv.on("/rest/api/v1/settings", handleSettings);
     (void)srv.on("/rest/api/v1/setting", handleSetting);
@@ -268,7 +269,6 @@ static void handleButton(AsyncWebServerRequest* request)
             buttonActions.executeAction(actionId);
 
             (void)RestUtil::prepareRspSuccess(jsonDoc);
-            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         } 
     }
 
@@ -295,7 +295,6 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
     if (HTTP_GET == request->method())
     {
         JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
         
         dataObj["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
     }
@@ -305,8 +304,6 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
         DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
         uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
         DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
         DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
 
@@ -319,6 +316,42 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Get slot info in JSON format.
+ * 
+ * @param[out] slot     Slot information
+ * @param[in]  slotId   Slot id
+ */
+static void getSlotInfo(JsonObject& slot, uint16_t slotId)
+{
+    DisplayMgr&         displayMgr  = DisplayMgr::getInstance();
+    uint8_t             stickySlot  = displayMgr.getStickySlot();
+    IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
+    const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
+    uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
+    String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
+    bool                isLocked    = displayMgr.isSlotLocked(slotId);
+    uint32_t            duration    = displayMgr.getSlotDuration(slotId);
+    bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
+
+    slot["name"]        = name;
+    slot["uid"]         = uid;
+    slot["alias"]       = alias;
+
+    if (stickySlot != slotId)
+    {
+        slot["isSticky"] = false;
+    }
+    else
+    {
+        slot["isSticky"] = true;
+    }
+
+    slot["isLocked"]    = isLocked;
+    slot["duration"]    = duration;
+    slot["isDisabled"]  = isDisabled;
 }
 
 /**
@@ -357,32 +390,10 @@ static void handleSlots(AsyncWebServerRequest* request)
         /* Add which plugin's are installed. */
         for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
         {
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked    = displayMgr.isSlotLocked(slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
-            JsonObject          slot        = slotArray.createNestedObject();
+            JsonObject slot = slotArray.createNestedObject();
 
-            slot["name"]        = name;
-            slot["uid"]         = uid;
-            slot["alias"]       = alias;
-
-            if (stickySlot != slotId)
-            {
-                slot["isSticky"] = false;
-            }
-            else
-            {
-                slot["isSticky"] = true;
-            }
-
-            slot["isLocked"]    = isLocked;
-            slot["duration"]    = duration;
+            getSlotInfo(slot, slotId);
         }
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -405,7 +416,8 @@ static void handleSlot(AsyncWebServerRequest* request)
         return;
     }
 
-    if (HTTP_POST != request->method())
+    if ((HTTP_POST != request->method()) &&
+        (HTTP_GET != request->method()))
     {
         RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
         httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
@@ -414,7 +426,7 @@ static void handleSlot(AsyncWebServerRequest* request)
     {
         const char* uriWithSlotId = "/rest/api/v1/display/slot/";
 
-        if (0U == request->url().startsWith(uriWithSlotId))
+        if (false == request->url().startsWith(uriWithSlotId))
         {
             RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
             httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
@@ -430,62 +442,23 @@ static void handleSlot(AsyncWebServerRequest* request)
                 RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
                 httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
             }
-            /* Only activate a slot? */
-            else if (false == request->hasArg("sticky"))
+            /* GET request? */
+            else if (HTTP_GET != request->method())
             {
-                if (false == DisplayMgr::getInstance().activateSlot(slotId))
-                {
-                    RestUtil::prepareRspError(jsonDoc, "Request rejected.");
-                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
-                }
-                else
-                {
-                    JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+                JsonObject dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
-                    UTIL_NOT_USED(dataObj);
-                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-                }
+                getSlotInfo(dataObj, slotId);
             }
-            /* Consider sticky flag. */
+            /* POST request */
             else
             {
-                const String&   stickyFlagStr   = request->arg("sticky");
-                bool            stickyFlag      = false;
+                DisplayMgr& displayMgr = DisplayMgr::getInstance();
 
-                if (stickyFlagStr == "true")
+                /* Activate a slot (no arguments)? */
+                if ((false == request->hasArg("sticky")) &&
+                    (false == request->hasArg("disable")))
                 {
-                    stickyFlag = true;
-                }
-                else if (stickyFlagStr == "false")
-                {
-                    stickyFlag = false;
-                }
-                else
-                {
-                    RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
-                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
-                }
-
-                if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
-                {
-                    if (false == stickyFlag)
-                    {
-                        if (slotId != DisplayMgr::getInstance().getStickySlot())
-                        {
-                            RestUtil::prepareRspError(jsonDoc, "Slot is not sticky.");
-                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
-                        }
-                        else
-                        {
-                            JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
-
-                            DisplayMgr::getInstance().clearSticky();
-
-                            UTIL_NOT_USED(dataObj);
-                            httpStatusCode = HttpStatus::STATUS_CODE_OK;
-                        }
-                    }
-                    else if (false == DisplayMgr::getInstance().setSlotSticky(slotId))
+                    if (false == displayMgr.activateSlot(slotId))
                     {
                         RestUtil::prepareRspError(jsonDoc, "Request rejected.");
                         httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
@@ -495,7 +468,123 @@ static void handleSlot(AsyncWebServerRequest* request)
                         JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
                         UTIL_NOT_USED(dataObj);
-                        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+                    }
+                }
+                /* Arguments are available, check them. */
+                else
+                {
+                    bool isSlotConfigDirty = false;
+
+                    /* Handle sticky flag. */
+                    if (true == request->hasArg("sticky"))
+                    {
+                        const String&   stickyFlagStr   = request->arg("sticky");
+                        bool            stickyFlag      = false;
+
+                        if (stickyFlagStr == "true")
+                        {
+                            stickyFlag = true;
+                        }
+                        else if (stickyFlagStr == "false")
+                        {
+                            stickyFlag = false;
+                        }
+                        else
+                        {
+                            RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
+                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                        }
+
+                        if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                        {
+                            /* Remove sticky flag? */
+                            if (false == stickyFlag)
+                            {
+                                if (slotId != displayMgr.getStickySlot())
+                                {
+                                    RestUtil::prepareRspError(jsonDoc, "Slot is not sticky.");
+                                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                                }
+                                else
+                                {
+                                    displayMgr.clearSticky();
+                                    isSlotConfigDirty = true;
+                                }
+                            }
+                            else if (false == displayMgr.setSlotSticky(slotId))
+                            {
+                                RestUtil::prepareRspError(jsonDoc, "Slot is empty or disabled.");
+                                httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                            }
+                            else
+                            {
+                                /* Sticky flag successful set. */
+                                isSlotConfigDirty = true;
+                            }
+                        }
+                    }
+
+                    /* Handle disable flag. */
+                    if ((HttpStatus::STATUS_CODE_OK == httpStatusCode) &&
+                        (true == request->hasArg("disable")))
+                    {
+                        const String&   disableFlagStr  = request->arg("disable");
+                        bool            disableFlag     = false;
+
+                        if (disableFlagStr == "true")
+                        {
+                            disableFlag = true;
+                        }
+                        else if (disableFlagStr == "false")
+                        {
+                            disableFlag = false;
+                        }
+                        else
+                        {
+                            RestUtil::prepareRspError(jsonDoc, "Invalid disable flag.");
+                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                        }
+
+                        if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                        {
+                            bool slotIsDisabled = displayMgr.isSlotDisabled(slotId);
+
+                            if (slotIsDisabled != disableFlag)
+                            {
+                                /* Enable slot? */
+                                if (false == disableFlag)
+                                {
+                                    displayMgr.enableSlot(slotId);
+                                    isSlotConfigDirty = true;
+                                }
+                                /* Disable slot. */
+                                else
+                                {
+                                    if (false == displayMgr.disableSlot(slotId))
+                                    {
+                                        RestUtil::prepareRspError(jsonDoc, "Slot is sticky.");
+                                        httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                                    }
+                                    else
+                                    {
+                                        isSlotConfigDirty = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                    {
+                        JsonObject dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                        getSlotInfo(dataObj, slotId);
+
+                        if (true == isSlotConfigDirty)
+                        {
+                            /* Ensure that the changes will be available after power-up. */
+                            PluginMgr::getInstance().save();
+                        }
                     }
                 }
             }
@@ -537,8 +626,8 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
         }
         else
         {
-            String              pluginName  = request->arg("name");
-            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName);
+            const String&       pluginName  = request->arg("name");
+            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName.c_str());
 
             /* Plugin not found? */
             if (nullptr == plugin)
@@ -559,7 +648,6 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
                 /* Prepare response */
                 dataObj["slotId"]   = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
                 dataObj["uid"]      = plugin->getUID();
-                httpStatusCode      = HttpStatus::STATUS_CODE_OK;
             }
         }
     }
@@ -615,7 +703,7 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
             }
             else
             {
-                String              pluginName  = request->arg("name");
+                const String&       pluginName  = request->arg("name");
                 IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
                 if (nullptr == plugin)
@@ -644,7 +732,6 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
                     PluginMgr::getInstance().save();
 
                     (void)RestUtil::prepareRspSuccess(jsonDoc);
-                    httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
             }
         }
@@ -689,8 +776,41 @@ static void handlePlugins(AsyncWebServerRequest* request)
             
             ++idx;
         }
+    }
 
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Perform a reset request.
+ * GET \c "/api/v1/reset"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleReset(AsyncWebServerRequest* request)
+{
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        /* To ensure the positive response will be sent. */
+        const uint32_t RESTART_DELAY = 100U; /* ms */
+
+        (void)RestUtil::prepareRspSuccess(jsonDoc);
+
+        UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -759,8 +879,6 @@ static void handleSensors(AsyncWebServerRequest* request)
                 }
             }
         }
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -805,8 +923,6 @@ static void handleSettings(AsyncWebServerRequest* request)
                 (void)settingsArray.add(setting->getKey());
             }
         }
-
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -930,8 +1046,6 @@ static void handleSetting(AsyncWebServerRequest* request)
             }
 
             settings.close();
-
-            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
     }
     else if (HTTP_POST == request->method())
@@ -975,7 +1089,6 @@ static void handleSetting(AsyncWebServerRequest* request)
                 else
                 {
                     (void)RestUtil::prepareRspSuccess(jsonDoc);
-                    httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
 
                 settings.close();
@@ -1249,7 +1362,7 @@ static void handleStatus(AsyncWebServerRequest* request)
     else
     {
         String              ssid;
-        int8_t              rssi            = -100; // dbm
+        int8_t              rssi            = -100; /* [dbm] */
         JsonVariant         dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
         JsonObject          hwObj           = dataObj.createNestedObject("hardware");
         JsonObject          swObj           = dataObj.createNestedObject("software");
@@ -1275,18 +1388,16 @@ static void handleStatus(AsyncWebServerRequest* request)
         hwObj["chipRev"]        = ESP.getChipRevision();
         hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
 
-        swObj["version"]        = Version::SOFTWARE_VER;
-        swObj["revision"]       = Version::SOFTWARE_REV;
+        swObj["version"]        = Version::getSoftwareVersion();
+        swObj["revision"]       = Version::getSoftwareRevision();
         swObj["espSdkVersion"]  = ESP.getSdkVersion();
 
         internalRamObj["heapSize"]      = ESP.getHeapSize();
         internalRamObj["availableHeap"] = ESP.getFreeHeap();
 
         wifiObj["ssid"]         = ssid;
-        wifiObj["rssi"]         = rssi;                             // dBm
-        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); // percent
-
-        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
+        wifiObj["rssi"]         = rssi;                             /* [dbm] */
+        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); /* [%] */
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1427,9 +1538,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        jsonDoc["status"]   = "ok";
-
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        jsonDoc["status"] = "ok";
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1444,7 +1553,6 @@ static void handleFilesystem(AsyncWebServerRequest* request)
  */
 static void handleFileGet(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -1456,9 +1564,8 @@ static void handleFileGet(AsyncWebServerRequest* request)
     if (HTTP_GET != request->method())
     {
         RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-        RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+        RestUtil::sendJsonRsp(request, jsonDoc, HttpStatus::STATUS_CODE_NOT_FOUND);
     }
     else
     {
@@ -1472,9 +1579,8 @@ static void handleFileGet(AsyncWebServerRequest* request)
             errorMsg += path;
 
             RestUtil::prepareRspError(jsonDoc, errorMsg.c_str());
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-            RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+            RestUtil::sendJsonRsp(request, jsonDoc, HttpStatus::STATUS_CODE_NOT_FOUND);
         }
         else
         {
@@ -1535,7 +1641,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
     else
     {
         (void)RestUtil::prepareRspSuccess(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1633,7 +1738,6 @@ static void handleFileDelete(AsyncWebServerRequest* request)
         else
         {
             (void)RestUtil::prepareRspSuccess(jsonDoc);
-            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
     }
 
@@ -1650,10 +1754,10 @@ static void handleFileDelete(AsyncWebServerRequest* request)
  */
 static bool isValidHostname(const String& hostname)
 {
-    bool                isValid         = true;
-    SettingsService&    settings        = SettingsService::getInstance();
-    const size_t    MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
-    const size_t    MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
+    bool                isValid             = true;
+    SettingsService&    settings            = SettingsService::getInstance();
+    const size_t        MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
+    const size_t        MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
 
     if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
         (MAX_HOSTNAME_LENGTH < hostname.length()))
@@ -1662,7 +1766,7 @@ static bool isValidHostname(const String& hostname)
     }
     else
     {
-        uint8_t index = 0;
+        uint8_t index = 0U;
 
         while((true == isValid) && (index < hostname.length()))
         {
@@ -1690,7 +1794,7 @@ static bool isValidHostname(const String& hostname)
             else if ('-' == hostname[index])
             {
                 /* No - at the begin */
-                if (0 == index)
+                if (0U == index)
                 {
                     isValid = false;
                 }

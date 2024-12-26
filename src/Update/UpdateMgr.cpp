@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@
 #include <Display.h>
 #include <SettingsService.h>
 
+#include "Services.h"
 #include "FileSystem.h"
 #include "MyWebServer.h"
 #include "DisplayMgr.h"
@@ -163,8 +164,11 @@ void UpdateMgr::beginProgress()
         /* Stop display manager */
         DisplayMgr::getInstance().end();
 
+        /* Stop services */
+        Services::stopAll();
+
         m_updateIsRunning   = true;
-        m_progress          = UINT8_MAX; // Force update
+        m_progress          = UINT8_MAX; /* Force update. */
         m_textWidget.setFormatStr("Update");
 
         /* Show user update status */
@@ -207,6 +211,9 @@ void UpdateMgr::endProgress()
 {
     if (true == m_isInitialized)
     {
+        /* Start services */
+        Services::startAll();
+
         /* Start display manager */
         if (false == DisplayMgr::getInstance().begin())
         {
@@ -228,12 +235,15 @@ UpdateMgr::UpdateMgr() :
     m_updateIsRunning(false),
     m_progress(0U),
     m_isRestartReq(false),
-    m_textWidget(),
-    m_progressBar(),
+    m_textWidget(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT, 1, 1),
+    m_progressBar(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
     m_timer()
 {
-    /* Move text for a better look. */
-    m_textWidget.move(1, 1);
+    /* Disable fade effect, because the update() method will not be
+     * called periodially but only on update progress change.
+     * Therefore the text widget fade effect won't look good.
+     */
+    m_textWidget.disableFadeEffect();
 }
 
 UpdateMgr::~UpdateMgr()

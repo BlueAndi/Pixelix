@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,9 +44,8 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "IPluginMaintenance.hpp"
-
-#include <LinkedList.hpp>
+#include <IPluginMaintenance.hpp>
+#include <vector>
 
 /******************************************************************************
  * Macros
@@ -91,7 +90,7 @@ public:
      * 
      * @return If successful, it will return the plugin object pointer otherwise nullptr.
      */
-    IPluginMaintenance* createPlugin(const String& name);
+    IPluginMaintenance* createPlugin(const char* name);
 
     /**
      * Create a plugin by name with given UID.
@@ -101,18 +100,21 @@ public:
      * 
      * @return If successful, it will return the plugin object pointer otherwise nullptr.
      */
-    IPluginMaintenance* createPlugin(const String& name, uint16_t uid);
+    IPluginMaintenance* createPlugin(const char* name, uint16_t uid);
 
     /**
      * Destroy plugin object.
      * 
      * @param[in] plugin    The plugin object pointer.
      */
-    void destroyPlugin(IPluginMaintenance* plugin);
+    void destroyPlugin(const IPluginMaintenance* plugin);
 
 private:
 
-    DLinkedList<IPluginMaintenance*>    m_plugins;  /**< List with all produced plugin objects. */
+    /** List of plugins type. */
+    typedef std::vector<IPluginMaintenance*> ListOfPlugins;
+
+    ListOfPlugins   m_plugins;  /**< List with all produced plugin objects. */
 
     PluginFactory(const PluginFactory& factory);
     PluginFactory& operator=(const PluginFactory& factory);

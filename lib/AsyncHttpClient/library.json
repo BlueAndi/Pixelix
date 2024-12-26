@@ -10,7 +10,11 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "LinkedList"
+        "name": "https://github.com/BlueAndi/AsyncTCPSock"
+    }, {
+        "name": "Os"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

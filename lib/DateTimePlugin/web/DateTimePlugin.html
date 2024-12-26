@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -39,7 +39,7 @@
                 <p>If date and time are configured, first the time will be shown for half of the slot duration and after it the date.</p>
                 <p>It can be configured to show only the date or only the time as well.</p>
                 <p>Below the day of the week is shown, starting from the left with Monday.</p>
-                <h2 class="mt-1">Date/Time Format</h2>
+                <h2>Date/Time Format</h2>
                 <p>Configure the date and time format in the plugin configuration JSON file. The format itself is according to <a href="https://cplusplus.com/reference/ctime/strftime/" target="_blank">strftime()</a>. For colorization text properties can be added.</p>
                 <ul>
                     <li>%b - Abbreviated month name (3 characters)</li>
@@ -52,11 +52,11 @@
                     <li>%Y - Year</li>
                 </ul>
                 <p>By default the local time (see timezone in the settings) is used. It can be overwritten by the plugin configuration.</p>
-                <h2 class="mt-1">REST API</h2>
-                <h3 class="mt-1">Get configuration about what the plugin shows.</h3>
+                <h2>REST API</h2>
+                <h3>Get configuration about what the plugin shows.</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime</code></pre>
-                <h3 class="mt-1">Set configuration about what the plugin shall show.</h3>
+                <h3>Set configuration about what the plugin shall show.</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
                 <ul>
@@ -70,44 +70,134 @@
                         </ul>
                     </li>
                 </ul>
-                <h2 class="mt-2">Configuration</h2>
-                <h3 class="mt-1">Display</h3>
-                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                    <div class="form-group">
-                        <label for="pluginUid">Plugin UID:</label>
-                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="mode">Display mode:</label>
-                        <select id="mode">
-                            <option value="0">Show date and time.</option>
-                            <option value="1">Show only the date.</option>
-                            <option value="2">Show only the time.</option>
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label for="timeFormat">Time format:</label>
-                        <input type="text" id="timeFormat" name="timeFormat" value="" />    
-                    </div>
-                    <div class="form-group">
-                        <label for="timeFormat">Date format:</label>
-                        <input type="text" id="dateFormat" name="dateFormat" value="" />    
-                    </div>
-                    <div class="form-group">
-                        <label for="timeFormat">Time zone:</label>
-                        <input type="text" id="timeZone" name="timeZone" value="" />    
-                    </div>
-                    <div class="form-group">
-                        <label for="timeFormat">Color of actual day:</label>
-                        <input type="text" id="dayOnColor" name="dayOnColor" value="" />    
-                    </div>
-                    <div class="form-group">
-                        <label for="timeFormat">Color of other days:</label>
-                        <input type="text" id="dayOffColor" name="dayOffColor" value="" />    
-                    </div>                    
-                    <input name="submit" type="submit" value="Update"/>
-                </form>   
+                <h2>Configuration</h2>
+                <h3>Display</h3>
+                <div class="h-100 p-1 p-md-5 bg-body-tertiary border rounded-3">
+                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <div class="form-group">
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="mode">Display mode:</label>
+                            <select class="form-select" id="mode">
+                                <option value="0">Show date and time.</option>
+                                <option value="1">Show only the date.</option>
+                                <option value="2">Show only the time.</option>
+                            </select>    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="timeFormat">Time format:</label>
+                            <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="timeFormat">Date format:</label>
+                            <input class="form-control" type="text" id="dateFormat" name="dateFormat" value="" />    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="timeFormat">Time zone:</label>
+                            <input class="form-control" type="text" id="timeZone" name="timeZone" value="" />    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="startOfWeek">Start of week:</label>
+                            <select class="form-select" id="startOfWeek">
+                                <option value="0">Sunday</option>
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="timeFormat">Color of actual day:</label>
+                            <input class="form-control" type="text" id="dayOnColor" name="dayOnColor" value="" />    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="timeFormat">Color of other days:</label>
+                            <input class="form-control" type="text" id="dayOffColor" name="dayOffColor" value="" />
+                        </div>
+                            <div class="container-fluid mt-3 p-0" id="options64x64" style="Display:none">
+                                <label class="form-label">Additional Options for 64x64 Layouts:</label>
+                                <div class="row mt-2 align-content-center">
+                                    <div class="col-12 col-sm-3 pb-2 pb-sm-0">
+                                        <label class="align-middle" for="viewMode">Clock View Mode:</label>
+                                    </div>
+                                    <div class="col-12 col-sm-9">
+                                        <div class="btn-group" role="group">
+                                            <input type="radio" class="btn-check" id="viewMode0" name="viewMode" value="0" checked />
+                                            <label class="btn btn-outline-secondary" for="viewMode0">Digital</label>
+    
+    
+                                            <input type="radio" class="btn-check" id="viewMode1" name="viewMode" value="1" />
+                                            <label class="btn btn-outline-secondary" for="viewMode1">Analog</label>
+    
+                                            <input type="radio" class="btn-check" id="viewMode2" name="viewMode" value="2" />
+                                            <label class="btn btn-outline-secondary" for="viewMode2">Both</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12 col-sm-3 pb-2 pb-sm-0">
+                                        <label class="align-middle" for="secondsMode">Analog Seconds Visualisation:</label>
+                                    </div>
+                                    <div class="col-12 col-sm-9">
+                                        <div class="btn-group" role="group">
+                                            <input type="radio" class="btn-check" id="secondsMode0" name="secondsMode" value="0" checked />
+                                            <label class="btn btn-outline-secondary" for="secondsMode0">Off</label>
+    
+    
+                                            <input type="radio" class="btn-check" id="secondsMode1" name="secondsMode" value="1" />
+                                            <label class="btn btn-outline-secondary" for="secondsMode1">Clock Hand</label>
+    
+                                            <input type="radio" class="btn-check" id="secondsMode2" name="secondsMode" value="2" />
+                                            <label class="btn btn-outline-secondary" for="secondsMode2">Dial Dots</label>
+                                            
+                                            <input type="radio" class="btn-check" id="secondsMode3" name="secondsMode" value="3" />
+                                            <label class="btn btn-outline-secondary" for="secondsMode3">Dial and Hand</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12 col-sm-3 pb-2 pb-sm-0">
+                                        <label class="align-middle">Hand Colors (H/M/S):</label>
+                                    </div>
+                                    <div class="col-12 col-sm-9">
+                                        <div class="btn-group" role="group">
+                                            <div class="form-group">
+                                                <input type="color" class="form-control form-control-color" id="handHourCol" value="#FFFFFF" title="Hour Hand Color" />
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="color" class="form-control form-control-color" id="handMinCol" value="#808080" title="Minute Hand Color" />
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="color" class="form-control form-control-color" id="handSecCol" value="#FFFF00" title="Second Hand Color" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12 col-sm-3 pb-2 pb-sm-0">
+                                        <label class="align-middle">Ring Colors (5min/Dots):</label>
+                                    </div>
+                                    <div class="col-12 col-sm-9">
+                                        <div class="btn-group" role="group">
+                                            <div class="form-group">
+                                                <input type="color" class="form-control form-control-color" id="ringFiveMinCol" value="#0000FF" title="Five Minute Mark Color" />
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="color" class="form-control form-control-color" id="ringMinDotCol" value="#A9A9A9" title="Minute Ring Dot Color" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input class="btn btn-secondary mt-3" name="submit" type="submit" value="Update" />
+                    </form>
+                </div>
             </div>
         </main>
   
@@ -115,13 +205,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
@@ -183,6 +273,7 @@
 
             function getConfig(pluginUid) {
                 disableUI();
+                
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
@@ -192,8 +283,20 @@
                     $("#timeFormat").val(rsp.data.timeFormat);
                     $("#dateFormat").val(rsp.data.dateFormat);
                     $("#timeZone").val(rsp.data.timeZone);
+                    $("#startOfWeek").val(rsp.data.startOfWeek);
                     $("#dayOnColor").val(rsp.data.dayOnColor);
                     $("#dayOffColor").val(rsp.data.dayOffColor);
+                    $("#viewMode").val(rsp.data.viewMode);
+
+                    if (rsp.data.hasOwnProperty("analogClock")) {
+                        jsonAnalogClock = rsp.data.analogClock;
+                        $("#handHourCol").val(jsonAnalogClock.handHourCol);
+                        $("#handMinCol").val(jsonAnalogClock.handMinCol);
+                        $("#handSecCol").val(jsonAnalogClock.handSecCol);
+                        $("#ringFiveMinCol").val(jsonAnalogClock.ringFiveMinCol);
+                        $("#ringMinDotCol").val(jsonAnalogClock.ringMinDotCol);
+                    }
+
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -203,18 +306,39 @@
 
             function setConfig(pluginUid) {
                 disableUI();
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
-                    isJsonResponse: true,
-                    parameter: {
+
+                let displayWidth = ~DISPLAY_HEIGHT~;
+                let displayHeight = ~DISPLAY_HEIGHT~;
+
+                configJson = {
                         mode: $("#mode").val(),
                         timeFormat: $("#timeFormat").val(),
                         dateFormat: $("#dateFormat").val(),
                         timeZone: $("#timeZone").val(),
+                        startOfWeek: $("#startOfWeek").val(),
                         dayOnColor: $("#dayOnColor").val(),
-                        dayOffColor: $("#dayOffColor").val()
-                    }
+                        dayOffColor: $("#dayOffColor").val(),
+                        viewMode: $('input[name=viewMode]:checked').val()
+                    };
+
+                if ((64 <= ~DISPLAY_HEIGHT~) && (64 <= ~DISPLAY_WIDTH~))
+                {
+                    configJson["analogClock"] = 
+                        {
+                            secondsMode: $('input[name=secondsMode]:checked').val(),
+                            handHourCol: $("#handHourCol").val(),
+                            handMinCol: $("#handMinCol").val(),
+                            handSecCol: $("#handSecCol").val(),
+                            ringFiveMinCol: $("#ringFiveMinCol").val(),
+                            ringMinDotCol: $("#ringMinDotCol").val()
+                        };
+                }
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
+                    isJsonResponse: true,
+                    parameter: configJson
                 }).then(function(rsp) {
                     alert("Ok.");
                 }).catch(function(rsp) {
@@ -232,6 +356,15 @@
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
+
+                let displayWidth = ~DISPLAY_WIDTH~;
+                let displayHeight = ~DISPLAY_HEIGHT~;
+
+                /* Enable extended options for screens >= 64x64. */
+                if ((displayWidth >= 64) && (displayHeight >= 64)) {
+                    let opt64x64 = document.getElementById("options64x64");
+                    opt64x64.style.display  = "block";
+                }
 
                 /* Load all plugin instances. */
                 getPluginInstances().then(function(cnt) {

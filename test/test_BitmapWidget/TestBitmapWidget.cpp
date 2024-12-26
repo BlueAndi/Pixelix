@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -119,12 +119,12 @@ extern void tearDown(void)
  */
 static void testBitmapWidget()
 {
-    const uint16_t BITMAP_WIDTH     = YAGfxTest::HEIGHT;    /* Use height as width here for a square */
-    const uint16_t BITMAP_HEIGHT    = YAGfxTest::HEIGHT;
-    const char*   WIDGET_NAME       = "bmpWidgetName";
+    const uint16_t  BITMAP_WIDTH    = YAGfxTest::HEIGHT;    /* Use height as width here for a square. */
+    const uint16_t  BITMAP_HEIGHT   = YAGfxTest::HEIGHT;
+    const char*     WIDGET_NAME     = "bmpWidgetName";
 
     YAGfxTest                                       testGfx;
-    BitmapWidget                                    bitmapWidget;
+    BitmapWidget                                    bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT);
     YAGfxStaticBitmap<BITMAP_WIDTH, BITMAP_HEIGHT>  bitmap;
 
     int16_t         x               = 0;
@@ -173,7 +173,10 @@ static void testBitmapWidget()
     {
         for(x = 0; x < BITMAP_WIDTH; ++x)
         {
-            TEST_ASSERT_EQUAL_UINT32(bitmap.getColor(x, y), bitmapWidget.get().getColor(x, y));
+            const Color&  bitmapColor = bitmap.getColor(x, y);
+            const Color&  bitmapWidgetColor = bitmapWidget.get().getColor(x, y);
+
+            TEST_ASSERT_EQUAL_UINT32(static_cast<uint32_t>(bitmapColor), static_cast<uint32_t>(bitmapWidgetColor));
         }
     }
 
@@ -185,9 +188,10 @@ static void testBitmapWidget()
     {
         for(x = 0; x < BITMAP_WIDTH; ++x)
         {
-            TEST_ASSERT_EQUAL_UINT16(x + y * BITMAP_WIDTH, displayBuffer[x + y * YAGfxTest::WIDTH]);
+            uint32_t    bitmapColor         = x + y * BITMAP_WIDTH;
+            Color*      displayBufferColor  = &displayBuffer[x + y * YAGfxTest::WIDTH];
+
+            TEST_ASSERT_EQUAL_UINT16(bitmapColor, static_cast<uint32_t>(*displayBufferColor));
         }
     }
-
-    return;
 }
