@@ -72,11 +72,15 @@ const char* MqttApiTopicHandler::MQTT_ENDPOINT_WRITE_ACCESS = "/set";
 void MqttApiTopicHandler::start()
 {
     m_haExtension.start();
+
+    m_isStarted = true;
 }
 
 void MqttApiTopicHandler::stop()
 {
     m_haExtension.stop();
+
+    m_isStarted = false;
 }
 
 void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
@@ -213,44 +217,47 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
 
 void MqttApiTopicHandler::process()
 {
-    MqttService& mqttService = MqttService::getInstance();
-    
-    /* If connection to MQTT broker is the first time established or reconnected,
-     * all topics will be published to be up-to-date.
-     */
-    if ((false == m_isMqttConnected) &&
-        (MqttService::STATE_CONNECTED == mqttService.getState()))
-
+    if (true == m_isStarted)
     {
-        m_isMqttConnected = true;
+        MqttService& mqttService = MqttService::getInstance();
         
-        /* Publish after connection establishment. */
-        requestToPublishAllTopicStates();
-    }
-    else if ((true == m_isMqttConnected) &&
-             (MqttService::STATE_CONNECTED != mqttService.getState()))
-    {
-        m_isMqttConnected = false;
-    }
-    else
-    {
-        ;
-    }
+        /* If connection to MQTT broker is the first time established or reconnected,
+        * all topics will be published to be up-to-date.
+        */
+        if ((false == m_isMqttConnected) &&
+            (MqttService::STATE_CONNECTED == mqttService.getState()))
 
-    if (true == m_isMqttConnected)
-    {
-        /* If necessary, a topic state will be published.
-         *
-         * Don't publish all of them at once, only one per process cycle.
-         * This has the advantage to detect lost MQTT connection, because remember
-         * its cooperative! As long as the MQTT service is not called, no update
-         * about the connection status will appear.
-         */
-        publishTopicStatesOnDemand();
-    }
+        {
+            m_isMqttConnected = true;
+            
+            /* Publish after connection establishment. */
+            requestToPublishAllTopicStates();
+        }
+        else if ((true == m_isMqttConnected) &&
+                (MqttService::STATE_CONNECTED != mqttService.getState()))
+        {
+            m_isMqttConnected = false;
+        }
+        else
+        {
+            ;
+        }
 
-    /* Process Home Assistant extension. */
-    m_haExtension.process(m_isMqttConnected);
+        if (true == m_isMqttConnected)
+        {
+            /* If necessary, a topic state will be published.
+            *
+            * Don't publish all of them at once, only one per process cycle.
+            * This has the advantage to detect lost MQTT connection, because remember
+            * its cooperative! As long as the MQTT service is not called, no update
+            * about the connection status will appear.
+            */
+            publishTopicStatesOnDemand();
+        }
+
+        /* Process Home Assistant extension. */
+        m_haExtension.process(m_isMqttConnected);
+    }
 }
 
 void MqttApiTopicHandler::notify(const String& deviceId, const String& entityId, const String& topic)

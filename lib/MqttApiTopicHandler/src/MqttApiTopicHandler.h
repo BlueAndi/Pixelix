@@ -69,6 +69,7 @@ public:
      */
     MqttApiTopicHandler() :
         ITopicHandler(),
+        m_isStarted(false),
         m_listOfTopicStates(),
         m_isMqttConnected(false),
         m_haExtension()
@@ -169,6 +170,7 @@ private:
     /** MQTT path endpoint for write access. */
     static const char*  MQTT_ENDPOINT_WRITE_ACCESS;
 
+    bool                m_isStarted;            /**< Is the topic handler started? */
     ListOfTopicStates   m_listOfTopicStates;    /**< List of registered topic states. */
     bool                m_isMqttConnected;      /**< Is the MQTT connection to the broker established? */
     HomeAssistantMqtt   m_haExtension;          /**< Home Assistant extension */

@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "ErrorState.h"
 #include "Services.h"
+#include "DisplayMgr.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -41,6 +42,7 @@
 #include <YAFont.h>
 #include <TomThumb.h>
 #include <Board.h>
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -78,6 +80,14 @@ void ErrorState::entry(StateMachine& sm)
     Board::ledOn();
     m_cnt = 0U;
 
+    /* Disconnect wifi connection to avoid any further external request. */
+    (void)WiFi.disconnect();
+
+    /* Stop display manager first, because this will stop the plugin
+     * processing at all.
+     */
+    DisplayMgr::getInstance().end();
+
     /* Any low level error happended and no error message can be shown
      * by the system message handler?
      */
@@ -86,7 +96,7 @@ void ErrorState::entry(StateMachine& sm)
         LOG_INFO("Low level error E%u.", m_errorId);
 
         /* Lets try to show the error cause on the display.
-         * We can not assume that the display manager is still running.
+         * The display manager is not running anymore and didn't run at all.
          * Therefore (re-)initialize the display and try to draw directly.
          */
         if (false == display.begin())

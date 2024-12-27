@@ -122,7 +122,11 @@ bool MqttService::start()
 
 void MqttService::stop()
 {
-    SettingsService& settings = SettingsService::getInstance();
+    SettingsService& settings  = SettingsService::getInstance();
+    String           willTopic = m_hostname + "/status";
+
+    /* Provide offline status */
+    (void)m_mqttClient.publish(willTopic.c_str(), "offline", true);
 
     settings.unregisterSetting(&m_mqttBrokerUrlSetting);
     m_mqttClient.disconnect();
@@ -439,7 +443,7 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
     }
 
     /* Port */
-    idx = m_url.indexOf(":");
+    idx    = m_url.indexOf(":");
 
     m_port = MQTT_PORT;
 

@@ -38,6 +38,8 @@
 #include "UpdateMgr.h"
 #include "FileSystem.h"
 #include "Services.h"
+#include "SensorDataProvider.h"
+#include "PluginMgr.h"
 
 #include <Board.h>
 #include <Display.h>
@@ -76,8 +78,6 @@ void RestartState::entry(StateMachine& sm)
     LOG_INFO("Going in restart state.");
 
     m_timer.start(WAIT_TILL_STOP_SVC);
-
-    Services::stopAll();
 }
 
 void RestartState::process(StateMachine& sm)
@@ -87,18 +87,26 @@ void RestartState::process(StateMachine& sm)
     MyWebServer::process();
     UpdateMgr::getInstance().process();
 
+    /* Wait a certain amount of time, because there may be still some pending tasks, which
+     * need to be finished before the system is restarted.
+     */
     if ((true == m_timer.isTimerRunning()) &&
         (true == m_timer.isTimeout()))
     {
-        /* Stop all servers */
-        MyWebServer::end();
-        UpdateMgr::getInstance().end();
-        MDNS.end();
+        /* Notes:
+         * - The wifi connection is required for a successful topic purge (MQTT).
+         * - The order of the shutdown is important and their dependencies shall be considered.
+         */
 
-        /* Unmount filesystem */
-        FILESYSTEM.end();
+        /* Purge sensor topics (MQTT) and remove REST API endpoints. */
+        SensorDataProvider::getInstance().end();
 
-        /* Stop display manager */
+        /* Unregister all plugins, which will purge all of their topics (MQTT) and remove REST API endpoints. */
+        PluginMgr::getInstance().unregisterAllPluginTopics();
+
+        /* Stop display manager first, because this will stop the plugin
+         * processing at all.
+         */
         DisplayMgr::getInstance().end();
 
         /* Clear display */
@@ -111,6 +119,32 @@ void RestartState::process(StateMachine& sm)
             /* Just wait ... */
             ;
         }
+
+        /* Avoid any external update request. */
+        UpdateMgr::getInstance().end();
+
+        /* Stop services.
+         *
+         * Important order (reverse order of start, see config files.):
+         * 1. Audio service, because it will stop the audio processing.
+         * 2. FileMgrService, because it will remove all REST API endpoints.
+         * 3. TopicHandlerService, because it will purge all published MQTT topics and remove all REST API endpoints.
+         * 4. MQTT service, because it will publish a offline status.
+         * 5. SettingsService, because it will save all settings.
+         */
+        Services::stopAll();
+
+        /* Disconnect wifi connection to avoid any further external request. */
+        (void)WiFi.disconnect();
+
+        /* Stop webserver. */
+        MyWebServer::end();
+
+        /* Stop DNS. */
+        MDNS.end();
+
+        /* Unmount filesystem at the end. */
+        FILESYSTEM.end();
 
         /* Reset */
         Board::reset();
