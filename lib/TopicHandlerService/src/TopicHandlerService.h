@@ -117,13 +117,13 @@ public:
      * @param[in] deviceId          The device id which represents the physical device.
      * @param[in] entityId          The entity id which represents the entity of the device.
      * @param[in] topic             The topic which to register.
-     * @param[in] extra             Extra JSON parameters for concrete topic handlers, which are pushed through.
+     * @param[in] jsonExtra         Extra JSON parameters for concrete topic handlers, which are pushed through.
      * @param[in] getTopicFunc      Function which is called to read the topic.
      * @param[in] hasChangedFunc    Function which is periodically called to check whether the topic has changed.
      * @param[in] setTopicFunc      Function which is called to set the topic.
      * @param[in] uploadReqFunc     Function which is called to accept a file upload or not.
      */
-    void registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc);
+    void registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& jsonExtra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc);
 
     /**
      * Unregister a topic.
@@ -194,6 +194,7 @@ private:
      */
     typedef std::vector<PluginMetaData*>    PluginMetaDataList;
 
+    bool                m_isStarted;            /**< Is the service started? */
     TopicMetaDataList   m_topicMetaDataList;    /**< List of readable topics and the required meta data. */
     PluginMetaDataList  m_pluginMetaDataList;   /**< List of plugins, which topics are handled. */
     SimpleTimer         m_onChangeTimer;        /**< Timer for on change processing period. */
@@ -203,6 +204,7 @@ private:
      */
     TopicHandlerService() :
         IService(),
+        m_isStarted(false),
         m_topicMetaDataList(),
         m_pluginMetaDataList(),
         m_onChangeTimer()

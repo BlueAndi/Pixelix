@@ -265,6 +265,26 @@ public:
      *     }]
      * }
      * 
+     * Homeassistant MQTT discovery support can be added with the "ha" key.
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "ha": {
+     *             <everything here will be used for MQTT discovery>
+     *         }
+     *     }]
+     * }
+     * 
+     * Additional information can be loaded from a file too. It will be appended
+     * to the topic data (parallel to "name" and "access"). If a file is used,
+     * any other key than "name" and "access" will be ignored.
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "fileName": "haText.json"
+     *    }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;

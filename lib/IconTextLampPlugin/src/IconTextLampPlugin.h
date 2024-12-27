@@ -83,7 +83,7 @@ public:
         m_mutex(),
         m_hasTopicTextChanged(false),
         m_hasTopicLampsChanged(false),
-        m_hasTopicLampChanged{false, false, false, false}
+        m_hasTopicLampChanged{ false, false, false, false }
     {
         (void)m_mutex.create();
     }
@@ -106,27 +106,27 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)IconTextLampPlugin(name, uid);
+        return new (std::nothrow) IconTextLampPlugin(name, uid);
     }
 
     /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
-     * 
+     *
      * Example:
      * {
      *     "topics": [
      *         "/text"
      *     ]
      * }
-     * 
+     *
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
      * values:
      * - Only readable: "r"
      * - Only writeable: "w"
      * - Readable and writeable: "rw"
-     * 
+     *
      * Example:
      * {
      *     "topics": [{
@@ -134,7 +134,27 @@ public:
      *         "access": "r"
      *     }]
      * }
-     * 
+     *
+     * Homeassistant MQTT discovery support can be added with the "ha" key.
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "ha": {
+     *             <everything here will be used for MQTT discovery>
+     *         }
+     *     }]
+     * }
+     *
+     * Additional information can be loaded from a file too. It will be appended
+     * to the topic data (parallel to "name" and "access"). If a file is used,
+     * any other key than "name" and "access" will be ignored.
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "fileName": "haText.json"
+     *    }]
+     * }
+     *
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -142,10 +162,10 @@ public:
     /**
      * Get a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[out]  value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool getTopic(const String& topic, JsonObject& value) const final;
@@ -153,10 +173,10 @@ public:
     /**
      * Set a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[in]   value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObjectConst& value) final;
@@ -165,9 +185,9 @@ public:
      * Is the topic content changed since last time?
      * Every readable volatile topic shall support this. Otherwise the topic
      * handlers might not be able to provide updated information.
-     * 
+     *
      * @param[in] topic The topic which to check.
-     * 
+     *
      * @return If the topic content changed since last time, it will return true otherwise false.
      */
     bool hasTopicChanged(const String& topic) final;
@@ -176,17 +196,17 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
-    
+
     /**
      * Stop the plugin. This is called only once during plugin lifetime.
      */
@@ -202,7 +222,7 @@ public:
 
     /**
      * Get text.
-     * 
+     *
      * @return Formatted text
      */
     String getText() const;
@@ -227,7 +247,7 @@ public:
 
     /**
      * Clear icon from view and remove it from filesytem.
-     * 
+     *
      * @param[in] storeFlag Store the text persistent or not.
      */
     void clearIcon(bool storeFlag);
@@ -235,9 +255,9 @@ public:
 
     /**
      * Get lamp state (true = on / false = off).
-     * 
+     *
      * @param[in] lampId    Lamp id
-     * 
+     *
      * @return Lamp state
      */
     bool getLamp(uint8_t lampId) const;
@@ -255,31 +275,35 @@ private:
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*      TOPIC_TEXT;
+    static const char* TOPIC_TEXT;
+
+    /**
+     * Filename for the plugin topic extra info, used for Home Assistant integration.
+     */
+    static const char* TOPIC_TEXT_EXTRA_FILE_NAME;
 
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*      TOPIC_LAMPS;
+    static const char* TOPIC_LAMPS;
 
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*      TOPIC_LAMP;
+    static const char*        TOPIC_LAMP;
 
-
-    _IconTextLampPlugin::View   m_view;                 /**< View with all widgets. */
-    FileMgrService::FileId      m_iconFileId;           /**< Icon file id, used to retrieve the full path to the icon from the file manager. */
-    String                      m_formatTextStored;     /**< It contains the format text, which is persistent stored. */
-    FileMgrService::FileId      m_iconFileIdStored;     /**< Icon file id, which is persistent stored. */
-    mutable MutexRecursive      m_mutex;                /**< Mutex to protect against concurrent access. */
-    bool                        m_hasTopicTextChanged;  /**< Has the topic text content changed? Used to notify the TopicHandlerService about changes. */
-    bool                        m_hasTopicLampsChanged; /**< Has the topic lamps content changed? Used to notify the TopicHandlerService about changes. */
-    bool                        m_hasTopicLampChanged[_IconTextLampPlugin::View::MAX_LAMPS];  /**< Has the topic lamp content changed? Used to notify the TopicHandlerService about changes. */
+    _IconTextLampPlugin::View m_view;                                                      /**< View with all widgets. */
+    FileMgrService::FileId    m_iconFileId;                                                /**< Icon file id, used to retrieve the full path to the icon from the file manager. */
+    String                    m_formatTextStored;                                          /**< It contains the format text, which is persistent stored. */
+    FileMgrService::FileId    m_iconFileIdStored;                                          /**< Icon file id, which is persistent stored. */
+    mutable MutexRecursive    m_mutex;                                                     /**< Mutex to protect against concurrent access. */
+    bool                      m_hasTopicTextChanged;                                       /**< Has the topic text content changed? Used to notify the TopicHandlerService about changes. */
+    bool                      m_hasTopicLampsChanged;                                      /**< Has the topic lamps content changed? Used to notify the TopicHandlerService about changes. */
+    bool                      m_hasTopicLampChanged[_IconTextLampPlugin::View::MAX_LAMPS]; /**< Has the topic lamp content changed? Used to notify the TopicHandlerService about changes. */
 
     /**
      * Get actual configuration in JSON.
-     * 
+     *
      * @param[out] cfg  Configuration
      */
     void getActualConfiguration(JsonObject& cfg) const;
@@ -287,25 +311,25 @@ private:
     /**
      * Set actual configuration in JSON.
      * It will not be stored to configuration file.
-     * 
+     *
      * @param[in] cfg   Configuration
-     * 
+     *
      * @return If successful set, it will return true otherwise false.
      */
     bool setActualConfiguration(const JsonObjectConst& jsonCfg);
 
     /**
      * Get persistent configuration in JSON.
-     * 
+     *
      * @param[out] cfg  Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set persistent configuration in JSON.
-     * 
+     *
      * @param[in] cfg   Configuration
-     * 
+     *
      * @return If successful set, it will return true otherwise false.
      */
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
@@ -315,6 +339,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* ICONTEXTLAMPPLUGIN_H */
+#endif /* ICONTEXTLAMPPLUGIN_H */
 
 /** @} */

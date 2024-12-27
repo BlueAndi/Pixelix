@@ -1,0 +1,11 @@
+{
+    "ha": {
+        "component": "text",
+        "discovery": {
+            "name": "MQTT text",
+            "ic": "mdi:form-textbox",
+            "cmd_tpl": "{\"iconText\": \"{{ value }}\" }",
+            "val_tpl": "{{ value_json.iconText }}"
+        }
+    }
+}
