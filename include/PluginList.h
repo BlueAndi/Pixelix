@@ -62,8 +62,8 @@ namespace PluginList
  */
 typedef struct
 {
-    const char*                     name;       /**< Name of plugin type. */
-    IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
+    const char*                    name;       /**< Name of plugin type. */
+    IPluginMaintenance::CreateFunc createFunc; /**< Plugin creation function */
 
 } Element;
 
@@ -73,15 +73,15 @@ typedef struct
 
 /**
  * Get list of provided plugins and their creation function.
- * 
+ *
  * @param[out] length   Length of list.
- * 
+ *
  * @return List of plugins.
  */
 const Element* getList(uint8_t& length);
 
-};
+}; /* namespace PluginList */
 
-#endif  /* PLUGIN_LIST_HPP */
+#endif /* PLUGIN_LIST_HPP */
 
 /** @} */

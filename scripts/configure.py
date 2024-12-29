@@ -62,7 +62,7 @@ def configure(config_full_path, layout):
         topic_handler_list = config_model.get_topic_handler_list()
 
         configure_plugins(plugin_list, layout)
-        configure_services(service_list)
+        configure_services(service_list, layout)
         configure_topic_handlers(topic_handler_list)
 
 ################################################################################

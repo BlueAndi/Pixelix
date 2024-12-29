@@ -303,7 +303,7 @@ def configure_plugins(plugin_list, layout):
         (os.path.exists(_MENU_FULL_PATH) is False) or \
         (os.path.exists(_PLUGIN_LIST_FULL_PATH) is False):
 
-        print("\tGenerating web menu.")
+        print("\tGenerating plugins web menu.")
         _generate_web_menu(_MENU_FULL_PATH, plugin_list)
         print("\tGenerating plugin list.")
         _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, plugin_list)
