@@ -161,16 +161,16 @@ void UpdateMgr::beginProgress()
 {
     if (true == m_isInitialized)
     {
+        /* Stop display manager first, because this will stop the plugin
+         * processing at all.
+         */
+        DisplayMgr::getInstance().end();
+        
         /* Purge sensor topics (MQTT) and remove REST API endpoints. */
         SensorDataProvider::getInstance().end();
 
         /* Unregister all plugins, which will purge all of their topics (MQTT) and remove REST API endpoints. */
         PluginMgr::getInstance().unregisterAllPluginTopics();
-
-        /* Stop display manager first, because this will stop the plugin
-        * processing at all.
-        */
-        DisplayMgr::getInstance().end();
 
         /* Stop services, but keep webserver running! */
         Services::stopAll();
