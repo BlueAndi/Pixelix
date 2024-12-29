@@ -96,6 +96,7 @@ bool DisplayMgr::begin()
     uint16_t         brightness             = 0U;
     uint16_t         minBrightnessHardLimit = 0U;
     uint16_t         maxBrightnessHardLimit = 0U;
+    uint8_t          fadeEffect             = 0U;
     SettingsService& settings               = SettingsService::getInstance();
     BrightnessCtrl&  brightnessCtrl         = BrightnessCtrl::getInstance();
 
@@ -103,11 +104,13 @@ bool DisplayMgr::begin()
     {
         maxSlots          = settings.getMaxSlots().getDefault();
         brightnessPercent = settings.getBrightness().getDefault();
+        fadeEffect        = settings.getFadeEffect().getDefault();
     }
     else
     {
         maxSlots          = settings.getMaxSlots().getValue();
         brightnessPercent = settings.getBrightness().getValue();
+        fadeEffect        = settings.getFadeEffect().getValue();
 
         settings.close();
     }
@@ -124,6 +127,10 @@ bool DisplayMgr::begin()
     brightnessCtrl.init(Display::getInstance(), minBrightnessHardLimit, maxBrightnessHardLimit);
     brightness = (static_cast<uint16_t>(brightnessPercent) * UINT8_MAX) / 100U;
     brightnessCtrl.setBrightness(static_cast<uint8_t>(brightness));
+
+    /* Set fade effect */
+    m_fadeEffectIndex = static_cast<FadeEffect>(fadeEffect);
+    m_fadeEffectUpdate = true;
 
     /* No slots available? */
     if (false == m_slotList.isAvailable())
