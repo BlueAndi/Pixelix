@@ -42,6 +42,7 @@
 #include <stdint.h>
 #include <IService.hpp>
 #include <Mutex.hpp>
+#include <SimpleTimer.hpp>
 
 #include "TimerSetting.h"
 
@@ -94,15 +95,17 @@ public:
 
 private:
 
-    static const uint8_t MAX_TIMER_COUNT = 8U; /**< Maximum number of timer. */
-    static const char*   FILE_NAME;            /**< File name of the timer settings. */
-    static const char*   TOPIC;                /**< Topic for timer settings. */
-    static const char*   ENTITY;               /**< Entity for timer settings. */
+    static const uint32_t PROCESS_PERIOD  = 100U; /**< Process period in ms. */
+    static const uint8_t  MAX_TIMER_COUNT = 8U;   /**< Maximum number of timer. */
+    static const char*    FILE_NAME;              /**< File name of the timer settings. */
+    static const char*    TOPIC;                  /**< Topic for timer settings. */
+    static const char*    ENTITY;                 /**< Entity for timer settings. */
 
-    String               m_deviceId;                  /**< Device id. */
-    TimerSetting         m_settings[MAX_TIMER_COUNT]; /**< Timer settings. */
-    bool                 m_hasSettingsChanged;        /**< Has any timer setting changed since last request? */
-    Mutex                m_mutex;                     /**< Mutex to protect the settings. */
+    String                m_deviceId;                  /**< Device id. */
+    TimerSetting          m_settings[MAX_TIMER_COUNT]; /**< Timer settings. */
+    bool                  m_hasSettingsChanged;        /**< Has any timer setting changed since last request? */
+    Mutex                 m_mutex;                     /**< Mutex to protect the settings. */
+    SimpleTimer           m_processTimer;              /**< Process timer */
 
     TimerService(const TimerService& drv);
     TimerService& operator=(const TimerService& drv);
@@ -115,7 +118,8 @@ private:
         m_deviceId(),
         m_settings(),
         m_hasSettingsChanged(true),
-        m_mutex()
+        m_mutex(),
+        m_processTimer()
     {
     }
 
