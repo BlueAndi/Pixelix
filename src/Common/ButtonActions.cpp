@@ -68,16 +68,16 @@
 
 void ButtonActions::executeAction(ButtonActionId id, bool firstTime)
 {
-    switch(id)
+    switch (id)
     {
     case BUTTON_ACTION_ID_NO_ACTION:
         /* Nothing to do. */
         break;
-    
+
     case BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT:
         nextSlot();
         break;
-    
+
     case BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT:
         previousSlot();
         break;
@@ -125,46 +125,67 @@ void ButtonActions::executeAction(ButtonActionId id, bool firstTime)
 
 void ButtonActions::sweepBrightness()
 {
-    uint8_t brightness = DisplayMgr::getInstance().getBrightness();
+    DisplayMgr& displayMgr             = DisplayMgr::getInstance();
+    uint8_t     brightness             = displayMgr.getBrightness();
+    uint8_t     brightnessSoftLimitMin = 0U;
+    uint8_t     brightnessSoftLimitMax = 0U;
+
+    displayMgr.getBrightnessSoftLimits(brightnessSoftLimitMin, brightnessSoftLimitMax);
 
     if (false == m_incBrightness)
     {
         if (BRIGHTNESS_DELTA > brightness)
         {
-            brightness = 0U;
-
+            brightness      = 0U;
             m_incBrightness = true;
         }
         else
         {
             brightness -= BRIGHTNESS_DELTA;
         }
+
+        /* Consider soft limit. */
+        if (brightnessSoftLimitMin > brightness)
+        {
+            brightness      = brightnessSoftLimitMin;
+            m_incBrightness = true;
+        }
     }
     else
     {
         if ((UINT8_MAX - BRIGHTNESS_DELTA) < brightness)
         {
-            brightness = UINT8_MAX;
-
+            brightness      = UINT8_MAX;
             m_incBrightness = false;
         }
         else
         {
             brightness += BRIGHTNESS_DELTA;
         }
+
+        /* Consider soft limit. */
+        if (brightnessSoftLimitMax < brightness)
+        {
+            brightness      = brightnessSoftLimitMax;
+            m_incBrightness = false;
+        }
     }
 
-    DisplayMgr::getInstance().setBrightness(brightness);
+    displayMgr.setBrightness(brightness);
 }
 
 void ButtonActions::increaseBrightness()
 {
-    uint8_t brightness = DisplayMgr::getInstance().getBrightness();
+    DisplayMgr& displayMgr             = DisplayMgr::getInstance();
+    uint8_t     brightness             = displayMgr.getBrightness();
+    uint8_t     brightnessSoftLimitMin = 0U;
+    uint8_t     brightnessSoftLimitMax = 0U;
+
+    displayMgr.getBrightnessSoftLimits(brightnessSoftLimitMin, brightnessSoftLimitMax);
 
     if ((UINT8_MAX - BRIGHTNESS_DELTA) < brightness)
     {
-        brightness = UINT8_MAX;
-
+        brightness      = UINT8_MAX;
         m_incBrightness = false;
     }
     else
@@ -172,17 +193,26 @@ void ButtonActions::increaseBrightness()
         brightness += BRIGHTNESS_DELTA;
     }
 
-    DisplayMgr::getInstance().setBrightness(brightness);
+    /* Consider soft limit. */
+    if (brightnessSoftLimitMax < brightness)
+    {
+        brightness      = brightnessSoftLimitMax;
+        m_incBrightness = false;
+    }
+
+    displayMgr.setBrightness(brightness);
 }
 
 void ButtonActions::decreaseBrightness()
 {
-    uint8_t brightness = DisplayMgr::getInstance().getBrightness();
+    DisplayMgr& displayMgr             = DisplayMgr::getInstance();
+    uint8_t     brightness             = displayMgr.getBrightness();
+    uint8_t     brightnessSoftLimitMin = 0U;
+    uint8_t     brightnessSoftLimitMax = 0U;
 
     if (BRIGHTNESS_DELTA > brightness)
     {
-        brightness = 0U;
-
+        brightness      = 0U;
         m_incBrightness = true;
     }
     else
@@ -190,7 +220,14 @@ void ButtonActions::decreaseBrightness()
         brightness -= BRIGHTNESS_DELTA;
     }
 
-    DisplayMgr::getInstance().setBrightness(brightness);
+    /* Consider soft limit. */
+    if (brightnessSoftLimitMin > brightness)
+    {
+        brightness      = brightnessSoftLimitMin;
+        m_incBrightness = true;
+    }
+
+    displayMgr.setBrightness(brightness);
 }
 
 void ButtonActions::nextSlot() const
@@ -225,20 +262,20 @@ void ButtonActions::previousSlot() const
 
 void ButtonActions::nextFadeEffect() const
 {
-    DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
-    uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
-    DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
+    DisplayMgr::FadeEffect currentFadeEffect = DisplayMgr::getInstance().getFadeEffect();
+    uint8_t                fadeEffectId      = static_cast<uint8_t>(currentFadeEffect);
+    DisplayMgr::FadeEffect nextFadeEffect    = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
 
     DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
 }
 
 void ButtonActions::showIpAddress() const
 {
-    const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
-    const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
-    String          infoStr                 = "IP: ";
+    const uint32_t DURATION_NON_SCROLLING  = 4000U; /* ms */
+    const uint32_t SCROLLING_REPEAT_NUM    = 2U;
+    String         infoStr                 = "IP: ";
 
-    infoStr += WiFi.localIP().toString();
+    infoStr                               += WiFi.localIP().toString();
     SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 }
 
