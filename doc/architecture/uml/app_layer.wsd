@@ -1,4 +1,4 @@
-@startuml
+@startuml app_layer
 
 skinparam component {
     BackgroundColor<<Arduino>> Lightgreen

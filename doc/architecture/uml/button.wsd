@@ -1,4 +1,4 @@
-@startuml
+@startuml button
 
 title User Button Debouncing\n
 

@@ -1,4 +1,4 @@
-@startuml
+@startuml startup
 
 start
 :Initialize hardware.;

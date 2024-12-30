@@ -1,4 +1,4 @@
-@startuml System State Machine
+@startuml system_state_machine
 
 title System State Machine
 

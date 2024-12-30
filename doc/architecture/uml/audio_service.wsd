@@ -1,4 +1,4 @@
-@startuml
+@startuml audio_service
 
 package "HAL" {
 

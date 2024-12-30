@@ -1,4 +1,4 @@
-@startuml
+@startuml system
 
 title ESP-RGB-LED Matrix
 

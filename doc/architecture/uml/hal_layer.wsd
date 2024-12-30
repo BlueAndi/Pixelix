@@ -1,4 +1,4 @@
-@startuml
+@startuml hal_layer
 
 skinparam component {
     BackgroundColor<<Arduino>> Lightgreen
