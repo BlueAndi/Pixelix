@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Restart
+ * @brief  Ambient light functions
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup sys_states
+ * @addtogroup DISPLAY_MGR
  *
  * @{
  */
 
-#ifndef RESTARTSTATE_H
-#define RESTARTSTATE_H
+#ifndef AMBIENT_LIGHT_H
+#define AMBIENT_LIGHT_H
 
 /******************************************************************************
  * Compile Switches
@@ -44,8 +44,6 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <StateMachine.hpp>
-#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -56,77 +54,52 @@
  *****************************************************************************/
 
 /**
- * System state: Restart
+ * Ambient light functions, based on illuminance, measured by a external sensor.
  */
-class RestartState : public AbstractState
+namespace AmbientLight
 {
-public:
 
-    /**
-     * Get state instance.
-     *
-     * @return State instance
-     */
-    static RestartState& getInstance()
-    {
-        static RestartState instance; /* singleton idiom to force initialization in the first usage. */
-
-        return instance;
-    }
-
-    /**
-     * The entry is called once, a state is entered.
-     *
-     * @param[in] sm    Responsible state machine
-     */
-    void entry(StateMachine& sm) final;
-
-    /**
-     * The process routine is called cyclic, as long as the state is active.
-     *
-     * @param[in] sm    Responsible state machine
-     */
-    void process(StateMachine& sm) final;
-
-    /**
-     * The exit is called once, a state will be left.
-     *
-     * @param[in] sm    Responsible state machine
-     */
-    void exit(StateMachine& sm) final;
-
-private:
-
-    /** Wait timer in ms, after that all services will be stopped. */
-    const uint32_t  WAIT_TILL_STOP_SVC  = 500U;
-
-    /** Wait timer */
-    SimpleTimer m_timer;
-
-    /**
-     * Constructs the state.
-     */
-    RestartState() :
-        m_timer()
-    {
-    }
-
-    /**
-     * Destroys the state.
-     */
-    ~RestartState()
-    {
-    }
-
-    RestartState(const RestartState& state);
-    RestartState& operator=(const RestartState& state);
-
+/**
+ * Ambient light level
+ * Source: https://docs.microsoft.com/de-de/windows-hardware/design/whitepapers/integrating-ambient-light-sensors-with-computers-running-windows-10-creators-update
+ */
+enum AmbientLightLevel
+{
+    AMBIENT_LIGHT_LEVEL_PITCH_BLACK = 0,    /**< Pitch black with 1 Lux */
+    AMBIENT_LIGHT_LEVEL_NIGHT_SKY,          /**< Night sky with 10 Lux */
+    AMBIENT_LIGHT_LEVEL_DARK_ROOM,          /**< Dark room with 50 Lux */
+    AMBIENT_LIGHT_LEVEL_DARK_OVERCAST,      /**< Dark overcast with 500 Lux */
+    AMBIENT_LIGHT_LEVEL_OVERCAST_DAY,       /**< Overcast day with 1000 Lux */
+    AMBIENT_LIGHT_LEVEL_FULL_DAYLIGHT,      /**< Full daylight with 15000 Lux */
+    AMBIENT_LIGHT_LEVEL_FULL_SUNLIGHT,      /**< Full sunlight with more than 15000 Lux */
+    AMBIENT_LIGHT_LEVEL_MAX                 /**< Number of levels */
 };
+
+/**
+ * Calculuate normalized light value in range of 0.0F - 1.0F, which
+ * corresponds from 0 to 100000 lux.
+ *
+ * @param[in] illuminance   Illuminance in lux
+ * 
+ * @return Normalized light value
+ */
+extern float normalizeIlluminance(float illuminance);
+
+/**
+ * Get ambient light level.
+ *
+ * @param[in] illuminance   Illuminance in lux
+ * 
+ * @return Ambient light level
+ */
+extern AmbientLightLevel getAmbientLightLevel(float illuminance);
+
+}
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* RESTARTSTATE_H */
+#endif  /* AMBIENT_LIGHT_H */
 
 /** @} */

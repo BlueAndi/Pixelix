@@ -8,7 +8,7 @@
 * [Purpose](#purpose)
 * [Scope](#scope)
 * [Context](#context)
-* [Deployment](#deployment)
+* [Task Deployment](#task-deployment)
 * [Layers](#layers)
   * [Application](#application)
   * [Services](#services)
@@ -43,7 +43,8 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 
 ![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/context.wsd)
 
-# Deployment
+# Task Deployment
+The diagram shows the task deployment on the esp32 dual core derivates.
 
 ![deployment-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/deployment.wsd)
 

@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Three button controller
+ * @brief  One button controller
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup app
+ * @addtogroup BUTTON_HANDLER
  *
  * @{
  */
 
-#ifndef THREE_BUTTON_CTRL_HPP
-#define THREE_BUTTON_CTRL_HPP
+#ifndef ONE_BUTTON_CTRL_HPP
+#define ONE_BUTTON_CTRL_HPP
 
 /******************************************************************************
  * Includes
@@ -54,14 +54,12 @@
  *****************************************************************************/
 
 /**
- * Used in case three buttons are available to control the application.
+ * Used in case only one button is available to control the application.
  * 
- * @tparam tButtonLeft  Button id of the left button.
- * @tparam tButtonOk    Button id of the ok button.
- * @tparam tButtonRight Button id of the right button.
+ * @tparam tButtonOk    Button id of the single button.
  */
-template < ButtonId tButtonLeft, ButtonId tButtonOk, ButtonId tButtonRight >
-class ThreeButtonCtrl
+template < ButtonId tButtonOk >
+class OneButtonCtrl
 {
 protected:
 
@@ -77,21 +75,9 @@ protected:
     {
         ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
 
-        if (tButtonLeft == buttonId)
-        {
-            action = handleButtonLeftTriggers(triggerCnt);
-        }
-        else if (tButtonOk == buttonId)
+        if (tButtonOk == buttonId)
         {
             action = handleButtonOkTriggers(triggerCnt);
-        }
-        else if (tButtonRight == buttonId)
-        {
-            action = handleButtonRightTriggers(triggerCnt);
-        }
-        else
-        {
-            ;
         }
 
         return action;
@@ -108,53 +94,16 @@ protected:
     {
         ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
 
-        if (tButtonLeft == buttonId)
+        if (tButtonOk == buttonId)
         {
-            action = BUTTON_ACTION_ID_INC_BRIGHTNESS;
-        }
-        else if (tButtonOk == buttonId)
-        {
-            action = BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON;
-        }
-        else if (tButtonRight == buttonId)
-        {
-            action = BUTTON_ACTION_ID_DEC_BRIGHTNESS;
-        }
-        else
-        {
-            ;
+            action = BUTTON_ACTION_ID_SWEEP_BRIGHTNESS;
         }
 
         return action;
     }
 
     /**
-     * Handles short button triggers of the left button.
-     * 
-     * @param[in]   triggerCnt  The number of triggers.
-     * 
-     * @return Returns the action which to execute.
-     */
-    ButtonActionId handleButtonLeftTriggers(uint32_t triggerCnt)
-    {
-        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
-        const ButtonActionId    ACTION_TABLE[]  =
-        {
-            /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
-            /* 1 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT
-        };
-        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
-
-        if (TABLE_NUM_ELEMENTS > triggerCnt)
-        {
-            action = ACTION_TABLE[triggerCnt];
-        }
-
-        return action;
-    }
-
-    /**
-     * Handles short button triggers of the ok button.
+     * Handles short button triggers.
      * 
      * @param[in]   triggerCnt  The number of triggers.
      * 
@@ -166,33 +115,11 @@ protected:
         const ButtonActionId    ACTION_TABLE[]  =
         {
             /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
-            /* 1 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
-            /* 2 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS,
-        };
-        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
-
-        if (TABLE_NUM_ELEMENTS > triggerCnt)
-        {
-            action = ACTION_TABLE[triggerCnt];
-        }
-
-        return action;
-    }
-
-    /**
-     * Handles short button triggers of the right button.
-     * 
-     * @param[in]   triggerCnt  The number of triggers.
-     * 
-     * @return Returns the action which to execute.
-     */
-    ButtonActionId handleButtonRightTriggers(uint32_t triggerCnt)
-    {
-        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
-        const ButtonActionId    ACTION_TABLE[]  =
-        {
-            /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
-            /* 1 */ BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT
+            /* 1 */ BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT,
+            /* 2 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
+            /* 3 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
+            /* 4 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS,
+            /* 5 */ BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON
         };
         const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 
@@ -213,6 +140,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* THREE_BUTTON_CTRL_HPP */
+#endif  /* ONE_BUTTON_CTRL_HPP */
 
 /** @} */

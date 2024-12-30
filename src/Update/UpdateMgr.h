@@ -28,7 +28,7 @@
  * @brief  Update manager
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup update
+ * @addtogroup UPDATE
  *
  * @{
  */

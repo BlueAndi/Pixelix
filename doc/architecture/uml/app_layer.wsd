@@ -1,31 +1,53 @@
 @startuml app_layer
 
-skinparam component {
-    BackgroundColor<<Arduino>> Lightgreen
-    BackgroundColor<<Future>> White
-}
-
 package "Application" as app {
 
-    component "StateMachine" as stateMachine
-    component "DisplayMgr" as displayMgr
-    component "UpdateMgr" as updateMgr
+    component "main" as main <<program-entry>>
 
-    package Plugin
-
-    package "State" as state {
-        component "APState"
-        component "ConnectedState"
-        component "ConnectingState"
-        component "ErrorState"
-        component "IdleState"
-        component "InitState"
-        component "RestartState"
+    package "StateMachine" as stateMachinePckg {
+        component "StateMachine" as stateMachine
+    }
+    
+    package "General" as generalPckg {
+        component "MiniTerminal" as miniTerminal
+        component "MemoryMonitor" as memoryMonitor
     }
 
-    stateMachine ...> state
+    package "ButtonHandler" as buttonHandlerPckg {
+        component "ButtonHandler" as buttonHandler
+    }
 
-    displayMgr ..> Plugin
+    package "DisplayMgr" as displayMgrPckg {
+        component "DisplayMgr" as displayMgr
+    }
+
+    package "Plugin" as pluginPckg {
+        component "PluginMgr" as pluginMgr
+    }
+
+    package "SystemState" as systemStatePckg {
+        component "APState" as apState
+        component "ConnectedState" as connectedState
+        component "ConnectingState" as connectingState
+        component "ErrorState" as errorState
+        component "IdleState" as idleState
+        component "InitState" as initState
+        component "RestartState" as restartState
+    }
+
+    package "Update" as updatePckg {
+        component "UpdateMgr" as updateMgr
+    }
+
+    main --> stateMachine
+    main --> miniTerminal
+    main ---> buttonHandler
+    main --> memoryMonitor
+    stateMachine o---> systemStatePckg
+
+    initState ...> updateMgr: <<use>>
+    connectedState ...> updateMgr: <<use>>
+    restartState ...> updateMgr: <<use>>
 }
 
 @enduml

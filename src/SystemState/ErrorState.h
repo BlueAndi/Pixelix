@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Idle
+ * @brief  System state: Error
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
+ * @addtogroup SYS_STATES
  * 
  * @{
  */
 
-#ifndef IDLESTATE_H
-#define IDLESTATE_H
+#ifndef ERRORSTATE_H
+#define ERRORSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -55,9 +56,9 @@
  *****************************************************************************/
 
 /**
- * System state: Idle
+ * System state: Error
  */
-class IdleState : public AbstractState
+class ErrorState : public AbstractState
 {
 public:
 
@@ -66,9 +67,9 @@ public:
      * 
      * @return State instance
      */
-    static IdleState& getInstance()
+    static ErrorState& getInstance()
     {
-        static IdleState instance; /* singleton idiom to force initialization in the first usage. */
+        static ErrorState instance; /* singleton idiom to force initialization in the first usage. */
 
         return instance;
     }
@@ -94,34 +95,85 @@ public:
      */
     void exit(StateMachine& sm) final;
 
-    /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
+    /**
+     * Low level errors which can happen.
+     * Low level means, it was before the display was initialized and the
+     * display manager, as well as the system message handler, were not
+     * active.
+     */
+    enum ErrorId
+    {
+        ERROR_ID_NO_ERROR = 0,      /**< No error */
+        ERROR_ID_UNKNOWN,           /**< Unknown error */
+        ERROR_ID_TWO_WIRE_ERROR,    /**< Two-wire (I2C) error */
+        ERROR_ID_NO_USER_BUTTON,    /**< User button is not available */
+        ERROR_ID_BAD_FS,            /**< Bad filesystem */
+        ERROR_ID_DISP_MGR,          /**< Display manager error */
+        ERROR_ID_SYS_MSG,           /**< System message handler error */
+        ERROR_ID_UPDATE_MGR,        /**< Update manager error */
+        ERROR_ID_SERVICE            /**< Service error */
+    };
+
+    /**
+     * Set error cause, why this state will be entered.
+     * 
+     * @param[in] errorId   The error id of the root cause.
+     */
+    void setErrorId(ErrorId errorId)
+    {
+        m_errorId = errorId;
+    }
+
+    /**
+     * Get current set error id.
+     * 
+     * @return Error id, which is set.
+     */
+    ErrorId getErrorId() const
+    {
+        return m_errorId;
+    }
 
 private:
+
+    /** Signal lamp on period in ms. */
+    static const uint32_t   BLINK_ON_PERIOD         = 200U;
+
+    /** Signal lamp short off period in ms. */
+    static const uint32_t   BLINK_OFF_SHORT_PERIOD  = 200U;
+
+    /** Signal lamp long off period in ms. */
+    static const uint32_t   BLINK_OFF_LONG_PERIOD   = 1000U;
+
+    ErrorId     m_errorId;  /**< The error cause, why this state is active. */
+    SimpleTimer m_timer;    /**< Timer used for onboard LED signalling. */
+    uint8_t     m_cnt;      /**< Count number of flashes. */
 
     /**
      * Constructs the state.
      */
-    IdleState()
+    ErrorState() :
+        m_errorId(ERROR_ID_NO_ERROR),
+        m_timer(),
+        m_cnt(0U)
     {
     }
 
     /**
      * Destroys the state.
      */
-    ~IdleState()
+    ~ErrorState()
     {
     }
     
-    IdleState(const IdleState& state);
-    IdleState& operator=(const IdleState& state);
-
+    ErrorState(const ErrorState& state);
+    ErrorState& operator=(const ErrorState& state);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* IDLESTATE_H */
+#endif  /* ERRORSTATE_H */
 
 /** @} */

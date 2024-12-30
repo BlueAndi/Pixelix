@@ -28,7 +28,7 @@
  * @brief  Brightness controller
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup DISPLAY_MGR
  *
  * @{
  */

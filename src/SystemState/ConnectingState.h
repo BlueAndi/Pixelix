@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  System state: Connecting
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
+ * @addtogroup SYS_STATES
  * 
  * @{
  */
 
-#ifndef CONNECTEDSTATE_H
-#define CONNECTEDSTATE_H
+#ifndef CONNECTINGSTATE_H
+#define CONNECTINGSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -43,10 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <AsyncHttpClient.h>
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <WString.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -57,9 +57,9 @@
  *****************************************************************************/
 
 /**
- * System state: Connected
+ * System state: Connecting
  */
-class ConnectedState : public AbstractState
+class ConnectingState : public AbstractState
 {
 public:
 
@@ -68,9 +68,9 @@ public:
      * 
      * @return State instance
      */
-    static ConnectedState& getInstance()
+    static ConnectingState& getInstance()
     {
-        static ConnectedState instance; /* singleton idiom to force initialization in the first usage. */
+        static ConnectingState instance; /* singleton idiom to force initialization in the first usage. */
 
         return instance;
     }
@@ -96,46 +96,56 @@ public:
      */
     void exit(StateMachine& sm) final;
 
+    /** Retry delay after a failed connection attempt in ms. */
+    static const uint32_t   RETRY_DELAY             = 30000U;
+
+    /** Standard wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000U;
+
+    /** Short wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
+
 private:
 
-    AsyncHttpClient m_client; /**< Asynchronous HTTP client. */
+    /** Remote wifi SSID */
+    String          m_wifiSSID;
+
+    /** Remote wifi passphrase */
+    String          m_wifiPassphrase;
+
+    /** Timer, used for retry mechanism. */
+    SimpleTimer     m_retryTimer;
+
+    /** Is quiet mode active? Quiet mode no unnecessary system messages on the display. */
+    bool            m_isQuiet;
 
     /**
      * Constructs the state.
      */
-    ConnectedState():
-        m_client()
+    ConnectingState() :
+        m_wifiSSID(),
+        m_wifiPassphrase(),
+        m_retryTimer(),
+        m_isQuiet(false)
     {
-        initHttpClient();
     }
 
     /**
      * Destroys the state.
      */
-    ~ConnectedState()
+    ~ConnectingState()
     {
     }
 
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
+    ConnectingState(const ConnectingState& state);
+    ConnectingState& operator=(const ConnectingState& state);
 
-    /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-    
-    /**
-     * Notify via URL that the system is online.
-     * 
-     * @param[in] pushUrl   Push URL
-     */
-    void pushUrl(const String& pushUrl);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* CONNECTEDSTATE_H */
+#endif  /* CONNECTINGSTATE_H */
 
 /** @} */

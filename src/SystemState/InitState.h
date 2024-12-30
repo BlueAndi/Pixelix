@@ -28,7 +28,7 @@
  * @brief  System state: Init
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup sys_states
+ * @addtogroup SYS_STATES
  *
  * @{
  */

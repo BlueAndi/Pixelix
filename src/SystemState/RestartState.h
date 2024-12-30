@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connecting
+ * @brief  System state: Restart
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup sys_states
- * 
+ *
+ * @addtogroup SYS_STATES
+ *
  * @{
  */
 
-#ifndef CONNECTINGSTATE_H
-#define CONNECTINGSTATE_H
+#ifndef RESTARTSTATE_H
+#define RESTARTSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -45,7 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
-#include <WString.h>
 #include <SimpleTimer.hpp>
 
 /******************************************************************************
@@ -57,88 +56,70 @@
  *****************************************************************************/
 
 /**
- * System state: Connecting
+ * System state: Restart
  */
-class ConnectingState : public AbstractState
+class RestartState : public AbstractState
 {
 public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
-    static ConnectingState& getInstance()
+    static RestartState& getInstance()
     {
-        static ConnectingState instance; /* singleton idiom to force initialization in the first usage. */
+        static RestartState instance; /* singleton idiom to force initialization in the first usage. */
 
         return instance;
     }
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm) final;
 
-    /** Retry delay after a failed connection attempt in ms. */
-    static const uint32_t   RETRY_DELAY             = 30000U;
-
-    /** Standard wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000U;
-
-    /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
-
 private:
 
-    /** Remote wifi SSID */
-    String          m_wifiSSID;
+    /** Wait timer in ms, after that all services will be stopped. */
+    const uint32_t  WAIT_TILL_STOP_SVC  = 500U;
 
-    /** Remote wifi passphrase */
-    String          m_wifiPassphrase;
-
-    /** Timer, used for retry mechanism. */
-    SimpleTimer     m_retryTimer;
-
-    /** Is quiet mode active? Quiet mode no unnecessary system messages on the display. */
-    bool            m_isQuiet;
+    /** Wait timer */
+    SimpleTimer m_timer;
 
     /**
      * Constructs the state.
      */
-    ConnectingState() :
-        m_wifiSSID(),
-        m_wifiPassphrase(),
-        m_retryTimer(),
-        m_isQuiet(false)
+    RestartState() :
+        m_timer()
     {
     }
 
     /**
      * Destroys the state.
      */
-    ~ConnectingState()
+    ~RestartState()
     {
     }
 
-    ConnectingState(const ConnectingState& state);
-    ConnectingState& operator=(const ConnectingState& state);
+    RestartState(const RestartState& state);
+    RestartState& operator=(const RestartState& state);
 
 };
 
@@ -146,6 +127,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CONNECTINGSTATE_H */
+#endif  /* RESTARTSTATE_H */
 
 /** @} */

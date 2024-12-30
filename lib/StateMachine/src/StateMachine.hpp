@@ -28,7 +28,7 @@
  * @brief  Abstract state machine
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup statemachine
+ * @addtogroup STATE_MACHINE
  *
  * @{
  */

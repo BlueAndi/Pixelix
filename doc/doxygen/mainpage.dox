@@ -4,29 +4,55 @@
 Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 <hr>
 
-@defgroup gfx Graphics functions
-The graphics functions containing all kind of widgets and the main display manager,
-as well as the LED matrix controller.
+@defgroup APP_LAYER Application layer
+The application layer.
 @{
 @}
 
-@defgroup hal Hardware abstraction
-The hardware abstraction makes it easier to use internal and external peripherals.
+@defgroup SERVICE_LAYER Service layer
+The service layer.
 @{
 @}
 
-@defgroup statemachine Statemachine
+@defgroup HA_LAYER Hardware abstraction layer
+The hardware abstraction layer.
+@{
+@}
+
+
+@defgroup STATE_MACHINE Statemachine
+@ingroup APP_LAYER
 Generic state machine.
 @{
 @}
 
-@defgroup sys_states System states
+@defgroup SYS_STATES System states
+@ingroup APP_LAYER
 The system states.
 @{
 @}
 
-@defgroup update Update routines
-The over-the-air update rountes.
+@defgroup DISPLAY_MGR Display manager
+@ingroup APP_LAYER
+The display manager.
+@{
+@}
+
+@defgroup BUTTON_HANDLER Button handler
+@ingroup APP_LAYER
+The button handler.
+@{
+@}
+
+@defgroup UPDATE Update routines
+@ingroup APP_LAYER
+The over-the-air update routines.
+@{
+@}
+
+@defgroup gfx Graphics functions
+The graphics functions containing all kind of widgets and the main display manager,
+as well as the LED matrix controller.
 @{
 @}
 

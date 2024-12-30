@@ -28,7 +28,7 @@
  * @brief  Button handler
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup app
+ * @addtogroup BUTTON_HANDLER
  *
  * @{
  */

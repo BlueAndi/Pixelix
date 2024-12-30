@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Error
+ * @brief  System state: Connected
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
+ * @addtogroup SYS_STATES
  * 
  * @{
  */
 
-#ifndef ERRORSTATE_H
-#define ERRORSTATE_H
+#ifndef CONNECTEDSTATE_H
+#define CONNECTEDSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -43,9 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include <AsyncHttpClient.h>
 #include <stdint.h>
 #include <StateMachine.hpp>
-#include <SimpleTimer.hpp>
+#include <WString.h>
 
 /******************************************************************************
  * Macros
@@ -56,9 +57,9 @@
  *****************************************************************************/
 
 /**
- * System state: Error
+ * System state: Connected
  */
-class ErrorState : public AbstractState
+class ConnectedState : public AbstractState
 {
 public:
 
@@ -67,9 +68,9 @@ public:
      * 
      * @return State instance
      */
-    static ErrorState& getInstance()
+    static ConnectedState& getInstance()
     {
-        static ErrorState instance; /* singleton idiom to force initialization in the first usage. */
+        static ConnectedState instance; /* singleton idiom to force initialization in the first usage. */
 
         return instance;
     }
@@ -95,85 +96,46 @@ public:
      */
     void exit(StateMachine& sm) final;
 
-    /**
-     * Low level errors which can happen.
-     * Low level means, it was before the display was initialized and the
-     * display manager, as well as the system message handler, were not
-     * active.
-     */
-    enum ErrorId
-    {
-        ERROR_ID_NO_ERROR = 0,      /**< No error */
-        ERROR_ID_UNKNOWN,           /**< Unknown error */
-        ERROR_ID_TWO_WIRE_ERROR,    /**< Two-wire (I2C) error */
-        ERROR_ID_NO_USER_BUTTON,    /**< User button is not available */
-        ERROR_ID_BAD_FS,            /**< Bad filesystem */
-        ERROR_ID_DISP_MGR,          /**< Display manager error */
-        ERROR_ID_SYS_MSG,           /**< System message handler error */
-        ERROR_ID_UPDATE_MGR,        /**< Update manager error */
-        ERROR_ID_SERVICE            /**< Service error */
-    };
-
-    /**
-     * Set error cause, why this state will be entered.
-     * 
-     * @param[in] errorId   The error id of the root cause.
-     */
-    void setErrorId(ErrorId errorId)
-    {
-        m_errorId = errorId;
-    }
-
-    /**
-     * Get current set error id.
-     * 
-     * @return Error id, which is set.
-     */
-    ErrorId getErrorId() const
-    {
-        return m_errorId;
-    }
-
 private:
 
-    /** Signal lamp on period in ms. */
-    static const uint32_t   BLINK_ON_PERIOD         = 200U;
-
-    /** Signal lamp short off period in ms. */
-    static const uint32_t   BLINK_OFF_SHORT_PERIOD  = 200U;
-
-    /** Signal lamp long off period in ms. */
-    static const uint32_t   BLINK_OFF_LONG_PERIOD   = 1000U;
-
-    ErrorId     m_errorId;  /**< The error cause, why this state is active. */
-    SimpleTimer m_timer;    /**< Timer used for onboard LED signalling. */
-    uint8_t     m_cnt;      /**< Count number of flashes. */
+    AsyncHttpClient m_client; /**< Asynchronous HTTP client. */
 
     /**
      * Constructs the state.
      */
-    ErrorState() :
-        m_errorId(ERROR_ID_NO_ERROR),
-        m_timer(),
-        m_cnt(0U)
+    ConnectedState():
+        m_client()
     {
+        initHttpClient();
     }
 
     /**
      * Destroys the state.
      */
-    ~ErrorState()
+    ~ConnectedState()
     {
     }
+
+    ConnectedState(const ConnectedState& state);
+    ConnectedState& operator=(const ConnectedState& state);
+
+    /**
+     * Register callback function on response reception.
+     */
+    void initHttpClient(void);
     
-    ErrorState(const ErrorState& state);
-    ErrorState& operator=(const ErrorState& state);
+    /**
+     * Notify via URL that the system is online.
+     * 
+     * @param[in] pushUrl   Push URL
+     */
+    void pushUrl(const String& pushUrl);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ERRORSTATE_H */
+#endif  /* CONNECTEDSTATE_H */
 
 /** @} */

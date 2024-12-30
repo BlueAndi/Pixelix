@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  One button controller
+ * @brief  Two button controller
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup app
+ * @addtogroup BUTTON_HANDLER
  *
  * @{
  */
 
-#ifndef ONE_BUTTON_CTRL_HPP
-#define ONE_BUTTON_CTRL_HPP
+#ifndef TWO_BUTTON_CTRL_HPP
+#define TWO_BUTTON_CTRL_HPP
 
 /******************************************************************************
  * Includes
@@ -54,12 +54,13 @@
  *****************************************************************************/
 
 /**
- * Used in case only one button is available to control the application.
+ * Used in case two buttons are available to control the application.
  * 
- * @tparam tButtonOk    Button id of the single button.
+ * @tparam tButtonLeft  Button id of the left button.
+ * @tparam tButtonRight Button id of the right button.
  */
-template < ButtonId tButtonOk >
-class OneButtonCtrl
+template < ButtonId tButtonLeft, ButtonId tButtonRight >
+class TwoButtonCtrl
 {
 protected:
 
@@ -75,9 +76,17 @@ protected:
     {
         ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
 
-        if (tButtonOk == buttonId)
+        if (tButtonLeft == buttonId)
         {
-            action = handleButtonOkTriggers(triggerCnt);
+            action = handleButtonLeftTriggers(triggerCnt);
+        }
+        else if (tButtonRight == buttonId)
+        {
+            action = handleButtonRightTriggers(triggerCnt);
+        }
+        else
+        {
+            ;
         }
 
         return action;
@@ -94,32 +103,64 @@ protected:
     {
         ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
 
-        if (tButtonOk == buttonId)
+        if (tButtonLeft == buttonId)
         {
-            action = BUTTON_ACTION_ID_SWEEP_BRIGHTNESS;
+            action = BUTTON_ACTION_ID_INC_BRIGHTNESS;
+        }
+        else if (tButtonRight == buttonId)
+        {
+            action = BUTTON_ACTION_ID_DEC_BRIGHTNESS;
+        }
+        else
+        {
+            ;
         }
 
         return action;
     }
 
     /**
-     * Handles short button triggers.
+     * Handles short button triggers of the left button.
      * 
      * @param[in]   triggerCnt  The number of triggers.
      * 
      * @return Returns the action which to execute.
      */
-    ButtonActionId handleButtonOkTriggers(uint32_t triggerCnt)
+    ButtonActionId handleButtonLeftTriggers(uint32_t triggerCnt)
+    {
+        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
+        const ButtonActionId    ACTION_TABLE[]  =
+        {
+            /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
+            /* 1 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
+            /* 2 */ BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON
+        };
+        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
+
+        if (TABLE_NUM_ELEMENTS > triggerCnt)
+        {
+            action = ACTION_TABLE[triggerCnt];
+        }
+
+        return action;
+    }
+
+    /**
+     * Handles short button triggers of the right button.
+     * 
+     * @param[in]   triggerCnt  The number of triggers.
+     * 
+     * @return Returns the action which to execute.
+     */
+    ButtonActionId handleButtonRightTriggers(uint32_t triggerCnt)
     {
         ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
         const ButtonActionId    ACTION_TABLE[]  =
         {
             /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
             /* 1 */ BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT,
-            /* 2 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
-            /* 3 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
-            /* 4 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS,
-            /* 5 */ BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON
+            /* 2 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
+            /* 3 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS
         };
         const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 
@@ -140,6 +181,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* ONE_BUTTON_CTRL_HPP */
+#endif  /* TWO_BUTTON_CTRL_HPP */
 
 /** @} */
