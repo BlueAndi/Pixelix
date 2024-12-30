@@ -296,7 +296,10 @@
 
             function updateFadeEffect() {
                 /* Update label accordingly. */
-                if (1 === currentFadeEffect) {
+                if (0 === currentFadeEffect) {
+                    $("#lableFadeEffect").text("None");
+                }
+                else if (1 === currentFadeEffect) {
                     $("#lableFadeEffect").text("Linear");
                 }
                 else if (2 === currentFadeEffect) {
@@ -306,7 +309,7 @@
                     $("#lableFadeEffect").text("MoveY");
                 }
                 else {
-                    $("#lableFadeEffect").text("No fade effect");
+                    $("#lableFadeEffect").text("Unknown");
                 }
             }
 

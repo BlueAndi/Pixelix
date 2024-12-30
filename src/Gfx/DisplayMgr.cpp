@@ -586,7 +586,7 @@ void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
 
     if (FADE_EFFECT_COUNT <= fadeEffect)
     {
-        m_fadeEffectIndex = FADE_EFFECT_LINEAR;
+        m_fadeEffectIndex = FADE_EFFECT_NONE;
     }
     else
     {
@@ -954,53 +954,62 @@ void DisplayMgr::startFadeOut()
 
 void DisplayMgr::fadeInOut(YAGfx& dst)
 {
-    if ((nullptr != m_selectedFrameBuffer) &&
-        (nullptr != m_fadeEffect))
+    if (nullptr != m_selectedFrameBuffer)
     {
-        YAGfxBitmap* prevFb = nullptr;
-
-        /* Determine previous frame buffer */
-        if (m_selectedFrameBuffer == &m_framebuffers[FB_ID_0])
-        {
-            prevFb = &m_framebuffers[FB_ID_1];
-        }
-        else
-        {
-            prevFb = &m_framebuffers[FB_ID_0];
-        }
-
         /* Continuously update the current canvas with its framebuffer. */
         if (nullptr != m_selectedPlugin)
         {
             m_selectedPlugin->update(*m_selectedFrameBuffer);
         }
 
-        /* Handle fading */
-        switch (m_displayFadeState)
+        /* No fade effect? */
+        if (nullptr == m_fadeEffect)
         {
-        /* No fading at all */
-        case FADE_IDLE:
             dst.drawBitmap(0, 0, *m_selectedFrameBuffer);
-            break;
+            m_displayFadeState = FADE_IDLE;
+        }
+        /* Process fade effect. */
+        else
+        {
+            YAGfxBitmap* prevFb = nullptr;
 
-        /* Fade new display content in */
-        case FADE_IN:
-            if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_selectedFrameBuffer))
+            /* Determine previous frame buffer. */
+            if (m_selectedFrameBuffer == &m_framebuffers[FB_ID_0])
             {
-                m_displayFadeState = FADE_IDLE;
+                prevFb = &m_framebuffers[FB_ID_1];
             }
-            break;
-
-        /* Fade old display content out! */
-        case FADE_OUT:
-            if (true == m_fadeEffect->fadeOut(dst, *prevFb, *m_selectedFrameBuffer))
+            else
             {
-                m_displayFadeState = FADE_IN;
+                prevFb = &m_framebuffers[FB_ID_0];
             }
-            break;
 
-        default:
-            break;
+            /* Handle fading */
+            switch (m_displayFadeState)
+            {
+            /* No fading at all */
+            case FADE_IDLE:
+                dst.drawBitmap(0, 0, *m_selectedFrameBuffer);
+                break;
+
+            /* Fade new display content in */
+            case FADE_IN:
+                if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_selectedFrameBuffer))
+                {
+                    m_displayFadeState = FADE_IDLE;
+                }
+                break;
+
+            /* Fade old display content out! */
+            case FADE_OUT:
+                if (true == m_fadeEffect->fadeOut(dst, *prevFb, *m_selectedFrameBuffer))
+                {
+                    m_displayFadeState = FADE_IN;
+                }
+                break;
+
+            default:
+                break;
+            }
         }
     }
 }
@@ -1208,6 +1217,10 @@ void DisplayMgr::process()
     {
         switch (m_fadeEffectIndex)
         {
+        case FADE_EFFECT_NONE:
+            m_fadeEffect = nullptr;
+            break;
+
         case FADE_EFFECT_LINEAR:
             m_fadeEffect = &m_fadeLinearEffect;
             break;
@@ -1222,7 +1235,7 @@ void DisplayMgr::process()
 
         default:
             m_fadeEffect      = nullptr;
-            m_fadeEffectIndex = FADE_EFFECT_NO;
+            m_fadeEffectIndex = FADE_EFFECT_NONE;
             break;
         }
 
