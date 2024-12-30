@@ -121,6 +121,7 @@
 
                     return Promise.all(promises);
                 }).then(function() {
+                    var $block      = null;
                     var $label      = null;
                     var $formGroup  = null;
                     var $formCheck  = null;
@@ -128,6 +129,9 @@
                     var $button     = null;
 
                     for(index = 0; index < data.length; ++index) {
+                        $block      = $("<div>")
+                                    .attr("class", "form-group h-100 p-2 bg-body-tertiary border rounded-3 mt-2");
+
                         $label      = $("<label>")
                                     .attr("for", "setting-" + index)
                                     .attr("class", "form-label")
@@ -203,19 +207,20 @@
                         if (null !== $formCheck) {
                             $formGroup  = $("<div>")
                                 .attr("class", "form-group")
-                                .append($formCheck)
-                                .append($button);
+                                .append($formCheck);
 
                         } else {
 
                             $formGroup  = $("<div>")
                                         .attr("class", "form-group")
                                         .append($label)
-                                        .append($inputField)
-                                        .append($button);
+                                        .append($inputField);
                         }
 
-                        $("#settings").append($formGroup);
+                        $block.append($formGroup);
+                        $block.append($button)
+
+                        $("#settings").append($block);
 
                         /* Reset */
                         $formCheck = null;
