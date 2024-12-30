@@ -247,6 +247,7 @@ def configure_services(service_list, layout):
     """
     # Avoid generation if possible, because it will cause a compilation step.
     is_generation_required = False
+    service_list_web = service_list.copy()
 
     if os.path.isdir(_WEB_DATA_PATH) is False:
         os.mkdir(_WEB_DATA_PATH)
@@ -258,6 +259,7 @@ def configure_services(service_list, layout):
             is_generation_required = True
 
     skip_list = []
+    skip_list_web = []
     for service_name in service_list:
         service_lib_path = _LIB_PATH + "/" + service_name
         service_lib_web_path = service_lib_path + "/web"
@@ -267,7 +269,8 @@ def configure_services(service_list, layout):
             skip_list.append(service_name)
 
         elif os.path.isdir(service_lib_web_path) is False:
-            pass
+            print(f"\tSkipping {service_name}, because {service_lib_web_path} doesn't exist.")
+            skip_list_web.append(service_name)
 
         else:
             data_web_service_path = _WEB_DATA_PATH + "/" + service_name
@@ -324,12 +327,15 @@ def configure_services(service_list, layout):
     for service_name in skip_list:
         service_list.remove(service_name)
 
+    for service_name in skip_list_web:
+        service_list_web.remove(service_name)
+
     if (is_generation_required is True) or \
         (os.path.exists(_MENU_FULL_PATH) is False) or \
         (os.path.exists(_SERVICE_LIST_FULL_PATH) is False):
 
         print("\tGenerating services web menu.")
-        _generate_web_menu(_MENU_FULL_PATH, service_list)
+        _generate_web_menu(_MENU_FULL_PATH, service_list_web)
 
     print("\tGenerating services.")
     _generate_cpp_service(_SERVICE_LIST_FULL_PATH, service_list)
