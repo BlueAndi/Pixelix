@@ -37,7 +37,6 @@
 #include <Logging.h>
 #include <JsonFile.h>
 #include <ClockDrv.h>
-#include <Display.h>
 #include <DisplayMgr.h>
 #include <FileSystem.h>
 #include <TopicHandlerService.h>
@@ -157,13 +156,13 @@ void TimerService::process()
                         {
                             LOG_INFO("Timer %u is switching display on.", idx);
 
-                            Display::getInstance().on();
+                            DisplayMgr::getInstance().displayOn();
                         }
                         else if (TimerSetting::DISPLAY_STATE_OFF == displayState)
                         {
                             LOG_INFO("Timer %u is switching display off.", idx);
 
-                            Display::getInstance().off();
+                            DisplayMgr::getInstance().displayOff();
                         }
                         else
                         {
