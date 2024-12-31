@@ -197,10 +197,14 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v2
 
     - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1.9.5
+      uses: mattnotmitt/doxygen-action@v1.9.8
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'
+
+    - name: Print doxygen warnings
+      if: ${{ failure() }}
+      run: cat ./doc/doxygen/doxygen_warnings.txt
 
   # Deploy release artifacts
   deploy:
