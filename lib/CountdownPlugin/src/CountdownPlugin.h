@@ -108,6 +108,8 @@ public:
          * Assign structure.
          *
          * @param[in] desc  Target day description, which to assign.
+         * 
+         * @return Date data
          */
         DateDMY& operator=(const DateDMY& desc)
         {
@@ -155,6 +157,8 @@ public:
          * Assign structure.
          *
          * @param[in] desc  Target day description, which to assign.
+         * 
+         * @return Target day description
          */
         TargetDayDescription& operator=(const TargetDayDescription& desc)
         {

@@ -100,6 +100,8 @@ public:
      * If sensor is not available or channel index is out of bounds, it will 
      * return nullptr.
      * 
+     * @param[in] index Index of the data channel.
+     * 
      * @return Data channel
      */
     virtual ISensorChannel* getChannel(uint8_t index) = 0;

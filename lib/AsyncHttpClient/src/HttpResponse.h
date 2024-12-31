@@ -170,6 +170,8 @@ public:
      * Get header field value.
      *
      * @param[in] name  Field name
+     * 
+     * @return Field value
      */
     String getHeader(const String& name);
 

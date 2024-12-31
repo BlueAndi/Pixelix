@@ -122,6 +122,8 @@ public:
      * Assign the content of a text widget.
      *
      * @param[in] widget Widget, which to assign
+     * 
+     * @return Text widget
      */
     TextWidget& operator=(const TextWidget& widget);
 

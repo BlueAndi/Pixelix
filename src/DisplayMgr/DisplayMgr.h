@@ -245,6 +245,8 @@ public:
      * If no enabled plugin is in the slot, it will fail.
      *
      * @param[in] slotId    Id of the slot which to activate.
+     * 
+     * @return If successful activated, it will return true otherwise false.
      */
     bool activateSlot(uint8_t slotId);
 
@@ -298,6 +300,8 @@ public:
 
     /**
      * Is slot locked?
+     * 
+     * @param[in] slotId    Slot id
      *
      * @return If slot is locked, it will return true otherwise false.
      */
@@ -323,6 +327,8 @@ public:
 
     /**
      * Is slot disabled?
+     * 
+     * @param[in] slotId    Slot id
      *
      * @return If slot is disabled, it will return true otherwise false.
      */

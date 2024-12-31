@@ -62,6 +62,12 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
+     * @param[in] min       Minimum value
+     * @param[in] max       Maximum value
      */
     KeyValueUInt8(const char* key, const char* name, uint8_t defValue, size_t min, size_t max) :
         KeyValueNumber(key, name, defValue, min, max)
@@ -70,6 +76,13 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] pref      Preferences
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
+     * @param[in] min       Minimum value
+     * @param[in] max       Maximum value
      */
     KeyValueUInt8(Preferences& pref, const char* key, const char* name, uint8_t defValue, size_t min, size_t max) :
         KeyValueNumber(pref, key, name, defValue, min, max)

@@ -116,6 +116,8 @@ public:
      * Assigns a existing bitmap widget.
      *
      * @param[in] widget Bitmap widge, which to assign
+     * 
+     * @return Bitmap widget
      */
     BitmapWidget& operator=(const BitmapWidget& widget);
 

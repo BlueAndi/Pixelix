@@ -108,6 +108,8 @@ public:
      * Copy a simple timer.
      * 
      * @param[in] sTimer    Simple timer, which to copy.
+     * 
+     * @return Simple timer
      */
     SimpleTimer& operator=(const SimpleTimer& sTimer)
     {

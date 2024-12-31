@@ -80,6 +80,8 @@ public:
 
     /**
      * Start the timer service.
+     * 
+     * @return If successful started, it will return true otherwise false.
      */
     bool start() final;
 

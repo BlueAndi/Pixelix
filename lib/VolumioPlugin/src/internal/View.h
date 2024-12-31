@@ -93,6 +93,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     void init(uint16_t width, uint16_t height) final
     {

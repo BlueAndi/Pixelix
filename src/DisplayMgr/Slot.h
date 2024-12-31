@@ -83,6 +83,8 @@ public:
      * Assign a slot.
      *
      * @param[in] slot  The slot which to assign.
+     * 
+     * @return Slot
      */
     Slot& operator=(const Slot& slot);
 

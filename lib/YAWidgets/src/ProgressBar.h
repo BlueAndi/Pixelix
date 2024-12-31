@@ -112,6 +112,8 @@ public:
      * Assign the content of a progress bar widget.
      * 
      * @param[in] widget Widget, which to assign
+     * 
+     * @return Progress bar widget
      */
     ProgressBar& operator=(const ProgressBar& widget)
     {

@@ -113,7 +113,7 @@ public:
     /**
      * Get the view mode (analog, digital or both).
      * 
-     * @return ViewMode 
+     * @return View mode 
      */
     ViewMode getViewMode() const override
     {
@@ -122,6 +122,8 @@ public:
 
     /**
      * Set the view mode (analog, digital or both).
+     * 
+     * @param[in] mode  View mode
      * 
      * @return success or failure
      */

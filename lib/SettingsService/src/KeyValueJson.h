@@ -63,6 +63,12 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
+     * @param[in] min       Minimum string length
+     * @param[in] max       Maximum string length
      */
     KeyValueJson(const char* key, const char* name, const char* defValue, size_t min, size_t max) :
         KeyValue(),
@@ -76,6 +82,13 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] pref      Preferences
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
+     * @param[in] min       Minimum string length
+     * @param[in] max       Maximum string length
      */
     KeyValueJson(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max) :
         KeyValue(pref),

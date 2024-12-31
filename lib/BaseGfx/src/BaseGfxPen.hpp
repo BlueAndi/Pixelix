@@ -156,6 +156,8 @@ protected:
 
     /**
      * Constructs a base graphics pen.
+     * 
+     * @param[in] gfx Base graphics
      */
     BaseGfxPen(BaseGfx<TColor>& gfx) :
         m_gfx(gfx),

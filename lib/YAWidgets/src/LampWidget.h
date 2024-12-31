@@ -102,6 +102,8 @@ public:
      * Assigns the content of another lamp widget.
      *
      * @param[in] widget Lamp widget, which to assign
+     * 
+     * @return Lamp widget
      */
     LampWidget& operator=(const LampWidget& widget)
     {

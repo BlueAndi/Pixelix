@@ -84,6 +84,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     virtual void init(uint16_t width, uint16_t height) = 0;
 
@@ -176,12 +179,14 @@ public:
     /**
      * Get the view mode (analog, digital or both).
      * 
-     * @return ViewMode 
+     * @return View mode 
      */
     virtual ViewMode getViewMode() const = 0;
 
     /**
      * Set the view mode (analog, digital or both).
+     * 
+     * @param[in] mode  View mode
      * 
      * @return bool success of failure 
      */

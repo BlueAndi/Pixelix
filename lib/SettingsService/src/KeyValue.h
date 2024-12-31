@@ -136,6 +136,8 @@ protected:
 
 /**
  * Key value pair with number as value.
+ * 
+ * @tparam T Number type
  */
 template < typename T >
 class KeyValueNumber : public KeyValue
@@ -144,6 +146,12 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
+     * @param[in] min       Minimum value
+     * @param[in] max       Maximum value
      */
     KeyValueNumber(const char* key, const char* name, T defValue, T min, T max) :
         KeyValue(),
@@ -157,6 +165,13 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] pref      Preferences
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
+     * @param[in] min       Minimum value
+     * @param[in] max       Maximum value
      */
     KeyValueNumber(Preferences& pref, const char* key, const char* name, T defValue, T min, T max) :
         KeyValue(pref),

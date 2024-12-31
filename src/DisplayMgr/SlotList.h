@@ -254,6 +254,8 @@ public:
 
     /**
      * Enable slot for scheduling.
+     * 
+     * @param[in] slotId    The id of the slot to enable.
      */
     void enable(uint8_t slotId);
 
@@ -262,12 +264,16 @@ public:
      * 
      * A sticky slot can't be disabled.
      * 
+     * @param[in] slotId    The id of the slot to disable.
+     * 
      * @return If successful, it will return true otherwise false.
      */
     bool disable(uint8_t slotId);
 
     /**
      * Is slot disabled?
+     * 
+     * @param[in] slotId    The id of the slot to check.
      * 
      * @return If slot is disabled, it will return true otherwise false.
      */

@@ -62,6 +62,10 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
      */
     KeyValueBool(const char* key, const char* name, bool defValue) :
         KeyValue(),
@@ -73,6 +77,11 @@ public:
 
     /**
      * Constructs a key value pair.
+     * 
+     * @param[in] pref      Preferences
+     * @param[in] key       Key
+     * @param[in] name      User friendly name
+     * @param[in] defValue  Default value
      */
     KeyValueBool(Preferences& pref, const char* key, const char* name, bool defValue) :
         KeyValue(pref),

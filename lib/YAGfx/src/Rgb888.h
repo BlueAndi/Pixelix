@@ -151,6 +151,8 @@ public:
      * Assign RGB color.
      *
      * @param[in] color Color, which to assign
+     * 
+     * @return RGB Color
      */
     Rgb888& operator=(const Rgb888& color)
     {
