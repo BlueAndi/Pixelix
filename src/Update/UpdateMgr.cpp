@@ -48,6 +48,7 @@
 #include "SensorDataProvider.h"
 #include "TextWidget.h"
 #include "ProgressBar.h"
+#include "Topics.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -161,6 +162,9 @@ void UpdateMgr::beginProgress()
 {
     if (true == m_isInitialized)
     {
+        /* Avoid any external request. */
+        Topics::end();
+
         /* Stop display manager first, because this will stop the plugin
          * processing at all.
          */
@@ -236,7 +240,7 @@ void UpdateMgr::endProgress()
     }
 
     /* Start services again. They are required for a graceful restart. */
-    Services::stopAll();
+    Services::startAll();
 }
 
 /******************************************************************************

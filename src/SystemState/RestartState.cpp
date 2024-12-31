@@ -40,6 +40,7 @@
 #include "Services.h"
 #include "SensorDataProvider.h"
 #include "PluginMgr.h"
+#include "Topics.h"
 
 #include <Board.h>
 #include <Display.h>
@@ -120,8 +121,9 @@ void RestartState::process(StateMachine& sm)
             ;
         }
 
-        /* Avoid any external update request. */
+        /* Avoid any external request. */
         UpdateMgr::getInstance().end();
+        Topics::end();
 
         /* Stop services.
          *

@@ -55,7 +55,7 @@
 #include "JsonFile.h"
 #include "Version.h"
 #include "Services.h"
-#include "WiFiUtil.h"
+#include "Topics.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -65,6 +65,7 @@
 #include <Util.h>
 #include <ESPmDNS.h>
 #include <SettingsService.h>
+#include <WiFiUtil.h>
 
 #include <lwip/init.h>
 
@@ -448,6 +449,9 @@ void InitState::exit(StateMachine& sm)
              * The LwIP stack is initialized with wifiLowLevelInit()!
              */
             MyWebServer::begin();
+
+            /* Register all general topics. */
+            Topics::begin();
         }
     }
 }
