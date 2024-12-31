@@ -28,7 +28,7 @@
  * @brief  Base graphics pen
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

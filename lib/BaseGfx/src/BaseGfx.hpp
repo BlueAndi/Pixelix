@@ -28,7 +28,7 @@
  * @brief  Basic graphics interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

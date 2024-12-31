@@ -27,7 +27,7 @@
 /**
  * @brief  Base class for view with icon and text.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

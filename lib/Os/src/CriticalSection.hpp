@@ -28,7 +28,7 @@
  * @brief  freeRTOS critical section wrapper
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup os
+ * @addtogroup OPERATING_SYSTEM
  *
  * @{
  */

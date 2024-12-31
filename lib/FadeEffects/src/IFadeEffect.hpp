@@ -28,7 +28,7 @@
  * @brief  Basic fade effect interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

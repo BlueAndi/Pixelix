@@ -27,7 +27,7 @@
 /**
  * @brief  Gets Bitcoin USD exchange rate
  * @author Flavio Curti <fcu-github@no-way.org>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

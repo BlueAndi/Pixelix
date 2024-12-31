@@ -28,7 +28,7 @@
  * @brief  WWebsocket command to get/set logging
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

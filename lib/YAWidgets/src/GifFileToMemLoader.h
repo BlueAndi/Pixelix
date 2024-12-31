@@ -28,7 +28,7 @@
  * @brief  GIF file to memory loader
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

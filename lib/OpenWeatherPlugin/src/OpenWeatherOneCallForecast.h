@@ -28,7 +28,7 @@
  * @brief  OpenWeather source for One-Call API to retrieve forecast weather
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

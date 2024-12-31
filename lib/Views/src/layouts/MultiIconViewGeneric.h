@@ -27,7 +27,7 @@
 /**
  * @brief  Generic view with multiple icons for LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

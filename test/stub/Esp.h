@@ -28,7 +28,7 @@
  * @brief  Stub for the ESP.h
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup common
+ * @addtogroup TEST
  *
  * @{
  */

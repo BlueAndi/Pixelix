@@ -27,7 +27,7 @@
 /**
  * @brief  View for 64x64 LED matrix with canvas and text for LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

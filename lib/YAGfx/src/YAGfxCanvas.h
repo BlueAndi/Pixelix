@@ -28,7 +28,7 @@
  * @brief  Yet anoterh GFX bitmap canvas class
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  Distributed Display Protocol server
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

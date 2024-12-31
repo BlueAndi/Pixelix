@@ -28,7 +28,7 @@
  * @brief  Audio driver
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */

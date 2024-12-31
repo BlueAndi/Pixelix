@@ -28,7 +28,7 @@
  * @brief  Websocket command to control the virtual user button
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

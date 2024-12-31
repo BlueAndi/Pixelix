@@ -28,7 +28,7 @@
  * @brief  Logging
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup utilities
+ * @addtogroup UTILITIES
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  Websocket command to get/set plugin alias name
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

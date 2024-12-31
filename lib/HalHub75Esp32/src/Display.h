@@ -28,7 +28,7 @@
  * @brief  HUB75 matrix display
  * @author Mariano Dupont <marianomd@gmail.com>
  *
- * @addtogroup gfx
+ * @addtogroup HAL
  *
  * @{
  */

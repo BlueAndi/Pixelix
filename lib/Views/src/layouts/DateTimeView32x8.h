@@ -27,7 +27,7 @@
 /**
  * @brief  View for 32x8 LED matrix with date and time.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

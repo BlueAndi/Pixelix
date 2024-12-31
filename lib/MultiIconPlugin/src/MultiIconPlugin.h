@@ -28,7 +28,7 @@
  * @brief  Multiple icon plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

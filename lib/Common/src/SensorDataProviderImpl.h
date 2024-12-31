@@ -28,7 +28,7 @@
  * @brief  Sensor data provider implementation
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */

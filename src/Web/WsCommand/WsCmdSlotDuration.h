@@ -28,7 +28,7 @@
  * @brief  Websocket command to get/set slot duration
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

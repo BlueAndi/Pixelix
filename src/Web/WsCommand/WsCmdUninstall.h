@@ -28,7 +28,7 @@
  * @brief  Websocket command to uninstall a plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

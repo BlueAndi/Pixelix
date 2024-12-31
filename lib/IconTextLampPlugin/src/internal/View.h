@@ -27,7 +27,7 @@
 /**
  * @brief  IconTextLampPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

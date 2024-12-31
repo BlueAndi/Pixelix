@@ -28,7 +28,7 @@
  * @brief  Display interface
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */

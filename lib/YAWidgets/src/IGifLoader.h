@@ -28,7 +28,7 @@
  * @brief  Interface of GIF loader
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

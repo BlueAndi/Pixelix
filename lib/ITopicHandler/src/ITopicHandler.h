@@ -28,7 +28,7 @@
  * @brief  Topic handler interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup TOPIC_HANDLER_SERVICE
  *
  * @{
  */

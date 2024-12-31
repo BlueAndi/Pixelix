@@ -27,7 +27,7 @@
 /**
  * @brief  Reads temperature and humidity from a sensor and displays it
  * @author Flavio Curti <fcu-github@no-way.org>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

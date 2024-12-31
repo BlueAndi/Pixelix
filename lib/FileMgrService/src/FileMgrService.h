@@ -28,7 +28,7 @@
  * @brief  File manager service
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup service
+ * @addtogroup FILE_MGR_SERVICE
  *
  * @{
  */

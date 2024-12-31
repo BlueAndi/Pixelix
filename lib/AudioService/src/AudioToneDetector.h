@@ -28,7 +28,7 @@
  * @brief  Audio tone detector by using Goertzel algorithm
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup audio_service
+ * @addtogroup AUDIO_SERVICE
  *
  * @{
  */

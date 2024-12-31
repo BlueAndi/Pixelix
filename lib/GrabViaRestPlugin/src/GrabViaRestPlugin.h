@@ -28,7 +28,7 @@
  * @brief  Grab information via MQTT plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

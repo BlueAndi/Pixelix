@@ -27,7 +27,7 @@
 /**
  * @brief  View with icon and text for 32x16 LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

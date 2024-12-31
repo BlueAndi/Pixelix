@@ -28,7 +28,7 @@
  * @brief  Sensor channel type classes
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */

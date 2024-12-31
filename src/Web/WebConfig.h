@@ -28,7 +28,7 @@
  * @brief  Webserver configuration
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

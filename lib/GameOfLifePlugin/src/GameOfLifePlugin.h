@@ -28,7 +28,7 @@
  * @brief  Conways Game of Life plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

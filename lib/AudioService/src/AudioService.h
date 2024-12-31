@@ -28,7 +28,7 @@
  * @brief  Audio service
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup audio_service
+ * @addtogroup AUDIO_SERVICE
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  Websocket command to move a plugin to a different slot.
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

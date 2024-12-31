@@ -28,7 +28,7 @@
  * @brief  Color in RGB888 format
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

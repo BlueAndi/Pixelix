@@ -28,7 +28,7 @@
  * @brief  Base Widget
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  REST pages
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

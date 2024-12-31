@@ -28,7 +28,7 @@
  * @brief  Asynchronous HTTP client
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  Statistic value
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup utilities
+ * @addtogroup UTILITIES
  *
  * @{
  */

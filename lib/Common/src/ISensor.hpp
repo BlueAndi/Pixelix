@@ -28,7 +28,7 @@
  * @brief  Generic sensor interface
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */

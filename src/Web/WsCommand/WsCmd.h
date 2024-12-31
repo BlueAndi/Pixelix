@@ -28,7 +28,7 @@
  * @brief  Abstract websocket command
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  Websocket command set slot properties
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

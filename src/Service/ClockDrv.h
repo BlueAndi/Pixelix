@@ -28,7 +28,7 @@
  * @brief  Clock driver
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup Hal
+ * @addtogroup SERVICE_LAYER
  *
  * @{
  */

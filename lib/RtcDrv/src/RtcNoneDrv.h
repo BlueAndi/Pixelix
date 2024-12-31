@@ -28,7 +28,7 @@
  * @brief  RTC driver without functionality
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup Hal
+ * @addtogroup RTC
  *
  * @{
  */

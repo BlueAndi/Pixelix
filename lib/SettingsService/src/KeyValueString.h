@@ -28,7 +28,7 @@
  * @brief  Key value pair with string type
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup settings
+ * @addtogroup SETTINGS
  *
  * @{
  */

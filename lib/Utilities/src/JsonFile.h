@@ -28,7 +28,7 @@
  * @brief  JSON file handler
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup common
+ * @addtogroup UTILITIES
  *
  * @{
  */

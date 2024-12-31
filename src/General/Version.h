@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Version
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-Provides the software version.
-
-*******************************************************************************/
-/** @defgroup version Version
- * Provides the software version.
+ * @brief  Version
+ * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup APP_LAYER
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  Board Abstraction
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */

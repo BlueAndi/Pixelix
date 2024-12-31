@@ -28,7 +28,7 @@
  * @brief  Sensors
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup SENSORS
  *
  * @{
  */

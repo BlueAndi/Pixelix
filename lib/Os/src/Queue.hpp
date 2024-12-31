@@ -28,7 +28,7 @@
  * @brief  freeRTOS queue wrapper
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup os
+ * @addtogroup OPERATING_SYSTEM
  *
  * @{
  */

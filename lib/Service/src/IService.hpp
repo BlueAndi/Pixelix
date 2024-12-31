@@ -28,7 +28,7 @@
  * @brief  Service interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup service
+ * @addtogroup SERVICE_LAYER
  *
  * @{
  */

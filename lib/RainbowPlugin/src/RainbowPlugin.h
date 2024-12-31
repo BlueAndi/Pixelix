@@ -28,7 +28,7 @@
  * @brief  Rainbow demo plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

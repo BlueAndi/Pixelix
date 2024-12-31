@@ -28,7 +28,7 @@
  * @brief  Light depended resistor driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup hal
+ * @addtogroup SENSORS
  *
  * @{
  */

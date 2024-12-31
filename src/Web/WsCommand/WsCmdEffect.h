@@ -28,7 +28,7 @@
  * @brief  Websocket command to control the fade effects
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

@@ -28,7 +28,7 @@
  * @brief  RTC 1307 driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup Hal
+ * @addtogroup RTC
  *
  * @{
  */

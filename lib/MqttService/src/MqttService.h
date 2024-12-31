@@ -28,7 +28,7 @@
  * @brief  MQTT service
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup service
+ * @addtogroup MQTT_SERVICE
  *
  * @{
  */

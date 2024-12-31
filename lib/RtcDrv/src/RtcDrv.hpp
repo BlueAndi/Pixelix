@@ -27,7 +27,8 @@
 /**
  * @brief  RTC driver selector
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * 
+ * @addtogroup RTC
  *
  * @{
  */

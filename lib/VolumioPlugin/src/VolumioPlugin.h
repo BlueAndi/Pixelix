@@ -28,7 +28,7 @@
  * @brief  VOLUMIO plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

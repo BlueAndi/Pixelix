@@ -28,7 +28,7 @@
  * @brief  OpenWeather source for forecast weather data
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

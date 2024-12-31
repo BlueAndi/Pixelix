@@ -28,7 +28,7 @@
  * @brief  Timer service
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup timer_service
+ * @addtogroup TIMER_SERVICE
  *
  * @{
  */

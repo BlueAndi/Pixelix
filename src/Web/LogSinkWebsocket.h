@@ -28,7 +28,7 @@
  * @brief  Websocket log sink
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup utilities
+ * @addtogroup WEB
  *
  * @{
  */

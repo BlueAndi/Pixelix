@@ -28,7 +28,7 @@
  * @brief  Grab information via REST API plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

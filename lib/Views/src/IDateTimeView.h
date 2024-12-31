@@ -27,7 +27,7 @@
 /**
  * @brief  Date and time view interface.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

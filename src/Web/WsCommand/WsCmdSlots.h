@@ -28,7 +28,7 @@
  * @brief  Websocket command get slots information
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

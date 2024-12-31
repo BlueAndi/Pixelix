@@ -28,7 +28,7 @@
  * @brief  RTC interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup Hal
+ * @addtogroup RTC
  *
  * @{
  */

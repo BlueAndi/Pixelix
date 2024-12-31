@@ -28,7 +28,7 @@
  * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

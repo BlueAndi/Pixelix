@@ -27,7 +27,7 @@
 /**
  * @brief  Generic view for LED matrix with date and time.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

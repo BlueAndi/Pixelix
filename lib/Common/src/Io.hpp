@@ -28,7 +28,7 @@
  * @brief  I/O abstraction
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */

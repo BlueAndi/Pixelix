@@ -28,7 +28,7 @@
  * @brief  LED matrix display
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup HAL
  *
  * @{
  */

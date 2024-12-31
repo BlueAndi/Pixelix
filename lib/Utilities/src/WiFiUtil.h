@@ -28,7 +28,7 @@
  * @brief  WiFi utilities
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup common
+ * @addtogroup UTILITIES
  *
  * @{
  */

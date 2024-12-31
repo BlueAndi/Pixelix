@@ -28,7 +28,7 @@
  * @brief  Graphic TFT display
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup HAL
  *
  * @{
  */

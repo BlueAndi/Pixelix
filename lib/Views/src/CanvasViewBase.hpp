@@ -27,7 +27,7 @@
 /**
  * @brief  Base class for view with canvas and bitmap.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

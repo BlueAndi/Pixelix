@@ -28,7 +28,7 @@
  * @brief  Memory monitor
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup common
+ * @addtogroup APP_LAYER
  *
  * @{
  */

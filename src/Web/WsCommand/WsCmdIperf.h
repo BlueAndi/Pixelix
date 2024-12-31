@@ -28,7 +28,7 @@
  * @brief  Websocket command to start/stop iperf
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */

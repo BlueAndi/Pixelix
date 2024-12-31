@@ -28,7 +28,7 @@
  * @brief  Widget for test purposes.
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup common
+ * @addtogroup TEST
  *
  * @{
  */

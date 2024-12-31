@@ -28,7 +28,7 @@
  * @brief  Plugin factory
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

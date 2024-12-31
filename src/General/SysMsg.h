@@ -28,7 +28,7 @@
  * @brief  System message
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup common
+ * @addtogroup APP_LAYER
  *
  * @{
  */

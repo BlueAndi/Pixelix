@@ -28,7 +28,7 @@
  * @brief  Buzzer driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup Hal
+ * @addtogroup HAL
  *
  * @{
  */

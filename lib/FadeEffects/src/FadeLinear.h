@@ -28,7 +28,7 @@
  * @brief  Linear fade in/out effect
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */

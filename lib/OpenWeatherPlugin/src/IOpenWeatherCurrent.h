@@ -28,7 +28,7 @@
  * @brief  Interface for the current weather
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */

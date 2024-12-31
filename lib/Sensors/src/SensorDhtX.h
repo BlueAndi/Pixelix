@@ -28,7 +28,7 @@
  * @brief  DHTx sensor
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup SENSORS
  *
  * @{
  */
