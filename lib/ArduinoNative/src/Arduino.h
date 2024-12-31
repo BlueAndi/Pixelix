@@ -28,7 +28,7 @@
  * @brief  Arduino stuff for test
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup test
+ * @addtogroup TEST
  *
  * @{
  */
