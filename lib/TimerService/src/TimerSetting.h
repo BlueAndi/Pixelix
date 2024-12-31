@@ -99,7 +99,7 @@ public:
     /**
      * Convert setting to JSON.
      *
-     * @param[out] json JSON object destination.
+     * @param[out] jsonTimerSetting JSON object destination.
      */
     void toJson(JsonObject& jsonTimerSetting) const;
 

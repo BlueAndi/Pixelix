@@ -58,8 +58,15 @@
  * Types and Classes
  *****************************************************************************/
 
-/* Forward declarations */
+/**
+ * To store general information about the GIF image file.
+ * Not needed after the file is loaded in memory.
+ */
 typedef struct _GifFileHeader GifFileHeader;
+
+/**
+ * The application extension.
+ */
 typedef struct _ApplicationExtension ApplicationExtension;
 
 /**

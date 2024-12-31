@@ -84,6 +84,7 @@ public:
     /**
      * Constructs a key value pair.
      * 
+     * @param[in]   pref        Preferences storage.
      * @param[in]   key         The key of the key value pair.
      * @param[in]   name        The name of the key value pair.
      * @param[in]   defValue    The default value of the key value pair.

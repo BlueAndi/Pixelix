@@ -60,13 +60,13 @@
  * Public Methods
  *****************************************************************************/
 
-bool CanvasViewGeneric::loadIcon(const String& path)
+bool CanvasViewGeneric::loadIcon(const String& filename)
 {
     bool isSuccessful = false;
 
-    if (false == m_bitmapWidget.load(FILESYSTEM, path))
+    if (false == m_bitmapWidget.load(FILESYSTEM, filename))
     {
-        LOG_WARNING("Failed to load icon %s.", path.c_str());
+        LOG_WARNING("Failed to load icon %s.", filename.c_str());
     }
     else
     {

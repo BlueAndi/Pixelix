@@ -280,6 +280,7 @@ protected:
     TextWidget      m_textWidget;               /**< Text widget used to show some text. */
     LampWidget      m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
 
+private:
     IconTextLampViewGeneric(const IconTextLampViewGeneric& other);
     IconTextLampViewGeneric& operator=(const IconTextLampViewGeneric& other);
 };

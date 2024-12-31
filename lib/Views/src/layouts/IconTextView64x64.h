@@ -248,6 +248,7 @@ protected:
     BitmapWidget    m_bitmapWidget; /**< Bitmap widget used to show a icon. */
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
 
+private:
     IconTextView64x64(const IconTextView64x64& other);
     IconTextView64x64& operator=(const IconTextView64x64& other);
 };

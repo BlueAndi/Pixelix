@@ -197,14 +197,14 @@ public:
         /**
      * Get current active configuration in JSON format.
      * 
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg Configuration
      */
     virtual void getConfiguration(JsonObject& jsonCfg) const = 0;
 
     /**
      * Apply configuration from JSON.
      * 
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg Configuration
      * 
      * @return If successful set, it will return true otherwise false.
      */

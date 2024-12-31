@@ -260,6 +260,7 @@ protected:
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
     ProgressBar     m_progressBar;  /**< Progress bar for the music. */
 
+private:
     PlayerView64x64(const PlayerView64x64& other);
     PlayerView64x64& operator=(const PlayerView64x64& other);
 };

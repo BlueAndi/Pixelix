@@ -157,11 +157,13 @@ public:
      * interfaces like REST, websocket, MQTT, etc.
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [
      *         "/text"
      *     ]
      * }
+     * </code>
      * 
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
@@ -171,32 +173,38 @@ public:
      * - Readable and writeable: "rw"
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "/text",
      *         "access": "r"
      *     }]
      * }
+     * </code>
      * 
      * Homeassistant MQTT discovery support can be added with the "ha" key.
+     * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "/text",
      *         "ha": {
-     *             <everything here will be used for MQTT discovery>
+     *             ... everything here will be used for MQTT discovery ...
      *         }
      *     }]
      * }
+     * </code>
      * 
      * Additional information can be loaded from a file too. It will be appended
      * to the topic data (parallel to "name" and "access"). If a file is used,
      * any other key than "name" and "access" will be ignored.
+     * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "/text",
      *         "fileName": "haText.json"
      *    }]
      * }
+     * </code>
      * 
      * @param[out] topics   Topis in JSON format
      */

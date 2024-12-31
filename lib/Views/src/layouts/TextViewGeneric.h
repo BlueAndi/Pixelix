@@ -177,6 +177,7 @@ protected:
     Fonts::FontType m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
 
+private:
     TextViewGeneric(const TextViewGeneric& other);
     TextViewGeneric& operator=(const TextViewGeneric& other);
 };

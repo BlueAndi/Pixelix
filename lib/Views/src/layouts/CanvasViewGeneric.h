@@ -167,6 +167,7 @@ protected:
     BitmapWidget    m_bitmapWidget; /**< Bitmap widget used to show a icon. */
     CanvasWidget    m_canvasWidget; /**< Canvas used for drawing. */
 
+private:
     CanvasViewGeneric(const CanvasViewGeneric& other);
     CanvasViewGeneric& operator=(const CanvasViewGeneric& other);
 };

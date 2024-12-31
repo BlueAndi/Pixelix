@@ -214,7 +214,9 @@ protected:
     CanvasWidget    m_canvasWidget; /**< Canvas widget used to draw. */
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
 
+private:
     CanvasTextViewGeneric(const CanvasTextViewGeneric& other);
+    /** Assignment operator not allowed. */
     CanvasTextViewGeneric& operator=(const CanvasTextViewGeneric& other);
 };
 

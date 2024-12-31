@@ -275,6 +275,7 @@ protected:
     bool                m_isWeatherInfoForecastUpdated;                 /**< Is forecast weather info updated? */
     bool                m_isWeatherIconForecastUpdated[FORECAST_DAYS];  /**< Is the forecast weather icon updated in the weather info? */
 
+private:
     OpenWeatherView64x64(const OpenWeatherView64x64& other);
     OpenWeatherView64x64& operator=(const OpenWeatherView64x64& other);
 

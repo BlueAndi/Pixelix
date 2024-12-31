@@ -172,6 +172,7 @@ protected:
 
     BitmapWidget m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
 
+private:
     MultiIconView32x8(const MultiIconView32x8& other);
     MultiIconView32x8& operator=(const MultiIconView32x8& other);
 

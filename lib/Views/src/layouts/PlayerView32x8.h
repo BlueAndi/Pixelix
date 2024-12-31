@@ -258,6 +258,7 @@ protected:
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
     ProgressBar     m_progressBar;  /**< Progress bar for the music. */
 
+private:
     PlayerView32x8(const PlayerView32x8& other);
     PlayerView32x8& operator=(const PlayerView32x8& other);
 };

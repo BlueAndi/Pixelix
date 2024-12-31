@@ -163,7 +163,6 @@ protected:
      * 
      * @param[in] server    Websocket server which is used to send a message to the client.
      * @param[in] clientId  The client id the message belongs to.
-     * @param[in] msg       The negative response messsage.
      */
     void sendPositiveResponse(AsyncWebSocket* server, uint32_t clientId);
 

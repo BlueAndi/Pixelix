@@ -268,7 +268,7 @@ protected:
     bool                m_isWeatherInfoCurrentUpdated;  /**< Is current weather info updated? */
     bool                m_isWeatherIconCurrentUpdated;  /**< Is the current weather icon updated in the weather info? */
 
-
+private:
     OpenWeatherView32x16(const OpenWeatherView32x16& other);
     OpenWeatherView32x16& operator=(const OpenWeatherView32x16& other);
 

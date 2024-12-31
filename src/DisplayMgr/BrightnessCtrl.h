@@ -170,7 +170,7 @@ public:
      * Initialize brightness controller and set initial display brightness.
      * 
      * @param[in] display                   The display, which to control.
-     * @param[in] minBrightnessHardLinit    The minimal brightness hard limit in digits [0; 255].
+     * @param[in] minBrightnessHardLimit    The minimal brightness hard limit in digits [0; 255].
      * @param[in] maxBrightnessHardLimit    The maximal brightness hard limit in digits [0; 255].
      */
     void init(IDisplay& display, uint8_t minBrightnessHardLimit, uint8_t maxBrightnessHardLimit);
@@ -200,7 +200,7 @@ public:
     /**
      * Set brightness soft limits, used for dynamic brightness adjustment.
      * 
-     * @param[in] minBrightnessSoftLinit    The minimal brightness soft limit in digits [0; 255].
+     * @param[in] minBrightnessSoftLimit    The minimal brightness soft limit in digits [0; 255].
      * @param[in] maxBrightnessSoftLimit    The maximal brightness soft limit in digits [0; 255].
      */
     void setSoftLimits(uint8_t minBrightnessSoftLimit, uint8_t maxBrightnessSoftLimit);

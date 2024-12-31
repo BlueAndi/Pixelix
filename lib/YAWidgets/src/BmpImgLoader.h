@@ -55,8 +55,15 @@
  * Types and Classes
  *****************************************************************************/
 
-/* Forward declarations */
+/**
+ * To store general information about the bitmap image file.
+ * Not needed after the file is loaded in memory.
+ */
 typedef struct _BmpFileHeader BmpFileHeader;
+
+/**
+ * Device independent header (DIB): The bitmap v5 header (size: 124 bytes).
+ */
 typedef struct _BmpV5Header BmpV5Header;
 
 /**

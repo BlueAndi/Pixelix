@@ -186,6 +186,7 @@ protected:
 
     BitmapWidget    m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
 
+private:
     MultiIconViewGeneric(const MultiIconViewGeneric& other);
     MultiIconViewGeneric& operator=(const MultiIconViewGeneric& other);
 };

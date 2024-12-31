@@ -214,6 +214,7 @@ protected:
     CanvasWidget    m_canvasWidget; /**< Canvas widget used to draw. */
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
 
+private:
     CanvasTextView32x8(const CanvasTextView32x8& other);
     CanvasTextView32x8& operator=(const CanvasTextView32x8& other);
 };

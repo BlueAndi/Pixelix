@@ -46,8 +46,13 @@
 #define FILESYSTEM_USE_LITTLEFS (1)
 
 #if FILESYSTEM_USE_LITTLEFS
+
+/** The used filesystem type. */
 #define FILESYSTEM              LittleFS
+
+/** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME     "littlefs.bin"
+
 #endif  /* FILESYSTEM_USE_LITTLEFS */
 
 /**
@@ -56,8 +61,13 @@
 #define FILESYSTEM_USE_SPIFFS   (0)
 
 #if FILESYSTEM_USE_SPIFFS
+
+/** The used filesystem type. */
 #define FILESYSTEM              SPIFFS
+
+/** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME     "spiffs.bin"
+
 #endif  /* FILESYSTEM_USE_SPIFFS */
 
 /******************************************************************************

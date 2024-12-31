@@ -225,6 +225,7 @@ protected:
     BitmapWidget    m_bitmapWidget; /**< Bitmap widget used to show a icon. */
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
 
+private:
     IconTextViewGeneric(const IconTextViewGeneric& other);
     IconTextViewGeneric& operator=(const IconTextViewGeneric& other);
 };

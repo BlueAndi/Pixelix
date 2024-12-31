@@ -294,7 +294,7 @@ public:
     /**
      * Get current active configuration in JSON format.
      * 
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const override
     {
@@ -304,7 +304,7 @@ public:
     /**
      * Apply configuration from JSON.
      * 
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg Configuration
      * 
      * @return If successful set, it will return true otherwise false.
      */
@@ -412,6 +412,7 @@ protected:
     Color           m_dayOnColor;               /**< Color of current day in the day of the week bar. */
     Color           m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
 
+private:
     DateTimeView32x8(const DateTimeView32x8& other);
     DateTimeView32x8& operator=(const DateTimeView32x8& other);
 

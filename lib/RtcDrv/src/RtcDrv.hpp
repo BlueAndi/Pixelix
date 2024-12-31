@@ -66,34 +66,63 @@ typedef enum
 
 } RTC_TYPE;
 
+/**
+ * RTC driver selector.
+ * 
+ * @tparam tRtcType RTC type
+ */
 template < RTC_TYPE tRtcType >
 class RtcDrvSelector : public IRtc
 {
 public:
+    /**
+     * Destroy the RTC driver selector object.
+     */
     virtual ~RtcDrvSelector() = default;
 };
 
+/**
+ * RTC driver selector specialization for no RTC available.
+ */
 template <>
 class RtcDrvSelector< RTC_TYPE_NONE > : public RtcNoneDrv
 {
 public:
+    /**
+     * Destroy the RTC driver selector object.
+     */
     virtual ~RtcDrvSelector() = default;
 };
 
+/**
+ * RTC driver selector specialization for RTC DS1307.
+ */
 template <>
 class RtcDrvSelector< RTC_TYPE_1307 > : public Rtc1307Drv
 {
 public:
+    /**
+     * Destroy the RTC driver selector object.
+     */
     virtual ~RtcDrvSelector() = default;
 };
 
+/**
+ * RTC driver selector specialization for RTC DS3231.
+ */
 template <>
 class RtcDrvSelector< RTC_TYPE_3231 > : public Rtc3231Drv
 {
 public:
+    /**
+     * Destroy the RTC driver selector object.
+     */
     virtual ~RtcDrvSelector() = default;
 };
 
+/**
+ * The concrete RTC driver.
+ */
 using RtcDrv = RtcDrvSelector<CONFIG_RTC_DRV>;
 
 /******************************************************************************
