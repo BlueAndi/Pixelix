@@ -91,21 +91,14 @@
 /**
  * The filename of the version information file.
  */
-static const char VERSION_FILE_NAME[]        = "/version.json";
+static const char VERSION_FILE_NAME[]   = "/version.json";
 
 /**
  * Plugin type of the welcome plugin. This is used to install it in the very
  * first startup. In further startups it is used in addition to the plugin
  * alias whether to show the welcome icon and message.
  */
-static const char WELCOME_PLUGIN_TYPE[]     = "IconTextPlugin";
-
-/**
- * The alias of the welcome plugin. This is used to determine in addition to
- * the plugin type whether to show the welcome icon and message after a reboot
- * again.
- */
-static const char WELCOME_PLUGIN_ALIAS[]    = "_welcome";
+static const char WELCOME_PLUGIN_TYPE[] = "IconTextPlugin";
 
 /******************************************************************************
  * Public Methods
@@ -113,9 +106,9 @@ static const char WELCOME_PLUGIN_ALIAS[]    = "_welcome";
 
 void InitState::entry(StateMachine& sm)
 {
-    bool                isError     = false;
-    ErrorState::ErrorId errorId     = ErrorState::ERROR_ID_UNKNOWN;
-    SettingsService&    settings    = SettingsService::getInstance();
+    bool                isError  = false;
+    ErrorState::ErrorId errorId  = ErrorState::ERROR_ID_UNKNOWN;
+    SettingsService&    settings = SettingsService::getInstance();
     String              uniqueId;
 
     /* Initialize hardware */
@@ -274,11 +267,11 @@ void InitState::entry(StateMachine& sm)
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (false == isFsCompatible())
         {
-            const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
-            const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
-            const uint32_t  DURATION_PAUSE          = 500U; /* ms */
-            const uint32_t  SCROLLING_NO_REPEAT     = 0U;
-            const char*     errMsg                  = "WARN: Filesystem may not be compatible.";
+            const uint32_t DURATION_NON_SCROLLING = 4000U; /* ms */
+            const uint32_t SCROLLING_REPEAT_NUM   = 1U;
+            const uint32_t DURATION_PAUSE         = 500U; /* ms */
+            const uint32_t SCROLLING_NO_REPEAT    = 0U;
+            const char*    errMsg                 = "WARN: Filesystem may not be compatible.";
 
             LOG_WARNING(errMsg);
 
@@ -361,15 +354,15 @@ void InitState::exit(StateMachine& sm)
     /* Continue initialization steps only, if there was no low level error before. */
     if (ErrorState::ERROR_ID_NO_ERROR == ErrorState::getInstance().getErrorId())
     {
-        SettingsService&    settings    = SettingsService::getInstance();
-        wifi_mode_t         wifiMode    = WIFI_MODE_NULL;
-        String              hostname;
+        SettingsService& settings = SettingsService::getInstance();
+        wifi_mode_t      wifiMode = WIFI_MODE_NULL;
+        String           hostname;
 
         /* Get hostname for mDNS. */
         if (false == settings.open(true))
         {
             LOG_WARNING("Use default hostname.");
-            
+
             hostname = settings.getHostname().getDefault();
         }
         else
@@ -438,31 +431,10 @@ void InitState::exit(StateMachine& sm)
                      * Of course a error may happened during loading the plugin installation,
                      * in this case show the welcome screen too.
                      */
-                    welcome(nullptr);
+                    welcome();
 
                     /* Save the plugin installation, so the user can configure it by its own in the web page settings. */
                     PluginMgr::getInstance().save();
-                }
-                else
-                {
-                    /* Loading of the plugin installation was successful.
-                     *
-                     * If the plugin in slot 1 is still the welcome plugin (determined by plugin type and alias),
-                     * show welcome message.
-                     */
-                    IPluginMaintenance* pluginInSlot1 = DisplayMgr::getInstance().getPluginInSlot(1U);
-
-                    /* Is a plugin in slot1? */
-                    if (nullptr != pluginInSlot1)
-                    {
-                        if (0 == strcmp(WELCOME_PLUGIN_TYPE,  pluginInSlot1->getName()))
-                        {
-                            if (true == pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
-                            {
-                                welcome(pluginInSlot1);
-                            }
-                        }
-                    }
                 }
 
                 /* Start over-the-air update server. */
@@ -509,11 +481,11 @@ void InitState::showStartupInfoOnSerial()
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
 {
-    const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
-    const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
-    const uint32_t  DURATION_PAUSE          = 500U; /* ms */
-    const uint32_t  SCROLLING_NO_REPEAT     = 0U;
-    SysMsg&         sysMsg                  = SysMsg::getInstance();
+    const uint32_t DURATION_NON_SCROLLING = 4000U; /* ms */
+    const uint32_t SCROLLING_REPEAT_NUM   = 1U;
+    const uint32_t DURATION_PAUSE         = 500U; /* ms */
+    const uint32_t SCROLLING_NO_REPEAT    = 0U;
+    SysMsg&        sysMsg                 = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
     sysMsg.show("{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}{vm 1}:{vm -1}.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
@@ -531,40 +503,30 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     }
 }
 
-void InitState::welcome(IPluginMaintenance* plugin)
+void InitState::welcome()
 {
-    IconTextPlugin* welcomePlugin = nullptr;
+    IPluginMaintenance* welcomePlugin         = PluginMgr::getInstance().install(WELCOME_PLUGIN_TYPE);
+    IconTextPlugin*     concreteWelcomePlugin = static_cast<IconTextPlugin*>(welcomePlugin);
 
-    if (nullptr == plugin)
-    {
-        /* Install default plugin. */
-        welcomePlugin = static_cast<IconTextPlugin*>(PluginMgr::getInstance().install(WELCOME_PLUGIN_TYPE));
-
-        PluginMgr::getInstance().setPluginAliasName(welcomePlugin, WELCOME_PLUGIN_ALIAS);
-        welcomePlugin->enable();
-    }
-    else
-    {
-        welcomePlugin = static_cast<IconTextPlugin*>(plugin);
-    }
-
-    if (nullptr != welcomePlugin)
+    if (nullptr != concreteWelcomePlugin)
     {
         FileMgrService::FileId iconFileId = FileMgrService::getInstance().getFileIdByName("smiley");
 
         if (FileMgrService::FILE_ID_INVALID != iconFileId)
         {
-            (void)welcomePlugin->loadIcon(iconFileId, false);
+            (void)concreteWelcomePlugin->loadIcon(iconFileId, true);
         }
-        welcomePlugin->setText("{hc}Hello World!", false);
+
+        concreteWelcomePlugin->setText("{hc}Hello World!", true);
+        concreteWelcomePlugin->enable();
     }
 }
 
 bool InitState::isFsCompatible()
 {
-    bool                isCompatible            = false;
+    bool                isCompatible = false;
     JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
+    const size_t        JSON_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
@@ -573,8 +535,8 @@ bool InitState::isFsCompatible()
 
         if (false == jsonVersion.isNull())
         {
-            String fileSystemVersion    = jsonVersion.as<String>();
-            String firmwareVersion      = Version::getSoftwareVersion();
+            String fileSystemVersion = jsonVersion.as<String>();
+            String firmwareVersion   = Version::getSoftwareVersion();
 
             /* Note that the firmware version may have a additional postfix.
              * Example: v4.1.2:b or v4.1.2:b:lc
