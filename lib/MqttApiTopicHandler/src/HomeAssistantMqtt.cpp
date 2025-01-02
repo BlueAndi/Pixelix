@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "HomeAssistantMqtt.h"
+#include "Version.h"
 
 #include <SettingsService.h>
 #include <Logging.h>
@@ -171,9 +172,9 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const Stri
 
                 if (nullptr != mqttDiscoveryInfo)
                 {
-                    mqttDiscoveryInfo->component        = jsonComponent.as<String>();
-                    mqttDiscoveryInfo->nodeId           = deviceId;
-                    mqttDiscoveryInfo->objectId         = getObjectId(entityId);
+                    mqttDiscoveryInfo->component = jsonComponent.as<String>();
+                    mqttDiscoveryInfo->nodeId    = deviceId;
+                    mqttDiscoveryInfo->objectId  = getObjectId(entityId);
                     mqttDiscoveryInfo->discoveryDetails.set(jsonDiscovery); /* Deep copy, because discovery details are handled in different context. */
 
                     /* Readable topic? */
@@ -339,7 +340,7 @@ void HomeAssistantMqtt::getConfigTopic(String& haConfigTopic, const String& comp
 
 void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscoveryInfo)
 {
-    const size_t            JSON_DOC_SIZE = 1024U;
+    const size_t            JSON_DOC_SIZE = 2048U;
     DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
     MqttService&            mqttService = MqttService::getInstance();
     String                  mqttTopic;
@@ -349,21 +350,23 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
     getConfigTopic(mqttTopic, mqttDiscoveryInfo.component, mqttDiscoveryInfo.nodeId, mqttDiscoveryInfo.objectId);
 
     /* The object id (object_id) is used to generate the entity id. */
-    jsonDoc["obj_id"]             = mqttDiscoveryInfo.objectId;
+    jsonDoc["obj_id"]      = mqttDiscoveryInfo.objectId;
     /* The unique id (unique_id) identifies the device and its entity. */
-    jsonDoc["uniq_id"]            = mqttDiscoveryInfo.nodeId + "/" + mqttDiscoveryInfo.objectId;
+    jsonDoc["uniq_id"]     = mqttDiscoveryInfo.nodeId + "/" + mqttDiscoveryInfo.objectId;
     /* Device identifier */
-    jsonDoc["dev"]["identifiers"] = WiFi.macAddress();
+    jsonDoc["dev"]["ids"]  = WiFi.macAddress();
     /* URL to configuration of the device (configuration_url). */
-    jsonDoc["dev"]["cu"]          = String("http://") + WiFi.localIP().toString();
+    jsonDoc["dev"]["cu"]   = String("http://") + WiFi.localIP().toString();
     /* Name of the device. */
-    jsonDoc["dev"]["name"]        = mqttDiscoveryInfo.nodeId;
+    jsonDoc["dev"]["name"] = mqttDiscoveryInfo.nodeId;
     /* Device model name (model) */
-    jsonDoc["dev"]["mdl"]         = "Pixelix";
+    jsonDoc["dev"]["mdl"]  = "Pixelix";
     /* Manufacturer (manufacturer) */
-    jsonDoc["dev"]["mf"]          = "BlueAndi & Friends";
+    jsonDoc["dev"]["mf"]   = "BlueAndi & Friends";
     /* SW version of the device (sw_version) */
-    jsonDoc["dev"]["sw"]          = QUOTE(SW_VERSION);
+    jsonDoc["dev"]["sw"]   = Version::getSoftwareVersion();
+    /* HW version is used for the target name (hw_version). */
+    jsonDoc["dev"]["hw"]   = Version::getTargetName();
 
     while (discoveryDetailsIt != mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().end())
     {
