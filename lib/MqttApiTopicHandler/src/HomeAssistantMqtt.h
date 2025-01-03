@@ -97,7 +97,7 @@ public:
 
     /**
      * Process the Home Assistant extension.
-     * 
+     *
      * @param[in] isConnected   Is a MQTT broker connection established?
      */
     void process(bool isConnected);
@@ -106,7 +106,7 @@ public:
      * Register Home Assistant MQTT discovery.
      * It will not publish, just prepare the MQTT discovery information
      * and hold it internally.
-     * 
+     *
      * @param[in]   deviceId            Device id.
      * @param[in]   entityId            Entity id.
      * @param[in]   stateTopic          The MQTT status topic.
@@ -118,7 +118,7 @@ public:
 
     /**
      * Unregister Home Assistant MQTT discovery.
-     * 
+     *
      * @param[in]   deviceId    Device id.
      * @param[in]   entityId    Entity id.
      * @param[in]   stateTopic  The MQTT status topic.
@@ -129,44 +129,46 @@ public:
 private:
 
     /** Home Assistant discovery prefix key */
-    static const char*  KEY_HA_DISCOVERY_PREFIX;
+    static const char* KEY_HA_DISCOVERY_PREFIX;
 
     /**Home Assistant discovery prefix name */
-    static const char*  NAME_HA_DISCOVERY_PREFIX;
+    static const char* NAME_HA_DISCOVERY_PREFIX;
 
     /** Home Assistant discovery prefix default value */
-    static const char*  DEFAULT_HA_DISCOVERY_PREFIX;
+    static const char* DEFAULT_HA_DISCOVERY_PREFIX;
 
     /** Home Assistant discovery prefix min. length */
-    static const size_t MIN_VALUE_HA_DISCOVERY_PREFIX   = 0U;
+    static const size_t MIN_VALUE_HA_DISCOVERY_PREFIX = 0U;
 
     /** Home Assistant discovery prefix max. length */
-    static const size_t MAX_VALUE_HA_DISCOVERY_PREFIX   = 64U;
+    static const size_t MAX_VALUE_HA_DISCOVERY_PREFIX = 64U;
 
     /** Home Assistant discovery enable flag key */
-    static const char*  KEY_HA_DISCOVERY_ENABLE;
+    static const char* KEY_HA_DISCOVERY_ENABLE;
 
     /** Home Assistant discovery enable flag name */
-    static const char*  NAME_HA_DISCOVERY_ENABLE;
+    static const char* NAME_HA_DISCOVERY_ENABLE;
 
     /** Home Assistant discovery enable flag default value */
-    static const bool   DEFAULT_HA_DISCOVERY_ENABLE;
+    static const bool DEFAULT_HA_DISCOVERY_ENABLE;
 
     /** Information necessary for Home Assistant MQTT discovery. */
     struct MqttDiscoveryInfo
     {
-        String              component;          /**< Home Assistant component */
-        String              nodeId;             /**< Home Assistant node id */
-        String              objectId;           /**< Home Assistant object id */
-        DynamicJsonDocument discoveryDetails;   /**< Additional discovery information. */
-        bool                isReqToPublish;     /**< Is requested to publish this discovery info? */
+        static const size_t JSON_DOC_SIZE = 768U; /**< JSON document size */
+
+        String              component;        /**< Home Assistant component */
+        String              nodeId;           /**< Home Assistant node id */
+        String              objectId;         /**< Home Assistant object id */
+        DynamicJsonDocument discoveryDetails; /**< Additional discovery information. */
+        bool                isReqToPublish;   /**< Is requested to publish this discovery info? */
 
         /** Construct Home Assistant MQTT discovery information. */
         MqttDiscoveryInfo() :
             component(),
             nodeId(),
             objectId(),
-            discoveryDetails(368U),
+            discoveryDetails(JSON_DOC_SIZE),
             isReqToPublish(true)
         {
         }
@@ -175,21 +177,21 @@ private:
     /** List of Home Assistant MQTT discovery information. */
     typedef std::vector<MqttDiscoveryInfo*> ListOfMqttDiscoveryInfo;
 
-    KeyValueString          m_haDiscoveryPrefixSetting;     /**< Setting for the Home Assistant MQTT discovery prefix. */
-    KeyValueBool            m_haDiscoveryEnabledSetting;    /**< Setting for the Home Assistant MQTT discovery enable flag. */
-    String                  m_haDiscoveryPrefix;            /**< Home Assistant MQTT discovery prefix. */
-    bool                    m_haDiscoveryEnabled;           /**< Is the Home Assistant MQTT discovery enabled or not. */
-    ListOfMqttDiscoveryInfo m_mqttDiscoveryInfoList;        /**< List of Home Assistant MQTT discovery informations. */
-    bool                    m_isConnected;                  /**< Is MQTT broker connection established? */
+    KeyValueString                          m_haDiscoveryPrefixSetting;  /**< Setting for the Home Assistant MQTT discovery prefix. */
+    KeyValueBool                            m_haDiscoveryEnabledSetting; /**< Setting for the Home Assistant MQTT discovery enable flag. */
+    String                                  m_haDiscoveryPrefix;         /**< Home Assistant MQTT discovery prefix. */
+    bool                                    m_haDiscoveryEnabled;        /**< Is the Home Assistant MQTT discovery enabled or not. */
+    ListOfMqttDiscoveryInfo                 m_mqttDiscoveryInfoList;     /**< List of Home Assistant MQTT discovery informations. */
+    bool                                    m_isConnected;               /**< Is MQTT broker connection established? */
 
     HomeAssistantMqtt(const HomeAssistantMqtt& ext);
     HomeAssistantMqtt& operator=(const HomeAssistantMqtt& ext);
 
     /**
      * Get the object id from the entity id.
-     * 
+     *
      * @param[in] entityId  The entity id.
-     * 
+     *
      * @return Object id
      */
     String getObjectId(const String& entityId);
@@ -201,7 +203,7 @@ private:
 
     /**
      * Get the discovery configuration topic.
-     * 
+     *
      * @param[out]  haConfigTopic   Discovery configuration topic
      * @param[in]   component       Home Assistant component
      * @param[in]   nodeId          Home Assistant node id
@@ -221,7 +223,7 @@ private:
 
     /**
      * Publish MQTT auto discovery informations, which are requested.
-     * 
+     *
      * Note: Need to be called continously and will only publish one info per
      *       call cycle.
      */
@@ -232,6 +234,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* HOME_ASSISTANT_MQTT_H */
+#endif /* HOME_ASSISTANT_MQTT_H */
 
 /** @} */

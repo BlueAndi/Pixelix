@@ -124,8 +124,8 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
             for (JsonVariantConst jsonTopic : jsonTopics)
             {
                 String                       topicName;
-                DynamicJsonDocument          jsonDocExtra(JSON_DOC_SIZE);
                 JsonObjectConst              jsonExtra;
+                String                       extraFileName;
                 String                       topicAccess   = DEFAULT_ACCESS;
                 ITopicHandler::GetTopicFunc  getTopicFunc  = nullptr;
                 ITopicHandler::SetTopicFunc  setTopicFunc  = nullptr;
@@ -136,7 +136,7 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                 {
                     JsonVariantConst jsonTopicName   = jsonTopic["name"];
                     JsonVariantConst jsonTopicAccess = jsonTopic["access"];
-                    JsonVariantConst jsonFileName    = jsonTopic["fileName"];
+                    JsonVariantConst jsonExtraVar    = jsonTopic["extra"];
 
                     if (true == jsonTopicName.is<String>())
                     {
@@ -148,27 +148,18 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                         topicAccess = jsonTopicAccess.as<String>();
                     }
 
-                    /* Shall extra info be loaded from a JSON file? */
-                    if (true == jsonFileName.is<String>())
+                    if (true == jsonExtraVar.is<JsonObjectConst>())
                     {
-                        JsonFile jsonFile(FILESYSTEM);
-                        String   fileName = jsonFileName.as<String>();
-
-                        LOG_INFO("Load extra info from file: %s", fileName.c_str());
-
-                        if (false == jsonFile.load(fileName, jsonDocExtra))
-                        {
-                            LOG_WARNING("Failed to load extra info from file: %s", fileName.c_str());
-                        }
-                        else
-                        {
-                            jsonExtra = jsonDocExtra.as<JsonObject>();
-                        }
+                        jsonExtra = jsonExtraVar.as<JsonObjectConst>();
                     }
-                    /* Extra info may be part of the topic object. */
+                    else if (true == jsonExtraVar.is<String>())
+                    {
+                        extraFileName = jsonExtraVar.as<String>();
+                    }
                     else
                     {
-                        jsonExtra = jsonTopic;
+                        /* Skip */
+                        ;
                     }
                 }
                 /* Only topic name is available */
@@ -187,12 +178,26 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                     strToAccess(plugin, topicAccess, getTopicFunc, setTopicFunc, uploadReqFunc);
 
                     /* Register plugin topic with plugin UID as entity id. */
-                    registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                    if (true == extraFileName.isEmpty())
+                    {
+                        registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                    }
+                    else
+                    {
+                        registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                    }
 
                     /* Register plugin topic with plugin alias as entity id (if possible). */
                     if (false == plugin->getAlias().isEmpty())
                     {
-                        registerTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                        if (true == extraFileName.isEmpty())
+                        {
+                            registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                        }
+                        else
+                        {
+                            registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                        }
                     }
 
                     addToPluginMetaDataList(deviceId, plugin, topicName);
@@ -311,6 +316,31 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
             }
         }
     }
+}
+
+void TopicHandlerService::registerTopic(const String& deviceId, const String& entityId, const String& topic, const char* extraFileName, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc)
+{
+    const size_t        JSON_DOC_SIZE = 1024U;
+    DynamicJsonDocument jsonDocExtra(JSON_DOC_SIZE);
+    JsonObjectConst     jsonExtra;
+
+    if (nullptr != extraFileName)
+    {
+        JsonFile jsonFile(FILESYSTEM);
+
+        LOG_INFO("Load extra info from file: %s", extraFileName);
+
+        if (false == jsonFile.load(extraFileName, jsonDocExtra))
+        {
+            LOG_WARNING("Failed to load extra info from file: %s", extraFileName);
+        }
+        else
+        {
+            jsonExtra = jsonDocExtra.as<JsonObject>();
+        }
+    }
+
+    registerTopic(deviceId, entityId, topic, jsonExtra, getTopicFunc, hasChangedFunc, setTopicFunc, uploadReqFunc);
 }
 
 void TopicHandlerService::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)

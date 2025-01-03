@@ -128,6 +128,20 @@ public:
     void registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& jsonExtra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc);
 
     /**
+     * Register a topic.
+     * 
+     * @param[in] deviceId          The device id which represents the physical device.
+     * @param[in] entityId          The entity id which represents the entity of the device.
+     * @param[in] topic             The topic which to register.
+     * @param[in] extraFileName     Name of the file with extra JSON parameters for concrete topic handlers, which are pushed through.
+     * @param[in] getTopicFunc      Function which is called to read the topic.
+     * @param[in] hasChangedFunc    Function which is periodically called to check whether the topic has changed.
+     * @param[in] setTopicFunc      Function which is called to set the topic.
+     * @param[in] uploadReqFunc     Function which is called to accept a file upload or not.
+     */
+    void registerTopic(const String& deviceId, const String& entityId, const String& topic, const char* extraFileName, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc);
+
+    /**
      * Unregister a topic.
      * 
      * @param[in] deviceId  The device id which represents the physical device.

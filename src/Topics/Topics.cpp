@@ -58,6 +58,7 @@ typedef struct
     ITopicHandler::GetTopicFunc         getTopicFunc;   /**< Get topic function */
     TopicHandlerService::HasChangedFunc hasChangedFunc; /**< Has changed function */
     ITopicHandler::SetTopicFunc         setTopicFunc;   /**< Set topic function */
+    const char*                         extraFileName;  /**< File name of a file with extra information. */
 
 } TopicElem;
 
@@ -82,13 +83,13 @@ static String gDeviceId;
  * List of topics.
  */
 static TopicElem gTopicList[] = {
-    { "display", "/power", getDisplayState, hasDisplayStateChanged, setDisplayState }
+    { "display", "/power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" }
 };
 
 /**
  * Last display on state.
  */
-static bool gLastDisplayOnState     = false;
+static bool gLastDisplayOnState = false;
 
 /******************************************************************************
  * Public Methods
@@ -110,7 +111,6 @@ void Topics::begin()
 {
     SettingsService& settings = SettingsService::getInstance();
     size_t           idx;
-    JsonObjectConst  jsonExtra;
 
     if (false == settings.open(true))
     {
@@ -132,7 +132,7 @@ void Topics::begin()
             gDeviceId,
             topicElem->entity,
             topicElem->topic,
-            jsonExtra,
+            topicElem->extraFileName,
             topicElem->getTopicFunc,
             topicElem->hasChangedFunc,
             topicElem->setTopicFunc,

@@ -1,0 +1,11 @@
+{
+    "ha": {
+        "component": "light",
+        "discovery": {
+            "name": "Display",
+            "ic": "mdi:clock-digital",
+            "pl_on": "{\"state\":\"on\"}",
+            "pl_off": "{\"state\":\"off\"}"
+        }
+    }
+}

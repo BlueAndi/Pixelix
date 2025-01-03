@@ -85,7 +85,7 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
      * The used icon is from MaterialDesignIcons.com (namespace: mdi).
      */
     jsonText["name"]     = TOPIC_TEXT;
-    jsonText["fileName"] = TOPIC_TEXT_EXTRA_FILE_NAME;
+    jsonText["extra"]    = TOPIC_TEXT_EXTRA_FILE_NAME;
 
     jsonLamps["name"]    = TOPIC_LAMPS;
     jsonLamps["access"]  = "r"; /* Only read access allowed. */

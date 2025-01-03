@@ -162,26 +162,28 @@ public:
      * }
      * </code>
      * 
-     * Homeassistant MQTT discovery support can be added with the "ha" key.
+     * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
+     * the "extra" JSON object.
      * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "/text",
-     *         "ha": {
-     *             ... everything here will be used for MQTT discovery ...
+     *         "extra": {
+     *             "ha": {
+     *                 ... everything here will be used for MQTT discovery ...
+     *             }
      *         }
      *     }]
      * }
      * </code>
      * 
-     * Additional information can be loaded from a file too. It will be appended
-     * to the topic data (parallel to "name" and "access"). If a file is used,
-     * any other key than "name" and "access" will be ignored.
+     * Extra information can be loaded from a file too. This is useful for complex
+     * configurations and to keep program memory usage low.
      * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "/text",
-     *         "fileName": "haText.json"
+     *         "extra": "extra.json"
      *    }]
      * }
      * </code>
