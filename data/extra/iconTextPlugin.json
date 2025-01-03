@@ -4,7 +4,7 @@
         "discovery": {
             "name": "IconTextPlugin",
             "ic": "mdi:form-textbox",
-            "cmd_tpl": "{\"iconText\": \"{{ value }}\" }",
+            "cmd_tpl": "{\"text\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.text }}"
         }
     }
