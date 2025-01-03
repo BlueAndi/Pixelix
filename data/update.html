@@ -124,6 +124,7 @@
 
             var restClient  = new pixelix.rest.Client();
             var zip         = new JSZip();
+            var hostname    = "~HOSTNAME~";
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -259,7 +260,7 @@
                         minutes = ((minutes < 10) ? '0' : '') + minutes;
                         var seconds = date.getSeconds();
                         seconds = ((seconds < 10) ? '0' : '') + seconds;
-                        var filename = year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
+                        var filename = hostname + "_" + year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
                         saveAs(content, filename);
                         resolve();
                     });
