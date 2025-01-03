@@ -192,11 +192,11 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                     {
                         if (true == extraFileName.isEmpty())
                         {
-                            registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                            registerTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
                         }
                         else
                         {
-                            registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                            registerTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
                         }
                     }
 
