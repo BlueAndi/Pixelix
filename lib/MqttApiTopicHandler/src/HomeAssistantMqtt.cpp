@@ -367,6 +367,10 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
     jsonDoc["dev"]["sw"]   = Version::getSoftwareVersion();
     /* HW version is used for the target name (hw_version). */
     jsonDoc["dev"]["hw"]   = Version::getTargetName();
+    /* Origin name */
+    jsonDoc["o"]["name"]   = "Pixelix";
+    /* Origin URL */
+    jsonDoc["o"]["url"]    = "https://github.com/BlueAndi/Pixelix";
 
     while (discoveryDetailsIt != mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().end())
     {
