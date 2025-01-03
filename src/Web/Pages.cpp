@@ -130,7 +130,41 @@ static bool gIsUploadError                        = false;
  * The list is alphabetic sorted in ascending order.
  */
 static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
-    "ARDUINO_IDF_BRANCH", []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; }, "BOOTLOADER_FILENAME", []() -> String { return BOOTLOADER_FILENAME; }, "ESP_CHIP_ID", tmpl::getEspChipId, "ESP_CHIP_REV", []() -> String { return String(ESP.getChipRevision()); }, "ESP_CPU_FREQ", []() -> String { return String(ESP.getCpuFreqMHz()); }, "ESP_SDK_VERSION", []() -> String { return ESP.getSdkVersion(); }, "ESP_TYPE", tmpl::getEspType, "FILESYSTEM_FILENAME", []() -> String { return FILESYSTEM_FILENAME; }, "FIRMWARE_FILENAME", []() -> String { return FIRMWARE_FILENAME; }, "FLASH_CHIP_MODE", tmpl::getFlashChipMode, "FLASH_CHIP_SIZE", []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); }, "FLASH_CHIP_SPEED", []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); }, "FREERTOS_VERSION", []() -> String { return tskKERNEL_VERSION_NUMBER; }, "FS_SIZE", []() -> String { return String(FILESYSTEM.totalBytes()); }, "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); }, "HEAP_SIZE", []() -> String { return String(ESP.getHeapSize()); }, "HEAP_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreeHeap()); }, "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); }, "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); }, "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); }, "HOSTNAME", tmpl::getHostname, "IPV4", tmpl::getIPAddress, "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; }, "MAC_ADDR", []() -> String { return WiFi.macAddress(); }, "RSSI", tmpl::getRSSI, "SSID", tmpl::getSSID, "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); }, "SW_REVISION", []() -> String { return Version::getSoftwareRevision(); }, "SW_VERSION", []() -> String { return Version::getSoftwareVersion(); }, "TARGET", []() -> String { return Version::getTargetName(); }, "WS_ENDPOINT", []() -> String { return WebConfig::WEBSOCKET_PATH; }, "WS_PORT", []() -> String { return String(WebConfig::WEBSOCKET_PORT); }, "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; }, "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); }, "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); }
+    { "ARDUINO_IDF_BRANCH", []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; } },
+    { "BOOTLOADER_FILENAME", []() -> String { return BOOTLOADER_FILENAME; } },
+    { "ESP_CHIP_ID", tmpl::getEspChipId },
+    { "ESP_CHIP_REV", []() -> String { return String(ESP.getChipRevision()); } },
+    { "ESP_CPU_FREQ", []() -> String { return String(ESP.getCpuFreqMHz()); } },
+    { "ESP_SDK_VERSION", []() -> String { return ESP.getSdkVersion(); } },
+    { "ESP_TYPE", tmpl::getEspType },
+    { "FILESYSTEM_FILENAME", []() -> String { return FILESYSTEM_FILENAME; } },
+    { "FIRMWARE_FILENAME", []() -> String { return FIRMWARE_FILENAME; } },
+    { "FLASH_CHIP_MODE", tmpl::getFlashChipMode },
+    { "FLASH_CHIP_SIZE", []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); } },
+    { "FLASH_CHIP_SPEED", []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); } },
+    { "FREERTOS_VERSION", []() -> String { return tskKERNEL_VERSION_NUMBER; } },
+    { "FS_SIZE", []() -> String { return String(FILESYSTEM.totalBytes()); } },
+    { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
+    { "HEAP_SIZE", []() -> String { return String(ESP.getHeapSize()); } },
+    { "HEAP_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreeHeap()); } },
+    { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
+    { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
+    { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
+    { "HOSTNAME", tmpl::getHostname },
+    { "IPV4", tmpl::getIPAddress },
+    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
+    { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
+    { "RSSI", tmpl::getRSSI },
+    { "SSID", tmpl::getSSID },
+    { "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); } },
+    { "SW_REVISION", []() -> String { return Version::getSoftwareRevision(); } },
+    { "SW_VERSION", []() -> String { return Version::getSoftwareVersion(); } },
+    { "TARGET", []() -> String { return Version::getTargetName(); } },
+    { "WS_ENDPOINT", []() -> String { return WebConfig::WEBSOCKET_PATH; } },
+    { "WS_PORT", []() -> String { return String(WebConfig::WEBSOCKET_PORT); } },
+    { "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; } },
+    { "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); } },
+    { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } }
 };
 
 /**
