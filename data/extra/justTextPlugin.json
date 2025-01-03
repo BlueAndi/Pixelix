@@ -2,7 +2,7 @@
     "ha": {
         "component": "text",
         "discovery": {
-            "name": "MQTT text",
+            "name": "JustTextPlugin",
             "ic": "mdi:form-textbox",
             "cmd_tpl": "{\"text\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.text }}"
