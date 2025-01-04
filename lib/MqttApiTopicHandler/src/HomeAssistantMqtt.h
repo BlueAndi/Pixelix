@@ -161,15 +161,13 @@ private:
         String              nodeId;           /**< Home Assistant node id */
         String              objectId;         /**< Home Assistant object id */
         DynamicJsonDocument discoveryDetails; /**< Additional discovery information. */
-        bool                isReqToPublish;   /**< Is requested to publish this discovery info? */
 
         /** Construct Home Assistant MQTT discovery information. */
         MqttDiscoveryInfo() :
             component(),
             nodeId(),
             objectId(),
-            discoveryDetails(JSON_DOC_SIZE),
-            isReqToPublish(true)
+            discoveryDetails(JSON_DOC_SIZE)
         {
         }
     };
@@ -215,11 +213,6 @@ private:
      * Publish the MQTT auto discovery information.
      */
     void publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscoveryInfo);
-
-    /**
-     * Request to publish all automatic discovery info's.
-     */
-    void requestToPublishAllAutoDiscoveryInfos();
 
     /**
      * Publish MQTT auto discovery informations, which are requested.

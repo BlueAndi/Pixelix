@@ -124,14 +124,6 @@ void HomeAssistantMqtt::process(bool isConnected)
     {
         if (true == isConnected)
         {
-            /* Connection to broker re-estiablished?
-             * All automatic discovery info's need to be published again.
-             */
-            if (false == m_isConnected)
-            {
-                requestToPublishAllAutoDiscoveryInfos();
-            }
-
             publishAutoDiscoveryInfosOnDemand();
         }
     }
@@ -265,7 +257,7 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
                 getConfigTopic(mqttTopic, mqttDiscoveryInfo->component, mqttDiscoveryInfo->nodeId, mqttDiscoveryInfo->objectId);
 
                 /* Purge discovery info. */
-                if (false == mqttService.publish(mqttTopic, ""))
+                if (false == mqttService.publish(mqttTopic, "", true))
                 {
                     LOG_WARNING("Failed to purge HA discovery info of %s.", mqttDiscoveryInfo->objectId.c_str());
                 }
@@ -376,7 +368,8 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
     /* Send the JSON as string. */
     if (0U < serializeJson(jsonDoc, discoveryInfo))
     {
-        if (false == mqttService.publish(mqttTopic, discoveryInfo))
+        /* Publish retained to ensure that HomeAssistant will recognize the device entity. */
+        if (false == mqttService.publish(mqttTopic, discoveryInfo, true))
         {
             LOG_WARNING("Failed to provide HA discovery info of %s.", mqttDiscoveryInfo.objectId.c_str());
         }
@@ -384,23 +377,6 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
         {
             LOG_INFO("HA discovery info of %s published.", mqttDiscoveryInfo.objectId.c_str());
         }
-    }
-}
-
-void HomeAssistantMqtt::requestToPublishAllAutoDiscoveryInfos()
-{
-    ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
-
-    while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
-    {
-        MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
-
-        if (nullptr != mqttDiscoveryInfo)
-        {
-            mqttDiscoveryInfo->isReqToPublish = true;
-        }
-
-        ++listOfMqttDiscoveryInfoIt;
     }
 }
 
@@ -414,15 +390,12 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfosOnDemand()
 
         if (nullptr != mqttDiscoveryInfo)
         {
-            if (true == mqttDiscoveryInfo->isReqToPublish)
-            {
-                publishAutoDiscoveryInfo(*mqttDiscoveryInfo);
+            publishAutoDiscoveryInfo(*mqttDiscoveryInfo);
 
-                mqttDiscoveryInfo->isReqToPublish = false;
+            (void)m_mqttDiscoveryInfoList.erase(listOfMqttDiscoveryInfoIt);
 
-                /* Continue with next call cycle. */
-                break;
-            }
+            /* Continue with next call cycle. */
+            break;
         }
 
         ++listOfMqttDiscoveryInfoIt;
