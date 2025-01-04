@@ -459,8 +459,7 @@ void TopicHandlerService::processOnChange()
     {
         TopicMetaData* topicMetaData = *topicMetaDataListIt;
 
-        if ((nullptr != topicMetaData) &&
-            (nullptr != topicMetaData->hasChangedFunc))
+        if (nullptr != topicMetaData)
         {
             bool hasTopicChanged = false;
 
