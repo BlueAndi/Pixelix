@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,8 +27,8 @@
 /**
  * @brief  Services
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup service
+ *
+ * @addtogroup SERVICE_LAYER
  *
  * @{
  */
@@ -59,13 +59,22 @@ namespace Services
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Service list element.
+ */
+typedef struct
+{
+    const char* name; /**< Name of service. */
+
+} Element;
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
 /**
  * Start all services.
- * 
+ *
  * @return If successful started, it will return true otherwise false.
  */
 extern bool startAll();
@@ -80,8 +89,17 @@ extern void stopAll();
  */
 extern void processAll();
 
-}
+/**
+ * Get list of provided plugins and their creation function.
+ * 
+ * @param[out] length   Length of list.
+ * 
+ * @return List of plugins.
+ */
+const Element* getList(uint8_t& length);
 
-#endif  /* SERVICES_H */
+} /* namespace Services */
+
+#endif /* SERVICES_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -112,7 +112,7 @@ void WsCmdUninstall::setPar(const char* par)
     {
         if (SlotList::SLOT_ID_INVALID == m_slotId)
         {
-            if (false == Util::strToUInt8(String(par), m_slotId))
+            if (false == Util::strToUInt8(par, m_slotId))
             {
                 LOG_ERROR("Conversion failed: %s", par);
                 m_isError = true;

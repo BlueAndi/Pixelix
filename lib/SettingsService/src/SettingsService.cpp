@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -117,6 +117,9 @@ static const char*  KEY_NOTIFY_URL                  = "notify_url";
 /** Quiet mode key */
 static const char*  KEY_QUIET_MODE                  = "quiet_mode";
 
+/** Fade effect key */
+static const char*  KEY_FADE_EFFECT                 = "fade_effect";
+
 /* ---------- Key value pair names ---------- */
 
 /** SettingsService version name */
@@ -166,6 +169,9 @@ static const char*  NAME_NOTIFY_URL                 = "URL to be triggered when 
 
 /** Quiet mode name */
 static const char*  NAME_QUIET_MODE                 = "Quiet mode (skip unnecessary system messages)";
+
+/** Fade effect name */
+static const char*  NAME_FADE_EFFECT                = "Fade effect (0: no, 1: linear, 2: move x, 3: move y)";
 
 /* ---------- Default values ---------- */
 
@@ -217,6 +223,9 @@ static const char*      DEFAULT_NOTIFY_URL              = "";
 /** Quiet mode default value */
 static const bool       DEFAULT_QUIET_MODE              = false;
 
+/** Fade effect default value */
+static const uint8_t    DEFAULT_FADE_EFFECT             = 1U;
+
 /* ---------- Minimum values ---------- */
 
 /** SettingsService version min. value */
@@ -243,7 +252,7 @@ static const size_t     MIN_VALUE_WEB_LOGIN_PASSWORD    = 4U;
 /** Hostname min. length */
 static const size_t     MIN_VALUE_HOSTNAME              = 1U;
 
-/** Brightness min. value in % */
+/** Brightness min. value in %. Its a hard limit. The soft limit can be adjusted by the user. */
 static const uint8_t    MIN_VALUE_BRIGHTNESS            = 10U;
 
 /*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
@@ -264,6 +273,9 @@ static const uint32_t   MIN_VALUE_SCROLL_PAUSE          = 20U;
 static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
 
 /*                      MIN_VALUE_QUIET_MODE */
+
+/** Fade effect min. value */
+static const uint8_t    MIN_VALUE_FADE_EFFECT           = 0U;
 
 /* ---------- Maximum values ---------- */
 
@@ -291,7 +303,7 @@ static const size_t     MAX_VALUE_WEB_LOGIN_PASSWORD    = 32U;
 /** Hostname max. length */
 static const size_t     MAX_VALUE_HOSTNAME              = 63U;
 
-/** Brightness max. value in % */
+/** Brightness max. value in %. Its a hard limit. The soft limit can be adjusted by the user. */
 static const uint8_t    MAX_VALUE_BRIGHTNESS            = 100U;
 
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
@@ -318,6 +330,9 @@ static const uint32_t   MAX_VALUE_SCROLL_PAUSE          = 500U;
 static const size_t     MAX_VALUE_NOTIFY_URL            = 64U;
 
 /*                      MAX_VALUE_QUIET_MODE */
+
+/** Fade effect max. value */
+static const uint8_t    MAX_VALUE_FADE_EFFECT           = 3U;
 
 /******************************************************************************
  * Public Methods
@@ -509,7 +524,8 @@ SettingsService::SettingsService() :
     m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS),
     m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE),
     m_notifyURL             (m_preferences, KEY_NOTIFY_URL,             NAME_NOTIFY_URL,            DEFAULT_NOTIFY_URL,             MIN_VALUE_NOTIFY_URL,           MAX_VALUE_NOTIFY_URL),
-    m_quietMode             (m_preferences, KEY_QUIET_MODE,             NAME_QUIET_MODE,            DEFAULT_QUIET_MODE)
+    m_quietMode             (m_preferences, KEY_QUIET_MODE,             NAME_QUIET_MODE,            DEFAULT_QUIET_MODE),
+    m_fadeEffect            (m_preferences, KEY_FADE_EFFECT,            NAME_FADE_EFFECT,           DEFAULT_FADE_EFFECT,            MIN_VALUE_FADE_EFFECT,          MAX_VALUE_FADE_EFFECT)
 {
 
     /* Skip m_version, because it shall not be modified by the user. */
@@ -528,6 +544,7 @@ SettingsService::SettingsService() :
     m_keyValueList.push_back(&m_scrollPause);
     m_keyValueList.push_back(&m_notifyURL);
     m_keyValueList.push_back(&m_quietMode);
+    m_keyValueList.push_back(&m_fadeEffect);
 }
 
 SettingsService::~SettingsService()

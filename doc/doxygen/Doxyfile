@@ -48,7 +48,7 @@ PROJECT_NAME           = Pixelix
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = v7.2.4
+PROJECT_NUMBER         = v8.0.0
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -857,7 +857,7 @@ WARN_IF_INCOMPLETE_DOC = YES
 # WARN_IF_INCOMPLETE_DOC
 # The default value is: NO.
 
-WARN_NO_PARAMDOC       = NO
+WARN_NO_PARAMDOC       = YES
 
 # If the WARN_AS_ERROR tag is set to YES then doxygen will immediately stop when
 # a warning is encountered. If the WARN_AS_ERROR tag is set to FAIL_ON_WARNINGS
@@ -866,7 +866,7 @@ WARN_NO_PARAMDOC       = NO
 # Possible values are: NO, YES and FAIL_ON_WARNINGS.
 # The default value is: NO.
 
-WARN_AS_ERROR          = NO
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
 
 # The WARN_FORMAT tag determines the format of the warning messages that doxygen
 # can produce. The string should contain the $file, $line, and $text tags, which
@@ -910,18 +910,8 @@ WARN_LOGFILE           = doxygen_warnings.txt
 
 INPUT                  = . \
                          ../../src \
-                         ../../lib/BaseGfx \
-                         ../../lib/Common \
-                         ../../lib/FadeEffects \
-                         ../../lib/Fonts \
-                         ../../lib/HalLedMatrix \
-                         ../../lib/HalTftDisplay \
-                         ../../lib/Os \
-                         ../../lib/Sensors \
-                         ../../lib/StateMachine \
-                         ../../lib/Utilities \
-                         ../../lib/YAGfx \
-                         ../../lib/YAWidgets
+                         ../../lib \
+                         ../../include
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1017,9 +1007,11 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = ../../lib/Gfx/TomThumb.h \
-                         ../../src/Performance/iperf.c \
-                         ../../src/Performance/iperf.h
+EXCLUDE                = ../../lib/ArduinoNative \
+                         ../../lib/HalHub75Esp32 \
+                         ../../lib/HalTftDisplay \
+                         ../../lib/Iperf \
+                         ../../lib/Fonts/src/TomThumb.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -2273,6 +2265,10 @@ DOCBOOK_OUTPUT         = docbook
 # The default value is: NO.
 
 GENERATE_AUTOGEN_DEF   = NO
+
+#---------------------------------------------------------------------------
+# Configuration options related to Sqlite3 output
+#---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
 # Configuration options related to the Perl module output

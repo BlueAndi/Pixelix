@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  View with multiple icons for 32x8 LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -69,14 +69,15 @@ public:
     MultiIconView32x8() :
         IMultiIconView(),
         m_bitmapWidgets{
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_0_X, BITMAP_0_Y},
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_1_X, BITMAP_1_Y},
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_2_X, BITMAP_2_Y}
+            { 0U, 0U, 0, 0 },
+            { 0U, 0U, 0, 0 },
+            { 0U, 0U, 0, 0 },
+            { 0U, 0U, 0, 0 }
         }
     {
         uint8_t slot = 0U;
 
-        while(MAX_ICON_SLOTS > slot)
+        while (MAX_ICON_SLOTS > slot)
         {
             m_bitmapWidgets[slot].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
             m_bitmapWidgets[slot].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
@@ -94,6 +95,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     void init(uint16_t width, uint16_t height) override
     {
@@ -103,7 +107,7 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override
@@ -112,7 +116,7 @@ public:
 
         gfx.fillScreen(ColorDef::BLACK);
 
-        while(MAX_ICON_SLOTS > idx)
+        while (MAX_ICON_SLOTS > idx)
         {
             m_bitmapWidgets[idx].update(gfx);
             ++idx;
@@ -129,17 +133,26 @@ public:
      */
     bool loadIcon(uint8_t slotId, const String& filename) override
     {
+        bool isSuccessful = false;
+
         if (MAX_ICON_SLOTS <= slotId)
         {
             slotId = 0U;
         }
 
-        return m_bitmapWidgets[slotId].load(FILESYSTEM, filename);
+        isSuccessful = m_bitmapWidgets[slotId].load(FILESYSTEM, filename);
+
+        if (true == isSuccessful)
+        {
+            reorder();
+        }
+
+        return isSuccessful;
     }
 
     /**
      * Clear icon in the slot with the given id.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
      */
     void clearIcon(uint8_t slotId) override
@@ -150,56 +163,46 @@ public:
         }
 
         m_bitmapWidgets[slotId].clear(ColorDef::BLACK);
+        reorder();
     }
 
     /**
      * Max. number of icons.
      */
-    static const uint8_t    MAX_ICON_SLOTS  = 3U;
+    static const uint8_t MAX_ICON_SLOTS = 4U;
 
 protected:
 
-    /**
-     * Bitmap width in pixels.
-     */
-    static const uint16_t   BITMAP_WIDTH    = 8U;
+    BitmapWidget m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
 
-    /**
-     * Bitmap height in pixels.
-     */
-    static const uint16_t   BITMAP_HEIGHT   = 8U;
-
-    /** Distance between two bitmaps in pixel. */
-    static const uint8_t    BITMAP_DISTANCE = (CONFIG_LED_MATRIX_WIDTH - (MAX_ICON_SLOTS * BITMAP_WIDTH)) / MAX_ICON_SLOTS;
-
-    /** Bitmap 0 x-coordinate in pixel. */
-    static const uint8_t    BITMAP_0_X      = 0U * (BITMAP_WIDTH + BITMAP_DISTANCE);
-
-    /** Bitmap 1 x-coordinate in pixel. */
-    static const uint8_t    BITMAP_1_X      = 1U * (BITMAP_WIDTH + BITMAP_DISTANCE);
-
-    /** Bitmap 2 x-coordinate in pixel. */
-    static const uint8_t    BITMAP_2_X      = 2U * (BITMAP_WIDTH + BITMAP_DISTANCE);
-
-    /** Bitmap 0 y-coordindate in pixel. */
-    static const uint16_t   BITMAP_0_Y      = 0U;
-
-    /** Bitmap 1 y-coordindate in pixel. */
-    static const uint16_t   BITMAP_1_Y      = BITMAP_0_Y;
-
-    /** Bitmap 2 y-coordindate in pixel. */
-    static const uint16_t   BITMAP_2_Y      = BITMAP_0_Y;
-
-    BitmapWidget    m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
-
+private:
     MultiIconView32x8(const MultiIconView32x8& other);
     MultiIconView32x8& operator=(const MultiIconView32x8& other);
+
+    /**
+     * Get the active number of icon slosts.
+     *
+     * @return Number of active icon slots
+     */
+    uint8_t getActiveIconSlots();
+
+    /**
+     * Re-order the icons, depended on the number of active icon slots.
+     */
+    void reorder();
+
+    /**
+     * Apply layout with four icons.
+     *
+     * @param[in] widgetCnt Number of active icons.
+     */
+    void applyLayout(uint8_t widgetCnt);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* MULTI_ICON_VIEW_32X8_H */
+#endif /* MULTI_ICON_VIEW_32X8_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,7 @@
 #include "WsCmdPlugins.h"
 #include "WsCmdReset.h"
 #include "WsCmdSlotDuration.h"
+#include "WsCmdSlot.h"
 #include "WsCmdSlots.h"
 #include "WsCmdUninstall.h"
 
@@ -75,6 +76,9 @@
 
 /** Websocket get display command */
 static WsCmdGetDisp         gWsCmdGetDisp;
+
+/** Websocket slot command */
+static WsCmdSlot            gWsCmdSlot;
 
 /** Websocket slots command */
 static WsCmdSlots           gWsCmdSlots;
@@ -123,6 +127,7 @@ static WsCmdAlias           gWsCmdAlias;
 static WsCmd*       gWsCommands[] =
 {
     &gWsCmdGetDisp,
+    &gWsCmdSlot,
     &gWsCmdSlots,
     &gWsCmdPlugins,
     &gWsCmdInstall,

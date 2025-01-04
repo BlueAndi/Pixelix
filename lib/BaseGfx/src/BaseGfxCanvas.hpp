@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Basic graphics bitmap canvas
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */
@@ -393,7 +393,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+            addr = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
         }
 
         return addr;
@@ -423,7 +423,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+            addr = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
         }
 
         return addr;

@@ -16,6 +16,8 @@
     }, {
         "name": "Service"
     }, {
+        "name": "TopicHandlerService"
+    }, {
         "name": "Utilities"
     }],
     "frameworks": "*",

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -195,7 +195,7 @@ void WsCmdIperf::setPar(const char* par)
             }
             else
             {
-                bool status = Util::strToUInt32(String(par), m_cfg.interval);
+                bool status = Util::strToUInt32(par, m_cfg.interval);
 
                 if (false == status)
                 {
@@ -211,7 +211,7 @@ void WsCmdIperf::setPar(const char* par)
             }
             else
             {
-                bool status = Util::strToUInt32(String(par), m_cfg.time);
+                bool status = Util::strToUInt32(par, m_cfg.time);
 
                 if (false == status)
                 {

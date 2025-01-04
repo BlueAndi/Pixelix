@@ -9,8 +9,11 @@ __pycache__
 .vscode/launch.json
 .vscode/settings.json
 data/js/pluginsSubMenu.js
+data/js/servicesSubMenu.js
 data/plugins/
-doc/html/
+data/services/
+doc/doxygen/html/
+doc/doxygen/doxygen_warnings.txt
 firmware.map
 out
 src/Generated/

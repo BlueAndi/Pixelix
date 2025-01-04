@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Lamp Widget
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */
@@ -102,6 +102,8 @@ public:
      * Assigns the content of another lamp widget.
      *
      * @param[in] widget Lamp widget, which to assign
+     * 
+     * @return Lamp widget
      */
     LampWidget& operator=(const LampWidget& widget)
     {

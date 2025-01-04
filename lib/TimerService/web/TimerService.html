@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">TimerService</h1>
+                <p>Use the timers to control the display on/off state and its brightness level in %.</p>
+                <p>Notes:</p>
+                <ul>
+                    <li>Timer settings are only active, if the timer is enabled.</li>
+                    <li>For the brightness level, the value range is from 0% to 100%.</li>
+                    <li>To avoid any brightness change, use the value -1.</li>
+                    <li>The brightness adjustment will be applied only if the automatic brightness adjustment is disabled.</li>
+                </ul>
+                <form id="myForm" action="javascript:save()">
+                </form>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var restClient = new pixelix.rest.Client();
+            var timerSettingsCount = 0;
+
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+
+            function clearAllTimerSettings() {
+                $("#myForm").empty();
+            }
+
+            function createFormGroup(elements) {
+                var $formGroup = $("<div class='form-group'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function createFormCheck(elements) {
+                var $formGroup = $("<div class='form-check'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function createFormCheckInline(elements) {
+                var $formGroup = $("<div class='form-check form-check-inline'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function createInputGroup(elements) {
+                var $formGroup = $("<div class='input-group'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function brightnessValueToPercent(value) {
+                if (0 > value) {
+                    return -1;
+                }
+
+                return Math.ceil(value * 100 / 255);
+            }
+
+            function brightnessPercentToValue(percent) {
+                if (0 > percent) {
+                    return -1;
+                }
+                
+                return Math.ceil(percent * 255 / 100);
+            }
+
+            function createTimerSetting(id, timerSetting) {
+                var $block = $("<div class='h-100 p-2 bg-body-tertiary border rounded-3 mt-2'></div>");
+                var $row = $("<div class='row'></div>")
+                
+                var $checkboxEnabled = $("<input type='checkbox' class='form-check-input' id='" + id + "Enabled' />")
+                                        .prop("checked", timerSetting.enabled);
+                var $labelEnabled = $("<label class='form-check-label' for='" + id + "Enabled'>Enabled</label>");
+
+                var $labelHour = $("<label for='" + id + "Hour'>Hour:</label>");
+                var $inputHour = $("<input type='number' class='form-control' id='" + id + "Hour' min='0' max='23' />")
+                                    .val(timerSetting.hour);
+
+                var $labelMinute = $("<label for='" + id + "Minute'>Minute:</label>");
+                var $inputMinute = $("<input type='number' class='form-control' id='" + id + "Minute' min='0' max='59' />")
+                                    .val(timerSetting.minute);
+
+                var $checkboxMo = $("<input type='checkbox' class='form-check-input' id='" + id + "Mo' />")
+                                    .prop("checked", timerSetting.monday);
+                var $labelMo = $("<label class='form-check-label' for='" + id + "Mo'>Mo</label>");
+
+                var $checkboxTu = $("<input type='checkbox' class='form-check-input' id='" + id + "Tu' />")
+                                    .prop("checked", timerSetting.tuesday);
+                var $labelTu = $("<label class='form-check-label' for='" + id + "Tu'>Tu</label>");
+
+                var $checkboxWe = $("<input type='checkbox' class='form-check-input' id='" + id + "We' />")
+                                    .prop("checked", timerSetting.wednesday);
+                var $labelWe = $("<label class='form-check-label' for='" + id + "We'>We</label>");
+
+                var $checkboxTh = $("<input type='checkbox' class='form-check-input' id='" + id + "Th' />")
+                                    .prop("checked", timerSetting.thursday);
+                var $labelTh = $("<label class='form-check-label' for='" + id + "Th'>Th</label>");
+
+                var $checkboxFr = $("<input type='checkbox' class='form-check-input' id='" + id + "Fr' />")
+                                    .prop("checked", timerSetting.friday);
+                var $labelFr = $("<label class='form-check-label' for='" + id + "Fr'>Fr</label>");
+
+                var $checkboxSa = $("<input type='checkbox' class='form-check-input' id='" + id + "Sa' />")
+                                    .prop("checked", timerSetting.saturday);
+                var $labelSa = $("<label class='form-check-label' for='" + id + "Sa'>Sa</label>");
+
+                var $checkboxSu = $("<input type='checkbox' class='form-check-input' id='" + id + "Su' />")
+                                    .prop("checked", timerSetting.sunday);
+                var $labelSu = $("<label class='form-check-label' for='" + id + "Su'>Su</label>");
+
+                var $labelDisplayStateNone = $("<label for='" + id + "DisplayStateNone'>None</label>");
+                var $radioDisplayStateNone = $("<input type='radio' class='form-check-input' name='" + id + "DisplayState' id='" + id + "DisplayStateNone' value='0' />")
+                                            .prop("checked", 0 === timerSetting.displayState);
+                var $labelDisplayStateOn = $("<label for='" + id + "DisplayStateOn'>On</label>");
+                var $radioDisplayStateOn = $("<input type='radio' class='form-check-input' name='" + id + "DisplayState' id='" + id + "DisplayStateOn' value='1' />")
+                                            .prop("checked", 1 === timerSetting.displayState);
+                var $labelDisplayStateOff = $("<label for='" + id + "DisplayStateOff'>Off</label>");
+                var $radioDisplayStateOff = $("<input type='radio' class='form-check-input' name='" + id + "DisplayState' id='" + id + "DisplayStateOff' value='2' />")
+                                            .prop("checked", 2 === timerSetting.displayState);
+
+                var $labelBrightness = $("<label for='" + id + "Brightness'>Brightness:</label>");
+                var $inputBrightness = $("<input type='number' class='form-control' id='" + id + "Brightness' min='-1' max='100' />")
+                                    .val(brightnessPercentToValue(timerSetting.brightness));
+
+                $block.append($row);
+
+                $row.append(
+                    $("<div class='col'></div>")
+                    .append(createFormCheck([
+                        $checkboxEnabled, $labelEnabled
+                    ]))
+                );
+
+                $row.append(
+                    $("<div class='col'></div>")
+                    .append(createFormGroup([
+                        $labelHour, $inputHour
+                    ]))
+                );
+
+                $row.append(
+                    $("<div class='col'></div>")
+                    .append(createFormGroup([
+                        $labelMinute, $inputMinute
+                    ]))
+                );
+
+                $row.append(
+                    $("<div class='col'></div>")
+                    .append(createFormCheckInline([
+                        $checkboxSu, $labelSu
+                    ]))
+                    .append(createFormCheckInline([
+                        $checkboxMo, $labelMo
+                    ]))
+                    .append(createFormCheckInline([
+                        $checkboxTu, $labelTu
+                    ]))
+                    .append(createFormCheckInline([
+                        $checkboxWe, $labelWe
+                    ]))
+                    .append(createFormCheckInline([
+                        $checkboxTh, $labelTh
+                    ]))
+                    .append(createFormCheckInline([
+                        $checkboxFr, $labelFr
+                    ]))
+                    .append(createFormCheckInline([
+                        $checkboxSa, $labelSa
+                    ]))
+                );
+
+                $row.append(
+                    $("<div class='col'></div>")
+                    .append($("<span class='m-2'>Display:</span>"))
+                    .append(createFormCheck([
+                        $labelDisplayStateNone, $radioDisplayStateNone
+                    ]))
+                    .append(createFormCheck([
+                        $labelDisplayStateOn, $radioDisplayStateOn
+                    ]))
+                    .append(createFormCheck([
+                        $labelDisplayStateOff, $radioDisplayStateOff
+                    ]))
+                );
+
+                $row.append(
+                    $("<div class='col'></div>")
+                    .append($labelBrightness)
+                    .append(createInputGroup([
+                        $inputBrightness, $("<span class='input-group-text'>%</span>")
+                    ]))
+                );
+
+                $("#myForm").append($block);
+            }
+
+            function load() {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/timerService/timer",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var idx;
+
+                    timerSettingsCount = rsp.data.timerSettings.length;
+
+                    for (idx = 0; idx < timerSettingsCount; ++idx) {
+                        createTimerSetting("timer" + idx, rsp.data.timerSettings[idx]);
+                    }
+
+                    $("#myForm").append($("<button type='submit' class='btn btn-primary' onclick='save()'>Save</button>"));
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getTimerSettings() {
+                var timerSettings = [];
+                var idx;
+
+                for (idx = 0; idx < timerSettingsCount; ++idx) {
+                    var timerSetting = {
+                        enabled: $("#timer" + idx + "Enabled").prop("checked"),
+                        displayState: $("input[name='timer" + idx + "DisplayState']:checked").val(),
+                        hour: $("#timer" + idx + "Hour").val(),
+                        minute: $("#timer" + idx + "Minute").val(),
+                        brightness: brightnessValueToPercent($("#timer" + idx + "Brightness").val()),
+                        monday: $("#timer" + idx + "Mo").prop("checked"),
+                        tuesday: $("#timer" + idx + "Tu").prop("checked"),
+                        wednesday: $("#timer" + idx + "We").prop("checked"),
+                        thursday: $("#timer" + idx + "Th").prop("checked"),
+                        friday: $("#timer" + idx + "Fr").prop("checked"),
+                        saturday: $("#timer" + idx + "Sa").prop("checked"),
+                        sunday: $("#timer" + idx + "Su").prop("checked")
+                    };
+
+                    timerSettings.push(timerSetting);
+                }
+
+                return timerSettings;
+            }
+
+            function save() {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/timerService/timer",
+                    isJsonResponse: true,
+                    parameter: {
+                        timerSettings: getTimerSettings()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+                menu.create("menu", menu.data);
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                load();
+            });
+        </script>
+    </body>
+</html>

@@ -1,4 +1,4 @@
-@startuml
+@startuml context
 
 rectangle "System" {
     component "PIXELIX" as system
@@ -12,7 +12,7 @@ component "WiFi Access Point" as wifiAP
 
 user - system: <<physical>>\nButton/Display
 system -- remoteButton: <<logical>>\nREST API
-system -- device: <<logical>>\nREST API\nWebsocket
+system -- device: <<logical>>\nREST API /\nWebsocket /\nMQTT
 system - service: <<logical>>\nHTTP Webserver
 system -- wifiAP: <<physical>>\nWiFi
 

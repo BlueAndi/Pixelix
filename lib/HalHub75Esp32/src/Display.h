@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  HUB75 matrix display
  * @author Mariano Dupont <marianomd@gmail.com>
  *
- * @addtogroup gfx
+ * @addtogroup HAL
  *
  * @{
  */
@@ -104,7 +104,14 @@ public:
             {
                 Color& color = m_ledMatrix.getColor(x, y);
 
+#if CONFIG_DISPLAY_ROTATE180 != 0
+                m_panel.drawPixelRGB888(
+                    Board::LedMatrix::width - x - 1, 
+                    Board::LedMatrix::height - y - 1,
+                    color.getRed(), color.getGreen(), color.getBlue());
+#else
                 m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
+#endif
             }
         }
     }

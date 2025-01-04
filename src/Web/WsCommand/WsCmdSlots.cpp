@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -92,6 +92,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
          * - Plugin alias name.
          * - Information about whether the slot is locked or not.
          * - Information about whether the slot is sticky or not.
+         * - Information about whether the slot is disabled or not.
          * - Slot duration in ms.
          */
         for(slotId = 0U; slotId < maxSlots; ++slotId)
@@ -102,6 +103,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
             String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
             bool                isLocked    = displayMgr.isSlotLocked(slotId);
             bool                isSticky    = (stickySlot == slotId) ? true : false;
+            bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
             uint32_t            duration    = displayMgr.getSlotDuration(slotId);
 
             msg += DELIMITER;
@@ -118,6 +120,8 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
             msg += (false == isLocked) ? "0" : "1";
             msg += DELIMITER;
             msg += (false == isSticky) ? "0" : "1";
+            msg += DELIMITER;
+            msg += (false == isDisabled) ? "0" : "1";
             msg += DELIMITER;
             msg += duration;
         }

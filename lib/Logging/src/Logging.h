@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Logging
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup utilities
+ * @addtogroup UTILITIES
  *
  * @{
  */
@@ -41,26 +41,32 @@
  *****************************************************************************/
 
 #ifndef LOG_FATAL_ENABLE
+/** Compile switch to enable fatal log messages. */
 #define LOG_FATAL_ENABLE    (1)
 #endif  /* LOG_FATAL_ENABLE */
 
 #ifndef LOG_ERROR_ENABLE
+/** Compile switch to enable error log messages. */
 #define LOG_ERROR_ENABLE    (1)
 #endif  /* LOG_ERROR_ENABLE */
 
 #ifndef LOG_WARNING_ENABLE
+/** Compile switch to enable warning log messages. */
 #define LOG_WARNING_ENABLE  (1)
 #endif  /* LOG_WARNING_ENABLE */
 
 #ifndef LOG_INFO_ENABLE
+/** Compile switch to enable info log messages. */
 #define LOG_INFO_ENABLE     (1)
 #endif  /* LOG_INFO_ENABLE */
 
 #ifndef LOG_DEBUG_ENABLE
+/** Compile switch to enable debug log messages. */
 #define LOG_DEBUG_ENABLE    (0)
 #endif  /* LOG_DEBUG_ENABLE */
 
 #ifndef LOG_TRACE_ENABLE
+/** Compile switch to enable trace log messages. */
 #define LOG_TRACE_ENABLE    (0)
 #endif  /* LOG_TRACE_ENABLE */
 
@@ -77,6 +83,7 @@
 
 #if (0 == LOG_FATAL_ENABLE)
 
+    /** Log fatal error message. */
     #define LOG_FATAL(...)
 
 #else/* (0 == LOG_FATAL_ENABLE) */
@@ -88,6 +95,7 @@
 
 #if (0 == LOG_ERROR_ENABLE)
 
+    /** Log error message. */
     #define LOG_ERROR(...)
 
 #else/* (0 == LOG_ERROR_ENABLE) */
@@ -99,6 +107,7 @@
 
 #if (0 == LOG_WARNING_ENABLE)
 
+    /** Log warning message. */
     #define LOG_WARNING(...)
 
 #else/* (0 == LOG_WARNING_ENABLE) */
@@ -110,17 +119,19 @@
 
 #if (0 == LOG_INFO_ENABLE)
 
+    /** Log info message. */
     #define LOG_INFO(...)
 
 #else/* (0 == LOG_INFO_ENABLE) */
 
-    /** Log info error message. */
+    /** Log info message. */
     #define LOG_INFO(...)       do{ Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_INFO, __VA_ARGS__); }while(0)
 
 #endif  /* (0 == LOG_INFO_ENABLE) */
 
 #if (0 == LOG_DEBUG_ENABLE)
 
+    /** Log debug message. */
     #define LOG_DEBUG(...)
 
 #else  /* (0 == LOG_DEBUG_ENABLE) */
@@ -132,6 +143,7 @@
 
 #if (0 == LOG_TRACE_ENABLE)
 
+    /** Log trace message. */
     #define LOG_TRACE(...)
 
 #else/* (0 == LOG_TRACE_ENABLE) */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  View for 32x8 LED matrix with date and time.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -87,6 +87,13 @@ public:
          * which will continuously trigger the fading effect.
          */
         m_textWidget.disableFadeEffect();
+
+        /* Keep text (default font) in the middle, which means one empty
+         * pixel row at the top and one between the text and the day lamps.
+         * Don't use text widget alignment feature, because it will calculate
+         * a 0 as optimum.
+         */
+        m_textWidget.move(0, 1);
     }
 
     /**
@@ -98,6 +105,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     void init(uint16_t width, uint16_t height) override
     {
@@ -250,11 +260,85 @@ public:
     }
 
     /**
+     * Get the view mode (analog, digital or both).
+     * 
+     * @return View mode 
+     */
+    ViewMode getViewMode() const override
+    {
+        return ViewMode::DIGITAL_ONLY;  /* 32X8 layout can only do digital. */
+    }
+
+    /**
+     * Set the view mode (analog, digital or both).
+     * 
+     * @param[in] mode View mode
+     * 
+     * @return ViewMode 
+     */
+    bool setViewMode(ViewMode mode) override
+    {
+        bool isSuccessful = true;
+
+        if (ViewMode::DIGITAL_ONLY != mode)
+        {
+            LOG_WARNING("Illegal DateTime view mode for 32X8: (%hhu)", mode);
+            isSuccessful = false;
+        }
+
+        return isSuccessful;
+    }
+
+    /**
      * @brief Update current time values in view.
      * 
      * @param[in] now current time
      */
     virtual void setCurrentTime(const tm& now) override;
+
+    /**
+     * Get current active configuration in JSON format.
+     * 
+     * @param[out] jsonCfg Configuration
+     */
+    void getConfiguration(JsonObject& jsonCfg) const override
+    {
+        (void)jsonCfg;  /* No configuration for 32x8. */
+    }
+
+    /**
+     * Apply configuration from JSON.
+     * 
+     * @param[in] jsonCfg Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(const JsonObjectConst& jsonCfg) override
+    {
+        (void)jsonCfg;
+
+        return true;
+    }
+
+    /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) override
+    {
+        (void)jsonMerged;
+        (void)jsonSource;
+
+        return false; /* Nothing to merge. */
+    }
 
     /** Max. number of lamps. One lamp per day in a week. */
     static const uint8_t    MAX_LAMPS       = 7U;
@@ -333,6 +417,7 @@ protected:
     Color           m_dayOnColor;               /**< Color of current day in the day of the week bar. */
     Color           m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
 
+private:
     DateTimeView32x8(const DateTimeView32x8& other);
     DateTimeView32x8& operator=(const DateTimeView32x8& other);
 

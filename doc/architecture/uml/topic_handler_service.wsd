@@ -1,4 +1,4 @@
-@startuml
+@startuml topic_handler_service
 
 
 participant "PluginMgr" as pluginMgr

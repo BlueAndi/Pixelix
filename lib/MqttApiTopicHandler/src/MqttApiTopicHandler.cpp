@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,11 +72,15 @@ const char* MqttApiTopicHandler::MQTT_ENDPOINT_WRITE_ACCESS = "/set";
 void MqttApiTopicHandler::start()
 {
     m_haExtension.start();
+
+    m_isStarted = true;
 }
 
 void MqttApiTopicHandler::stop()
 {
     m_haExtension.stop();
+
+    m_isStarted = false;
 }
 
 void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
@@ -146,7 +150,7 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
     }
 }
 
-void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
+void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
     if ((false == deviceId.isEmpty()) &&
         (false == entityId.isEmpty()) &&
@@ -175,14 +179,17 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 {
                     topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
 
-                    /* Purge topic */
-                    if (false == mqttService.publish(topicUriReadable, ""))
+                    /* Purge topic? */
+                    if (true == purge)
                     {
-                        LOG_WARNING("Failed to purge: %s", topicUriReadable.c_str());
-                    }
-                    else
-                    {
-                        LOG_INFO("Purged: %s", topicUriReadable.c_str());
+                        if (false == mqttService.publish(topicUriReadable, ""))
+                        {
+                            LOG_WARNING("Failed to purge: %s", topicUriReadable.c_str());
+                        }
+                        else
+                        {
+                            LOG_INFO("Purged: %s", topicUriReadable.c_str());
+                        }
                     }
                 }
                 
@@ -195,8 +202,11 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                     mqttService.unsubscribe(topicUriWriteable);
                 }
 
-                /* Handle Home Assistant extension */
-                m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable);
+                /* Handle Home Assistant extension. */
+                if (true == purge)
+                {
+                    m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable);
+                }
 
                 topicStateIt = m_listOfTopicStates.erase(topicStateIt);
 
@@ -213,44 +223,47 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
 
 void MqttApiTopicHandler::process()
 {
-    MqttService& mqttService = MqttService::getInstance();
-    
-    /* If connection to MQTT broker is the first time established or reconnected,
-     * all topics will be published to be up-to-date.
-     */
-    if ((false == m_isMqttConnected) &&
-        (MqttService::STATE_CONNECTED == mqttService.getState()))
-
+    if (true == m_isStarted)
     {
-        m_isMqttConnected = true;
+        MqttService& mqttService = MqttService::getInstance();
         
-        /* Publish after connection establishment. */
-        requestToPublishAllTopicStates();
-    }
-    else if ((true == m_isMqttConnected) &&
-             (MqttService::STATE_CONNECTED != mqttService.getState()))
-    {
-        m_isMqttConnected = false;
-    }
-    else
-    {
-        ;
-    }
+        /* If connection to MQTT broker is the first time established or reconnected,
+        * all topics will be published to be up-to-date.
+        */
+        if ((false == m_isMqttConnected) &&
+            (MqttService::STATE_CONNECTED == mqttService.getState()))
 
-    if (true == m_isMqttConnected)
-    {
-        /* If necessary, a topic state will be published.
-         *
-         * Don't publish all of them at once, only one per process cycle.
-         * This has the advantage to detect lost MQTT connection, because remember
-         * its cooperative! As long as the MQTT service is not called, no update
-         * about the connection status will appear.
-         */
-        publishTopicStatesOnDemand();
-    }
+        {
+            m_isMqttConnected = true;
+            
+            /* Publish after connection establishment. */
+            requestToPublishAllTopicStates();
+        }
+        else if ((true == m_isMqttConnected) &&
+                (MqttService::STATE_CONNECTED != mqttService.getState()))
+        {
+            m_isMqttConnected = false;
+        }
+        else
+        {
+            ;
+        }
 
-    /* Process Home Assistant extension. */
-    m_haExtension.process(m_isMqttConnected);
+        if (true == m_isMqttConnected)
+        {
+            /* If necessary, a topic state will be published.
+            *
+            * Don't publish all of them at once, only one per process cycle.
+            * This has the advantage to detect lost MQTT connection, because remember
+            * its cooperative! As long as the MQTT service is not called, no update
+            * about the connection status will appear.
+            */
+            publishTopicStatesOnDemand();
+        }
+
+        /* Process Home Assistant extension. */
+        m_haExtension.process(m_isMqttConnected);
+    }
 }
 
 void MqttApiTopicHandler::notify(const String& deviceId, const String& entityId, const String& topic)
@@ -337,7 +350,7 @@ void MqttApiTopicHandler::publishTopicStatesOnDemand()
 
 void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    const size_t            JSON_DOC_SIZE   = 1024U;
+    const size_t            JSON_DOC_SIZE   = 4096U;
     DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
     DeserializationError    error           = deserializeJson(jsonDoc, payload, size);
 
@@ -429,7 +442,7 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 {
     if (nullptr != getTopicFunc)
     {
-        const size_t        JSON_DOC_SIZE       = 1024U;
+        const size_t        JSON_DOC_SIZE       = 4096U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonObj             = jsonDoc.createNestedObject("data");
         String              mqttTopicNameBase   = deviceId + "/" + entityId + topic;

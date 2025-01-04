@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,11 @@
 
 /** Scaling factor numerator: 256 * (3/4)^(8/height) */
 static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 192U;
+
+#elif 16U == CONFIG_LED_MATRIX_HEIGHT
+
+/** Scaling factor numerator: 256 * (3/4)^(8/height) */
+static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 222U;
 
 #elif 32U == CONFIG_LED_MATRIX_HEIGHT
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  DateTime plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -141,11 +141,13 @@ public:
      * interfaces like REST, websocket, MQTT, etc.
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [
      *         "/text"
      *     ]
      * }
+     * </code>
      * 
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
@@ -155,12 +157,40 @@ public:
      * - Readable and writeable: "rw"
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "/text",
      *         "access": "r"
      *     }]
      * }
+     * </code>
+     * 
+     * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
+     * the "extra" JSON object.
+     * <code>{.json}
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "extra": {
+     *             "ha": {
+     *                 ... everything here will be used for MQTT discovery ...
+     *             }
+     *         }
+     *     }]
+     * }
+     * </code>
+     * 
+     * Extra information can be loaded from a file too. This is useful for complex
+     * configurations and to keep program memory usage low.
+     * <code>{.json}
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "extra": "extra.json"
+     *    }]
+     * }
+     * </code>
      * 
      * @param[out] topics   Topis in JSON format
      */
@@ -279,7 +309,7 @@ private:
     /**
      * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC_CONFIG;
+    static const char      TOPIC_CONFIG[];
 
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_UPDATE_PERIOD     = SIMPLE_TIMER_SECONDS(1U);
@@ -288,10 +318,10 @@ private:
     static const uint32_t   MS_TO_SEC_DIVIDER       = 1000U;
 
     /** Default time format according to strftime(). */
-    static const char*      TIME_FORMAT_DEFAULT;
+    static const char       TIME_FORMAT_DEFAULT[];
 
     /** Default date format according to strftime(). */
-    static const char*      DATE_FORMAT_DEFAULT;
+    static const char       DATE_FORMAT_DEFAULT[];
 
     /**
      * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
@@ -331,6 +361,20 @@ private:
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource);
+
+    /**
      * Get current date/time and update the text, which to be displayed.
      * The update takes only place, if the date changed.
      *
@@ -352,23 +396,6 @@ private:
      */
     bool getTimeAsString(String& time, const String& format, const tm *currentTime = nullptr);
 
-    /**
-     * Convert color to HTML format.
-     * 
-     * @param[in] color Color
-     * 
-     * @return Color in HTML format
-     */
-    String colorToHtml(const Color& color) const;
-
-    /**
-     * Convert color from HTML format.
-     * 
-     * @param[in] htmlColor Color in HTML format
-     * 
-     * @return Color
-     */
-    Color colorFromHtml(const String& htmlColor) const;
 };
 
 /******************************************************************************

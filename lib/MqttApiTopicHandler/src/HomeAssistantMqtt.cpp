@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "HomeAssistantMqtt.h"
+#include "Version.h"
 
 #include <SettingsService.h>
 #include <Logging.h>
@@ -47,12 +48,6 @@
  * Macros
  *****************************************************************************/
 
-/** Stringizing the value. */
-#define Q(x) #x
-
-/** Quote the given value to get a string literal. */
-#define QUOTE(x) Q(x)
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -66,22 +61,22 @@
  *****************************************************************************/
 
 /* Initialize Home Assistant discovery prefix key. */
-const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_PREFIX      = "ha_dp";
+const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_PREFIX     = "ha_dp";
 
 /* Initialize Home Assistant discovery prefix name. */
-const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_PREFIX     = "Home Assistant Discovery Prefix";
+const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_PREFIX    = "Home Assistant Discovery Prefix";
 
 /* Initialize Home Assistant discovery prefix default value. */
-const char* HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_PREFIX  = "homeassistant";
+const char* HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_PREFIX = "homeassistant";
 
 /* Initialize Home Assistant discovery enable flag key */
-const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_ENABLE      = "ha_ena";
+const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_ENABLE     = "ha_ena";
 
 /* Initialize Home Assistant discovery enable flag name */
-const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_ENABLE     = "Enable Home Assistant Discovery";
+const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_ENABLE    = "Enable Home Assistant Discovery";
 
 /* Initialize Home Assistant discovery enable flag default value */
-const bool  HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_ENABLE  = false;
+const bool HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_ENABLE  = false;
 
 /******************************************************************************
  * Public Methods
@@ -105,8 +100,8 @@ void HomeAssistantMqtt::start()
     }
     else
     {
-        m_haDiscoveryPrefix     = m_haDiscoveryPrefixSetting.getValue();
-        m_haDiscoveryEnabled    = m_haDiscoveryEnabledSetting.getValue();
+        m_haDiscoveryPrefix  = m_haDiscoveryPrefixSetting.getValue();
+        m_haDiscoveryEnabled = m_haDiscoveryEnabledSetting.getValue();
 
         settings.close();
     }
@@ -118,8 +113,6 @@ void HomeAssistantMqtt::stop()
 
     settings.unregisterSetting(&m_haDiscoveryPrefixSetting);
     settings.unregisterSetting(&m_haDiscoveryEnabledSetting);
-
-    clearMqttDiscoveryInfoList();
 }
 
 void HomeAssistantMqtt::process(bool isConnected)
@@ -129,14 +122,6 @@ void HomeAssistantMqtt::process(bool isConnected)
     {
         if (true == isConnected)
         {
-            /* Connection to broker re-estiablished?
-             * All automatic discovery info's need to be published again.
-             */
-            if (false == m_isConnected)
-            {
-                requestToPublishAllAutoDiscoveryInfos();
-            }
-
             publishAutoDiscoveryInfosOnDemand();
         }
     }
@@ -155,20 +140,26 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const Stri
         JsonVariantConst jsonHomeAssistant = extra["ha"];
 
         /* Configuration available? */
-        if (false == jsonHomeAssistant.isNull())
+        if (true == jsonHomeAssistant.is<JsonObjectConst>())
         {
             JsonVariantConst jsonComponent = jsonHomeAssistant["component"];
+            JsonVariantConst jsonDiscovery = jsonHomeAssistant["discovery"];
 
-            if (true == jsonComponent.is<String>())
+            if ((false == jsonComponent.is<String>()) ||
+                (false == jsonDiscovery.is<JsonObjectConst>()))
             {
-                MqttDiscoveryInfo* mqttDiscoveryInfo = new(std::nothrow) MqttDiscoveryInfo();
+                LOG_WARNING("Invalid Home Assistant MQTT discovery configuration.");
+            }
+            else
+            {
+                MqttDiscoveryInfo* mqttDiscoveryInfo = new (std::nothrow) MqttDiscoveryInfo();
 
                 if (nullptr != mqttDiscoveryInfo)
                 {
-                    mqttDiscoveryInfo->component        = jsonComponent.as<String>();
-                    mqttDiscoveryInfo->nodeId           = deviceId;
-                    mqttDiscoveryInfo->objectId         = getObjectId(entityId);
-                    mqttDiscoveryInfo->discoveryDetails = jsonHomeAssistant["discovery"];
+                    mqttDiscoveryInfo->component = jsonComponent.as<String>();
+                    mqttDiscoveryInfo->nodeId    = deviceId;
+                    mqttDiscoveryInfo->objectId  = getObjectId(entityId);
+                    mqttDiscoveryInfo->discoveryDetails.set(jsonDiscovery); /* Deep copy, because discovery details are handled in different context. */
 
                     /* Readable topic? */
                     if (false == stateTopic.isEmpty())
@@ -203,21 +194,21 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
     if ((true == m_haDiscoveryEnabled) &&
         (false == m_haDiscoveryPrefix.isEmpty()))
     {
-        ListOfMqttDiscoveryInfo::iterator   listOfMqttDiscoveryInfoIt   = m_mqttDiscoveryInfoList.begin();
-        String                              objectId                    = getObjectId(entityId);
+        ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
+        String                            objectId                  = getObjectId(entityId);
 
-        while(m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
+        while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
         {
-            MqttDiscoveryInfo*  mqttDiscoveryInfo   = *listOfMqttDiscoveryInfoIt;
-            bool                found               = false;
-            
+            MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
+            bool               found             = false;
+
             if ((nullptr != mqttDiscoveryInfo) &&
                 (deviceId == mqttDiscoveryInfo->nodeId) &&
                 (objectId == mqttDiscoveryInfo->objectId))
             {
-                JsonVariantConst    jsonStateTopic  = mqttDiscoveryInfo->discoveryDetails["stat_t"];
-                JsonVariantConst    jsonCmdTopic    = mqttDiscoveryInfo->discoveryDetails["cmd_t"];
-                
+                JsonVariantConst jsonStateTopic = mqttDiscoveryInfo->discoveryDetails["stat_t"];
+                JsonVariantConst jsonCmdTopic   = mqttDiscoveryInfo->discoveryDetails["cmd_t"];
+
                 /* Topic only readable? */
                 if ((false == jsonStateTopic.isNull()) &&
                     (true == jsonCmdTopic.isNull()))
@@ -258,16 +249,17 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
             }
             else
             {
-                MqttService&    mqttService = MqttService::getInstance();
-                String          mqttTopic;
+                MqttService& mqttService = MqttService::getInstance();
+                String       mqttTopic;
 
                 getConfigTopic(mqttTopic, mqttDiscoveryInfo->component, mqttDiscoveryInfo->nodeId, mqttDiscoveryInfo->objectId);
 
-                /* Purge discovery info. */
-                if (false == mqttService.publish(mqttTopic, ""))
+                /* Purge retained discovery info. */
+                if (false == mqttService.publish(mqttTopic, "", true))
                 {
                     LOG_WARNING("Failed to purge HA discovery info of %s.", mqttDiscoveryInfo->objectId.c_str());
                 }
+                /* Successful purged. */
                 else
                 {
                     LOG_INFO("HA discovery info of %s purged.", mqttDiscoveryInfo->objectId.c_str());
@@ -305,11 +297,11 @@ void HomeAssistantMqtt::clearMqttDiscoveryInfoList()
 {
     ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
 
-    while(m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
+    while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
     {
         MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
 
-        listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.erase(listOfMqttDiscoveryInfoIt);
+        listOfMqttDiscoveryInfoIt            = m_mqttDiscoveryInfoList.erase(listOfMqttDiscoveryInfoIt);
 
         if (nullptr != mqttDiscoveryInfo)
         {
@@ -333,33 +325,39 @@ void HomeAssistantMqtt::getConfigTopic(String& haConfigTopic, const String& comp
 
 void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscoveryInfo)
 {
-    const size_t            JSON_DOC_SIZE               = 1024U;
+    const size_t            JSON_DOC_SIZE = 2048U;
     DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-    MqttService&            mqttService                 = MqttService::getInstance();
+    MqttService&            mqttService = MqttService::getInstance();
     String                  mqttTopic;
     String                  discoveryInfo;
-    JsonObjectConstIterator discoveryDetailsIt          = mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().begin();
+    JsonObjectConstIterator discoveryDetailsIt = mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().begin();
 
     getConfigTopic(mqttTopic, mqttDiscoveryInfo.component, mqttDiscoveryInfo.nodeId, mqttDiscoveryInfo.objectId);
 
     /* The object id (object_id) is used to generate the entity id. */
-    jsonDoc["obj_id"]               = mqttDiscoveryInfo.objectId;
+    jsonDoc["obj_id"]      = mqttDiscoveryInfo.objectId;
     /* The unique id (unique_id) identifies the device and its entity. */
-    jsonDoc["uniq_id"]              = mqttDiscoveryInfo.nodeId + "/" + mqttDiscoveryInfo.objectId;
+    jsonDoc["uniq_id"]     = mqttDiscoveryInfo.nodeId + "/" + mqttDiscoveryInfo.objectId;
     /* Device identifier */
-    jsonDoc["dev"]["identifiers"]   = WiFi.macAddress();
+    jsonDoc["dev"]["ids"]  = WiFi.macAddress();
     /* URL to configuration of the device (configuration_url). */
-    jsonDoc["dev"]["cu"]            = String("http://") + WiFi.localIP().toString();
+    jsonDoc["dev"]["cu"]   = String("http://") + WiFi.localIP().toString();
     /* Name of the device. */
-    jsonDoc["dev"]["name"]          = mqttDiscoveryInfo.nodeId;
+    jsonDoc["dev"]["name"] = mqttDiscoveryInfo.nodeId;
     /* Device model name (model) */
-    jsonDoc["dev"]["mdl"]           = "Pixelix";
+    jsonDoc["dev"]["mdl"]  = "Pixelix";
     /* Manufacturer (manufacturer) */
-    jsonDoc["dev"]["mf"]            = "BlueAndi & Friends";
+    jsonDoc["dev"]["mf"]   = "BlueAndi & Friends";
     /* SW version of the device (sw_version) */
-    jsonDoc["dev"]["sw"]            = QUOTE(SW_VERSION);
+    jsonDoc["dev"]["sw"]   = Version::getSoftwareVersion();
+    /* HW version is used for the target name (hw_version). */
+    jsonDoc["dev"]["hw"]   = Version::getTargetName();
+    /* Origin name */
+    jsonDoc["o"]["name"]   = "Pixelix";
+    /* Origin URL */
+    jsonDoc["o"]["url"]    = "https://github.com/BlueAndi/Pixelix";
 
-    while(discoveryDetailsIt != mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().end())
+    while (discoveryDetailsIt != mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().end())
     {
         jsonDoc[discoveryDetailsIt->key()] = discoveryDetailsIt->value();
 
@@ -369,7 +367,8 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
     /* Send the JSON as string. */
     if (0U < serializeJson(jsonDoc, discoveryInfo))
     {
-        if (false == mqttService.publish(mqttTopic, discoveryInfo))
+        /* Publish retained to ensure that HomeAssistant will recognize the device entity. */
+        if (false == mqttService.publish(mqttTopic, discoveryInfo, true))
         {
             LOG_WARNING("Failed to provide HA discovery info of %s.", mqttDiscoveryInfo.objectId.c_str());
         }
@@ -380,30 +379,13 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
     }
 }
 
-void HomeAssistantMqtt::requestToPublishAllAutoDiscoveryInfos()
-{
-    ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
-
-    while(m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
-    {
-        MqttDiscoveryInfo*  mqttDiscoveryInfo   = *listOfMqttDiscoveryInfoIt;
-
-        if (nullptr != mqttDiscoveryInfo)
-        {
-            mqttDiscoveryInfo->isReqToPublish = true;
-        }
-
-        ++listOfMqttDiscoveryInfoIt;
-    }
-}
-
 void HomeAssistantMqtt::publishAutoDiscoveryInfosOnDemand()
 {
     ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
 
-    while(m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
+    while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
     {
-        MqttDiscoveryInfo*  mqttDiscoveryInfo   = *listOfMqttDiscoveryInfoIt;
+        MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
 
         if (nullptr != mqttDiscoveryInfo)
         {

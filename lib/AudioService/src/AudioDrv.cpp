@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,34 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+#ifdef CONFIG_IDF_TARGET_ESP32
+
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 4)
+
+/**
+ * Only the left channel is supported.
+ * Workaround, see https://github.com/espressif/arduino-esp32/issues/7177
+ */
+#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_RIGHT 
+
+#else
+
+/**
+ * Only the left channel is supported.
+ */
+#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_LEFT
+
+#endif  
+
+#else
+
+/**
+ * Only the left channel is supported.
+ */
+#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_LEFT
+
+#endif
 
 /******************************************************************************
  * Types and classes

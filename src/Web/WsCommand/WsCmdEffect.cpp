@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -97,7 +97,7 @@ void WsCmdEffect::setPar(const char* par)
 {
     if (0U == m_parCnt)
     {
-        if (false == Util::strToUInt8(String(par), m_fadeEffect))
+        if (false == Util::strToUInt8(par, m_fadeEffect))
         {
             m_isError = true;
         }

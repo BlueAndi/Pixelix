@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -104,17 +104,15 @@ void WsCmdSlotDuration::setPar(const char* par)
     switch(m_parCnt)
     {
     case 0:
-        if (false == Util::strToUInt8(String(par), m_slotId))
+        if (false == Util::strToUInt8(par, m_slotId))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;
 
     case 1:
-        if (false == Util::strToUInt32(String(par), m_slotDuration))
+        if (false == Util::strToUInt32(par, m_slotDuration))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;

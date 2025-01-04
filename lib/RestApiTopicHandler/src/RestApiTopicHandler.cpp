@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -106,8 +106,10 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
     }
 }
 
-void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
+void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
+    UTIL_NOT_USED(purge);
+
     if ((false == deviceId.isEmpty()) &&
         (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
@@ -165,7 +167,7 @@ String RestApiTopicHandler::getBaseUri(const String& entityId)
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMetaData* topicMetaData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE   = 2048U;
+    const size_t        JSON_DOC_SIZE   = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj         = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;

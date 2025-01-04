@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,14 +39,16 @@
 #include <Display.h>
 #include <SettingsService.h>
 
+#include "Services.h"
 #include "FileSystem.h"
 #include "MyWebServer.h"
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 #include "PluginMgr.h"
-
+#include "SensorDataProvider.h"
 #include "TextWidget.h"
 #include "ProgressBar.h"
+#include "Topics.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -77,8 +79,8 @@ const char* UpdateMgr::OTA_PASSWORD = "maytheforcebewithyou";
 
 bool UpdateMgr::init()
 {
-    String              hostname;
-    SettingsService&    settings    = SettingsService::getInstance();
+    String           hostname;
+    SettingsService& settings = SettingsService::getInstance();
 
     /* Prepare over the air update. Note, the configuration must be done
      * before the update server is running.
@@ -160,11 +162,25 @@ void UpdateMgr::beginProgress()
 {
     if (true == m_isInitialized)
     {
-        /* Stop display manager */
-        DisplayMgr::getInstance().end();
+        /* Avoid any external request. */
+        Topics::end();
 
-        m_updateIsRunning   = true;
-        m_progress          = UINT8_MAX; // Force update
+        /* Stop display manager first, because this will stop the plugin
+         * processing at all.
+         */
+        DisplayMgr::getInstance().end();
+        
+        /* Unregister sensor topics (no purge). */
+        SensorDataProvider::getInstance().end();
+
+        /* Unregister all plugin topics (no purge). */
+        PluginMgr::getInstance().unregisterAllPluginTopics();
+
+        /* Stop services, but keep webserver running! */
+        Services::stopAll();
+
+        m_updateIsRunning = true;
+        m_progress        = UINT8_MAX; /* Force update. */
         m_textWidget.setFormatStr("Update");
 
         /* Show user update status */
@@ -177,22 +193,24 @@ void UpdateMgr::updateProgress(uint8_t progress)
     if ((true == m_isInitialized) &&
         (m_progress != progress))
     {
-        m_progress = progress;
+        Display& display = Display::getInstance();
+
+        m_progress       = progress;
 
         m_progressBar.setProgress(m_progress);
 
         /* Update display manually. Note, that this must be done to avoid
          * artifacts on the display, caused by long flash write cycles.
          */
-        Display::getInstance().clear();
-        m_progressBar.update(Display::getInstance()); // Draw the progress bar in the background
-        m_textWidget.update(Display::getInstance());  // Overlay with the text
-        Display::getInstance().show();
+        display.clear();
+        m_progressBar.update(display); // Draw the progress bar in the background
+        m_textWidget.update(display);  // Overlay with the text
+        display.show();
 
         /* Wait until the LED matrix is updated to avoid artifacts on the
          * display.
          */
-        while(false == Display::getInstance().isReady())
+        while (false == display.isReady())
         {
             /* Just wait and give other tasks a chance. */
             delay(1U);
@@ -205,14 +223,24 @@ void UpdateMgr::updateProgress(uint8_t progress)
 
 void UpdateMgr::endProgress()
 {
-    if (true == m_isInitialized)
+    Display& display = Display::getInstance();
+
+    display.clear();
+    m_textWidget.setFormatStr("...");
+    m_textWidget.update(display);
+    display.show();
+
+    /* Wait until the LED matrix is updated to avoid artifacts on the
+     * display.
+     */
+    while (false == display.isReady())
     {
-        /* Start display manager */
-        if (false == DisplayMgr::getInstance().begin())
-        {
-            LOG_WARNING("Couldn't initialize display manager again.");
-        }
+        /* Just wait and give other tasks a chance. */
+        delay(1U);
     }
+
+    /* Start services again. They are required for a graceful restart. */
+    Services::startAll();
 }
 
 /******************************************************************************
@@ -245,40 +273,45 @@ UpdateMgr::~UpdateMgr()
 
 void UpdateMgr::onStart()
 {
-    String infoStr = "Update ";
-
-    /* Stop webserver, before filesystem may be unmounted. */
-    MyWebServer::end();
+    String infoStr = "Start OTA update of ";
 
     /* Shall the firmware be updated? */
     if (U_FLASH == ArduinoOTA.getCommand())
     {
-        infoStr += "sketch.";
+        infoStr += "firmware.";
     }
     /* The filesystem will be updated. */
-    else
+    else if (U_SPIFFS == ArduinoOTA.getCommand())
     {
         infoStr += "filesystem.";
-
-        /* Close filesystem before continue.
-         * Note, this needs a restart after update is finished.
-         */
-        FILESYSTEM.end();
+    }
+    else
+    {
+        infoStr += "unknown type.";
     }
 
     LOG_INFO(infoStr);
 
     getInstance().beginProgress();
+
+    /* Stop webserver, before filesystem may be unmounted. */
+    MyWebServer::end();
+
+    /* Shall the filesystem will be updated? */
+    if (U_SPIFFS == ArduinoOTA.getCommand())
+    {
+        /* Close filesystem before continue.
+         * Note, this needs a restart after update is finished.
+         */
+        FILESYSTEM.end();
+    }
 }
 
 void UpdateMgr::onEnd()
 {
-    String  infoStr = "Update successful finished.";
+    LOG_INFO("Update successful finished.");
 
     getInstance().m_updateIsRunning = false;
-
-    LOG_INFO(infoStr);
-
     getInstance().endProgress();
 
     /* Note, there is no need here to start the webserver or the display
@@ -289,7 +322,7 @@ void UpdateMgr::onEnd()
 
 void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
-    const uint32_t  PROGRESS_PERCENT    = (progress * 100U) / total;
+    const uint32_t PROGRESS_PERCENT = (progress * 100U) / total;
 
     getInstance().updateProgress(PROGRESS_PERCENT);
 }
@@ -298,7 +331,7 @@ void UpdateMgr::onError(ota_error_t error)
 {
     String infoStr;
 
-    switch(error)
+    switch (error)
     {
     case OTA_AUTH_ERROR:
         infoStr = "OTA - Authentication error.";
@@ -346,8 +379,8 @@ void UpdateMgr::onError(ota_error_t error)
          */
         if (true == getInstance().m_updateIsRunning)
         {
-            const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
-            const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+            const uint32_t DURATION_NON_SCROLLING = 4000U; /* ms */
+            const uint32_t SCROLLING_REPEAT_NUM   = 2U;
 
             SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 

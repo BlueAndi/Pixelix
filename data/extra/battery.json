@@ -1,0 +1,12 @@
+{
+    "ha": {
+        "component": "sensor",
+        "discovery": {
+            "name": "Battery",
+            "unit_of_meas": "%",
+            "ic": "mdi:battery-90",
+            "dev_cla": "battery",
+            "val_tpl": "{{ value_json.value }}"
+        }
+    }
+}

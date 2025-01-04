@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  Date and time view interface.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -42,6 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include <ArduinoJson.h>
 #include <YAGfx.h>
 #include <Fonts.h>
 #include <WString.h>
@@ -70,7 +71,22 @@ public:
     }
 
     /**
+     * The view modes, which influences how the data is
+     * shown on the display.
+     */
+    enum ViewMode
+    {
+        DIGITAL_ONLY = 0U,       /**< Show date and time */
+        ANALOG_ONLY,             /**< Show only the date */
+        DIGITAL_AND_ANALOG,      /**< Show only the time */
+        VIEW_MODE_MAX            /**< Number of configurations */
+    };
+
+    /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     virtual void init(uint16_t width, uint16_t height) = 0;
 
@@ -161,11 +177,57 @@ public:
     virtual void setDayOffColor(const Color& color) = 0;
 
     /**
+     * Get the view mode (analog, digital or both).
+     * 
+     * @return View mode 
+     */
+    virtual ViewMode getViewMode() const = 0;
+
+    /**
+     * Set the view mode (analog, digital or both).
+     * 
+     * @param[in] mode  View mode
+     * 
+     * @return bool success of failure 
+     */
+    virtual bool setViewMode(ViewMode mode) = 0;
+
+    /**
      * @brief Update current time values in view.
      * 
-     * @param now current time
+     * @param[in] now current time
      */
     virtual void setCurrentTime(const tm& now) = 0;
+
+        /**
+     * Get current active configuration in JSON format.
+     * 
+     * @param[out] jsonCfg Configuration
+     */
+    virtual void getConfiguration(JsonObject& jsonCfg) const = 0;
+
+    /**
+     * Apply configuration from JSON.
+     * 
+     * @param[in] jsonCfg Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    virtual bool setConfiguration(const JsonObjectConst& jsonCfg) = 0;
+
+     /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    virtual bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) = 0;
 
 protected:
 

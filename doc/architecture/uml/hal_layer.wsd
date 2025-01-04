@@ -1,44 +1,65 @@
-@startuml
+@startuml hal_layer
 
 skinparam component {
     BackgroundColor<<Arduino>> Lightgreen
     BackgroundColor<<Future>> White
 }
 
-package "HAL" {
+package "HAL" as halPckg {
 
     component "AudioDrv" as audioDrv
     component "SensorDataProvider" as sensorDataProvider
     component "ButtonDrv" as buttonDrv
+    component "BuzzerDrv" as buzzerDrv
 
-    package "Hal<concrete-name>" {
+    package "RtcDrv" as rtcDrvPckg {
+        component "Rtc1307Drv" as rtc1307Drv
+        component "Rtc3231Drv" as rtc3231Drv
+        component "RtcNoneDrv" as rtcNoneDrv
+        component "RtcDrv" as rtcDrv
+
+        rtcDrv --> rtc1307Drv
+        rtcDrv --> rtc3231Drv
+        rtcDrv --> rtcNoneDrv
+    }
+
+    package "Hal<concrete-name>" as halConcretePckg {
         component "Display" as display
         component "Board" as board
     }
 
-    package "3rd party" as hal3rdParty {
+    package "3rd party" as hal3rdPartyPckg {
 
+        component "NeoPixelBus" <<Arduino>> as neoPixelBus
         component "TwoWire" <<Arduino>> as twoWire
         component "WiFi" <<Arduino>> as wifi
-        component "OneWire\n(Propritary)" as oneWire
+        component "OneWire\n(Proprietary)" as oneWire
         component "I2S" <<Arduino>> as i2s
+        component "RMT" <<Arduino>> as rmt
     }
 
-    package Sensors {
+    package "Sensors" as sensorsPckg {
+        component "SensorBattery" as sensorBattery
         component "SensorDhtX" as sensorDhtX
         component "SensorLdr" as sensorLdr
         component "SensorSht3X" as sensorSht3X
     }
 
-    audioDrv ...> i2s
+    display ..> neoPixelBus
+    neoPixelBus ..> rmt: <<use>>\n(for other than ESP32-S3)
+    neoPixelBus ..> i2s: <<use>>\n(for ESP32-S3 only)
+
+    audioDrv .....> i2s
     sensorDataProvider ..> sensorSht3X
     sensorDataProvider ..> sensorDhtX
     sensorDataProvider ..> sensorLdr
-    buttonDrv ..> board
+    buttonDrv ...> board
+    buzzerDrv ...> board
 
+    sensorBattery ..> board
     sensorSht3X ..> twoWire
     sensorDhtX ..> oneWire
-    sensorLdr .u.> board
+    sensorLdr ..> board
 }
 
 @enduml

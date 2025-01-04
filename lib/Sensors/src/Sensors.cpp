@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -89,28 +89,28 @@
 #define SENSOR_ID_SHT3X     SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_LDR)
 #endif  /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
 
-#if IS_ENABLED(CONFIG_SENSOR_DHT11_ENABLE)
+#if IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE)
 /**
- * DHT11 sensor id.
+ * DHTx sensor id.
  */
-#define SENSOR_ID_DHT11     SENSOR_ID_NEXT(SENSOR_ID_SHT3X)
-#else   /* IS_ENABLED(CONFIG_SENSOR_DHT11_ENABLE) */
+#define SENSOR_ID_DHT_X     SENSOR_ID_NEXT(SENSOR_ID_SHT3X)
+#else   /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
 /**
- * DHT11 sensor id (not applicable).
+ * DHTx sensor id (not applicable).
  */
-#define SENSOR_ID_DHT11     SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_SHT3X)
-#endif  /* IS_ENABLED(CONFIG_SENSOR_DHT11_ENABLE) */
+#define SENSOR_ID_DHT_X     SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_SHT3X)
+#endif  /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE)
 /**
  * Battery sensor id.
  */
-#define SENSOR_ID_BATTERY   SENSOR_ID_NEXT(SENSOR_ID_DHT11)
+#define SENSOR_ID_BATTERY   SENSOR_ID_NEXT(SENSOR_ID_DHT_X)
 #else   /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
 /**
  * Battery sensor id (not applicable).
  */
-#define SENSOR_ID_BATTERY   SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_DHT11)
+#define SENSOR_ID_BATTERY   SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_DHT_X)
 #endif  /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
 
 /******************************************************************************
@@ -139,12 +139,12 @@ static SensorSht3X      gSht3x(SHTSensor::AUTO_DETECT);
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
 
-#if IS_ENABLED(CONFIG_SENSOR_DHT11_ENABLE)
+#if IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE)
 
-/** The DHT11 sensor. */
-static SensorDhtX       gDht11(SensorDhtX::MODEL_DHT11);
+/** The DHTx sensor. */
+static SensorDhtX       gDhtX(CONFIG_SENSOR_DHT_X_TYPE);
 
-#endif /* IS_ENABLED(CONFIG_SENSOR_DHT11_ENABLE) */
+#endif /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE)
 
@@ -164,13 +164,14 @@ static ISensor*         gSensors[] =
     &gSht3x,
 #endif /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
 
-#if IS_ENABLED(CONFIG_SENSOR_DHT11_ENABLE)
-    &gDht11,
-#endif /* IS_ENABLED(CONFIG_SENSOR_DHT11_ENABLE) */
+#if IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE)
+    &gDhtX,
+#endif /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE)
     &gBattery,
 #endif /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
+
     nullptr
 };
 

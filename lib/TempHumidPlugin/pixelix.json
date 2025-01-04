@@ -20,6 +20,12 @@
                     "./web/icon8x8/temp.gif"
                 ]
             }, {
+                "name": "LAYOUT_32X16",
+                "files": [
+                    "./web/icon8x8/drop.gif",
+                    "./web/icon8x8/temp.gif"
+                ]
+            }, {
                 "name": "LAYOUT_64X64",
                 "files": [
                     "./web/icon16x16/drop.gif",

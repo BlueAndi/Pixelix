@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Base graphics pen
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */
@@ -156,6 +156,8 @@ protected:
 
     /**
      * Constructs a base graphics pen.
+     * 
+     * @param[in] gfx Base graphics
      */
     BaseGfxPen(BaseGfx<TColor>& gfx) :
         m_gfx(gfx),

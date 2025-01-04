@@ -27,7 +27,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-s3-devkitc-1-n16r8v-LED-32x16", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
@@ -68,7 +68,7 @@ jobs:
       run: platformio run --environment ${{ matrix.environment }}
     
     - name: Deploy ${{ matrix.environment }} firmware
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.environment }}_firmware
         path: |
@@ -81,7 +81,7 @@ jobs:
       run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
     - name: Deploy ${{ matrix.environment }} filesystem image
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.environment }}_filesystem
         path: |
@@ -96,7 +96,7 @@ jobs:
     needs: [build]
     steps:
     - name: Download release artifacts
-      uses: actions/download-artifact@v4.1.7
+      uses: actions/download-artifact@v4
       with:
         path: ${{ github.workspace }}/artifacts
 

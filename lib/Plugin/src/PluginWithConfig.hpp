@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Plugin base with configuration
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -168,10 +168,6 @@ public:
     }
 
 protected:
-
-    PluginWithConfig();
-    PluginWithConfig(const PluginWithConfig& handler);
-    PluginWithConfig& operator=(const PluginWithConfig& handler);
 
     /**
      * Construct the base plugin.
@@ -333,6 +329,9 @@ private:
     bool        m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
     bool        m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
 
+    PluginWithConfig();
+    PluginWithConfig(const PluginWithConfig& handler);
+    PluginWithConfig& operator=(const PluginWithConfig& handler);
 };
 
 /******************************************************************************

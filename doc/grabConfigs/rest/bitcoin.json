@@ -2,13 +2,13 @@
     "method": "GET",
     "url": "http://api.coindesk.com/v1/bpi/currentprice/USD.json",
     "filter": {
-      "bpi": {
-        "USD": {
-          "rate_float": true
+        "bpi": {
+            "USD": {
+                "rate_float": true
+            }
         }
-      }
     },
-    "iconPath": "",
+    "iconFileId": 255,
     "format": "%0.2f $/BTC",
     "multiplier": 1,
     "offset": 0

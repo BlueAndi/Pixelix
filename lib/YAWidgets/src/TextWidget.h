@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Text Widget
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */
@@ -122,6 +122,8 @@ public:
      * Assign the content of a text widget.
      *
      * @param[in] widget Widget, which to assign
+     * 
+     * @return Text widget
      */
     TextWidget& operator=(const TextWidget& widget);
 
@@ -517,13 +519,13 @@ private:
     void paint(YAGfx& gfx) override;
 
     /**
-     * Walks throught the AST and integrates the character code keywords.
-     * Thats means the token will be converted to a text token and its
-     * string will be the character code.
+     * Walks throught the AST and integrates the special character code
+     * keywords. Thats means the token will be converted to a text token and
+     * its string will be the character code.
      * 
      * @param[in, out] ast  The abstract syntax tree (AST)
      */
-    void characterCodeKeywordToText(TWAbstractSyntaxTree& ast);
+    void specialCharacterCodeKeywordToText(TWAbstractSyntaxTree& ast);
 
     /**
      * Get only the text from abstract syntax tree.

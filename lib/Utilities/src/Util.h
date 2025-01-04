@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Utilitiy
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup utilities
+ * @addtogroup UTILITIES
  *
  * @{
  */
@@ -46,6 +46,8 @@
 #include <stdint.h>
 #include <WString.h>
 #include <cerrno>
+
+#include <YAColor.h>
 
 /******************************************************************************
  * Macros
@@ -78,7 +80,29 @@ namespace Util
  *
  * @return If conversion fails, it will return false otherwise true.
  */
+extern bool strToUInt8(const char* str, uint8_t& value);
+
+/**
+ * Convert a string to uint8_t. String can contain integer number in decimal
+ * or hexadecimal format.
+ *
+ * @param[in]   str     String
+ * @param[out]  value   Converted value
+ *
+ * @return If conversion fails, it will return false otherwise true.
+ */
 extern bool strToUInt8(const String& str, uint8_t& value);
+
+/**
+ * Convert a string to uint16_t. String can contain integer number in decimal
+ * or hexadecimal format.
+ *
+ * @param[in]   str     String
+ * @param[out]  value   Converted value
+ *
+ * @return If conversion fails, it will return false otherwise true.
+ */
+extern bool strToUInt16(const char* str, uint16_t& value);
 
 /**
  * Convert a string to uint16_t. String can contain integer number in decimal
@@ -104,7 +128,33 @@ extern bool strToUInt16(const String& str, uint16_t& value);
  *
  * @return If conversion fails, it will return false otherwise true.
  */
+extern bool strToUInt32(const char* str, uint32_t& value);
+
+/**
+ * Convert a string to uint32_t. String can contain integer number in decimal
+ * or hexadecimal format.
+ *
+ * Note, negative values in the string will lead to a successful conversion.
+ * This is a limitation due to fact that the underlying strtoul() cast the
+ * result to unsigned long, which is on the esp32 equal to uint32_t.
+ *
+ * @param[in]   str     String
+ * @param[out]  value   Converted value
+ *
+ * @return If conversion fails, it will return false otherwise true.
+ */
 extern bool strToUInt32(const String& str, uint32_t& value);
+
+/**
+ * Convert a string to int32_t. String can contain integer number in decimal
+ * or hexadecimal format.
+ *
+ * @param[in]   str     String
+ * @param[out]  value   Converted value
+ *
+ * @return If conversion fails, it will return false otherwise true.
+ */
+extern bool strToInt32(const char* str, int32_t& value);
 
 /**
  * Convert a string to int32_t. String can contain integer number in decimal
@@ -166,6 +216,23 @@ constexpr T max(T valA, T valB)
     return (valA > valB) ? valA : valB;
 }
 
+/**
+ * Convert color to HTML format.
+ * 
+ * @param[in] color Color
+ * 
+ * @return Color in HTML format
+ */
+extern String colorToHtml(const Color& color);
+
+/**
+ * Convert color from HTML format.
+ * 
+ * @param[in] htmlColor Color in HTML format
+ * 
+ * @return Color
+ */
+extern Color colorFromHtml(const String& htmlColor);
 }
 
 #endif  /* UTILITY_H */

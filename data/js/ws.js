@@ -171,8 +171,6 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this._pendingCmd.resolve(rsp);
             } else if ("GETDISP" === this._pendingCmd.name) {
                 rsp.slotId = parseInt(data.shift());
-                rsp.width = parseInt(data.shift());
-                rsp.height = parseInt(data.shift());
                 rsp.data = [];
                 for(index = 0; index < data.length; ++index) {
                     rsp.data.push(parseInt(data[index], 16));
@@ -180,7 +178,9 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this._pendingCmd.resolve(rsp);
             } else if ("BRIGHTNESS" === this._pendingCmd.name) {
                 rsp.brightness = parseInt(data[0]);
-                rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
+                rsp.minBrightness = parseInt(data[1]);
+                rsp.maxBrightness = parseInt(data[2]);
+                rsp.automaticBrightnessControl = (1 === parseInt(data[3])) ? true : false;
                 this._pendingCmd.resolve(rsp);
             } else if ("BUTTON" === this._pendingCmd.name) {
                 this._pendingCmd.resolve(rsp);
@@ -210,10 +210,20 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("SLOT_DURATION" === this._pendingCmd.name) {
                 rsp.duration = parseInt(data[0]);
                 this._pendingCmd.resolve(rsp);
+            } else if ("SLOT" === this._pendingCmd.name) {
+                rsp.slotId = parseInt(data[0]);
+                rsp.name = data[1].substring(1, data[1].length - 1),
+                rsp.uid = parseInt(data[2]),
+                rsp.alias = data[3].substring(1, data[3].length - 1),
+                rsp.isLocked = (0 == parseInt(data[4])) ? false : true,
+                rsp.isSticky = (0 == parseInt(data[5])) ? false : true,
+                rsp.isDisabled = (0 == parseInt(data[6])) ? false : true,
+                rsp.duration = parseInt(data[7])
+                this._pendingCmd.resolve(rsp);
             } else if ("SLOTS" === this._pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
-                elements = 6;
+                elements = 7;
                 for(index = 0; index < (data.length / elements); ++index) {
                     rsp.slots.push({
                         name: data[elements * index + 0].substring(1, data[elements * index + 0].length - 1),
@@ -221,7 +231,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                         alias: data[elements * index + 2].substring(1, data[elements * index + 2].length - 1),
                         isLocked: (0 == parseInt(data[elements * index + 3])) ? false : true,
                         isSticky: (0 == parseInt(data[elements * index + 4])) ? false : true,
-                        duration: parseInt(data[elements * index + 5])
+                        isDisabled: (0 == parseInt(data[elements * index + 5])) ? false : true,
+                        duration: parseInt(data[elements * index + 6])
                     });
                 }
                 this._pendingCmd.resolve(rsp);
@@ -316,14 +327,21 @@ pixelix.ws.Client.prototype.setBrightness = function(options) {
             reject();
         } else if ("number" !== typeof options.brightness) {
             reject();
+        } else if ("number" !== typeof options.minBrightness) {
+            reject();
+        } else if ("number" !== typeof options.maxBrightness) {
+            reject();
+        } else if ("boolean" !== typeof options.automaticBrightnessControl) {
+            reject();
         } else {
 
             par += options.brightness;
-
-            if ("boolean" === typeof options.automaticBrightnessControl) {
-                par += ";";
-                par += (false == options.automaticBrightnessControl) ? 0 : 1;
-            }
+            par += ";";
+            par += options.minBrightness;
+            par += ";";
+            par += options.maxBrightness;
+            par += ";";
+            par += (false == options.automaticBrightnessControl) ? 0 : 1;
 
             this._sendCmd({
                 name: "BRIGHTNESS",
@@ -476,6 +494,42 @@ pixelix.ws.Client.prototype.setSlotDuration = function(options) {
 
             this._sendCmd({
                 name: "SLOT_DURATION",
+                par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.setSlot = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+        if (null === this._socket) {
+            reject();
+        } else if ("number" !== typeof options.slotId) {
+            reject();
+        } else {
+
+            par += options.slotId
+            par += ";";
+            
+            if ("boolean" !== typeof options.sticky) {
+                par += "0";
+            } else {
+                par += (false === options.sticky) ? "1" : "2";
+            }
+
+            par += ";";
+
+            if ("boolean" !== typeof options.isDisabled) {
+                par += "0";
+            } else {
+                par += (false === options.isDisabled) ? "1" : "2";
+            }
+
+            this._sendCmd({
+                name: "SLOT",
                 par: par,
                 resolve: resolve,
                 reject: reject

@@ -1,52 +1,140 @@
 /**
 
-@mainpage Manual of esp-rgb-led-matrix
+@mainpage Manual of Pixelix
 Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 <hr>
 
-@defgroup gfx Graphics functions
+@defgroup APP_LAYER Application layer
+The application layer.
+@{
+@}
+
+@defgroup STATE_MACHINE Statemachine
+@ingroup APP_LAYER
+Generic state machine.
+@{
+@}
+
+@defgroup SYS_STATES System states
+@ingroup APP_LAYER
+The system states.
+@{
+@}
+
+@defgroup DISPLAY_MGR Display manager
+@ingroup APP_LAYER
+The display manager.
+@{
+@}
+
+@defgroup BUTTON_HANDLER Button handler
+@ingroup APP_LAYER
+The button handler.
+@{
+@}
+
+@defgroup PLUGIN Plugin
+@ingroup APP_LAYER
+The plugins or plugin related functionality.
+@{
+@}
+
+@defgroup UPDATE Update routines
+@ingroup APP_LAYER
+The over-the-air update routines.
+@{
+@}
+
+@defgroup SERVICE_LAYER Service layer
+The service layer.
+@{
+@}
+
+@defgroup AUDIO_SERVICE Audio Service
+@ingroup SERVICE_LAYER
+Provides different kind of audio related functionality.
+@{
+@}
+
+@defgroup FILE_MGR_SERVICE File manager service
+@ingroup SERVICE_LAYER
+The file manager service.
+@{
+@}
+
+@defgroup MQTT_SERVICE MQTT service
+@ingroup SERVICE_LAYER
+The MQTT service.
+@{
+@}
+
+@defgroup SETTINGS Settings Service
+@ingroup SERVICE_LAYER
+Settings are stored persistent and will survive an firmware or filesystem update.
+@{
+@}
+
+@defgroup TIMER_SERVICE Timer service
+@ingroup SERVICE_LAYER
+The timer service.
+@{
+@}
+
+@defgroup TOPIC_HANDLER_SERVICE Topic handler service
+@ingroup SERVICE_LAYER
+The topic handler service.
+@{
+@}
+
+@defgroup WEB Web functions
+@ingroup SERVICE_LAYER
+All web related functions.
+@{
+@}
+
+@defgroup HAL Hardware abstraction layer
+The hardware abstraction layer.
+@{
+@}
+
+@defgroup SENSORS Sensors
+@ingroup HAL
+The sensor drivers.
+@{
+@}
+
+@defgroup RTC RTC drivers
+@ingroup HAL
+The RTC drivers.
+@{
+@}
+
+@defgroup GENERAL General utilities
+The general utilities (vertical layer).
+@{
+@}
+
+@defgroup GFX Graphics functions
+@ingroup GENERAL
 The graphics functions containing all kind of widgets and the main display manager,
 as well as the LED matrix controller.
 @{
 @}
 
-@defgroup hal Hardware abstraction
-The hardware abstraction makes it easier to use internal and external peripherals.
+@defgroup OPERATING_SYSTEM Operating system
+@ingroup GENERAL
+The operating system abstractions.
 @{
 @}
 
-@defgroup statemachine Statemachine
-Generic state machine.
-@{
-@}
-
-@defgroup sys_states System states
-The system states.
-@{
-@}
-
-@defgroup update Update routines
-The over-the-air update rountes.
-@{
-@}
-
-@defgroup utilities Utility functions
+@defgroup UTILITIES Utility functions
+@ingroup GENERAL
 The utilities are widely common used functions, like a vertical layer.
 @{
 @}
 
-@defgroup web Web functions
-All web related functions.
-@{
-@}
-
-@defgroup audio_service Audio Service
-Provides different kind of audio related functionality.
-@{
-@}
-
-@defgroup settings Settings Service
-Settings are stored persistent and will survive an firmware or filesystem update.
+@defgroup TEST Test functionality
+The test functionality.
 @{
 @}
 

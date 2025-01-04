@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,8 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_TEXT = "/iconText";
+const char* IconTextPlugin::TOPIC_TEXT                 = "/iconText";
+const char* IconTextPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/iconTextPlugin.json";
 
 /******************************************************************************
  * Public Methods
@@ -81,16 +82,16 @@ bool IconTextPlugin::isEnabled() const
 
 void IconTextPlugin::getTopics(JsonArray& topics) const
 {
-    JsonObject  jsonText    = topics.createNestedObject();
+    JsonObject jsonText = topics.createNestedObject();
 
+    /* The topic contains Home Assistant support of the MQTT discovery
+     * (https://www.home-assistant.io/integrations/mqtt). See the configured
+     * JSON file.
+     *
+     * The used icon is from MaterialDesignIcons.com (namespace: mdi).
+     */
     jsonText["name"]    = TOPIC_TEXT;
-
-    /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
-    jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
-    jsonText["ha"]["discovery"]["name"]     = "MQTT text";                      /* Application that is the origin the discovered MQTT. */
-    jsonText["ha"]["discovery"]["cmd_tpl"]  = "{\"text\": \"{{ value }}\" }";   /* Command template */
-    jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
-    jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
+    jsonText["extra"]   = TOPIC_TEXT_EXTRA_FILE_NAME;
 }
 
 bool IconTextPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -112,14 +113,14 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_TEXT))
     {
-        bool                storeFlag               = false;
-        const size_t        JSON_DOC_SIZE           = 512U;
+        bool                storeFlag     = false;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonIconFileId          = value["iconFileId"];
-        JsonVariantConst    jsonText                = value["text"];
-        JsonVariantConst    jsonStoreFlag           = value["storeFlag"];
-    
+        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonIconFileId = value["iconFileId"];
+        JsonVariantConst    jsonText       = value["text"];
+        JsonVariantConst    jsonStoreFlag  = value["storeFlag"];
+
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
          * overwrite them with the received ones.
@@ -134,13 +135,13 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         if (false == jsonIconFileId.isNull())
         {
             jsonCfg["iconFileId"] = jsonIconFileId.as<FileMgrService::FileId>();
-            isSuccessful = true;
+            isSuccessful          = true;
         }
-        
+
         if (false == jsonText.isNull())
         {
             jsonCfg["text"] = jsonText.as<String>();
-            isSuccessful = true;
+            isSuccessful    = true;
         }
 
         /* Note: The store flag is not part of the stored configuration, its just
@@ -149,7 +150,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
          */
         if (false == jsonStoreFlag.isNull())
         {
-            storeFlag = jsonStoreFlag.as<bool>();
+            storeFlag    = jsonStoreFlag.as<bool>();
             isSuccessful = true;
         }
 
@@ -174,8 +175,8 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
 bool IconTextPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -187,8 +188,8 @@ bool IconTextPlugin::hasTopicChanged(const String& topic)
 
 void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
-    String                      iconFullPath;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    String                     iconFullPath;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
 
@@ -229,8 +230,8 @@ void IconTextPlugin::update(YAGfx& gfx)
 
 String IconTextPlugin::getText() const
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      formattedText   = m_view.getFormatText();
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                     formattedText = m_view.getFormatText();
 
     return formattedText;
 }
@@ -255,14 +256,14 @@ void IconTextPlugin::setText(const String& formatText, bool storeFlag)
 
 bool IconTextPlugin::loadIcon(FileMgrService::FileId fileId, bool storeFlag)
 {
-    bool                        isSuccessful    = false;
-    String                      iconFullPath;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                       isSuccessful = false;
+    String                     iconFullPath;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (m_iconFileId != fileId)
     {
-        m_iconFileId        = fileId;
-        m_hasTopicChanged   = true;
+        m_iconFileId      = fileId;
+        m_hasTopicChanged = true;
 
         if (true == storeFlag)
         {
@@ -287,7 +288,7 @@ bool IconTextPlugin::loadIcon(FileMgrService::FileId fileId, bool storeFlag)
          */
         isSuccessful = m_view.loadIcon(iconFullPath);
     }
-    
+
     return isSuccessful;
 }
 
@@ -300,8 +301,8 @@ void IconTextPlugin::clearIcon(bool storeFlag)
         /* Clear icon first in the view (will close file). */
         m_view.clearIcon();
 
-        m_iconFileId        = FileMgrService::FILE_ID_INVALID;
-        m_hasTopicChanged   = true;
+        m_iconFileId      = FileMgrService::FILE_ID_INVALID;
+        m_hasTopicChanged = true;
 
         if (true == storeFlag)
         {
@@ -323,8 +324,8 @@ void IconTextPlugin::getActualConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["iconFileId"]   = m_iconFileId;
-    jsonCfg["text"]         = m_view.getFormatText();
+    jsonCfg["iconFileId"] = m_iconFileId;
+    jsonCfg["text"]       = m_view.getFormatText();
 }
 
 bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
@@ -343,9 +344,9 @@ bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        FileMgrService::FileId      newIconFileId   = jsonIconFileId.as<FileMgrService::FileId>();
-        String                      newFormatText   = jsonText.as<String>();
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        FileMgrService::FileId     newIconFileId = jsonIconFileId.as<FileMgrService::FileId>();
+        String                     newFormatText = jsonText.as<String>();
 
         if (m_iconFileId != newIconFileId)
         {
@@ -393,8 +394,8 @@ void IconTextPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["iconFileId"]   = m_iconFileIdStored;
-    jsonCfg["text"]         = m_formatTextStored;
+    jsonCfg["iconFileId"] = m_iconFileIdStored;
+    jsonCfg["text"]       = m_formatTextStored;
 }
 
 bool IconTextPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -403,8 +404,8 @@ bool IconTextPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
     if (true == status)
     {
-        m_iconFileIdStored  = m_iconFileId;
-        m_formatTextStored  = m_view.getFormatText();
+        m_iconFileIdStored = m_iconFileId;
+        m_formatTextStored = m_view.getFormatText();
     }
 
     return status;

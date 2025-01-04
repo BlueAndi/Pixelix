@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Defines the filesystem.
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup common
+ * @addtogroup UTILITIES
  *
  * @{
  */
@@ -46,8 +46,13 @@
 #define FILESYSTEM_USE_LITTLEFS (1)
 
 #if FILESYSTEM_USE_LITTLEFS
+
+/** The used filesystem type. */
 #define FILESYSTEM              LittleFS
+
+/** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME     "littlefs.bin"
+
 #endif  /* FILESYSTEM_USE_LITTLEFS */
 
 /**
@@ -56,8 +61,13 @@
 #define FILESYSTEM_USE_SPIFFS   (0)
 
 #if FILESYSTEM_USE_SPIFFS
+
+/** The used filesystem type. */
 #define FILESYSTEM              SPIFFS
+
+/** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME     "spiffs.bin"
+
 #endif  /* FILESYSTEM_USE_SPIFFS */
 
 /******************************************************************************

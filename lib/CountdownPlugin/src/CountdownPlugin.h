@@ -1,7 +1,7 @@
 
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
  * @brief  Countdown plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -108,6 +108,8 @@ public:
          * Assign structure.
          *
          * @param[in] desc  Target day description, which to assign.
+         * 
+         * @return Date data
          */
         DateDMY& operator=(const DateDMY& desc)
         {
@@ -155,6 +157,8 @@ public:
          * Assign structure.
          *
          * @param[in] desc  Target day description, which to assign.
+         * 
+         * @return Target day description
          */
         TargetDayDescription& operator=(const TargetDayDescription& desc)
         {
@@ -244,11 +248,13 @@ public:
      * interfaces like REST, websocket, MQTT, etc.
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [
      *         "/text"
      *     ]
      * }
+     * </code>
      * 
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
@@ -258,12 +264,40 @@ public:
      * - Readable and writeable: "rw"
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "/text",
      *         "access": "r"
      *     }]
      * }
+     * </code>
+     * 
+     * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
+     * the "extra" JSON object.
+     * <code>{.json}
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "extra": {
+     *             "ha": {
+     *                 ... everything here will be used for MQTT discovery ...
+     *             }
+     *         }
+     *     }]
+     * }
+     * </code>
+     * 
+     * Extra information can be loaded from a file too. This is useful for complex
+     * configurations and to keep program memory usage low.
+     * <code>{.json}
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "extra": "extra.json"
+     *    }]
+     * }
+     * </code>
      * 
      * @param[out] topics   Topis in JSON format
      */

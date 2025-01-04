@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -109,18 +109,16 @@ void WsCmdMove::setPar(const char* par)
 {
     switch(m_parCnt)
     {
-    case 0:
-        if (false == Util::strToUInt16(String(par), m_uid))
+    case 0U:
+        if (false == Util::strToUInt16(par, m_uid))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;
 
-    case 1:
-        if (false == Util::strToUInt8(String(par), m_slotId))
+    case 1U:
+        if (false == Util::strToUInt8(par, m_slotId))
         {
-            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;

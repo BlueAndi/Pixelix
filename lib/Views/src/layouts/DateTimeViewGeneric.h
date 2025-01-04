@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  Generic view for LED matrix with date and time.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -99,6 +99,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     void init(uint16_t width, uint16_t height) override
     {
@@ -251,11 +254,85 @@ public:
     }
 
     /**
+     * Get the view mode (analog, digital or both).
+     * 
+     * @return View mode 
+     */
+    ViewMode getViewMode() const override
+    {
+        return ViewMode::DIGITAL_ONLY;  /* Generic layout can only do digital. */
+    }
+
+    /**
+     * Set the view mode (analog, digital or both).
+     * 
+     * @param[in] mode  View mode
+     * 
+     * @return ViewMode 
+     */
+    bool setViewMode(ViewMode mode) override
+    {
+        bool isSuccessful = true;
+
+        if (ViewMode::DIGITAL_ONLY != mode)
+        {
+            LOG_WARNING("Illegal DateTime view mode for generic: (%hhu)", mode);
+            isSuccessful = false;
+        }
+
+        return isSuccessful;
+    }
+
+    /**
      * @brief Update current time values in view
      * 
      * @param now current time
      */
     virtual void setCurrentTime(const tm& now) override;
+
+    /**
+     * Get current active configuration in JSON format.
+     * 
+     * @param[out] jsonCfg Configuration
+     */
+    void getConfiguration(JsonObject& jsonCfg) const override
+    {
+        (void)jsonCfg;  /* No configuration for generic. */
+    }
+
+    /**
+     * Apply configuration from JSON.
+     * 
+     * @param[in] jsonCfg Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(const JsonObjectConst& jsonCfg) override
+    {
+        (void)jsonCfg;
+
+        return true;
+    }
+
+    /**
+     * Merge JSON configuration with local settings to create a complete set.
+     *
+     * The received configuration may not contain all single key/value pair.
+     * Therefore create a complete internal configuration and overwrite it
+     * with the received one.
+     *  
+     * @param[out] jsonMerged  The complete config set with merge content from jsonSource.
+     * @param[in]  jsonSource  The recevied congi set, which may not cover all keys.
+     * @return     true        Keys needed merging.
+     * @return     false       Nothing needed merging.
+     */
+    bool mergeConfiguration(JsonObject& jsonMerged, const JsonObjectConst& jsonSource) override
+    {
+        (void)jsonMerged;
+        (void)jsonSource;
+
+        return false; /* Nothing to merge. */
+    }
 
     /** Max. number of lamps. One lamp per day in a week. */
     static const uint8_t    MAX_LAMPS       = 7U;
@@ -335,6 +412,7 @@ protected:
     Color           m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
     tm              m_now;                      /**< Latest time update */
 
+private:
     DateTimeViewGeneric(const DateTimeViewGeneric& other);
     DateTimeViewGeneric& operator=(const DateTimeViewGeneric& other);
 

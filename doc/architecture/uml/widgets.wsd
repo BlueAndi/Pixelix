@@ -1,4 +1,4 @@
-@startuml
+@startuml widgets
 
 class YAGfx
 class YAGfxCanvas

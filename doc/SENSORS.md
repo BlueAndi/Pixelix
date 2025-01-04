@@ -42,10 +42,7 @@ The photoresistor pin 2 needs additional a pull-down.
 # Temperature and humidity sensors
 
 ## DHTx (Proprietary one-wire)
-Different DHT sensors are supported. Out of the box the DHT11 is configured. It can be changed in the source code, see /lib/Sensors/Sensors.cpp:
-```cpp
-static SensorDhtX       gDht11(SensorDhtX::MODEL_DHT11);
-```
+Different DHT sensors are supported. Out of the box the DHT11 is configured. It can be changed in the [board.ini](../config/board.ini), see ```CONFIG_SENSOR_DHT_X_TYPE``` there.
 
 * DHT11 (Proprietary one-wire)
 * DHT12 (Proprietary one-wire)
@@ -123,7 +120,7 @@ Example in case all sensors are available:
 ```
 
 # Issues, Ideas And Bugs
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).

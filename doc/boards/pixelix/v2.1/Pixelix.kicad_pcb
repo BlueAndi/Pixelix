@@ -2897,7 +2897,7 @@
   (gr_text "LED Matrix" (at 114.5301 101.5601 90) (layer "F.SilkS") (tstamp 91c549de-e27b-40ef-abc8-c2016f3d0a52)
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (gr_text "BlueAndi/esp-rgb-led-matrix " (at 168.2 116.7001) (layer "F.SilkS") (tstamp ab24990e-d687-4232-bee1-11382ae12fe2)
+  (gr_text "BlueAndi/Pixelix " (at 168.2 116.9) (layer "F.SilkS") (tstamp ab24990e-d687-4232-bee1-11382ae12fe2)
     (effects (font (size 1 1) (thickness 0.15)))
   )
   (gr_text "JTAG" (at 177.0101 80.2101) (layer "F.SilkS") (tstamp d0280717-aec3-49ba-87df-8848625f2888)

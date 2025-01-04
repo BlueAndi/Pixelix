@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,13 +55,13 @@
  *****************************************************************************/
 
 /* Delimiter of websocket parameters */
-const char*    WsCmd::DELIMITER = ";";
+const char   WsCmd::DELIMITER[] = ";";
 
 /* Positive response code */
-const char*    WsCmd::ACK       = "ACK";
+const char    WsCmd::ACK[]       = "ACK";
 
 /* Negative response code. */
-const char*    WsCmd::NACK      = "NACK";
+const char    WsCmd::NACK[]      = "NACK";
 
 /******************************************************************************
  * Public Methods

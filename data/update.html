@@ -97,8 +97,8 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
@@ -108,6 +108,7 @@
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <script type="text/javascript" src="/js/dialog.js"></script>
@@ -123,6 +124,7 @@
 
             var restClient  = new pixelix.rest.Client();
             var zip         = new JSZip();
+            var hostname    = "~HOSTNAME~";
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -258,7 +260,7 @@
                         minutes = ((minutes < 10) ? '0' : '') + minutes;
                         var seconds = date.getSeconds();
                         seconds = ((seconds < 10) ? '0' : '') + seconds;
-                        var filename = year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
+                        var filename = hostname + "_" + year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
                         saveAs(content, filename);
                         resolve();
                     });
@@ -324,13 +326,14 @@
                                         }
                                     }
     
-                                    promiseChain = promiseChain.then(zipObj.file(filename).async(fileType)).then(function(data) {
-
-                                        progress += progressPerFile;
-                                        updateProgressBar("progressBarRestore", progress);
-    
-                                        return restClient.writeFile("/configuration/" + filename, data, mimeType);
-                                    });
+                                    promiseChain = promiseChain.then(function() {
+                                        return zipObj.file(filename).async(fileType).then(function(data) {
+                                            progress += progressPerFile;
+                                            updateProgressBar("progressBarRestore", progress);
+        
+                                            return restClient.writeFile("/configuration/" + filename, data, mimeType);
+                                        }.bind(zipObj))
+                                    }.bind(zipObj));
                                 });
                                 
                                 return promiseChain.then(function() {
@@ -357,6 +360,7 @@
             /* Execute after page is ready. */
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 $("#inputFile").on("change", function() {

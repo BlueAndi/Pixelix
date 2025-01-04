@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,13 +59,14 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT      = "/iconText";
+const char* IconTextLampPlugin::TOPIC_TEXT                 = "/iconText";
+const char* IconTextLampPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/iconTextLampPlugin.json";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMPS     = "/lamps";
+const char* IconTextLampPlugin::TOPIC_LAMPS                = "/lamps";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMP      = "/lamp";
+const char* IconTextLampPlugin::TOPIC_LAMP                 = "/lamp";
 
 /******************************************************************************
  * Public Methods
@@ -73,23 +74,23 @@ const char* IconTextLampPlugin::TOPIC_LAMP      = "/lamp";
 
 void IconTextLampPlugin::getTopics(JsonArray& topics) const
 {
-    uint8_t     lampId      = 0U;
-    JsonObject  jsonText    = topics.createNestedObject();
-    JsonObject  jsonLamps   = topics.createNestedObject();
+    uint8_t    lampId    = 0U;
+    JsonObject jsonText  = topics.createNestedObject();
+    JsonObject jsonLamps = topics.createNestedObject();
 
-    jsonText["name"]    = TOPIC_TEXT;
+    /* The topic contains Home Assistant support of the MQTT discovery
+     * (https://www.home-assistant.io/integrations/mqtt). See the configured
+     * JSON file.
+     *
+     * The used icon is from MaterialDesignIcons.com (namespace: mdi).
+     */
+    jsonText["name"]     = TOPIC_TEXT;
+    jsonText["extra"]    = TOPIC_TEXT_EXTRA_FILE_NAME;
 
-    /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
-    jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
-    jsonText["ha"]["discovery"]["name"]     = "MQTT text";                      /* Application that is the origin the discovered MQTT. */
-    jsonText["ha"]["discovery"]["cmd_tpl"]  = "{\"text\": \"{{ value }}\" }";   /* Command template */
-    jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
-    jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
+    jsonLamps["name"]    = TOPIC_LAMPS;
+    jsonLamps["access"]  = "r"; /* Only read access allowed. */
 
-    jsonLamps["name"]   = TOPIC_LAMPS;
-    jsonLamps["access"] = "r"; /* Only read access allowed. */
-
-    for(lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
+    for (lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
     {
         (void)topics.add(String(TOPIC_LAMP) + "/" + lampId);
     }
@@ -106,37 +107,37 @@ bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
     }
     else if (true == topic.equals(TOPIC_LAMPS))
     {
-        JsonArray   lampArray   = value.createNestedArray("lamps");
-        uint8_t     lampId      = 0U;
+        JsonArray lampArray = value.createNestedArray("lamps");
+        uint8_t   lampId    = 0U;
 
-        for(lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
+        for (lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
         {
-            bool        lampOnState = getLamp(lampId);
-            JsonObject  lampObj     = lampArray.createNestedObject();
+            bool       lampOnState = getLamp(lampId);
+            JsonObject lampObj     = lampArray.createNestedObject();
 
-            lampObj["id"]       = lampId;
-            lampObj["state"]    = (false == lampOnState) ? String("off") : String("on");
+            lampObj["id"]          = lampId;
+            lampObj["state"]       = (false == lampOnState) ? String("off") : String("on");
         }
 
         isSuccessful = true;
     }
     else if (true == topic.startsWith(String(TOPIC_LAMP) + "/"))
     {
-        uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
-        String      lampIdStr           = topic.substring(indexBeginLampId);
-        uint8_t     lampId              = _IconTextLampPlugin::View::MAX_LAMPS;
-        bool        status              = Util::strToUInt8(lampIdStr, lampId);
+        uint32_t indexBeginLampId = topic.lastIndexOf("/") + 1U;
+        String   lampIdStr        = topic.substring(indexBeginLampId);
+        uint8_t  lampId           = _IconTextLampPlugin::View::MAX_LAMPS;
+        bool     status           = Util::strToUInt8(lampIdStr, lampId);
 
         if ((true == status) &&
             (_IconTextLampPlugin::View::MAX_LAMPS > lampId))
         {
-            bool    lampState       = getLamp(lampId);
-            String  lampStateStr    = (false == lampState) ? "off" : "on";
+            bool   lampState    = getLamp(lampId);
+            String lampStateStr = (false == lampState) ? "off" : "on";
 
-            value["id"]     = lampId;
-            value["state"]  = lampStateStr;
+            value["id"]         = lampId;
+            value["state"]      = lampStateStr;
 
-            isSuccessful = true;
+            isSuccessful        = true;
         }
     }
     else
@@ -153,14 +154,14 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
 
     if (true == topic.equals(TOPIC_TEXT))
     {
-        bool                storeFlag               = false;
-        const size_t        JSON_DOC_SIZE           = 512U;
+        bool                storeFlag     = false;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonIconFileId          = value["iconFileId"];
-        JsonVariantConst    jsonText                = value["text"];
-        JsonVariantConst    jsonStoreFlag           = value["storeFlag"];
-    
+        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonIconFileId = value["iconFileId"];
+        JsonVariantConst    jsonText       = value["text"];
+        JsonVariantConst    jsonStoreFlag  = value["storeFlag"];
+
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
          * overwrite them with the received ones.
@@ -175,13 +176,13 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
         if (false == jsonIconFileId.isNull())
         {
             jsonCfg["iconFileId"] = jsonIconFileId.as<FileMgrService::FileId>();
-            isSuccessful = true;
+            isSuccessful          = true;
         }
-        
+
         if (false == jsonText.isNull())
         {
             jsonCfg["text"] = jsonText.as<String>();
-            isSuccessful = true;
+            isSuccessful    = true;
         }
 
         /* Note: The store flag is not part of the stored configuration, its just
@@ -190,7 +191,7 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
          */
         if (false == jsonStoreFlag.isNull())
         {
-            storeFlag = jsonStoreFlag.as<bool>();
+            storeFlag    = jsonStoreFlag.as<bool>();
             isSuccessful = true;
         }
 
@@ -211,11 +212,11 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
     }
     else if (true == topic.startsWith(String(TOPIC_LAMP) + "/"))
     {
-        uint32_t            indexBeginLampId    = topic.lastIndexOf("/") + 1U;
-        String              lampIdStr           = topic.substring(indexBeginLampId);
-        uint8_t             lampId              = _IconTextLampPlugin::View::MAX_LAMPS;
-        bool                status              = Util::strToUInt8(lampIdStr, lampId);
-        JsonVariantConst    jsonSet             = value["state"];
+        uint32_t         indexBeginLampId = topic.lastIndexOf("/") + 1U;
+        String           lampIdStr        = topic.substring(indexBeginLampId);
+        uint8_t          lampId           = _IconTextLampPlugin::View::MAX_LAMPS;
+        bool             status           = Util::strToUInt8(lampIdStr, lampId);
+        JsonVariantConst jsonSet          = value["state"];
 
         if ((true == status) &&
             (_IconTextLampPlugin::View::MAX_LAMPS > lampId) &&
@@ -255,29 +256,29 @@ bool IconTextLampPlugin::hasTopicChanged(const String& topic)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        hasTopicChanged = m_hasTopicTextChanged;
+        hasTopicChanged       = m_hasTopicTextChanged;
         m_hasTopicTextChanged = false;
     }
     else if (true == topic.equals(TOPIC_LAMPS))
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        hasTopicChanged = m_hasTopicLampsChanged;
+        hasTopicChanged        = m_hasTopicLampsChanged;
         m_hasTopicLampsChanged = false;
     }
     else if (true == topic.startsWith(String(TOPIC_LAMP) + "/"))
     {
-        uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
-        String      lampIdStr           = topic.substring(indexBeginLampId);
-        uint8_t     lampId              = _IconTextLampPlugin::View::MAX_LAMPS;
-        bool        status              = Util::strToUInt8(lampIdStr, lampId);
+        uint32_t indexBeginLampId = topic.lastIndexOf("/") + 1U;
+        String   lampIdStr        = topic.substring(indexBeginLampId);
+        uint8_t  lampId           = _IconTextLampPlugin::View::MAX_LAMPS;
+        bool     status           = Util::strToUInt8(lampIdStr, lampId);
 
         if ((true == status) &&
             (_IconTextLampPlugin::View::MAX_LAMPS > lampId))
         {
             MutexGuard<MutexRecursive> guard(m_mutex);
-            
-            hasTopicChanged = m_hasTopicLampChanged[lampId];
+
+            hasTopicChanged               = m_hasTopicLampChanged[lampId];
             m_hasTopicLampChanged[lampId] = false;
         }
     }
@@ -291,8 +292,8 @@ bool IconTextLampPlugin::hasTopicChanged(const String& topic)
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    String                      iconFullPath;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    String                     iconFullPath;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
 
@@ -333,8 +334,8 @@ void IconTextLampPlugin::update(YAGfx& gfx)
 
 String IconTextLampPlugin::getText() const
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      formattedText   = m_view.getFormatText();
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                     formattedText = m_view.getFormatText();
 
     return formattedText;
 }
@@ -359,14 +360,14 @@ void IconTextLampPlugin::setText(const String& formatText, bool storeFlag)
 
 bool IconTextLampPlugin::loadIcon(FileMgrService::FileId fileId, bool storeFlag)
 {
-    bool                        isSuccessful    = false;
-    String                      iconFullPath;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                       isSuccessful = false;
+    String                     iconFullPath;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (m_iconFileId != fileId)
     {
-        m_iconFileId            = fileId;
-        m_hasTopicTextChanged   = true;
+        m_iconFileId          = fileId;
+        m_hasTopicTextChanged = true;
 
         if (true == storeFlag)
         {
@@ -391,7 +392,7 @@ bool IconTextLampPlugin::loadIcon(FileMgrService::FileId fileId, bool storeFlag)
          */
         isSuccessful = m_view.loadIcon(iconFullPath);
     }
-    
+
     return isSuccessful;
 }
 
@@ -404,8 +405,8 @@ void IconTextLampPlugin::clearIcon(bool storeFlag)
         /* Clear icon first in the view (will close file). */
         m_view.clearIcon();
 
-        m_iconFileId            = FileMgrService::FILE_ID_INVALID;
-        m_hasTopicTextChanged   = true;
+        m_iconFileId          = FileMgrService::FILE_ID_INVALID;
+        m_hasTopicTextChanged = true;
 
         if (true == storeFlag)
         {
@@ -417,8 +418,8 @@ void IconTextLampPlugin::clearIcon(bool storeFlag)
 
 bool IconTextLampPlugin::getLamp(uint8_t lampId) const
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        lampState = m_view.getLamp(lampId);
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       lampState = m_view.getLamp(lampId);
 
     return lampState;
 }
@@ -433,7 +434,7 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
         {
             m_view.setLamp(lampId, state);
 
-            m_hasTopicLampsChanged = true;
+            m_hasTopicLampsChanged        = true;
             m_hasTopicLampChanged[lampId] = true;
         }
     }
@@ -451,8 +452,8 @@ void IconTextLampPlugin::getActualConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["iconFileId"]   = m_iconFileId;
-    jsonCfg["text"]         = m_view.getFormatText();
+    jsonCfg["iconFileId"] = m_iconFileId;
+    jsonCfg["text"]       = m_view.getFormatText();
 }
 
 bool IconTextLampPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
@@ -471,9 +472,9 @@ bool IconTextLampPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        FileMgrService::FileId      newIconFileId   = jsonIconFileId.as<FileMgrService::FileId>();
-        String                      newFormatText   = jsonText.as<String>();
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        FileMgrService::FileId     newIconFileId = jsonIconFileId.as<FileMgrService::FileId>();
+        String                     newFormatText = jsonText.as<String>();
 
         if (m_iconFileId != newIconFileId)
         {
@@ -521,8 +522,8 @@ void IconTextLampPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["iconFileId"]   = m_iconFileIdStored;
-    jsonCfg["text"]         = m_formatTextStored;
+    jsonCfg["iconFileId"] = m_iconFileIdStored;
+    jsonCfg["text"]       = m_formatTextStored;
 }
 
 bool IconTextLampPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -531,8 +532,8 @@ bool IconTextLampPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
     if (true == status)
     {
-        m_iconFileIdStored  = m_iconFileId;
-        m_formatTextStored  = m_view.getFormatText();
+        m_iconFileIdStored = m_iconFileId;
+        m_formatTextStored = m_view.getFormatText();
     }
 
     return status;
