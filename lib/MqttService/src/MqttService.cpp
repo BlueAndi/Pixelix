@@ -162,14 +162,14 @@ MqttService::State MqttService::getState() const
     return m_state;
 }
 
-bool MqttService::publish(const String& topic, const String& msg)
+bool MqttService::publish(const String& topic, const String& msg, bool retained)
 {
-    return publish(topic.c_str(), msg.c_str());
+    return publish(topic.c_str(), msg.c_str(), retained);
 }
 
-bool MqttService::publish(const char* topic, const char* msg)
+bool MqttService::publish(const char* topic, const char* msg, bool retained)
 {
-    return m_mqttClient.publish(topic, msg);
+    return m_mqttClient.publish(topic, msg, retained);
 }
 
 bool MqttService::subscribe(const String& topic, TopicCallback callback)
