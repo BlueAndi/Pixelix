@@ -99,10 +99,10 @@ void RestartState::process(StateMachine& sm)
          * - The order of the shutdown is important and their dependencies shall be considered.
          */
 
-        /* Purge sensor topics (MQTT) and remove REST API endpoints. */
+        /* Unregister sensor topics (no purge). */
         SensorDataProvider::getInstance().end();
 
-        /* Unregister all plugins, which will purge all of their topics (MQTT) and remove REST API endpoints. */
+        /* Unregister all plugin topics (no purge). */
         PluginMgr::getInstance().unregisterAllPluginTopics();
 
         /* Stop display manager first, because this will stop the plugin

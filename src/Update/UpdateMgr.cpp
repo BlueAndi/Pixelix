@@ -170,10 +170,10 @@ void UpdateMgr::beginProgress()
          */
         DisplayMgr::getInstance().end();
         
-        /* Purge sensor topics (MQTT) and remove REST API endpoints. */
+        /* Unregister sensor topics (no purge). */
         SensorDataProvider::getInstance().end();
 
-        /* Unregister all plugins, which will purge all of their topics (MQTT) and remove REST API endpoints. */
+        /* Unregister all plugin topics (no purge). */
         PluginMgr::getInstance().unregisterAllPluginTopics();
 
         /* Stop services, but keep webserver running! */

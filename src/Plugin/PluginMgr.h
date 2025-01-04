@@ -96,6 +96,7 @@ public:
 
     /**
      * Uninstall plugin.
+     * All plugin topics will be unregistered and purged.
      *
      * @param[in] plugin    Plugin, which to remove
      *
@@ -116,6 +117,7 @@ public:
     /**
      * Unregister all plugin topics from the topic handler service.
      * The plugins will still be installed, but won't get any update from outside.
+     * The plugin topics will NOT be purged.
      */
     void unregisterAllPluginTopics();
 
@@ -262,8 +264,9 @@ private:
      *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics shall be unregistered.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin);
+    void unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge);
 
     /**
      * Register all topics of the given plugin by its alias.
@@ -278,8 +281,9 @@ private:
      *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics shall be unregistered.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin);
+    void unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge);
 };
 
 /******************************************************************************

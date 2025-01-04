@@ -82,6 +82,7 @@ public:
 
     /**
      * Start the service.
+     * It will start all topic handlers.
      *
      * @return If successful started, it will return true otherwise false.
      */
@@ -89,6 +90,8 @@ public:
 
     /**
      * Stop the service.
+     * It will stop all topic handlers.
+     * Topics are NOT unregistered. If necessary, this must be done before.
      */
     void stop() final;
 
@@ -108,12 +111,16 @@ public:
 
     /**
      * Unregister all topics of the given plugin.
+     * 
+     * If the purge flag is set, the topic handler will purge the topics like they never existed.
+     * If the topics will be registered again, they will be treated as new topics.
      *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] plugin    The plugin, which topics to unregister.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin);
+    void unregisterTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin, bool purge = false);
 
     /**
      * Register a topic.
@@ -149,8 +156,9 @@ public:
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic which to unregister.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic);
+    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge = false);
 
 private:
 

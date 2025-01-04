@@ -116,8 +116,8 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            unregisterTopicsByUID(m_deviceId, plugin);
-            unregisterTopicsByAlias(m_deviceId, plugin);
+            unregisterTopicsByUID(m_deviceId, plugin, true);
+            unregisterTopicsByAlias(m_deviceId, plugin, true);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
@@ -135,7 +135,7 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
-        unregisterTopicsByAlias(m_deviceId, plugin);
+        unregisterTopicsByAlias(m_deviceId, plugin, true);
 
         /* Set new alias */
         plugin->setAlias(alias);
@@ -158,8 +158,8 @@ void PluginMgr::unregisterAllPluginTopics()
     {
         IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
-        unregisterTopicsByUID(m_deviceId, plugin);
-        unregisterTopicsByAlias(m_deviceId, plugin);
+        unregisterTopicsByUID(m_deviceId, plugin, false);
+        unregisterTopicsByAlias(m_deviceId, plugin, false);
     }
 }
 
@@ -527,13 +527,13 @@ void PluginMgr::registerTopicsByUID(const String& deviceId, IPluginMaintenance* 
     }
 }
 
-void PluginMgr::unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin)
+void PluginMgr::unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge)
 {
     if (nullptr != plugin)
     {
         String entityId = getEntityIdByPluginUid(plugin->getUID());
 
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin);
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
     }
 }
 
@@ -548,14 +548,14 @@ void PluginMgr::registerTopicsByAlias(const String& deviceId, IPluginMaintenance
     }
 }
 
-void PluginMgr::unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin)
+void PluginMgr::unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge)
 {
     if ((nullptr != plugin) &&
         (false == plugin->getAlias().isEmpty()))
     {
         String entityId = getEntityIdByPluginAlias(plugin->getAlias());
 
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin);
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
     }
 }
 

@@ -106,8 +106,10 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
     }
 }
 
-void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
+void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
+    UTIL_NOT_USED(purge);
+
     if ((false == deviceId.isEmpty()) &&
         (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))

@@ -113,8 +113,6 @@ void HomeAssistantMqtt::stop()
 
     settings.unregisterSetting(&m_haDiscoveryPrefixSetting);
     settings.unregisterSetting(&m_haDiscoveryEnabledSetting);
-
-    clearMqttDiscoveryInfoList();
 }
 
 void HomeAssistantMqtt::process(bool isConnected)
@@ -256,11 +254,12 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
 
                 getConfigTopic(mqttTopic, mqttDiscoveryInfo->component, mqttDiscoveryInfo->nodeId, mqttDiscoveryInfo->objectId);
 
-                /* Purge discovery info. */
+                /* Purge retained discovery info. */
                 if (false == mqttService.publish(mqttTopic, "", true))
                 {
                     LOG_WARNING("Failed to purge HA discovery info of %s.", mqttDiscoveryInfo->objectId.c_str());
                 }
+                /* Successful purged. */
                 else
                 {
                     LOG_INFO("HA discovery info of %s purged.", mqttDiscoveryInfo->objectId.c_str());
@@ -390,15 +389,15 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfosOnDemand()
 
         if (nullptr != mqttDiscoveryInfo)
         {
-            publishAutoDiscoveryInfo(*mqttDiscoveryInfo);
+            if (true == mqttDiscoveryInfo->isReqToPublish)
+            {
+                publishAutoDiscoveryInfo(*mqttDiscoveryInfo);
 
-            (void)m_mqttDiscoveryInfoList.erase(listOfMqttDiscoveryInfoIt);
+                mqttDiscoveryInfo->isReqToPublish = false;
 
-            delete mqttDiscoveryInfo;
-            mqttDiscoveryInfo = nullptr;
-
-            /* Continue with next call cycle. */
-            break;
+                /* Continue with next call cycle. */
+                break;
+            }
         }
 
         ++listOfMqttDiscoveryInfoIt;

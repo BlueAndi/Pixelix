@@ -92,6 +92,7 @@ public:
 
     /**
      * Stop the Home Assistant extension.
+     * Discovery info's are NOT unregistered. If necessary, this must be done before.
      */
     void stop();
 
@@ -118,6 +119,8 @@ public:
 
     /**
      * Unregister Home Assistant MQTT discovery.
+     * This means the MQTT discovery information will be removed (purged) from
+     * the MQTT broker.
      *
      * @param[in]   deviceId    Device id.
      * @param[in]   entityId    Entity id.
@@ -161,13 +164,15 @@ private:
         String              nodeId;           /**< Home Assistant node id */
         String              objectId;         /**< Home Assistant object id */
         DynamicJsonDocument discoveryDetails; /**< Additional discovery information. */
+        bool                isReqToPublish;   /**< Is requested to publish this discovery info? */
 
         /** Construct Home Assistant MQTT discovery information. */
         MqttDiscoveryInfo() :
             component(),
             nodeId(),
             objectId(),
-            discoveryDetails(JSON_DOC_SIZE)
+            discoveryDetails(JSON_DOC_SIZE),
+            isReqToPublish(true)
         {
         }
     };

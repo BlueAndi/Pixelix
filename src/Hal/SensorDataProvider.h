@@ -93,6 +93,7 @@ public:
 
     /**
      * Stop the sensor data provider.
+     * It will unregister all sensor topics (no purge).
      */
     void end();
 

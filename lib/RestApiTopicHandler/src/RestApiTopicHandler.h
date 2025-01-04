@@ -90,6 +90,7 @@ public:
 
     /**
      * Stop the topic handler.
+     * Topics are NOT unregistered. If necessary, this must be done before.
      */
     void stop() final
     {
@@ -115,8 +116,9 @@ public:
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic) final;
+    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge = false) final;
 
     /**
      * Process the topic handler.

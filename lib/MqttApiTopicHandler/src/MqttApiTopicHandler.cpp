@@ -150,7 +150,7 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
     }
 }
 
-void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
+void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
     if ((false == deviceId.isEmpty()) &&
         (false == entityId.isEmpty()) &&
@@ -179,14 +179,17 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 {
                     topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
 
-                    /* Purge topic */
-                    if (false == mqttService.publish(topicUriReadable, ""))
+                    /* Purge topic? */
+                    if (true == purge)
                     {
-                        LOG_WARNING("Failed to purge: %s", topicUriReadable.c_str());
-                    }
-                    else
-                    {
-                        LOG_INFO("Purged: %s", topicUriReadable.c_str());
+                        if (false == mqttService.publish(topicUriReadable, ""))
+                        {
+                            LOG_WARNING("Failed to purge: %s", topicUriReadable.c_str());
+                        }
+                        else
+                        {
+                            LOG_INFO("Purged: %s", topicUriReadable.c_str());
+                        }
                     }
                 }
                 
@@ -199,8 +202,11 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                     mqttService.unsubscribe(topicUriWriteable);
                 }
 
-                /* Handle Home Assistant extension */
-                m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable);
+                /* Handle Home Assistant extension. */
+                if (true == purge)
+                {
+                    m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable);
+                }
 
                 topicStateIt = m_listOfTopicStates.erase(topicStateIt);
 

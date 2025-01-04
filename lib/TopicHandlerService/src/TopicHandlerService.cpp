@@ -193,7 +193,7 @@ void TopicHandlerService::registerTopics(const String& deviceId, const String& e
     }
 }
 
-void TopicHandlerService::unregisterTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin)
+void TopicHandlerService::unregisterTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin, bool purge)
 {
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
@@ -235,7 +235,7 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, const String&
 
                 if (false == topicName.isEmpty())
                 {
-                    unregisterTopic(deviceId, entityId, topicName);
+                    unregisterTopic(deviceId, entityId, topicName, purge);
 
                     removeFromTopicMetaDataList(deviceId, entityId, topicName);
                 }
@@ -322,7 +322,7 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
     registerTopic(deviceId, entityId, topic, jsonExtra, getTopicFunc, hasChangedFunc, setTopicFunc, uploadReqFunc);
 }
 
-void TopicHandlerService::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
+void TopicHandlerService::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
     if ((false == deviceId.isEmpty()) &&
         (false == entityId.isEmpty()) &&
@@ -339,7 +339,7 @@ void TopicHandlerService::unregisterTopic(const String& deviceId, const String& 
 
             if (nullptr != handler)
             {
-                handler->unregisterTopic(deviceId, entityId, topic);
+                handler->unregisterTopic(deviceId, entityId, topic, purge);
             }
 
             ++idx;
