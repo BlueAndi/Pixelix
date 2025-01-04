@@ -394,6 +394,9 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfosOnDemand()
 
             (void)m_mqttDiscoveryInfoList.erase(listOfMqttDiscoveryInfoIt);
 
+            delete mqttDiscoveryInfo;
+            mqttDiscoveryInfo = nullptr;
+
             /* Continue with next call cycle. */
             break;
         }
