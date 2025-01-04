@@ -230,6 +230,56 @@ private:
      * @return Filtered plugin alias
      */
     String filterPluginAlias(const String& alias);
+
+    /**
+     * Get the entity id by plugin UID.
+     *
+     * @param[in] uid   Plugin UID
+     *
+     * @return Entity id
+     */
+    String getEntityIdByPluginUid(uint16_t uid);
+
+    /**
+     * Get the entity id by plugin alias.
+     *
+     * @param[in] alias Plugin alias
+     *
+     * @return Entity id
+     */
+    String getEntityIdByPluginAlias(const String& alias);
+
+    /**
+     * Register all topics of the given plugin by its UID.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be registered.
+     */
+    void registerTopicsByUID(const String& deviceId, IPluginMaintenance* plugin);
+
+    /**
+     * Unregister all topics of the given plugin by its UID.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be unregistered.
+     */
+    void unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin);
+
+    /**
+     * Register all topics of the given plugin by its alias.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be registered.
+     */
+    void registerTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin);
+
+    /**
+     * Unregister all topics of the given plugin by its alias.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be unregistered.
+     */
+    void unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin);
 };
 
 /******************************************************************************

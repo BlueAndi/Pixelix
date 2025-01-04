@@ -102,7 +102,7 @@ void TopicHandlerService::process()
     }
 }
 
-void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintenance* plugin)
+void TopicHandlerService::registerTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin)
 {
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
@@ -177,37 +177,23 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                 {
                     strToAccess(plugin, topicAccess, getTopicFunc, setTopicFunc, uploadReqFunc);
 
-                    /* Register plugin topic with plugin UID as entity id. */
                     if (true == extraFileName.isEmpty())
                     {
-                        registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                        registerTopic(deviceId, entityId, topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
                     }
                     else
                     {
-                        registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                        registerTopic(deviceId, entityId, topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
                     }
 
-                    /* Register plugin topic with plugin alias as entity id (if possible). */
-                    if (false == plugin->getAlias().isEmpty())
-                    {
-                        if (true == extraFileName.isEmpty())
-                        {
-                            registerTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
-                        }
-                        else
-                        {
-                            registerTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
-                        }
-                    }
-
-                    addToPluginMetaDataList(deviceId, plugin, topicName);
+                    addToTopicMetaDataList(deviceId, entityId, plugin, topicName, nullptr);
                 }
             }
         }
     }
 }
 
-void TopicHandlerService::unregisterTopics(const String& deviceId, IPluginMaintenance* plugin)
+void TopicHandlerService::unregisterTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin)
 {
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
@@ -249,16 +235,9 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, IPluginMainte
 
                 if (false == topicName.isEmpty())
                 {
-                    /* Unregister plugin topic with plugin UID as entity id. */
-                    unregisterTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName);
+                    unregisterTopic(deviceId, entityId, topicName);
 
-                    /* Unregister plugin topic with plugin UID as entity id (if possible). */
-                    if (false == plugin->getAlias().isEmpty())
-                    {
-                        unregisterTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName);
-                    }
-
-                    removeFromPluginMetaDataList(deviceId, plugin);
+                    removeFromTopicMetaDataList(deviceId, entityId, topicName);
                 }
             }
         }
@@ -312,7 +291,7 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
             if ((true == isReadAccess) &&
                 (nullptr != hasChangedFunc))
             {
-                addToTopicMetaDataList(deviceId, entityId, topic, hasChangedFunc);
+                addToTopicMetaDataList(deviceId, entityId, nullptr, topic, hasChangedFunc);
             }
         }
     }
@@ -379,16 +358,6 @@ void TopicHandlerService::unregisterTopic(const String& deviceId, const String& 
  * Private Methods
  *****************************************************************************/
 
-String TopicHandlerService::getEntityIdByPluginUid(uint16_t uid)
-{
-    return String("display/uid/") + uid;
-}
-
-String TopicHandlerService::getEntityIdByPluginAlias(const String& alias)
-{
-    return String("display/alias/") + alias;
-}
-
 void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& strAccess, ITopicHandler::GetTopicFunc& getTopicFunc, ITopicHandler::SetTopicFunc& setTopicFunc, ITopicHandler::UploadReqFunc& uploadReqFunc) const
 {
     if (nullptr != plugin)
@@ -435,12 +404,11 @@ void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& 
     }
 }
 
-void TopicHandlerService::addToTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic, HasChangedFunc hasChangedFunc)
+void TopicHandlerService::addToTopicMetaDataList(const String& deviceId, const String& entityId, IPluginMaintenance* plugin, const String& topic, HasChangedFunc hasChangedFunc)
 {
     if ((false == deviceId.isEmpty()) &&
         (false == entityId.isEmpty()) &&
-        (false == topic.isEmpty()) &&
-        (nullptr != hasChangedFunc))
+        (false == topic.isEmpty()))
     {
         TopicMetaData* topicMetaData = new (std::nothrow) TopicMetaData();
 
@@ -448,6 +416,7 @@ void TopicHandlerService::addToTopicMetaDataList(const String& deviceId, const S
         {
             topicMetaData->deviceId       = deviceId;
             topicMetaData->entityId       = entityId;
+            topicMetaData->plugin         = plugin;
             topicMetaData->topic          = topic;
             topicMetaData->hasChangedFunc = hasChangedFunc;
 
@@ -481,73 +450,9 @@ void TopicHandlerService::removeFromTopicMetaDataList(const String& deviceId, co
     }
 }
 
-void TopicHandlerService::addToPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin, const String& topic)
-{
-    if ((false == deviceId.isEmpty()) &&
-        (nullptr != plugin) &&
-        (false == topic.isEmpty()))
-    {
-        PluginMetaData* pluginMetaData = new (std::nothrow) PluginMetaData();
-
-        if (nullptr != pluginMetaData)
-        {
-            pluginMetaData->deviceId = deviceId;
-            pluginMetaData->plugin   = plugin;
-            pluginMetaData->topic    = topic;
-
-            m_pluginMetaDataList.push_back(pluginMetaData);
-        }
-    }
-}
-
-void TopicHandlerService::removeFromPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin)
-{
-    PluginMetaDataList::iterator pluginMetaDataListIt = m_pluginMetaDataList.begin();
-
-    while (m_pluginMetaDataList.end() != pluginMetaDataListIt)
-    {
-        PluginMetaData* pluginMetaData = *pluginMetaDataListIt;
-
-        if ((nullptr != pluginMetaData) &&
-            (deviceId == pluginMetaData->deviceId) &&
-            (plugin == pluginMetaData->plugin))
-        {
-            pluginMetaDataListIt = m_pluginMetaDataList.erase(pluginMetaDataListIt);
-
-            delete pluginMetaData;
-            pluginMetaData = nullptr;
-        }
-        else
-        {
-            ++pluginMetaDataListIt;
-        }
-    }
-}
-
 void TopicHandlerService::processOnChange()
 {
-    PluginMetaDataList::iterator pluginMetaDataListIt = m_pluginMetaDataList.begin();
-    TopicMetaDataList::iterator  topicMetaDataListIt  = m_topicMetaDataList.begin();
-
-    /** Process all plugin related topics. */
-    while (m_pluginMetaDataList.end() != pluginMetaDataListIt)
-    {
-        PluginMetaData* pluginMetaData = *pluginMetaDataListIt;
-
-        if ((nullptr != pluginMetaData) &&
-            (nullptr != pluginMetaData->plugin) &&
-            (true == pluginMetaData->plugin->hasTopicChanged(pluginMetaData->topic)))
-        {
-            notifyAllHandlers(pluginMetaData->deviceId, getEntityIdByPluginUid(pluginMetaData->plugin->getUID()), pluginMetaData->topic);
-
-            if (false == pluginMetaData->plugin->getAlias().isEmpty())
-            {
-                notifyAllHandlers(pluginMetaData->deviceId, getEntityIdByPluginAlias(pluginMetaData->plugin->getAlias()), pluginMetaData->topic);
-            }
-        }
-
-        ++pluginMetaDataListIt;
-    }
+    TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
 
     /** Proces all topics which are independent from plugins. */
     while (m_topicMetaDataList.end() != topicMetaDataListIt)
@@ -555,10 +460,28 @@ void TopicHandlerService::processOnChange()
         TopicMetaData* topicMetaData = *topicMetaDataListIt;
 
         if ((nullptr != topicMetaData) &&
-            (nullptr != topicMetaData->hasChangedFunc) &&
-            (true == topicMetaData->hasChangedFunc(topicMetaData->topic)))
+            (nullptr != topicMetaData->hasChangedFunc))
         {
-            notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
+            bool hasTopicChanged = false;
+
+            if (nullptr != topicMetaData->plugin)
+            {
+                hasTopicChanged = topicMetaData->plugin->hasTopicChanged(topicMetaData->topic);
+            }
+            else if (nullptr != topicMetaData->hasChangedFunc)
+            {
+                hasTopicChanged = topicMetaData->hasChangedFunc(topicMetaData->topic);
+            }
+            else
+            {
+                /* Skip */
+                ;
+            }
+
+            if (true == hasTopicChanged)
+            {
+                notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
+            }
         }
 
         ++topicMetaDataListIt;
