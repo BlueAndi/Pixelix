@@ -289,13 +289,13 @@ pixelix.ws.Client.prototype.getSlots = function() {
     }.bind(this));
 };
 
-pixelix.ws.Client.prototype.reset = function() {
+pixelix.ws.Client.prototype.restart = function() {
     return new Promise(function(resolve, reject) {
         if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
-                name: "RESET",
+                name: "RESTART",
                 par: null,
                 resolve: resolve,
                 reject: reject

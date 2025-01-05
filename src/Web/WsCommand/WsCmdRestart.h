@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command to reset system
+ * @brief  Websocket command to restart the system
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup WEB
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef WSCMDRESET_H
-#define WSCMDRESET_H
+#ifndef WS_CMD_RESTART_H
+#define WS_CMD_RESTART_H
 
 /******************************************************************************
  * Compile Switches
@@ -54,17 +54,17 @@
  *****************************************************************************/
 
 /**
- * Websocket command to reset system
+ * Websocket command to restart system
  */
-class WsCmdReset: public WsCmd
+class WsCmdRestart: public WsCmd
 {
 public:
 
     /**
      * Constructs the websocket command.
      */
-    WsCmdReset() :
-        WsCmd("RESET"),
+    WsCmdRestart() :
+        WsCmd("RESTART"),
         m_isError(false)
     {
     }
@@ -72,7 +72,7 @@ public:
     /**
      * Destroys websocket command.
      */
-    ~WsCmdReset()
+    ~WsCmdRestart()
     {
     }
 
@@ -95,14 +95,14 @@ private:
 
     bool    m_isError;  /**< Any error happened during parameter reception? */
 
-    WsCmdReset(const WsCmdReset& cmd);
-    WsCmdReset& operator=(const WsCmdReset& cmd);
+    WsCmdRestart(const WsCmdRestart& cmd);
+    WsCmdRestart& operator=(const WsCmdRestart& cmd);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDRESET_H */
+#endif  /* WS_CMD_RESTART_H */
 
 /** @} */

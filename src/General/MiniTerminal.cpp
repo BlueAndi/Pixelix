@@ -61,31 +61,31 @@
  * Local Variables
  *****************************************************************************/
 
-/** Command: reset */
-static const char     RESET[]                    = "reset";
+/** Command: restart */
+static const char RESTART[]                                  = "restart";
 
 /** Command: write wifi passphrase */
-static const char     WRITE_WIFI_PASSPHRASE[]    = "write wifi passphrase ";
+static const char WRITE_WIFI_PASSPHRASE[]                    = "write wifi passphrase ";
 
 /** Command: write wifi ssid */
-static const char     WRITE_WIFI_SSID[]          = "write wifi ssid ";
+static const char WRITE_WIFI_SSID[]                          = "write wifi ssid ";
 
 /** Command: get ip */
-static const char     GET_IP[]                   = "get ip";
+static const char GET_IP[]                                   = "get ip";
 
 /** Command: status */
-static const char     GET_STATUS[]               = "get status";
+static const char GET_STATUS[]                               = "get status";
 
 /** Command: help */
-static const char     HELP[]                     = "help";
+static const char                 HELP[]                     = "help";
 
 const MiniTerminal::CmdTableEntry MiniTerminal::m_cmdTable[] = {
-    { RESET,                    &MiniTerminal::cmdReset },
-    { WRITE_WIFI_PASSPHRASE,    &MiniTerminal::cmdWriteWifiPassphrase },
-    { WRITE_WIFI_SSID,          &MiniTerminal::cmdWriteWifiSSID },
-    { GET_IP,                   &MiniTerminal::cmdGetIPAddress },
-    { GET_STATUS,               &MiniTerminal::cmdGetStatus },
-    { HELP,                     &MiniTerminal::cmdHelp },
+    { RESTART, &MiniTerminal::cmdRestart },
+    { WRITE_WIFI_PASSPHRASE, &MiniTerminal::cmdWriteWifiPassphrase },
+    { WRITE_WIFI_SSID, &MiniTerminal::cmdWriteWifiSSID },
+    { GET_IP, &MiniTerminal::cmdGetIPAddress },
+    { GET_STATUS, &MiniTerminal::cmdGetStatus },
+    { HELP, &MiniTerminal::cmdHelp },
 };
 
 /******************************************************************************
@@ -94,12 +94,12 @@ const MiniTerminal::CmdTableEntry MiniTerminal::m_cmdTable[] = {
 
 void MiniTerminal::process()
 {
-    char    buffer[LOCAL_BUFFER_SIZE];
-    size_t  read    = m_stream.readBytes(buffer, LOCAL_BUFFER_SIZE);
-    size_t  idx     = 0U;
+    char   buffer[LOCAL_BUFFER_SIZE];
+    size_t read = m_stream.readBytes(buffer, LOCAL_BUFFER_SIZE);
+    size_t idx  = 0U;
 
     /* Process the read input data. */
-    while(read > idx)
+    while (read > idx)
     {
         char currentChar = buffer[idx];
 
@@ -107,8 +107,8 @@ void MiniTerminal::process()
         if (ASCII_LF == currentChar)
         {
             /* Don't echo mechanism, because its too late in case the
-                * command may write a result too.
-                */
+             * command may write a result too.
+             */
             (void)m_stream.write(currentChar);
 
             m_input[m_writeIndex] = '\0';
@@ -118,9 +118,9 @@ void MiniTerminal::process()
             {
                 executeCommand(m_input);
             }
-            
+
             /* Reset command line buffer */
-            m_writeIndex = 0U;
+            m_writeIndex          = 0U;
             m_input[m_writeIndex] = '\0';
         }
         /* Remove the last character from command line? */
@@ -129,8 +129,7 @@ void MiniTerminal::process()
         {
             if (0 < m_writeIndex)
             {
-                static const char removeSeq[] =
-                {
+                static const char removeSeq[] = {
                     ASCII_BS,
                     ASCII_SP,
                     ASCII_BS
@@ -192,7 +191,7 @@ void MiniTerminal::executeCommand(const char* cmdLine)
     for (idx = 0U; UTIL_ARRAY_NUM(m_cmdTable) > idx; ++idx)
     {
         const CmdTableEntry entry = m_cmdTable[idx];
-        const size_t len = strlen(entry.cmdStr);
+        const size_t        len   = strlen(entry.cmdStr);
 
         if (0 == strncmp(cmdLine, entry.cmdStr, len))
         {
@@ -207,7 +206,7 @@ void MiniTerminal::executeCommand(const char* cmdLine)
     }
 }
 
-void MiniTerminal::cmdReset(const char* par)
+void MiniTerminal::cmdRestart(const char* par)
 {
     UTIL_NOT_USED(par);
     m_isRestartRequested = true;
@@ -282,7 +281,7 @@ void MiniTerminal::cmdGetStatus(const char* par)
 {
     UTIL_NOT_USED(par);
 
-    ErrorState::ErrorId status  = ErrorState::getInstance().getErrorId();
+    ErrorState::ErrorId status = ErrorState::getInstance().getErrorId();
     String              result;
 
     result += static_cast<int32_t>(status);

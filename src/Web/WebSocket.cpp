@@ -44,7 +44,7 @@
 #include "WsCmdLog.h"
 #include "WsCmdMove.h"
 #include "WsCmdPlugins.h"
-#include "WsCmdReset.h"
+#include "WsCmdRestart.h"
 #include "WsCmdSlotDuration.h"
 #include "WsCmdSlot.h"
 #include "WsCmdSlots.h"
@@ -93,7 +93,7 @@ static WsCmdInstall         gWsCmdInstall;
 static WsCmdUninstall       gWsCmdUninstall;
 
 /** Websocket reset command */
-static WsCmdReset           gWsCmdReset;
+static WsCmdRestart         gWsCmdRestart;
 
 /** Websocket get/set brightness command */
 static WsCmdBrightness      gWsCmdBrightness;
@@ -132,7 +132,7 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdPlugins,
     &gWsCmdInstall,
     &gWsCmdUninstall,
-    &gWsCmdReset,
+    &gWsCmdRestart,
     &gWsCmdBrightness,
     &gWsCmdLog,
     &gWsCmdMove,

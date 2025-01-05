@@ -37,6 +37,7 @@
 #include <TopicHandlerService.h>
 #include <Util.h>
 #include "DisplayMgr.h"
+#include "UpdateMgr.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -69,6 +70,7 @@ typedef struct
 static bool getDisplayState(const String& topic, JsonObject& value);
 static bool hasDisplayStateChanged(const String& topic);
 static bool setDisplayState(const String& topic, const JsonObjectConst& value);
+static bool restart(const String& topic, const JsonObjectConst& value);
 
 /******************************************************************************
  * Local Variables
@@ -83,7 +85,8 @@ static String gDeviceId;
  * List of topics.
  */
 static TopicElem gTopicList[] = {
-    { "display", "/power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" }
+    { "display", "/power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" },
+    { "device", "/restart", nullptr, nullptr, restart, "/extra/restart.json" }
 };
 
 /**
@@ -262,4 +265,27 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
     }
 
     return isSuccessful;
+}
+
+/**
+ * Restart the device.
+ *
+ * @param[in]   topic   Topic
+ * @param[in]   value   Value
+ *
+ * @return If successful, it will return true otherwise false.
+ */
+static bool restart(const String& topic, const JsonObjectConst& value)
+{
+    const uint32_t RESTART_DELAY = 100U; /* ms */
+
+    UTIL_NOT_USED(topic);
+    UTIL_NOT_USED(value);
+
+    /* To ensure that a positive response will be sent before the device restarts,
+     * a short delay is necessary.
+     */
+    UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
+
+    return true;
 }

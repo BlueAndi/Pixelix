@@ -154,11 +154,11 @@ private:
     void executeCommand(const char* cmdLine);
 
     /**
-     * Reset the device.
+     * Restart the device.
      * 
      * @param[in] par   Parameter
      */
-    void cmdReset(const char* par);
+    void cmdRestart(const char* par);
 
     /**
      * Write wifi passphrase.

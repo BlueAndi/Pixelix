@@ -43,7 +43,6 @@
 #include "RestUtil.h"
 #include "SlotList.h"
 #include "ButtonActions.h"
-#include "UpdateMgr.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -120,7 +119,6 @@ static void        handleSlot(AsyncWebServerRequest* request);
 static void        handlePluginInstall(AsyncWebServerRequest* request);
 static void        handlePluginUninstall(AsyncWebServerRequest* request);
 static void        handlePlugins(AsyncWebServerRequest* request);
-static void        handleReset(AsyncWebServerRequest* request);
 static void        handleSensors(AsyncWebServerRequest* request);
 static void        handleSettings(AsyncWebServerRequest* request);
 static void        handleSetting(AsyncWebServerRequest* request);
@@ -178,7 +176,6 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
-    (void)srv.on("/rest/api/v1/reset", handleReset);
     (void)srv.on("/rest/api/v1/sensors", handleSensors);
     (void)srv.on("/rest/api/v1/settings", handleSettings);
     (void)srv.on("/rest/api/v1/setting", handleSetting);
@@ -775,41 +772,6 @@ static void handlePlugins(AsyncWebServerRequest* request)
 
             ++idx;
         }
-    }
-
-    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-}
-
-/**
- * Perform a reset request.
- * GET \c "/api/v1/reset"
- *
- * @param[in] request   HTTP request
- */
-static void handleReset(AsyncWebServerRequest* request)
-{
-    const size_t        JSON_DOC_SIZE = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET != request->method())
-    {
-        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    else
-    {
-        /* To ensure the positive response will be sent. */
-        const uint32_t RESTART_DELAY = 100U; /* ms */
-
-        (void)RestUtil::prepareRspSuccess(jsonDoc);
-
-        UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);

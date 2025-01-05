@@ -259,7 +259,7 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
             isReadAccess = true;
         }
 
-        if ((nullptr != setTopicFunc) &&
+        if ((nullptr != setTopicFunc) ||
             (nullptr != uploadReqFunc))
         {
             isWriteAccess = true;

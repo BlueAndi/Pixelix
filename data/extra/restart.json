@@ -1,0 +1,12 @@
+{
+    "ha": {
+        "component": "button",
+        "discovery": {
+            "name": "Restart",
+            "ic": "mdi:restart",
+            "ent_cat": "config",
+            "dev_cla": "restart",
+            "pl_prs": "{}"
+        }
+    }
+}

@@ -344,12 +344,12 @@
                             progress = 90;
                             updateProgressBar("progressBarRestore", progress);
                         }).then(function() {
-                            return restClient.reset();
+                            return restClient.restart();
                         }).then(function() {
                             progress = 100;
                             updateProgressBar("progressBarRestore", progress);
 
-                            return dialog.showInfo("<p>Reset performed to apply restored configuration.</p>");
+                            return dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
                         }).catch(function() {
                             dialog.showError("<p>Restore failed.</p>");
                         });

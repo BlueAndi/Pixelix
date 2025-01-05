@@ -25,14 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command to reset system
+ * @brief  Websocket command to restart the system
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdReset.h"
+#include "WsCmdRestart.h"
 #include "UpdateMgr.h"
 
 #include <Util.h>
@@ -61,7 +61,7 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdReset::execute(AsyncWebSocket* server, uint32_t clientId)
+void WsCmdRestart::execute(AsyncWebSocket* server, uint32_t clientId)
 {
     if (nullptr == server)
     {
@@ -86,7 +86,7 @@ void WsCmdReset::execute(AsyncWebSocket* server, uint32_t clientId)
     m_isError = false;
 }
 
-void WsCmdReset::setPar(const char* par)
+void WsCmdRestart::setPar(const char* par)
 {
     UTIL_NOT_USED(par);
 
