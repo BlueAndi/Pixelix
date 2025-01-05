@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* VolumioPlugin::TOPIC_CONFIG = "/host";
+const char* VolumioPlugin::TOPIC_CONFIG = "host";
 
 /******************************************************************************
  * Public Methods

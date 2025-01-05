@@ -59,10 +59,10 @@
  *****************************************************************************/
 
 /* Initialize slot control topic. */
-const char* MultiIconPlugin::TOPIC_SLOT     = "/slot";
+const char* MultiIconPlugin::TOPIC_SLOT     = "slot";
 
 /* Initialize slots control topic. */
-const char* MultiIconPlugin::TOPIC_SLOTS    = "/slots";
+const char* MultiIconPlugin::TOPIC_SLOTS    = "slots";
 
 /******************************************************************************
  * Public Methods

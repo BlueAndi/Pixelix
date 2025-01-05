@@ -521,7 +521,7 @@ void SensorDataProvider::registerSensorTopics()
             const uint32_t              VALUE_PRECISION = 2U; /* 2 digits after the . */
             ISensor*                    sensor          = this->getSensor(sensorIndex);
             ISensorChannel*             sensorChannel   = sensor->getChannel(channelIndex);
-            String                      channelName     = "/" + ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
+            String                      channelName     = ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
             String                      entityId        = "sensors/";
             ITopicHandler::GetTopicFunc getTopicFunc =
                 [sensorTopic, sensorChannel, VALUE_PRECISION](const String& topic, JsonObject& jsonValue) -> bool {
@@ -583,7 +583,7 @@ void SensorDataProvider::unregisterSensorTopics()
     for (index = 0U; index < UTIL_ARRAY_NUM(gSensorTopics); ++index)
     {
         const SensorTopic* sensorTopic  = &gSensorTopics[index];
-        String             channelName  = "/" + ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
+        String             channelName  = ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
         String             entityId     = "sensors/";
 
         entityId                       += index;

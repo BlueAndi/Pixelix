@@ -58,7 +58,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char*     SoundReactivePlugin::TOPIC_CONFIG                       = "/config";
+const char*     SoundReactivePlugin::TOPIC_CONFIG                       = "config";
 
 /* Initialize the list with the high edge frequency bin of the center band frequency. */
 const uint16_t  SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[]  =

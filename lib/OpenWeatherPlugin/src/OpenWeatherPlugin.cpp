@@ -70,7 +70,7 @@
 const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "http://api.openweathermap.org";
 
 /* Initialize plugin topic. */
-const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/weather";
+const char* OpenWeatherPlugin::TOPIC_CONFIG             = "weather";
 
 /******************************************************************************
  * Public Methods

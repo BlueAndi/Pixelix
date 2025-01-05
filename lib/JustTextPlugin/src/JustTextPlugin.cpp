@@ -58,7 +58,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* JustTextPlugin::TOPIC_TEXT                 = "/text";
+const char* JustTextPlugin::TOPIC_TEXT                 = "text";
 const char* JustTextPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/justTextPlugin.json";
 
 /******************************************************************************

@@ -83,10 +83,22 @@ static String gDeviceId;
 
 /**
  * List of topics.
+ *
+ * ENTITY-ID     : display/uid/PLUGIN-UID | display/alias/PLUGIN-ALIAS | empty
+ *
+ * REST API      : BASE-URL/[ENTITY-ID/]TOPIC
+ *
+ * MQTT          : DEVICE-ID/[ENTITY-ID/]TOPIC/set (writeable)
+ *                 DEVICE-ID/[ENTITY-ID/]TOPIC/state (readable)
+ *
+ * HomeAssistant : NODE-ID = DEVICE-ID with "/" and "." replaced by "_"
+ *                 OBJECT-ID = [ENTITY-ID/]TOPIC with "/" and "." replaced by "_"
+ *                 UNIQUE-ID = DEVICE-ID/[ENTITY-ID/]TOPIC
+ *                 DISCOVERY-TOPIC = DISCOVERY-PREFIX/COMPONENT/NODE-ID/OBJECT-ID/config
  */
 static TopicElem gTopicList[] = {
-    { "display", "/power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" },
-    { "device", "/restart", nullptr, nullptr, restart, "/extra/restart.json" }
+    { "display", "power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" },
+    { "", "restart", nullptr, nullptr, restart, "/extra/restart.json" }
 };
 
 /**

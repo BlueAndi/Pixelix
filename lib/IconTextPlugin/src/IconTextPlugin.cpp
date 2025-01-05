@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_TEXT                 = "/iconText";
+const char* IconTextPlugin::TOPIC_TEXT                 = "iconText";
 const char* IconTextPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/iconTextPlugin.json";
 
 /******************************************************************************

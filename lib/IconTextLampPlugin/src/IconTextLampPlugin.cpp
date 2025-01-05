@@ -59,14 +59,14 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT                 = "/iconText";
+const char* IconTextLampPlugin::TOPIC_TEXT                 = "iconText";
 const char* IconTextLampPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/iconTextLampPlugin.json";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMPS                = "/lamps";
+const char* IconTextLampPlugin::TOPIC_LAMPS                = "lamps";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMP                 = "/lamp";
+const char* IconTextLampPlugin::TOPIC_LAMP                 = "lamp";
 
 /******************************************************************************
  * Public Methods

@@ -232,7 +232,7 @@ pixelix.rest.Client.prototype.setSetting = function(key, value) {
 pixelix.rest.Client.prototype.restart = function() {
     return utils.makeRequest({
         method: "POST",
-        url: "/rest/api/v1/device/restart",
+        url: "/rest/api/v1/restart",
         isJsonResponse: true
     });
 };

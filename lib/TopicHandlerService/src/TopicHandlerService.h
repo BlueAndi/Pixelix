@@ -104,7 +104,7 @@ public:
      * Register all topics of the given plugin.
      *
      * @param[in] deviceId  The device id which represents the physical device.
-     * @param[in] entityId  The entity id which represents the entity of the device.
+     * @param[in] entityId  The entity id which represents the entity of the device. May be empty.
      * @param[in] plugin    The plugin, which topics shall be registered.
      */
     void registerTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin);

@@ -158,7 +158,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [
-     *         "/text"
+     *         "text"
      *     ]
      * }
      * </code>
@@ -174,7 +174,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "access": "r"
      *     }]
      * }
@@ -185,7 +185,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": {
      *             "ha": {
      *                 ... everything here will be used for MQTT discovery ...
@@ -200,7 +200,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": "extra.json"
      *    }]
      * }

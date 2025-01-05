@@ -247,7 +247,6 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, const String&
 void TopicHandlerService::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& jsonExtra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc)
 {
     if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         bool isReadAccess  = false;
@@ -325,7 +324,6 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
 void TopicHandlerService::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
     if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         uint8_t         idx              = 0U;
@@ -407,7 +405,6 @@ void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& 
 void TopicHandlerService::addToTopicMetaDataList(const String& deviceId, const String& entityId, IPluginMaintenance* plugin, const String& topic, HasChangedFunc hasChangedFunc)
 {
     if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         TopicMetaData* topicMetaData = new (std::nothrow) TopicMetaData();

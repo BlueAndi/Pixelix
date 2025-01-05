@@ -129,7 +129,7 @@ void HomeAssistantMqtt::process(bool isConnected)
     m_isConnected = isConnected;
 }
 
-void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const String& entityId, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra)
+void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const String& entityId, const String& topic, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra)
 {
     /* The Home Assistant discovery must be enabled and the prefix must be available, otherwise this
      * feature is disabled.
@@ -157,8 +157,8 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const Stri
                 if (nullptr != mqttDiscoveryInfo)
                 {
                     mqttDiscoveryInfo->component = jsonComponent.as<String>();
-                    mqttDiscoveryInfo->nodeId    = deviceId;
-                    mqttDiscoveryInfo->objectId  = getObjectId(entityId);
+                    mqttDiscoveryInfo->nodeId    = getNodeId(deviceId);
+                    mqttDiscoveryInfo->objectId  = getObjectId(entityId, topic);
                     mqttDiscoveryInfo->discoveryDetails.set(jsonDiscovery); /* Deep copy, because discovery details are handled in different context. */
 
                     /* Readable topic? */
@@ -186,7 +186,7 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const Stri
     }
 }
 
-void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const String& entityId, const String& stateTopic, const String& cmdTopic)
+void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const String& entityId, const String& topic, const String& stateTopic, const String& cmdTopic)
 {
     /* The Home Assistant discovery must be enabled and the prefix must be available, otherwise this
      * feature is disabled.
@@ -195,7 +195,7 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
         (false == m_haDiscoveryPrefix.isEmpty()))
     {
         ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
-        String                            objectId                  = getObjectId(entityId);
+        String                            objectId                  = getObjectId(entityId, topic);
 
         while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
         {
@@ -282,11 +282,35 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
  * Private Methods
  *****************************************************************************/
 
-String HomeAssistantMqtt::getObjectId(const String& entityId)
+String HomeAssistantMqtt::getNodeId(const String& deviceId)
 {
-    String objectId = entityId;
+    String nodeId = deviceId;
 
-    /* Home Assistant MQTT discovery doesn't allow '/' and '.' in the object id. */
+    /* Home Assistant MQTT discovery doesn't allow '/' and '.' in the node id.
+     * See https://www.home-assistant.io/integrations/mqtt#discovery-messages
+     */
+    nodeId.replace('/', '_');
+    nodeId.replace('.', '_');
+
+    return nodeId;
+}
+
+String HomeAssistantMqtt::getObjectId(const String& entityId, const String& topic)
+{
+    String objectId;
+
+    if (false == entityId.isEmpty())
+    {
+        objectId = entityId + "/" + topic;
+    }
+    else
+    {
+        objectId = topic;
+    }
+
+    /* Home Assistant MQTT discovery doesn't allow '/' and '.' in the object id.
+     * See https://www.home-assistant.io/integrations/mqtt#discovery-messages
+     */
     objectId.replace('/', '_');
     objectId.replace('.', '_');
 

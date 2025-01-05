@@ -65,7 +65,7 @@
 
 /* Initialize constant values. */
 const char* TimerService::FILE_NAME = "/configuration/timerService.json";
-const char* TimerService::TOPIC     = "/timer";
+const char* TimerService::TOPIC     = "timer";
 const char* TimerService::ENTITY    = "timerService";
 
 /******************************************************************************
