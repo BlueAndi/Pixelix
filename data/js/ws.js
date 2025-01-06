@@ -205,7 +205,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                     rsp.plugins.push(data[index].substring(1, data[index].length - 1));
                 }
                 this._pendingCmd.resolve(rsp);
-            } else if ("RESET" === this._pendingCmd.name) {
+            } else if ("RESTART" === this._pendingCmd.name) {
                 this._pendingCmd.resolve(rsp);
             } else if ("SLOT_DURATION" === this._pendingCmd.name) {
                 rsp.duration = parseInt(data[0]);
