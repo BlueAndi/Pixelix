@@ -10,6 +10,7 @@
 * [MQTT Topics](#mqtt-topics)
   * [Birth and last will](#birth-and-last-will)
   * [Plugin topic path](#plugin-topic-path)
+  * [Readable/Writeable Topic](#readablewriteable-topic)
   * [Topic name](#topic-name)
   * [Sending a bitmap](#sending-a-bitmap)
   * [Sensors](#sensors)
@@ -37,29 +38,43 @@ Examples:
 # MQTT Topics
 
 ## Birth and last will
-Pixelix supports birth and last will messages.
+Pixelix supports birth and last will messages (retained).
 
 After the successful connection establishment to the MQTT broker, Pixelix will send "online" to the &lt;HOSTNAME&gt;/status topic. In any disconnect case, "offline" will be sent to the &lt;HOSTNAME&gt;/status topic.
 
 ## Plugin topic path
-The base topic path to access plugin related topics can be setup with the plugin UID or the plugin alias:
-* &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/...
-* &lt;HOSTNAME&gt;/display/alias/&lt;PLUGIN-ALIAS&gt;/...
+The MQTT base topic path to access plugin related topics can be setup with the plugin UID or the plugin alias:
+* &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;
+* &lt;HOSTNAME&gt;/display/alias/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;
+## Readable/Writeable Topic
+If a topic is readable or writeable, use the following suffixes for the MQTT base path:
+* For readable topics, add ```/state``` to the base path.
+* For writeable topics, add ```/set``` to the base path.
+* For topics that are both readable and writeable, use both paths.
+
+This ensures clear communication and control over the topics.
 
 ## Topic name
 The complete topic name can be derived from the REST API documentation.
 
 Example: JustTextPlugin
 
-The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
-1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/ part with &lt;HOSTNAME&gt; --> &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
-2. Every URL parameter, which is in this case show=&lt;TEXT&gt; must be sent in JSON format.
-
-```json
-{
-    "text": "<text>"
-}
-```
+The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;?text=&lt;TEXT&gt;
+1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/ part with &lt;HOSTNAME&gt; and remove the parameters which will look like &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;
+2. To read from the topic, add ```/state```: &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;/state
+    *  Every URL parameter, which is in this case text=&lt;TEXT&gt; will be received in JSON format.
+    ```json
+    {
+        "text": "<TEXT>"
+    }
+    ```
+3. To write to the topic, add  ```/set```: &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;/set
+    * Every URL parameter, which is in this case text=&lt;TEXT&gt; must be sent in JSON format.
+    ```json
+    {
+        "text": "<TEXT>"
+    }
+    ```
 
 ## Sending a bitmap
 

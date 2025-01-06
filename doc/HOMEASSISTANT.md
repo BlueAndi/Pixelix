@@ -60,7 +60,7 @@ See it in the example screenshot above.
 **Important:** Each sensor entry **must have** an corresponding sensor label entry!
 
 # MQTT
-MQTT is not part of every Pixelix installation. It depends on the development board specific configuration or in other words, mainly on the available flash size. For development boards with less than 8 MB flash, its disabled by default. You can enable it, but need to compile it by yourself and throw other plugins out to get it fit.
+MQTT is not part of every Pixelix installation. It depends on the development board specific configuration or in other words, mainly on the available flash size. For development boards with less than 8 MB flash, its disabled by default, except the Ulanzi TC001. You can enable it, but need to compile it by yourself and throw other plugins out to get it fit.
 
 ## Installation
 If not already installed, you will need to add the MQTT integration
@@ -68,12 +68,14 @@ If not already installed, you will need to add the MQTT integration
 [![MQTT Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=mqtt)
 
 ## MQTT Discovery
-The Home Assistant automatic MQTT discovery is supported by the following plugins:
+The Home Assistant automatic MQTT discovery is supported by:
+* Display on/off
+* Sensor information
 * JustTextPlugin
 * IconTextPlugin
 * IconTextLampPlugin
 
-Pixelix will be shown as device with its entities. Every installed plugin will be shown as at least one entity. By default the plugin UID is used to generate the entity id in Home Assistant. If the plugin instance has an alias, another entity with the alias as entity id will be available.
+Pixelix will be shown as device with its entities. Every installed plugin will be shown as at least one entity.
 
 [More technical details about MQTT](./MQTT.md)
 
