@@ -94,6 +94,7 @@ utils.makeRequest = function(options) {
             }
 
             xhr.open(options.method, options.url + urlEncodedPar);
+            xhr.timeout = 5000; /* ms */
 
             if ("undefined" !== typeof options.headers) {
                 Object.keys(options.headers).forEach(function(key) {
@@ -130,8 +131,14 @@ utils.makeRequest = function(options) {
                 }
             };
 
-            xhr.onerror = function() {
+            xhr.ontimeout = function() {
+                console.error(xhr.statusText);
                 reject("Timeout");
+            };
+
+            xhr.onerror = function() {
+                console.error(xhr.statusText);
+                reject("Error");
             };
 
             if (null === formData) {
