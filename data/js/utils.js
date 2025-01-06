@@ -94,7 +94,6 @@ utils.makeRequest = function(options) {
             }
 
             xhr.open(options.method, options.url + urlEncodedPar);
-            xhr.timeout = 5000; /* ms */
 
             if ("undefined" !== typeof options.headers) {
                 Object.keys(options.headers).forEach(function(key) {
