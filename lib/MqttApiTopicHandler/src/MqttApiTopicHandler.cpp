@@ -85,7 +85,13 @@ void MqttApiTopicHandler::stop()
 
 void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    if ((false == deviceId.isEmpty()) &&
+    MqttService& mqttService = MqttService::getInstance();
+
+    /* MQTT service shall be enabled and
+     * a device id and topic name shall be given.
+     */
+    if ((MqttService::STATE_IDLE != mqttService.getState()) &&
+        (false == deviceId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         String      mqttTopicBase = getMqttBaseTopic(deviceId, entityId, topic);
@@ -150,7 +156,13 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
 
 void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
-    if ((false == deviceId.isEmpty()) &&
+    MqttService& mqttService = MqttService::getInstance();
+
+    /* MQTT service shall be enabled and
+     * a device id and topic name shall be given.
+     */
+    if ((MqttService::STATE_IDLE != mqttService.getState()) &&
+        (false == deviceId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         String                      mqttTopicBase = getMqttBaseTopic(deviceId, entityId, topic);
@@ -265,7 +277,13 @@ void MqttApiTopicHandler::process()
 
 void MqttApiTopicHandler::notify(const String& deviceId, const String& entityId, const String& topic)
 {
-    if ((false == deviceId.isEmpty()) &&
+    MqttService& mqttService = MqttService::getInstance();
+
+    /* MQTT service shall be enabled and
+     * a device id and topic name shall be given.
+     */
+    if ((MqttService::STATE_IDLE != mqttService.getState()) &&
+        (false == deviceId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
