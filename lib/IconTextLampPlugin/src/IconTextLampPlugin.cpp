@@ -191,8 +191,20 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
          */
         if (false == jsonStoreFlag.isNull())
         {
-            storeFlag    = jsonStoreFlag.as<bool>();
-            isSuccessful = true;
+            if (true == jsonStoreFlag.is<String>())
+            {
+                storeFlag    = jsonStoreFlag.as<String>().equalsIgnoreCase("true");
+                isSuccessful = true;
+            }
+            else if (true == jsonStoreFlag.is<bool>())
+            {
+                storeFlag    = jsonStoreFlag.as<bool>();
+                isSuccessful = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
