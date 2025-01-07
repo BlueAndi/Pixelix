@@ -418,6 +418,9 @@ static void uploadPage(AsyncWebServerRequest* request)
     /* Trigger restart after the client has disconnected.
      * Do this in every case to ensure that if there was any error, the
      * device will be restarted as well.
+     *
+     * Requesting a restart after the client has disconnected, is necessary to be
+     * able to update more than just on file.
      */
     request->onDisconnect(
         []() {
@@ -437,10 +440,15 @@ static void uploadPage(AsyncWebServerRequest* request)
  */
 static void uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final)
 {
+    UpdateMgr& updateMgr = UpdateMgr::getInstance();
+
     /* Begin of upload? */
     if (0 == index)
     {
-        uint32_t fileSize = UPDATE_SIZE_UNKNOWN;
+        uint32_t        fileSize           = UPDATE_SIZE_UNKNOWN;
+        int             cmd                = U_FLASH;
+        AsyncWebHeader* headerXFileSize    = nullptr;
+        bool            isFilesystemUpdate = false;
 
         /* If there is a pending upload, abort it. */
         if (true == Update.isRunning())
@@ -450,9 +458,6 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
         }
 
         /* Upload firmware, bootloader or filesystem? */
-        int             cmd             = U_FLASH;
-        AsyncWebHeader* headerXFileSize = nullptr;
-
         if (filename == FIRMWARE_FILENAME)
         {
             cmd             = U_FLASH;
@@ -465,8 +470,9 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
         }
         else if (filename == FILESYSTEM_FILENAME)
         {
-            cmd             = U_SPIFFS;
-            headerXFileSize = request->getHeader("X-File-Size-Filesystem");
+            cmd                = U_SPIFFS;
+            headerXFileSize    = request->getHeader("X-File-Size-Filesystem");
+            isFilesystemUpdate = true;
         }
         else
         {
@@ -492,24 +498,11 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
 
         gIsUploadError = false;
 
-        /* Update filesystem? */
-        if (U_SPIFFS == cmd)
-        {
-            /* Close filesystem before continue. */
-            FILESYSTEM.end();
-        }
-
-        /* Start update */
+        /* Start update, after the update procedure is prepared! */
         if (false == Update.begin(fileSize, cmd))
         {
             LOG_ERROR("Upload failed: %s", Update.errorString());
             gIsUploadError = true;
-
-            /* Mount filesystem again, it may be unmounted in case of filesystem update.*/
-            if (false == FILESYSTEM.begin())
-            {
-                LOG_FATAL("Couldn't mount filesystem.");
-            }
 
             /* Inform client about abort.*/
             request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");
@@ -517,67 +510,70 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
         /* Update is now running. */
         else
         {
+            /* Prepare the update procedure. */
+            updateMgr.prepareUpdate(isFilesystemUpdate);
+
             /* Use UpdateMgr to show the user the update status.
              * Note, the display manager will be completely stopped during this,
              * to avoid artifacts on the display, because of long writes to flash.
              */
-            UpdateMgr::getInstance().beginProgress();
+            updateMgr.beginProgress();
         }
     }
 
+    /* Is update in progress? */
     if (true == Update.isRunning())
     {
+        /* Continue update procedure. */
         if (false == gIsUploadError)
         {
             if (len != Update.write(data, len))
             {
-                LOG_ERROR("Upload failed: %s", Update.errorString());
                 gIsUploadError = true;
             }
             else
             {
                 uint32_t progress = (Update.progress() * 100) / Update.size();
 
-                UpdateMgr::getInstance().updateProgress(progress);
-            }
+                updateMgr.updateProgress(progress);
 
-            /* Upload finished? */
-            if (true == final)
-            {
-                /* Finish update now. */
-                if (false == Update.end(true))
+                /* Upload finished? */
+                if (true == final)
                 {
-                    LOG_ERROR("Upload failed: %s", Update.errorString());
-                    gIsUploadError = true;
-                }
-                /* Update was successful! */
-                else
-                {
-                    const uint8_t PROGRESS_FINISHED = 100U; /* % */
+                    /* Finish update now. */
+                    if (false == Update.end(true))
+                    {                        
+                        gIsUploadError = true;
+                    }
+                    /* Update was successful! */
+                    else
+                    {
+                        const uint8_t PROGRESS_FINISHED = 100U; /* % */
 
-                    LOG_INFO("Upload of %s finished.", filename.c_str());
+                        LOG_INFO("Upload of %s finished.", filename.c_str());
 
-                    /* Filesystem is not mounted here, because we will restart in the next seconds. */
+                        /* Filesystem is not mounted here, because we will restart in the next seconds. */
 
-                    /* Ensure that the user see 100% update status on the display. */
-                    UpdateMgr::getInstance().updateProgress(PROGRESS_FINISHED);
-                    UpdateMgr::getInstance().endProgress();
+                        /* Ensure that the user see 100% update status on the display. */
+                        updateMgr.updateProgress(PROGRESS_FINISHED);
+                        updateMgr.endProgress();
+                        updateMgr.prepareForRestart();
 
-                    /* Restart is requested in upload page handler, see uploadPage(). */
+                        /* Restart is requested in upload page handler, see uploadPage(). */
+                    }
                 }
             }
         }
-        else
+
+        /* Any upload error? */
+        if (true == gIsUploadError)
         {
-            /* Mount filesystem again, it may be unmounted in case of filesystem update. */
-            if (false == FILESYSTEM.begin())
-            {
-                LOG_FATAL("Couldn't mount filesystem.");
-            }
+            LOG_ERROR("Upload failed: %s", Update.errorString());
 
             /* Abort update */
             Update.abort();
-            UpdateMgr::getInstance().endProgress();
+            updateMgr.endProgress();
+            updateMgr.prepareForRestart();
 
             /* Inform client about abort.*/
             request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");

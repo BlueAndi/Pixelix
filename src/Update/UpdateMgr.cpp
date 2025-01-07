@@ -35,7 +35,6 @@
 #include "UpdateMgr.h"
 
 #include <Logging.h>
-#include <Esp.h>
 #include <Display.h>
 #include <SettingsService.h>
 
@@ -124,12 +123,12 @@ void UpdateMgr::begin()
 {
     if (true == m_isInitialized)
     {
+        String hostname = ArduinoOTA.getHostname();
+
         /* Start over-the-air server */
         ArduinoOTA.begin();
 
-        LOG_INFO(String("OTA hostname: ") + ArduinoOTA.getHostname());
-        LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
-        LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
+        LOG_INFO("Arduino-OTA ready (hostname: %s).", hostname.c_str());
     }
 }
 
@@ -158,7 +157,7 @@ void UpdateMgr::process()
     }
 }
 
-void UpdateMgr::beginProgress()
+void UpdateMgr::prepareUpdate(bool isFilesystemUpdate)
 {
     if (true == m_isInitialized)
     {
@@ -176,13 +175,67 @@ void UpdateMgr::beginProgress()
         /* Unregister all plugin topics (no purge). */
         PluginMgr::getInstance().unregisterAllPluginTopics();
 
+        /* Disable HomeAssistant MQTT automatic discovery to avoid that the welcome plugin
+         * will be discovered, after a filesystem update.
+         */
+        if (true == isFilesystemUpdate)
+        {
+            SettingsService& settings                = SettingsService::getInstance();
+
+            /* Key see HomeAssistantMqtt::KEY_HA_DISCOVERY_ENABLE
+             * Include the header is not possible, because MQTT might not be compiled in.
+             */
+            KeyValue* kvHomeAssistantEnableDiscovery = settings.getSettingByKey("ha_ena");
+
+            if ((nullptr != kvHomeAssistantEnableDiscovery) &&
+                (KeyValue::TYPE_BOOL == kvHomeAssistantEnableDiscovery->getValueType()))
+            {
+                if (true == settings.open(false))
+                {
+                    KeyValueBool* homeAssistantEnableDiscovery = static_cast<KeyValueBool*>(kvHomeAssistantEnableDiscovery);
+
+                    homeAssistantEnableDiscovery->setValue(false);
+                    settings.close();
+
+                    LOG_INFO("HA discovery disabled for filesystem update.");
+                }
+            }
+        }
+
         /* Stop services, but keep webserver running! */
         Services::stopAll();
 
-        m_updateIsRunning = true;
-        m_progress        = UINT8_MAX; /* Force update. */
-        m_textWidget.setFormatStr("Update");
+        if (true == isFilesystemUpdate)
+        {
+            /* Close filesystem before continue.
+             * Note, this needs a restart after update is finished.
+             */
+            FILESYSTEM.end();
+        }
 
+        m_updateIsRunning = true;
+        m_progress        = UINT8_MAX; /* Force progress update of inital value. */
+        m_textWidget.setFormatStr("Update");
+    }
+}
+
+void UpdateMgr::prepareForRestart()
+{
+    getInstance().m_updateIsRunning = false;
+
+    /* Mount filesystem, because it may be unmounted because of an filesystem
+     * update.
+     */
+    if (false == FILESYSTEM.begin())
+    {
+        LOG_FATAL("Couldn't mount filesystem.");
+    }
+}
+
+void UpdateMgr::beginProgress()
+{
+    if (true == m_updateIsRunning)
+    {
         /* Show user update status */
         updateProgress(0U);
     }
@@ -190,31 +243,12 @@ void UpdateMgr::beginProgress()
 
 void UpdateMgr::updateProgress(uint8_t progress)
 {
-    if ((true == m_isInitialized) &&
+    if ((true == m_updateIsRunning) &&
         (m_progress != progress))
     {
-        Display& display = Display::getInstance();
-
-        m_progress       = progress;
-
+        m_progress = progress;
         m_progressBar.setProgress(m_progress);
-
-        /* Update display manually. Note, that this must be done to avoid
-         * artifacts on the display, caused by long flash write cycles.
-         */
-        display.fillScreen(ColorDef::BLACK);
-        m_progressBar.update(display); /* Draw the progress bar in the background. */
-        m_textWidget.update(display);  /* Overlay with the text. */
-        display.show();
-
-        /* Wait until the LED matrix is updated to avoid artifacts on the
-         * display.
-         */
-        while (false == display.isReady())
-        {
-            /* Just wait and give other tasks a chance. */
-            delay(1U);
-        }
+        updateDisplay(true);
 
         /* Show update status on console. */
         LOG_INFO(String("[") + m_progress + "%]");
@@ -223,26 +257,11 @@ void UpdateMgr::updateProgress(uint8_t progress)
 
 void UpdateMgr::endProgress()
 {
-    Display& display = Display::getInstance();
-
-    display.fillScreen(ColorDef::BLACK);
-    m_textWidget.setFormatStr("...");
-    m_textWidget.update(display);
-    display.show();
-
-    /* Wait until the LED matrix is updated to avoid artifacts on the
-     * display.
-     */
-    while (false == display.isReady())
+    if (true == m_updateIsRunning)
     {
-        /* Just wait and give other tasks a chance. */
-        delay(1U);
+        m_textWidget.setFormatStr("...");
+        updateDisplay(false);
     }
-
-    /* Don't start the services again, because
-     * - a restart will come anyway and
-     * - starting the services would notify the online status for a short moment, until the restart happens.
-     */
 }
 
 /******************************************************************************
@@ -273,9 +292,35 @@ UpdateMgr::~UpdateMgr()
 {
 }
 
+void UpdateMgr::updateDisplay(bool showProgress)
+{
+    Display& display = Display::getInstance();
+
+    /* Update display manually. Note, that this must be done to avoid
+     * artifacts on the display, caused by long flash write cycles.
+     */
+    display.fillScreen(ColorDef::BLACK);
+    if (true == showProgress)
+    {
+        m_progressBar.update(display); /* Draw the progress bar in the background. */
+    }
+    m_textWidget.update(display); /* Overlay with the text. */
+    display.show();
+
+    /* Wait until the LED matrix is updated to avoid artifacts on the
+     * display.
+     */
+    while (false == display.isReady())
+    {
+        /* Just wait and give other tasks a chance. */
+        delay(1U);
+    }
+}
+
 void UpdateMgr::onStart()
 {
-    String infoStr = "Start OTA update of ";
+    String infoStr            = "Start OTA update of ";
+    bool   isFilesystemUpdate = false;
 
     /* Shall the firmware be updated? */
     if (U_FLASH == ArduinoOTA.getCommand())
@@ -285,7 +330,9 @@ void UpdateMgr::onStart()
     /* The filesystem will be updated. */
     else if (U_SPIFFS == ArduinoOTA.getCommand())
     {
-        infoStr += "filesystem.";
+        infoStr            += "filesystem.";
+
+        isFilesystemUpdate  = true;
     }
     else
     {
@@ -294,19 +341,15 @@ void UpdateMgr::onStart()
 
     LOG_INFO(infoStr);
 
-    getInstance().beginProgress();
-
-    /* Stop webserver, before filesystem may be unmounted. */
+    /* Stop webserver, before filesystem may be unmounted.
+     * This can not be moved to prepareUpdate(), because the update may come
+     * via the webserver. Therefore it can only be stopped in case of
+     * ArudinoOTA.
+     */
     MyWebServer::end();
 
-    /* Shall the filesystem will be updated? */
-    if (U_SPIFFS == ArduinoOTA.getCommand())
-    {
-        /* Close filesystem before continue.
-         * Note, this needs a restart after update is finished.
-         */
-        FILESYSTEM.end();
-    }
+    getInstance().prepareUpdate(isFilesystemUpdate);
+    getInstance().beginProgress();
 }
 
 void UpdateMgr::onEnd()
@@ -315,6 +358,7 @@ void UpdateMgr::onEnd()
 
     getInstance().m_updateIsRunning = false;
     getInstance().endProgress();
+    getInstance().prepareForRestart();
 
     /* Note, there is no need here to start the webserver or the display
      * manager again, because we request a restart of the system now.
@@ -331,67 +375,62 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 
 void UpdateMgr::onError(ota_error_t error)
 {
-    String infoStr;
+    const uint32_t RESTART_DELAY = 4000U; /* ms */
+    String         errorStr;
 
+    /* Keep error information short to avoid that text scrolling is needed.
+     * Because the display manager is stopped during the update.
+     */
     switch (error)
     {
     case OTA_AUTH_ERROR:
-        infoStr = "OTA - Authentication error.";
+        errorStr = "EAuth";
         break;
 
     case OTA_BEGIN_ERROR:
-        infoStr = "OTA - Begin error.";
+        errorStr = "EBegin";
         break;
 
     case OTA_CONNECT_ERROR:
-        infoStr = "OTA - Connect error.";
+        errorStr = "EErr";
         break;
 
     case OTA_RECEIVE_ERROR:
-        infoStr = "OTA - Receive error.";
+        errorStr = "ERcv";
         break;
 
     case OTA_END_ERROR:
-        infoStr = "OTA - End error.";
+        errorStr = "EEnd";
         break;
 
     default:
-        infoStr = "OTA - Unknown error.";
+        errorStr = "EUndef";
         break;
     }
 
-    LOG_INFO(infoStr);
+    LOG_ERROR(errorStr);
 
-    /* Mount filesystem, because it may be unmounted in case of failed filesystem update. */
-    if (false == FILESYSTEM.begin())
+    /* If the authentication fails, the onError() is called and there is no
+     * running update. Therefore no restart is necessary, just notify
+     * the user.
+     */
+    if (false == getInstance().m_updateIsRunning)
     {
-        /* To ensure the log information will be shown. */
-        const uint32_t RESTART_DELAY = 100U; /* ms */
+        const uint32_t DURATION_NON_SCROLLING = 4000U; /* ms */
+        const uint32_t SCROLLING_REPEAT_NUM   = 1U;
 
-        LOG_FATAL("Couldn't mount filesystem.");
-
-        getInstance().reqRestart(RESTART_DELAY);
+        SysMsg::getInstance().show(errorStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
     }
     else
     {
         getInstance().endProgress();
+        getInstance().prepareForRestart();
 
-        /* Reset only if the error happened during update.
-         * Security note: This avoids a reset in case the authentication failed.
-         */
-        if (true == getInstance().m_updateIsRunning)
-        {
-            const uint32_t DURATION_NON_SCROLLING = 4000U; /* ms */
-            const uint32_t SCROLLING_REPEAT_NUM   = 2U;
+        getInstance().m_textWidget.setFormatStr(errorStr);
+        getInstance().updateDisplay(false);
 
-            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
-
-            /* Request a restart */
-            getInstance().reqRestart(DURATION_NON_SCROLLING);
-        }
+        getInstance().reqRestart(RESTART_DELAY);
     }
-
-    getInstance().m_updateIsRunning = false;
 }
 
 /******************************************************************************

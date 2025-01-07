@@ -138,9 +138,22 @@ public:
     }
 
     /**
+     * Prepare the system for an update.
+     * 
+     * @param[in] isFilesystemUpdate Is it a filesystem update?
+     */
+    void prepareUpdate(bool isFilesystemUpdate);
+
+    /**
+     * Prepare the system for a restart after an successful or even
+     * and failed update.
+     */
+    void prepareForRestart();
+
+    /**
      * Show the user that the update starts.
      */
-    void beginProgress(void);
+    void beginProgress();
 
     /**
      * Show the user the current update progress.
@@ -152,7 +165,7 @@ public:
     /**
      * Show the user that the update is finished.
      */
-    void endProgress(void);
+    void endProgress();
 
     /** Over-the-air update password */
     static const char*  OTA_PASSWORD;
@@ -197,6 +210,13 @@ private:
      * Destroys the update manager.
      */
     ~UpdateMgr();
+
+    /**
+     * Update the display content.
+     * 
+     * @param[in] showProgress If true, the progress bar will be shown too.
+     */
+    void updateDisplay(bool showProgress);
 
     /**
      * Over-the-air update start.
