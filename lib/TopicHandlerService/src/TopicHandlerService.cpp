@@ -187,6 +187,15 @@ void TopicHandlerService::registerTopics(const String& deviceId, const String& e
                     }
 
                     addToTopicMetaDataList(deviceId, entityId, plugin, topicName, nullptr);
+
+                    /* A plugin can be registered by UID and by alias for the same topic.
+                     * This raises the problem that the plugin is added twice to the topic meta data list.
+                     * During processing on change, the plugin will be asked twice whether there is any change.
+                     * But the first call will reset the change flag, so the second call will not recognize any change.
+                     * To avoid this, the plugin will be added only once to the plugin list and just asked once,
+                     * but the topic handlers will be notified for every registration.
+                     */
+                    addToPluginList(plugin, topicName);
                 }
             }
         }
@@ -238,6 +247,7 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, const String&
                     unregisterTopic(deviceId, entityId, topicName, purge);
 
                     removeFromTopicMetaDataList(deviceId, entityId, topicName);
+                    removeFromPluginList(plugin, topicName);
                 }
             }
         }
@@ -447,11 +457,140 @@ void TopicHandlerService::removeFromTopicMetaDataList(const String& deviceId, co
     }
 }
 
+void TopicHandlerService::addToPluginList(IPluginMaintenance* plugin, const String& topic)
+{
+    if ((nullptr != plugin) &&
+        (false == topic.isEmpty()))
+    {
+        PluginMetaDataList::iterator pluginMetaDataIt = m_pluginMetaDataList.begin();
+        bool                         found            = false;
+
+        /* Check whether the plugin is already added with its topic. */
+        while (m_pluginMetaDataList.end() != pluginMetaDataIt)
+        {
+            PluginMetaData* pluginMetaData = *pluginMetaDataIt;
+
+            /* Found? */
+            if ((plugin == pluginMetaData->plugin) &&
+                (topic == pluginMetaData->topic))
+            {
+                ++pluginMetaData->count;
+                found = true;
+                break;
+            }
+
+            ++pluginMetaDataIt;
+        }
+
+        /* If plugin and its topic is not found, it will be added to the list. */
+        if (false == found)
+        {
+            PluginMetaData* pluginMetaData = new (std::nothrow) PluginMetaData();
+
+            if (nullptr != pluginMetaData)
+            {
+                pluginMetaData->plugin = plugin;
+                pluginMetaData->topic  = topic;
+                pluginMetaData->count  = 1U;
+
+                m_pluginMetaDataList.push_back(pluginMetaData);
+            }
+        }
+    }
+}
+
+void TopicHandlerService::removeFromPluginList(IPluginMaintenance* plugin, const String& topic)
+{
+    if ((nullptr != plugin) &&
+        (false == topic.isEmpty()))
+    {
+        PluginMetaDataList::iterator pluginMetaDataIt = m_pluginMetaDataList.begin();
+
+        /* Find the plugin with its topic in the list. */
+        while (m_pluginMetaDataList.end() != pluginMetaDataIt)
+        {
+            PluginMetaData* pluginMetaData = *pluginMetaDataIt;
+
+            /* Found? */
+            if ((plugin == pluginMetaData->plugin) &&
+                (topic == pluginMetaData->topic))
+            {
+                if (0U < pluginMetaData->count)
+                {
+                    --pluginMetaData->count;
+                }
+
+                /* If its the last registration, the entry will be removed. */
+                if (0U == pluginMetaData->count)
+                {
+                    pluginMetaDataIt = m_pluginMetaDataList.erase(pluginMetaDataIt);
+
+                    delete pluginMetaData;
+                    pluginMetaData = nullptr;
+                }
+                else
+                {
+                    ++pluginMetaDataIt;
+                }
+            }
+            else
+            {
+                ++pluginMetaDataIt;
+            }
+        }
+    }
+}
+
 void TopicHandlerService::processOnChange()
+{
+    processPluginsOnChange();
+    processOthersOnChange();
+}
+
+void TopicHandlerService::processPluginsOnChange()
+{
+    PluginMetaDataList::iterator pluginMetaDataListIt = m_pluginMetaDataList.begin();
+
+    /* Process all topics which are related to plugins. */
+    while (m_pluginMetaDataList.end() != pluginMetaDataListIt)
+    {
+        PluginMetaData* pluginMetaData = *pluginMetaDataListIt;
+
+        if ((nullptr != pluginMetaData) &&
+            (nullptr != pluginMetaData->plugin))
+        {
+            bool hasTopicChanged = pluginMetaData->plugin->hasTopicChanged(pluginMetaData->topic);
+
+            if (true == hasTopicChanged)
+            {
+                TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
+
+                /* Notify all handlers, which are interested in this topic. */
+                while (m_topicMetaDataList.end() != topicMetaDataListIt)
+                {
+                    TopicMetaData* topicMetaData = *topicMetaDataListIt;
+
+                    if ((nullptr != topicMetaData) &&
+                        (pluginMetaData->plugin == topicMetaData->plugin) &&
+                        (pluginMetaData->topic == topicMetaData->topic))
+                    {
+                        notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
+                    }
+
+                    ++topicMetaDataListIt;
+                }
+            }
+        }
+
+        ++pluginMetaDataListIt;
+    }
+}
+
+void TopicHandlerService::processOthersOnChange()
 {
     TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
 
-    /** Proces all topics which are independent from plugins. */
+    /* Proces all topics which are independent from plugins. */
     while (m_topicMetaDataList.end() != topicMetaDataListIt)
     {
         TopicMetaData* topicMetaData = *topicMetaDataListIt;
@@ -460,18 +599,9 @@ void TopicHandlerService::processOnChange()
         {
             bool hasTopicChanged = false;
 
-            if (nullptr != topicMetaData->plugin)
-            {
-                hasTopicChanged = topicMetaData->plugin->hasTopicChanged(topicMetaData->topic);
-            }
-            else if (nullptr != topicMetaData->hasChangedFunc)
+            if (nullptr != topicMetaData->hasChangedFunc)
             {
                 hasTopicChanged = topicMetaData->hasChangedFunc(topicMetaData->topic);
-            }
-            else
-            {
-                /* Skip */
-                ;
             }
 
             if (true == hasTopicChanged)

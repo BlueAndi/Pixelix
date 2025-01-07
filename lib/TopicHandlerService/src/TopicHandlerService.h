@@ -111,7 +111,7 @@ public:
 
     /**
      * Unregister all topics of the given plugin.
-     * 
+     *
      * If the purge flag is set, the topic handler will purge the topics like they never existed.
      * If the topics will be registered again, they will be treated as new topics.
      *
@@ -197,9 +197,35 @@ private:
      */
     typedef std::vector<TopicMetaData*> TopicMetaDataList;
 
-    bool                                m_isStarted;         /**< Is the service started? */
-    TopicMetaDataList                   m_topicMetaDataList; /**< List of readable topics and the required meta data. */
-    SimpleTimer                         m_onChangeTimer;     /**< Timer for on change processing period. */
+    /**
+     * Plugin meta data, used for automatic publishing.
+     */
+    struct PluginMetaData
+    {
+        IPluginMaintenance* plugin; /**< Plugin */
+        String              topic;  /**< Topic */
+        uint8_t             count;  /**< Number of topic registrations */
+
+        /**
+         * Construct plugin meta data instance.
+         */
+        PluginMetaData() :
+            plugin(nullptr),
+            topic(),
+            count(0U)
+        {
+        }
+    };
+
+    /**
+     * List of plugins which have at least one topic registered.
+     */
+    typedef std::vector<PluginMetaData*> PluginMetaDataList;
+
+    bool                                 m_isStarted;          /**< Is the service started? */
+    TopicMetaDataList                    m_topicMetaDataList;  /**< List of readable topics and the required meta data. */
+    PluginMetaDataList                   m_pluginMetaDataList; /**< List of plugins which have at least one topic registered. */
+    SimpleTimer                          m_onChangeTimer;      /**< Timer for on change processing period. */
 
     /**
      * Constructs the service instance.
@@ -208,6 +234,7 @@ private:
         IService(),
         m_isStarted(false),
         m_topicMetaDataList(),
+        m_pluginMetaDataList(),
         m_onChangeTimer()
     {
     }
@@ -256,10 +283,39 @@ private:
     void removeFromTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic);
 
     /**
-     * Process all plugin topics to check which one has changed.
+     * Add a plugin to the list of plugins, which have at least one topic registered.
+     * If a plugin is already in the list with the same topic, nothing will be done.
+     *
+     * @param[in] plugin    The plugin, which is related to the topic.
+     * @param[in] topic     The topic name.
+     */
+    void addToPluginList(IPluginMaintenance* plugin, const String& topic);
+
+    /**
+     * Remove a plugin from the list of plugins, which have at least one topic registered.
+     *
+     * @param[in] plugin    The plugin, which is related to the topic.
+     * @param[in] topic     The topic name.
+     */
+    void removeFromPluginList(IPluginMaintenance* plugin, const String& topic);
+
+    /**
+     * Process all topics to check which one has changed.
      * For every changed one, notify the handlers about.
      */
     void processOnChange();
+
+    /**
+     * Process all plugin topics to check which one has changed.
+     * For every changed one, notify the handlers about.
+     */
+    void processPluginsOnChange();
+
+    /**
+     * Process all not plugin related topics to check which one has changed.
+     * For every changed one, notify the handlers about.
+     */
+    void processOthersOnChange();
 
     /**
      * Start all topic handlers.
