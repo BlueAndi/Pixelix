@@ -169,7 +169,7 @@ void UpdateMgr::beginProgress()
          * processing at all.
          */
         DisplayMgr::getInstance().end();
-        
+
         /* Unregister sensor topics (no purge). */
         SensorDataProvider::getInstance().end();
 
@@ -202,9 +202,9 @@ void UpdateMgr::updateProgress(uint8_t progress)
         /* Update display manually. Note, that this must be done to avoid
          * artifacts on the display, caused by long flash write cycles.
          */
-        display.clear();
-        m_progressBar.update(display); // Draw the progress bar in the background
-        m_textWidget.update(display);  // Overlay with the text
+        display.fillScreen(ColorDef::BLACK);
+        m_progressBar.update(display); /* Draw the progress bar in the background. */
+        m_textWidget.update(display);  /* Overlay with the text. */
         display.show();
 
         /* Wait until the LED matrix is updated to avoid artifacts on the
@@ -225,7 +225,7 @@ void UpdateMgr::endProgress()
 {
     Display& display = Display::getInstance();
 
-    display.clear();
+    display.fillScreen(ColorDef::BLACK);
     m_textWidget.setFormatStr("...");
     m_textWidget.update(display);
     display.show();
@@ -239,8 +239,10 @@ void UpdateMgr::endProgress()
         delay(1U);
     }
 
-    /* Start services again. They are required for a graceful restart. */
-    Services::startAll();
+    /* Don't start the services again, because
+     * - a restart will come anyway and
+     * - starting the services would notify the online status for a short moment, until the restart happens.
+     */
 }
 
 /******************************************************************************
