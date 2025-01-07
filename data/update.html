@@ -60,6 +60,13 @@
                     <div class="tab-pane fade active show" id="update" role="tabpanel" aria-labelledby="update-tab">
                         <br />
                         <p>Upload <u>~FIRMWARE_FILENAME~</u> and <u>~BOOTLOADER_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
+                        <div class="alert alert-warning" role="alert">
+                            A filesystem update might cause a loss of all configuration data on the filesystem. Make sure you have a backup of your configuration before updating it.
+                        </div>
+                        <div class="alert alert-warning" role="alert">
+                            A filesystem update will disable the HomeAssistant MQTT discovery feature. After the update, you have to re-enable it manually.
+                            This prevents that the welcome plugin will be discovered, after a filesystem update.
+                        </div>
                         <p>Use multi-select to upload several files at once.</p>
                         <div class="input-group">
                             <input type="file" class="form-control" id="inputFile" multiple="multiple" accept=".bin">
