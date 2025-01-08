@@ -7,7 +7,8 @@
             "cmd_tpl": "{\"fileId\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.fileId }}",
             "min": 0,
-            "max": 255
+            "max": 255,
+            "mode": "box"
         }
     }
 ]
