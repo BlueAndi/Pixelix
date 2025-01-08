@@ -144,9 +144,9 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
 
             /* Handle Home Assistant extension */
             {
-                String willTopic = deviceId + "/status"; /* See MqttService how the last will shall look like. */
+                String mqttWillTopic = deviceId + "/status"; /* See MqttService how the last will shall look like. */
 
-                m_haExtension.registerMqttDiscovery(deviceId, entityId, topic, mqttTopicReadable, mqttTopicWriteable, willTopic, extra);
+                m_haExtension.registerMqttDiscovery(deviceId, entityId, topic, mqttTopicReadable, mqttTopicWriteable, mqttWillTopic, extra);
             }
 
             m_listOfTopicStates.push_back(topicState);
@@ -214,7 +214,7 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 /* Handle Home Assistant extension. */
                 if (true == purge)
                 {
-                    m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topic, mqttTopicReadable, mqttTopicWriteable);
+                    m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topic);
                 }
 
                 topicStateIt = m_listOfTopicStates.erase(topicStateIt);

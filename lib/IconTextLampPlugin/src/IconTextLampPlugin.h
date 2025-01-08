@@ -290,7 +290,7 @@ private:
     /**
      * Filename for the plugin topic extra info, used for Home Assistant integration.
      */
-    static const char* TOPIC_TEXT_EXTRA_FILE_NAME;
+    static const char* TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 
     /**
      * Plugin topic, used for parameter exchange.

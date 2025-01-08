@@ -280,7 +280,7 @@ private:
     /**
      * Filename for the plugin topic extra info, used for Home Assistant integration.
      */
-    static const char*     TOPIC_TEXT_EXTRA_FILE_NAME;
+    static const char*     TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 
     _JustTextPlugin::View  m_view;             /**< View with all widgets. */
     String                 m_formatTextStored; /**< It contains the format text, which is persistent stored. */

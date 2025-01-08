@@ -1,5 +1,5 @@
-{
-    "ha": {
+[
+    {
         "component": "button",
         "discovery": {
             "name": "Restart",
@@ -9,4 +9,4 @@
             "pl_prs": "{}"
         }
     }
-}
+]

@@ -58,8 +58,8 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* JustTextPlugin::TOPIC_TEXT                 = "text";
-const char* JustTextPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/justTextPlugin.json";
+const char* JustTextPlugin::TOPIC_TEXT                    = "text";
+const char* JustTextPlugin::TOPIC_TEXT_EXTRA_HA_FILE_NAME = "/extra/justTextPlugin.json";
 
 /******************************************************************************
  * Public Methods
@@ -81,7 +81,7 @@ bool JustTextPlugin::isEnabled() const
 
 void JustTextPlugin::getTopics(JsonArray& topics) const
 {
-    JsonObject jsonText = topics.createNestedObject();
+    JsonObject jsonText     = topics.createNestedObject();
 
     /* The topic contains Home Assistant support of the MQTT discovery
      * (https://www.home-assistant.io/integrations/mqtt). See the configured
@@ -89,8 +89,8 @@ void JustTextPlugin::getTopics(JsonArray& topics) const
      *
      * The used icon is from MaterialDesignIcons.com (namespace: mdi).
      */
-    jsonText["name"]    = TOPIC_TEXT;
-    jsonText["extra"]   = TOPIC_TEXT_EXTRA_FILE_NAME;
+    jsonText["name"]        = TOPIC_TEXT;
+    jsonText["extra"]["ha"] = TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 }
 
 bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const

@@ -54,12 +54,12 @@
 /** Topic data element. */
 typedef struct
 {
-    const char*                         entity;         /**< Entity */
-    const char*                         topic;          /**< Topic */
-    ITopicHandler::GetTopicFunc         getTopicFunc;   /**< Get topic function */
-    TopicHandlerService::HasChangedFunc hasChangedFunc; /**< Has changed function */
-    ITopicHandler::SetTopicFunc         setTopicFunc;   /**< Set topic function */
-    const char*                         extraFileName;  /**< File name of a file with extra information. */
+    const char*                         entity;          /**< The entity which provides the topic. */
+    const char*                         topic;           /**< The feature topic. */
+    ITopicHandler::GetTopicFunc         getTopicFunc;    /**< Function to read the feature topic content. */
+    TopicHandlerService::HasChangedFunc hasChangedFunc;  /**< Function to checked whether the feature topic content changed. */
+    ITopicHandler::SetTopicFunc         setTopicFunc;    /**< Function to write the feature topic content. */
+    const char*                         extraHAFileName; /**< File name of a file with extra Home Assistant information. */
 
 } TopicElem;
 
@@ -88,12 +88,12 @@ static String gDeviceId;
  *
  * REST API      : BASE-URL/[ENTITY-ID/]TOPIC
  *
- * MQTT          : DEVICE-ID/[ENTITY-ID/]TOPIC/set (writeable)
- *                 DEVICE-ID/[ENTITY-ID/]TOPIC/state (readable)
+ * MQTT topic(s) : DEVICE-ID[/ENTITY-ID]/TOPIC[/ENTITY-INDEX]/set (writeable)
+ *                 DEVICE-ID[/ENTITY-ID]/TOPIC[/ENTITY-INDEX]/state (readable)
  *
  * HomeAssistant : NODE-ID = DEVICE-ID with "/" and "." replaced by "_"
- *                 OBJECT-ID = [ENTITY-ID/]TOPIC with "/" and "." replaced by "_"
- *                 UNIQUE-ID = DEVICE-ID/[ENTITY-ID/]TOPIC
+ *                 OBJECT-ID = [ENTITY-ID/]TOPIC[/ENTITIY-INDEX] with "/" and "." replaced by "_"
+ *                 UNIQUE-ID = NODE-ID/OBJECT-ID
  *                 DISCOVERY-TOPIC = DISCOVERY-PREFIX/COMPONENT/NODE-ID/OBJECT-ID/config
  */
 static TopicElem gTopicList[] = {
@@ -124,8 +124,10 @@ static bool gLastDisplayOnState = false;
 
 void Topics::begin()
 {
-    SettingsService& settings = SettingsService::getInstance();
-    size_t           idx;
+    SettingsService&    settings      = SettingsService::getInstance();
+    const size_t        JSON_DOC_SIZE = 256U;
+    DynamicJsonDocument jsonDocExtra(JSON_DOC_SIZE);
+    size_t              idx;
 
     if (false == settings.open(true))
     {
@@ -141,13 +143,17 @@ void Topics::begin()
     /* Register topics */
     for (idx = 0U; idx < UTIL_ARRAY_NUM(gTopicList); ++idx)
     {
-        TopicElem* topicElem = &gTopicList[idx];
+        TopicElem*      topicElem = &gTopicList[idx];
+        JsonObjectConst jsonExtra;
+
+        jsonDocExtra["ha"] = topicElem->extraHAFileName;
+        jsonExtra          = jsonDocExtra.as<JsonObjectConst>();
 
         TopicHandlerService::getInstance().registerTopic(
             gDeviceId,
             topicElem->entity,
             topicElem->topic,
-            topicElem->extraFileName,
+            jsonExtra,
             topicElem->getTopicFunc,
             topicElem->hasChangedFunc,
             topicElem->setTopicFunc,

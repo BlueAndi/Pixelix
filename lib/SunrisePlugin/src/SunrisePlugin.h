@@ -182,16 +182,14 @@ public:
      * }
      * </code>
      * 
-     * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
-     * the "extra" JSON object.
+     * Home Assistant MQTT discovery support can be added with the "ha" JSON object inside
+     * the "extra" JSON object. The Home Assistant extension supports only loading by file.
      * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "text",
      *         "extra": {
-     *             "ha": {
-     *                 ... everything here will be used for MQTT discovery ...
-     *             }
+     *             "ha": "myHomeAssistantConfig.json"
      *         }
      *     }]
      * }

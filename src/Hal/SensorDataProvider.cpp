@@ -61,7 +61,7 @@
 typedef struct
 {
     ISensorChannel::Type sensorChannelType; /**< Sensor channel type. */
-    const char*          extraFileName;     /**< Filename of extra data in JSON format, e.g. for homeassistant extension. */
+    const char*          extraHAFileName;   /**< Filename of extra Home Assistant data in JSON format. */
     uint32_t             updatePeriod;      /**< Max. sensor data update period in ms regarding publishing. */
 
 } SensorTopic;
@@ -507,6 +507,8 @@ void SensorDataProvider::registerSensorTopics()
 {
     uint8_t              index               = 0U;
     TopicHandlerService& topicHandlerService = TopicHandlerService::getInstance();
+    const size_t         JSON_DOC_SIZE       = 256U;
+    DynamicJsonDocument  jsonDocExtra(JSON_DOC_SIZE);
 
     for (index = 0U; index < UTIL_ARRAY_NUM(gSensorTopics); ++index)
     {
@@ -514,6 +516,7 @@ void SensorDataProvider::registerSensorTopics()
         SensorTopicRunData* sensorTopicRunData = &gSensorLastValue[index];
         uint8_t             sensorIndex        = 0U;
         uint8_t             channelIndex       = 0U;
+        JsonObjectConst     jsonExtra;
 
         /* Try to find a sensor channel which provides the required information. */
         if (true == find(sensorIndex, channelIndex, sensorTopic->sensorChannelType))
@@ -570,7 +573,10 @@ void SensorDataProvider::registerSensorTopics()
 
             entityId += index;
 
-            topicHandlerService.registerTopic(m_deviceId, entityId, channelName, sensorTopic->extraFileName, getTopicFunc, hasChangedFunc, nullptr, nullptr);
+            jsonDocExtra["ha"] = sensorTopic->extraHAFileName;
+            jsonExtra = jsonDocExtra.as<JsonObjectConst>();
+
+            topicHandlerService.registerTopic(m_deviceId, entityId, channelName, jsonExtra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
         }
     }
 }

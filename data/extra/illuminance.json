@@ -1,5 +1,5 @@
-{
-    "ha": {
+[
+    {
         "component": "sensor",
         "discovery": {
             "name": "Illuminance",
@@ -9,4 +9,4 @@
             "val_tpl": "{{ value_json.value }}"
         }
     }
-}
+]

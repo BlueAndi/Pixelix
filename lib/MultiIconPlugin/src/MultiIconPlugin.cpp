@@ -59,10 +59,13 @@
  *****************************************************************************/
 
 /* Initialize slot control topic. */
-const char* MultiIconPlugin::TOPIC_SLOT     = "slot";
+const char* MultiIconPlugin::TOPIC_SLOT                    = "slot";
+
+/* Initialize slot control Home Assistant discovery file name. */
+const char* MultiIconPlugin::TOPIC_SLOT_EXTRA_HA_FILE_NAME = "/extra/multiIconPlugin.json";
 
 /* Initialize slots control topic. */
-const char* MultiIconPlugin::TOPIC_SLOTS    = "slots";
+const char* MultiIconPlugin::TOPIC_SLOTS                   = "slots";
 
 /******************************************************************************
  * Public Methods
@@ -72,11 +75,12 @@ void MultiIconPlugin::getTopics(JsonArray& topics) const
 {
     uint8_t slotId;
 
-    for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+    for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     {
-        JsonObject jsonSlot = topics.createNestedObject();
+        JsonObject jsonSlot     = topics.createNestedObject();
 
-        jsonSlot["name"] = String(TOPIC_SLOT) + "/" + slotId;
+        jsonSlot["name"]        = String(TOPIC_SLOT) + "/" + slotId;
+        jsonSlot["extra"]["ha"] = TOPIC_SLOT_EXTRA_HA_FILE_NAME;
     }
 
     topics.add(TOPIC_SLOTS);
@@ -89,8 +93,8 @@ bool MultiIconPlugin::getTopic(const String& topic, JsonObject& value) const
     /* Single slot requested? */
     if (true == topic.startsWith(String(TOPIC_SLOT) + "/"))
     {
-        uint8_t slotId  = _MultiIconPlugin::View::MAX_ICON_SLOTS;
-        bool    status  = getSlotIdFromTopic(slotId, topic);
+        uint8_t slotId = _MultiIconPlugin::View::MAX_ICON_SLOTS;
+        bool    status = getSlotIdFromTopic(slotId, topic);
 
         if ((true == status) &&
             (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
@@ -98,7 +102,7 @@ bool MultiIconPlugin::getTopic(const String& topic, JsonObject& value) const
             value["slotId"] = slotId;
             value["fileId"] = getIconFileId(slotId);
 
-            isSuccessful = true;
+            isSuccessful    = true;
         }
     }
     /* All slots requested? */
@@ -121,16 +125,16 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
     if (true == topic.startsWith(String(TOPIC_SLOT) + "/"))
     {
-        uint8_t slotId  = _MultiIconPlugin::View::MAX_ICON_SLOTS;
-        bool    status  = getSlotIdFromTopic(slotId, topic);
+        uint8_t slotId = _MultiIconPlugin::View::MAX_ICON_SLOTS;
+        bool    status = getSlotIdFromTopic(slotId, topic);
 
         if ((true == status) &&
             (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
-            const size_t        JSON_DOC_SIZE           = 512U;
+            const size_t        JSON_DOC_SIZE = 512U;
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-            JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-            JsonVariantConst    jsonFileId              = value["fileId"];
+            JsonObject          jsonCfg    = jsonDoc.to<JsonObject>();
+            JsonVariantConst    jsonFileId = value["fileId"];
 
             /* The received configuration may not contain all single key/value pair.
              * Therefore read first the complete internal configuration and
@@ -141,14 +145,14 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
             if (false == jsonFileId.isNull())
             {
                 jsonCfg["slots"][slotId] = jsonFileId.as<FileMgrService::FileId>();
-                isSuccessful = true;
+                isSuccessful             = true;
             }
 
             if (true == isSuccessful)
             {
                 JsonObjectConst jsonCfgConst = jsonCfg;
 
-                isSuccessful = setConfiguration(jsonCfgConst);
+                isSuccessful                 = setConfiguration(jsonCfgConst);
 
                 if (true == isSuccessful)
                 {
@@ -159,11 +163,11 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     }
     else if (true == topic.equals(TOPIC_SLOTS))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonSlots               = value["slots"];
-    
+        JsonObject          jsonCfg   = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonSlots = value["slots"];
+
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
          * overwrite them with the received ones.
@@ -179,7 +183,7 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
         {
             JsonArray jsonCfgSlots = jsonCfg.createNestedArray("slots");
 
-            for(JsonVariantConst slot: jsonSlots.as<JsonArrayConst>())
+            for (JsonVariantConst slot : jsonSlots.as<JsonArrayConst>())
             {
                 FileMgrService::FileId fileId = slot.as<String>().toInt();
 
@@ -188,12 +192,12 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
             isSuccessful = true;
         }
-        
+
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -205,7 +209,7 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     {
         ;
     }
-    
+
     return isSuccessful;
 }
 
@@ -215,24 +219,24 @@ bool MultiIconPlugin::hasTopicChanged(const String& topic)
 
     if (true == topic.startsWith(String(TOPIC_SLOT) + "/"))
     {
-        uint8_t slotId  = _MultiIconPlugin::View::MAX_ICON_SLOTS;
-        bool    status  = getSlotIdFromTopic(slotId, topic);
+        uint8_t slotId = _MultiIconPlugin::View::MAX_ICON_SLOTS;
+        bool    status = getSlotIdFromTopic(slotId, topic);
 
         if ((true == status) &&
             (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
             MutexGuard<MutexRecursive> guard(m_mutex);
 
-            hasTopicChanged                 = m_slots[slotId].hasSlotChanged;
-            m_slots[slotId].hasSlotChanged  = false;
+            hasTopicChanged                = m_slots[slotId].hasSlotChanged;
+            m_slots[slotId].hasSlotChanged = false;
         }
     }
     else if (true == topic.equals(TOPIC_SLOTS))
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
-        hasTopicChanged         = m_hasTopicSlotsChanged;
-        m_hasTopicSlotsChanged  = false;
+        hasTopicChanged        = m_hasTopicSlotsChanged;
+        m_hasTopicSlotsChanged = false;
     }
     else
     {
@@ -244,16 +248,16 @@ bool MultiIconPlugin::hasTopicChanged(const String& topic)
 
 void MultiIconPlugin::start(uint16_t width, uint16_t height)
 {
-    uint8_t                     slotId;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint8_t                    slotId;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
 
-    for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
-    { 
-        IconSlot&   iconSlot = m_slots[slotId];
+    for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+    {
+        IconSlot& iconSlot = m_slots[slotId];
 
         if (FileMgrService::FILE_ID_INVALID != iconSlot.fileId)
         {
@@ -284,15 +288,15 @@ void MultiIconPlugin::stop()
 
 void MultiIconPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.update(gfx);
 }
 
 uint8_t MultiIconPlugin::getIconFileId(uint8_t slotId) const
 {
-    FileMgrService::FileId      fileId          = FileMgrService::FILE_ID_INVALID;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    FileMgrService::FileId     fileId = FileMgrService::FILE_ID_INVALID;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId)
     {
@@ -304,13 +308,13 @@ uint8_t MultiIconPlugin::getIconFileId(uint8_t slotId) const
 
 bool MultiIconPlugin::loadIcon(uint8_t slotId, FileMgrService::FileId fileId)
 {
-    bool isSuccessful    = false;
+    bool isSuccessful = false;
 
     if (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId)
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        IconSlot&                   iconSlot        = m_slots[slotId];
-        String                      iconFullPath;
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        IconSlot&                  iconSlot = m_slots[slotId];
+        String                     iconFullPath;
 
         iconSlot.fileId         = fileId;
         iconSlot.hasSlotChanged = true;
@@ -344,12 +348,12 @@ void MultiIconPlugin::clearIcon(uint8_t slotId)
 {
     if (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId)
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        IconSlot&                   iconSlot = m_slots[slotId];
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        IconSlot&                  iconSlot = m_slots[slotId];
 
-        iconSlot.fileId         = FileMgrService::FILE_ID_INVALID;
-        iconSlot.hasSlotChanged = true;
-        m_hasTopicSlotsChanged  = true;
+        iconSlot.fileId                     = FileMgrService::FILE_ID_INVALID;
+        iconSlot.hasSlotChanged             = true;
+        m_hasTopicSlotsChanged              = true;
 
         m_view.clearIcon(slotId);
     }
@@ -365,11 +369,11 @@ void MultiIconPlugin::clearIcon(uint8_t slotId)
 
 void MultiIconPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    JsonArray                   jsonSlots       = jsonCfg.createNestedArray("slots");
-    uint8_t                     slotId;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    JsonArray                  jsonSlots = jsonCfg.createNestedArray("slots");
+    uint8_t                    slotId;
 
-    for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+    for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     {
         jsonSlots.add(m_slots[slotId].fileId);
     }
@@ -377,8 +381,8 @@ void MultiIconPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status      = false;
-    JsonVariantConst    jsonSlots   = jsonCfg["slots"];
+    bool             status    = false;
+    JsonVariantConst jsonSlots = jsonCfg["slots"];
 
     if (false == jsonSlots.is<JsonArrayConst>())
     {
@@ -386,10 +390,10 @@ bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        uint8_t                     slotId          = 0U;
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        uint8_t                    slotId = 0U;
 
-        for(JsonVariantConst jsonSlot: jsonSlots.as<JsonArrayConst>())
+        for (JsonVariantConst jsonSlot : jsonSlots.as<JsonArrayConst>())
         {
             if (true == jsonSlot.is<FileMgrService::FileId>())
             {
@@ -416,19 +420,19 @@ bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
 bool MultiIconPlugin::getSlotIdFromTopic(uint8_t& slotId, const String& topic) const
 {
-    bool    isSuccessful        = false;
-    int32_t indexBeginSlotId    = topic.lastIndexOf("/");
+    bool    isSuccessful     = false;
+    int32_t indexBeginSlotId = topic.lastIndexOf("/");
 
     if (0 <= indexBeginSlotId)
     {
-        String  slotIdStr       = topic.substring(indexBeginSlotId + 1);
+        String  slotIdStr = topic.substring(indexBeginSlotId + 1);
         uint8_t slotIdTmp;
-        bool    statusSlotId    = Util::strToUInt8(slotIdStr, slotIdTmp);
+        bool    statusSlotId = Util::strToUInt8(slotIdStr, slotIdTmp);
 
         if (true == statusSlotId)
         {
-            slotId          = slotIdTmp;
-            isSuccessful    = true;
+            slotId       = slotIdTmp;
+            isSuccessful = true;
         }
     }
 

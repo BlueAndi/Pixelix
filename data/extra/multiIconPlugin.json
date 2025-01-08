@@ -1,0 +1,13 @@
+[
+    {
+        "component": "number",
+        "discovery": {
+            "name": "MultiIconPlugin Slot",
+            "ic": "mdi:image-outline",
+            "cmd_tpl": "{\"fileId\": \"{{ value }}\" }",
+            "val_tpl": "{{ value_json.fileId }}",
+            "min": 0,
+            "max": 255
+        }
+    }
+]
