@@ -171,12 +171,23 @@
                     fileCnt = 2;
                 }
 
+                /* Filesystem shall always be updated first!
+                 * Otherwise the Home Assistant MQTT discovery feature will stay enabled
+                 */
+                 for(index = 0; index < fileCnt; ++index) {
+                    file = document.getElementById("inputFile").files[index];
+
+                    if ("~FILESYSTEM_FILENAME~" === file.name) {
+                        files.push(file);
+                    }
+                }
+
+
                 for(index = 0; index < fileCnt; ++index) {
                     file = document.getElementById("inputFile").files[index];
 
                     if (("~FIRMWARE_FILENAME~" === file.name) ||
-                        ("~BOOTLOADER_FILENAME~" === file.name) ||
-                        ("~FILESYSTEM_FILENAME~" === file.name)) {
+                        ("~BOOTLOADER_FILENAME~" === file.name)) {
 
                         files.push(file);
                     }
