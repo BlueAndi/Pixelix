@@ -166,7 +166,16 @@ private:
     static const char* DEFAULT_ACCESS;
 
     /** Period in ms to check for changed topics. */
-    static const uint32_t ON_CHANGE_PERIOD = 500U;
+    static const uint32_t ON_CHANGE_PERIOD    = 500U;
+
+    /**
+     * The update counter forces an topic update, independent whether the topic changed.
+     * This ensures that the topic content is updated periodically and that in case e.g.
+     * Home Assistant restarted, it will receive the topic content.
+     * 
+     * The update counter is decremented every ON_CHANGE_PERIOD.
+     */
+    static const uint8_t UPDATE_COUNTER_VALUE = 20U;
 
     /**
      * Topic meta data, used for automatic publishing.
@@ -226,6 +235,7 @@ private:
     TopicMetaDataList                    m_topicMetaDataList;  /**< List of readable topics and the required meta data. */
     PluginMetaDataList                   m_pluginMetaDataList; /**< List of plugins which have at least one topic registered. */
     SimpleTimer                          m_onChangeTimer;      /**< Timer for on change processing period. */
+    uint8_t                              m_updateCounter;      /**< If counter is 0, a topic content will be updated indepdendent its changed. */
 
     /**
      * Constructs the service instance.
@@ -235,7 +245,8 @@ private:
         m_isStarted(false),
         m_topicMetaDataList(),
         m_pluginMetaDataList(),
-        m_onChangeTimer()
+        m_onChangeTimer(),
+        m_updateCounter(UPDATE_COUNTER_VALUE)
     {
     }
 
@@ -302,20 +313,26 @@ private:
     /**
      * Process all topics to check which one has changed.
      * For every changed one, notify the handlers about.
+     * 
+     * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
      */
-    void processOnChange();
+    void processOnChange(bool forceUpdate);
 
     /**
      * Process all plugin topics to check which one has changed.
      * For every changed one, notify the handlers about.
+     * 
+     * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
      */
-    void processPluginsOnChange();
+    void processPluginsOnChange(bool forceUpdate);
 
     /**
      * Process all not plugin related topics to check which one has changed.
      * For every changed one, notify the handlers about.
+     * 
+     * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
      */
-    void processOthersOnChange();
+    void processOthersOnChange(bool forceUpdate);
 
     /**
      * Start all topic handlers.

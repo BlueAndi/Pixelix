@@ -97,7 +97,22 @@ void TopicHandlerService::process()
         if ((true == m_onChangeTimer.isTimerRunning()) &&
             (true == m_onChangeTimer.isTimeout()))
         {
-            processOnChange();
+            bool forceUpdate = false;
+
+            if (0U < m_updateCounter)
+            {
+                --m_updateCounter;
+            }
+
+            if (0U == m_updateCounter)
+            {
+                forceUpdate = true;
+                m_updateCounter = UPDATE_COUNTER_VALUE;
+            }
+
+            processOnChange(forceUpdate);
+
+            m_onChangeTimer.restart();
         }
     }
 }
@@ -541,13 +556,13 @@ void TopicHandlerService::removeFromPluginList(IPluginMaintenance* plugin, const
     }
 }
 
-void TopicHandlerService::processOnChange()
+void TopicHandlerService::processOnChange(bool forceUpdate)
 {
-    processPluginsOnChange();
-    processOthersOnChange();
+    processPluginsOnChange(forceUpdate);
+    processOthersOnChange(forceUpdate);
 }
 
-void TopicHandlerService::processPluginsOnChange()
+void TopicHandlerService::processPluginsOnChange(bool forceUpdate)
 {
     PluginMetaDataList::iterator pluginMetaDataListIt = m_pluginMetaDataList.begin();
 
@@ -561,7 +576,8 @@ void TopicHandlerService::processPluginsOnChange()
         {
             bool hasTopicChanged = pluginMetaData->plugin->hasTopicChanged(pluginMetaData->topic);
 
-            if (true == hasTopicChanged)
+            if ((true == hasTopicChanged) ||
+                (true == forceUpdate))
             {
                 TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
 
@@ -586,7 +602,7 @@ void TopicHandlerService::processPluginsOnChange()
     }
 }
 
-void TopicHandlerService::processOthersOnChange()
+void TopicHandlerService::processOthersOnChange(bool forceUpdate)
 {
     TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
 
@@ -604,7 +620,8 @@ void TopicHandlerService::processOthersOnChange()
                 hasTopicChanged = topicMetaData->hasChangedFunc(topicMetaData->topic);
             }
 
-            if (true == hasTopicChanged)
+            if ((true == hasTopicChanged) ||
+                (true == forceUpdate))
             {
                 notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
             }
