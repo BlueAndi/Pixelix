@@ -133,7 +133,7 @@
                     return -1;
                 }
 
-                return Math.ceil(value * 100 / 255);
+                return (value * 100 / 255).toFixed();
             }
 
             function brightnessPercentToValue(percent) {
@@ -141,7 +141,7 @@
                     return -1;
                 }
                 
-                return Math.ceil(percent * 255 / 100);
+                return (percent * 255 / 100).toFixed();
             }
 
             function createTimerSetting(id, timerSetting) {
