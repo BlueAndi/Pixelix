@@ -71,6 +71,9 @@ const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
 /** Digital input pin: Button "right" (input with pull-up) */
 const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
 
+/** Digital input pin: Button "reset" (input with pull-up) */
+const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP>   Board::buttonResetIn;
+
 /** Analog input pin: LDR in */
 const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
 
@@ -97,6 +100,7 @@ static const IoPin* ioPinList[] =
     &buttonOkIn,
     &buttonLeftIn,
     &buttonRightIn,
+    &buttonResetIn,
     &ldrIn,
     &dhtIn,
     &batteryVoltageIn,

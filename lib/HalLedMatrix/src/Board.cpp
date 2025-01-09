@@ -71,6 +71,9 @@ const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
 /** Digital input pin: Button "right" (input with pull-up) */
 const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
 
+/** Digital input pin: Button "reset" (input with pull-up) */
+const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP>   Board::buttonResetIn;
+
 /** Digital output pin: Test pin (only for debug purposes) */
 const DOutPin<Pin::testPinNo>                       Board::testPinOut;
 
@@ -100,6 +103,7 @@ static const IoPin* ioPinList[] =
     &buttonOkIn,
     &buttonLeftIn,
     &buttonRightIn,
+    &buttonResetIn,
     &testPinOut,
     &ledMatrixDataOut,
     &ldrIn,
