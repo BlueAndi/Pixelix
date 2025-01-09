@@ -33,9 +33,11 @@ Examples:
 
 # Overview Mindmap
 
-![topic-handling-minmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/topic_handling_mindmap.wsd)
+![topic-handling-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/topic_handling_mindmap.wsd)
 
 # MQTT Topics
+
+![mqtt-topic-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/mqtt_mindmap.wsd)
 
 ## Birth and last will
 Pixelix supports birth and last will messages (retained).

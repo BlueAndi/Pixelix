@@ -68,8 +68,9 @@ If not already installed, you will need to add the MQTT integration
 [![MQTT Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=mqtt)
 
 ## MQTT Discovery
-The Home Assistant automatic MQTT discovery is supported by:
+The Home Assistant MQTT discovery is supported by several plugins and features, here are some examples:
 * Display on/off
+* Device restart
 * Sensor information
 * JustTextPlugin
 * IconTextPlugin
