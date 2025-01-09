@@ -613,7 +613,7 @@ bool GifImgPlayer::parseExtension()
     bool            isSuccessful = true;
     ExtensionLabel  label;
 
-        /* Load extension label. */
+    /* Load extension label. */
     if (false == m_gifLoader->read(&label, sizeof(label)))
     {
         isSuccessful = false;
