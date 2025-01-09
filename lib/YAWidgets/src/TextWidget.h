@@ -144,7 +144,7 @@ public:
      * 
      * Encoding: UTF-8
      * 
-     * @param[in] formatStr String, which may contain format tags
+     * @param[in] formatStrUtf8 UTF-8 string, which may contain format tags.
      */
     void setFormatStr(const String& formatStrUtf8);
 
@@ -158,7 +158,7 @@ public:
      * 
      * Encoding: UTF-8
      *
-     * @return String, which may contain format tags.
+     * @return UTF-8 string, which may contain format tags.
      */
     String getFormatStr() const
     {
