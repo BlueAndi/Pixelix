@@ -74,6 +74,7 @@ The Home Assistant automatic MQTT discovery is supported by:
 * JustTextPlugin
 * IconTextPlugin
 * IconTextLampPlugin
+* MultiIconPlugin
 
 Pixelix will be shown as device with its entities. Every installed plugin will be shown as at least one entity.
 
