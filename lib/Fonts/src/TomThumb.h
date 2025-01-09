@@ -63,6 +63,11 @@
 **
 ** Jan 08, 2025: Beautified for better readability.
 ** Andreas Merkle (web@blue-andi.de)
+**
+** Jan 09, 2025: Fixed degree symbol (U+00B0) bitmap and glyph by using an
+** encoding which needs only 2 bitmap bytes. This ensures that all glyph
+** offsets match again.
+** Andreas Merkle (web@blue-andi.de)
 */
 
 #define TOMTHUMB_USE_EXTENDED 1
@@ -185,7 +190,7 @@ const uint8_t TomThumbBitmaps[] PROGMEM = {
     0xC0,                   /* [107] U+00AD '­' softhyphen */
     0xDA, 0x80,             /* [108] U+00AE '®' registered */
     0xE0,                   /* [109] U+00AF '¯' macron */
-    0xC0, 0xC0, 0x00,       /* [110] U+00B0 '°' degree */
+    0xD8, 0x00,             /* [110] U+00B0 '°' degree */
     0x5D, 0x0E,             /* [111] U+00B1 '±' plusminus */
     0xC9, 0x80,             /* [112] U+00B2 '²' twosuperior */
     0xEF, 0x80,             /* [113] U+00B3 '³' threesuperior */
@@ -396,7 +401,7 @@ const GFXglyph TomThumbGlyphs[] PROGMEM = {
     { 200, 2, 1, 3, 0, -3 },    /* [107] U+00AD '­' softhyphen */
     { 201, 3, 3, 4, 0, -5 },    /* [108] U+00AE '®' registered */
     { 203, 3, 1, 4, 0, -5 },    /* [109] U+00AF '¯' macron */
-    { 204, 8, 3, 4, 0, -5 },    /* [110] U+00B0 '°' degree */
+    { 204, 3, 3, 4, 0, -5 },    /* [110] U+00B0 '°' degree */
     { 206, 3, 5, 4, 0, -5 },    /* [111] U+00B1 '±' plusminus */
     { 208, 3, 3, 4, 0, -5 },    /* [112] U+00B2 '²' twosuperior */
     { 210, 3, 3, 4, 0, -5 },    /* [113] U+00B3 '³' threesuperior */
