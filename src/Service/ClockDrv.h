@@ -148,7 +148,7 @@ private:
     char*       m_internalTimeZoneBuffer;
 
     /** NTP server address, used by sntp. Don't remove it! */
-    String      m_ntpServerAddress;
+    char        m_ntpServerAddress[32U];
 
     /** Real time clock */
     IRtc*       m_rtc;
@@ -166,7 +166,7 @@ private:
         m_isClockDrvInitialized(false),
         m_timeZone(TZ_UTC),
         m_internalTimeZoneBuffer(nullptr),
-        m_ntpServerAddress(),
+        m_ntpServerAddress{0},
         m_rtc(nullptr),
         m_syncTimeByRtcTimer(),
         m_syncRtcByNtpTimer()
@@ -187,8 +187,8 @@ private:
     /**
      * Fill string up with spaces.
      * 
-     * @param[in, out]  str     String which to fill up.
-     * @param[in]       size    String buffer size in byte (incl. termination)
+     * @param[in, out]  str         String which to fill up.
+     * @param[in]       size        String buffer size in byte (incl. termination)
      */
     void fillUpWithSpaces(char* str, size_t size);
 

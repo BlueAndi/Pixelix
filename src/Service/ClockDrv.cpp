@@ -73,6 +73,7 @@ void ClockDrv::init(IRtc* rtc)
 {
     SettingsService&    settings            = SettingsService::getInstance();
     char                tzBuffer[TZ_MIN_SIZE];
+    String              ntpServerAddress;
 
     /* Handle RTC */
     m_rtc = rtc;
@@ -102,20 +103,30 @@ void ClockDrv::init(IRtc* rtc)
         LOG_WARNING("Use default values for NTP request.");
 
         m_timeZone          = settings.getTimezone().getDefault();
-        m_ntpServerAddress  = settings.getNTPServerAddress().getDefault();
+        ntpServerAddress    = settings.getNTPServerAddress().getDefault();
     }
     else
     {
         m_timeZone          = settings.getTimezone().getValue();
-        m_ntpServerAddress  = settings.getNTPServerAddress().getValue();
+        ntpServerAddress    = settings.getNTPServerAddress().getValue();
         settings.close();
     }
+
+    if (sizeof(m_ntpServerAddress) <= ntpServerAddress.length())
+    {
+        LOG_WARNING("NTP server address is too long. Use default value.");
+        ntpServerAddress = settings.getNTPServerAddress().getDefault();
+    }
+
+    strncpy(m_ntpServerAddress, ntpServerAddress.c_str(), sizeof(m_ntpServerAddress) - 1U);
+    m_ntpServerAddress[sizeof(m_ntpServerAddress) - 1U] = '\0';
 
     sntp_set_time_sync_notification_cb(sntpCallback);
     sntp_set_sync_interval(SYNC_TIME_BY_NTP_PERIOD);
 
     /* Workaround part 1 to avoid memory leaks by calling setenv() of the newlib.
      * https://github.com/espressif/esp-idf/issues/3046
+     * https://newlib.sourceware.narkive.com/6VfBYW7D/how-to-use-a-static-environment
      */
     strcpy(tzBuffer, TZ_UTC);
     fillUpWithSpaces(tzBuffer, TZ_MIN_SIZE);
@@ -130,7 +141,7 @@ void ClockDrv::init(IRtc* rtc)
      * Important: The NTP server address is not copied by configTzTime(). It will access the
      * string periodically, therefore its important to keep it as member variable!
      */
-    configTzTime(tzBuffer, m_ntpServerAddress.c_str());
+    configTzTime(tzBuffer, m_ntpServerAddress);
 
     /* Workaround part 2 to avoid memory leaks by calling setenv() of the newlib.
      * https://github.com/espressif/esp-idf/issues/3046
