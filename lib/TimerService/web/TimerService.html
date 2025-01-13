@@ -200,7 +200,7 @@
 
                 var $labelBrightness = $("<label for='" + id + "Brightness'>Brightness:</label>");
                 var $inputBrightness = $("<input type='number' class='form-control' id='" + id + "Brightness' min='-1' max='100' />")
-                                    .val(brightnessPercentToValue(timerSetting.brightness));
+                                    .val(brightnessValueToPercent(timerSetting.brightness));
 
                 $block.append($row);
 
@@ -310,7 +310,7 @@
                         displayState: $("input[name='timer" + idx + "DisplayState']:checked").val(),
                         hour: $("#timer" + idx + "Hour").val(),
                         minute: $("#timer" + idx + "Minute").val(),
-                        brightness: brightnessValueToPercent($("#timer" + idx + "Brightness").val()),
+                        brightness: brightnessPercentToValue($("#timer" + idx + "Brightness").val()),
                         monday: $("#timer" + idx + "Mo").prop("checked"),
                         tuesday: $("#timer" + idx + "Tu").prop("checked"),
                         wednesday: $("#timer" + idx + "We").prop("checked"),
