@@ -487,10 +487,6 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
                 {
                     LOG_WARNING("Couldn't publish %s.", topicStateUri.c_str());
                 }
-                else
-                {
-                    LOG_INFO("Published: %s", topicStateUri.c_str());
-                }
             }
         }
     }
