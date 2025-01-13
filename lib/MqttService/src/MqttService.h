@@ -193,7 +193,14 @@ private:
     typedef std::vector<Subscriber*> SubscriberList;
 
     /** MQTT port */
-    static const uint16_t MQTT_PORT = 1883U;
+    static const uint16_t MQTT_PORT         = 1883U;
+
+    /**
+     * MQTT socket timeout in s. Keep it low to improve systems responsiveness.
+     * Otherwise a reconnect may take a while and blocks any other activities.
+     * The same for reading and writing to the socket.
+     */
+    static const uint16_t MQTT_SOCK_TIMEOUT = 1U;
 
     /** MQTT broker URL key */
     static const char* KEY_MQTT_BROKER_URL;

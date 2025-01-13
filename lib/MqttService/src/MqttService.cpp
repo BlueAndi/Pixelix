@@ -99,6 +99,7 @@ bool MqttService::start()
                 this->rxCallback(topic, payload, length);
             });
             (void)m_mqttClient.setBufferSize(MAX_BUFFER_SIZE);
+            (void)m_mqttClient.setSocketTimeout(MQTT_SOCK_TIMEOUT);
 
             m_state = STATE_DISCONNECTED;
         }
