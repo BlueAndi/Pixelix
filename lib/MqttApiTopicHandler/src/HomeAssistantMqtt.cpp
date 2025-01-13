@@ -130,8 +130,6 @@ void HomeAssistantMqtt::process(bool isConnected)
             publishAutoDiscoveryInfosOnDemand();
         }
     }
-
-    m_isConnected = isConnected;
 }
 
 void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const String& entityId, const String& topic, const String& mqttStateTopic, const String& mqttCmdTopic, const String& mqttAvailabilityTopic, JsonObjectConst& jsonExtra)

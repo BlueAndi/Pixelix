@@ -73,8 +73,7 @@ public:
         m_haDiscoveryEnabledSetting(KEY_HA_DISCOVERY_ENABLE, NAME_HA_DISCOVERY_ENABLE, DEFAULT_HA_DISCOVERY_ENABLE),
         m_haDiscoveryPrefix(),
         m_haDiscoveryEnabled(false),
-        m_mqttDiscoveryInfoList(),
-        m_isConnected(false)
+        m_mqttDiscoveryInfoList()
     {
     }
 
@@ -107,7 +106,7 @@ public:
 
     /**
      * Register Home Assistant MQTT discovery.
-     * 
+     *
      * The extra parameters shall contain the @see KEY_EXTRA_INFO_HA key.
      * This key is used to store the filename, where the extra information is stored,
      * required for the Home Assistant MQTT discovery.
@@ -208,7 +207,6 @@ private:
     String                                  m_haDiscoveryPrefix;         /**< Home Assistant MQTT discovery prefix. */
     bool                                    m_haDiscoveryEnabled;        /**< Is the Home Assistant MQTT discovery enabled or not. */
     ListOfMqttDiscoveryInfo                 m_mqttDiscoveryInfoList;     /**< List of Home Assistant MQTT discovery informations. */
-    bool                                    m_isConnected;               /**< Is MQTT broker connection established? */
 
     HomeAssistantMqtt(const HomeAssistantMqtt& ext);
     HomeAssistantMqtt& operator=(const HomeAssistantMqtt& ext);
@@ -323,9 +321,9 @@ private:
 
     /**
      * Get number of components in the string.
-     * 
+     *
      * @param[in] components    Components as string, separated by comma.
-     * 
+     *
      * @return Number of components.
      */
     uint8_t getComponentCount(const String& components);
@@ -333,7 +331,7 @@ private:
     /**
      * Get component by index.
      * If index is out of bounce, a empty component will be returned.
-     * 
+     *
      * @param[out]  component    Component destination.
      * @param[in]   components   Components as string, separated by comma.
      * @param[in]   idx          Index
