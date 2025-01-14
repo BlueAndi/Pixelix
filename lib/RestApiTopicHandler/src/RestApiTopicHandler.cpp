@@ -256,9 +256,9 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest* request, const St
     /* Begin of upload? */
     if (0 == index)
     {
-        AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
-        size_t          fileSize        = request->contentLength();
-        size_t          fileSystemSpace = FILESYSTEM.totalBytes() - FILESYSTEM.usedBytes();
+        const AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
+        size_t                fileSize        = request->contentLength();
+        size_t                fileSystemSpace = FILESYSTEM.totalBytes() - FILESYSTEM.usedBytes();
 
         /* File size available? */
         if (nullptr != headerXFileSize)

@@ -445,10 +445,10 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
     /* Begin of upload? */
     if (0 == index)
     {
-        uint32_t        fileSize           = UPDATE_SIZE_UNKNOWN;
-        int             cmd                = U_FLASH;
-        AsyncWebHeader* headerXFileSize    = nullptr;
-        bool            isFilesystemUpdate = false;
+        uint32_t              fileSize           = UPDATE_SIZE_UNKNOWN;
+        int                   cmd                = U_FLASH;
+        const AsyncWebHeader* headerXFileSize    = nullptr;
+        bool                  isFilesystemUpdate = false;
 
         /* If there is a pending upload, abort it. */
         if (true == Update.isRunning())
@@ -542,7 +542,7 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
                 {
                     /* Finish update now. */
                     if (false == Update.end(true))
-                    {                        
+                    {
                         gIsUploadError = true;
                     }
                     /* Update was successful! */
