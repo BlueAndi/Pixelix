@@ -7,6 +7,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![Repo Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Release](https://img.shields.io/github/release/BlueAndi/Pixelix.svg)](https://github.com/BlueAndi/Pixelix/releases)
 [![Build Status](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml/badge.svg)](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml)
+[<img src="https://api.gitsponsors.com/api/badge/img?id=189284754" height="20">](https://api.gitsponsors.com/api/badge/link?p=sgpunVSyf1gkM9F8XqhYO0nOD9i3RoeE7BxAGqgqfmC4cN1U5tHiZt01NzoK5sSmm80DaHhTHGRwilQh+NB32fnv2G7OuSMuOhcDATks0fFjFyHb4ie2DjOCKhyG7iv0upXJObKhxEKCwQaroxC4XA==)
 
 [![pixelix](https://img.youtube.com/vi/u1W9nlzJOI4/1.jpg)](https://youtu.be/u1W9nlzJOI4 "Pixelix & Friends")
 [![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/1.jpg)](https://youtu.be/dik8Rm6f3o0 "Pixelix")
