@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Plugin manager
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -96,6 +96,7 @@ public:
 
     /**
      * Uninstall plugin.
+     * All plugin topics will be unregistered and purged.
      *
      * @param[in] plugin    Plugin, which to remove
      *
@@ -116,6 +117,7 @@ public:
     /**
      * Unregister all plugin topics from the topic handler service.
      * The plugins will still be installed, but won't get any update from outside.
+     * The plugin topics will NOT be purged.
      */
     void unregisterAllPluginTopics();
 
@@ -230,6 +232,58 @@ private:
      * @return Filtered plugin alias
      */
     String filterPluginAlias(const String& alias);
+
+    /**
+     * Get the entity id by plugin UID.
+     *
+     * @param[in] uid   Plugin UID
+     *
+     * @return Entity id
+     */
+    String getEntityIdByPluginUid(uint16_t uid);
+
+    /**
+     * Get the entity id by plugin alias.
+     *
+     * @param[in] alias Plugin alias
+     *
+     * @return Entity id
+     */
+    String getEntityIdByPluginAlias(const String& alias);
+
+    /**
+     * Register all topics of the given plugin by its UID.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be registered.
+     */
+    void registerTopicsByUID(const String& deviceId, IPluginMaintenance* plugin);
+
+    /**
+     * Unregister all topics of the given plugin by its UID.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be unregistered.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
+     */
+    void unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge);
+
+    /**
+     * Register all topics of the given plugin by its alias.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be registered.
+     */
+    void registerTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin);
+
+    /**
+     * Unregister all topics of the given plugin by its alias.
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The plugin, which topics shall be unregistered.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
+     */
+    void unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge);
 };
 
 /******************************************************************************

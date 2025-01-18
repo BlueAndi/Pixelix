@@ -1,4 +1,4 @@
-@startuml
+@startuml spectrum-analyzer
 
 participant "SoundReactivePlugin" as plugin
 participant "AudioService" as audioService

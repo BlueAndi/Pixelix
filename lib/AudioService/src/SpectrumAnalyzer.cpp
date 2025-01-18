@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,6 +70,9 @@ struct WindowCorrection
 template <>
 struct WindowCorrection<FFTWindow::Rectangle>
 {
+    /**
+     * The FFT rectangle window correction factor value.
+     */
     static constexpr const float factor = 1.0F;
 };
 
@@ -79,6 +82,9 @@ struct WindowCorrection<FFTWindow::Rectangle>
 template <>
 struct WindowCorrection<FFTWindow::Hamming>
 {
+    /**
+     * The FFT hamming window correction factor value.
+     */
     static constexpr const float factor = 0.54F;
 };
 
@@ -88,6 +94,9 @@ struct WindowCorrection<FFTWindow::Hamming>
 template <>
 struct WindowCorrection<FFTWindow::Hann>
 {
+    /**
+     * The FFT hann window correction factor value.
+     */
     static constexpr const float factor = 0.50F;
 };
 
@@ -97,6 +106,9 @@ struct WindowCorrection<FFTWindow::Hann>
 template <>
 struct WindowCorrection<FFTWindow::Blackman_Harris>
 {
+    /**
+     * The FFT blackman-harris window correction factor value.
+     */
     static constexpr const float factor = 0.42F;
 };
 
@@ -106,6 +118,9 @@ struct WindowCorrection<FFTWindow::Blackman_Harris>
 template <>
 struct WindowCorrection<FFTWindow::Flat_top>
 {
+    /**
+     * The FFT flat top window correction factor value.
+     */
     static constexpr const float factor = 0.22F;
 };
 

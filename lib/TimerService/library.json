@@ -1,0 +1,27 @@
+{
+    "name": "TimerService",
+    "version": "0.1.0",
+    "description": "...",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "IRtc"
+    }, {
+        "name": "Logging"
+    }, {
+        "name": "Os"
+    }, {
+        "name": "Service"
+    }, {
+        "name": "Utilities"
+    }, {
+        "name": "YAWidgets"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

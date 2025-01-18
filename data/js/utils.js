@@ -130,8 +130,14 @@ utils.makeRequest = function(options) {
                 }
             };
 
-            xhr.onerror = function() {
+            xhr.ontimeout = function() {
+                console.error(xhr.statusText);
                 reject("Timeout");
+            };
+
+            xhr.onerror = function() {
+                console.error(xhr.statusText);
+                reject("Error");
             };
 
             if (null === formData) {

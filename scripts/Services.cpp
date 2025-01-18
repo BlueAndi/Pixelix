@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,6 +58,14 @@ $INCLUDES
  * Local Variables
  *****************************************************************************/
 
+/**
+ * List of services.
+ */
+static const Services::Element gServiceList[] =
+{
+$LIST_ENTRIES
+};
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -96,6 +104,13 @@ $STOP_SERVICES
 extern void Services::processAll()
 {
 $PROCESS_SERVICES
+}
+
+const Services::Element* Services::getList(uint8_t& length)
+{
+    length = sizeof(gServiceList) / sizeof(gServiceList[0]);
+
+    return gServiceList;
 }
 
 /******************************************************************************

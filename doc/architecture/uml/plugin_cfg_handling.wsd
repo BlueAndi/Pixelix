@@ -1,4 +1,4 @@
-@startuml
+@startuml plugin_cfg_handling
 
 participant "RestApiTopicHandler" as restApiTopicHandler
 participant "PluginMgr" as pluginMgr

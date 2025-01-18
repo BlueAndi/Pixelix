@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  View with icon and text for 32x8 LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -99,6 +99,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     void init(uint16_t width, uint16_t height) override
     {
@@ -240,6 +243,7 @@ protected:
     BitmapWidget    m_bitmapWidget; /**< Bitmap widget used to show a icon. */
     TextWidget      m_textWidget;   /**< Text widget used to show some text. */
 
+private:
     IconTextView32x8(const IconTextView32x8& other);
     IconTextView32x8& operator=(const IconTextView32x8& other);
 };

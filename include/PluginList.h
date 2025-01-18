@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Plugin list
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -62,8 +62,8 @@ namespace PluginList
  */
 typedef struct
 {
-    const char*                     name;       /**< Name of plugin type. */
-    IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
+    const char*                    name;       /**< Name of plugin type. */
+    IPluginMaintenance::CreateFunc createFunc; /**< Plugin creation function */
 
 } Element;
 
@@ -73,15 +73,15 @@ typedef struct
 
 /**
  * Get list of provided plugins and their creation function.
- * 
+ *
  * @param[out] length   Length of list.
- * 
+ *
  * @return List of plugins.
  */
 const Element* getList(uint8_t& length);
 
-};
+}; /* namespace PluginList */
 
-#endif  /* PLUGIN_LIST_HPP */
+#endif /* PLUGIN_LIST_HPP */
 
 /** @} */

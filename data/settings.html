@@ -57,7 +57,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -68,6 +68,7 @@
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <script type="text/javascript" src="/js/dialog.js"></script>
@@ -101,6 +102,7 @@
                 var index = 0;
 
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 restClient.getSettingKeys().then(function(result) {
@@ -119,6 +121,7 @@
 
                     return Promise.all(promises);
                 }).then(function() {
+                    var $block      = null;
                     var $label      = null;
                     var $formGroup  = null;
                     var $formCheck  = null;
@@ -126,6 +129,9 @@
                     var $button     = null;
 
                     for(index = 0; index < data.length; ++index) {
+                        $block      = $("<div>")
+                                    .attr("class", "form-group h-100 p-2 bg-body-tertiary border rounded-3 mt-2");
+
                         $label      = $("<label>")
                                     .attr("for", "setting-" + index)
                                     .attr("class", "form-label")
@@ -201,19 +207,20 @@
                         if (null !== $formCheck) {
                             $formGroup  = $("<div>")
                                 .attr("class", "form-group")
-                                .append($formCheck)
-                                .append($button);
+                                .append($formCheck);
 
                         } else {
 
                             $formGroup  = $("<div>")
                                         .attr("class", "form-group")
                                         .append($label)
-                                        .append($inputField)
-                                        .append($button);
+                                        .append($inputField);
                         }
 
-                        $("#settings").append($formGroup);
+                        $block.append($formGroup);
+                        $block.append($button)
+
+                        $("#settings").append($block);
 
                         /* Reset */
                         $formCheck = null;

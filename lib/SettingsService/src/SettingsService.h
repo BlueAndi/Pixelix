@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Settings service
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup settings
+ * @addtogroup SETTINGS
  *
  * @{
  */
@@ -72,7 +72,7 @@ public:
 
     /**
      * Get settings service.
-     * 
+     *
      * @return Settings service
      */
     static SettingsService& getInstance()
@@ -84,7 +84,7 @@ public:
 
     /**
      * Start the service.
-     * 
+     *
      * @return If successful started, it will return true otherwise false.
      */
     bool start() final;
@@ -119,17 +119,17 @@ public:
     /**
      * Remove obsolete keys in the persistency. It can be used to prevent a
      * growing up persistency with obsolete key/value pairs.
-     * 
+     *
      * The clean-up itself is only performed if the stored version number is
      * different from the settings version number.
-     * 
+     *
      * Note, the settings must be opened in write mode!
      */
     void cleanUp();
 
     /**
      * Get key value pair by key.
-     * 
+     *
      * @param key The key is used to search for the right key value pair.
      * @return If key is found, it will return the key value pair otherwise nullptr.
      */
@@ -137,16 +137,16 @@ public:
 
     /**
      * Register a single setting.
-     * 
+     *
      * @param[in] setting   Setting which to register
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool registerSetting(KeyValue* setting);
 
     /**
      * Unregister setting.
-     * 
+     *
      * @param[in] setting   Setting which to unregister
      */
     void unregisterSetting(KeyValue* setting);
@@ -155,7 +155,7 @@ public:
      * Get a list of all key value pairs.
      *
      * @param[out] count    Number of key value pairs in the list.
-     * 
+     *
      * @return List of key value pairs.
      */
     KeyValue** getList(size_t& count)
@@ -305,24 +305,34 @@ public:
         return m_scrollPause;
     }
 
-   /**
-    * Get notifyURL.
-    *
-    * @return The URL to be triggered
-    */
+    /**
+     * Get notifyURL.
+     *
+     * @return The URL to be triggered
+     */
     KeyValueString& getNotifyURL()
     {
         return m_notifyURL;
     }
 
-   /**
-    * Get quite mode state.
-    *
-    * @return Is quiet mode enabled or not?
-    */
+    /**
+     * Get quite mode state.
+     *
+     * @return Is quiet mode enabled or not?
+     */
     KeyValueBool& getQuietMode()
     {
         return m_quietMode;
+    }
+
+    /**
+     * Get fade effect.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt8& getFadeEffect()
+    {
+        return m_fadeEffect;
     }
 
     /**
@@ -332,29 +342,30 @@ public:
      * - a existing setting changed
      * - a existing setting was removed
      */
-    static const uint32_t   VERSION = 2U;
+    static const uint32_t VERSION = 3U;
 
 private:
 
-    Preferences             m_preferences;          /**< Persistent storage */
-    std::vector<KeyValue*>  m_keyValueList;         /**< List of key/value pairs, stored in persistent storage. */
+    Preferences            m_preferences;  /**< Persistent storage */
+    std::vector<KeyValue*> m_keyValueList; /**< List of key/value pairs, stored in persistent storage. */
 
-    KeyValueUInt32          m_version;              /**< Settings version (just an consequtive incremented number) */
-    KeyValueString          m_wifiSSID;             /**< Remote wifi network SSID */
-    KeyValueString          m_wifiPassphrase;       /**< Remote wifi network passphrase */
-    KeyValueString          m_apSSID;               /**< Access point SSID */
-    KeyValueString          m_apPassphrase;         /**< Access point passphrase */
-    KeyValueString          m_webLoginUser;         /**< Website login user account */
-    KeyValueString          m_webLoginPassword;     /**< Website login user password */
-    KeyValueString          m_hostname;             /**< Hostname */
-    KeyValueUInt8           m_brightness;           /**< The brightness level in % set at startup. */
-    KeyValueBool            m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
-    KeyValueString          m_timezone;             /**< POSIX timezone string */
-    KeyValueString          m_ntpServer;            /**< NTP server address */
-    KeyValueUInt8           m_maxSlots;             /**< Max. number of display slots. */
-    KeyValueUInt32          m_scrollPause;          /**< Text scroll pause */
-    KeyValueString          m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */
-    KeyValueBool            m_quietMode;            /**< Quiet mode (skip unnecessary system messages) */
+    KeyValueUInt32         m_version;            /**< Settings version (just an consequtive incremented number) */
+    KeyValueString         m_wifiSSID;           /**< Remote wifi network SSID */
+    KeyValueString         m_wifiPassphrase;     /**< Remote wifi network passphrase */
+    KeyValueString         m_apSSID;             /**< Access point SSID */
+    KeyValueString         m_apPassphrase;       /**< Access point passphrase */
+    KeyValueString         m_webLoginUser;       /**< Website login user account */
+    KeyValueString         m_webLoginPassword;   /**< Website login user password */
+    KeyValueString         m_hostname;           /**< Hostname */
+    KeyValueUInt8          m_brightness;         /**< The brightness level in % set at startup. */
+    KeyValueBool           m_autoBrightnessCtrl; /**< Automatic brightness control switch */
+    KeyValueString         m_timezone;           /**< POSIX timezone string */
+    KeyValueString         m_ntpServer;          /**< NTP server address */
+    KeyValueUInt8          m_maxSlots;           /**< Max. number of display slots. */
+    KeyValueUInt32         m_scrollPause;        /**< Text scroll pause */
+    KeyValueString         m_notifyURL;          /**< URL to be triggered when PIXELIX has connected to a remote network. */
+    KeyValueBool           m_quietMode;          /**< Quiet mode (skip unnecessary system messages) */
+    KeyValueUInt8          m_fadeEffect;         /**< Fade effect */
 
     /**
      * Constructs the settings service instance.
@@ -375,6 +386,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SETTINGS_SERVICE_H */
+#endif /* SETTINGS_SERVICE_H */
 
 /** @} */

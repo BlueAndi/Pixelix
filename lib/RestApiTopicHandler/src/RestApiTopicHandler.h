@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  REST API topic handler
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup TOPIC_HANDLER_SERVICE
  *
  * @{
  */
@@ -90,6 +90,7 @@ public:
 
     /**
      * Stop the topic handler.
+     * Topics are NOT unregistered. If necessary, this must be done before.
      */
     void stop() final
     {
@@ -98,9 +99,10 @@ public:
 
     /**
      * Register the topic.
-     * 
+     * Generates the REST API URI according to the following pattern: BASE-URL/[ENTITY-ID/]TOPIC
+     *
      * @param[in] deviceId      The device id which represents the physical device.
-     * @param[in] entityId      The entity id which represents the entity of the device.
+     * @param[in] entityId      The entity id which represents the entity of the device. May be empty in case of a general REST API.
      * @param[in] topic         The topic name.
      * @param[in] extra         Extra parameters, which depend on the topic handler.
      * @param[in] getTopicFunc  Function to get the topic content.
@@ -111,12 +113,13 @@ public:
 
     /**
      * Unregister the topic.
-     * 
+     *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic) final;
+    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge = false) final;
 
     /**
      * Process the topic handler.
@@ -128,7 +131,7 @@ public:
 
     /**
      * Notify that the topic has changed.
-     * 
+     *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
@@ -148,22 +151,20 @@ private:
      */
     struct TopicMetaData
     {
-        String                      deviceId;       /**< The device id. */
-        String                      entityId;       /**< The entity id. */
-        String                      topic;          /**< The plugin topic. */
-        GetTopicFunc                getTopicFunc;   /**< Function used to get topic content. */
-        SetTopicFunc                setTopicFunc;   /**< Function used to set topic content. */
-        UploadReqFunc               uploadReqFunc;  /**< Function used to check whether a file upload is allowed. */
-        AsyncCallbackWebHandler*    webHandler;     /**< Webhandler callback, necessary to remove it later again. */
-        String                      uri;            /**< URI where the handler is registered. */
-        bool                        isUploadError;  /**< If upload error happened, it will be true otherwise false. */
-        String                      fullPath;       /**< Full path of uploaded file. If empty, there is no file available. */
+        String                   entityId;      /**< The entity id. */
+        String                   topic;         /**< The plugin topic. */
+        GetTopicFunc             getTopicFunc;  /**< Function used to get topic content. */
+        SetTopicFunc             setTopicFunc;  /**< Function used to set topic content. */
+        UploadReqFunc            uploadReqFunc; /**< Function used to check whether a file upload is allowed. */
+        AsyncCallbackWebHandler* webHandler;    /**< Webhandler callback, necessary to remove it later again. */
+        String                   uri;           /**< URI where the handler is registered. */
+        bool                     isUploadError; /**< If upload error happened, it will be true otherwise false. */
+        String                   fullPath;      /**< Full path of uploaded file. If empty, there is no file available. */
 
         /**
          * Initialize topic meta data.
          */
         TopicMetaData() :
-            deviceId(),
             entityId(),
             topic(),
             getTopicFunc(nullptr),
@@ -182,27 +183,28 @@ private:
      */
     typedef std::vector<TopicMetaData*> ListOfTopicMetaData;
 
-    ListOfTopicMetaData m_listOfTopicMetaData;  /**< List of topic meta data. */
+    ListOfTopicMetaData                 m_listOfTopicMetaData; /**< List of topic meta data. */
 
     RestApiTopicHandler(const RestApiTopicHandler& adapter);
     RestApiTopicHandler& operator=(const RestApiTopicHandler& adapter);
 
     /**
-     * Get plugin REST base URI to identify plugin.
+     * Get plugin REST URI
      *
-     * @param[in] entityId  The entity id which represents the entity of the device.
+     * @param[in] entityId  The entity id which represents the entity of a plugin. May be empty in case of a general REST API.
+     * @param[in] topic     The topic.
      *
-     * @return Plugin REST API base URI
+     * @return REST API base URL
      */
-    String getBaseUri(const String& entityId);
+    String getUri(const String& entityId, const String& topic) const;
 
     /**
      * The web request handler handles all incoming HTTP requests for every plugin topic.
-     * 
+     *
      * @param[in] request       The web request information from the client.
      * @param[in] topicMetaData The related topic meta data.
      */
-    void webReqHandler(AsyncWebServerRequest *request, TopicMetaData* topicMetaData);
+    void webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData);
 
     /**
      * File upload handler.
@@ -215,15 +217,15 @@ private:
      * @param[in] final         Is final packet or not.
      * @param[in] topicMetaData The related topic meta data.
      */
-    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, TopicMetaData* topicMetaData);
+    void uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final, TopicMetaData* topicMetaData);
 
     /**
      * Convert HTTP parameters to JSON format.
-     * 
+     *
      * @param[in, out]  jsonDocPar  JSON document which the parameters will be transfered to.
      * @param[in]       request     HTTP request with parameters
      */
-    void par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest *request);
+    void par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest* request);
 
     /**
      * Clear plugin topics.
@@ -235,6 +237,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* REST_API_TOPIC_HANDLER_H */
+#endif /* REST_API_TOPIC_HANDLER_H */
 
 /** @} */

@@ -1,0 +1,87 @@
+@startmindmap mqtt_mindmap.wsd
+
++ MQTT
+
+++_ A readable topic has the endpoint /state
+++_ A writeable topic has the endpoint /set
+++_ Every /state and /set endpoint requires JSON format.
+
+++ <HOSTNAME>
+
++++ status
+++++_ device availability
+++++_ possible values
++++++[#lightblue] offline
++++++[#lightblue] online
+
++++ /
+
+++++ display
++++++ /
+
+++++++ uid
++++++++ /
+++++++++ <PLUGIN-UID>
++++++++++ /
+++++++++++ <PLUGIN-TOPIC>
++++++++++++ /
+++++++++++++ set
++++++++++++++_ See plugin documentation.
+++++++++++++ state
++++++++++++++_ See plugin documentation.
+
+++++++ alias
++++++++_ Only if plugin has an alias set.
++++++++ /
+++++++++ <PLUGIN-ALIAS>
++++++++++ /
+++++++++++ <PLUGIN-TOPIC>
++++++++++++ /
+++++++++++++ set
++++++++++++++_ See plugin documentation.
+++++++++++++ state
++++++++++++++_ See plugin documentation.
+
+++++++ power
++++++++ /
+++++++++ set
++++++++++_ JSON
+++++++++++[#lightblue] "state"
++++++++++++_ possible values
+++++++++++++[#lightblue] "off"
+++++++++++++[#lightblue] "on"
+++++++++++_ example
++++++++++++[#lightblue] { "state": "off" }
+
+++++ restart
++++++ /
+++++++ set
++++++++_ Empty JSON object
+++++++++[#lightblue] {}
+
+++++ sensors
++++++ /
+++++++ <SENSOR-CHANNEL-ID>
++++++++ /
+++++++++ <SENSOR-TYPE>
++++++++++ /
+++++++++++ state
++++++++++++_ JSON
+++++++++++++[#lightblue] "value"
++++++++++++++_ type: string
+++++++++++++_ example
++++++++++++++[#lightblue] { "value": "23.5" }
+
+++ <HOMEASSISTANT-DISCOVERY-PREFIX>
++++_ https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery
++++ /
+++++ <HOMEASSISTANT-COMPONENT>
++++++ /
+++++++ <HOMEASSISTANT-NODE-ID>
++++++++ /
+++++++++ <HOMEASSISTANT-OBJECT-ID>
++++++++++ /
+++++++++++ config
++++++++++++_ JSON
+
+@endmindmap

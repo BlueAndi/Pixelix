@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  View for 32x16 LED matrix with date and time.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -105,6 +105,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     void init(uint16_t width, uint16_t height) override
     {
@@ -269,7 +272,9 @@ public:
     /**
      * Set the view mode (analog, digital or both).
      * 
-     * @return ViewMode 
+     * @param[in] mode  View mode
+     * 
+     * @return View mode 
      */
     bool setViewMode(ViewMode mode) override
     {
@@ -294,7 +299,7 @@ public:
     /**
      * Get current active configuration in JSON format.
      * 
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const override
     {
@@ -304,7 +309,7 @@ public:
     /**
      * Apply configuration from JSON.
      * 
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg Configuration
      * 
      * @return If successful set, it will return true otherwise false.
      */
@@ -412,6 +417,7 @@ protected:
     Color           m_dayOnColor;               /**< Color of current day in the day of the week bar. */
     Color           m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
 
+private:
     DateTimeView32x16(const DateTimeView32x16& other);
     DateTimeView32x16& operator=(const DateTimeView32x16& other);
 

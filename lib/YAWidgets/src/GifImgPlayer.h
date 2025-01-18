@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  GIF image player
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup gfx
+ * @addtogroup GFX
  *
  * @{
  */
@@ -58,8 +58,15 @@
  * Types and Classes
  *****************************************************************************/
 
-/* Forward declarations */
+/**
+ * To store general information about the GIF image file.
+ * Not needed after the file is loaded in memory.
+ */
 typedef struct _GifFileHeader GifFileHeader;
+
+/**
+ * The application extension.
+ */
 typedef struct _ApplicationExtension ApplicationExtension;
 
 /**

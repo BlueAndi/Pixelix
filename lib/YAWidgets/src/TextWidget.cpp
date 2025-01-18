@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "TextWidget.h"
 #include "TWTokenizer.h"
+#include "Utf8.h"
 
 #include <Fonts.h>
 #include <Util.h>
@@ -95,8 +96,8 @@ uint32_t        TextWidget::m_scrollPause   = TextWidget::DEFAULT_SCROLL_PAUSE;
 
 TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
     Widget(WIDGET_TYPE, width, height, x, y),
-    m_formatStr(),
-    m_formatStrNew(),
+    m_formatStrUtf8(),
+    m_formatStrNewUtf8(),
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
     m_isFadeEffectEnabled(true),
@@ -123,8 +124,8 @@ TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
 
 TextWidget::TextWidget(const String& str, const Color& color) :
     Widget(WIDGET_TYPE, 0U, 0U, 0, 0),
-    m_formatStr(),
-    m_formatStrNew(str),
+    m_formatStrUtf8(),
+    m_formatStrNewUtf8(str),
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
     m_isFadeEffectEnabled(true),
@@ -143,11 +144,14 @@ TextWidget::TextWidget(const String& str, const Color& color) :
     m_vAlignPosY(0)
 {
     TWTokenizer tokenizer;
+    String      formatStrIntern; /* Internal character encoding. */
+
+    Utf8::toIntern(m_formatStrNewUtf8, formatStrIntern);
 
     /* Build AST for the new format string. */
-    if (false == tokenizer.parse(m_astNew, m_formatStrNew))
+    if (false == tokenizer.parse(m_astNew, formatStrIntern))
     {
-        m_formatStrNew.clear();
+        m_formatStrNewUtf8.clear();
         m_prepareNewText = false;
     }
 
@@ -160,8 +164,8 @@ TextWidget::TextWidget(const String& str, const Color& color) :
 
 TextWidget::TextWidget(const TextWidget& widget) :
     Widget(widget),
-    m_formatStr(widget.m_formatStr),
-    m_formatStrNew(widget.m_formatStrNew),
+    m_formatStrUtf8(widget.m_formatStrUtf8),
+    m_formatStrNewUtf8(widget.m_formatStrNewUtf8),
     m_fadeState(widget.m_fadeState),
     m_fadeBrightness(widget.m_fadeBrightness),
     m_isFadeEffectEnabled(widget.m_isFadeEffectEnabled),
@@ -187,8 +191,8 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
     {
         Widget::operator=(widget);
         
-        m_formatStr             = widget.m_formatStr;
-        m_formatStrNew          = widget.m_formatStrNew;
+        m_formatStrUtf8         = widget.m_formatStrUtf8;
+        m_formatStrNewUtf8      = widget.m_formatStrNewUtf8;
         m_fadeState             = widget.m_fadeState;
         m_fadeBrightness        = widget.m_fadeBrightness;
         m_isFadeEffectEnabled   = widget.m_isFadeEffectEnabled;
@@ -210,22 +214,25 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
     return *this;
 }
 
-void TextWidget::setFormatStr(const String& formatStr)
+void TextWidget::setFormatStr(const String& formatStrUtf8)
 {
     /* Avoid update if not necessary. */
-    if (((m_formatStr != formatStr) && (false == m_prepareNewText)) ||
-        ((m_formatStrNew != formatStr) && (true == m_prepareNewText)))
+    if (((m_formatStrUtf8 != formatStrUtf8) && (false == m_prepareNewText)) ||
+        ((m_formatStrNewUtf8 != formatStrUtf8) && (true == m_prepareNewText)))
     {
         TWTokenizer             tokenizer;
         TWAbstractSyntaxTree    ast;
+        String                  formatStrIntern; /* Internal character encoding. */
 
-        if (false == tokenizer.parse(ast, formatStr))
+        Utf8::toIntern(formatStrUtf8, formatStrIntern);
+
+        if (false == tokenizer.parse(ast, formatStrIntern))
         {
             LOG_WARNING("Text format is invalid at pos %u", tokenizer.getErrorIndex());
         }
         else
         {
-            m_formatStrNew      = formatStr;
+            m_formatStrNewUtf8  = formatStrUtf8;
             m_prepareNewText    = true;
             m_astNew            = std::move(ast);
 
@@ -239,10 +246,10 @@ void TextWidget::setFormatStr(const String& formatStr)
 
 void TextWidget::clear()
 {
-    m_formatStr.clear();
+    m_formatStrUtf8.clear();
     m_scrollInfo.clear();
 
-    m_formatStrNew.clear();
+    m_formatStrNewUtf8.clear();
     m_scrollInfoNew.clear();
 
     m_prepareNewText = false;
@@ -447,7 +454,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         else if (FADE_STATE_IDLE == m_fadeState)
         {
             /* If no text is shown, fade in immediately. */
-            if (true == m_formatStr.isEmpty())
+            if (true == m_formatStrUtf8.isEmpty())
             {
                 m_fadeState         = FADE_STATE_IN;
                 m_fadeBrightness    = FADING_BRIGHTNESS_LOW;
@@ -644,7 +651,7 @@ void TextWidget::paint(YAGfx& gfx)
     if (true == m_updateText)
     {
         m_updateText    = false;
-        m_formatStr     = m_formatStrNew;
+        m_formatStrUtf8 = m_formatStrNewUtf8;
         m_scrollInfo    = m_scrollInfoNew;
         m_ast           = std::move(m_astNew);
 

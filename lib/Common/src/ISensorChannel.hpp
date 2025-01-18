@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Abstract sensor data channel interface
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */
@@ -173,8 +173,7 @@ public:
             break;
 
         case ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS:
-            unit  = "\x8E";
-            unit += "C";
+            unit  = "°C";
             break;
 
         case ISensorChannel::TYPE_HUMIDITY_PERCENT:

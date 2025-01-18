@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,13 +60,13 @@
  * Public Methods
  *****************************************************************************/
 
-bool PlayerView32x16::loadIcon(const String& path)
+bool PlayerView32x16::loadIcon(const String& filename)
 {
     bool isSuccessful = false;
 
-    if (false == m_bitmapWidget.load(FILESYSTEM, path))
+    if (false == m_bitmapWidget.load(FILESYSTEM, filename))
     {
-        LOG_WARNING("Failed to load icon %s.", path.c_str());
+        LOG_WARNING("Failed to load icon %s.", filename.c_str());
     }
     else
     {

@@ -229,10 +229,10 @@ pixelix.rest.Client.prototype.setSetting = function(key, value) {
     return promise;
 };
 
-pixelix.rest.Client.prototype.reset = function() {
+pixelix.rest.Client.prototype.restart = function() {
     return utils.makeRequest({
-        method: "GET",
-        url: "/rest/api/v1/reset",
+        method: "POST",
+        url: "/rest/api/v1/restart",
         isJsonResponse: true
     });
 };
@@ -252,6 +252,33 @@ pixelix.rest.Client.prototype.fileMgrRemoveFile = function(fileId) {
             }
         });
     }
+
+    return promise;
+};
+
+pixelix.rest.Client.prototype.getDisplayState = function() {
+    return utils.makeRequest({
+        method: "GET",
+        url: "/rest/api/v1/display/power",
+        isJsonResponse: true
+    });
+};
+
+pixelix.rest.Client.prototype.setDisplayState = function(state) {
+    var promise = null;
+
+    if ("string" !== typeof state) {
+        promise = Promise.reject();
+    } else {
+        promise = utils.makeRequest({
+            method: "POST",
+            url: "/rest/api/v1/display/power",
+            isJsonResponse: true,
+            parameter: {
+                state: state
+            }
+        });
+    };
 
     return promise;
 };

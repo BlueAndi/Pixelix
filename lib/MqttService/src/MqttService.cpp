@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -99,6 +99,7 @@ bool MqttService::start()
                 this->rxCallback(topic, payload, length);
             });
             (void)m_mqttClient.setBufferSize(MAX_BUFFER_SIZE);
+            (void)m_mqttClient.setSocketTimeout(MQTT_SOCK_TIMEOUT);
 
             m_state = STATE_DISCONNECTED;
         }
@@ -122,7 +123,11 @@ bool MqttService::start()
 
 void MqttService::stop()
 {
-    SettingsService& settings = SettingsService::getInstance();
+    SettingsService& settings  = SettingsService::getInstance();
+    String           willTopic = m_hostname + "/status";
+
+    /* Provide offline status */
+    (void)m_mqttClient.publish(willTopic.c_str(), "offline", true);
 
     settings.unregisterSetting(&m_mqttBrokerUrlSetting);
     m_mqttClient.disconnect();
@@ -158,14 +163,14 @@ MqttService::State MqttService::getState() const
     return m_state;
 }
 
-bool MqttService::publish(const String& topic, const String& msg)
+bool MqttService::publish(const String& topic, const String& msg, bool retained)
 {
-    return publish(topic.c_str(), msg.c_str());
+    return publish(topic.c_str(), msg.c_str(), retained);
 }
 
-bool MqttService::publish(const char* topic, const char* msg)
+bool MqttService::publish(const char* topic, const char* msg, bool retained)
 {
-    return m_mqttClient.publish(topic, msg);
+    return m_mqttClient.publish(topic, msg, retained);
 }
 
 bool MqttService::subscribe(const String& topic, TopicCallback callback)
@@ -439,7 +444,7 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
     }
 
     /* Port */
-    idx = m_url.indexOf(":");
+    idx    = m_url.indexOf(":");
 
     m_port = MQTT_PORT;
 

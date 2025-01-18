@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,11 +33,14 @@
  * Includes
  *****************************************************************************/
 #include "HomeAssistantMqtt.h"
+#include "Version.h"
 
 #include <SettingsService.h>
 #include <Logging.h>
 #include <MqttService.h>
 #include <WiFi.h>
+#include <JsonFile.h>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -46,12 +49,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Stringizing the value. */
-#define Q(x) #x
-
-/** Quote the given value to get a string literal. */
-#define QUOTE(x) Q(x)
 
 /******************************************************************************
  * Types and classes
@@ -64,6 +61,9 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/* Initialize Home Assistant extra info key. */
+const char* HomeAssistantMqtt::KEY_EXTRA_INFO_HA           = "ha";
 
 /* Initialize Home Assistant discovery prefix key. */
 const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_PREFIX     = "ha_dp";
@@ -118,8 +118,6 @@ void HomeAssistantMqtt::stop()
 
     settings.unregisterSetting(&m_haDiscoveryPrefixSetting);
     settings.unregisterSetting(&m_haDiscoveryEnabledSetting);
-
-    clearMqttDiscoveryInfoList();
 }
 
 void HomeAssistantMqtt::process(bool isConnected)
@@ -129,22 +127,12 @@ void HomeAssistantMqtt::process(bool isConnected)
     {
         if (true == isConnected)
         {
-            /* Connection to broker re-estiablished?
-             * All automatic discovery info's need to be published again.
-             */
-            if (false == m_isConnected)
-            {
-                requestToPublishAllAutoDiscoveryInfos();
-            }
-
             publishAutoDiscoveryInfosOnDemand();
         }
     }
-
-    m_isConnected = isConnected;
 }
 
-void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const String& entityId, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra)
+void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const String& entityId, const String& topic, const String& mqttStateTopic, const String& mqttCmdTopic, const String& mqttAvailabilityTopic, JsonObjectConst& jsonExtra)
 {
     /* The Home Assistant discovery must be enabled and the prefix must be available, otherwise this
      * feature is disabled.
@@ -152,56 +140,48 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const Stri
     if ((true == m_haDiscoveryEnabled) &&
         (false == m_haDiscoveryPrefix.isEmpty()))
     {
-        JsonVariantConst jsonHomeAssistant = extra["ha"];
+        JsonVariantConst jsonHomeAssistant = jsonExtra[KEY_EXTRA_INFO_HA];
 
-        /* Configuration available? */
-        if (true == jsonHomeAssistant.is<JsonObjectConst>())
+        /* Is the extra info not relevant? */
+        if (true == jsonHomeAssistant.isNull())
         {
-            JsonVariantConst jsonComponent = jsonHomeAssistant["component"];
-            JsonVariantConst jsonDiscovery = jsonHomeAssistant["discovery"];
+            /* Skip it, because it seems to be not Home Assistant relevant. */
+            ;
+        }
+        /* Filename for the HA discovery info available? */
+        else if (true == jsonHomeAssistant.is<String>())
+        {
+            String discoveryInfoFileName = jsonHomeAssistant.as<String>();
 
-            if ((false == jsonComponent.is<String>()) ||
-                (false == jsonDiscovery.is<JsonObjectConst>()))
-            {
-                LOG_WARNING("Invalid Home Assistant MQTT discovery configuration.");
-            }
-            else
+            if (false == discoveryInfoFileName.isEmpty())
             {
                 MqttDiscoveryInfo* mqttDiscoveryInfo = new (std::nothrow) MqttDiscoveryInfo();
 
                 if (nullptr != mqttDiscoveryInfo)
                 {
-                    mqttDiscoveryInfo->component        = jsonComponent.as<String>();
-                    mqttDiscoveryInfo->nodeId           = deviceId;
-                    mqttDiscoveryInfo->objectId         = getObjectId(entityId);
-                    mqttDiscoveryInfo->discoveryDetails.set(jsonDiscovery); /* Deep copy, because discovery details are handled in different context. */
-
-                    /* Readable topic? */
-                    if (false == stateTopic.isEmpty())
-                    {
-                        mqttDiscoveryInfo->discoveryDetails["stat_t"] = stateTopic;
-                    }
-
-                    /* Writeable topic? */
-                    if (false == cmdTopic.isEmpty())
-                    {
-                        mqttDiscoveryInfo->discoveryDetails["cmd_t"] = cmdTopic;
-                    }
-
-                    /* Availability? */
-                    if (false == availabilityTopic.isEmpty())
-                    {
-                        mqttDiscoveryInfo->discoveryDetails["avty_t"] = availabilityTopic;
-                    }
+                    mqttDiscoveryInfo->deviceId              = deviceId;              /* Required for Home Assistant node-id generation. */
+                    mqttDiscoveryInfo->entityId              = entityId;              /* Required for Home Assistant object-id generation. */
+                    mqttDiscoveryInfo->topic                 = topic;                 /* Required for Home Assistant object-id generation. */
+                    mqttDiscoveryInfo->mqttStateTopic        = mqttStateTopic;        /* Required for the Home Assistant MQTT discovery configuration. */
+                    mqttDiscoveryInfo->mqttCmdTopic          = mqttCmdTopic;          /* Required for the Home Assistant MQTT discovery configuration. */
+                    mqttDiscoveryInfo->mqttAvailabilityTopic = mqttAvailabilityTopic; /* Required for the Home Assistant MQTT discovery configuration. */
+                    mqttDiscoveryInfo->discoveryInfoFileName = discoveryInfoFileName; /* Required for the Home Assistant MQTT discovery configuration. */
+                    mqttDiscoveryInfo->isReqToPublish        = true;                  /* Publish in next process cycle. */
 
                     m_mqttDiscoveryInfoList.push_back(mqttDiscoveryInfo);
                 }
             }
         }
+        /* Invalid discovery info. */
+        else
+        {
+            /* Skip. */
+            LOG_ERROR("HA extra info invalid.");
+        }
     }
 }
 
-void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const String& entityId, const String& stateTopic, const String& cmdTopic)
+void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const String& entityId, const String& topic)
 {
     /* The Home Assistant discovery must be enabled and the prefix must be available, otherwise this
      * feature is disabled.
@@ -209,80 +189,54 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
     if ((true == m_haDiscoveryEnabled) &&
         (false == m_haDiscoveryPrefix.isEmpty()))
     {
+        MqttService&                      mqttService               = MqttService::getInstance();
         ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
-        String                            objectId                  = getObjectId(entityId);
 
         while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
         {
             MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
-            bool               found             = false;
 
+            /* Registration found? */
             if ((nullptr != mqttDiscoveryInfo) &&
-                (deviceId == mqttDiscoveryInfo->nodeId) &&
-                (objectId == mqttDiscoveryInfo->objectId))
+                (deviceId == mqttDiscoveryInfo->deviceId) &&
+                (entityId == mqttDiscoveryInfo->entityId) &&
+                (topic == mqttDiscoveryInfo->topic))
             {
-                JsonVariantConst jsonStateTopic = mqttDiscoveryInfo->discoveryDetails["stat_t"];
-                JsonVariantConst jsonCmdTopic   = mqttDiscoveryInfo->discoveryDetails["cmd_t"];
+                uint8_t componentCount = getComponentCount(mqttDiscoveryInfo->components);
+                uint8_t idx            = 0U;
 
-                /* Topic only readable? */
-                if ((false == jsonStateTopic.isNull()) &&
-                    (true == jsonCmdTopic.isNull()))
+                for (idx = 0U; idx < componentCount; ++idx)
                 {
-                    if (stateTopic == jsonStateTopic.as<String>())
+                    int8_t discoveryEntityIndex = (1U == componentCount) ? -1 : idx;
+                    String objectId             = getObjectId(entityId, topic, discoveryEntityIndex);
+                    String component;
+                    String mqttDiscoveryInfoTopic;
+
+                    getComponentByIndex(component, mqttDiscoveryInfo->components, idx);
+                    getConfigTopic(mqttDiscoveryInfoTopic, component, mqttDiscoveryInfo->deviceId, mqttDiscoveryInfo->entityId, mqttDiscoveryInfo->topic, discoveryEntityIndex);
+
+                    LOG_DEBUG("Component: %s", component.c_str());
+
+                    /* Purge retained discovery info. */
+                    if (false == mqttService.publish(mqttDiscoveryInfoTopic, "", true))
                     {
-                        found = true;
+                        LOG_WARNING("Failed to purge HA discovery of %s.", objectId.c_str());
                     }
-                }
-                /* Topic only writeable? */
-                else if ((true == jsonStateTopic.isNull()) &&
-                         (false == jsonCmdTopic.isNull()))
-                {
-                    if (cmdTopic == jsonCmdTopic.as<String>())
+                    /* Successful purged. */
+                    else
                     {
-                        found = true;
+                        LOG_INFO("Purged HA discovery of %s.", objectId.c_str());
                     }
-                }
-                /* Topic is read- and writeable? */
-                else if ((false == jsonStateTopic.isNull()) &&
-                         (false == jsonCmdTopic.isNull()))
-                {
-                    if ((stateTopic == jsonStateTopic.as<String>()) &&
-                        (cmdTopic == jsonCmdTopic.as<String>()))
-                    {
-                        found = true;
-                    }
-                }
-                else
-                {
-                    ;
-                }
-            }
-
-            if (false == found)
-            {
-                ++listOfMqttDiscoveryInfoIt;
-            }
-            else
-            {
-                MqttService& mqttService = MqttService::getInstance();
-                String       mqttTopic;
-
-                getConfigTopic(mqttTopic, mqttDiscoveryInfo->component, mqttDiscoveryInfo->nodeId, mqttDiscoveryInfo->objectId);
-
-                /* Purge discovery info. */
-                if (false == mqttService.publish(mqttTopic, ""))
-                {
-                    LOG_WARNING("Failed to purge HA discovery info of %s.", mqttDiscoveryInfo->objectId.c_str());
-                }
-                else
-                {
-                    LOG_INFO("HA discovery info of %s purged.", mqttDiscoveryInfo->objectId.c_str());
                 }
 
                 listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.erase(listOfMqttDiscoveryInfoIt);
 
                 delete mqttDiscoveryInfo;
                 mqttDiscoveryInfo = nullptr;
+            }
+            else
+            {
+                ++listOfMqttDiscoveryInfoIt;
             }
         }
     }
@@ -296,15 +250,50 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
  * Private Methods
  *****************************************************************************/
 
-String HomeAssistantMqtt::getObjectId(const String& entityId)
+String HomeAssistantMqtt::getNodeId(const String& deviceId)
 {
-    String objectId = entityId;
+    String nodeId = deviceId;
 
-    /* Home Assistant MQTT discovery doesn't allow '/' and '.' in the object id. */
+    /* Home Assistant MQTT discovery doesn't allow '/' and '.' in the node id.
+     * See https://www.home-assistant.io/integrations/mqtt#discovery-messages
+     */
+    nodeId.replace('/', '_');
+    nodeId.replace('.', '_');
+
+    return nodeId;
+}
+
+String HomeAssistantMqtt::getObjectId(const String& entityId, const String& topic, int8_t discoveryEntityIndex)
+{
+    String objectId;
+
+    if (false == entityId.isEmpty())
+    {
+        objectId = entityId + "/" + topic;
+    }
+    else
+    {
+        objectId = topic;
+    }
+
+    if (0 <= discoveryEntityIndex)
+    {
+        objectId += "/";
+        objectId += discoveryEntityIndex;
+    }
+
+    /* Home Assistant MQTT discovery doesn't allow '/' and '.' in the object id.
+     * See https://www.home-assistant.io/integrations/mqtt#discovery-messages
+     */
     objectId.replace('/', '_');
     objectId.replace('.', '_');
 
     return objectId;
+}
+
+String HomeAssistantMqtt::getUniqueId(const String& nodeId, const String& objectId)
+{
+    return nodeId + "/" + objectId;
 }
 
 void HomeAssistantMqtt::clearMqttDiscoveryInfoList()
@@ -325,81 +314,208 @@ void HomeAssistantMqtt::clearMqttDiscoveryInfoList()
     }
 }
 
-void HomeAssistantMqtt::getConfigTopic(String& haConfigTopic, const String& component, const String& nodeId, const String& objectId)
+void HomeAssistantMqtt::getConfigTopic(String& haConfigTopic, const String& component, const String& deviceId, const String& entityId, const String& topic, int8_t discoveryEntityIndex)
 {
-    haConfigTopic  = m_haDiscoveryPrefix;
-    haConfigTopic += "/";
-    haConfigTopic += component;
-    haConfigTopic += "/";
-    haConfigTopic += nodeId;
-    haConfigTopic += "/";
-    haConfigTopic += objectId;
-    haConfigTopic += "/config";
+    String nodeId    = getNodeId(deviceId);
+    String objectId  = getObjectId(entityId, topic, discoveryEntityIndex);
+
+    haConfigTopic    = m_haDiscoveryPrefix;
+    haConfigTopic   += "/";
+    haConfigTopic   += component;
+    haConfigTopic   += "/";
+    haConfigTopic   += nodeId;
+    haConfigTopic   += "/";
+    haConfigTopic   += objectId;
+    haConfigTopic   += "/config";
+}
+
+void HomeAssistantMqtt::addDeviceInfo(JsonDocument& jsonDoc, MqttDiscoveryInfo& mqttDiscoveryInfo)
+{
+    String nodeId          = getNodeId(mqttDiscoveryInfo.deviceId);
+
+    /* Device identifier */
+    jsonDoc["dev"]["ids"]  = WiFi.macAddress();
+    /* URL to configuration of the device (configuration_url). */
+    jsonDoc["dev"]["cu"]   = String("http://") + WiFi.localIP().toString();
+    /* Name of the device. */
+    jsonDoc["dev"]["name"] = nodeId;
+    /* Device model name (model) */
+    jsonDoc["dev"]["mdl"]  = "Pixelix";
+    /* Manufacturer (manufacturer) */
+    jsonDoc["dev"]["mf"]   = "BlueAndi & Friends";
+    /* SW version of the device (sw_version) */
+    jsonDoc["dev"]["sw"]   = Version::getSoftwareVersion();
+    /* HW version is used for the target name (hw_version). */
+    jsonDoc["dev"]["hw"]   = Version::getTargetName();
+}
+
+void HomeAssistantMqtt::addOriginInfo(JsonDocument& jsonDoc)
+{
+    /* Origin name */
+    jsonDoc["o"]["name"] = "Pixelix";
+    /* Origin URL */
+    jsonDoc["o"]["url"]  = "https://github.com/BlueAndi/Pixelix";
+}
+
+bool HomeAssistantMqtt::loadDiscoveryInfo(JsonDocument& jsonDoc, const String& fileName)
+{
+    JsonFile jsonFile(FILESYSTEM);
+    bool     isSuccessful = false;
+
+    /* Read the discovery info from file. */
+    if (false == jsonFile.load(fileName, jsonDoc))
+    {
+        LOG_ERROR("Failed to load discovery info from file: %s", fileName.c_str());
+    }
+    else if (false == jsonDoc.is<JsonArrayConst>())
+    {
+        LOG_ERROR("Discovery info shall be an array.");
+    }
+    else
+    {
+        JsonArrayConst discoveryInfoArray      = jsonDoc.as<JsonArrayConst>();
+        size_t         discoveryInfoArrayCount = discoveryInfoArray.size();
+        size_t         idx                     = 0U;
+
+        isSuccessful                           = true;
+
+        while ((idx < discoveryInfoArrayCount) && (true == isSuccessful))
+        {
+            JsonVariantConst discoveryInfoVar = discoveryInfoArray[idx];
+
+            if (false == discoveryInfoVar.is<JsonObjectConst>())
+            {
+                isSuccessful = false;
+            }
+            else
+            {
+                JsonObjectConst  discoveryInfo = discoveryInfoVar.as<JsonObjectConst>();
+                JsonVariantConst jsonComponent = discoveryInfo["component"];
+                JsonVariantConst jsonDiscovery = discoveryInfo["discovery"];
+
+                if ((false == jsonComponent.is<String>()) ||
+                    (false == jsonDiscovery.is<JsonObjectConst>()))
+                {
+                    isSuccessful = false;
+                }
+                else
+                {
+                    String component = jsonComponent.as<String>();
+
+                    /* Component shall not be empty and
+                     * shall not contain a comma, because it is used as delimiter.
+                     */
+                    if ((true == component.isEmpty()) ||
+                        (0 <= component.indexOf(',')))
+                    {
+                        isSuccessful = false;
+                    }
+                }
+            }
+
+            if (false == isSuccessful)
+            {
+                LOG_ERROR("Discovery info element %u invalid.", idx);
+            }
+            else
+            {
+                ++idx;
+            }
+        }
+    }
+
+    return isSuccessful;
 }
 
 void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscoveryInfo)
 {
-    const size_t            JSON_DOC_SIZE = 1024U;
-    DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-    MqttService&            mqttService = MqttService::getInstance();
-    String                  mqttTopic;
-    String                  discoveryInfo;
-    JsonObjectConstIterator discoveryDetailsIt = mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().begin();
+    const size_t        JSON_DISCOVERY_INFO_DOC_SIZE = 1024U;
+    DynamicJsonDocument jsonDiscoveryInfoDoc(JSON_DISCOVERY_INFO_DOC_SIZE);
 
-    getConfigTopic(mqttTopic, mqttDiscoveryInfo.component, mqttDiscoveryInfo.nodeId, mqttDiscoveryInfo.objectId);
-
-    /* The object id (object_id) is used to generate the entity id. */
-    jsonDoc["obj_id"]             = mqttDiscoveryInfo.objectId;
-    /* The unique id (unique_id) identifies the device and its entity. */
-    jsonDoc["uniq_id"]            = mqttDiscoveryInfo.nodeId + "/" + mqttDiscoveryInfo.objectId;
-    /* Device identifier */
-    jsonDoc["dev"]["identifiers"] = WiFi.macAddress();
-    /* URL to configuration of the device (configuration_url). */
-    jsonDoc["dev"]["cu"]          = String("http://") + WiFi.localIP().toString();
-    /* Name of the device. */
-    jsonDoc["dev"]["name"]        = mqttDiscoveryInfo.nodeId;
-    /* Device model name (model) */
-    jsonDoc["dev"]["mdl"]         = "Pixelix";
-    /* Manufacturer (manufacturer) */
-    jsonDoc["dev"]["mf"]          = "BlueAndi & Friends";
-    /* SW version of the device (sw_version) */
-    jsonDoc["dev"]["sw"]          = QUOTE(SW_VERSION);
-
-    while (discoveryDetailsIt != mqttDiscoveryInfo.discoveryDetails.as<JsonObjectConst>().end())
+    /* Read the discovery info from file. */
+    if (false == loadDiscoveryInfo(jsonDiscoveryInfoDoc, mqttDiscoveryInfo.discoveryInfoFileName))
     {
-        jsonDoc[discoveryDetailsIt->key()] = discoveryDetailsIt->value();
-
-        ++discoveryDetailsIt;
+        /* Skip it. */
+        ;
     }
-
-    /* Send the JSON as string. */
-    if (0U < serializeJson(jsonDoc, discoveryInfo))
+    else
     {
-        if (false == mqttService.publish(mqttTopic, discoveryInfo))
-        {
-            LOG_WARNING("Failed to provide HA discovery info of %s.", mqttDiscoveryInfo.objectId.c_str());
-        }
-        else
-        {
-            LOG_INFO("HA discovery info of %s published.", mqttDiscoveryInfo.objectId.c_str());
-        }
-    }
-}
+        MqttService&        mqttService   = MqttService::getInstance();
+        const size_t        JSON_DOC_SIZE = 2048U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonArrayConst      jsonDiscoveryInfoArray  = jsonDiscoveryInfoDoc.as<JsonArrayConst>();
+        size_t              discoveryInfoArrayCount = jsonDiscoveryInfoArray.size();
+        String              nodeId                  = getNodeId(mqttDiscoveryInfo.deviceId);
+        size_t              idx;
 
-void HomeAssistantMqtt::requestToPublishAllAutoDiscoveryInfos()
-{
-    ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
+        addDeviceInfo(jsonDoc, mqttDiscoveryInfo);
+        addOriginInfo(jsonDoc);
 
-    while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
-    {
-        MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
-
-        if (nullptr != mqttDiscoveryInfo)
+        /* Readable topic? */
+        if (false == mqttDiscoveryInfo.mqttStateTopic.isEmpty())
         {
-            mqttDiscoveryInfo->isReqToPublish = true;
+            jsonDoc["stat_t"] = mqttDiscoveryInfo.mqttStateTopic;
         }
 
-        ++listOfMqttDiscoveryInfoIt;
+        /* Writeable topic? */
+        if (false == mqttDiscoveryInfo.mqttCmdTopic.isEmpty())
+        {
+            jsonDoc["cmd_t"] = mqttDiscoveryInfo.mqttCmdTopic;
+        }
+
+        /* Availability? */
+        if (false == mqttDiscoveryInfo.mqttAvailabilityTopic.isEmpty())
+        {
+            jsonDoc["avty_t"] = mqttDiscoveryInfo.mqttAvailabilityTopic;
+        }
+
+        for (idx = 0U; idx < discoveryInfoArrayCount; ++idx)
+        {
+            JsonObjectConst discoveryInfo        = jsonDiscoveryInfoArray[idx];
+            String          component            = discoveryInfo["component"].as<String>();
+            JsonObjectConst jsonDiscovery        = discoveryInfo["discovery"];
+            int8_t          discoveryEntityIndex = (1U == discoveryInfoArrayCount) ? -1 : idx;
+            String          objectId             = getObjectId(mqttDiscoveryInfo.entityId, mqttDiscoveryInfo.topic, discoveryEntityIndex);
+            String          uniqueId             = getUniqueId(nodeId, objectId);
+            String          mqttDiscoveryTopic;
+            String          mqttDiscoveryContent;
+
+            getConfigTopic(mqttDiscoveryTopic, component, mqttDiscoveryInfo.deviceId, mqttDiscoveryInfo.entityId, mqttDiscoveryInfo.topic, discoveryEntityIndex);
+
+            /* The Home Assistant object id (object_id) is used to generate the Home Assistant entity id. */
+            jsonDoc["obj_id"]  = objectId;
+            /* The Home Assistant unique id (unique_id) identifies the device and its Home Assistant entity.
+             * It shall be unique in the Home Assistant entity domain.
+             */
+            jsonDoc["uniq_id"] = uniqueId;
+
+            /* Copy all discovery details. */
+            for (JsonObjectConst::iterator discoveryDetailsIt = jsonDiscovery.begin(); discoveryDetailsIt != jsonDiscovery.end(); ++discoveryDetailsIt)
+            {
+                jsonDoc[discoveryDetailsIt->key()] = discoveryDetailsIt->value();
+            }
+
+            /* Send the JSON as string. */
+            if (0U < serializeJson(jsonDoc, mqttDiscoveryContent))
+            {
+                /* Publish retained to ensure that HomeAssistant will recognize the device entity. */
+                if (false == mqttService.publish(mqttDiscoveryTopic, mqttDiscoveryContent.c_str(), true))
+                {
+                    LOG_WARNING("Failed to provide HA discovery info of %s.", objectId.c_str());
+                }
+                else
+                {
+                    LOG_INFO("HA discovery info of %s published.", objectId.c_str());
+                }
+            }
+
+            /* Remember the component for unregistration later. */
+            if (0U < idx)
+            {
+                mqttDiscoveryInfo.components += ",";
+            }
+            mqttDiscoveryInfo.components += component;
+        }
     }
 }
 
@@ -425,6 +541,50 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfosOnDemand()
         }
 
         ++listOfMqttDiscoveryInfoIt;
+    }
+}
+
+uint8_t HomeAssistantMqtt::getComponentCount(const String& components)
+{
+    uint8_t  count  = 1U;
+    uint32_t length = components.length();
+
+    for (size_t idx = 0U; idx < length; ++idx)
+    {
+        if (',' == components[idx])
+        {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
+void HomeAssistantMqtt::getComponentByIndex(String& component, const String& components, uint8_t idx)
+{
+    int32_t startIdx = 0;
+    int32_t endIdx   = components.indexOf(',');
+    uint8_t count    = 1U;
+
+    while ((count <= idx) && (0 <= endIdx))
+    {
+        startIdx = endIdx + 1;
+        endIdx   = components.indexOf(',', startIdx);
+
+        ++count;
+    }
+
+    if (count < idx)
+    {
+        component.clear();
+    }
+    else if (0 > endIdx)
+    {
+        component = components.substring(startIdx);
+    }
+    else
+    {
+        component = components.substring(startIdx, endIdx);
     }
 }
 

@@ -1,0 +1,12 @@
+[
+    {
+        "component": "sensor",
+        "discovery": {
+            "name": "Illuminance",
+            "unit_of_meas": "lx",
+            "ic": "mdi:sun-wireless",
+            "dev_cla": "illuminance",
+            "val_tpl": "{{ value_json.value }}"
+        }
+    }
+]

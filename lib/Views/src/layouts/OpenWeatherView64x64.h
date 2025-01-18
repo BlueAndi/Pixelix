@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  OpenWeather view with icon and text for 64x64 LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -78,6 +78,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     void init(uint16_t width, uint16_t height) override
     {
@@ -275,6 +278,7 @@ protected:
     bool                m_isWeatherInfoForecastUpdated;                 /**< Is forecast weather info updated? */
     bool                m_isWeatherIconForecastUpdated[FORECAST_DAYS];  /**< Is the forecast weather icon updated in the weather info? */
 
+private:
     OpenWeatherView64x64(const OpenWeatherView64x64& other);
     OpenWeatherView64x64& operator=(const OpenWeatherView64x64& other);
 

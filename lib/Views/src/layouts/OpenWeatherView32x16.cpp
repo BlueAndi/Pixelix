@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -437,19 +437,17 @@ void OpenWeatherView32x16::appendTemperature(String& dst, float temperature, boo
 
         if (false == noUnit)
         {
-            dst += "\x8E";
-
             if (m_units == "default")
             {
-                dst += "K";
+                dst += "°K";
             }
             else if (m_units == "metric")
             {
-                dst += "C";
+                dst += "°C";
             }
             else
             {
-                dst += "F";
+                dst += "°F";
             }
         }
     }

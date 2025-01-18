@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Key value pair with string type
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup settings
+ * @addtogroup SETTINGS
  *
  * @{
  */
@@ -84,6 +84,7 @@ public:
     /**
      * Constructs a key value pair.
      * 
+     * @param[in]   pref        Preferences storage.
      * @param[in]   key         The key of the key value pair.
      * @param[in]   name        The name of the key value pair.
      * @param[in]   defValue    The default value of the key value pair.
