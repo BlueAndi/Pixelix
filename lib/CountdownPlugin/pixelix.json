@@ -18,6 +18,11 @@
                     "./web/icon8x8/countdown.gif"
                 ]
             }, {
+                "name": "LAYOUT_32X16",
+                "files": [
+                    "./web/icon8x8/countdown.gif"
+                ]
+            }, {
                 "name": "LAYOUT_64X64",
                 "files": [
                     "./web/icon16x16/countdown.gif"

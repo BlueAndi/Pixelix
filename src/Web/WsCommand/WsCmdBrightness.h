@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Websocket command to get/set display brightness
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup web
+ * @addtogroup WEB
  *
  * @{
  */
@@ -56,7 +56,7 @@
 /**
  * Websocket command to get/set display brightness
  */
-class WsCmdBrightness: public WsCmd
+class WsCmdBrightness : public WsCmd
 {
 public:
 
@@ -68,7 +68,9 @@ public:
         m_isError(false),
         m_parCnt(0U),
         m_brightness(0U),
-        m_isEnabled(false)
+        m_minBrightness(0U),
+        m_maxBrightness(0U),
+        m_isAutomaticBrightnessCtrlEnabled(false)
     {
     }
 
@@ -96,10 +98,12 @@ public:
 
 private:
 
-    bool    m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t m_parCnt;       /**< Received number of parameters */
-    uint8_t m_brightness;   /**< Brightness in percent */
-    bool    m_isEnabled;    /**< Is automatic brightness adjustment enabled or not. */
+    bool    m_isError;                          /**< Any error happened during parameter reception? */
+    uint8_t m_parCnt;                           /**< Received number of parameters. */
+    uint8_t m_brightness;                       /**< Brightness in digits [0; 255]. */
+    uint8_t m_minBrightness;                    /**< Minimum brightness soft limit in digits [0; 255]. */
+    uint8_t m_maxBrightness;                    /**< Maximum brightness soft limit in digits [0; 255]. */
+    bool    m_isAutomaticBrightnessCtrlEnabled; /**< Is automatic brightness adjustment enabled or not. */
 
     WsCmdBrightness(const WsCmdBrightness& cmd);
     WsCmdBrightness& operator=(const WsCmdBrightness& cmd);
@@ -109,6 +113,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDBRIGHTNESS_H */
+#endif /* WSCMDBRIGHTNESS_H */
 
 /** @} */

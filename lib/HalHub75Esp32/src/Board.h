@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Board Abstraction
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup hal
+ * @addtogroup HAL
  *
  * @{
  */
@@ -76,6 +76,9 @@ namespace Pin
     /** Pin number of button "right" */
     constexpr uint8_t   buttonRightPinNo        = CONFIG_PIN_BUTTON_RIGHT;
 
+    /** Pin number of button "reset" */
+    constexpr uint8_t   buttonResetPinNo        = CONFIG_PIN_BUTTON_RESET;
+
     /** Pin number of dht sensor in */
     constexpr uint8_t   dhtInPinNo              = CONFIG_PIN_DHT_IN;
 
@@ -118,6 +121,9 @@ extern const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>     buttonLeftIn;
 
 /* Digital input pin: Button "right" (input with pull-up) */
 extern const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>    buttonRightIn;
+
+/* Digital input pin: Button "reset" (input with pull-up) */
+extern const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP>    buttonResetIn;
 
 /* Digital output pin: Test pin (only for debug purposes) */
 extern const DOutPin<Pin::testPinNo>                        testPinOut;

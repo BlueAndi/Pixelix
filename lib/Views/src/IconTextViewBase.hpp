@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  Base class for view with icon and text.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -45,6 +45,7 @@
 #include "Layouts.h"
 #include "./layouts/IconTextViewGeneric.h"
 #include "./layouts/IconTextView32x8.h"
+#include "./layouts/IconTextView32x16.h"
 #include "./layouts/IconTextView64x64.h"
 
 /******************************************************************************
@@ -75,6 +76,19 @@ public:
  */
 template<>
 class IconTextView<LAYOUT_32X8> : public IconTextView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~IconTextView() = default;
+};
+
+/**
+ * View for canvas and text for 32x16 display.
+ */
+template<>
+class IconTextView<LAYOUT_32X16> : public IconTextView32x16
 {
 public:
     /**

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Grab information via MQTT plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -155,11 +155,13 @@ public:
      * interfaces like REST, websocket, MQTT, etc.
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [
-     *         "/text"
+     *         "text"
      *     ]
      * }
+     * </code>
      * 
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
@@ -169,12 +171,38 @@ public:
      * - Readable and writeable: "rw"
      * 
      * Example:
+     * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "access": "r"
      *     }]
      * }
+     * </code>
+     * 
+     * Home Assistant MQTT discovery support can be added with the "ha" JSON object inside
+     * the "extra" JSON object. The Home Assistant extension supports only loading by file.
+     * <code>{.json}
+     * {
+     *     "topics": [{
+     *         "name": "text",
+     *         "extra": {
+     *             "ha": "myHomeAssistantConfig.json"
+     *         }
+     *     }]
+     * }
+     * </code>
+     * 
+     * Extra information can be loaded from a file too. This is useful for complex
+     * configurations and to keep program memory usage low.
+     * <code>{.json}
+     * {
+     *     "topics": [{
+     *         "name": "text",
+     *         "extra": "extra.json"
+     *    }]
+     * }
+     * </code>
      * 
      * @param[out] topics   Topis in JSON format
      */

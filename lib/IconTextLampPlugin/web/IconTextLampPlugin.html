@@ -66,9 +66,21 @@
                     <li>ICON-FILE-ID: ID of the icon file.</li>
                     <li>STORE-FLAG: Store persistent (true) or not (false).</li>
                 </ul>
+                <h2>Text tags</h2>
+                <p>The following tags are supported in the text:</p>
+                <ul>
+                    <li>{#RRGGBB} - Change text color (RRGGBB in hex)</li>
+                    <li>{hl} - Horizontal alignment left</li>
+                    <li>{hc} - Horizontal alignment right</li>
+                    <li>{hr} - Horizontal alignment center</li>
+                    <li>{vt} - Vertical alignment top</li>
+                    <li>{vc} - Vertical alignment center</li>
+                    <li>{vb} - Vertical alignment bottom</li>
+                    <li>{0xCC} - Special character code (CC in hex)</li>
+                </ul>
                 <h2>Configuration</h2>
                 <h3>Text</h3>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value, iconFileId.value, storeFlag.checked)">
                         <div class="form-group">
                             <label class="form-label" for="pluginUidText">Plugin UID:</label>
@@ -92,7 +104,7 @@
                     </form>
                 </div>
                 <h3>Lamp</h3>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
                         <div class="form-group">
                             <label class="form-label" for="pluginUidLamp">Plugin UID:</label>
@@ -125,7 +137,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -136,6 +148,7 @@
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <!-- Pixelix REST API -->
@@ -302,6 +315,7 @@
 
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
                 
                 utils.injectOrigin("injectOrigin", "{{ORIGIN}}");

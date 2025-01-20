@@ -178,7 +178,9 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this._pendingCmd.resolve(rsp);
             } else if ("BRIGHTNESS" === this._pendingCmd.name) {
                 rsp.brightness = parseInt(data[0]);
-                rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
+                rsp.minBrightness = parseInt(data[1]);
+                rsp.maxBrightness = parseInt(data[2]);
+                rsp.automaticBrightnessControl = (1 === parseInt(data[3])) ? true : false;
                 this._pendingCmd.resolve(rsp);
             } else if ("BUTTON" === this._pendingCmd.name) {
                 this._pendingCmd.resolve(rsp);
@@ -203,7 +205,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                     rsp.plugins.push(data[index].substring(1, data[index].length - 1));
                 }
                 this._pendingCmd.resolve(rsp);
-            } else if ("RESET" === this._pendingCmd.name) {
+            } else if ("RESTART" === this._pendingCmd.name) {
                 this._pendingCmd.resolve(rsp);
             } else if ("SLOT_DURATION" === this._pendingCmd.name) {
                 rsp.duration = parseInt(data[0]);
@@ -287,13 +289,13 @@ pixelix.ws.Client.prototype.getSlots = function() {
     }.bind(this));
 };
 
-pixelix.ws.Client.prototype.reset = function() {
+pixelix.ws.Client.prototype.restart = function() {
     return new Promise(function(resolve, reject) {
         if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
-                name: "RESET",
+                name: "RESTART",
                 par: null,
                 resolve: resolve,
                 reject: reject
@@ -325,14 +327,21 @@ pixelix.ws.Client.prototype.setBrightness = function(options) {
             reject();
         } else if ("number" !== typeof options.brightness) {
             reject();
+        } else if ("number" !== typeof options.minBrightness) {
+            reject();
+        } else if ("number" !== typeof options.maxBrightness) {
+            reject();
+        } else if ("boolean" !== typeof options.automaticBrightnessControl) {
+            reject();
         } else {
 
             par += options.brightness;
-
-            if ("boolean" === typeof options.automaticBrightnessControl) {
-                par += ";";
-                par += (false == options.automaticBrightnessControl) ? 0 : 1;
-            }
+            par += ";";
+            par += options.minBrightness;
+            par += ";";
+            par += options.maxBrightness;
+            par += ";";
+            par += (false == options.automaticBrightnessControl) ? 0 : 1;
 
             this._sendCmd({
                 name: "BRIGHTNESS",

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,6 +71,9 @@ const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
 /** Digital input pin: Button "right" (input with pull-up) */
 const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
 
+/** Digital input pin: Button "reset" (input with pull-up) */
+const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP>   Board::buttonResetIn;
+
 /** Analog input pin: LDR in */
 const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
 
@@ -97,6 +100,7 @@ static const IoPin* ioPinList[] =
     &buttonOkIn,
     &buttonLeftIn,
     &buttonRightIn,
+    &buttonResetIn,
     &ldrIn,
     &dhtIn,
     &batteryVoltageIn,

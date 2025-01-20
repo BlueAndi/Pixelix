@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,8 +65,8 @@
 const char* FileMgrService::WORKING_DIRECTORY   = "/configuration";
 const char* FileMgrService::CONFIG_FILE_NAME    = "fileMgr.json";
 const char* FileMgrService::ENTITY_ID           = "files";
-const char* FileMgrService::TOPIC_UPLOAD        = "/upload";
-const char* FileMgrService::TOPIC_REMOVE        = "/remove";
+const char* FileMgrService::TOPIC_UPLOAD        = "upload";
+const char* FileMgrService::TOPIC_REMOVE        = "remove";
 const char* FileMgrService::FILE_EXTENSIONS[]   =
 {
     ".bmp",

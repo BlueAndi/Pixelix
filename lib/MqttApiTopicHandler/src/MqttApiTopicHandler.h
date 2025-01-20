@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  MQTT API topic handler
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup TOPIC_HANDLER_SERVICE
  *
  * @{
  */
@@ -69,6 +69,7 @@ public:
      */
     MqttApiTopicHandler() :
         ITopicHandler(),
+        m_isStarted(false),
         m_listOfTopicStates(),
         m_isMqttConnected(false),
         m_haExtension()
@@ -90,6 +91,7 @@ public:
 
     /**
      * Stop the topic handler.
+     * Topics are NOT unregistered. If necessary, this must be done before.
      */
     void stop() final;
 
@@ -112,8 +114,9 @@ public:
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
+     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic) final;
+    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge = false) final;
 
     /**
      * Process the topic handler.
@@ -169,12 +172,28 @@ private:
     /** MQTT path endpoint for write access. */
     static const char*  MQTT_ENDPOINT_WRITE_ACCESS;
 
+    bool                m_isStarted;            /**< Is the topic handler started? */
     ListOfTopicStates   m_listOfTopicStates;    /**< List of registered topic states. */
     bool                m_isMqttConnected;      /**< Is the MQTT connection to the broker established? */
     HomeAssistantMqtt   m_haExtension;          /**< Home Assistant extension */
 
     MqttApiTopicHandler(const MqttApiTopicHandler& adapter);
     MqttApiTopicHandler& operator=(const MqttApiTopicHandler& adapter);
+
+    /**
+     * Get MQTT base topic.
+     * 
+     * Generates the base topic for the MQTT API according to following pattern:
+     * - writeable: DEVICE-ID/[ENTITY-ID/]TOPIC/set
+     * - readable:  DEVICE-ID/[ENTITY-ID/]TOPIC/state
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of a plugin. May be empty.
+     * @param[in] topic     The topic.
+     *
+     * @return REST API base URL
+     */
+    String getMqttBaseTopic(const String& deviceId, const String& entityId, const String& topic) const;
 
     /**
      * Request to publish all topic states.

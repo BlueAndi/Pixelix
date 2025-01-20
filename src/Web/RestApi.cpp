@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,6 @@
 #include "RestUtil.h"
 #include "SlotList.h"
 #include "ButtonActions.h"
-#include "UpdateMgr.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -68,8 +67,8 @@
 /** Content type element */
 typedef struct
 {
-    const char* fileExtension;  /**< File extension used to determine content type */
-    const char* contentType;    /**< Content type */
+    const char* fileExtension; /**< File extension used to determine content type */
+    const char* contentType;   /**< Content type */
 
 } ContentTypeElem;
 
@@ -97,7 +96,7 @@ public:
 
     /**
      * Execute action by button action id.
-     * 
+     *
      * @param[in] id    Button action id
      */
     void executeAction(ButtonActionId id)
@@ -106,52 +105,50 @@ public:
     }
 
 private:
-
 };
 
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
-static void handleButton(AsyncWebServerRequest* request);
-static void handleFadeEffect(AsyncWebServerRequest* request);
-static void getSlotInfo(JsonObject& slot, uint16_t slotId);
-static void handleSlots(AsyncWebServerRequest* request);
-static void handleSlot(AsyncWebServerRequest* request);
-static void handlePluginInstall(AsyncWebServerRequest* request);
-static void handlePluginUninstall(AsyncWebServerRequest* request);
-static void handlePlugins(AsyncWebServerRequest* request);
-static void handleReset(AsyncWebServerRequest* request);
-static void handleSensors(AsyncWebServerRequest* request);
-static void handleSettings(AsyncWebServerRequest* request);
-static void handleSetting(AsyncWebServerRequest* request);
-static bool storeSetting(KeyValue* parameter, const String& value, String& error);
-static void handleStatus(AsyncWebServerRequest* request);
-static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
-static void handleFilesystem(AsyncWebServerRequest* request);
-static void handleFileGet(AsyncWebServerRequest* request);
+static void        handleButton(AsyncWebServerRequest* request);
+static void        handleFadeEffect(AsyncWebServerRequest* request);
+static void        getSlotInfo(JsonObject& slot, uint16_t slotId);
+static void        handleSlots(AsyncWebServerRequest* request);
+static void        handleSlot(AsyncWebServerRequest* request);
+static void        handlePluginInstall(AsyncWebServerRequest* request);
+static void        handlePluginUninstall(AsyncWebServerRequest* request);
+static void        handlePlugins(AsyncWebServerRequest* request);
+static void        handleSensors(AsyncWebServerRequest* request);
+static void        handleSettings(AsyncWebServerRequest* request);
+static void        handleSetting(AsyncWebServerRequest* request);
+static bool        storeSetting(KeyValue* parameter, const String& value, String& error);
+static void        handleStatus(AsyncWebServerRequest* request);
+static void        getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
+static void        handleFilesystem(AsyncWebServerRequest* request);
+static void        handleFileGet(AsyncWebServerRequest* request);
 static const char* getContentType(const String& filename);
-static void handleFilePost(AsyncWebServerRequest* request);
-static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
-static void handleFileDelete(AsyncWebServerRequest* request);
-static bool isValidHostname(const String& hostname);
+static void        handleFilePost(AsyncWebServerRequest* request);
+static bool        createDirectories(const String& path);
+static void        uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final);
+static void        handleFileDelete(AsyncWebServerRequest* request);
+static bool        isValidHostname(const String& hostname);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
 
 /** Table of content types and the file extensions they will be derived from. */
-static const ContentTypeElem    contentTypeTable[] =
-{
-    { ".html",  "text/html"                 },
-    { ".css",   "text/css"                  },
-    { ".js",    "application/javascript"    },
-    { ".bmp",   "image/bmp"                 },
-    { ".png",   "image/png"                 },
-    { ".gif",   "image/gif"                 },
-    { ".jpg",   "image/jpg"                 },
-    { ".ico",   "image/x-icon"              },
-    { ".gz",    "application/x-gzip"        }
+static const ContentTypeElem contentTypeTable[] = {
+    { ".html", "text/html" },
+    { ".css", "text/css" },
+    { ".js", "application/javascript" },
+    { ".bmp", "image/bmp" },
+    { ".png", "image/png" },
+    { ".gif", "image/gif" },
+    { ".jpg", "image/jpg" },
+    { ".ico", "image/x-icon" },
+    { ".gz", "application/x-gzip" }
 };
 
 /******************************************************************************
@@ -179,7 +176,6 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
-    (void)srv.on("/rest/api/v1/reset", handleReset);
     (void)srv.on("/rest/api/v1/sensors", handleSensors);
     (void)srv.on("/rest/api/v1/settings", handleSettings);
     (void)srv.on("/rest/api/v1/setting", handleSetting);
@@ -197,9 +193,9 @@ void RestApi::init(AsyncWebServer& srv)
  */
 void RestApi::error(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_NOT_FOUND;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
     if (nullptr == request)
     {
@@ -223,8 +219,8 @@ void RestApi::error(AsyncWebServerRequest* request)
  */
 static void handleButton(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -239,8 +235,8 @@ static void handleButton(AsyncWebServerRequest* request)
     }
     else
     {
-        ButtonActionId  actionId        = BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT; /* Default */
-        bool            isSuccessful    = true;
+        ButtonActionId actionId     = BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT; /* Default */
+        bool           isSuccessful = true;
 
         if (true == request->hasArg("actionId"))
         {
@@ -269,7 +265,7 @@ static void handleButton(AsyncWebServerRequest* request)
             buttonActions.executeAction(actionId);
 
             (void)RestUtil::prepareRspSuccess(jsonDoc);
-        } 
+        }
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -283,8 +279,8 @@ static void handleButton(AsyncWebServerRequest* request)
  */
 static void handleFadeEffect(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -294,16 +290,16 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
 
     if (HTTP_GET == request->method())
     {
-        JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
-        
+        JsonVariant dataObj   = RestUtil::prepareRspSuccess(jsonDoc);
+
         dataObj["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
     }
     else if (HTTP_POST == request->method())
     {
-        JsonVariant             dataObj             = RestUtil::prepareRspSuccess(jsonDoc);
-        DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
-        uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
-        DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
+        JsonVariant            dataObj           = RestUtil::prepareRspSuccess(jsonDoc);
+        DisplayMgr::FadeEffect currentFadeEffect = DisplayMgr::getInstance().getFadeEffect();
+        uint8_t                fadeEffectId      = static_cast<uint8_t>(currentFadeEffect);
+        DisplayMgr::FadeEffect nextFadeEffect    = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
 
         DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
 
@@ -320,25 +316,25 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
 
 /**
  * Get slot info in JSON format.
- * 
+ *
  * @param[out] slot     Slot information
  * @param[in]  slotId   Slot id
  */
 static void getSlotInfo(JsonObject& slot, uint16_t slotId)
 {
-    DisplayMgr&         displayMgr  = DisplayMgr::getInstance();
-    uint8_t             stickySlot  = displayMgr.getStickySlot();
-    IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
-    const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-    uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-    String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-    bool                isLocked    = displayMgr.isSlotLocked(slotId);
-    uint32_t            duration    = displayMgr.getSlotDuration(slotId);
-    bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
+    DisplayMgr&         displayMgr = DisplayMgr::getInstance();
+    uint8_t             stickySlot = displayMgr.getStickySlot();
+    IPluginMaintenance* plugin     = displayMgr.getPluginInSlot(slotId);
+    const char*         name       = (nullptr != plugin) ? plugin->getName() : "";
+    uint16_t            uid        = (nullptr != plugin) ? plugin->getUID() : 0U;
+    String              alias      = (nullptr != plugin) ? plugin->getAlias() : "";
+    bool                isLocked   = displayMgr.isSlotLocked(slotId);
+    uint32_t            duration   = displayMgr.getSlotDuration(slotId);
+    bool                isDisabled = displayMgr.isSlotDisabled(slotId);
 
-    slot["name"]        = name;
-    slot["uid"]         = uid;
-    slot["alias"]       = alias;
+    slot["name"]                   = name;
+    slot["uid"]                    = uid;
+    slot["alias"]                  = alias;
 
     if (stickySlot != slotId)
     {
@@ -349,9 +345,9 @@ static void getSlotInfo(JsonObject& slot, uint16_t slotId)
         slot["isSticky"] = true;
     }
 
-    slot["isLocked"]    = isLocked;
-    slot["duration"]    = duration;
-    slot["isDisabled"]  = isDisabled;
+    slot["isLocked"]   = isLocked;
+    slot["duration"]   = duration;
+    slot["isDisabled"] = isDisabled;
 }
 
 /**
@@ -362,8 +358,8 @@ static void getSlotInfo(JsonObject& slot, uint16_t slotId)
  */
 static void handleSlots(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 4096U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -378,17 +374,17 @@ static void handleSlots(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant dataObj     = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray   slotArray   = dataObj.createNestedArray("slots");
-        uint8_t     slotId      = 0U;
-        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        uint8_t     stickySlot  = displayMgr.getStickySlot();
+        JsonVariant dataObj    = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray   slotArray  = dataObj.createNestedArray("slots");
+        uint8_t     slotId     = 0U;
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        uint8_t     stickySlot = displayMgr.getStickySlot();
 
         /* Add max. number of slots */
-        dataObj["maxSlots"] = displayMgr.getMaxSlots();
+        dataObj["maxSlots"]    = displayMgr.getMaxSlots();
 
         /* Add which plugin's are installed. */
-        for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
+        for (slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
         {
             JsonObject slot = slotArray.createNestedObject();
 
@@ -407,8 +403,8 @@ static void handleSlots(AsyncWebServerRequest* request)
  */
 static void handleSlot(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -433,9 +429,9 @@ static void handleSlot(AsyncWebServerRequest* request)
         }
         else
         {
-            uint8_t slotId          = SlotList::SLOT_ID_INVALID;
-            size_t  baseUriLen      = strlen(uriWithSlotId);
-            bool    slotIdStatus    = Util::strToUInt8(request->url().substring(baseUriLen), slotId);
+            uint8_t slotId       = SlotList::SLOT_ID_INVALID;
+            size_t  baseUriLen   = strlen(uriWithSlotId);
+            bool    slotIdStatus = Util::strToUInt8(request->url().substring(baseUriLen), slotId);
 
             if (false == slotIdStatus)
             {
@@ -478,8 +474,8 @@ static void handleSlot(AsyncWebServerRequest* request)
                     /* Handle sticky flag. */
                     if (true == request->hasArg("sticky"))
                     {
-                        const String&   stickyFlagStr   = request->arg("sticky");
-                        bool            stickyFlag      = false;
+                        const String& stickyFlagStr = request->arg("sticky");
+                        bool          stickyFlag    = false;
 
                         if (stickyFlagStr == "true")
                         {
@@ -528,8 +524,8 @@ static void handleSlot(AsyncWebServerRequest* request)
                     if ((HttpStatus::STATUS_CODE_OK == httpStatusCode) &&
                         (true == request->hasArg("disable")))
                     {
-                        const String&   disableFlagStr  = request->arg("disable");
-                        bool            disableFlag     = false;
+                        const String& disableFlagStr = request->arg("disable");
+                        bool          disableFlag    = false;
 
                         if (disableFlagStr == "true")
                         {
@@ -602,9 +598,9 @@ static void handleSlot(AsyncWebServerRequest* request)
  */
 static void handlePluginInstall(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -626,8 +622,8 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
         }
         else
         {
-            const String&       pluginName  = request->arg("name");
-            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName.c_str());
+            const String&       pluginName = request->arg("name");
+            IPluginMaintenance* plugin     = PluginMgr::getInstance().install(pluginName.c_str());
 
             /* Plugin not found? */
             if (nullptr == plugin)
@@ -646,8 +642,8 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
                 PluginMgr::getInstance().save();
 
                 /* Prepare response */
-                dataObj["slotId"]   = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
-                dataObj["uid"]      = plugin->getUID();
+                dataObj["slotId"] = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
+                dataObj["uid"]    = plugin->getUID();
             }
         }
     }
@@ -663,9 +659,9 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
  */
 static void handlePluginUninstall(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -693,8 +689,8 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
         }
         else
         {
-            uint8_t slotId          = SlotList::SLOT_ID_INVALID;
-            bool    slotIdStatus    = Util::strToUInt8(request->arg("slotId"), slotId);
+            uint8_t slotId       = SlotList::SLOT_ID_INVALID;
+            bool    slotIdStatus = Util::strToUInt8(request->arg("slotId"), slotId);
 
             if (false == slotIdStatus)
             {
@@ -703,8 +699,8 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
             }
             else
             {
-                const String&       pluginName  = request->arg("name");
-                IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+                const String&       pluginName = request->arg("name");
+                IPluginMaintenance* plugin     = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
                 if (nullptr == plugin)
                 {
@@ -748,9 +744,9 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
  */
 static void handlePlugins(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -764,53 +760,18 @@ static void handlePlugins(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant                 dataObj                 = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray                   pluginArray             = dataObj.createNestedArray("plugins");
-        uint8_t                     pluginTypeListLength    = 0U;
-        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
-        uint8_t                     idx                     = 0U;
+        JsonVariant                dataObj              = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray                  pluginArray          = dataObj.createNestedArray("plugins");
+        uint8_t                    pluginTypeListLength = 0U;
+        const PluginList::Element* pluginTypeList       = PluginList::getList(pluginTypeListLength);
+        uint8_t                    idx                  = 0U;
 
-        while(pluginTypeListLength > idx)
+        while (pluginTypeListLength > idx)
         {
             pluginArray.add(pluginTypeList[idx].name);
-            
+
             ++idx;
         }
-    }
-
-    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-}
-
-/**
- * Perform a reset request.
- * GET \c "/api/v1/reset"
- *
- * @param[in] request   HTTP request
- */
-static void handleReset(AsyncWebServerRequest* request)
-{
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET != request->method())
-    {
-        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    else
-    {
-        /* To ensure the positive response will be sent. */
-        const uint32_t RESTART_DELAY = 100U; /* ms */
-
-        (void)RestUtil::prepareRspSuccess(jsonDoc);
-
-        UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -824,9 +785,9 @@ static void handleReset(AsyncWebServerRequest* request)
  */
 static void handleSensors(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -840,42 +801,41 @@ static void handleSensors(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant         dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray           sensorsArray    = dataObj.createNestedArray("sensors");
-        SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
-        uint8_t             numSensors      = sensorDataProv.getNumSensors();
-        uint8_t             sensorIdx       = 0U;
+        JsonVariant         dataObj        = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray           sensorsArray   = dataObj.createNestedArray("sensors");
+        SensorDataProvider& sensorDataProv = SensorDataProvider::getInstance();
+        uint8_t             numSensors     = sensorDataProv.getNumSensors();
+        uint8_t             sensorIdx      = 0U;
 
-        for(sensorIdx = 0; sensorIdx < numSensors; ++sensorIdx)
+        for (sensorIdx = 0; sensorIdx < numSensors; ++sensorIdx)
         {
-            ISensor*    sensor  = sensorDataProv.getSensor(sensorIdx);
+            ISensor* sensor = sensorDataProv.getSensor(sensorIdx);
 
             if (nullptr != sensor)
             {
-                uint8_t     numChannels     = sensor->getNumChannels();
-                JsonObject  sensorObj       = sensorsArray.createNestedObject();
+                uint8_t    numChannels   = sensor->getNumChannels();
+                JsonObject sensorObj     = sensorsArray.createNestedObject();
 
-                sensorObj["index"]          = sensorIdx;
-                sensorObj["name"]           = sensor->getName();
-                sensorObj["isAvailable"]    = sensor->isAvailable();
+                sensorObj["index"]       = sensorIdx;
+                sensorObj["name"]        = sensor->getName();
+                sensorObj["isAvailable"] = sensor->isAvailable();
 
                 /* Block is only used, to have the channels in the correct JSON order. */
                 {
-                    uint8_t     channelIdx      = 0U;
-                    JsonArray   channelsArray   = sensorObj.createNestedArray("channels");
+                    uint8_t   channelIdx    = 0U;
+                    JsonArray channelsArray = sensorObj.createNestedArray("channels");
 
-                    for(channelIdx = 0U; channelIdx < numChannels; ++channelIdx)
+                    for (channelIdx = 0U; channelIdx < numChannels; ++channelIdx)
                     {
-                        ISensorChannel* channel     = sensor->getChannel(channelIdx);
-                        JsonObject      channelObj  = channelsArray.createNestedObject();
+                        ISensorChannel* channel    = sensor->getChannel(channelIdx);
+                        JsonObject      channelObj = channelsArray.createNestedObject();
 
                         if (nullptr != channel)
                         {
-                            channelObj["index"]  = channelIdx;
-                            channelObj["name"]   = ISensorChannel::channelTypeToName(channel->getType());
+                            channelObj["index"] = channelIdx;
+                            channelObj["name"]  = ISensorChannel::channelTypeToName(channel->getType());
                         }
                     }
-
                 }
             }
         }
@@ -892,9 +852,9 @@ static void handleSensors(AsyncWebServerRequest* request)
  */
 static void handleSettings(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -908,15 +868,15 @@ static void handleSettings(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray   settingsArray   = dataObj.createNestedArray("settings");
-        size_t      settingIdx      = 0U;
-        size_t      settingsCount   = 0U;
-        KeyValue**  settings        = SettingsService::getInstance().getList(settingsCount);
+        JsonVariant dataObj       = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray   settingsArray = dataObj.createNestedArray("settings");
+        size_t      settingIdx    = 0U;
+        size_t      settingsCount = 0U;
+        KeyValue**  settings      = SettingsService::getInstance().getList(settingsCount);
 
-        for(settingIdx = 0; settingIdx < settingsCount; ++settingIdx)
+        for (settingIdx = 0; settingIdx < settingsCount; ++settingIdx)
         {
-            KeyValue*   setting = settings[settingIdx];
+            KeyValue* setting = settings[settingIdx];
 
             if (nullptr != setting)
             {
@@ -937,10 +897,10 @@ static void handleSettings(AsyncWebServerRequest* request)
  */
 static void handleSetting(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 2048U;
+    const size_t        JSON_DOC_SIZE = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    SettingsService&    settings        = SettingsService::getInstance();
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    SettingsService&    settings       = SettingsService::getInstance();
 
     if (nullptr == request)
     {
@@ -961,85 +921,79 @@ static void handleSetting(AsyncWebServerRequest* request)
         }
         else
         {
-            JsonVariant     dataObj = RestUtil::prepareRspSuccess(jsonDoc);
-            const String&   key     = request->arg("key");
-            KeyValue*       setting = settings.getSettingByKey(key.c_str());
+            JsonVariant   dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+            const String& key     = request->arg("key");
+            KeyValue*     setting = settings.getSettingByKey(key.c_str());
 
-            dataObj["key"]  = setting->getKey();
-            dataObj["name"] = setting->getName();
+            dataObj["key"]        = setting->getKey();
+            dataObj["name"]       = setting->getName();
 
-            switch(setting->getValueType())
+            switch (setting->getValueType())
             {
-            case KeyValue::TYPE_STRING:
+            case KeyValue::TYPE_STRING: {
+                KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
+
+                dataObj["value"]      = kvStr->getValue();
+                dataObj["minlength"]  = kvStr->getMinLength();
+                dataObj["maxlength"]  = kvStr->getMaxLength();
+                dataObj["isSecret"]   = kvStr->isSecret();
+            }
+            break;
+
+            case KeyValue::TYPE_BOOL: {
+                KeyValueBool* kvBool = static_cast<KeyValueBool*>(setting);
+
+                dataObj["value"]     = kvBool->getValue();
+            }
+            break;
+
+            case KeyValue::TYPE_UINT8: {
+                KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(setting);
+
+                dataObj["value"]       = kvUInt8->getValue();
+                dataObj["min"]         = kvUInt8->getMin();
+                dataObj["max"]         = kvUInt8->getMax();
+            }
+            break;
+
+            case KeyValue::TYPE_INT32: {
+                KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(setting);
+
+                dataObj["value"]       = kvInt32->getValue();
+                dataObj["min"]         = kvInt32->getMin();
+                dataObj["max"]         = kvInt32->getMax();
+            }
+            break;
+
+            case KeyValue::TYPE_JSON: {
+                KeyValueJson*        kvJson   = static_cast<KeyValueJson*>(setting);
+                JsonObject           valueObj = dataObj.createNestedObject("value");
+                DynamicJsonDocument  jsonBuffer(JSON_DOC_SIZE);
+                DeserializationError error = deserializeJson(jsonBuffer, kvJson->getValue());
+
+                if (DeserializationError::Ok != error.code())
                 {
-                    KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
-
-                    dataObj["value"]        = kvStr->getValue();
-                    dataObj["minlength"]    = kvStr->getMinLength();
-                    dataObj["maxlength"]    = kvStr->getMaxLength();
-                    dataObj["isSecret"]     = kvStr->isSecret();
+                    LOG_WARNING("JSON deserialization failed: %s", error.c_str());
                 }
-                break;
-            
-            case KeyValue::TYPE_BOOL:
+                else
                 {
-                    KeyValueBool* kvBool = static_cast<KeyValueBool*>(setting);
-
-                    dataObj["value"]    = kvBool->getValue();
+                    /* Copy deserialized JSON object. */
+                    valueObj.set(jsonBuffer.as<JsonObject>());
                 }
-                break;
 
-            case KeyValue::TYPE_UINT8:
-                {
-                    KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(setting);
+                dataObj["minlength"] = kvJson->getMinLength();
+                dataObj["maxlength"] = kvJson->getMaxLength();
+            }
+            break;
 
-                    dataObj["value"]    = kvUInt8->getValue();
-                    dataObj["min"]      = kvUInt8->getMin();
-                    dataObj["max"]      = kvUInt8->getMax();
-                }
-                break;
-            
-            case KeyValue::TYPE_INT32:
-                {
-                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(setting);
+            case KeyValue::TYPE_UINT32: {
+                KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(setting);
 
-                    dataObj["value"]    = kvInt32->getValue();
-                    dataObj["min"]      = kvInt32->getMin();
-                    dataObj["max"]      = kvInt32->getMax();
-                }
-                break;
-            
-            case KeyValue::TYPE_JSON:
-                {
-                    KeyValueJson*           kvJson      = static_cast<KeyValueJson*>(setting);
-                    JsonObject              valueObj    = dataObj.createNestedObject("value");
-                    DynamicJsonDocument     jsonBuffer(JSON_DOC_SIZE);
-                    DeserializationError    error       = deserializeJson(jsonBuffer, kvJson->getValue());
-
-                    if (DeserializationError::Ok != error.code())
-                    {
-                        LOG_WARNING("JSON deserialization failed: %s", error.c_str());
-                    }
-                    else
-                    {
-                        /* Copy deserialized JSON object. */
-                        valueObj.set(jsonBuffer.as<JsonObject>());
-                    }
-
-                    dataObj["minlength"]    = kvJson->getMinLength();
-                    dataObj["maxlength"]    = kvJson->getMaxLength();
-                }
-                break;
-
-            case KeyValue::TYPE_UINT32:
-                {
-                    KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(setting);
-
-                    dataObj["value"]    = kvUInt32->getValue();
-                    dataObj["min"]      = kvUInt32->getMin();
-                    dataObj["max"]      = kvUInt32->getMax();
-                }
-                break;
+                dataObj["value"]         = kvUInt32->getValue();
+                dataObj["min"]           = kvUInt32->getMin();
+                dataObj["max"]           = kvUInt32->getMax();
+            }
+            break;
 
             default:
                 break;
@@ -1062,8 +1016,8 @@ static void handleSetting(AsyncWebServerRequest* request)
         }
         else
         {
-            const String&   key     = request->arg("key");
-            KeyValue*       setting = settings.getSettingByKey(key.c_str());
+            const String& key     = request->arg("key");
+            KeyValue*     setting = settings.getSettingByKey(key.c_str());
 
             if (nullptr == setting)
             {
@@ -1120,216 +1074,210 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
     if (nullptr == parameter)
     {
         status = false;
-        error   = "Internal error.";
+        error  = "Internal error.";
     }
     else
     {
-        SettingsService&    settings    = SettingsService::getInstance();
+        SettingsService& settings = SettingsService::getInstance();
 
-        switch(parameter->getValueType())
+        switch (parameter->getValueType())
         {
-        case KeyValue::TYPE_STRING:
+        case KeyValue::TYPE_STRING: {
+            KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+
+            /* If it is the hostname, verify it explicit. */
+            if (0 == strcmp(settings.getHostname().getKey(), kvStr->getKey()))
             {
-                KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
-
-                /* If it is the hostname, verify it explicit. */
-                if (0 == strcmp(settings.getHostname().getKey(), kvStr->getKey()))
+                if (false == isValidHostname(value))
                 {
-                    if (false == isValidHostname(value))
-                    {
-                        status  = false;
-                        error   = "Invalid hostname.";
-                    }
-                }
-
-                if (true == status)
-                {
-                    /* Check for min. and max. length */
-                    if (kvStr->getMinLength() > value.length())
-                    {
-                        error  = "String length lower than ";
-                        error += kvStr->getMinLength();
-                        error += ".";
-
-                        status = false;
-                    }
-                    else if (kvStr->getMaxLength() < value.length())
-                    {
-                        error  = "String length greater than ";
-                        error += kvStr->getMaxLength();
-                        error += ".";
-
-                        status = false;
-                    }
-                    else
-                    {
-                        kvStr->setValue(value);
-                    }
+                    status = false;
+                    error  = "Invalid hostname.";
                 }
             }
-            break;
 
-        case KeyValue::TYPE_BOOL:
+            if (true == status)
             {
-                KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
-
-                if (0 == strcmp(value.c_str(), "false"))
-                {
-                    kvBool->setValue(false);
-                }
-                else if (0 == strcmp(value.c_str(), "true"))
-                {
-                    kvBool->setValue(true);
-                }
-                else
-                {
-                    status  = false;
-                    error   = "Invalid value.";
-                }
-            }
-            break;
-
-        case KeyValue::TYPE_UINT8:
-            {
-                KeyValueUInt8*  kvUInt8     = static_cast<KeyValueUInt8*>(parameter);
-                uint8_t         uint8Value  = 0;
-                bool            convStatus  = Util::strToUInt8(value, uint8Value);
-
-                /* Conversion failed? */
-                if (false == convStatus)
-                {
-                    status  = false;
-                    error   = "Invalid value.";
-                }
                 /* Check for min. and max. length */
-                else if (kvUInt8->getMin() > uint8Value)
+                if (kvStr->getMinLength() > value.length())
                 {
-                    error  = "Value lower than ";
-                    error += kvUInt8->getMin();
-                    error += ".";
+                    error   = "String length lower than ";
+                    error  += kvStr->getMinLength();
+                    error  += ".";
 
-                    status = false;
-                }
-                else if (kvUInt8->getMax() < uint8Value)
-                {
-                    error  = "Value greater than ";
-                    error += kvUInt8->getMax();
-                    error += ".";
-
-                    status = false;
-                }
-                else
-                {
-                    kvUInt8->setValue(uint8Value);
-                }
-            }
-            break;
-
-        case KeyValue::TYPE_INT32:
-            {
-                KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
-                int32_t         int32Value  = 0;
-                bool            convStatus  = Util::strToInt32(value, int32Value);
-
-                /* Conversion failed? */
-                if (false == convStatus)
-                {
                     status  = false;
-                    error   = "Invalid value.";
                 }
-                /* Check for min. and max. length */
-                else if (kvInt32->getMin() > int32Value)
+                else if (kvStr->getMaxLength() < value.length())
                 {
-                    error  = "Value lower than ";
-                    error += kvInt32->getMin();
-                    error += ".";
+                    error   = "String length greater than ";
+                    error  += kvStr->getMaxLength();
+                    error  += ".";
 
-                    status = false;
-                }
-                else if (kvInt32->getMax() < int32Value)
-                {
-                    error  = "Value greater than ";
-                    error += kvInt32->getMax();
-                    error += ".";
-
-                    status = false;
-                }
-                else
-                {
-                    kvInt32->setValue(int32Value);
-                }
-            }
-            break;
-
-        case KeyValue::TYPE_JSON:
-            {
-                KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
-
-                /* Check for min. and max. length */
-                if (kvJson->getMinLength() > value.length())
-                {
-                    error  = "JSON length lower than ";
-                    error += kvJson->getMinLength();
-                    error += ".";
-
-                    status = false;
-                }
-                else if (kvJson->getMaxLength() < value.length())
-                {
-                    error  = "JSON length greater than ";
-                    error += kvJson->getMaxLength();
-                    error += ".";
-
-                    status = false;
-                }
-                else
-                {
-                    kvJson->setValue(value);
-                }
-            }
-            break;
-
-        case KeyValue::TYPE_UINT32:
-            {
-                KeyValueUInt32* kvUInt32    = static_cast<KeyValueUInt32*>(parameter);
-                uint32_t        uint32Value = 0U;
-                bool            convStatus  = Util::strToUInt32(value, uint32Value);
-
-                /* Conversion failed? */
-                if (false == convStatus)
-                {
                     status  = false;
-                    error   = "Invalid value.";
-                }
-                /* Check for min. and max. length */
-                else if (kvUInt32->getMin() > uint32Value)
-                {
-                    error  = "Value lower than ";
-                    error += kvUInt32->getMin();
-                    error += ".";
-
-                    status = false;
-                }
-                else if (kvUInt32->getMax() < uint32Value)
-                {
-                    error  = "Value greater than ";
-                    error += kvUInt32->getMax();
-                    error += ".";
-
-                    status = false;
                 }
                 else
                 {
-                    kvUInt32->setValue(uint32Value);
+                    kvStr->setValue(value);
                 }
             }
-            break;
+        }
+        break;
+
+        case KeyValue::TYPE_BOOL: {
+            KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
+
+            if (0 == strcmp(value.c_str(), "false"))
+            {
+                kvBool->setValue(false);
+            }
+            else if (0 == strcmp(value.c_str(), "true"))
+            {
+                kvBool->setValue(true);
+            }
+            else
+            {
+                status = false;
+                error  = "Invalid value.";
+            }
+        }
+        break;
+
+        case KeyValue::TYPE_UINT8: {
+            KeyValueUInt8* kvUInt8    = static_cast<KeyValueUInt8*>(parameter);
+            uint8_t        uint8Value = 0;
+            bool           convStatus = Util::strToUInt8(value, uint8Value);
+
+            /* Conversion failed? */
+            if (false == convStatus)
+            {
+                status = false;
+                error  = "Invalid value.";
+            }
+            /* Check for min. and max. length */
+            else if (kvUInt8->getMin() > uint8Value)
+            {
+                error   = "Value lower than ";
+                error  += kvUInt8->getMin();
+                error  += ".";
+
+                status  = false;
+            }
+            else if (kvUInt8->getMax() < uint8Value)
+            {
+                error   = "Value greater than ";
+                error  += kvUInt8->getMax();
+                error  += ".";
+
+                status  = false;
+            }
+            else
+            {
+                kvUInt8->setValue(uint8Value);
+            }
+        }
+        break;
+
+        case KeyValue::TYPE_INT32: {
+            KeyValueInt32* kvInt32    = static_cast<KeyValueInt32*>(parameter);
+            int32_t        int32Value = 0;
+            bool           convStatus = Util::strToInt32(value, int32Value);
+
+            /* Conversion failed? */
+            if (false == convStatus)
+            {
+                status = false;
+                error  = "Invalid value.";
+            }
+            /* Check for min. and max. length */
+            else if (kvInt32->getMin() > int32Value)
+            {
+                error   = "Value lower than ";
+                error  += kvInt32->getMin();
+                error  += ".";
+
+                status  = false;
+            }
+            else if (kvInt32->getMax() < int32Value)
+            {
+                error   = "Value greater than ";
+                error  += kvInt32->getMax();
+                error  += ".";
+
+                status  = false;
+            }
+            else
+            {
+                kvInt32->setValue(int32Value);
+            }
+        }
+        break;
+
+        case KeyValue::TYPE_JSON: {
+            KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
+
+            /* Check for min. and max. length */
+            if (kvJson->getMinLength() > value.length())
+            {
+                error   = "JSON length lower than ";
+                error  += kvJson->getMinLength();
+                error  += ".";
+
+                status  = false;
+            }
+            else if (kvJson->getMaxLength() < value.length())
+            {
+                error   = "JSON length greater than ";
+                error  += kvJson->getMaxLength();
+                error  += ".";
+
+                status  = false;
+            }
+            else
+            {
+                kvJson->setValue(value);
+            }
+        }
+        break;
+
+        case KeyValue::TYPE_UINT32: {
+            KeyValueUInt32* kvUInt32    = static_cast<KeyValueUInt32*>(parameter);
+            uint32_t        uint32Value = 0U;
+            bool            convStatus  = Util::strToUInt32(value, uint32Value);
+
+            /* Conversion failed? */
+            if (false == convStatus)
+            {
+                status = false;
+                error  = "Invalid value.";
+            }
+            /* Check for min. and max. length */
+            else if (kvUInt32->getMin() > uint32Value)
+            {
+                error   = "Value lower than ";
+                error  += kvUInt32->getMin();
+                error  += ".";
+
+                status  = false;
+            }
+            else if (kvUInt32->getMax() < uint32Value)
+            {
+                error   = "Value greater than ";
+                error  += kvUInt32->getMax();
+                error  += ".";
+
+                status  = false;
+            }
+            else
+            {
+                kvUInt32->setValue(uint32Value);
+            }
+        }
+        break;
 
         case KeyValue::TYPE_UNKNOWN:
             /* fallthrough */
         default:
-            status  = false;
-            error   = "Unknown parameter.";
+            status = false;
+            error  = "Unknown parameter.";
             break;
         }
     }
@@ -1345,8 +1293,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
  */
 static void handleStatus(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1361,14 +1309,14 @@ static void handleStatus(AsyncWebServerRequest* request)
     }
     else
     {
-        String              ssid;
-        int8_t              rssi            = -100; /* [dbm] */
-        JsonVariant         dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonObject          hwObj           = dataObj.createNestedObject("hardware");
-        JsonObject          swObj           = dataObj.createNestedObject("software");
-        JsonObject          internalRamObj  = swObj.createNestedObject("internalRam");
-        JsonObject          wifiObj         = dataObj.createNestedObject("wifi");
-        SettingsService&    settings        = SettingsService::getInstance();
+        String           ssid;
+        int8_t           rssi           = -100; /* [dbm] */
+        JsonVariant      dataObj        = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonObject       hwObj          = dataObj.createNestedObject("hardware");
+        JsonObject       swObj          = dataObj.createNestedObject("software");
+        JsonObject       internalRamObj = swObj.createNestedObject("internalRam");
+        JsonObject       wifiObj        = dataObj.createNestedObject("wifi");
+        SettingsService& settings       = SettingsService::getInstance();
 
         /* Only in station mode it makes sense to retrieve the RSSI.
          * Otherwise keep it -100 dbm.
@@ -1385,19 +1333,19 @@ static void handleStatus(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        hwObj["chipRev"]        = ESP.getChipRevision();
-        hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
+        hwObj["chipRev"]                = ESP.getChipRevision();
+        hwObj["cpuFreqMhz"]             = ESP.getCpuFreqMHz();
 
-        swObj["version"]        = Version::SOFTWARE_VER;
-        swObj["revision"]       = Version::SOFTWARE_REV;
-        swObj["espSdkVersion"]  = ESP.getSdkVersion();
+        swObj["version"]                = Version::getSoftwareVersion();
+        swObj["revision"]               = Version::getSoftwareRevision();
+        swObj["espSdkVersion"]          = ESP.getSdkVersion();
 
         internalRamObj["heapSize"]      = ESP.getHeapSize();
         internalRamObj["availableHeap"] = ESP.getFreeHeap();
 
-        wifiObj["ssid"]         = ssid;
-        wifiObj["rssi"]         = rssi;                             /* [dbm] */
-        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); /* [%] */
+        wifiObj["ssid"]                 = ssid;
+        wifiObj["rssi"]                 = rssi;                             /* [dbm] */
+        wifiObj["quality"]              = WiFiUtil::getSignalQuality(rssi); /* [%] */
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1407,7 +1355,7 @@ static void handleStatus(AsyncWebServerRequest* request)
  * Get the files in the directory (optional: recursively) and fill the JSON array flat.
  * It will start to collect the files/directories after "preCount" were found.
  * It will stop to collect after "count" files.
- * 
+ *
  * @param[in]       dir         The directory to start with.
  * @param[out]      files       JSON array for collecting the files.
  * @param[in,out]   preCount    This amount of files will be skipped.
@@ -1418,7 +1366,7 @@ static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& 
 {
     File fd = dir.openNextFile();
 
-    while((true == fd) && (0U < count))
+    while ((true == fd) && (0U < count))
     {
         /* Skip the first number of files. */
         if (0U < preCount)
@@ -1467,7 +1415,7 @@ static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& 
             fd = dir.openNextFile();
         }
     }
-    
+
     /* Cleanup */
     if (true == fd)
     {
@@ -1477,7 +1425,7 @@ static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& 
 
 /**
  * List files of given directory (?dir=<path>).
- * 
+ *
  * GET \c "/api/v1/fs"
  *
  * @param[in] request   HTTP request
@@ -1485,8 +1433,8 @@ static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& 
 static void handleFilesystem(AsyncWebServerRequest* request)
 {
     String              content;
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 2048U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1501,14 +1449,14 @@ static void handleFilesystem(AsyncWebServerRequest* request)
     }
     else
     {
-        const String&   path                = request->arg("dir");
-        const String&   pageStr             = request->arg("page");
-        File            fdRoot              = FILESYSTEM.open(path, "r");
-        JsonArray       jsonData            = jsonDoc.createNestedArray("data");
-        const uint32_t  DEFAULT_MAX_FILES   = 15U;
-        uint32_t        count               = DEFAULT_MAX_FILES;
-        uint32_t        page                = 0U;
-        uint32_t        preCount            = page * count;
+        const String&  path              = request->arg("dir");
+        const String&  pageStr           = request->arg("page");
+        File           fdRoot            = FILESYSTEM.open(path, "r");
+        JsonArray      jsonData          = jsonDoc.createNestedArray("data");
+        const uint32_t DEFAULT_MAX_FILES = 15U;
+        uint32_t       count             = DEFAULT_MAX_FILES;
+        uint32_t       page              = 0U;
+        uint32_t       preCount          = page * count;
 
         if (false == pageStr.isEmpty())
         {
@@ -1546,14 +1494,14 @@ static void handleFilesystem(AsyncWebServerRequest* request)
 
 /**
  * Read file from filesystem (?path=<path>).
- * 
+ *
  * GET \c "/api/v1/fs/file"
  *
  * @param[in] request   HTTP request
  */
 static void handleFileGet(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1575,8 +1523,8 @@ static void handleFileGet(AsyncWebServerRequest* request)
 
         if (false == FILESYSTEM.exists(path))
         {
-            String errorMsg = "Invalid path ";
-            errorMsg += path;
+            String errorMsg  = "Invalid path ";
+            errorMsg        += path;
 
             RestUtil::prepareRspError(jsonDoc, errorMsg.c_str());
 
@@ -1591,9 +1539,9 @@ static void handleFileGet(AsyncWebServerRequest* request)
 
 /**
  * Get content type of file.
- * 
+ *
  * @param[in] filename  Name of file
- * 
+ *
  * @return The file specific content type.
  */
 static const char* getContentType(const String& filename)
@@ -1601,7 +1549,7 @@ static const char* getContentType(const String& filename)
     const char* contentType = "text/plain";
     uint8_t     idx         = 0U;
 
-    while(UTIL_ARRAY_NUM(contentTypeTable) > idx)
+    while (UTIL_ARRAY_NUM(contentTypeTable) > idx)
     {
         if (true == filename.endsWith(contentTypeTable[idx].fileExtension))
         {
@@ -1617,15 +1565,15 @@ static const char* getContentType(const String& filename)
 
 /**
  * Write file to filesystem (?path=<path>).
- * 
+ *
  * POST \c "/api/v1/fs/file"
  *
  * @param[in] request   HTTP request
  */
 static void handleFilePost(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1647,6 +1595,40 @@ static void handleFilePost(AsyncWebServerRequest* request)
 }
 
 /**
+ * Create directories recursively by parsing the given path.
+ *
+ * @param[in] path  Path to create.
+ *
+ * @return If successful created, it will return true otherwise false.
+ */
+static bool createDirectories(const String& path)
+{
+    bool    status = true;
+    uint8_t idx    = 0U;
+    String  currentPath;
+
+    while ((true == status) && (path.length() > idx))
+    {
+        if ('/' == path[idx])
+        {
+            if (0U < currentPath.length())
+            {
+                if (false == FILESYSTEM.exists(currentPath))
+                {
+                    status = FILESYSTEM.mkdir(currentPath);
+                }
+            }
+        }
+
+        currentPath += path[idx];
+
+        ++idx;
+    }
+
+    return status;
+}
+
+/**
  * File upload handler.
  *
  * @param[in] request   HTTP request.
@@ -1656,22 +1638,30 @@ static void handleFilePost(AsyncWebServerRequest* request)
  * @param[in] len       Data part size in byte.
  * @param[in] final     Is final packet or not.
  */
-static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+static void uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final)
 {
     bool isError = false;
 
     /* Begin of upload? */
     if (0 == index)
     {
-        request->_tempFile = FILESYSTEM.open(filename, "w");
-
-        if (false == request->_tempFile)
+        /* Create directories if not exist. */
+        if (false == createDirectories(filename))
         {
             isError = true;
         }
         else
         {
-            LOG_INFO("Receiving file %s.", filename.c_str());
+            request->_tempFile = FILESYSTEM.open(filename, "w");
+
+            if (false == request->_tempFile)
+            {
+                isError = true;
+            }
+            else
+            {
+                LOG_INFO("Receiving file %s.", filename.c_str());
+            }
         }
     }
 
@@ -1682,7 +1672,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 
     if ((true == final) &&
         (false == isError))
-    {        
+    {
         LOG_INFO("File %s successful written.", filename.c_str());
 
         request->_tempFile.close();
@@ -1703,15 +1693,15 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 
 /**
  * Delete file from filesystem (?path=<path>).
- * 
+ *
  * DELETE \c "/api/v1/fs/file"
  *
  * @param[in] request   HTTP request
  */
 static void handleFileDelete(AsyncWebServerRequest* request)
 {
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1754,10 +1744,10 @@ static void handleFileDelete(AsyncWebServerRequest* request)
  */
 static bool isValidHostname(const String& hostname)
 {
-    bool                isValid             = true;
-    SettingsService&    settings            = SettingsService::getInstance();
-    const size_t        MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
-    const size_t        MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
+    bool             isValid             = true;
+    SettingsService& settings            = SettingsService::getInstance();
+    const size_t     MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
+    const size_t     MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
 
     if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
         (MAX_HOSTNAME_LENGTH < hostname.length()))
@@ -1768,7 +1758,7 @@ static bool isValidHostname(const String& hostname)
     {
         uint8_t index = 0U;
 
-        while((true == isValid) && (index < hostname.length()))
+        while ((true == isValid) && (index < hostname.length()))
         {
             if (('0' <= hostname[index]) &&
                 ('9' >= hostname[index]))

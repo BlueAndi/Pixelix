@@ -52,9 +52,23 @@
                     <li>OFFSET: Number which is added to a number value. Not used for string values.</li>
                 </ul>
                 <p><a href="https://github.com/BlueAndi/Pixelix/tree/Development/doc/grabConfigs/mqtt" target="_blank">Configuration examples</a> may help to configure.</p>
+                <h2>Format text tags</h2>
+                <p>The following tags are supported in the format text:</p>
+                <ul>
+                    <li>{#RRGGBB} - Change text color (RRGGBB in hex)</li>
+                    <li>{hl} - Horizontal alignment left</li>
+                    <li>{hc} - Horizontal alignment right</li>
+                    <li>{hr} - Horizontal alignment center</li>
+                    <li>{vt} - Vertical alignment top</li>
+                    <li>{vc} - Vertical alignment center</li>
+                    <li>{vb} - Vertical alignment bottom</li>
+                    <li>{0xCC} - Special character code (CC in hex)</li>
+                </ul>
+                <p>Use for numbers always "%f", independed whether its a integer or floating point number.</p>
+                <p>In all other cases use "%s".</p>
                 <h2>Configuration</h2>
                 <h3>User</h3>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                         <div class="form-group">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
@@ -96,7 +110,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -107,6 +121,7 @@
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <!-- Pixelix REST API -->
@@ -209,6 +224,7 @@
 
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
                 
                 utils.injectOrigin("injectOrigin", "{{ORIGIN}}");

@@ -60,6 +60,13 @@
                     <div class="tab-pane fade active show" id="update" role="tabpanel" aria-labelledby="update-tab">
                         <br />
                         <p>Upload <u>~FIRMWARE_FILENAME~</u> and <u>~BOOTLOADER_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
+                        <div class="alert alert-warning" role="alert">
+                            A filesystem update might cause a loss of all configuration data on the filesystem. Make sure you have a backup of your configuration before updating it.
+                        </div>
+                        <div class="alert alert-warning" role="alert">
+                            A filesystem update will disable the HomeAssistant MQTT discovery feature. After the update, you have to re-enable it manually.
+                            This prevents that the welcome plugin will be discovered, after a filesystem update.
+                        </div>
                         <p>Use multi-select to upload several files at once.</p>
                         <div class="input-group">
                             <input type="file" class="form-control" id="inputFile" multiple="multiple" accept=".bin">
@@ -97,7 +104,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -108,6 +115,7 @@
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <script type="text/javascript" src="/js/dialog.js"></script>
@@ -123,6 +131,7 @@
 
             var restClient  = new pixelix.rest.Client();
             var zip         = new JSZip();
+            var hostname    = "~HOSTNAME~";
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -143,7 +152,7 @@
                 var progress = 0;
 
                 if (true === evt.lengthComputable) {
-                    progress = Math.ceil(evt.loaded * 100 / evt.total);
+                    progress = (evt.loaded * 100 / evt.total).toFixed();
                 }
 
                 updateProgressBar("progressBar", progress);
@@ -162,12 +171,23 @@
                     fileCnt = 2;
                 }
 
+                /* Filesystem shall always be updated first!
+                 * Otherwise the Home Assistant MQTT discovery feature will stay enabled
+                 */
+                 for(index = 0; index < fileCnt; ++index) {
+                    file = document.getElementById("inputFile").files[index];
+
+                    if ("~FILESYSTEM_FILENAME~" === file.name) {
+                        files.push(file);
+                    }
+                }
+
+
                 for(index = 0; index < fileCnt; ++index) {
                     file = document.getElementById("inputFile").files[index];
 
                     if (("~FIRMWARE_FILENAME~" === file.name) ||
-                        ("~BOOTLOADER_FILENAME~" === file.name) ||
-                        ("~FILESYSTEM_FILENAME~" === file.name)) {
+                        ("~BOOTLOADER_FILENAME~" === file.name)) {
 
                         files.push(file);
                     }
@@ -258,7 +278,7 @@
                         minutes = ((minutes < 10) ? '0' : '') + minutes;
                         var seconds = date.getSeconds();
                         seconds = ((seconds < 10) ? '0' : '') + seconds;
-                        var filename = year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
+                        var filename = hostname + "_" + year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
                         saveAs(content, filename);
                         resolve();
                     });
@@ -342,12 +362,12 @@
                             progress = 90;
                             updateProgressBar("progressBarRestore", progress);
                         }).then(function() {
-                            return restClient.reset();
+                            return restClient.restart();
                         }).then(function() {
                             progress = 100;
                             updateProgressBar("progressBarRestore", progress);
 
-                            return dialog.showInfo("<p>Reset performed to apply restored configuration.</p>");
+                            return dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
                         }).catch(function() {
                             dialog.showError("<p>Restore failed.</p>");
                         });
@@ -358,6 +378,7 @@
             /* Execute after page is ready. */
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 $("#inputFile").on("change", function() {

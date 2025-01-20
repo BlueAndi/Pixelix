@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  Date and time view interface.
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -84,6 +84,9 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
+     * 
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
      */
     virtual void init(uint16_t width, uint16_t height) = 0;
 
@@ -176,12 +179,14 @@ public:
     /**
      * Get the view mode (analog, digital or both).
      * 
-     * @return ViewMode 
+     * @return View mode 
      */
     virtual ViewMode getViewMode() const = 0;
 
     /**
      * Set the view mode (analog, digital or both).
+     * 
+     * @param[in] mode  View mode
      * 
      * @return bool success of failure 
      */
@@ -197,14 +202,14 @@ public:
         /**
      * Get current active configuration in JSON format.
      * 
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg Configuration
      */
     virtual void getConfiguration(JsonObject& jsonCfg) const = 0;
 
     /**
      * Apply configuration from JSON.
      * 
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg Configuration
      * 
      * @return If successful set, it will return true otherwise false.
      */

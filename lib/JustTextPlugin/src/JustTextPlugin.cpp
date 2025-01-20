@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,8 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* JustTextPlugin::TOPIC_TEXT  = "/text";
+const char* JustTextPlugin::TOPIC_TEXT                    = "text";
+const char* JustTextPlugin::TOPIC_TEXT_EXTRA_HA_FILE_NAME = "/extra/justTextPlugin.json";
 
 /******************************************************************************
  * Public Methods
@@ -80,16 +81,16 @@ bool JustTextPlugin::isEnabled() const
 
 void JustTextPlugin::getTopics(JsonArray& topics) const
 {
-    JsonObject jsonText = topics.createNestedObject();
- 
-    jsonText["name"] = TOPIC_TEXT;
+    JsonObject jsonText     = topics.createNestedObject();
 
-    /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
-    jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
-    jsonText["ha"]["discovery"]["name"]     = "MQTT text";                      /* Application that is the origin the discovered MQTT. */
-    jsonText["ha"]["discovery"]["cmd_tpl"]  = "{\"text\": \"{{ value }}\" }";   /* Command template */
-    jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
-    jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
+    /* The topic contains Home Assistant support of the MQTT discovery
+     * (https://www.home-assistant.io/integrations/mqtt). See the configured
+     * JSON file.
+     *
+     * The used icon is from MaterialDesignIcons.com (namespace: mdi).
+     */
+    jsonText["name"]        = TOPIC_TEXT;
+    jsonText["extra"]["ha"] = TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 }
 
 bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -111,13 +112,13 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_TEXT))
     {
-        bool                storeFlag               = false;
-        const size_t        JSON_DOC_SIZE           = 512U;
+        bool                storeFlag     = false;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonText                = value["text"];
-        JsonVariantConst    jsonStoreFlag           = value["storeFlag"];
-    
+        JsonObject          jsonCfg       = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonText      = value["text"];
+        JsonVariantConst    jsonStoreFlag = value["storeFlag"];
+
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
          * overwrite them with the received ones.
@@ -132,7 +133,7 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         if (false == jsonText.isNull())
         {
             jsonCfg["text"] = jsonText.as<String>();
-            isSuccessful = true;
+            isSuccessful    = true;
         }
 
         /* Note: The store flag is not part of the stored configuration, its just
@@ -141,8 +142,20 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
          */
         if (false == jsonStoreFlag.isNull())
         {
-            storeFlag = jsonStoreFlag.as<bool>();
-            isSuccessful = true;
+            if (true == jsonStoreFlag.is<String>())
+            {
+                storeFlag    = jsonStoreFlag.as<String>().equalsIgnoreCase("true");
+                isSuccessful = true;
+            }
+            else if (true == jsonStoreFlag.is<bool>())
+            {
+                storeFlag    = jsonStoreFlag.as<bool>();
+                isSuccessful = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
@@ -166,8 +179,8 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
 bool JustTextPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -204,8 +217,8 @@ void JustTextPlugin::update(YAGfx& gfx)
 
 String JustTextPlugin::getText() const
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      formattedText   = m_view.getFormatText();
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                     formattedText = m_view.getFormatText();
 
     return formattedText;
 }
@@ -245,8 +258,8 @@ void JustTextPlugin::getActualConfiguration(JsonObject& jsonCfg) const
 
 bool JustTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status     = false;
-    JsonVariantConst jsonText   = jsonCfg["text"];
+    bool             status   = false;
+    JsonVariantConst jsonText = jsonCfg["text"];
 
     if (false == jsonText.is<String>())
     {
@@ -254,8 +267,8 @@ bool JustTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        String                      newFormatText   = jsonText.as<String>();
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        String                     newFormatText = jsonText.as<String>();
 
         if (m_view.getFormatText() != newFormatText)
         {

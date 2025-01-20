@@ -30,7 +30,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-s3-devkitc-1-n16r8v-LED-32x16", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
@@ -90,7 +90,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-s3-devkitc-1-n16r8v-LED-32x16", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
 
     steps:
     - name: Checkout repository
@@ -197,10 +197,14 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v2
 
     - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1.9.5
+      uses: mattnotmitt/doxygen-action@v1.9.8
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'
+
+    - name: Print doxygen warnings
+      if: ${{ failure() }}
+      run: cat ./doc/doxygen/doxygen_warnings.txt
 
   # Deploy release artifacts
   deploy:

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,8 +65,8 @@
  *****************************************************************************/
 
 /* Initialize static members */
-const char* PluginMgr::CONFIG_FILE_NAME         = "slotConfig.json";
-const char* PluginMgr::MQTT_SPECIAL_CHARACTERS  = "+#*>$"; /* See MQTT specification */
+const char* PluginMgr::CONFIG_FILE_NAME        = "slotConfig.json";
+const char* PluginMgr::MQTT_SPECIAL_CHARACTERS = "+#*>$"; /* See MQTT specification */
 
 /******************************************************************************
  * Public Methods
@@ -116,7 +116,8 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
+            unregisterTopicsByUID(m_deviceId, plugin, true);
+            unregisterTopicsByAlias(m_deviceId, plugin, true);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
@@ -134,13 +135,13 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
+        unregisterTopicsByAlias(m_deviceId, plugin, true);
 
         /* Set new alias */
         plugin->setAlias(alias);
 
         /* Register web API, based on new alias. */
-        TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
+        registerTopicsByAlias(m_deviceId, plugin);
 
         isSuccessful = true;
     }
@@ -150,27 +151,28 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
 
 void PluginMgr::unregisterAllPluginTopics()
 {
-    uint8_t maxSlots    = DisplayMgr::getInstance().getMaxSlots();
-    uint8_t slotId      = 0U;
+    uint8_t maxSlots = DisplayMgr::getInstance().getMaxSlots();
+    uint8_t slotId   = 0U;
 
-    for(slotId = 0U; slotId < maxSlots; ++slotId)
+    for (slotId = 0U; slotId < maxSlots; ++slotId)
     {
         IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
+        unregisterTopicsByUID(m_deviceId, plugin, false);
+        unregisterTopicsByAlias(m_deviceId, plugin, false);
     }
 }
 
 bool PluginMgr::load()
 {
-    bool                isSuccessful            = true;
+    bool                isSuccessful = true;
     JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 4096U;
+    const size_t        JSON_DOC_SIZE = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              fullConfigFileName      = Plugin::CONFIG_PATH;
+    String              fullConfigFileName  = Plugin::CONFIG_PATH;
 
-    fullConfigFileName += "/";
-    fullConfigFileName += CONFIG_FILE_NAME;
+    fullConfigFileName                     += "/";
+    fullConfigFileName                     += CONFIG_FILE_NAME;
 
     if (false == jsonFile.load(fullConfigFileName, jsonDoc))
     {
@@ -184,14 +186,14 @@ bool PluginMgr::load()
     }
     else
     {
-        JsonArray       jsonSlots   = jsonDoc["slotConfiguration"].as<JsonArray>();
-        uint8_t         slotId      = 0;
-        const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
+        JsonArray     jsonSlots = jsonDoc["slotConfiguration"].as<JsonArray>();
+        uint8_t       slotId    = 0;
+        const uint8_t MAX_SLOTS = DisplayMgr::getInstance().getMaxSlots();
 
-        for(JsonObject jsonSlot: jsonSlots)
+        for (JsonObject jsonSlot : jsonSlots)
         {
             prepareSlotByConfiguration(slotId, jsonSlot);
-            
+
             ++slotId;
             if (MAX_SLOTS <= slotId)
             {
@@ -206,40 +208,40 @@ bool PluginMgr::load()
 void PluginMgr::save()
 {
     String              installation;
-    uint8_t             slotId              = 0;
-    const size_t        JSON_DOC_SIZE       = 4096U;
+    uint8_t             slotId        = 0;
+    const size_t        JSON_DOC_SIZE = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonArray           jsonSlots           = jsonDoc.createNestedArray("slotConfiguration");
+    JsonArray           jsonSlots = jsonDoc.createNestedArray("slotConfiguration");
     JsonFile            jsonFile(FILESYSTEM);
     String              fullConfigFileName  = Plugin::CONFIG_PATH;
     DisplayMgr&         displayMgr          = DisplayMgr::getInstance();
     uint8_t             stickySlotId        = displayMgr.getStickySlot();
 
-    fullConfigFileName += "/";
-    fullConfigFileName += CONFIG_FILE_NAME;
+    fullConfigFileName                     += "/";
+    fullConfigFileName                     += CONFIG_FILE_NAME;
 
-    for(slotId = 0; slotId < displayMgr.getMaxSlots(); ++slotId)
+    for (slotId = 0; slotId < displayMgr.getMaxSlots(); ++slotId)
     {
-        IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
-        JsonObject          jsonSlot    = jsonSlots.createNestedObject();
+        IPluginMaintenance* plugin   = displayMgr.getPluginInSlot(slotId);
+        JsonObject          jsonSlot = jsonSlots.createNestedObject();
 
         if (nullptr == plugin)
         {
-            jsonSlot["name"]        = "";
-            jsonSlot["uid"]         = 0;
-            jsonSlot["alias"]       = "";
-            jsonSlot["fontType"]    = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
+            jsonSlot["name"]     = "";
+            jsonSlot["uid"]      = 0;
+            jsonSlot["alias"]    = "";
+            jsonSlot["fontType"] = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
         }
         else
         {
-            jsonSlot["name"]        = plugin->getName();
-            jsonSlot["uid"]         = plugin->getUID();
-            jsonSlot["alias"]       = plugin->getAlias();
-            jsonSlot["fontType"]    = Fonts::fontTypeToStr(plugin->getFontType());
+            jsonSlot["name"]     = plugin->getName();
+            jsonSlot["uid"]      = plugin->getUID();
+            jsonSlot["alias"]    = plugin->getAlias();
+            jsonSlot["fontType"] = Fonts::fontTypeToStr(plugin->getFontType());
         }
 
-        jsonSlot["duration"]    = displayMgr.getSlotDuration(slotId);
-        
+        jsonSlot["duration"] = displayMgr.getSlotDuration(slotId);
+
         if (stickySlotId == slotId)
         {
             jsonSlot["isSticky"] = true;
@@ -249,7 +251,7 @@ void PluginMgr::save()
             jsonSlot["isSticky"] = false;
         }
 
-        jsonSlot["isDisabled"]  = displayMgr.isSlotDisabled(slotId);
+        jsonSlot["isDisabled"] = displayMgr.isSlotDisabled(slotId);
     }
 
     if (true == jsonDoc.overflowed())
@@ -283,13 +285,13 @@ void PluginMgr::createPluginConfigDirectory()
 
 void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jsonSlot)
 {
-    JsonVariantConst    jsonName        = jsonSlot["name"];
-    JsonVariantConst    jsonUid         = jsonSlot["uid"];
-    JsonVariantConst    jsonAlias       = jsonSlot["alias"];
-    JsonVariantConst    jsonFontType    = jsonSlot["fontType"];
-    JsonVariantConst    jsonDuration    = jsonSlot["duration"];
-    JsonVariantConst    jsonIsSticky    = jsonSlot["isSticky"];
-    JsonVariantConst    jsonIsDisabled  = jsonSlot["isDisabled"];
+    JsonVariantConst jsonName       = jsonSlot["name"];
+    JsonVariantConst jsonUid        = jsonSlot["uid"];
+    JsonVariantConst jsonAlias      = jsonSlot["alias"];
+    JsonVariantConst jsonFontType   = jsonSlot["fontType"];
+    JsonVariantConst jsonDuration   = jsonSlot["duration"];
+    JsonVariantConst jsonIsSticky   = jsonSlot["isSticky"];
+    JsonVariantConst jsonIsDisabled = jsonSlot["isDisabled"];
 
     if (false == jsonName.is<String>())
     {
@@ -313,11 +315,11 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
     }
     else
     {
-        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        const char* name        = jsonName.as<const char*>();
-        uint32_t    duration    = jsonDuration.as<uint32_t>();
-        bool        isSticky    = false;
-        bool        isDisabled  = false;
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        const char* name       = jsonName.as<const char*>();
+        uint32_t    duration   = jsonDuration.as<uint32_t>();
+        bool        isSticky   = false;
+        bool        isDisabled = false;
 
         /* Optional */
         if (false == jsonIsSticky.is<bool>())
@@ -350,18 +352,18 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
             {
                 uint16_t uid = jsonUid.as<uint16_t>();
 
-                plugin = m_pluginFactory.createPlugin(name, uid);
-            
+                plugin       = m_pluginFactory.createPlugin(name, uid);
+
                 if (nullptr == plugin)
                 {
                     LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name, uid, slotId);
                 }
                 else
                 {
-                    String          alias           = jsonAlias.as<String>();
-                    String          filteredAlias   = filterPluginAlias(alias);
-                    String          fontTypeStr     = jsonFontType.as<String>();
-                    Fonts::FontType fontType        = Fonts::strToFontType(fontTypeStr.c_str());
+                    String          alias         = jsonAlias.as<String>();
+                    String          filteredAlias = filterPluginAlias(alias);
+                    String          fontTypeStr   = jsonFontType.as<String>();
+                    Fonts::FontType fontType      = Fonts::strToFontType(fontTypeStr.c_str());
 
                     plugin->setAlias(filteredAlias);
                     plugin->setFontType(fontType);
@@ -382,7 +384,7 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
         }
 
         displayMgr.setSlotDuration(slotId, duration);
-        
+
         if (true == isSticky)
         {
             displayMgr.setSlotSticky(slotId);
@@ -416,7 +418,8 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
+            registerTopicsByUID(m_deviceId, plugin);
+            registerTopicsByAlias(m_deviceId, plugin);
         }
     }
 
@@ -463,11 +466,11 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
 
 bool PluginMgr::isPluginAliasValid(const String& alias)
 {
-    const size_t    MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
-    bool            isValid                     = true;
-    size_t          idx                         = 0U;
-    
-    while((MQTT_SPECIAL_CHARACTERS_LEN > idx) && (true == isValid))
+    const size_t MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
+    bool         isValid                     = true;
+    size_t       idx                         = 0U;
+
+    while ((MQTT_SPECIAL_CHARACTERS_LEN > idx) && (true == isValid))
     {
         if (0 <= alias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]))
         {
@@ -484,15 +487,15 @@ bool PluginMgr::isPluginAliasValid(const String& alias)
 
 String PluginMgr::filterPluginAlias(const String& alias)
 {
-    const size_t    MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
-    size_t          idx                         = 0U;
-    String          filteredPluginAlias         = alias;
+    const size_t MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
+    size_t       idx                         = 0U;
+    String       filteredPluginAlias         = alias;
 
-    while(MQTT_SPECIAL_CHARACTERS_LEN > idx)
+    while (MQTT_SPECIAL_CHARACTERS_LEN > idx)
     {
         int pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
 
-        while(0 <= pos)
+        while (0 <= pos)
         {
             filteredPluginAlias.remove(pos, 1U);
             pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
@@ -502,6 +505,58 @@ String PluginMgr::filterPluginAlias(const String& alias)
     }
 
     return filteredPluginAlias;
+}
+
+String PluginMgr::getEntityIdByPluginUid(uint16_t uid)
+{
+    return String("display/uid/") + uid;
+}
+
+String PluginMgr::getEntityIdByPluginAlias(const String& alias)
+{
+    return String("display/alias/") + alias;
+}
+
+void PluginMgr::registerTopicsByUID(const String& deviceId, IPluginMaintenance* plugin)
+{
+    if (nullptr != plugin)
+    {
+        String entityId = getEntityIdByPluginUid(plugin->getUID());
+
+        TopicHandlerService::getInstance().registerTopics(m_deviceId, entityId.c_str(), plugin);
+    }
+}
+
+void PluginMgr::unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge)
+{
+    if (nullptr != plugin)
+    {
+        String entityId = getEntityIdByPluginUid(plugin->getUID());
+
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
+    }
+}
+
+void PluginMgr::registerTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin)
+{
+    if ((nullptr != plugin) &&
+        (false == plugin->getAlias().isEmpty()))
+    {
+        String entityId = getEntityIdByPluginAlias(plugin->getAlias());
+
+        TopicHandlerService::getInstance().registerTopics(m_deviceId, entityId.c_str(), plugin);
+    }
+}
+
+void PluginMgr::unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge)
+{
+    if ((nullptr != plugin) &&
+        (false == plugin->getAlias().isEmpty()))
+    {
+        String entityId = getEntityIdByPluginAlias(plugin->getAlias());
+
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
+    }
 }
 
 /******************************************************************************

@@ -1,0 +1,11 @@
+[
+    {
+        "component": "text",
+        "discovery": {
+            "name": "JustTextPlugin Text",
+            "ic": "mdi:form-textbox",
+            "cmd_tpl": "{\"text\": \"{{ value }}\" }",
+            "val_tpl": "{{ value_json.text }}"
+        }
+    }
+]

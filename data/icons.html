@@ -49,7 +49,7 @@
             <div class="container">
                 <h1 class="mt-5">Icons</h1>
                 <h2>Upload</h2>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(icon.files)">
                         <div class="form-group">
                             <label class="form-label" for="icon">Icon:</label>
@@ -71,7 +71,7 @@
                     <li>Extended options: Select 24 bit per pixel.</li>
                 </ul>
                 <h2>Overview</h2>
-                <div class="h-100 p-5 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="overview">
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="overview">
                 </div>
             </div>
         </main>
@@ -80,7 +80,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -91,6 +91,7 @@
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <script type="text/javascript" src="/js/dialog.js"></script>
@@ -226,6 +227,7 @@
 
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 downloadFileList("overview");

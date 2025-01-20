@@ -63,8 +63,12 @@ To find out which part shall be connected to which pin of your development board
 ## ESP32-S3 DEVKITC-1-N16R8V
 * Reference design: [ESP32-S3-DevKitC-1](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitc-1-v1.0.html)
 * Pinning:
-  * Board: [board:esp32-s3-devkitc-1-n16r8v-LED-32x8](../../config/board.ini)
-  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+  * LED matrix 32x8
+    * Board: [board:esp32-s3-devkitc-1-n16r8v-LED-32x8](../../config/board.ini)
+    * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+  * LED matrix 32x16
+    * Board: [board:esp32-s3-devkitc-1-n16r8v-LED-32x16](../../config/board.ini)
+    * Display: [display:led_matrix_32x16_column_major_alternating](../../config/display.ini)
 * Not compatible with Pixelix boards.
 
 ## ESP32 NodeMCU
@@ -109,7 +113,7 @@ The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, beca
 This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
 * [Hardware description](./pixelix/v1.5/ELECTRONIC.md)
 * [Bill of material](./pixelix/v1.5/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Pinning](../../lib/HalLedMatrix/src/Board.h)
 * [Schematic](./pixelix/v1.5/schematics/)
 * [PCB](./pixelix/v1.5/pcb/)
 * [Housing Part 1](https://www.thingiverse.com/thing:2791276)
@@ -119,14 +123,14 @@ This board was original developed with a ESP32 DevKit V1 development board as pi
 The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
 * [Hardware description](./pixelix/v2.0/ELECTRONIC.md)
 * [Bill of material](./pixelix/v2.0/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Pinning](../../lib/HalLedMatrix/src/Board.h)
 * [Housing](./pixelix/housing/)
 
 # Pixelix Board v2.1
 The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
 * [Hardware description](./pixelix/v2.1/ELECTRONIC.md)
 * [Bill of material](./pixelix/v2.1/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Pinning](../../lib/HalLedMatrix/src/Board.h)
 * [Housing](./pixelix/housing/)
 
 # Ulanzi TC001 smart pixel clock

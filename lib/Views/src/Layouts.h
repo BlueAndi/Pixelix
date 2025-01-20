@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  Layouts
  * @author Andreas Merkle <web@blue-andi.de>
- * @addtogroup plugin
+ * @addtogroup PLUGIN
  *
  * @{
  */
@@ -43,6 +43,11 @@
 
 /** Layout type derived by LED matrix width and height. */
 #define LAYOUT_TYPE LAYOUT_32X8
+
+#elif (32U == CONFIG_LED_MATRIX_WIDTH) && (16U == CONFIG_LED_MATRIX_HEIGHT)
+
+/** Layout type derived by LED matrix width and height. */
+#define LAYOUT_TYPE LAYOUT_32X16
 
 #elif (64U == CONFIG_LED_MATRIX_WIDTH) && (64U == CONFIG_LED_MATRIX_HEIGHT)
 
@@ -75,6 +80,7 @@ typedef enum
 {
     LAYOUT_GENERIC = 0, /**< Generic layout, used in case there is no specific one. */
     LAYOUT_32X8,        /**< Layout for 32x8 pixel displays. */
+    LAYOUT_32X16,       /**< Layout for 32x16 pixel displays. */
     LAYOUT_64X64        /**< Layout for 64x64 pixel displays. */
 
 } Layout;

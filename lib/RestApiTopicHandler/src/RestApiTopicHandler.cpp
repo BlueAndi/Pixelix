@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,36 +68,34 @@
 
 void RestApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
-        (false == topic.isEmpty()))
+    /* A REST API URI is unique by its entity id and topic. */
+    UTIL_NOT_USED(deviceId);
+
+    /* Extra info not supported. */
+    UTIL_NOT_USED(extra);
+
+    if (false == topic.isEmpty())
     {
-        TopicMetaData* topicMetaData = new(std::nothrow) TopicMetaData();
+        TopicMetaData* topicMetaData = new (std::nothrow) TopicMetaData();
 
         if (nullptr != topicMetaData)
         {
-            String                      baseUri     = getBaseUri(entityId);
-            ArRequestHandlerFunction    onRequest   =
-                                            [this, topicMetaData](AsyncWebServerRequest *request)
-                                            {
-                                                this->webReqHandler(request, topicMetaData);
-                                            };
-            ArUploadHandlerFunction     onUpload    =
-                                            [this, topicMetaData](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-                                            {
-                                                this->uploadHandler(request, filename, index, data, len, final, topicMetaData);
-                                            };
+            ArRequestHandlerFunction onRequest =
+                [this, topicMetaData](AsyncWebServerRequest* request) {
+                    this->webReqHandler(request, topicMetaData);
+                };
+            ArUploadHandlerFunction onUpload =
+                [this, topicMetaData](AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final) {
+                    this->uploadHandler(request, filename, index, data, len, final, topicMetaData);
+                };
 
-            topicMetaData->deviceId         = deviceId;
-            topicMetaData->entityId         = entityId;
-            topicMetaData->topic            = topic;
-            topicMetaData->getTopicFunc     = getTopicFunc;
-            topicMetaData->setTopicFunc     = setTopicFunc;
-            topicMetaData->uploadReqFunc    = uploadReqFunc;
-            topicMetaData->uri              = baseUri + topic;
-            topicMetaData->webHandler       = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload);
-
-            UTIL_NOT_USED(extra);
+            topicMetaData->entityId      = entityId;
+            topicMetaData->topic         = topic;
+            topicMetaData->getTopicFunc  = getTopicFunc;
+            topicMetaData->setTopicFunc  = setTopicFunc;
+            topicMetaData->uploadReqFunc = uploadReqFunc;
+            topicMetaData->uri           = getUri(entityId, topic);
+            topicMetaData->webHandler    = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload);
 
             LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 
@@ -106,20 +104,20 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
     }
 }
 
-void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
+void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
-    if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
-        (false == topic.isEmpty()))
+    UTIL_NOT_USED(deviceId);
+    UTIL_NOT_USED(purge);
+
+    if (false == topic.isEmpty())
     {
         ListOfTopicMetaData::iterator topicMetaDataIt = m_listOfTopicMetaData.begin();
 
-        while(m_listOfTopicMetaData.end() != topicMetaDataIt)
+        while (m_listOfTopicMetaData.end() != topicMetaDataIt)
         {
             TopicMetaData* topicMetaData = *topicMetaDataIt;
 
             if ((nullptr != topicMetaData) &&
-                (deviceId == topicMetaData->deviceId) &&
                 (entityId == topicMetaData->entityId) &&
                 (topic == topicMetaData->topic))
             {
@@ -133,7 +131,7 @@ void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 }
 
                 topicMetaDataIt = m_listOfTopicMetaData.erase(topicMetaDataIt);
-                
+
                 delete topicMetaData;
                 topicMetaData = nullptr;
             }
@@ -153,22 +151,29 @@ void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
  * Private Methods
  *****************************************************************************/
 
-String RestApiTopicHandler::getBaseUri(const String& entityId)
+String RestApiTopicHandler::getUri(const String& entityId, const String& topic) const
 {
-    String  baseUri = RestApi::BASE_URI;
-    baseUri += "/";
-    baseUri += entityId;
+    String restUri = RestApi::BASE_URI;
 
-    return baseUri;
+    if (false == entityId.isEmpty())
+    {
+        restUri += "/";
+        restUri += entityId;
+    }
+
+    restUri += "/";
+    restUri += topic;
+
+    return restUri;
 }
 
-void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMetaData* topicMetaData)
+void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE   = 2048U;
+    const size_t        JSON_DOC_SIZE = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonObject          dataObj         = jsonDoc.createNestedObject("data");
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    JsonObject          dataObj        = jsonDoc.createNestedObject("data");
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if ((nullptr == request) ||
         (nullptr == topicMetaData))
@@ -200,7 +205,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
     {
         DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
         JsonObjectConst     jsonValue;
-        
+
         /* Topic data is in the HTTP parameters and needs to be converted to JSON. */
         par2Json(jsonDocPar, request);
 
@@ -230,8 +235,8 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
         }
         else
         {
-            jsonDoc["status"]   = "ok";
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+            jsonDoc["status"] = "ok";
+            httpStatusCode    = HttpStatus::STATUS_CODE_OK;
         }
     }
     else
@@ -246,14 +251,14 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 }
 
-void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, TopicMetaData* topicMetaData)
+void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final, TopicMetaData* topicMetaData)
 {
     /* Begin of upload? */
     if (0 == index)
     {
-        AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
-        size_t          fileSize        = request->contentLength();
-        size_t          fileSystemSpace = FILESYSTEM.totalBytes() - FILESYSTEM.usedBytes();
+        const AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
+        size_t                fileSize        = request->contentLength();
+        size_t                fileSystemSpace = FILESYSTEM.totalBytes() - FILESYSTEM.usedBytes();
 
         /* File size available? */
         if (nullptr != headerXFileSize)
@@ -325,7 +330,7 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
     }
 }
 
-void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest *request)
+void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest* request)
 {
     size_t idx = 0U;
 
@@ -334,15 +339,15 @@ void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerReque
      * - key.subKey=value       --> { "key": { "subKey": "value "} }
      * - key._0_=value          --> { "key": [ "value" ] }
      * - key._0_.subKey=value   --> { "key": [ "subKey": "value" ] }
-     * 
+     *
      * Note: Only the patterns above are supported, but not a higher
      *       nesting level.
      */
-    for(idx = 0U; idx < request->args(); ++idx)
+    for (idx = 0U; idx < request->args(); ++idx)
     {
-        const String&   keyPattern  = request->argName(idx);
-        const String&   value 	    = request->arg(idx);
-        int             dotIdx      = keyPattern.indexOf(".");
+        const String& keyPattern = request->argName(idx);
+        const String& value      = request->arg(idx);
+        int           dotIdx     = keyPattern.indexOf(".");
 
         /* No "."  in the key pattern means: key=value */
         if (0 > dotIdx)
@@ -352,21 +357,21 @@ void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerReque
         /* No "_" after the "." means: key.subKey=value */
         else if ('_' != keyPattern[dotIdx + 1U])
         {
-            String  key     = keyPattern.substring(0, dotIdx);
-            String  subKey  = keyPattern.substring(dotIdx + 1U);
+            String key              = keyPattern.substring(0, dotIdx);
+            String subKey           = keyPattern.substring(dotIdx + 1U);
 
             jsonDocPar[key][subKey] = value;
         }
         /* Its an array. */
         else
         {
-            String  key     = keyPattern.substring(0, dotIdx);
-            int     dot2Idx = keyPattern.lastIndexOf(".");
+            String key     = keyPattern.substring(0, dotIdx);
+            int    dot2Idx = keyPattern.lastIndexOf(".");
 
             /* No additional "." means: key._0_=value */
             if (dotIdx == dot2Idx)
             {
-                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
@@ -377,8 +382,8 @@ void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerReque
             /* Additional "." means: key._0_.subKey=value */
             else
             {
-                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
-                String  subKey      = keyPattern.substring(dot2Idx + 1U);
+                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String subKey      = keyPattern.substring(dot2Idx + 1U);
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
@@ -394,7 +399,7 @@ void RestApiTopicHandler::clearPluginTopics()
 {
     ListOfTopicMetaData::iterator topicMetaDataIt = m_listOfTopicMetaData.begin();
 
-    while(m_listOfTopicMetaData.end() != topicMetaDataIt)
+    while (m_listOfTopicMetaData.end() != topicMetaDataIt)
     {
         TopicMetaData* topicMetaData = *topicMetaDataIt;
 

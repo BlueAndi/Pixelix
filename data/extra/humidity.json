@@ -1,0 +1,12 @@
+[
+    {
+        "component": "sensor",
+        "discovery": {
+            "name": "Humidity",
+            "unit_of_meas": "%",
+            "ic": "mdi:water-percent",
+            "dev_cla": "humidity",
+            "val_tpl": "{{ value_json.value }}"
+        }
+    }
+]

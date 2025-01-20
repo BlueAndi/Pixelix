@@ -48,6 +48,26 @@
                     "./web/icon8x8/wind.bmp"
                 ]
             }, {
+                "name": "LAYOUT_32X16",
+                "files": [
+                    "./web/icon8x8/01d.bmp",
+                    "./web/icon8x8/01n.bmp",
+                    "./web/icon8x8/02d.bmp",
+                    "./web/icon8x8/02n.bmp",
+                    "./web/icon8x8/03.bmp",
+                    "./web/icon8x8/04.bmp",
+                    "./web/icon8x8/09.bmp",
+                    "./web/icon8x8/10d.bmp",
+                    "./web/icon8x8/10n.bmp",
+                    "./web/icon8x8/11.bmp",
+                    "./web/icon8x8/13.bmp",
+                    "./web/icon8x8/50.bmp",
+                    "./web/icon8x8/hum.bmp",
+                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/uvi.bmp",
+                    "./web/icon8x8/wind.bmp"
+                ]
+            }, {
                 "name": "LAYOUT_64X64",
                 "files": [
                     "./web/icon8x8/01d.bmp",

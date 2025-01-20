@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,8 @@
 #include "TopicHandlers.h"
 
 #include <Logging.h>
+#include <FileSystem.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,6 +71,7 @@ bool TopicHandlerService::start()
     startAllHandlers();
 
     m_onChangeTimer.start(ON_CHANGE_PERIOD);
+    m_isStarted = true;
 
     LOG_INFO("Topic handler service started.");
 
@@ -77,6 +80,7 @@ bool TopicHandlerService::start()
 
 void TopicHandlerService::stop()
 {
+    m_isStarted = false;
     m_onChangeTimer.stop();
 
     stopAllHandlers();
@@ -86,23 +90,41 @@ void TopicHandlerService::stop()
 
 void TopicHandlerService::process()
 {
-    processAllHandlers();
-
-    if ((true == m_onChangeTimer.isTimerRunning()) &&
-        (true == m_onChangeTimer.isTimeout()))
+    if (true == m_isStarted)
     {
-        processOnChange();
+        processAllHandlers();
+
+        if ((true == m_onChangeTimer.isTimerRunning()) &&
+            (true == m_onChangeTimer.isTimeout()))
+        {
+            bool forceUpdate = false;
+
+            if (0U < m_updateCounter)
+            {
+                --m_updateCounter;
+            }
+
+            if (0U == m_updateCounter)
+            {
+                forceUpdate = true;
+                m_updateCounter = UPDATE_COUNTER_VALUE;
+            }
+
+            processOnChange(forceUpdate);
+
+            m_onChangeTimer.restart();
+        }
     }
 }
 
-void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintenance* plugin)
+void TopicHandlerService::registerTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin)
 {
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
     {
-        const size_t        JSON_DOC_SIZE   = 1024U;
+        const size_t        JSON_DOC_SIZE = 1024U;
         DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
-        JsonArray           jsonTopics      = topicsDoc.createNestedArray("topics");
+        JsonArray           jsonTopics = topicsDoc.createNestedArray("topics");
 
         /* Get topics from plugin. */
         plugin->getTopics(jsonTopics);
@@ -116,18 +138,20 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
         {
             for (JsonVariantConst jsonTopic : jsonTopics)
             {
-                String                          topicName;
-                JsonObjectConst                 extra;
-                String                          topicAccess     = DEFAULT_ACCESS;
-                ITopicHandler::GetTopicFunc     getTopicFunc    = nullptr;
-                ITopicHandler::SetTopicFunc     setTopicFunc    = nullptr;
-                ITopicHandler::UploadReqFunc    uploadReqFunc   = nullptr;
+                String                       topicName;
+                JsonObjectConst              jsonExtra;
+                String                       extraFileName;
+                String                       topicAccess   = DEFAULT_ACCESS;
+                ITopicHandler::GetTopicFunc  getTopicFunc  = nullptr;
+                ITopicHandler::SetTopicFunc  setTopicFunc  = nullptr;
+                ITopicHandler::UploadReqFunc uploadReqFunc = nullptr;
 
                 /* Topic specific parameter available? */
                 if (true == jsonTopic.is<JsonObjectConst>())
                 {
-                    JsonVariantConst    jsonTopicName   = jsonTopic["name"];
-                    JsonVariantConst    jsonTopicAccess = jsonTopic["access"];
+                    JsonVariantConst jsonTopicName   = jsonTopic["name"];
+                    JsonVariantConst jsonTopicAccess = jsonTopic["access"];
+                    JsonVariantConst jsonExtraVar    = jsonTopic["extra"];
 
                     if (true == jsonTopicName.is<String>())
                     {
@@ -139,7 +163,19 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                         topicAccess = jsonTopicAccess.as<String>();
                     }
 
-                    extra = jsonTopic;
+                    if (true == jsonExtraVar.is<JsonObjectConst>())
+                    {
+                        jsonExtra = jsonExtraVar.as<JsonObjectConst>();
+                    }
+                    else if (true == jsonExtraVar.is<String>())
+                    {
+                        extraFileName = jsonExtraVar.as<String>();
+                    }
+                    else
+                    {
+                        /* Skip */
+                        ;
+                    }
                 }
                 /* Only topic name is available */
                 else if (true == jsonTopic.is<String>())
@@ -155,31 +191,40 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                 if (false == topicName.isEmpty())
                 {
                     strToAccess(plugin, topicAccess, getTopicFunc, setTopicFunc, uploadReqFunc);
-                    
-                    /* Register plugin topic with plugin UID as entity id. */
-                    registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
 
-                    /* Register plugin topic with plugin alias as entity id (if possible). */
-                    if (false == plugin->getAlias().isEmpty())
+                    if (true == extraFileName.isEmpty())
                     {
-                        registerTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                        registerTopic(deviceId, entityId, topicName, jsonExtra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                    }
+                    else
+                    {
+                        registerTopic(deviceId, entityId, topicName, extraFileName.c_str(), getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
                     }
 
-                    addToPluginMetaDataList(deviceId, plugin, topicName);
+                    addToTopicMetaDataList(deviceId, entityId, plugin, topicName, nullptr);
+
+                    /* A plugin can be registered by UID and by alias for the same topic.
+                     * This raises the problem that the plugin is added twice to the topic meta data list.
+                     * During processing on change, the plugin will be asked twice whether there is any change.
+                     * But the first call will reset the change flag, so the second call will not recognize any change.
+                     * To avoid this, the plugin will be added only once to the plugin list and just asked once,
+                     * but the topic handlers will be notified for every registration.
+                     */
+                    addToPluginList(plugin, topicName);
                 }
             }
         }
     }
 }
 
-void TopicHandlerService::unregisterTopics(const String& deviceId, IPluginMaintenance* plugin)
+void TopicHandlerService::unregisterTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin, bool purge)
 {
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
     {
-        const size_t        JSON_DOC_SIZE   = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
-        JsonArray           jsonTopics      = topicsDoc.createNestedArray("topics");
+        JsonArray           jsonTopics = topicsDoc.createNestedArray("topics");
 
         /* Get topics from plugin. */
         plugin->getTopics(jsonTopics);
@@ -214,30 +259,23 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, IPluginMainte
 
                 if (false == topicName.isEmpty())
                 {
-                    /* Unregister plugin topic with plugin UID as entity id. */
-                    unregisterTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName);
+                    unregisterTopic(deviceId, entityId, topicName, purge);
 
-                    /* Unregister plugin topic with plugin UID as entity id (if possible). */
-                    if (false == plugin->getAlias().isEmpty())
-                    {
-                        unregisterTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName);
-                    }
-
-                    removeFromPluginMetaDataList(deviceId, plugin);
+                    removeFromTopicMetaDataList(deviceId, entityId, topicName);
+                    removeFromPluginList(plugin, topicName);
                 }
             }
         }
     }
 }
 
-void TopicHandlerService::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc)
+void TopicHandlerService::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& jsonExtra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc)
 {
     if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
-        bool    isReadAccess    = false;
-        bool    isWriteAccess   = false;
+        bool isReadAccess  = false;
+        bool isWriteAccess = false;
 
         /* Determine the kind of accessability. */
         if (nullptr != getTopicFunc)
@@ -245,7 +283,7 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
             isReadAccess = true;
         }
 
-        if ((nullptr != setTopicFunc) &&
+        if ((nullptr != setTopicFunc) ||
             (nullptr != uploadReqFunc))
         {
             isWriteAccess = true;
@@ -254,18 +292,18 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
         if ((true == isReadAccess) ||
             (true == isWriteAccess))
         {
-            uint8_t         idx                 = 0U;
-            uint8_t         count               = 0U;
-            ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+            uint8_t         idx              = 0U;
+            uint8_t         count            = 0U;
+            ITopicHandler** topicHandlerList = TopicHandlers::getList(count);
 
             /* Register topic by every known topic handler. */
-            while(count > idx)
+            while (count > idx)
             {
                 ITopicHandler* handler = topicHandlerList[idx];
 
                 if (nullptr != handler)
                 {
-                    handler->registerTopic(deviceId, entityId, topic, extra, getTopicFunc, setTopicFunc, uploadReqFunc);
+                    handler->registerTopic(deviceId, entityId, topic, jsonExtra, getTopicFunc, setTopicFunc, uploadReqFunc);
                 }
 
                 ++idx;
@@ -277,30 +315,54 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
             if ((true == isReadAccess) &&
                 (nullptr != hasChangedFunc))
             {
-                addToTopicMetaDataList(deviceId, entityId, topic, hasChangedFunc);
+                addToTopicMetaDataList(deviceId, entityId, nullptr, topic, hasChangedFunc);
             }
         }
     }
 }
 
-void TopicHandlerService::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
+void TopicHandlerService::registerTopic(const String& deviceId, const String& entityId, const String& topic, const char* extraFileName, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc)
+{
+    const size_t        JSON_DOC_SIZE = 1024U;
+    DynamicJsonDocument jsonDocExtra(JSON_DOC_SIZE);
+    JsonObjectConst     jsonExtra;
+
+    if (nullptr != extraFileName)
+    {
+        JsonFile jsonFile(FILESYSTEM);
+
+        LOG_INFO("Load extra info from file: %s", extraFileName);
+
+        if (false == jsonFile.load(extraFileName, jsonDocExtra))
+        {
+            LOG_WARNING("Failed to load extra info from file: %s", extraFileName);
+        }
+        else
+        {
+            jsonExtra = jsonDocExtra.as<JsonObject>();
+        }
+    }
+
+    registerTopic(deviceId, entityId, topic, jsonExtra, getTopicFunc, hasChangedFunc, setTopicFunc, uploadReqFunc);
+}
+
+void TopicHandlerService::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
     if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
-        uint8_t         idx                 = 0U;
-        uint8_t         count               = 0U;
-        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+        uint8_t         idx              = 0U;
+        uint8_t         count            = 0U;
+        ITopicHandler** topicHandlerList = TopicHandlers::getList(count);
 
         /* Unregister topic by every known topic handler. */
-        while(count > idx)
+        while (count > idx)
         {
             ITopicHandler* handler = topicHandlerList[idx];
 
             if (nullptr != handler)
             {
-                handler->unregisterTopic(deviceId, entityId, topic);
+                handler->unregisterTopic(deviceId, entityId, topic, purge);
             }
 
             ++idx;
@@ -319,28 +381,18 @@ void TopicHandlerService::unregisterTopic(const String& deviceId, const String& 
  * Private Methods
  *****************************************************************************/
 
-String TopicHandlerService::getEntityIdByPluginUid(uint16_t uid)
-{
-    return String("display/uid/") + uid;
-}
-
-String TopicHandlerService::getEntityIdByPluginAlias(const String& alias)
-{
-    return String("display/alias/") + alias;
-}
-
 void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& strAccess, ITopicHandler::GetTopicFunc& getTopicFunc, ITopicHandler::SetTopicFunc& setTopicFunc, ITopicHandler::UploadReqFunc& uploadReqFunc) const
 {
     if (nullptr != plugin)
     {
-        bool isReadAccess = false;
+        bool isReadAccess  = false;
         bool isWriteAccess = false;
 
         if (true == strAccess.equalsIgnoreCase("rw"))
         {
             /* Read/Write access */
-            isReadAccess    = true;
-            isWriteAccess   = true;
+            isReadAccess  = true;
+            isWriteAccess = true;
         }
         else if (true == strAccess.equalsIgnoreCase("w"))
         {
@@ -355,44 +407,40 @@ void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& 
 
         if (true == isReadAccess)
         {
-            getTopicFunc =      [plugin](const String& topic, JsonObject& value) -> bool
-                                {
-                                    LOG_INFO("Get %s of plugin %u.", topic.c_str(), plugin->getUID());
-                                    return plugin->getTopic(topic, value);
-                                };
+            getTopicFunc = [plugin](const String& topic, JsonObject& value) -> bool {
+                LOG_INFO("Get %s of plugin %u.", topic.c_str(), plugin->getUID());
+                return plugin->getTopic(topic, value);
+            };
         }
 
         if (true == isWriteAccess)
         {
-            setTopicFunc  =     [plugin](const String& topic, const JsonObjectConst& value) -> bool
-                                {
-                                    LOG_INFO("Set %s of plugin %u.", topic.c_str(), plugin->getUID());
-                                    return plugin->setTopic(topic, value);
-                                };
+            setTopicFunc = [plugin](const String& topic, const JsonObjectConst& value) -> bool {
+                LOG_INFO("Set %s of plugin %u.", topic.c_str(), plugin->getUID());
+                return plugin->setTopic(topic, value);
+            };
 
-            uploadReqFunc =     [plugin](const String& topic, const String& srcFilename, String& dstFilename) -> bool
-                                {
-                                    return plugin->isUploadAccepted(topic, srcFilename, dstFilename);
-                                };
+            uploadReqFunc = [plugin](const String& topic, const String& srcFilename, String& dstFilename) -> bool {
+                return plugin->isUploadAccepted(topic, srcFilename, dstFilename);
+            };
         }
     }
 }
 
-void TopicHandlerService::addToTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic, HasChangedFunc hasChangedFunc)
+void TopicHandlerService::addToTopicMetaDataList(const String& deviceId, const String& entityId, IPluginMaintenance* plugin, const String& topic, HasChangedFunc hasChangedFunc)
 {
     if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
-        (false == topic.isEmpty()) &&
-        (nullptr != hasChangedFunc))
+        (false == topic.isEmpty()))
     {
-        TopicMetaData* topicMetaData = new(std::nothrow) TopicMetaData();
+        TopicMetaData* topicMetaData = new (std::nothrow) TopicMetaData();
 
         if (nullptr != topicMetaData)
         {
-            topicMetaData->deviceId         = deviceId;
-            topicMetaData->entityId         = entityId;
-            topicMetaData->topic            = topic;
-            topicMetaData->hasChangedFunc   = hasChangedFunc;
+            topicMetaData->deviceId       = deviceId;
+            topicMetaData->entityId       = entityId;
+            topicMetaData->plugin         = plugin;
+            topicMetaData->topic          = topic;
+            topicMetaData->hasChangedFunc = hasChangedFunc;
 
             m_topicMetaDataList.push_back(topicMetaData);
         }
@@ -403,7 +451,7 @@ void TopicHandlerService::removeFromTopicMetaDataList(const String& deviceId, co
 {
     TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
 
-    while(m_topicMetaDataList.end() != topicMetaDataListIt)
+    while (m_topicMetaDataList.end() != topicMetaDataListIt)
     {
         TopicMetaData* topicMetaData = *topicMetaDataListIt;
 
@@ -413,7 +461,7 @@ void TopicHandlerService::removeFromTopicMetaDataList(const String& deviceId, co
             (topic == topicMetaData->topic))
         {
             topicMetaDataListIt = m_topicMetaDataList.erase(topicMetaDataListIt);
-            
+
             delete topicMetaData;
             topicMetaData = nullptr;
         }
@@ -424,84 +472,159 @@ void TopicHandlerService::removeFromTopicMetaDataList(const String& deviceId, co
     }
 }
 
-void TopicHandlerService::addToPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin, const String& topic)
+void TopicHandlerService::addToPluginList(IPluginMaintenance* plugin, const String& topic)
 {
-    if ((false == deviceId.isEmpty()) &&
-        (nullptr != plugin) &&
+    if ((nullptr != plugin) &&
         (false == topic.isEmpty()))
     {
-        PluginMetaData* pluginMetaData = new(std::nothrow) PluginMetaData();
+        PluginMetaDataList::iterator pluginMetaDataIt = m_pluginMetaDataList.begin();
+        bool                         found            = false;
 
-        if (nullptr != pluginMetaData)
+        /* Check whether the plugin is already added with its topic. */
+        while (m_pluginMetaDataList.end() != pluginMetaDataIt)
         {
-            pluginMetaData->deviceId    = deviceId;
-            pluginMetaData->plugin      = plugin;
-            pluginMetaData->topic       = topic;
+            PluginMetaData* pluginMetaData = *pluginMetaDataIt;
 
-            m_pluginMetaDataList.push_back(pluginMetaData);
+            /* Found? */
+            if ((plugin == pluginMetaData->plugin) &&
+                (topic == pluginMetaData->topic))
+            {
+                ++pluginMetaData->count;
+                found = true;
+                break;
+            }
+
+            ++pluginMetaDataIt;
+        }
+
+        /* If plugin and its topic is not found, it will be added to the list. */
+        if (false == found)
+        {
+            PluginMetaData* pluginMetaData = new (std::nothrow) PluginMetaData();
+
+            if (nullptr != pluginMetaData)
+            {
+                pluginMetaData->plugin = plugin;
+                pluginMetaData->topic  = topic;
+                pluginMetaData->count  = 1U;
+
+                m_pluginMetaDataList.push_back(pluginMetaData);
+            }
         }
     }
 }
 
-void TopicHandlerService::removeFromPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin)
+void TopicHandlerService::removeFromPluginList(IPluginMaintenance* plugin, const String& topic)
+{
+    if ((nullptr != plugin) &&
+        (false == topic.isEmpty()))
+    {
+        PluginMetaDataList::iterator pluginMetaDataIt = m_pluginMetaDataList.begin();
+
+        /* Find the plugin with its topic in the list. */
+        while (m_pluginMetaDataList.end() != pluginMetaDataIt)
+        {
+            PluginMetaData* pluginMetaData = *pluginMetaDataIt;
+
+            /* Found? */
+            if ((plugin == pluginMetaData->plugin) &&
+                (topic == pluginMetaData->topic))
+            {
+                if (0U < pluginMetaData->count)
+                {
+                    --pluginMetaData->count;
+                }
+
+                /* If its the last registration, the entry will be removed. */
+                if (0U == pluginMetaData->count)
+                {
+                    pluginMetaDataIt = m_pluginMetaDataList.erase(pluginMetaDataIt);
+
+                    delete pluginMetaData;
+                    pluginMetaData = nullptr;
+                }
+                else
+                {
+                    ++pluginMetaDataIt;
+                }
+            }
+            else
+            {
+                ++pluginMetaDataIt;
+            }
+        }
+    }
+}
+
+void TopicHandlerService::processOnChange(bool forceUpdate)
+{
+    processPluginsOnChange(forceUpdate);
+    processOthersOnChange(forceUpdate);
+}
+
+void TopicHandlerService::processPluginsOnChange(bool forceUpdate)
 {
     PluginMetaDataList::iterator pluginMetaDataListIt = m_pluginMetaDataList.begin();
 
-    while(m_pluginMetaDataList.end() != pluginMetaDataListIt)
+    /* Process all topics which are related to plugins. */
+    while (m_pluginMetaDataList.end() != pluginMetaDataListIt)
     {
         PluginMetaData* pluginMetaData = *pluginMetaDataListIt;
 
         if ((nullptr != pluginMetaData) &&
-            (deviceId == pluginMetaData->deviceId) &&
-            (plugin == pluginMetaData->plugin))
+            (nullptr != pluginMetaData->plugin))
         {
-            pluginMetaDataListIt = m_pluginMetaDataList.erase(pluginMetaDataListIt);
-            
-            delete pluginMetaData;
-            pluginMetaData = nullptr;
-        }
-        else
-        {
-            ++pluginMetaDataListIt;
-        }
-    }
-}
+            bool hasTopicChanged = pluginMetaData->plugin->hasTopicChanged(pluginMetaData->topic);
 
-void TopicHandlerService::processOnChange()
-{
-    PluginMetaDataList::iterator    pluginMetaDataListIt    = m_pluginMetaDataList.begin();
-    TopicMetaDataList::iterator     topicMetaDataListIt     = m_topicMetaDataList.begin();
-    
-    /** Process all plugin related topics. */
-    while(m_pluginMetaDataList.end() != pluginMetaDataListIt)
-    {
-        PluginMetaData* pluginMetaData = *pluginMetaDataListIt;
-
-        if ((nullptr != pluginMetaData) &&
-            (nullptr != pluginMetaData->plugin) &&
-            (true == pluginMetaData->plugin->hasTopicChanged(pluginMetaData->topic)))
-        {
-            notifyAllHandlers(pluginMetaData->deviceId, getEntityIdByPluginUid(pluginMetaData->plugin->getUID()), pluginMetaData->topic);
-
-            if (false == pluginMetaData->plugin->getAlias().isEmpty())
+            if ((true == hasTopicChanged) ||
+                (true == forceUpdate))
             {
-                notifyAllHandlers(pluginMetaData->deviceId, getEntityIdByPluginAlias(pluginMetaData->plugin->getAlias()), pluginMetaData->topic);
+                TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
+
+                /* Notify all handlers, which are interested in this topic. */
+                while (m_topicMetaDataList.end() != topicMetaDataListIt)
+                {
+                    TopicMetaData* topicMetaData = *topicMetaDataListIt;
+
+                    if ((nullptr != topicMetaData) &&
+                        (pluginMetaData->plugin == topicMetaData->plugin) &&
+                        (pluginMetaData->topic == topicMetaData->topic))
+                    {
+                        notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
+                    }
+
+                    ++topicMetaDataListIt;
+                }
             }
         }
 
         ++pluginMetaDataListIt;
     }
+}
 
-    /** Proces all topics which are independent from plugins. */
-    while(m_topicMetaDataList.end() != topicMetaDataListIt)
+void TopicHandlerService::processOthersOnChange(bool forceUpdate)
+{
+    TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
+
+    /* Proces all topics which are independent from plugins. */
+    while (m_topicMetaDataList.end() != topicMetaDataListIt)
     {
         TopicMetaData* topicMetaData = *topicMetaDataListIt;
 
-        if ((nullptr != topicMetaData) &&
-            (nullptr != topicMetaData->hasChangedFunc) &&
-            (true == topicMetaData->hasChangedFunc(topicMetaData->topic)))
+        if (nullptr != topicMetaData)
         {
-            notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
+            bool hasTopicChanged = false;
+
+            if (nullptr != topicMetaData->hasChangedFunc)
+            {
+                hasTopicChanged = topicMetaData->hasChangedFunc(topicMetaData->topic);
+            }
+
+            if ((true == hasTopicChanged) ||
+                (true == forceUpdate))
+            {
+                notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
+            }
         }
 
         ++topicMetaDataListIt;
@@ -510,11 +633,11 @@ void TopicHandlerService::processOnChange()
 
 void TopicHandlerService::startAllHandlers()
 {
-    uint8_t         idx                 = 0U;
-    uint8_t         count               = 0U;
-    ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+    uint8_t         idx              = 0U;
+    uint8_t         count            = 0U;
+    ITopicHandler** topicHandlerList = TopicHandlers::getList(count);
 
-    while(count > idx)
+    while (count > idx)
     {
         ITopicHandler* handler = topicHandlerList[idx];
 
@@ -529,11 +652,11 @@ void TopicHandlerService::startAllHandlers()
 
 void TopicHandlerService::stopAllHandlers()
 {
-    uint8_t         idx                 = 0U;
-    uint8_t         count               = 0U;
-    ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+    uint8_t         idx              = 0U;
+    uint8_t         count            = 0U;
+    ITopicHandler** topicHandlerList = TopicHandlers::getList(count);
 
-    while(count > idx)
+    while (count > idx)
     {
         ITopicHandler* handler = topicHandlerList[idx];
 
@@ -548,11 +671,11 @@ void TopicHandlerService::stopAllHandlers()
 
 void TopicHandlerService::processAllHandlers()
 {
-    uint8_t         idx                 = 0U;
-    uint8_t         count               = 0U;
-    ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+    uint8_t         idx              = 0U;
+    uint8_t         count            = 0U;
+    ITopicHandler** topicHandlerList = TopicHandlers::getList(count);
 
-    while(count > idx)
+    while (count > idx)
     {
         ITopicHandler* handler = topicHandlerList[idx];
 
@@ -569,11 +692,11 @@ void TopicHandlerService::notifyAllHandlers(const String& deviceId, const String
 {
     if (false == topic.isEmpty())
     {
-        uint8_t         idx                 = 0U;
-        uint8_t         count               = 0U;
-        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+        uint8_t         idx              = 0U;
+        uint8_t         count            = 0U;
+        ITopicHandler** topicHandlerList = TopicHandlers::getList(count);
 
-        while(count > idx)
+        while (count > idx)
         {
             ITopicHandler* handler = topicHandlerList[idx];
 

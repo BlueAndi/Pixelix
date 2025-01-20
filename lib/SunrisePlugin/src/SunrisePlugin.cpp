@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* SunrisePlugin::TOPIC_CONFIG         = "/location";
+const char* SunrisePlugin::TOPIC_CONFIG         = "location";
 
 /* Initialize time format. */
 const char* SunrisePlugin::TIME_FORMAT_DEFAULT  = "%I:%M %p";

@@ -1,4 +1,4 @@
-@startuml
+@startuml hal
 
 title Hardware Abstraction Layer (HAL)
 
