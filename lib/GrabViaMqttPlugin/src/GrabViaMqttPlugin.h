@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Grab information via REST API plugin
+ * @brief  Grab information via MQTT API plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup PLUGIN
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef GRAB_VIA_REST_PLUGIN_H
-#define GRAB_VIA_REST_PLUGIN_H
+#ifndef GRAB_VIA_MQTT_PLUGIN_H
+#define GRAB_VIA_MQTT_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -343,6 +343,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* GRAB_VIA_REST_PLUGIN_H */
+#endif  /* GRAB_VIA_MQTT_PLUGIN_H */
 
 /** @} */

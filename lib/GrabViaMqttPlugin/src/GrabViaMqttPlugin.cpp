@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Grab information via REST API plugin
+ * @brief  Grab information via MQTT API plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
