@@ -14,9 +14,9 @@
     }, {
         "name": "SPI"
     }, {
-        "owner": "0ooYoo0",
+        "owner": "moononournation",
         "name": "GFX Library for Arduino",
-        "version": "https://github.com/0ooYoo0/Arduino_GFX/archive/refs/heads/master.zip"
+        "version": "1.5.2"
     }, {
         "name": "YAGfx"
     }, {

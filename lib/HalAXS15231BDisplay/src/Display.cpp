@@ -39,6 +39,14 @@
  * Compiler Switches
  *****************************************************************************/
 
+#if CONFIG_DISPLAY_ROTATE180 != 0
+/** TFT rotation value, see Arduino_GFX::setRotation() */
+#define TFT_ROTATION    0
+#else
+/** TFT rotation value, see Arduino_GFX::setRotation() */
+#define TFT_ROTATION    2
+#endif
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -70,8 +78,8 @@
 Display::Display() :
     IDisplay(),
     m_bus(TFT_QSPI_CS /* CS */, TFT_QSPI_SCK /* SCK */, TFT_QSPI_D0 /* SDIO0 */, TFT_QSPI_D1 /* SDIO1 */, TFT_QSPI_D2 /* SDIO2 */, TFT_QSPI_D3 /* SDIO3 */),
-    m_g(&m_bus, TFT_QSPI_RST /* RST */, 0 /* rotation */,false /* IPS */, TFT_WIDTH, TFT_HEIGHT),
-    m_gfx(TFT_WIDTH /* width */, TFT_HEIGHT /* height */, &m_g, 0 /* output_x */, 0 /* output_y */, 0 /* rotation */),
+    m_g(&m_bus, TFT_QSPI_RST /* RST */, 0 /* rotation */, false /* IPS */, TFT_WIDTH, TFT_HEIGHT),
+    m_gfx(TFT_WIDTH /* width */, TFT_HEIGHT /* height */, &m_g, 0 /* output_x */, 0 /* output_y */, TFT_ROTATION /* rotation */),
     m_ledMatrix(),
     m_brightness(DEFAULT_BRIGHTNESS),
     m_isOn(false)
@@ -91,24 +99,23 @@ void Display::show()
     {
         for(x = 0; x < MATRIX_WIDTH; ++x)
         {
-#if CONFIG_DISPLAY_ROTATE180 != 0
-            Color       brightnessAdjustedColor = m_ledMatrix.getColor(MATRIX_WIDTH - x - 1, MATRIX_HEIGHT - y - 1);
-#else
             Color       brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
-#endif           
             uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
-            int32_t     xNative                 = y * (PIXEL_HEIGHT + PiXEL_DISTANCE) + BORDER_Y;
-            int32_t     yNative                 = TFT_HEIGHT - (x * (PIXEL_WIDTH  + PiXEL_DISTANCE) + BORDER_X) - 1;
+            int32_t     xNative                 = y * (PIXEL_HEIGHT + PIXEL_DISTANCE) + BORDER_Y;
+            int32_t     yNative                 = TFT_HEIGHT - (x * (PIXEL_WIDTH  + PIXEL_DISTANCE) + BORDER_X) - 1;
             
             intensity *= (static_cast<uint16_t>(m_brightness) + 1U);
             intensity /= 256U;
             brightnessAdjustedColor.setIntensity(static_cast<uint8_t>(intensity));
             
-            m_gfx.fillRect(xNative, yNative, PIXEL_HEIGHT, PIXEL_WIDTH, brightnessAdjustedColor.to565());
+            m_gfx.fillRect( xNative,
+                            yNative, 
+                            PIXEL_HEIGHT,
+                            PIXEL_WIDTH, brightnessAdjustedColor.to565());
        }
     }
-    
-     m_gfx.flush();
+
+    m_gfx.flush();
 }
 
 void Display::off()

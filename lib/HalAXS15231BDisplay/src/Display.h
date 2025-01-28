@@ -295,13 +295,13 @@ private:
     static const int32_t PIXEL_HEIGHT                                 = TFT_PIXEL_HEIGHT;
 
     /** Pixel distance in T-Display pixels */
-    static const int32_t PiXEL_DISTANCE                               = TFT_PIXEL_DISTANCE;
+    static const int32_t PIXEL_DISTANCE                               = TFT_PIXEL_DISTANCE;
 
     /** T-Display x-axis border size in T-Display pixels */
-    static const int32_t BORDER_X                                     = (TFT_HEIGHT - (MATRIX_WIDTH * (PIXEL_WIDTH + PiXEL_DISTANCE))) / 2;
+    static const int32_t BORDER_X                                     = (TFT_HEIGHT - (MATRIX_WIDTH * (PIXEL_WIDTH + PIXEL_DISTANCE))) / 2;
 
     /** T-Display y-axis border size in T-Display pixels */
-    static const int32_t BORDER_Y                                     = (TFT_WIDTH - (MATRIX_HEIGHT * (PIXEL_HEIGHT + PiXEL_DISTANCE))) / 2;
+    static const int32_t BORDER_Y                                     = (TFT_WIDTH - (MATRIX_HEIGHT * (PIXEL_HEIGHT + PIXEL_DISTANCE))) / 2;
 
     /** TFT default brightness */
     static const uint8_t                           DEFAULT_BRIGHTNESS = TFT_DEFAULT_BRIGHTNESS;
