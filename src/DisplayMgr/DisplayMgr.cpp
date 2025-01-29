@@ -1531,7 +1531,7 @@ void DisplayMgr::updateTask(void* parameters)
             /* Give other tasks a chance. */
             if (UPDATE_TASK_PERIOD <= duration)
             {
-                delay(1U);
+                delay(4U);
             }
             else
             {
