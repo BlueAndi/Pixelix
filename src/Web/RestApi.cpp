@@ -768,7 +768,10 @@ static void handlePlugins(AsyncWebServerRequest* request)
 
         while (pluginTypeListLength > idx)
         {
-            pluginArray.add(pluginTypeList[idx].name);
+            if (false == pluginArray.add(pluginTypeList[idx].name))
+            {
+                break;
+            }
 
             ++idx;
         }
@@ -880,7 +883,10 @@ static void handleSettings(AsyncWebServerRequest* request)
 
             if (nullptr != setting)
             {
-                (void)settingsArray.add(setting->getKey());
+                if (false == settingsArray.add(setting->getKey()))
+                {
+                    break;
+                }
             }
         }
     }

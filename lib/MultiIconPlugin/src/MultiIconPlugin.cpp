@@ -83,7 +83,7 @@ void MultiIconPlugin::getTopics(JsonArray& topics) const
         jsonSlot["extra"]["ha"] = TOPIC_SLOT_EXTRA_HA_FILE_NAME;
     }
 
-    topics.add(TOPIC_SLOTS);
+    (void)topics.add(TOPIC_SLOTS);
 }
 
 bool MultiIconPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -187,7 +187,7 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
             {
                 FileMgrService::FileId fileId = slot.as<String>().toInt();
 
-                jsonCfgSlots.add(fileId);
+                (void)jsonCfgSlots.add(fileId);
             }
 
             isSuccessful = true;
@@ -375,7 +375,7 @@ void MultiIconPlugin::getConfiguration(JsonObject& jsonCfg) const
 
     for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     {
-        jsonSlots.add(m_slots[slotId].fileId);
+        (void)jsonSlots.add(m_slots[slotId].fileId);
     }
 }
 
