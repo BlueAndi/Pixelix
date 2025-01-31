@@ -5,18 +5,17 @@
 
 # Configurations for the GrabViaMqttPlugin and GrabViaRestPlugin <!-- omit in toc -->
 
-* [General](#general)
-* [GrabViaMqttPlugin examples](#grabviamqttplugin-examples)
-  * [Grodans Paradis AB outdoor temperature](#grodans-paradis-ab-outdoor-temperature)
-* [GrabViaRestPlugin examples](#grabviarestplugin-examples)
-  * [Bitcoin price in US$](#bitcoin-price-in-us)
-  * [Github repository stargazers](#github-repository-stargazers)
-  * [NINA - Warnings](#nina---warnings)
-  * [Bitcoin price in US$](#bitcoin-price-in-us-1)
-  * [Shelly PlugS - Power consumption](#shelly-plugs---power-consumption)
-* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-* [License](#license)
-* [Contribution](#contribution)
+- [General](#general)
+- [GrabViaMqttPlugin examples](#grabviamqttplugin-examples)
+  - [Grodans Paradis AB outdoor temperature](#grodans-paradis-ab-outdoor-temperature)
+- [GrabViaRestPlugin examples](#grabviarestplugin-examples)
+  - [Bitcoin price in US$](#bitcoin-price-in-us)
+  - [Github repository stargazers](#github-repository-stargazers)
+  - [NINA - Warnings](#nina---warnings)
+  - [Shelly PlugS - Power consumption](#shelly-plugs---power-consumption)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
 # General
 Please share your configuration for others by pull request or you can open an issue with your example. It will be added here to the list.
@@ -307,7 +306,6 @@ Example result: ```321 stars```
 Find the complete plugin configuration in [githubStargazers.json](./rest/githubStargazers.json).
 
 ## NINA - Warnings
-## Bitcoin price in US$
 Show the warnings from the Bundesamt für [Bevölkerungsschutz und Katastrophenhilfe](https://www.bbk.bund.de/) in Germany. They provide a [REST API](https://nina.api.bund.dev/) to retrieve several kind of informations.
 
 Get the official regional key of your area here: https://www.xrepository.de/api/xrepository/urn:de:bund:destatis:bevoelkerungsstatistik:schluessel:rs_2021-07-31/download/Regionalschl_ssel_2021-07-31.json
