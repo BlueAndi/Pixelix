@@ -89,16 +89,16 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 1024U;
+        const size_t        JSON_DOC_SIZE = 1024U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonMethod              = value["method"];
-        JsonVariantConst    jsonUrl                 = value["url"];
-        JsonVariantConst    jsonFilter              = value["filter"];
-        JsonVariantConst    jsonIconFileId          = value["iconFileId"];
-        JsonVariantConst    jsonFormat              = value["format"];
-        JsonVariantConst    jsonMultiplier          = value["multiplier"];
-        JsonVariantConst    jsonOffset              = value["offset"];
+        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonMethod     = value["method"];
+        JsonVariantConst    jsonUrl        = value["url"];
+        JsonVariantConst    jsonFilter     = value["filter"];
+        JsonVariantConst    jsonIconFileId = value["iconFileId"];
+        JsonVariantConst    jsonFormat     = value["format"];
+        JsonVariantConst    jsonMultiplier = value["multiplier"];
+        JsonVariantConst    jsonOffset     = value["offset"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -114,13 +114,13 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
         if (false == jsonMethod.isNull())
         {
             jsonCfg["method"] = jsonMethod.as<String>();
-            isSuccessful = true;
+            isSuccessful      = true;
         }
 
         if (false == jsonUrl.isNull())
         {
             jsonCfg["url"] = jsonUrl.as<String>();
-            isSuccessful = true;
+            isSuccessful   = true;
         }
 
         if (false == jsonFilter.isNull())
@@ -128,18 +128,35 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             if (true == jsonFilter.is<JsonObjectConst>())
             {
                 jsonCfg["filter"] = jsonFilter.as<JsonObjectConst>();
-                isSuccessful = true;
+                isSuccessful      = true;
+            }
+            else if (true == jsonFilter.is<JsonArrayConst>())
+            {
+                jsonCfg["filter"] = jsonFilter.as<JsonArrayConst>();
+                isSuccessful      = true;
             }
             else if (true == jsonFilter.is<String>())
             {
-                const size_t            JSON_DOC_FILTER_SIZE    = 256U;
-                DynamicJsonDocument     jsonDocFilter(JSON_DOC_FILTER_SIZE);
-                DeserializationError    result = deserializeJson(jsonDocFilter, jsonFilter.as<String>());
+                const size_t         JSON_DOC_FILTER_SIZE = 256U;
+                DynamicJsonDocument  jsonDocFilter(JSON_DOC_FILTER_SIZE);
+                DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<String>());
 
                 if (DeserializationError::Ok == result)
                 {
-                    jsonCfg["filter"] = jsonDocFilter.as<JsonObjectConst>();
-                    isSuccessful = true;
+                    if (true == jsonDocFilter.is<JsonObjectConst>())
+                    {
+                        jsonCfg["filter"] = jsonDocFilter.as<JsonObjectConst>();
+                        isSuccessful      = true;
+                    }
+                    else if (true == jsonDocFilter.is<JsonArrayConst>())
+                    {
+                        jsonCfg["filter"] = jsonDocFilter.as<JsonArrayConst>();
+                        isSuccessful      = true;
+                    }
+                    else
+                    {
+                        ;
+                    }
                 }
             }
             else
@@ -151,32 +168,32 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
         if (false == jsonIconFileId.isNull())
         {
             jsonCfg["iconFileId"] = jsonIconFileId.as<FileMgrService::FileId>();
-            isSuccessful = true;
+            isSuccessful          = true;
         }
 
         if (false == jsonFormat.isNull())
         {
             jsonCfg["format"] = jsonFormat.as<String>();
-            isSuccessful = true;
+            isSuccessful      = true;
         }
 
         if (false == jsonMultiplier.isNull())
         {
             jsonCfg["multiplier"] = jsonMultiplier.as<float>();
-            isSuccessful = true;
+            isSuccessful          = true;
         }
 
         if (false == jsonOffset.isNull())
         {
             jsonCfg["offset"] = jsonOffset.as<float>();
-            isSuccessful = true;
+            isSuccessful      = true;
         }
 
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -190,8 +207,8 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
 bool GrabViaRestPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -238,7 +255,7 @@ void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
 
 void GrabViaRestPlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -247,8 +264,8 @@ void GrabViaRestPlugin::stop()
 
 void GrabViaRestPlugin::process(bool isConnected)
 {
-    Msg                         msg;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    Msg                        msg;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     PluginWithConfig::process(isConnected);
 
@@ -302,7 +319,7 @@ void GrabViaRestPlugin::process(bool isConnected)
 
     if (true == m_taskProxy.receive(msg))
     {
-        switch(msg.type)
+        switch (msg.type)
         {
         case MSG_TYPE_INVALID:
             /* Should never happen. */
@@ -361,25 +378,25 @@ void GrabViaRestPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["method"]       = m_method;
-    jsonCfg["url"]          = m_url;
-    jsonCfg["filter"]       = m_filter;
-    jsonCfg["iconFileId"]   = m_iconFileId;
-    jsonCfg["format"]       = m_format;
-    jsonCfg["multiplier"]   = m_multiplier;
-    jsonCfg["offset"]       = m_offset;
+    jsonCfg["method"]     = m_method;
+    jsonCfg["url"]        = m_url;
+    jsonCfg["filter"]     = m_filter;
+    jsonCfg["iconFileId"] = m_iconFileId;
+    jsonCfg["format"]     = m_format;
+    jsonCfg["multiplier"] = m_multiplier;
+    jsonCfg["offset"]     = m_offset;
 }
 
 bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status          = false;
-    JsonVariantConst    jsonMethod      = jsonCfg["method"];
-    JsonVariantConst    jsonUrl         = jsonCfg["url"];
-    JsonVariantConst    jsonFilter      = jsonCfg["filter"];
-    JsonVariantConst    jsonIconFileId  = jsonCfg["iconFileId"];
-    JsonVariantConst    jsonFormat      = jsonCfg["format"];
-    JsonVariantConst    jsonMultiplier  = jsonCfg["multiplier"];
-    JsonVariantConst    jsonOffset      = jsonCfg["offset"];
+    bool             status         = false;
+    JsonVariantConst jsonMethod     = jsonCfg["method"];
+    JsonVariantConst jsonUrl        = jsonCfg["url"];
+    JsonVariantConst jsonFilter     = jsonCfg["filter"];
+    JsonVariantConst jsonIconFileId = jsonCfg["iconFileId"];
+    JsonVariantConst jsonFormat     = jsonCfg["format"];
+    JsonVariantConst jsonMultiplier = jsonCfg["multiplier"];
+    JsonVariantConst jsonOffset     = jsonCfg["offset"];
 
     if (false == jsonMethod.is<String>())
     {
@@ -389,7 +406,8 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON URL not found or invalid type.");
     }
-    else if (false == jsonFilter.is<JsonObjectConst>())
+    else if ((false == jsonFilter.is<JsonObjectConst>()) &&
+             (false == jsonFilter.is<JsonArrayConst>()))
     {
         LOG_WARNING("JSON filter not found or invalid type.");
     }
@@ -411,21 +429,21 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        bool                        reqIcon = false;
-        MutexGuard<MutexRecursive>  guard(m_mutex);
+        bool                       reqIcon = false;
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         if (m_iconFileId != jsonIconFileId.as<FileMgrService::FileId>())
         {
             reqIcon = true;
         }
 
-        m_method        = jsonMethod.as<String>();
-        m_url           = jsonUrl.as<String>();
-        m_filter        = jsonFilter.as<JsonObjectConst>();
-        m_iconFileId    = jsonIconFileId.as<FileMgrService::FileId>();
-        m_format        = jsonFormat.as<String>();
-        m_multiplier    = jsonMultiplier.as<float>();
-        m_offset        = jsonOffset.as<float>();
+        m_method     = jsonMethod.as<String>();
+        m_url        = jsonUrl.as<String>();
+        m_filter     = jsonFilter;
+        m_iconFileId = jsonIconFileId.as<FileMgrService::FileId>();
+        m_format     = jsonFormat.as<String>();
+        m_multiplier = jsonMultiplier.as<float>();
+        m_offset     = jsonOffset.as<float>();
 
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -460,7 +478,7 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_hasTopicChanged = true;
 
-        status = true;
+        status            = true;
     }
 
     return status;
@@ -513,49 +531,43 @@ void GrabViaRestPlugin::initHttpClient()
      *       The processing must be deferred via task proxy.
      */
     m_client.regOnResponse(
-        [this](const HttpResponse& rsp)
-        {
+        [this](const HttpResponse& rsp) {
             handleAsyncWebResponse(rsp);
-        }
-    );
+        });
 
     m_client.regOnClosed(
-        [this]()
-        {
+        [this]() {
             Msg msg;
 
             msg.type = MSG_TYPE_CONN_CLOSED;
 
             (void)this->m_taskProxy.send(msg);
-        }
-    );
+        });
 
     m_client.regOnError(
-        [this]()
-        {
+        [this]() {
             Msg msg;
 
             msg.type = MSG_TYPE_CONN_ERROR;
 
             (void)this->m_taskProxy.send(msg);
-        }
-    );
+        });
 }
 
 void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
 {
     if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
     {
-        const size_t            JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+        const size_t         JSON_DOC_SIZE = 4096U;
+        DynamicJsonDocument* jsonDoc       = new (std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
         if (nullptr != jsonDoc)
         {
-            bool                    isSuccessful    = false;
-            size_t                  payloadSize     = 0U;
-            const void*             vPayload        = rsp.getPayload(payloadSize);
-            const char*             payload         = static_cast<const char*>(vPayload);
-            
+            bool        isSuccessful = false;
+            size_t      payloadSize  = 0U;
+            const void* vPayload     = rsp.getPayload(payloadSize);
+            const char* payload      = static_cast<const char*>(vPayload);
+
             if (true == m_filter.overflowed())
             {
                 LOG_ERROR("Less memory for filter available.");
@@ -577,8 +589,8 @@ void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
                 {
                     Msg msg;
 
-                    msg.type    = MSG_TYPE_RSP;
-                    msg.rsp     = jsonDoc;
+                    msg.type     = MSG_TYPE_RSP;
+                    msg.rsp      = jsonDoc;
 
                     isSuccessful = this->m_taskProxy.send(msg);
                 }
@@ -593,68 +605,142 @@ void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
     }
 }
 
-void GrabViaRestPlugin::getJsonValueByFilter(JsonObjectConst src, JsonObjectConst filter, JsonVariantConst& value)
+void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantConst filter, JsonArray& values)
 {
-    for (JsonPairConst pair : filter)
+    /* Source type and filter type must always match.
+     * If not, it is a configuration error and the values array will be empty.
+     */
+    if ((true == src.is<JsonObjectConst>()) &&
+        (true == filter.is<JsonObjectConst>()))
     {
-        if (true == pair.value().is<JsonObjectConst>())
+        /* The filter leads to the required key/value pair. */
+        for (JsonPairConst pair : filter.as<JsonObjectConst>())
         {
-            getJsonValueByFilter(src[pair.key()], filter[pair.key()], value);
+            /* If the pair value is a JSON object or array, continue traversing. */
+            if ((true == pair.value().is<JsonObjectConst>()) ||
+                (true == pair.value().is<JsonArrayConst>()))
+            {
+                getJsonValueByFilter(src[pair.key()], filter[pair.key()], values);
+            }
+            /* Capture the value from the source, by using the filter pair key. */
+            else
+            {
+                if (false == values.add(src[pair.key()]))
+                {
+                    break;
+                }
+            }
         }
-        else
-        {
-            value = src[pair.key()];
-        }
+    }
+    else if ((true == src.is<JsonArrayConst>()) &&
+             (true == filter.is<JsonArrayConst>()))
+    {
+        JsonArrayConst filterArray = filter.as<JsonArrayConst>();
 
-        /* Break immediately as its assumed that the filter only contains one
-         * single object.
-         */
-        break;
+        /* Walk through the source array and capture every required value. */
+        for (JsonVariantConst value : src.as<JsonArrayConst>())
+        {
+            /* If the pair value is a JSON object or array, continue traversing. */
+            if ((true == filterArray[0].is<JsonObjectConst>()) ||
+                (true == filterArray[0].is<JsonArrayConst>()))
+            {
+                getJsonValueByFilter(value, filterArray[0], values);
+            }
+            /* Capture the value from the source. */
+            else
+            {
+                if (false == values.add(value))
+                {
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        /* Configuration error. */
+        ;
     }
 }
 
 void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
-    JsonVariantConst jsonValue;
+    const size_t        JSON_DOC_SIZE = 1024U;
+    DynamicJsonDocument jsonDocValues(JSON_DOC_SIZE);
+    JsonArray           jsonValuesArray = jsonDocValues.to<JsonArray>();
+    size_t              index           = 0U;
+    String              outputStr;
+    size_t              valueCount = 0U;
 
-    getJsonValueByFilter(jsonDoc.as<JsonObjectConst>(), m_filter.as<JsonObjectConst>(), jsonValue);
+    getJsonValueByFilter(jsonDoc, m_filter, jsonValuesArray);
+    valueCount = jsonValuesArray.size();
 
-    /* Is it a number? */
-    if ((true == jsonValue.is<float>()) &&
-        (0 > m_format.indexOf("%s"))) /* Prevent mistake which may cause a LoadProhibited core panic by snprintf. */
+    if (true == jsonDocValues.overflowed())
     {
-        const size_t    BUFFER_SIZE = 128U;
-        char            buffer[BUFFER_SIZE];
-        float           value = jsonValue.as<float>();
+        LOG_ERROR("Less memory for JSON values available.");
 
-        value *= m_multiplier;
-        value += m_offset;
-
-        (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), value);
-
-        m_view.setFormatText(buffer);
+        /* The last value may be corrupt, throw it away and show the rest. */
+        if (0U < valueCount)
+        {
+            --valueCount;
+        }
     }
-    /* Is it a string? */
-    else if (true == jsonValue.is<String>())
+
+    for (index = 0U; index < valueCount; ++index)
     {
-        const size_t    BUFFER_SIZE = 128U;
-        char            buffer[BUFFER_SIZE];
+        JsonVariantConst jsonValue = jsonValuesArray[index];
 
-        (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
+        if (0U < index)
+        {
+            outputStr += m_delimiter;
+        }
 
-        m_view.setFormatText(buffer);
+        /* Is it a number and format string doesn't contain a '%s'? */
+        if ((true == jsonValue.is<float>()) &&
+            (0 > m_format.indexOf("%s"))) /* Prevent mistake which may cause a LoadProhibited core panic by snprintf. */
+        {
+            const size_t BUFFER_SIZE = 128U;
+            char         buffer[BUFFER_SIZE];
+            float        value  = jsonValue.as<float>();
+
+            value              *= m_multiplier;
+            value              += m_offset;
+
+            (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), value);
+
+            outputStr += buffer;
+        }
+        /* Is it a string? */
+        else if (true == jsonValue.is<String>())
+        {
+            const size_t BUFFER_SIZE = 128U;
+            char         buffer[BUFFER_SIZE];
+
+            (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
+
+            outputStr += buffer;
+        }
+        else
+        {
+            outputStr += "?";
+        }
     }
-    else
+
+    if (true == outputStr.isEmpty())
     {
-        m_view.setFormatText("{hc}-");
+        outputStr = "{hc}-";
     }
+
+    LOG_INFO("Grabbed: %s", outputStr.c_str());
+
+    m_view.setFormatText(outputStr);
 }
 
 void GrabViaRestPlugin::clearQueue()
 {
     Msg msg;
 
-    while(true == m_taskProxy.receive(msg))
+    while (true == m_taskProxy.receive(msg))
     {
         if (MSG_TYPE_RSP == msg.type)
         {
