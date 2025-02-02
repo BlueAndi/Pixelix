@@ -67,10 +67,10 @@
 /* Initialize OpenWeather base URI.
  * Use http:// instead of https:// for less required heap memory for SSL connection.
  */
-const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "http://api.openweathermap.org";
+const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI = "http://api.openweathermap.org";
 
 /* Initialize plugin topic. */
-const char* OpenWeatherPlugin::TOPIC_CONFIG             = "weather";
+const char* OpenWeatherPlugin::TOPIC_CONFIG          = "weather";
 
 /******************************************************************************
  * Public Methods
@@ -100,16 +100,16 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonSourceId            = value["sourceId"];
-        JsonVariantConst    jsonUpdatePeriod        = value["updatePeriod"];
-        JsonVariantConst    jsonApiKey              = value["apiKey"];
-        JsonVariantConst    jsonLatitude            = value["latitude"];
-        JsonVariantConst    jsonLongitude           = value["longitude"];
-        JsonVariantConst    jsonWeatherInfo         = value["weatherInfo"];
-        JsonVariantConst    jsonUnits               = value["units"];
+        JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonSourceId     = value["sourceId"];
+        JsonVariantConst    jsonUpdatePeriod = value["updatePeriod"];
+        JsonVariantConst    jsonApiKey       = value["apiKey"];
+        JsonVariantConst    jsonLatitude     = value["latitude"];
+        JsonVariantConst    jsonLongitude    = value["longitude"];
+        JsonVariantConst    jsonWeatherInfo  = value["weatherInfo"];
+        JsonVariantConst    jsonUnits        = value["units"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -125,50 +125,50 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
         if (false == jsonSourceId.isNull())
         {
             jsonCfg["sourceId"] = jsonSourceId.as<uint32_t>();
-            isSuccessful = true;
+            isSuccessful        = true;
         }
 
         if (false == jsonUpdatePeriod.isNull())
         {
             jsonCfg["updatePeriod"] = jsonUpdatePeriod.as<uint32_t>();
-            isSuccessful = true;
+            isSuccessful            = true;
         }
 
         if (false == jsonApiKey.isNull())
         {
             jsonCfg["apiKey"] = jsonApiKey.as<String>();
-            isSuccessful = true;
+            isSuccessful      = true;
         }
 
         if (false == jsonLatitude.isNull())
         {
             jsonCfg["latitude"] = jsonLatitude.as<String>();
-            isSuccessful = true;
+            isSuccessful        = true;
         }
-        
+
         if (false == jsonLongitude.isNull())
         {
             jsonCfg["longitude"] = jsonLongitude.as<String>();
-            isSuccessful = true;
+            isSuccessful         = true;
         }
 
         if (false == jsonWeatherInfo.isNull())
         {
             jsonCfg["weatherInfo"] = jsonWeatherInfo.as<uint32_t>();
-            isSuccessful = true;
+            isSuccessful           = true;
         }
 
         if (false == jsonUnits.isNull())
         {
             jsonCfg["units"] = jsonUnits.as<String>();
-            isSuccessful = true;
+            isSuccessful     = true;
         }
 
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -182,8 +182,8 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
 bool OpenWeatherPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -203,6 +203,7 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
+    setViewUnits();
 
     PluginWithConfig::start(width, height);
 
@@ -211,7 +212,7 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
 
 void OpenWeatherPlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -231,9 +232,9 @@ void OpenWeatherPlugin::inactive()
 
 void OpenWeatherPlugin::process(bool isConnected)
 {
-    Msg                         msg;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        isRestRequestRequired   = false;
+    Msg                        msg;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       isRestRequestRequired = false;
 
     PluginWithConfig::process(isConnected);
 
@@ -277,7 +278,7 @@ void OpenWeatherPlugin::process(bool isConnected)
             if (false == startHttpRequest(source))
             {
                 LOG_WARNING("Failed to request weather info.");
-                
+
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
             else
@@ -290,12 +291,12 @@ void OpenWeatherPlugin::process(bool isConnected)
 
     if (nullptr != m_slotInterf)
     {
-        m_view.setViewDuration(m_slotInterf->getDuration()); 
+        m_view.setViewDuration(m_slotInterf->getDuration());
     }
 
     if (true == m_taskProxy.receive(msg))
     {
-        switch(msg.type)
+        switch (msg.type)
         {
         case MSG_TYPE_INVALID:
             /* Should never happen. */
@@ -358,14 +359,14 @@ void OpenWeatherPlugin::createOpenWeatherCurrentSource(OpenWeatherSource id)
 {
     destroyOpenWeatherCurrentSource();
 
-    switch(id)
+    switch (id)
     {
     case OPENWEATHER_SOURCE_CURRENT_FORECAST:
-        m_sourceCurrent = new(std::nothrow) OpenWeatherCurrent();
+        m_sourceCurrent = new (std::nothrow) OpenWeatherCurrent();
         break;
 
     case OPENWEATHER_SOURCE_ONE_CALL_30:
-        m_sourceCurrent = new(std::nothrow) OpenWeatherOneCallCurrent("3.0");
+        m_sourceCurrent = new (std::nothrow) OpenWeatherOneCallCurrent("3.0");
         break;
 
     default:
@@ -377,14 +378,14 @@ void OpenWeatherPlugin::createOpenWeatherForecastSource(OpenWeatherSource id)
 {
     destroyOpenWeatherForecastSource();
 
-    switch(id)
+    switch (id)
     {
     case OPENWEATHER_SOURCE_CURRENT_FORECAST:
-        m_sourceForecast = new(std::nothrow) OpenWeatherForecast();
+        m_sourceForecast = new (std::nothrow) OpenWeatherForecast();
         break;
 
     case OPENWEATHER_SOURCE_ONE_CALL_30:
-        m_sourceForecast = new(std::nothrow) OpenWeatherOneCallForecast("3.0");
+        m_sourceForecast = new (std::nothrow) OpenWeatherOneCallForecast("3.0");
         break;
 
     default:
@@ -435,17 +436,17 @@ void OpenWeatherPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool OpenWeatherPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status              = false;
-    JsonVariantConst    jsonSourceId        = jsonCfg["sourceId"];
-    JsonVariantConst    jsonUpdatePeriod    = jsonCfg["updatePeriod"];
-    JsonVariantConst    jsonApiKey          = jsonCfg["apiKey"];
-    JsonVariantConst    jsonLatitude        = jsonCfg["latitude"];
-    JsonVariantConst    jsonLongitude       = jsonCfg["longitude"];
-    JsonVariantConst    jsonWeatherInfo     = jsonCfg["weatherInfo"];
-    JsonVariantConst    jsonUnits           = jsonCfg["units"];
+    bool             status                    = false;
+    JsonVariantConst jsonSourceId              = jsonCfg["sourceId"];
+    JsonVariantConst jsonUpdatePeriod          = jsonCfg["updatePeriod"];
+    JsonVariantConst jsonApiKey                = jsonCfg["apiKey"];
+    JsonVariantConst jsonLatitude              = jsonCfg["latitude"];
+    JsonVariantConst jsonLongitude             = jsonCfg["longitude"];
+    JsonVariantConst jsonWeatherInfo           = jsonCfg["weatherInfo"];
+    JsonVariantConst jsonUnits                 = jsonCfg["units"];
 
-    const uint32_t      UPDATE_PERIOD_LOWER_LIMIT   = 1U;   /* minutes */
-    const uint32_t      UPDATE_PERIOD_UPPER_LIMIT   = 120U; /* minutes */
+    const uint32_t   UPDATE_PERIOD_LOWER_LIMIT = 1U;   /* minutes */
+    const uint32_t   UPDATE_PERIOD_UPPER_LIMIT = 120U; /* minutes */
 
     if (false == jsonSourceId.is<uint32_t>())
     {
@@ -477,8 +478,8 @@ bool OpenWeatherPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        OpenWeatherSource           sourceId        = static_cast<OpenWeatherSource>(jsonSourceId.as<uint32_t>());
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        OpenWeatherSource          sourceId = static_cast<OpenWeatherSource>(jsonSourceId.as<uint32_t>());
 
         if (m_sourceId != sourceId)
         {
@@ -513,6 +514,8 @@ bool OpenWeatherPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
             m_sourceCurrent->setLatitude(jsonLatitude.as<String>());
             m_sourceCurrent->setLongitude(jsonLongitude.as<String>());
             m_sourceCurrent->setUnits(jsonUnits.as<String>());
+
+            setViewUnits();
         }
 
         if (true == _OpenWeatherPlugin::View::isWeatherForecastSupported())
@@ -537,7 +540,7 @@ bool OpenWeatherPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_hasTopicChanged = true;
 
-        status = true;
+        status            = true;
     }
 
     return status;
@@ -580,53 +583,47 @@ void OpenWeatherPlugin::initHttpClient()
      *       The processing must be deferred via task proxy.
      */
     m_client.regOnResponse(
-        [this](const HttpResponse& rsp)
-        {
+        [this](const HttpResponse& rsp) {
             handleAsyncWebResponse(rsp);
-        }
-    );
+        });
 
     m_client.regOnClosed(
-        [this]()
-        {
+        [this]() {
             Msg msg;
 
             msg.type = MSG_TYPE_CONN_CLOSED;
 
             (void)this->m_taskProxy.send(msg);
-        }
-    );
+        });
 
     m_client.regOnError(
-        [this]()
-        {
+        [this]() {
             Msg msg;
 
             msg.type = MSG_TYPE_CONN_ERROR;
 
             (void)this->m_taskProxy.send(msg);
-        }
-    );
+        });
 }
 
 void OpenWeatherPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
 {
     if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
     {
-        bool                        isSuccessful    = false;
-        const IOpenWeatherGeneric*  source          = getWeatherSourceByStatus();
+        bool                       isSuccessful = false;
+        const IOpenWeatherGeneric* source       = getWeatherSourceByStatus();
 
         if (nullptr != source)
         {
-            const size_t            JSON_DOC_SIZE   = 2048U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+            const size_t         JSON_DOC_SIZE = 2048U;
+            DynamicJsonDocument* jsonDoc       = new (std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
             {
-                size_t                          payloadSize     = 0U;
-                const void*                     vPayload        = rsp.getPayload(payloadSize);
-                const char*                     payload         = static_cast<const char*>(vPayload);
-                const size_t                    FILTER_SIZE     = 640U;
+                size_t                          payloadSize = 0U;
+                const void*                     vPayload    = rsp.getPayload(payloadSize);
+                const char*                     payload     = static_cast<const char*>(vPayload);
+                const size_t                    FILTER_SIZE = 640U;
                 StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
                 source->getFilter(jsonFilterDoc);
@@ -652,8 +649,8 @@ void OpenWeatherPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
                     {
                         Msg msg;
 
-                        msg.type    = MSG_TYPE_RSP;
-                        msg.rsp     = jsonDoc;
+                        msg.type     = MSG_TYPE_RSP;
+                        msg.rsp      = jsonDoc;
 
                         isSuccessful = this->m_taskProxy.send(msg);
                     }
@@ -674,8 +671,8 @@ void OpenWeatherPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
         {
             Msg msg;
 
-            msg.type    = MSG_TYPE_RSP;
-            msg.rsp     = nullptr;
+            msg.type = MSG_TYPE_RSP;
+            msg.rsp  = nullptr;
 
             if (false == this->m_taskProxy.send(msg))
             {
@@ -741,14 +738,14 @@ void OpenWeatherPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
                     /* Handle forecast weather information. */
                     if (nullptr != m_sourceForecast)
                     {
-                        uint8_t                                         day;
-                        _OpenWeatherPlugin::View::WeatherInfoForecast   weatherInfo;
+                        uint8_t                                       day;
+                        _OpenWeatherPlugin::View::WeatherInfoForecast weatherInfo;
 
-                        for(day = 0U; day < _OpenWeatherPlugin::View::FORECAST_DAYS; ++day)
+                        for (day = 0U; day < _OpenWeatherPlugin::View::FORECAST_DAYS; ++day)
                         {
-                            weatherInfo.iconId          = m_sourceForecast->getWeatherIconId(day);
-                            weatherInfo.temperatureMax  = m_sourceForecast->getTemperatureMax(day);
-                            weatherInfo.temperatureMin  = m_sourceForecast->getTemperatureMin(day);
+                            weatherInfo.iconId         = m_sourceForecast->getWeatherIconId(day);
+                            weatherInfo.temperatureMax = m_sourceForecast->getTemperatureMax(day);
+                            weatherInfo.temperatureMin = m_sourceForecast->getTemperatureMin(day);
 
                             m_view.setWeatherInfoForecast(day, weatherInfo);
 
@@ -780,7 +777,7 @@ void OpenWeatherPlugin::clearQueue()
 {
     Msg msg;
 
-    while(true == m_taskProxy.receive(msg))
+    while (true == m_taskProxy.receive(msg))
     {
         if (MSG_TYPE_RSP == msg.type)
         {
@@ -792,10 +789,10 @@ void OpenWeatherPlugin::clearQueue()
 
 IOpenWeatherGeneric* OpenWeatherPlugin::getWeatherSourceByStatus()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    IOpenWeatherGeneric*        source = nullptr;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    IOpenWeatherGeneric*       source = nullptr;
 
-    switch(m_weatherReqStatus)
+    switch (m_weatherReqStatus)
     {
     case WEATHER_REQUEST_STATUS_IDLE:
         source = static_cast<IOpenWeatherGeneric*>(m_sourceCurrent);
@@ -804,15 +801,15 @@ IOpenWeatherGeneric* OpenWeatherPlugin::getWeatherSourceByStatus()
     case WEATHER_REQUEST_STATUS_CURRENT_PENDING:
         source = static_cast<IOpenWeatherGeneric*>(m_sourceCurrent);
         break;
-        
+
     case WEATHER_REQUEST_STATUS_FORECAST_REQ:
         source = static_cast<IOpenWeatherGeneric*>(m_sourceForecast);
         break;
-        
+
     case WEATHER_REQUEST_STATUS_FORECAST_PENDING:
         source = static_cast<IOpenWeatherGeneric*>(m_sourceForecast);
         break;
-        
+
     default:
         break;
     }
@@ -834,6 +831,32 @@ void OpenWeatherPlugin::weatherRequestStarted()
     {
         /* Should never happen. */
         ;
+    }
+}
+
+void OpenWeatherPlugin::setViewUnits()
+{
+    if (nullptr != m_sourceCurrent)
+    {
+        String units = m_sourceCurrent->getUnits();
+        String temperatureUnit;
+        String windSpeedUnit;
+
+        if (true == units.equals("metric"))
+        {
+            temperatureUnit = "°C";
+            windSpeedUnit   = "m/s";
+        }
+        else if (true == units.equals("imperial"))
+        {
+            temperatureUnit = "°F";
+            windSpeedUnit   = "mph";
+        }
+        else
+        {
+            temperatureUnit = "K";
+            windSpeedUnit   = "m/s";
+        }
     }
 }
 

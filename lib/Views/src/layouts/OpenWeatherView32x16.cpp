@@ -128,7 +128,7 @@ static const float  EPSILON = 0.0001F;
 const char* OpenWeatherView32x16::IMAGE_PATH                 = "/plugins/OpenWeatherPlugin/";
 
 /* Initialize image path for standard icon. */
-const char* OpenWeatherView32x16::IMAGE_PATH_STD_ICON        = "/plugins/OpenWeatherPlugin/openWeather.bmp";
+const char* OpenWeatherView32x16::IMAGE_PATH_STD_ICON        = "/plugins/OpenWeatherPlugin/std.bmp";
 
 /* Initialize image path for uvi icon. */
 const char* OpenWeatherView32x16::IMAGE_PATH_UVI_ICON        = "/plugins/OpenWeatherPlugin/uvi.bmp";
@@ -159,7 +159,8 @@ OpenWeatherView32x16::OpenWeatherView32x16() :
     m_weatherInfoCurrentText(WEATHER_INFO_TEXT_CURRENT_WIDTH, WEATHER_INFO_TEXT_CURRENT_HEIGHT, WEATHER_INFO_TEXT_CURRENT_X, WEATHER_INFO_TEXT_CURRENT_Y),
     m_viewDurationTimer(),
     m_viewDuration(0U),
-    m_units("metric"),
+    m_temperatureUnit(),
+    m_windSpeedUnit(),
     m_weatherInfo(WEATHER_INFO_ALL),
     m_weatherInfoId(0U),
     m_weatherInfoCurrent(),
@@ -437,18 +438,7 @@ void OpenWeatherView32x16::appendTemperature(String& dst, float temperature, boo
 
         if (false == noUnit)
         {
-            if (m_units == "default")
-            {
-                dst += "°K";
-            }
-            else if (m_units == "metric")
-            {
-                dst += "°C";
-            }
-            else
-            {
-                dst += "°F";
-            }
+            dst += m_temperatureUnit;
         }
     }
     else
@@ -472,19 +462,7 @@ void OpenWeatherView32x16::appendWindSpeed(String& dst, float windSpeed)
         (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
 
         dst += windReducedPrecison;
-
-        if (m_units == "default")
-        {
-            dst += "m/s";
-        }
-        else if (m_units == "metric")
-        {
-            dst += "m/s";
-        }
-        else
-        {
-            dst += "mph";
-        }
+        dst += m_windSpeedUnit;
     }
     else
     {

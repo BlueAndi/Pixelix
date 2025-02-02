@@ -1,11 +1,11 @@
 {
     "pixelix": {
         "type": "plugin",
-        "name": "OpenWeatherPlugin",
+        "name": "OpenMeteoPlugin",
         "web": {
             "files": [
-                "./web/OpenWeatherPlugin.html",
-                "./web/OpenWeatherPlugin.jpg"
+                "./web/OpenMeteoPlugin.html",
+                "./web/OpenMeteoPlugin.jpg"
             ],
             "layouts": [{
                 "name": "LAYOUT_GENERIC",
