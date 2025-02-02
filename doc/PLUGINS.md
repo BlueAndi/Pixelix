@@ -25,6 +25,7 @@ Each plugin is identified by its unique UID.
   * [GameOfLifePlugin](#gameoflifeplugin)
   * [GruenbeckPlugin](#gruenbeckplugin)
   * [MatrixPlugin](#matrixplugin)
+  * [OpenMeteoPlugin](#openmeteoplugin)
   * [OpenWeatherPlugin](#openweatherplugin)
   * [RainbowPlugin](#rainbowplugin)
   * [SensorPlugin](#sensorplugin)
@@ -143,6 +144,12 @@ The IP address of the Gruenbeck webserver can be set via the [REST API](https://
 
 ## MatrixPlugin
 The plugin shows the effect from the film "Matrix" over the whole display.
+
+## OpenMeteoPlugin
+The OpenMeteoPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
+Information provided by [Open-Meteo](https://open-meteo.com/).\
+Its free for non-commerical use and there is no registration necessary, no API key required, neither credit card information!
+The coordinates (latitude & longitude) of your location and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.7.0#/OpenMeteoPlugin).
 
 ## OpenWeatherPlugin
 The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
