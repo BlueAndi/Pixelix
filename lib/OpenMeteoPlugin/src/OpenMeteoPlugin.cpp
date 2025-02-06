@@ -679,110 +679,112 @@ void OpenMeteoPlugin::setViewUnits()
     }
 }
 
+bool OpenMeteoPlugin::isPartOf(const uint8_t* weatherCodes, size_t length, uint8_t weatherCode) const
+{
+    bool isPartOf = false;
+
+    if (nullptr != weatherCodes)
+    {
+        for (size_t idx = 0U; idx < length; ++idx)
+        {
+            if (weatherCodes[idx] == weatherCode)
+            {
+                isPartOf = true;
+                break;
+            }
+        }
+    }
+
+    return isPartOf;
+}
+
 String OpenMeteoPlugin::getIconIdFromWeatherCode(uint8_t weatherCode, bool isDay)
 {
-    String         iconId;
-    const uint16_t WEATHER_CODE_MIN_CLEAR_SKY        = 0U;
-    const uint16_t WEATHER_CODE_MAX_CLEAR_SKY        = 19U;
-    const uint16_t WEATHER_CODE_MIN_FEW_CLOUDS       = 20U;
-    const uint16_t WEATHER_CODE_MAX_FEW_CLOUDS       = 29U;
-    const uint16_t WEATHER_CODE_MIN_SCATTERED_CLOUDS = 30U;
-    const uint16_t WEATHER_CODE_MAX_SCATTERED_CLOUDS = 39U;
-    const uint16_t WEATHER_CODE_MIN_BROKEN_CLOUDS    = 40U;
-    const uint16_t WEATHER_CODE_MAX_BROKEN_CLOUDS    = 44U;
-    const uint16_t WEATHER_CODE_MIN_MIST             = 45U;
-    const uint16_t WEATHER_CODE_MAX_MIST             = 49U;
-    const uint16_t WEATHER_CODE_MIN_RAIN             = 50U;
-    const uint16_t WEATHER_CODE_MAX_RAIN             = 69U;
-    const uint16_t WEATHER_CODE_MIN_SNOW             = 70U;
-    const uint16_t WEATHER_CODE_MAX_SNOW             = 79U;
-    const uint16_t WEATHER_CODE_MIN_SHOWER_RAIN      = 80U;
-    const uint16_t WEATHER_CODE_MAX_SHOWER_RAIN      = 89U;
-    const uint16_t WEATHER_CODE_MIN_THUNDERSTORM     = 90U;
-    const uint16_t WEATHER_CODE_MAX_THUNDERSTORM     = 99U;
+    String        iconId;
+    const uint8_t WEATHER_CODE_CLEAR_SKY[]        = { 0U };
+    const uint8_t WEATHER_CODE_FEW_CLOUDS[]       = { 1U, 2U };
+    const uint8_t WEATHER_CODE_SCATTERED_CLOUDS[] = { 3U };
+    const uint8_t WEATHER_CODE_MIST[]             = { 45U, 48U };
+    const uint8_t WEATHER_CODE_RAIN[]             = { 51U, 53U, 55U, 56U, 57U, 61U, 63U, 65U, 66U, 67U };
+    const uint8_t WEATHER_CODE_SNOW[]             = { 71U, 73U, 75U, 77U, 85U, 86U };
+    const uint8_t WEATHER_CODE_SHOWER_RAIN[]      = { 80U, 81U, 82U };
+    const uint8_t WEATHER_CODE_THUNDERSTORM[]     = { 95U, 96U, 99U };
 
     /* Weather codes:
      * https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM
      *
-     * | Weather          | OpenWeather | Open-Meteo |
-     * | ---------------- | ----------- | ---------- |
-     * | Clear sky        | 01d, 01n    | 00 - 19    |
-     * | Few clouds       | 02d, 02n    | 20 - 29    |
-     * | Scattered clouds | 03d, 03n    | 30 - 39    |
-     * | Broken clouds    | 04d, 04n    | 40 - 44    |
-     * | Mist             | 50d, 50n    | 45 - 49    |
-     * | Rain             | 10d, 10n    | 50 - 69    |
-     * | Snow             | 13d, 13n    | 70 - 79    |
-     * | Shower rain      | 09d, 09n    | 80 - 89    |
-     * | Thunderstorm     | 11d, 11n    | 90 - 99    |
+     * | Weather          | OpenWeather | Open-Meteo                             |
+     * | ---------------- | ----------- | -------------------------------------- |
+     * | Clear sky        | 01d, 01n    | 0                                      |
+     * | Few clouds       | 02d, 02n    | 1, 2                                   |
+     * | Scattered clouds | 03d, 03n    | 3                                      |
+     * | Broken clouds    | 04d, 04n    |                                        |
+     * | Mist             | 50d, 50n    | 45, 48                                 |
+     * | Rain             | 10d, 10n    | 51, 53, 55, 56, 57, 61, 63, 65, 66, 67 |
+     * | Snow             | 13d, 13n    | 71, 73, 75, 77, 85, 86                 |
+     * | Shower rain      | 09d, 09n    | 80, 81, 82                             |
+     * | Thunderstorm     | 11d, 11n    | 95, 96, 99                             |
      */
 
     /* Clear sky? */
-    if ((WEATHER_CODE_MIN_CLEAR_SKY <= weatherCode) &&
-        (WEATHER_CODE_MAX_CLEAR_SKY >= weatherCode))
+    if (true == isPartOf(WEATHER_CODE_CLEAR_SKY, UTIL_ARRAY_NUM(WEATHER_CODE_CLEAR_SKY), weatherCode))
     {
         iconId = "01";
     }
     /* Few clouds? */
-    else if ((WEATHER_CODE_MIN_FEW_CLOUDS <= weatherCode) &&
-             (WEATHER_CODE_MAX_FEW_CLOUDS >= weatherCode))
+    else if (true == isPartOf(WEATHER_CODE_FEW_CLOUDS, UTIL_ARRAY_NUM(WEATHER_CODE_FEW_CLOUDS), weatherCode))
     {
         iconId = "02";
     }
     /* Scattered clouds? */
-    else if ((WEATHER_CODE_MIN_SCATTERED_CLOUDS <= weatherCode) &&
-             (WEATHER_CODE_MAX_SCATTERED_CLOUDS >= weatherCode))
+    else if (true == isPartOf(WEATHER_CODE_SCATTERED_CLOUDS, UTIL_ARRAY_NUM(WEATHER_CODE_SCATTERED_CLOUDS), weatherCode))
     {
         iconId = "03";
     }
-    /* Broken clouds? */
-    else if ((WEATHER_CODE_MIN_BROKEN_CLOUDS <= weatherCode) &&
-             (WEATHER_CODE_MAX_BROKEN_CLOUDS >= weatherCode))
-    {
-        iconId = "04";
-    }
     /* Mist? */
-    else if ((WEATHER_CODE_MIN_MIST <= weatherCode) &&
-             (WEATHER_CODE_MAX_MIST >= weatherCode))
+    else if (true == isPartOf(WEATHER_CODE_MIST, UTIL_ARRAY_NUM(WEATHER_CODE_MIST), weatherCode))
     {
         iconId = "50";
     }
     /* Rain? */
-    else if ((WEATHER_CODE_MIN_RAIN <= weatherCode) &&
-             (WEATHER_CODE_MAX_RAIN >= weatherCode))
+    else if (true == isPartOf(WEATHER_CODE_RAIN, UTIL_ARRAY_NUM(WEATHER_CODE_RAIN), weatherCode))
     {
         iconId = "10";
     }
     /* Snow? */
-    else if ((WEATHER_CODE_MIN_SNOW <= weatherCode) &&
-             (WEATHER_CODE_MAX_SNOW >= weatherCode))
+    else if (true == isPartOf(WEATHER_CODE_SNOW, UTIL_ARRAY_NUM(WEATHER_CODE_SNOW), weatherCode))
     {
         iconId = "13";
     }
     /* Shower rain? */
-    else if ((WEATHER_CODE_MIN_SHOWER_RAIN <= weatherCode) &&
-             (WEATHER_CODE_MAX_SHOWER_RAIN >= weatherCode))
+    else if (true == isPartOf(WEATHER_CODE_SHOWER_RAIN, UTIL_ARRAY_NUM(WEATHER_CODE_SHOWER_RAIN), weatherCode))
     {
         iconId = "09";
     }
     /* Thunderstorm? */
-    else if ((WEATHER_CODE_MIN_THUNDERSTORM <= weatherCode) &&
-             (WEATHER_CODE_MAX_THUNDERSTORM >= weatherCode))
+    else if (true == isPartOf(WEATHER_CODE_THUNDERSTORM, UTIL_ARRAY_NUM(WEATHER_CODE_THUNDERSTORM), weatherCode))
     {
         iconId = "11";
     }
     else
     {
-        iconId = "01";
+        ;
     }
 
-    if (false == isDay)
+    if (false == iconId.isEmpty())
     {
-        iconId += "n";
+        if (false == isDay)
+        {
+            iconId += "n";
+        }
+        else
+        {
+            iconId += "d";
+        }
     }
     else
     {
-        iconId += "d";
+        iconId = "std";
     }
 
     return iconId;
@@ -790,8 +792,6 @@ String OpenMeteoPlugin::getIconIdFromWeatherCode(uint8_t weatherCode, bool isDay
 
 void OpenMeteoPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
-
-
     if (true == jsonDoc.containsKey("current"))
     {
         _OpenMeteoPlugin::View::WeatherInfoCurrent currentWeatherInfo;

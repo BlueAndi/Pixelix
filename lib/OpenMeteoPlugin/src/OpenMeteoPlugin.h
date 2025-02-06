@@ -430,6 +430,17 @@ private:
     void setViewUnits();
 
     /**
+     * Is the given weather code part of the given weather codes?
+     * 
+     * @param[in] weatherCodes Weather codes
+     * @param[in] length       Length of weather codes array
+     * @param[in] weatherCode  Weather code
+     * 
+     * @return If the weather code is part of the weather codes, it will return true otherwise false.
+     */
+    bool isPartOf(const uint8_t* weatherCodes, size_t length, uint8_t weatherCode) const;
+
+    /**
      * Get icon id from weather code.
      *
      * @param[in] weatherCode Weather code
