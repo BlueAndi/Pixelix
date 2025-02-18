@@ -82,8 +82,8 @@ void BTCQuotePlugin::stop()
 
 void BTCQuotePlugin::process(bool isConnected)
 {
-    Msg                         msg;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    Msg                        msg;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
@@ -129,7 +129,7 @@ void BTCQuotePlugin::process(bool isConnected)
 
     if (true == m_taskProxy.receive(msg))
     {
-        switch(msg.type)
+        switch (msg.type)
         {
         case MSG_TYPE_INVALID:
             /* Should never happen. */
@@ -168,8 +168,8 @@ void BTCQuotePlugin::update(YAGfx& gfx)
 
 bool BTCQuotePlugin::startHttpRequest()
 {
-    bool    status  = false;
-    String  url     = String("http://api.coindesk.com/v1/bpi/currentprice/USD.json");
+    bool   status = false;
+    String url    = "https://api.coinbase.com/v2/prices/BTC-USD/buy";
 
     if (true == m_client.begin(url))
     {
@@ -194,31 +194,32 @@ void BTCQuotePlugin::initHttpClient()
      *       The processing must be deferred via task proxy.
      */
     m_client.regOnResponse(
-        [this](const HttpResponse& rsp)
-        {
+        [this](const HttpResponse& rsp) {
             handleAsyncWebResponse(rsp);
-        }
-    );
+        });
 }
 
 void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
 {
     if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
     {
-        const size_t            JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+        const size_t         JSON_DOC_SIZE = 512U;
+        DynamicJsonDocument* jsonDoc       = new (std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+        /* Example response:active
+         * {"data":{"amount":"96142.655","base":"BTC","currency":"USD"}}
+         */
 
         if (nullptr != jsonDoc)
         {
-            bool                            isSuccessful    = false;
-            size_t                          payloadSize     = 0U;
-            const void*                     vPayload        = rsp.getPayload(payloadSize);
-            const char*                     payload         = static_cast<const char*>(vPayload);
-            const size_t                    FILTER_SIZE     = 128U;
+            bool                            isSuccessful = false;
+            size_t                          payloadSize  = 0U;
+            const void*                     vPayload     = rsp.getPayload(payloadSize);
+            const char*                     payload      = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE  = 128U;
             StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
-            jsonFilterDoc["bpi"]["USD"]["rate_float"]   = true;
-            jsonFilterDoc["bpi"]["USD"]["rate"]         = true;
+            jsonFilterDoc["data"]["amount"] = true;
 
             if (true == jsonFilterDoc.overflowed())
             {
@@ -241,8 +242,8 @@ void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
                 {
                     Msg msg;
 
-                    msg.type    = MSG_TYPE_RSP;
-                    msg.rsp     = jsonDoc;
+                    msg.type     = MSG_TYPE_RSP;
+                    msg.rsp      = jsonDoc;
 
                     isSuccessful = this->m_taskProxy.send(msg);
                 }
@@ -259,18 +260,20 @@ void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
 
 void BTCQuotePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
-    JsonVariantConst    jsonBpi     = jsonDoc["bpi"];
-    JsonVariantConst    jsonUsd     = jsonBpi["USD"];
-    JsonVariantConst    jsonRate    = jsonUsd["rate"];
+    JsonVariantConst jsonData   = jsonDoc["data"];
+    JsonVariantConst jsonAmount = jsonData["amount"];
 
-    if (false == jsonRate.isNull())
+    if (false == jsonAmount.isNull())
     {
-        m_relevantResponsePart = jsonRate.as<String>() + " $/BTC";
-        m_relevantResponsePart.replace(",", "'");  /* Beautify to european(?) standard formatting ' for 1000s */
-        
-        LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
+        String rate            = jsonAmount.as<String>();
+        float  fRate           = rate.toFloat();
+        String formattedRate   = String(fRate, 0U);
 
-        m_view.setFormatText(m_relevantResponsePart);
+        formattedRate += " $/BTC";
+
+        LOG_INFO("BTC/USD to print %s", formattedRate);
+
+        m_view.setFormatText(formattedRate);
     }
 }
 
@@ -278,7 +281,7 @@ void BTCQuotePlugin::clearQueue()
 {
     Msg msg;
 
-    while(true == m_taskProxy.receive(msg))
+    while (true == m_taskProxy.receive(msg))
     {
         if (MSG_TYPE_RSP == msg.type)
         {

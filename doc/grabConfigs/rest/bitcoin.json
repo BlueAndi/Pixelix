@@ -1,15 +1,13 @@
 {
     "method": "GET",
-    "url": "http://api.coindesk.com/v1/bpi/currentprice/USD.json",
+    "url": "https://api.coinbase.com/v2/prices/BTC-USD/buy",
     "filter": {
-        "bpi": {
-            "USD": {
-                "rate_float": true
-            }
+        "data": {
+            "amount": true
         }
     },
     "iconFileId": 255,
-    "format": "%0.2f $/BTC",
+    "format": "%s $/BTC",
     "multiplier": 1,
     "offset": 0
 }

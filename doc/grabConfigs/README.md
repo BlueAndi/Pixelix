@@ -1,28 +1,31 @@
 # PIXELIX <!-- omit in toc -->
+
 ![PIXELIX](../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
 # Configurations for the GrabViaMqttPlugin and GrabViaRestPlugin <!-- omit in toc -->
 
-- [General](#general)
-- [GrabViaMqttPlugin examples](#grabviamqttplugin-examples)
-  - [Grodans Paradis AB outdoor temperature](#grodans-paradis-ab-outdoor-temperature)
-- [GrabViaRestPlugin examples](#grabviarestplugin-examples)
-  - [Bitcoin price in US$](#bitcoin-price-in-us)
-  - [Github repository stargazers](#github-repository-stargazers)
-  - [NINA - Warnings](#nina---warnings)
-  - [Shelly PlugS - Power consumption](#shelly-plugs---power-consumption)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [General](#general)
+* [GrabViaMqttPlugin examples](#grabviamqttplugin-examples)
+  * [Grodans Paradis AB outdoor temperature](#grodans-paradis-ab-outdoor-temperature)
+* [GrabViaRestPlugin examples](#grabviarestplugin-examples)
+  * [Bitcoin price in US$](#bitcoin-price-in-us)
+  * [Github repository stargazers](#github-repository-stargazers)
+  * [NINA - Warnings](#nina---warnings)
+  * [Shelly PlugS - Power consumption](#shelly-plugs---power-consumption)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # General
+
 Please share your configuration for others by pull request or you can open an issue with your example. It will be added here to the list.
 
 # GrabViaMqttPlugin examples
 
 ## Grodans Paradis AB outdoor temperature
+
 The author and maintainer of [VSCP](https://www.vscp.org) has an public [MQTT broker](https://github.com/grodansparadis/vscp/wiki/VSCP-Demo-server) and provides some data from his locally installed sensors. This shows how to retrieve e.g. the outdoor temperature at Ake's south house side.
 
 ```json
@@ -47,6 +50,7 @@ The author and maintainer of [VSCP](https://www.vscp.org) has an public [MQTT br
 ```
 
 The filter is used to identify the value of interest.
+
 ```json
     "filter": {
     "measurement": {
@@ -56,6 +60,7 @@ The filter is used to identify the value of interest.
 ```
 
 The bumblebee icon is chosen.
+
 ```json
 {
     "iconFileId": 0
@@ -63,6 +68,7 @@ The bumblebee icon is chosen.
 ```
 
 The format specifies how the rate will be shown.
+
 ```json
 {
     "format": "{hc}%0.1f°C"
@@ -70,6 +76,7 @@ The format specifies how the rate will be shown.
 ```
 
 No additional manipulation of the value shall take place.
+
 ```json
 {
     "multiplier": 1,
@@ -84,39 +91,31 @@ Find the complete plugin configuration in [grodansparadisOutdoorTemperature.json
 # GrabViaRestPlugin examples
 
 ## Bitcoin price in US$
-The bitcoin price is get from http://api.coindesk.com/v1/bpi/currentprice/USD.json which returns a JSON object. 
+
+The bitcoin price is get from https://api.coinbase.com/v2/prices/BTC-USD/buy which returns a JSON object. 
 
 ```json
 {
-    "time": {
-        "updated": "Jan 29, 2025 22:14:39 UTC",
-        "updatedISO": "2025-01-29T22:14:39+00:00",
-        "updateduk": "Jan 29, 2025 at 22:14 GMT"
-    },
-    "disclaimer": "This data was produced from the CoinDesk Bitcoin Price Index (USD). Non-USD currency data converted using hourly conversion rate from openexchangerates.org",
-    "bpi": {
-        "USD": {
-            "code": "USD",
-            "rate": "103,865.253",
-            "description": "United States Dollar",
-            "rate_float": 103865.2534
-        }
+    "data": {
+        "amount": "96145.315",
+        "base": "BTC",
+        "currency": "USD"
     }
 }
 ```
 
 The filter is used to identify the value of interest.
+
 ```json
     "filter": {
-        "bpi": {
-            "USD": {
-                "rate_float": true
-            }
+        "data": {
+            "amount": true
         }
     }
 ```
 
 No icon is chosen to use the whole display just for the text.
+
 ```json
 {
     "iconFileId": 255
@@ -124,13 +123,15 @@ No icon is chosen to use the whole display just for the text.
 ```
 
 The format specifies how the rate will be shown.
+
 ```json
 {
-    "format": "%0.2f $/BTC"
+    "format": "%s $/BTC"
 }
 ```
 
 No additional manipulation of the value shall take place.
+
 ```json
 {
     "multiplier": 1,
@@ -138,11 +139,12 @@ No additional manipulation of the value shall take place.
 }
 ```
 
-Example result: ```103865.25 $/BTC```
+Example result: ```96145.315 $/BTC```
 
 Find the complete plugin configuration in [bitcoin.json](./rest/bitcoin.json).
 
 ## Github repository stargazers
+
 The github repositiry stargazers is get for this repository from https://api.github.com/repos/BlueAndi/Pixelix which returns a JSON object. 
 
 ```json
@@ -273,6 +275,7 @@ The github repositiry stargazers is get for this repository from https://api.git
 ```
 
 The filter is used to identify the value of interest.
+
 ```json
     "filter": {
         "stargazers_count": true
@@ -280,6 +283,7 @@ The filter is used to identify the value of interest.
 ```
 
 The github icon is chosen and will appear on the left side.
+
 ```json
 {
     "iconFileId": 2
@@ -287,6 +291,7 @@ The github icon is chosen and will appear on the left side.
 ```
 
 The format specifies how the number of stars will be shown.
+
 ```json
 {
     "format":  "%.0f stars"
@@ -294,6 +299,7 @@ The format specifies how the number of stars will be shown.
 ```
 
 No additional manipulation of the value shall take place.
+
 ```json
 {
     "multiplier": 1,
@@ -306,21 +312,23 @@ Example result: ```321 stars```
 Find the complete plugin configuration in [githubStargazers.json](./rest/githubStargazers.json).
 
 ## NINA - Warnings
+
 Show the warnings from the Bundesamt für [Bevölkerungsschutz und Katastrophenhilfe](https://www.bbk.bund.de/) in Germany. They provide a [REST API](https://nina.api.bund.dev/) to retrieve several kind of informations.
 
 Get the official regional key of your area here: https://www.xrepository.de/api/xrepository/urn:de:bund:destatis:bevoelkerungsstatistik:schluessel:rs_2021-07-31/download/Regionalschl_ssel_2021-07-31.json
-
 
 Replace the last 7 digits with "0000000" because the data is only provided at the district level.
 
 Build the URL like ```https://nina.api.proxy.bund.dev/api31/dashboard/<district-key>.json```.
 
 Example:
+
 * Region key for Illertissen: 097750129129
 * District key: 097750000000
 * URL: ```https://nina.api.proxy.bund.dev/api31/dashboard/097750000000.json```
 
 The URL will provide a JSON object:
+
 ```json
 [
     {
@@ -355,6 +363,7 @@ The URL will provide a JSON object:
 ```
 
 The filter is used to identify the value of interest.
+
 ```json
     "filter": [{
         "i18nTitle": {
@@ -366,6 +375,7 @@ The filter is used to identify the value of interest.
 Be aware that the i18nTitle is not always for other languages available.
 
 No icon is chosen to use the whole display just for the text.
+
 ```json
 {
     "iconFileId": 255
@@ -381,6 +391,7 @@ The format specifies how the warning will be shown. Note, there may be several w
 ```
 
 No additional manipulation of the string is possible, so we don't care about the multiplier and the offset.
+
 ```json
 {
     "multiplier": 1,
@@ -393,6 +404,7 @@ Example result: ```Entwarnung```
 Find the complete plugin configuration in [nina.json](./rest/nina.json).
 
 ## Shelly PlugS - Power consumption
+
 The Shelly PlugS provide the power consumption via [REST API](https://shelly-api-docs.shelly.cloud/gen1/#shelly-plug-plugs-meter-0), e. g. http://192.168.1.123/meter/0/.
 
 ```json
@@ -407,6 +419,7 @@ The Shelly PlugS provide the power consumption via [REST API](https://shelly-api
 ```
 
 The filter is used to identify the value of interest.
+
 ```json
     "filter": {
         "power": true
@@ -414,6 +427,7 @@ The filter is used to identify the value of interest.
 ```
 
 The lightning icon is chosen.
+
 ```json
 {
     "iconFileId": 5
@@ -421,6 +435,7 @@ The lightning icon is chosen.
 ```
 
 The format specifies how the power consumption will be shown.
+
 ```json
 {
     "format": "{hc}%0.1f W"
@@ -428,6 +443,7 @@ The format specifies how the power consumption will be shown.
 ```
 
 No additional manipulation of the value shall take place.
+
 ```json
 {
     "multiplier": 1,
@@ -440,12 +456,15 @@ Example result: ```0.0 W```
 Find the complete plugin configuration in [shellyPlugSPower.json](./rest/shellyPlugSPower.json).
 
 # Issues, Ideas And Bugs
+
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
 # License
+
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
 Consider the different licenses of the used third party libraries too!
 
 # Contribution
+
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
 additional terms or conditions.
