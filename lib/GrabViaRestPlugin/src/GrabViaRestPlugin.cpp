@@ -37,6 +37,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <HttpStatus.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -697,18 +698,49 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 
         /* Is it a number and format string doesn't contain a '%s'? */
         if ((true == jsonValue.is<float>()) &&
-            (0 > m_format.indexOf("%s"))) /* Prevent mistake which may cause a LoadProhibited core panic by snprintf. */
+            (false == Util::isFormatSpecifierInStr(m_format, 's'))) /* Prevent mistake which may cause a LoadProhibited core panic by snprintf. */
         {
             const size_t BUFFER_SIZE = 128U;
             char         buffer[BUFFER_SIZE];
-            float        value  = jsonValue.as<float>();
+            float        value = jsonValue.as<float>();
 
-            value              *= m_multiplier;
-            value              += m_offset;
+            /* Is it not a number? */
+            if (true == std::isnan(value))
+            {
+                outputStr += "!";
+            }
+            else
+            {
+                value *= m_multiplier;
+                value += m_offset;
 
-            (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), value);
+                (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), value);
 
-            outputStr += buffer;
+                outputStr += buffer;
+            }
+        }
+        /* Is it a string and should be converted to a floating point number? */
+        else if ((true == jsonValue.is<String>()) &&
+                 (true == Util::isFormatSpecifierInStr(m_format, 'f')))
+        {
+            const size_t BUFFER_SIZE = 128U;
+            char         buffer[BUFFER_SIZE];
+            float        value = jsonValue.as<String>().toFloat();
+
+            /* Is it not a number? */
+            if (true == std::isnan(value))
+            {
+                outputStr += "!";
+            }
+            else
+            {
+                value *= m_multiplier;
+                value += m_offset;
+
+                (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), value);
+
+                outputStr += buffer;
+            }
         }
         /* Is it a string? */
         else if (true == jsonValue.is<String>())
