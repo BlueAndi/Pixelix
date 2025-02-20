@@ -181,6 +181,21 @@ private:
     MqttApiTopicHandler& operator=(const MqttApiTopicHandler& adapter);
 
     /**
+     * Get MQTT base topic.
+     * 
+     * Generates the base topic for the MQTT API according to following pattern:
+     * - writeable: DEVICE-ID/[ENTITY-ID/]TOPIC/set
+     * - readable:  DEVICE-ID/[ENTITY-ID/]TOPIC/state
+     *
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of a plugin. May be empty.
+     * @param[in] topic     The topic.
+     *
+     * @return REST API base URL
+     */
+    String getMqttBaseTopic(const String& deviceId, const String& entityId, const String& topic) const;
+
+    /**
      * Request to publish all topic states.
      */
     void requestToPublishAllTopicStates();

@@ -59,8 +59,8 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_TEXT                 = "/iconText";
-const char* IconTextPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/iconTextPlugin.json";
+const char* IconTextPlugin::TOPIC_TEXT                    = "iconText";
+const char* IconTextPlugin::TOPIC_TEXT_EXTRA_HA_FILE_NAME = "/extra/iconTextPlugin.json";
 
 /******************************************************************************
  * Public Methods
@@ -82,7 +82,7 @@ bool IconTextPlugin::isEnabled() const
 
 void IconTextPlugin::getTopics(JsonArray& topics) const
 {
-    JsonObject jsonText = topics.createNestedObject();
+    JsonObject jsonText     = topics.createNestedObject();
 
     /* The topic contains Home Assistant support of the MQTT discovery
      * (https://www.home-assistant.io/integrations/mqtt). See the configured
@@ -90,8 +90,8 @@ void IconTextPlugin::getTopics(JsonArray& topics) const
      *
      * The used icon is from MaterialDesignIcons.com (namespace: mdi).
      */
-    jsonText["name"]    = TOPIC_TEXT;
-    jsonText["extra"]   = TOPIC_TEXT_EXTRA_FILE_NAME;
+    jsonText["name"]        = TOPIC_TEXT;
+    jsonText["extra"]["ha"] = TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 }
 
 bool IconTextPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -150,8 +150,20 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
          */
         if (false == jsonStoreFlag.isNull())
         {
-            storeFlag    = jsonStoreFlag.as<bool>();
-            isSuccessful = true;
+            if (true == jsonStoreFlag.is<String>())
+            {
+                storeFlag    = jsonStoreFlag.as<String>().equalsIgnoreCase("true");
+                isSuccessful = true;
+            }
+            else if (true == jsonStoreFlag.is<bool>())
+            {
+                storeFlag    = jsonStoreFlag.as<bool>();
+                isSuccessful = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)

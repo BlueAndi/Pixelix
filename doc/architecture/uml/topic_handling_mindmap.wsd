@@ -9,14 +9,15 @@
 ++++ Base URI: http://<HOSTNAME>/rest/api/v1
 
 ++++ GET
-+++++ URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
++++++ URL: <BASE-URI>/[<ENTITY-ID>/]<TOPIC>
 ++++++ Examples
 +++++++ <BASE-URI>/display/uid/1234/text
 +++++++ <BASE-URI>/display/alias/myPlugin/text
 
 ++++ POST
-+++++ URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
++++++ URL: <BASE-URI>/[<ENTITY-ID>/]<TOPIC>
 ++++++ Examples
++++++++ <BASE-URI>/restart
 +++++++ <BASE-URI>/display/uid/1234/text
 +++++++ <BASE-URI>/display/alias/myPlugin/text
 
@@ -54,7 +55,6 @@
 
 +++++ A file is BASE64 encoded and provided in HTTP body.
 
-
 ++++ General response
 +++++ In case of successful request
 ******:
@@ -78,48 +78,66 @@
 +++ MQTT API
 
 ++++ Homeassistant auto discovery
-+++++ General path
-++++++ <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<DEVICE-ID>/<ENTITY-ID>/config
-+++++ Topic with plugin UID: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display/uid/<PLUGIN-UID>/config
++++++ General
+++++++ <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOMEASSISTANT-NODE-ID>/<HOMEASSISTANT-OBJECT-ID>/config
+++++++ <HOMEASSISTANT-NODE-ID> = DEVICE-ID with "/" and "." replaced by "_"
+++++++ <HOMEASSISTANT-OBJECT-ID> = [ENTITY-ID/]TOPIC with "/" and "." replaced by "_"
+++++++ <HOMEASSISTANT-UNIQUE-ID> = DEVICE-ID/[ENTITY-ID/]TOPIC
+
++++++ Topic with plugin UID: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display_uid_<PLUGIN-UID>_<TOPIC>/config
 *****:
 <code>
 {
-  "name": "MQTT text",
-  "object_id": "display/uid/19583",
-  "unique_id": "pixelix-facfc834/display/uid/19583",
-  "device": {
-    "identifiers": "F4:12:FA:CF:C8:34",
-    "configuration_url": "http://192.168.2.62",
-    "name": "pixelix-facfc834",
-    "model": "Pixelix",
-    "manufacturer": "BlueAndi & Friends",
-    "sw_version": "v7.0.0"
-  },
-  "state_topic": "pixelix-facfc834/display/uid/19583/text/state",
-  "value_template": "{{ value_json.text }}",
-  "command_topic": "pixelix-facfc834/display/uid/19583/text/set",
-  "command_template": "{\"text\": \"{{ value }}\" }"
+    "obj_id": "display_uid_42798_text",
+    "uniq_id": "pixelix-6F1AD6B8/display_uid_42798_text",
+    "dev": {
+        "ids": "B8:D6:1A:6F:F7:00",
+        "cu": "http://192.168.2.238",
+        "name": "pixelix-6F1AD6B8",
+        "mdl": "Pixelix",
+        "mf": "BlueAndi & Friends",
+        "sw": "v8.0.0:uc:lc:b",
+        "hw": "ulanzi-tc001-LED-32x8"
+    },
+    "o": {
+        "name": "Pixelix",
+        "url": "https://github.com/BlueAndi/Pixelix"
+    },
+    "name": "JustTextPlugin",
+    "ic": "mdi:form-textbox",
+    "cmd_tpl": "{\"text\": \"{{ value }}\" }",
+    "val_tpl": "{{ value_json.text }}",
+    "stat_t": "pixelix-6F1AD6B8/display/uid/42798/text/state",
+    "cmd_t": "pixelix-6F1AD6B8/display/uid/42798/text/set",
+    "avty_t": "pixelix-6F1AD6B8/status"
 }
 </code>;
-+++++ Topic with plugin alias: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display/alias/<PLUGIN-ALIAS>/config
++++++ Topic with plugin alias: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display_alias_<PLUGIN-ALIAS>_<TOPIC>/config
 *****:
 <code>
 {
-  "name": "MQTT text",
-  "object_id": "display/alias/myPlugin",
-  "unique_id": "pixelix-facfc834/display/alias/myPlugin",
-  "device": {
-    "identifiers": "F4:12:FA:CF:C8:34",
-    "configuration_url": "http://192.168.2.62",
-    "name": "pixelix-facfc834",
-    "model": "Pixelix",
-    "manufacturer": "BlueAndi & Friends",
-    "sw_version": "v7.0.0"
-  },
-  "state_topic": "pixelix-facfc834/display/alias/myPlugin/text/state",
-  "value_template": "{{ value_json.text }}",
-  "command_topic": "pixelix-facfc834/display/alias/myPlugin/text/set",
-  "command_template": "{\"text\": \"{{ value }}\" }"
+    "obj_id": "display_alias_myPlugin_text",
+    "uniq_id": "pixelix-6F1AD6B8/display_alias_myPlugin_text",
+    "dev": {
+        "ids": "B8:D6:1A:6F:F7:00",
+        "cu": "http://192.168.2.238",
+        "name": "pixelix-6F1AD6B8",
+        "mdl": "Pixelix",
+        "mf": "BlueAndi & Friends",
+        "sw": "v8.0.0:uc:lc:b",
+        "hw": "ulanzi-tc001-LED-32x8"
+    },
+    "o": {
+        "name": "Pixelix",
+        "url": "https://github.com/BlueAndi/Pixelix"
+    },
+    "name": "JustTextPlugin",
+    "ic": "mdi:form-textbox",
+    "cmd_tpl": "{\"text\": \"{{ value }}\" }",
+    "val_tpl": "{{ value_json.text }}",
+    "stat_t": "pixelix-6F1AD6B8/display/alias/myPlugin/text/state",
+    "cmd_t": "pixelix-6F1AD6B8/display/alias/myPlugin/text/set",
+    "avty_t": "pixelix-6F1AD6B8/status"
 }
 </code>;
 ++++ HOMEASSISTANT-DEVICE-CLASS

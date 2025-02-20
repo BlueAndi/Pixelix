@@ -65,8 +65,8 @@
 const char* FileMgrService::WORKING_DIRECTORY   = "/configuration";
 const char* FileMgrService::CONFIG_FILE_NAME    = "fileMgr.json";
 const char* FileMgrService::ENTITY_ID           = "files";
-const char* FileMgrService::TOPIC_UPLOAD        = "/upload";
-const char* FileMgrService::TOPIC_REMOVE        = "/remove";
+const char* FileMgrService::TOPIC_UPLOAD        = "upload";
+const char* FileMgrService::TOPIC_REMOVE        = "remove";
 const char* FileMgrService::FILE_EXTENSIONS[]   =
 {
     ".bmp",

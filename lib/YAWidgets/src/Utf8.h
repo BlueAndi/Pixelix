@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command to reset system
+ * @brief  UTF-8 conversion
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup WEB
+ * @addtogroup GFX
  *
  * @{
  */
 
-#ifndef WSCMDRESET_H
-#define WSCMDRESET_H
+#ifndef UTF8_H
+#define UTF8_H
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmd.h"
+#include <WString.h>
+
+namespace Utf8
+{
 
 /******************************************************************************
  * Macros
@@ -53,56 +56,20 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * Websocket command to reset system
- */
-class WsCmdReset: public WsCmd
-{
-public:
-
-    /**
-     * Constructs the websocket command.
-     */
-    WsCmdReset() :
-        WsCmd("RESET"),
-        m_isError(false)
-    {
-    }
-
-    /**
-     * Destroys websocket command.
-     */
-    ~WsCmdReset()
-    {
-    }
-
-    /**
-     * Execute command.
-     *
-     * @param[in] server    Websocket server
-     * @param[in] clientId  Websocket client ID
-     */
-    void execute(AsyncWebSocket* server, uint32_t clientId) final;
-
-    /**
-     * Set command parameter. Call this for each parameter, until executing it.
-     *
-     * @param[in] par   Parameter string
-     */
-    void setPar(const char* par) final;
-
-private:
-
-    bool    m_isError;  /**< Any error happened during parameter reception? */
-
-    WsCmdReset(const WsCmdReset& cmd);
-    WsCmdReset& operator=(const WsCmdReset& cmd);
-};
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDRESET_H */
+/**
+ * Convert UTF-8 string to internal string representation.
+ * 
+ * @param[in]   utf8    UTF-8 string
+ * @param[out]  intern  Internal string representation
+ */
+extern void toIntern(const String& utf8, String& intern);
+
+} /* namespace Utf8 */
+
+#endif /* UTF8_H */
 
 /** @} */

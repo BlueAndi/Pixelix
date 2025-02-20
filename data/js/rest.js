@@ -229,10 +229,10 @@ pixelix.rest.Client.prototype.setSetting = function(key, value) {
     return promise;
 };
 
-pixelix.rest.Client.prototype.reset = function() {
+pixelix.rest.Client.prototype.restart = function() {
     return utils.makeRequest({
-        method: "GET",
-        url: "/rest/api/v1/reset",
+        method: "POST",
+        url: "/rest/api/v1/restart",
         isJsonResponse: true
     });
 };

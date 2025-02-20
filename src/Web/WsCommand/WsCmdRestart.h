@@ -25,86 +25,84 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command to reset system
+ * @brief  Websocket command to restart the system
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup WEB
+ *
+ * @{
  */
+
+#ifndef WS_CMD_RESTART_H
+#define WS_CMD_RESTART_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdReset.h"
-#include "UpdateMgr.h"
-
-#include <Util.h>
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include "WsCmd.h"
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-void WsCmdReset::execute(AsyncWebSocket* server, uint32_t clientId)
+/**
+ * Websocket command to restart system
+ */
+class WsCmdRestart: public WsCmd
 {
-    if (nullptr == server)
+public:
+
+    /**
+     * Constructs the websocket command.
+     */
+    WsCmdRestart() :
+        WsCmd("RESTART"),
+        m_isError(false)
     {
-        return;
     }
 
-    /* Any error happended? */
-    if (true == m_isError)
+    /**
+     * Destroys websocket command.
+     */
+    ~WsCmdRestart()
     {
-        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
-    }
-    else
-    {
-        /* To ensure the positive response will be sent. */
-        const uint32_t RESTART_DELAY = 100U; /* ms */
-
-        UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
-
-        sendPositiveResponse(server, clientId);
     }
 
-    m_isError = false;
-}
+    /**
+     * Execute command.
+     *
+     * @param[in] server    Websocket server
+     * @param[in] clientId  Websocket client ID
+     */
+    void execute(AsyncWebSocket* server, uint32_t clientId) final;
 
-void WsCmdReset::setPar(const char* par)
-{
-    UTIL_NOT_USED(par);
+    /**
+     * Set command parameter. Call this for each parameter, until executing it.
+     *
+     * @param[in] par   Parameter string
+     */
+    void setPar(const char* par) final;
 
-    m_isError = true;
-}
+private:
+
+    bool    m_isError;  /**< Any error happened during parameter reception? */
+
+    WsCmdRestart(const WsCmdRestart& cmd);
+    WsCmdRestart& operator=(const WsCmdRestart& cmd);
+};
 
 /******************************************************************************
- * Protected Methods
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
+#endif  /* WS_CMD_RESTART_H */
 
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+/** @} */

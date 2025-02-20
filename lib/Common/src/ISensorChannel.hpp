@@ -173,8 +173,7 @@ public:
             break;
 
         case ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS:
-            unit  = "\x8E";
-            unit += "C";
+            unit  = "°C";
             break;
 
         case ISensorChannel::TYPE_HUMIDITY_PERCENT:

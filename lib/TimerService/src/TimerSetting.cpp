@@ -120,17 +120,17 @@ bool TimerSetting::fromJson(const JsonObjectConst& jsonTimerSetting)
         m_displayState = static_cast<DisplayState>(jsonDisplayState.as<uint8_t>());
         m_brightness   = jsonBrightness.as<int16_t>();
 
-        if (true == jsonEnabled.is<bool>())
+        if (true == jsonEnabled.is<String>())
+        {
+            m_isEnabled = jsonEnabled.as<String>().equalsIgnoreCase("true");
+        }
+        else if (true == jsonEnabled.is<bool>())
         {
             m_isEnabled = jsonEnabled.as<bool>();
         }
-        else if (true == jsonEnabled.as<String>().equals("false"))
-        {
-            m_isEnabled = false;
-        }
         else
         {
-            m_isEnabled = true;
+            m_isEnabled = false;
         }
 
         if (((true == jsonSunday.is<bool>()) && (true == jsonSunday.as<bool>())) ||

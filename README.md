@@ -138,7 +138,7 @@ Use the following default credentials to get access to the PIXELIX web interface
 Connect PIXELIX with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
 * Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
 * Write wifi SSID: ```write wifi ssid <your-ssid>```
-* Restart PIXELIX: ```reset```
+* Restart PIXELIX: ```restart```
 * Get IP-address: ```get ip```
 * Get status: ```get status```
   * A status of 0 means everything is ok.
@@ -212,7 +212,7 @@ Keyword   | Description
 {vb}      | Vertical alignment bottom
 
 **Notes**
-- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.5.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.6.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.  
 
 **Examples**

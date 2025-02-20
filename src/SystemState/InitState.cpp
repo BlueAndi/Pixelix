@@ -408,6 +408,10 @@ void InitState::exit(StateMachine& sm)
         {
             /* Initialize webserver. The filesystem must be mounted before! */
             MyWebServer::init(m_isApModeRequested);
+
+            /* Add services to mDNS.
+             * See http://www.dns-sd.org/serviceTypes.html
+             */
             MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
 
             /* Do some stuff only in wifi station mode. */

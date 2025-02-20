@@ -25,23 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Board Abstraction
+ * @brief  Websocket command to restart the system
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Board.h"
+#include "WsCmdRestart.h"
+#include "UpdateMgr.h"
 
 #include <Util.h>
-#include <Esp.h>
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
-
-using namespace Board;
 
 /******************************************************************************
  * Macros
@@ -56,65 +54,44 @@ using namespace Board;
  *****************************************************************************/
 
 /******************************************************************************
- * Global Variables
- *****************************************************************************/
-
-/** Digital output pin: Onboard LED */
-const DOutPin<Pin::onBoardLedPinNo>                 Board::onBoardLedOut;
-
-/** Digital input pin: Button "ok" (input with pull-up) */
-const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP>      Board::buttonOkIn;
-
-/** Digital input pin: Button "left" (input with pull-up) */
-const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
-
-/** Digital input pin: Button "right" (input with pull-up) */
-const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
-
-/** Digital input pin: Button "reset" (input with pull-up) */
-const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP>   Board::buttonResetIn;
-
-/** Digital output pin: Test pin (only for debug purposes) */
-const DOutPin<Pin::testPinNo>                       Board::testPinOut;
-
-/** Digital output pin: LED matrix data out */
-const DOutPin<Pin::ledMatrixDataOutPinNo>           Board::ledMatrixDataOut;
-
-/** Analog input pin: LDR in */
-const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
-
-/** Digital input pin: DHT Sensor (input with pull-up) */
-const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
-
-/** Analog input pin: battery voltage in */
-const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
-
-/** Digital output pin: Buzzer */
-const DOutPin<Pin::buzzerOutPinNo>                  Board::buzzerOut;
-
-/******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/** A list of all used i/o pins, used for initialization. */
-static const IoPin* ioPinList[] =
-{
-    &onBoardLedOut,
-    &buttonOkIn,
-    &buttonLeftIn,
-    &buttonRightIn,
-    &buttonResetIn,
-    &testPinOut,
-    &ledMatrixDataOut,
-    &ldrIn,
-    &dhtIn,
-    &batteryVoltageIn,
-    &buzzerOut
-};
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void WsCmdRestart::execute(AsyncWebSocket* server, uint32_t clientId)
+{
+    if (nullptr == server)
+    {
+        return;
+    }
+
+    /* Any error happended? */
+    if (true == m_isError)
+    {
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
+    }
+    else
+    {
+        /* To ensure the positive response will be sent. */
+        const uint32_t RESTART_DELAY = 100U; /* ms */
+
+        UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
+
+        sendPositiveResponse(server, clientId);
+    }
+
+    m_isError = false;
+}
+
+void WsCmdRestart::setPar(const char* par)
+{
+    UTIL_NOT_USED(par);
+
+    m_isError = true;
+}
 
 /******************************************************************************
  * Protected Methods
@@ -127,47 +104,6 @@ static const IoPin* ioPinList[] =
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-extern void Board::init()
-{
-    uint8_t index = 0U;
-
-    /* Initialize all i/o pins */
-    for(index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
-    {
-        if (nullptr != ioPinList[index])
-        {
-            ioPinList[index]->init();
-        }
-    }
-
-    /* Disable buzzer */
-    buzzerOut.write(LOW);
-}
-
-extern void Board::reset()
-{
-    ESP.restart();
-
-    /* Will never be reached. */
-}
-
-extern void Board::ledOn()
-{
-    /* High active */
-    onBoardLedOut.write(HIGH);
-}
-
-extern void Board::ledOff()
-{
-    /* High active */
-    onBoardLedOut.write(LOW);
-}
-
-extern bool Board::isLedOn()
-{
-    return (HIGH == onBoardLedOut.read()) ? true : false;
-}
 
 /******************************************************************************
  * Local Functions

@@ -59,14 +59,14 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT                 = "/iconText";
-const char* IconTextLampPlugin::TOPIC_TEXT_EXTRA_FILE_NAME = "/extra/iconTextLampPlugin.json";
+const char* IconTextLampPlugin::TOPIC_TEXT                    = "iconText";
+const char* IconTextLampPlugin::TOPIC_TEXT_EXTRA_HA_FILE_NAME = "/extra/iconTextLampPlugin.json";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMPS                = "/lamps";
+const char* IconTextLampPlugin::TOPIC_LAMPS                   = "lamps";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMP                 = "/lamp";
+const char* IconTextLampPlugin::TOPIC_LAMP                    = "lamp";
 
 /******************************************************************************
  * Public Methods
@@ -74,9 +74,9 @@ const char* IconTextLampPlugin::TOPIC_LAMP                 = "/lamp";
 
 void IconTextLampPlugin::getTopics(JsonArray& topics) const
 {
-    uint8_t    lampId    = 0U;
-    JsonObject jsonText  = topics.createNestedObject();
-    JsonObject jsonLamps = topics.createNestedObject();
+    uint8_t    lampId       = 0U;
+    JsonObject jsonText     = topics.createNestedObject();
+    JsonObject jsonLamps    = topics.createNestedObject();
 
     /* The topic contains Home Assistant support of the MQTT discovery
      * (https://www.home-assistant.io/integrations/mqtt). See the configured
@@ -84,11 +84,11 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
      *
      * The used icon is from MaterialDesignIcons.com (namespace: mdi).
      */
-    jsonText["name"]     = TOPIC_TEXT;
-    jsonText["extra"]    = TOPIC_TEXT_EXTRA_FILE_NAME;
+    jsonText["name"]        = TOPIC_TEXT;
+    jsonText["extra"]["ha"] = TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 
-    jsonLamps["name"]    = TOPIC_LAMPS;
-    jsonLamps["access"]  = "r"; /* Only read access allowed. */
+    jsonLamps["name"]       = TOPIC_LAMPS;
+    jsonLamps["access"]     = "r"; /* Only read access allowed. */
 
     for (lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
     {
@@ -191,8 +191,20 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
          */
         if (false == jsonStoreFlag.isNull())
         {
-            storeFlag    = jsonStoreFlag.as<bool>();
-            isSuccessful = true;
+            if (true == jsonStoreFlag.is<String>())
+            {
+                storeFlag    = jsonStoreFlag.as<String>().equalsIgnoreCase("true");
+                isSuccessful = true;
+            }
+            else if (true == jsonStoreFlag.is<bool>())
+            {
+                storeFlag    = jsonStoreFlag.as<bool>();
+                isSuccessful = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)

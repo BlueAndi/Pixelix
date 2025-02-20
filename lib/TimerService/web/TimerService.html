@@ -40,6 +40,9 @@
                     <li>For the brightness level, the value range is from 0% to 100%.</li>
                     <li>To avoid any brightness change, use the value -1.</li>
                     <li>The brightness adjustment will be applied only if the automatic brightness adjustment is disabled.</li>
+                    <li>If the brightness level is lower than the min. brightness soft limit, the min. soft limit will be set.</li>
+                    <li>If the brightness level is greater than the max. brightness soft limit, the max. soft limit will be set.</li>
+                    <li>The timer uses the local time. See its timezone in the settings.</li>
                 </ul>
                 <form id="myForm" action="javascript:save()">
                 </form>
@@ -133,7 +136,7 @@
                     return -1;
                 }
 
-                return Math.ceil(value * 100 / 255);
+                return (value * 100 / 255).toFixed();
             }
 
             function brightnessPercentToValue(percent) {
@@ -141,7 +144,7 @@
                     return -1;
                 }
                 
-                return Math.ceil(percent * 255 / 100);
+                return (percent * 255 / 100).toFixed();
             }
 
             function createTimerSetting(id, timerSetting) {
@@ -200,7 +203,7 @@
 
                 var $labelBrightness = $("<label for='" + id + "Brightness'>Brightness:</label>");
                 var $inputBrightness = $("<input type='number' class='form-control' id='" + id + "Brightness' min='-1' max='100' />")
-                                    .val(brightnessPercentToValue(timerSetting.brightness));
+                                    .val(brightnessValueToPercent(timerSetting.brightness));
 
                 $block.append($row);
 
@@ -310,7 +313,7 @@
                         displayState: $("input[name='timer" + idx + "DisplayState']:checked").val(),
                         hour: $("#timer" + idx + "Hour").val(),
                         minute: $("#timer" + idx + "Minute").val(),
-                        brightness: brightnessValueToPercent($("#timer" + idx + "Brightness").val()),
+                        brightness: brightnessPercentToValue($("#timer" + idx + "Brightness").val()),
                         monday: $("#timer" + idx + "Mo").prop("checked"),
                         tuesday: $("#timer" + idx + "Tu").prop("checked"),
                         wednesday: $("#timer" + idx + "We").prop("checked"),

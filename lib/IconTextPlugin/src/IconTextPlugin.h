@@ -145,7 +145,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [
-     *         "/text"
+     *         "text"
      *     ]
      * }
      * </code>
@@ -161,22 +161,20 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "access": "r"
      *     }]
      * }
      * </code>
      * 
-     * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
-     * the "extra" JSON object.
+     * Home Assistant MQTT discovery support can be added with the "ha" JSON object inside
+     * the "extra" JSON object. The Home Assistant extension supports only loading by file.
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": {
-     *             "ha": {
-     *                 ... everything here will be used for MQTT discovery ...
-     *             }
+     *             "ha": "myHomeAssistantConfig.json"
      *         }
      *     }]
      * }
@@ -187,7 +185,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": "extra.json"
      *    }]
      * }
@@ -300,7 +298,7 @@ private:
     /**
      * Filename for the plugin topic extra info, used for Home Assistant integration.
      */
-    static const char*     TOPIC_TEXT_EXTRA_FILE_NAME;
+    static const char*     TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 
     _IconTextPlugin::View  m_view;             /**< View with all widgets. */
     FileMgrService::FileId m_iconFileId;       /**< Icon file id, used to retrieve the full path to the icon from the file manager. */

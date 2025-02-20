@@ -104,14 +104,14 @@ public:
      * Register all topics of the given plugin.
      *
      * @param[in] deviceId  The device id which represents the physical device.
-     * @param[in] entityId  The entity id which represents the entity of the device.
+     * @param[in] entityId  The entity id which represents the entity of the device. May be empty.
      * @param[in] plugin    The plugin, which topics shall be registered.
      */
     void registerTopics(const String& deviceId, const String& entityId, IPluginMaintenance* plugin);
 
     /**
      * Unregister all topics of the given plugin.
-     * 
+     *
      * If the purge flag is set, the topic handler will purge the topics like they never existed.
      * If the topics will be registered again, they will be treated as new topics.
      *
@@ -166,7 +166,16 @@ private:
     static const char* DEFAULT_ACCESS;
 
     /** Period in ms to check for changed topics. */
-    static const uint32_t ON_CHANGE_PERIOD = 500U;
+    static const uint32_t ON_CHANGE_PERIOD    = 500U;
+
+    /**
+     * The update counter forces an topic update, independent whether the topic changed.
+     * This ensures that the topic content is updated periodically and that in case e.g.
+     * Home Assistant restarted, it will receive the topic content.
+     * 
+     * The update counter is decremented every ON_CHANGE_PERIOD.
+     */
+    static const uint8_t UPDATE_COUNTER_VALUE = 20U;
 
     /**
      * Topic meta data, used for automatic publishing.
@@ -197,9 +206,36 @@ private:
      */
     typedef std::vector<TopicMetaData*> TopicMetaDataList;
 
-    bool                                m_isStarted;         /**< Is the service started? */
-    TopicMetaDataList                   m_topicMetaDataList; /**< List of readable topics and the required meta data. */
-    SimpleTimer                         m_onChangeTimer;     /**< Timer for on change processing period. */
+    /**
+     * Plugin meta data, used for automatic publishing.
+     */
+    struct PluginMetaData
+    {
+        IPluginMaintenance* plugin; /**< Plugin */
+        String              topic;  /**< Topic */
+        uint8_t             count;  /**< Number of topic registrations */
+
+        /**
+         * Construct plugin meta data instance.
+         */
+        PluginMetaData() :
+            plugin(nullptr),
+            topic(),
+            count(0U)
+        {
+        }
+    };
+
+    /**
+     * List of plugins which have at least one topic registered.
+     */
+    typedef std::vector<PluginMetaData*> PluginMetaDataList;
+
+    bool                                 m_isStarted;          /**< Is the service started? */
+    TopicMetaDataList                    m_topicMetaDataList;  /**< List of readable topics and the required meta data. */
+    PluginMetaDataList                   m_pluginMetaDataList; /**< List of plugins which have at least one topic registered. */
+    SimpleTimer                          m_onChangeTimer;      /**< Timer for on change processing period. */
+    uint8_t                              m_updateCounter;      /**< If counter is 0, a topic content will be updated indepdendent its changed. */
 
     /**
      * Constructs the service instance.
@@ -208,7 +244,9 @@ private:
         IService(),
         m_isStarted(false),
         m_topicMetaDataList(),
-        m_onChangeTimer()
+        m_pluginMetaDataList(),
+        m_onChangeTimer(),
+        m_updateCounter(UPDATE_COUNTER_VALUE)
     {
     }
 
@@ -256,10 +294,45 @@ private:
     void removeFromTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic);
 
     /**
+     * Add a plugin to the list of plugins, which have at least one topic registered.
+     * If a plugin is already in the list with the same topic, nothing will be done.
+     *
+     * @param[in] plugin    The plugin, which is related to the topic.
+     * @param[in] topic     The topic name.
+     */
+    void addToPluginList(IPluginMaintenance* plugin, const String& topic);
+
+    /**
+     * Remove a plugin from the list of plugins, which have at least one topic registered.
+     *
+     * @param[in] plugin    The plugin, which is related to the topic.
+     * @param[in] topic     The topic name.
+     */
+    void removeFromPluginList(IPluginMaintenance* plugin, const String& topic);
+
+    /**
+     * Process all topics to check which one has changed.
+     * For every changed one, notify the handlers about.
+     * 
+     * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
+     */
+    void processOnChange(bool forceUpdate);
+
+    /**
      * Process all plugin topics to check which one has changed.
      * For every changed one, notify the handlers about.
+     * 
+     * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
      */
-    void processOnChange();
+    void processPluginsOnChange(bool forceUpdate);
+
+    /**
+     * Process all not plugin related topics to check which one has changed.
+     * For every changed one, notify the handlers about.
+     * 
+     * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
+     */
+    void processOthersOnChange(bool forceUpdate);
 
     /**
      * Start all topic handlers.

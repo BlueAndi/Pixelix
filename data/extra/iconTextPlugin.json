@@ -1,11 +1,22 @@
-{
-    "ha": {
+[
+    {
         "component": "text",
         "discovery": {
-            "name": "IconTextPlugin",
+            "name": "IconTextPlugin Text",
             "ic": "mdi:form-textbox",
             "cmd_tpl": "{\"text\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.text }}"
         }
+    }, {
+        "component": "number",
+        "discovery": {
+            "name": "IconTextPlugin Icon",
+            "ic": "mdi:image-outline",
+            "cmd_tpl": "{\"iconFileId\": \"{{ value }}\" }",
+            "val_tpl": "{{ value_json.iconFileId }}",
+            "min": 0,
+            "max": 255,
+            "mode": "box"
+        }
     }
-}
+]

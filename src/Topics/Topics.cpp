@@ -37,6 +37,7 @@
 #include <TopicHandlerService.h>
 #include <Util.h>
 #include "DisplayMgr.h"
+#include "UpdateMgr.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -53,12 +54,12 @@
 /** Topic data element. */
 typedef struct
 {
-    const char*                         entity;         /**< Entity */
-    const char*                         topic;          /**< Topic */
-    ITopicHandler::GetTopicFunc         getTopicFunc;   /**< Get topic function */
-    TopicHandlerService::HasChangedFunc hasChangedFunc; /**< Has changed function */
-    ITopicHandler::SetTopicFunc         setTopicFunc;   /**< Set topic function */
-    const char*                         extraFileName;  /**< File name of a file with extra information. */
+    const char*                         entity;          /**< The entity which provides the topic. */
+    const char*                         topic;           /**< The feature topic. */
+    ITopicHandler::GetTopicFunc         getTopicFunc;    /**< Function to read the feature topic content. */
+    TopicHandlerService::HasChangedFunc hasChangedFunc;  /**< Function to checked whether the feature topic content changed. */
+    ITopicHandler::SetTopicFunc         setTopicFunc;    /**< Function to write the feature topic content. */
+    const char*                         extraHAFileName; /**< File name of a file with extra Home Assistant information. */
 
 } TopicElem;
 
@@ -69,6 +70,7 @@ typedef struct
 static bool getDisplayState(const String& topic, JsonObject& value);
 static bool hasDisplayStateChanged(const String& topic);
 static bool setDisplayState(const String& topic, const JsonObjectConst& value);
+static bool restart(const String& topic, const JsonObjectConst& value);
 
 /******************************************************************************
  * Local Variables
@@ -81,9 +83,22 @@ static String gDeviceId;
 
 /**
  * List of topics.
+ *
+ * ENTITY-ID     : display/uid/PLUGIN-UID | display/alias/PLUGIN-ALIAS | empty
+ *
+ * REST API      : BASE-URL/[ENTITY-ID/]TOPIC
+ *
+ * MQTT topic(s) : DEVICE-ID[/ENTITY-ID]/TOPIC[/ENTITY-INDEX]/set (writeable)
+ *                 DEVICE-ID[/ENTITY-ID]/TOPIC[/ENTITY-INDEX]/state (readable)
+ *
+ * HomeAssistant : NODE-ID = DEVICE-ID with "/" and "." replaced by "_"
+ *                 OBJECT-ID = [ENTITY-ID/]TOPIC[/ENTITIY-INDEX] with "/" and "." replaced by "_"
+ *                 UNIQUE-ID = NODE-ID/OBJECT-ID
+ *                 DISCOVERY-TOPIC = DISCOVERY-PREFIX/COMPONENT/NODE-ID/OBJECT-ID/config
  */
 static TopicElem gTopicList[] = {
-    { "display", "/power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" }
+    { "display", "power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" },
+    { "", "restart", nullptr, nullptr, restart, "/extra/restart.json" }
 };
 
 /**
@@ -109,8 +124,10 @@ static bool gLastDisplayOnState = false;
 
 void Topics::begin()
 {
-    SettingsService& settings = SettingsService::getInstance();
-    size_t           idx;
+    SettingsService&    settings      = SettingsService::getInstance();
+    const size_t        JSON_DOC_SIZE = 256U;
+    DynamicJsonDocument jsonDocExtra(JSON_DOC_SIZE);
+    size_t              idx;
 
     if (false == settings.open(true))
     {
@@ -126,13 +143,17 @@ void Topics::begin()
     /* Register topics */
     for (idx = 0U; idx < UTIL_ARRAY_NUM(gTopicList); ++idx)
     {
-        TopicElem* topicElem = &gTopicList[idx];
+        TopicElem*      topicElem = &gTopicList[idx];
+        JsonObjectConst jsonExtra;
+
+        jsonDocExtra["ha"] = topicElem->extraHAFileName;
+        jsonExtra          = jsonDocExtra.as<JsonObjectConst>();
 
         TopicHandlerService::getInstance().registerTopic(
             gDeviceId,
             topicElem->entity,
             topicElem->topic,
-            topicElem->extraFileName,
+            jsonExtra,
             topicElem->getTopicFunc,
             topicElem->hasChangedFunc,
             topicElem->setTopicFunc,
@@ -262,4 +283,27 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
     }
 
     return isSuccessful;
+}
+
+/**
+ * Restart the device.
+ *
+ * @param[in]   topic   Topic
+ * @param[in]   value   Value
+ *
+ * @return If successful, it will return true otherwise false.
+ */
+static bool restart(const String& topic, const JsonObjectConst& value)
+{
+    const uint32_t RESTART_DELAY = 100U; /* ms */
+
+    UTIL_NOT_USED(topic);
+    UTIL_NOT_USED(value);
+
+    /* To ensure that a positive response will be sent before the device restarts,
+     * a short delay is necessary.
+     */
+    UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
+
+    return true;
 }

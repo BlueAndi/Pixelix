@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char*     SignalDetectorPlugin::TOPIC_CONFIG      = "/signalDetector";
+const char*     SignalDetectorPlugin::TOPIC_CONFIG      = "signalDetector";
 
 /* Initialize the default text which will be shown if signal is detected. */
 const char*     SignalDetectorPlugin::DEFAULT_TEXT      = "{hc}Signal!";

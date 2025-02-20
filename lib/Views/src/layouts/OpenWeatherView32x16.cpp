@@ -437,19 +437,17 @@ void OpenWeatherView32x16::appendTemperature(String& dst, float temperature, boo
 
         if (false == noUnit)
         {
-            dst += "\x8E";
-
             if (m_units == "default")
             {
-                dst += "K";
+                dst += "°K";
             }
             else if (m_units == "metric")
             {
-                dst += "C";
+                dst += "°C";
             }
             else
             {
-                dst += "F";
+                dst += "°F";
             }
         }
     }

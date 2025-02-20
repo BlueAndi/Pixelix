@@ -60,7 +60,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* GruenbeckPlugin::TOPIC_CONFIG   = "/ipAddress";
+const char* GruenbeckPlugin::TOPIC_CONFIG   = "ipAddress";
 
 /******************************************************************************
  * Public Methods

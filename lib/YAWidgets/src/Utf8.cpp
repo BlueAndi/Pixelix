@@ -25,23 +25,20 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Board Abstraction
+ * @brief  UTF-8 conversion
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Board.h"
+#include "Utf8.h"
 
-#include <Util.h>
-#include <Esp.h>
+#include <stdint.h>
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
-
-using namespace Board;
 
 /******************************************************************************
  * Macros
@@ -56,61 +53,8 @@ using namespace Board;
  *****************************************************************************/
 
 /******************************************************************************
- * Global Variables
- *****************************************************************************/
-
-/** Digital output pin: Onboard LED */
-const DOutPin<Pin::onBoardLedPinNo>                 Board::onBoardLedOut;
-
-/** Digital input pin: Button "ok" (input with pull-up) */
-const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP>      Board::buttonOkIn;
-
-/** Digital input pin: Button "left" (input with pull-up) */
-const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
-
-/** Digital input pin: Button "right" (input with pull-up) */
-const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
-
-/** Digital input pin: Button "reset" (input with pull-up) */
-const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP>   Board::buttonResetIn;
-
-/** Digital output pin: Test pin (only for debug purposes) */
-const DOutPin<Pin::testPinNo>                       Board::testPinOut;
-
-/** Digital output pin: LED matrix data out */
-const DOutPin<Pin::ledMatrixDataOutPinNo>           Board::ledMatrixDataOut;
-
-/** Analog input pin: LDR in */
-const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
-
-/** Digital input pin: DHT Sensor (input with pull-up) */
-const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
-
-/** Analog input pin: battery voltage in */
-const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
-
-/** Digital output pin: Buzzer */
-const DOutPin<Pin::buzzerOutPinNo>                  Board::buzzerOut;
-
-/******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/** A list of all used i/o pins, used for initialization. */
-static const IoPin* ioPinList[] =
-{
-    &onBoardLedOut,
-    &buttonOkIn,
-    &buttonLeftIn,
-    &buttonRightIn,
-    &buttonResetIn,
-    &testPinOut,
-    &ledMatrixDataOut,
-    &ldrIn,
-    &dhtIn,
-    &batteryVoltageIn,
-    &buzzerOut
-};
 
 /******************************************************************************
  * Public Methods
@@ -128,45 +72,132 @@ static const IoPin* ioPinList[] =
  * External Functions
  *****************************************************************************/
 
-extern void Board::init()
+void Utf8::toIntern(const String& utf8, String& intern)
 {
-    uint8_t index = 0U;
+    size_t utf8Length = utf8.length();
+    size_t utf8Index  = 0U;
 
-    /* Initialize all i/o pins */
-    for(index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
+    while (utf8Length > utf8Index)
     {
-        if (nullptr != ioPinList[index])
+        uint16_t ucs2Char   = 0U;
+        char     internChar = 0;
+
+        if (0 == (utf8[utf8Index] & 0x80))
         {
-            ioPinList[index]->init();
+            ucs2Char   = utf8[utf8Index];
+            utf8Index += 1U;
+        }
+        else if (0xC0 == (utf8[utf8Index] & 0xE0))
+        {
+            ucs2Char   = ((utf8[utf8Index] & 0x1F) << 6) | (utf8[utf8Index + 1U] & 0x3F);
+            utf8Index += 2U;
+        }
+        else if (0xE0 == (utf8[utf8Index] & 0xF0))
+        {
+            ucs2Char   = ((utf8[utf8Index] & 0x0F) << 12) | ((utf8[utf8Index + 1U] & 0x3F) << 6) | (utf8[utf8Index + 2U] & 0x3F);
+            utf8Index += 3U;
+        }
+        else if (0xF0 == (utf8[utf8Index] & 0xF8))
+        {
+            ucs2Char   = ((utf8[utf8Index] & 0x07) << 18) | ((utf8[utf8Index + 1U] & 0x3F) << 12) | ((utf8[utf8Index + 2U] & 0x03) << 6) | (utf8[utf8Index + 3U] & 0x3F);
+            utf8Index += 4U;
+        }
+        else
+        {
+            ucs2Char   = 0U;
+            utf8Index += 1U;
+        }
+
+        /* U+0000 - U+001F */
+        if (0x0020U > ucs2Char)
+        {
+            /* N/A */
+        }
+        /* U+0020 - U+007E */
+        else if (0x007FU > ucs2Char)
+        {
+            internChar = static_cast<char>(ucs2Char);
+        }
+        /* U+007F - U+00A0 */
+        else if (0x00A1U > ucs2Char)
+        {
+            /* N/A */
+        }
+        /* 0x00A1 - 0x00FF ? */
+        else if (0x0100U > ucs2Char)
+        {
+            internChar = static_cast<char>(ucs2Char - 0x22U);
+        }
+        /* Single character extensions. */
+        else
+        {
+            switch (ucs2Char)
+            {
+            case 0x011DU:
+                internChar = 0xDE;
+                break;
+            case 0x152U:
+                internChar = 0xDF;
+                break;
+
+            case 0x153U:
+                internChar = 0xE0;
+                break;
+
+            case 0x160U:
+                internChar = 0xE1;
+                break;
+
+            case 0x161U:
+                internChar = 0xE2;
+                break;
+
+            case 0x178U:
+                internChar = 0xE3;
+                break;
+
+            case 0x17DU:
+                internChar = 0xE4;
+                break;
+
+            case 0x17EU:
+                internChar = 0xE5;
+                break;
+
+            case 0x0EA4U:
+                internChar = 0xE6;
+                break;
+
+            case 0x13A0U:
+                internChar = 0xE7;
+                break;
+
+            case 0x2022U:
+                internChar = 0xE8;
+                break;
+
+            case 0x2026U:
+                internChar = 0xE9;
+                break;
+
+            case 0x20ACU:
+                internChar = 0xEA;
+                break;
+
+            case 0xFFFDU:
+                internChar = 0xEB;
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        if (0 != internChar)
+        {
+            intern += internChar;
         }
     }
-
-    /* Disable buzzer */
-    buzzerOut.write(LOW);
-}
-
-extern void Board::reset()
-{
-    ESP.restart();
-
-    /* Will never be reached. */
-}
-
-extern void Board::ledOn()
-{
-    /* High active */
-    onBoardLedOut.write(HIGH);
-}
-
-extern void Board::ledOff()
-{
-    /* High active */
-    onBoardLedOut.write(LOW);
-}
-
-extern bool Board::isLedOn()
-{
-    return (HIGH == onBoardLedOut.read()) ? true : false;
 }
 
 /******************************************************************************

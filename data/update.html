@@ -60,6 +60,13 @@
                     <div class="tab-pane fade active show" id="update" role="tabpanel" aria-labelledby="update-tab">
                         <br />
                         <p>Upload <u>~FIRMWARE_FILENAME~</u> and <u>~BOOTLOADER_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
+                        <div class="alert alert-warning" role="alert">
+                            A filesystem update might cause a loss of all configuration data on the filesystem. Make sure you have a backup of your configuration before updating it.
+                        </div>
+                        <div class="alert alert-warning" role="alert">
+                            A filesystem update will disable the HomeAssistant MQTT discovery feature. After the update, you have to re-enable it manually.
+                            This prevents that the welcome plugin will be discovered, after a filesystem update.
+                        </div>
                         <p>Use multi-select to upload several files at once.</p>
                         <div class="input-group">
                             <input type="file" class="form-control" id="inputFile" multiple="multiple" accept=".bin">
@@ -145,7 +152,7 @@
                 var progress = 0;
 
                 if (true === evt.lengthComputable) {
-                    progress = Math.ceil(evt.loaded * 100 / evt.total);
+                    progress = (evt.loaded * 100 / evt.total).toFixed();
                 }
 
                 updateProgressBar("progressBar", progress);
@@ -164,12 +171,23 @@
                     fileCnt = 2;
                 }
 
+                /* Filesystem shall always be updated first!
+                 * Otherwise the Home Assistant MQTT discovery feature will stay enabled
+                 */
+                 for(index = 0; index < fileCnt; ++index) {
+                    file = document.getElementById("inputFile").files[index];
+
+                    if ("~FILESYSTEM_FILENAME~" === file.name) {
+                        files.push(file);
+                    }
+                }
+
+
                 for(index = 0; index < fileCnt; ++index) {
                     file = document.getElementById("inputFile").files[index];
 
                     if (("~FIRMWARE_FILENAME~" === file.name) ||
-                        ("~BOOTLOADER_FILENAME~" === file.name) ||
-                        ("~FILESYSTEM_FILENAME~" === file.name)) {
+                        ("~BOOTLOADER_FILENAME~" === file.name)) {
 
                         files.push(file);
                     }
@@ -344,12 +362,12 @@
                             progress = 90;
                             updateProgressBar("progressBarRestore", progress);
                         }).then(function() {
-                            return restClient.reset();
+                            return restClient.restart();
                         }).then(function() {
                             progress = 100;
                             updateProgressBar("progressBarRestore", progress);
 
-                            return dialog.showInfo("<p>Reset performed to apply restored configuration.</p>");
+                            return dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
                         }).catch(function() {
                             dialog.showError("<p>Restore failed.</p>");
                         });

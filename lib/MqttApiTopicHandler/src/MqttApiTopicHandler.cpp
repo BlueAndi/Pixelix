@@ -85,32 +85,37 @@ void MqttApiTopicHandler::stop()
 
 void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
+    MqttService& mqttService = MqttService::getInstance();
+
+    /* MQTT service shall be enabled and
+     * a device id and topic name shall be given.
+     */
+    if ((MqttService::STATE_IDLE != mqttService.getState()) &&
+        (false == deviceId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
-        String      mqttTopicNameBase   = deviceId + "/" + entityId + topic;
-        TopicState* topicState          = new(std::nothrow) TopicState();
+        String      mqttTopicBase = getMqttBaseTopic(deviceId, entityId, topic);
+        TopicState* topicState    = new (std::nothrow) TopicState();
 
-        LOG_INFO("Register: %s", mqttTopicNameBase.c_str());
+        LOG_INFO("Register: %s", mqttTopicBase.c_str());
 
         if (nullptr != topicState)
         {
-            String  topicUriReadable;
-            String  topicUriWriteable;
+            String mqttTopicReadable;
+            String mqttTopicWriteable;
 
-            topicState->deviceId        = deviceId;
-            topicState->entityId        = entityId;
-            topicState->topic           = topic;
-            topicState->getTopicFunc    = getTopicFunc;
-            topicState->setTopicFunc    = setTopicFunc;
-            topicState->uploadReqFunc   = uploadReqFunc;
-            topicState->isPublishReq    = false;
+            topicState->deviceId      = deviceId;
+            topicState->entityId      = entityId;
+            topicState->topic         = topic;
+            topicState->getTopicFunc  = getTopicFunc;
+            topicState->setTopicFunc  = setTopicFunc;
+            topicState->uploadReqFunc = uploadReqFunc;
+            topicState->isPublishReq  = false;
 
             /* Is the topic readable? */
             if (nullptr != getTopicFunc)
             {
-                topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
+                mqttTopicReadable        = mqttTopicBase + MQTT_ENDPOINT_READ_ACCESS;
 
                 /* Publish initially. */
                 topicState->isPublishReq = true;
@@ -119,30 +124,29 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
             /* Is the topic writeable? */
             if (nullptr != setTopicFunc)
             {
-                MqttService&                mqttService = MqttService::getInstance();
-                MqttService::TopicCallback  setCallback =
-                    [this, topicState](const String& mqttTopic, const uint8_t* payload, size_t size)
-                    {
+                MqttService&               mqttService = MqttService::getInstance();
+                MqttService::TopicCallback setCallback =
+                    [this, topicState](const String& mqttTopic, const uint8_t* payload, size_t size) {
                         if (0U != mqttTopic.endsWith(topicState->topic + MQTT_ENDPOINT_WRITE_ACCESS))
                         {
                             this->write(topicState->deviceId, topicState->entityId, topicState->topic, payload, size, topicState->setTopicFunc, topicState->uploadReqFunc);
                         }
                     };
 
-                topicUriWriteable = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
+                mqttTopicWriteable = mqttTopicBase + MQTT_ENDPOINT_WRITE_ACCESS;
 
-                LOG_INFO("Subscribe: %s", topicUriWriteable.c_str());
-                if (false == mqttService.subscribe(topicUriWriteable, setCallback))
+                LOG_INFO("Subscribe: %s", mqttTopicWriteable.c_str());
+                if (false == mqttService.subscribe(mqttTopicWriteable, setCallback))
                 {
-                    LOG_WARNING("Couldn't subscribe %s.", topicUriWriteable.c_str());
+                    LOG_WARNING("Couldn't subscribe %s.", mqttTopicWriteable.c_str());
                 }
             }
 
             /* Handle Home Assistant extension */
             {
-                String willTopic = deviceId + "/status";
+                String mqttWillTopic = deviceId + "/status"; /* See MqttService how the last will shall look like. */
 
-                m_haExtension.registerMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable, willTopic, extra);
+                m_haExtension.registerMqttDiscovery(deviceId, entityId, topic, mqttTopicReadable, mqttTopicWriteable, mqttWillTopic, extra);
             }
 
             m_listOfTopicStates.push_back(topicState);
@@ -152,17 +156,22 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
 
 void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)
 {
-    if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
+    MqttService& mqttService = MqttService::getInstance();
+
+    /* MQTT service shall be enabled and
+     * a device id and topic name shall be given.
+     */
+    if ((MqttService::STATE_IDLE != mqttService.getState()) &&
+        (false == deviceId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
-        String                      mqttTopicNameBase   = deviceId + "/" + entityId + topic;
-        MqttService&                mqttService         = MqttService::getInstance();
-        ListOfTopicStates::iterator topicStateIt        = m_listOfTopicStates.begin();
+        String                      mqttTopicBase = getMqttBaseTopic(deviceId, entityId, topic);
+        MqttService&                mqttService   = MqttService::getInstance();
+        ListOfTopicStates::iterator topicStateIt  = m_listOfTopicStates.begin();
 
-        LOG_INFO("Unregister: %s", mqttTopicNameBase.c_str());
+        LOG_INFO("Unregister: %s", mqttTopicBase.c_str());
 
-        while(m_listOfTopicStates.end() != topicStateIt)
+        while (m_listOfTopicStates.end() != topicStateIt)
         {
             TopicState* topicState = *topicStateIt;
 
@@ -171,41 +180,41 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 (entityId == topicState->entityId) &&
                 (topic == topicState->topic))
             {
-                String topicUriReadable;
-                String topicUriWriteable;
+                String mqttTopicReadable;
+                String mqttTopicWriteable;
 
                 if ((nullptr != topicState->getTopicFunc) &&
                     (true == m_isMqttConnected))
                 {
-                    topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
+                    mqttTopicReadable = mqttTopicBase + MQTT_ENDPOINT_READ_ACCESS;
 
                     /* Purge topic? */
                     if (true == purge)
                     {
-                        if (false == mqttService.publish(topicUriReadable, ""))
+                        if (false == mqttService.publish(mqttTopicReadable, ""))
                         {
-                            LOG_WARNING("Failed to purge: %s", topicUriReadable.c_str());
+                            LOG_WARNING("Failed to purge: %s", mqttTopicReadable.c_str());
                         }
                         else
                         {
-                            LOG_INFO("Purged: %s", topicUriReadable.c_str());
+                            LOG_INFO("Purged: %s", mqttTopicReadable.c_str());
                         }
                     }
                 }
-                
+
                 if (nullptr != topicState->setTopicFunc)
                 {
-                    topicUriWriteable = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
+                    mqttTopicWriteable = mqttTopicBase + MQTT_ENDPOINT_WRITE_ACCESS;
 
-                    LOG_INFO("Unsubscribe: %s", topicUriWriteable.c_str());
+                    LOG_INFO("Unsubscribe: %s", mqttTopicWriteable.c_str());
 
-                    mqttService.unsubscribe(topicUriWriteable);
+                    mqttService.unsubscribe(mqttTopicWriteable);
                 }
 
                 /* Handle Home Assistant extension. */
                 if (true == purge)
                 {
-                    m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable);
+                    m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topic);
                 }
 
                 topicStateIt = m_listOfTopicStates.erase(topicStateIt);
@@ -226,21 +235,21 @@ void MqttApiTopicHandler::process()
     if (true == m_isStarted)
     {
         MqttService& mqttService = MqttService::getInstance();
-        
+
         /* If connection to MQTT broker is the first time established or reconnected,
-        * all topics will be published to be up-to-date.
-        */
+         * all topics will be published to be up-to-date.
+         */
         if ((false == m_isMqttConnected) &&
             (MqttService::STATE_CONNECTED == mqttService.getState()))
 
         {
             m_isMqttConnected = true;
-            
+
             /* Publish after connection establishment. */
             requestToPublishAllTopicStates();
         }
         else if ((true == m_isMqttConnected) &&
-                (MqttService::STATE_CONNECTED != mqttService.getState()))
+                 (MqttService::STATE_CONNECTED != mqttService.getState()))
         {
             m_isMqttConnected = false;
         }
@@ -252,12 +261,12 @@ void MqttApiTopicHandler::process()
         if (true == m_isMqttConnected)
         {
             /* If necessary, a topic state will be published.
-            *
-            * Don't publish all of them at once, only one per process cycle.
-            * This has the advantage to detect lost MQTT connection, because remember
-            * its cooperative! As long as the MQTT service is not called, no update
-            * about the connection status will appear.
-            */
+             *
+             * Don't publish all of them at once, only one per process cycle.
+             * This has the advantage to detect lost MQTT connection, because remember
+             * its cooperative! As long as the MQTT service is not called, no update
+             * about the connection status will appear.
+             */
             publishTopicStatesOnDemand();
         }
 
@@ -268,13 +277,18 @@ void MqttApiTopicHandler::process()
 
 void MqttApiTopicHandler::notify(const String& deviceId, const String& entityId, const String& topic)
 {
-    if ((false == deviceId.isEmpty()) &&
-        (false == entityId.isEmpty()) &&
+    MqttService& mqttService = MqttService::getInstance();
+
+    /* MQTT service shall be enabled and
+     * a device id and topic name shall be given.
+     */
+    if ((MqttService::STATE_IDLE != mqttService.getState()) &&
+        (false == deviceId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
 
-        while(m_listOfTopicStates.end() != topicStateIt)
+        while (m_listOfTopicStates.end() != topicStateIt)
         {
             TopicState* topicState = *topicStateIt;
 
@@ -299,18 +313,32 @@ void MqttApiTopicHandler::notify(const String& deviceId, const String& entityId,
  * Private Methods
  *****************************************************************************/
 
+String MqttApiTopicHandler::getMqttBaseTopic(const String& deviceId, const String& entityId, const String& topic) const
+{
+    String mqttBaseTopic = deviceId;
+
+    if (false == entityId.isEmpty())
+    {
+        mqttBaseTopic += "/" + entityId;
+    }
+
+    mqttBaseTopic += "/";
+    mqttBaseTopic += topic;
+
+    return mqttBaseTopic;
+}
+
 void MqttApiTopicHandler::requestToPublishAllTopicStates()
 {
     ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
 
     /* Set the publish request flag for all topic states. */
-    while(m_listOfTopicStates.end() != topicStateIt)
+    while (m_listOfTopicStates.end() != topicStateIt)
     {
         TopicState* topicState = *topicStateIt;
 
         if ((nullptr != topicState) &&
             (false == topicState->deviceId.isEmpty()) &&
-            (false == topicState->entityId.isEmpty()) &&
             (nullptr != topicState->getTopicFunc))
         {
             topicState->isPublishReq = true;
@@ -324,13 +352,12 @@ void MqttApiTopicHandler::publishTopicStatesOnDemand()
 {
     ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
 
-    while(m_listOfTopicStates.end() != topicStateIt)
+    while (m_listOfTopicStates.end() != topicStateIt)
     {
         TopicState* topicState = *topicStateIt;
 
         if ((nullptr != topicState) &&
             (false == topicState->deviceId.isEmpty()) &&
-            (false == topicState->entityId.isEmpty()) &&
             (nullptr != topicState->getTopicFunc))
         {
             if (true == topicState->isPublishReq)
@@ -350,9 +377,9 @@ void MqttApiTopicHandler::publishTopicStatesOnDemand()
 
 void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    const size_t            JSON_DOC_SIZE   = 4096U;
-    DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-    DeserializationError    error           = deserializeJson(jsonDoc, payload, size);
+    const size_t         JSON_DOC_SIZE = 4096U;
+    DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
+    DeserializationError error = deserializeJson(jsonDoc, payload, size);
 
     if (DeserializationError::Ok != error)
     {
@@ -360,8 +387,8 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
     }
     else
     {
-        JsonVariantConst    jsonFileName   = jsonDoc["fileName"];
-        JsonVariantConst    jsonFileBase64 = jsonDoc["file"];
+        JsonVariantConst jsonFileName   = jsonDoc["fileName"];
+        JsonVariantConst jsonFileBase64 = jsonDoc["file"];
 
         /* File transfer? */
         if ((true == jsonFileName.is<String>()) &&
@@ -377,9 +404,9 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
             }
             else
             {
-                String  fileBase64  = jsonFileBase64.as<String>();
-                size_t  fileSize    = 0U;
-                int32_t decodeRet   = mbedtls_base64_decode(nullptr, 0U, &fileSize, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
+                String  fileBase64 = jsonFileBase64.as<String>();
+                size_t  fileSize   = 0U;
+                int32_t decodeRet  = mbedtls_base64_decode(nullptr, 0U, &fileSize, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
 
                 if (MBEDTLS_ERR_BASE64_INVALID_CHARACTER == decodeRet)
                 {
@@ -392,7 +419,7 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
                 }
                 else
                 {
-                    uint8_t* buffer = new(std::nothrow) uint8_t[fileSize];
+                    uint8_t* buffer = new (std::nothrow) uint8_t[fileSize];
 
                     if (nullptr != buffer)
                     {
@@ -442,10 +469,10 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 {
     if (nullptr != getTopicFunc)
     {
-        const size_t        JSON_DOC_SIZE       = 4096U;
+        const size_t        JSON_DOC_SIZE = 4096U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonObj             = jsonDoc.createNestedObject("data");
-        String              mqttTopicNameBase   = deviceId + "/" + entityId + topic;
+        JsonObject          jsonObj       = jsonDoc.createNestedObject("data");
+        String              mqttTopicBase = getMqttBaseTopic(deviceId, entityId, topic);
 
         if (true == getTopicFunc(topic, jsonObj))
         {
@@ -453,16 +480,12 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 
             if (0U < serializeJson(jsonDoc["data"], topicContent))
             {
-                MqttService&    mqttService     = MqttService::getInstance();
-                String          topicStateUri   = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
+                MqttService& mqttService   = MqttService::getInstance();
+                String       topicStateUri = mqttTopicBase + MQTT_ENDPOINT_READ_ACCESS;
 
                 if (false == mqttService.publish(topicStateUri, topicContent))
                 {
                     LOG_WARNING("Couldn't publish %s.", topicStateUri.c_str());
-                }
-                else
-                {
-                    LOG_INFO("Published: %s", topicStateUri.c_str());
                 }
             }
         }
@@ -471,10 +494,10 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 
 void MqttApiTopicHandler::clearTopicStates()
 {
-    MqttService&                mqttService     = MqttService::getInstance();
-    ListOfTopicStates::iterator topicStateIt    = m_listOfTopicStates.begin();
+    MqttService&                mqttService  = MqttService::getInstance();
+    ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
 
-    while(m_listOfTopicStates.end() != topicStateIt)
+    while (m_listOfTopicStates.end() != topicStateIt)
     {
         TopicState* topicState = *topicStateIt;
 
@@ -482,8 +505,8 @@ void MqttApiTopicHandler::clearTopicStates()
         {
             if (nullptr != topicState->setTopicFunc)
             {
-                String mqttTopicNameBase    = topicState->deviceId + "/" + topicState->entityId + topicState->topic;
-                String topicStateUri        = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
+                String mqttTopicBase = topicState->deviceId + "/" + topicState->entityId + topicState->topic;
+                String topicStateUri = mqttTopicBase + MQTT_ENDPOINT_WRITE_ACCESS;
 
                 mqttService.unsubscribe(topicStateUri);
             }

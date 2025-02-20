@@ -60,7 +60,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* SensorPlugin::TOPIC_CONFIG = "/channel";
+const char* SensorPlugin::TOPIC_CONFIG = "channel";
 
 /******************************************************************************
  * Public Methods

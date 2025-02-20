@@ -117,7 +117,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [
-     *         "/text"
+     *         "text"
      *     ]
      * }
      * </code>
@@ -133,7 +133,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "access": "r"
      *     }]
      * }
@@ -144,7 +144,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": {
      *             "ha": {
      *                 ... everything here will be used for MQTT discovery ...
@@ -159,7 +159,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": "extra.json"
      *    }]
      * }
@@ -290,7 +290,7 @@ private:
     /**
      * Filename for the plugin topic extra info, used for Home Assistant integration.
      */
-    static const char* TOPIC_TEXT_EXTRA_FILE_NAME;
+    static const char* TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 
     /**
      * Plugin topic, used for parameter exchange.

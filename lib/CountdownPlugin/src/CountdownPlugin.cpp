@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* CountdownPlugin::TOPIC_CONFIG   = "/countdown";
+const char* CountdownPlugin::TOPIC_CONFIG   = "countdown";
 
 /******************************************************************************
  * Public Methods

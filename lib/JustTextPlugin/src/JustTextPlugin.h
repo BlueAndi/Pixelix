@@ -142,7 +142,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [
-     *         "/text"
+     *         "text"
      *     ]
      * }
      * </code>
@@ -158,7 +158,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "access": "r"
      *     }]
      * }
@@ -169,7 +169,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": {
      *             "ha": {
      *                 ... everything here will be used for MQTT discovery ...
@@ -184,7 +184,7 @@ public:
      * <code>{.json}
      * {
      *     "topics": [{
-     *         "name": "/text",
+     *         "name": "text",
      *         "extra": "extra.json"
      *    }]
      * }
@@ -280,7 +280,7 @@ private:
     /**
      * Filename for the plugin topic extra info, used for Home Assistant integration.
      */
-    static const char*     TOPIC_TEXT_EXTRA_FILE_NAME;
+    static const char*     TOPIC_TEXT_EXTRA_HA_FILE_NAME;
 
     _JustTextPlugin::View  m_view;             /**< View with all widgets. */
     String                 m_formatTextStored; /**< It contains the format text, which is persistent stored. */

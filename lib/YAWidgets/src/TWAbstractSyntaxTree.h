@@ -46,6 +46,7 @@
 #include <WString.h>
 #include <TWToken.h>
 #include <vector>
+#include <stdint.h>
 
 /******************************************************************************
  * Macros

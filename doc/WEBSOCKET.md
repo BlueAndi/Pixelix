@@ -7,7 +7,7 @@
 
 * [Get display pixel colors](#get-display-pixel-colors)
 * [Get slots information](#get-slots-information)
-* [Reset](#reset)
+* [Restart](#restart)
 * [Brightness](#brightness)
   * [Get brightness information](#get-brightness-information)
   * [Set brightness](#set-brightness)
@@ -62,8 +62,8 @@ Response:
 * Failed:
   * ```NACK```
 
-# Reset
-Command: ```RESET```
+# Restart
+Command: ```RESTART```
 
 Parameter:
 * N/A
