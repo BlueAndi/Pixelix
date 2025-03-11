@@ -1,16 +1,17 @@
 # PIXELIX <!-- omit in toc -->
+
 ![PIXELIX](../../../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# BOM <!-- omit in toc -->
+## BOM <!-- omit in toc -->
 
 - [List](#list)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
 
-# List
+## List
 
 | Amount | Description | Package | Part | URL |
 | --- | --- | --- | --- | --- |
@@ -39,13 +40,16 @@
 
 Note, X2 is a composition of Wago clamp 1 and 2.
 
-# Issues, Ideas And Bugs
+## Issues, Ideas And Bugs
+
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-# License
+## License
+
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
 Consider the different licenses of the used third party libraries too!
 
-# Contribution
+## Contribution
+
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
 additional terms or conditions.
