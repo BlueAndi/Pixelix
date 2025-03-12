@@ -318,7 +318,7 @@ bool SensorDataProvider::save()
 
                     if (nullptr == channel)
                     {
-                        jsonChannels.add("null");
+                        (void)jsonChannels.add("null");
                     }
                     else
                     {
@@ -378,36 +378,36 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
     switch (channel.getDataType())
     {
     case ISensorChannel::DataType::DATA_TYPE_INVALID:
-        jsonOffset.add("NaN");
+        (void)jsonOffset.add("NaN");
         break;
 
     case ISensorChannel::DataType::DATA_TYPE_UINT32: {
         const SensorChannelUInt32* uint32Channel = reinterpret_cast<const SensorChannelUInt32*>(&channel);
 
-        jsonOffset.add(uint32Channel->getOffset());
+        (void)jsonOffset.add(uint32Channel->getOffset());
     }
     break;
 
     case ISensorChannel::DataType::DATA_TYPE_INT32: {
         const SensorChannelInt32* int32Channel = reinterpret_cast<const SensorChannelInt32*>(&channel);
 
-        jsonOffset.add(int32Channel->getOffset());
+        (void)jsonOffset.add(int32Channel->getOffset());
     }
     break;
 
     case ISensorChannel::DataType::DATA_TYPE_FLOAT32: {
         const SensorChannelFloat32* float32Channel = reinterpret_cast<const SensorChannelFloat32*>(&channel);
 
-        jsonOffset.add(float32Channel->getOffset());
+        (void)jsonOffset.add(float32Channel->getOffset());
     }
     break;
 
     case ISensorChannel::DataType::DATA_TYPE_BOOL:
-        jsonOffset.add("NaN");
+        (void)jsonOffset.add("NaN");
         break;
 
     default:
-        jsonOffset.add("NaN");
+        (void)jsonOffset.add("NaN");
         break;
     }
 }

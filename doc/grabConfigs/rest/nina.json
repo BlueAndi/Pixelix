@@ -1,0 +1,13 @@
+  {
+    "method": "GET",
+    "url": "https://warnung.bund.de/api31/dashboard/097720000000.json",
+    "filter": [{
+        "i18nTitle": {
+            "de": true
+        }
+    }],
+    "iconFileId": 255,
+    "format": "%s",
+    "multiplier": 1,
+    "offset": 0
+}

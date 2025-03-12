@@ -110,11 +110,18 @@ public:
     virtual void setViewDuration(uint32_t duration) = 0;
 
     /**
-     * Set the units to use temperature and wind speed.
+     * Set the unit to use temperature.
      * 
-     * @param[in] units The units which to set.
+     * @param[in] unit The temperature unit.
      */
-    virtual void setUnits(const String& units) = 0;
+    virtual void setTemperatureUnit(const String& unit) = 0;
+
+    /**
+     * Set the unit to use wind speed.
+     * 
+     * @param[in] unit The wind speed unit.
+     */
+    virtual void setWindSpeedUnit(const String& unit) = 0;
 
     /** Weather info */
     enum WeatherInfo : uint8_t

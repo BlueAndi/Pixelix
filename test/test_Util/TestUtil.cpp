@@ -52,6 +52,9 @@
  *****************************************************************************/
 
 static void testUtil(void);
+static void testMinMax(void);
+static void testColorHtml(void);
+static void testFormatSpecifierInStr(void);
 
 /******************************************************************************
  * Local Variables
@@ -87,6 +90,9 @@ extern int main(int argc, char **argv)
     UNITY_BEGIN();
 
     RUN_TEST(testUtil);
+    RUN_TEST(testMinMax);
+    RUN_TEST(testColorHtml);
+    RUN_TEST(testFormatSpecifierInStr);
 
     return UNITY_END();
 }
@@ -244,4 +250,150 @@ static void testUtil(void)
     TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
     hexStr = "0y5";
     TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+}
+
+/**
+ * Test min and max functions.
+ */
+static void testMinMax(void)
+{
+    TEST_ASSERT_EQUAL_INT8(1, Util::min(1, 2));
+    TEST_ASSERT_EQUAL_INT8(1, Util::min(2, 1));
+    TEST_ASSERT_EQUAL_INT8(1, Util::min(1, 1));
+
+    TEST_ASSERT_EQUAL_INT8(2, Util::max(1, 2));
+    TEST_ASSERT_EQUAL_INT8(2, Util::max(2, 1));
+    TEST_ASSERT_EQUAL_INT8(1, Util::max(1, 1));
+}
+
+/**
+ * Test color to HTML conversion.
+ */
+static void testColorHtml(void)
+{
+    Color   color;
+    String  htmlColor;
+
+    /* Test black color */
+    color.set(0, 0, 0);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#000000", htmlColor.c_str());
+
+    /* Test white color */
+    color.set(255, 255, 255);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#FFFFFF", htmlColor.c_str());
+
+    /* Test red color */
+    color.set(255, 0, 0);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#FF0000", htmlColor.c_str());
+
+    /* Test green color */
+    color.set(0, 255, 0);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#00FF00", htmlColor.c_str());
+
+    /* Test blue color */
+    color.set(0, 0, 255);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#0000FF", htmlColor.c_str());
+
+    /* Test yellow color */
+    color.set(255, 255, 0);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#FFFF00", htmlColor.c_str());
+
+    /* Test magenta color */
+    color.set(255, 0, 255);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#FF00FF", htmlColor.c_str());
+
+    /* Test cyan color */
+    color.set(0, 255, 255);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#00FFFF", htmlColor.c_str());
+
+    /* Test gray color */
+    color.set(128, 128, 128);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#808080", htmlColor.c_str());
+
+    /* Test dark red color */
+    color.set(128, 0, 0);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#800000", htmlColor.c_str());
+
+    /* Test dark green color */
+    color.set(0, 128, 0);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#008000", htmlColor.c_str());
+
+    /* Test dark blue color */
+    color.set(0, 0, 128);
+    htmlColor = Util::colorToHtml(color);
+    TEST_ASSERT_EQUAL_STRING("#000080", htmlColor.c_str());
+}
+
+/**
+ * Test format specifier in string.
+ */
+static void testFormatSpecifierInStr(void)
+{
+    String  str;
+
+    str = "Hello %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+
+    str = "Hello %f";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'f'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %d %s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'd'));
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %.5s";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 's'));
+
+    str = "Hello %0.2f";
+    TEST_ASSERT_TRUE(Util::isFormatSpecifierInStr(str, 'f'));
 }

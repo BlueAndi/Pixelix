@@ -201,10 +201,10 @@ static const float      EPSILON                                 = 0.0001F;
 const char* OpenWeatherView64x64::IMAGE_PATH                        = "/plugins/OpenWeatherPlugin/";
 
 /* Initialize image path for standard icon. */
-const char* OpenWeatherView64x64::IMAGE_PATH_STD_ICON               = "/plugins/OpenWeatherPlugin/openWeather.bmp";
+const char* OpenWeatherView64x64::IMAGE_PATH_STD_ICON               = "/plugins/OpenWeatherPlugin/std.bmp";
 
 /* Initialize image path for standard icon. */
-const char* OpenWeatherView64x64::IMAGE_PATH_STD_ICON_16X16         = "/plugins/OpenWeatherPlugin/openWeather_16x16.gif";
+const char* OpenWeatherView64x64::IMAGE_PATH_STD_ICON_16X16         = "/plugins/OpenWeatherPlugin/std_16x16.gif";
 
 /* Initialize image path for uvi icon. */
 const char* OpenWeatherView64x64::IMAGE_PATH_UVI_ICON_16X16         = "/plugins/OpenWeatherPlugin/uvi_16x16.gif";
@@ -256,7 +256,8 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
     },
     m_viewDurationTimer(),
     m_viewDuration(0U),
-    m_units("metric"),
+    m_temperatureUnit(),
+    m_windSpeedUnit(),
     m_weatherInfo(WEATHER_INFO_ALL),
     m_weatherInfoId(0U),
     m_weatherInfoCurrent(),
@@ -647,18 +648,7 @@ void OpenWeatherView64x64::appendTemperature(String& dst, float temperature, boo
 
         if (false == noUnit)
         {
-            if (m_units == "default")
-            {
-                dst += "°K";
-            }
-            else if (m_units == "metric")
-            {
-                dst += "°C";
-            }
-            else
-            {
-                dst += "°F";
-            }
+            dst += m_temperatureUnit;
         }
     }
     else
@@ -682,19 +672,7 @@ void OpenWeatherView64x64::appendWindSpeed(String& dst, float windSpeed)
         (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
 
         dst += windReducedPrecison;
-
-        if (m_units == "default")
-        {
-            dst += "m/s";
-        }
-        else if (m_units == "metric")
-        {
-            dst += "m/s";
-        }
-        else
-        {
-            dst += "mph";
-        }
+        dst += m_windSpeedUnit;
     }
     else
     {

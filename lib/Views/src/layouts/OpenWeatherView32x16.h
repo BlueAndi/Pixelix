@@ -137,13 +137,23 @@ public:
     }
 
     /**
-     * Set the units to use temperature and wind speed.
+     * Set the unit to use temperature.
      * 
-     * @param[in] units The units which to set.
+     * @param[in] unit The temperature unit.
      */
-    void setUnits(const String& units) override
+    void setTemperatureUnit(const String& unit) override
     {
-        m_units = units;
+        m_temperatureUnit = unit;
+    }
+
+    /**
+     * Set the unit to use wind speed.
+     * 
+     * @param[in] unit The wind speed unit.
+     */
+    void setWindSpeedUnit(const String& unit) override
+    {
+        m_windSpeedUnit = unit;
     }
 
     /**
@@ -264,7 +274,8 @@ protected:
     TextWidget          m_weatherInfoCurrentText;       /**< Current weather info text. */
     uint32_t            m_viewDuration;                 /**< The duration in ms, this view will be shown on the display. */
     SimpleTimer         m_viewDurationTimer;            /**< The timer used to determine which weather info to show on the display. */
-    String              m_units;                        /**< Units (default, metric, imperial) */
+    String              m_temperatureUnit;              /**< Temperature unit */
+    String              m_windSpeedUnit;                /**< Wind speed unit */
     uint8_t             m_weatherInfo;                  /**< Use the bits to determine which weather info to show. */
     uint8_t             m_weatherInfoId;                /**< The weather info id is used to mask the weather info flag. Its the number of bit shifts. */
     WeatherInfoCurrent  m_weatherInfoCurrent;           /**< Current weather information. */

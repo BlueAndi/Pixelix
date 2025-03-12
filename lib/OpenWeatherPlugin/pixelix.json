@@ -23,7 +23,7 @@
                     "./web/icon8x8/13.bmp",
                     "./web/icon8x8/50.bmp",
                     "./web/icon8x8/hum.bmp",
-                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/std.bmp",
                     "./web/icon8x8/uvi.bmp",
                     "./web/icon8x8/wind.bmp"
                 ]
@@ -43,7 +43,7 @@
                     "./web/icon8x8/13.bmp",
                     "./web/icon8x8/50.bmp",
                     "./web/icon8x8/hum.bmp",
-                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/std.bmp",
                     "./web/icon8x8/uvi.bmp",
                     "./web/icon8x8/wind.bmp"
                 ]
@@ -63,7 +63,7 @@
                     "./web/icon8x8/13.bmp",
                     "./web/icon8x8/50.bmp",
                     "./web/icon8x8/hum.bmp",
-                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/std.bmp",
                     "./web/icon8x8/uvi.bmp",
                     "./web/icon8x8/wind.bmp"
                 ]
@@ -82,7 +82,7 @@
                     "./web/icon8x8/11.bmp",
                     "./web/icon8x8/13.bmp",
                     "./web/icon8x8/50.bmp",
-                    "./web/icon8x8/openWeather.bmp",
+                    "./web/icon8x8/std.bmp",
 
                     "./web/icon16x16/01d_16x16.gif",
                     "./web/icon16x16/01n_16x16.gif",
@@ -98,7 +98,7 @@
                     "./web/icon16x16/50_16x16.gif",
 
                     "./web/icon16x16/hum_16x16.gif",
-                    "./web/icon16x16/openWeather_16x16.gif",
+                    "./web/icon16x16/std_16x16.gif",
                     "./web/icon16x16/uvi_16x16.gif",
                     "./web/icon16x16/wind_16x16.gif"
                 ]

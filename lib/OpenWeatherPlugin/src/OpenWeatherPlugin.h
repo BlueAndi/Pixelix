@@ -507,6 +507,12 @@ private:
      * weather request status.
      */
     void weatherRequestStarted();
+
+    /**
+     * Set the view units for temperature and wind speed,
+     * according to the configuration.
+     */
+    void setViewUnits();
 };
 
 /******************************************************************************
