@@ -18,7 +18,6 @@ Each plugin is identified by its unique UID.
   - [MultiIconPlugin](#multiiconplugin)
 - [Dedicated plugins](#dedicated-plugins)
   - [BatteryPlugin](#batteryplugin)
-  - [BTCQuotePlugin](#btcquoteplugin)
   - [CountdownPlugin](#countdownplugin)
   - [DateTimePlugin](#datetimeplugin)
   - [DDPPlugin](#ddpplugin)
@@ -92,11 +91,6 @@ Dedicated plugins are plugins which only serves one single purpose thy are only 
 ### BatteryPlugin
 
 This plugin displays the battery symbol with state of charge bar.
-
-### BTCQuotePlugin
-
-The BTCQuotePlugin shows the current exchange rate from Bitcoin to USD.\
-Powered by [CoinDesk](https://www.coindesk.com/price/bitcoin).
 
 ### CountdownPlugin
 

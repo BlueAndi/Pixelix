@@ -1,0 +1,24 @@
+{
+    "name": "RestService",
+    "version": "0.1.0",
+    "description": "...",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Logging"
+    }, {
+        "name": "Service"
+    }, {
+        "name": "Utilities"
+    },{
+        "name": "AsyncHttpClient"
+    }
+],
+    "frameworks": "*",
+    "platforms": "*"
+}

@@ -27,7 +27,7 @@
 /**
  * @brief  Task proxy, used for task decoupling.
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup UTILITIES
  *
  * @{
@@ -57,7 +57,7 @@
 /**
  * The task proxy is used to decouple from tasks with different priority.
  * Especially in the case that priority inheritance shall be avoided.
- * 
+ *
  * @tparam T                Item type, which is transfered via queue
  * @tparam size             Max. number of items in the queue
  * @tparam waitTimeTicks    The time which shall be waited until a item is sent to queue or received from queue.
@@ -87,9 +87,9 @@ public:
     /**
      * Send a item to the queue. The item will be copied!
      * Attention: The copy takes place via memcpy, consider this in case of objects.
-     * 
+     *
      * @param[in] item  The item, which to send.
-     * 
+     *
      * @return If the item is successful sent, it will return true otherwise false.
      */
     bool send(const T& item)
@@ -100,9 +100,9 @@ public:
     /**
      * Receive a item from the queue. The item will be copied, so enough space
      * must be provided!
-     * 
+     *
      * @param[out] item The item, which will be overwritten from the queue.
-     * 
+     *
      * @return If a item is successful received, it will return true otherwise false.
      */
     bool receive(T& item)
@@ -110,19 +110,31 @@ public:
         return m_queue.receive(&item, waitTimeTicks);
     }
 
+    /**
+     * Send a item to the front of the queue. The item will be copied!
+     * Attention: The copy takes place via memcpy, consider this in case of objects.
+     *
+     * @param[in] item  The item, which to send.
+     *
+     * @return If the item is successful sent, it will return true otherwise false.
+     */
+    bool sendToFront(T& item)
+    {
+        return m_queue.sendToFront(item, waitTimeTicks);
+    }
+
 private:
 
-    Queue<T>    m_queue;    /**< Queue with elements, used for decoupling from task. */
+    Queue<T> m_queue; /**< Queue with elements, used for decoupling from task. */
 
     TaskProxy(const TaskProxy& proxy);
     TaskProxy& operator=(const TaskProxy& proxy);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* TASK_PROXY_HPP */
+#endif /* TASK_PROXY_HPP */
 
 /** @} */

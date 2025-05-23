@@ -47,11 +47,11 @@
 
 #include <stdint.h>
 #include <PluginWithConfig.hpp>
-#include <AsyncHttpClient.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
 #include <FileMgrService.h>
+#include <RestService.h>
 
 /******************************************************************************
  * Macros
@@ -80,7 +80,6 @@ public:
         m_method("GET"),
         m_url(),
         m_filter(1024U),
-        m_client(),
         m_iconFileId(FileMgrService::FILE_ID_INVALID),
         m_format("%s"),
         m_delimiter("::"),
@@ -90,9 +89,11 @@ public:
         m_mutex(),
         m_isConnectionError(false),
         m_hasTopicChanged(false),
-        m_taskProxy()
+        m_restService(RestService::getInstance()),
+        m_isAllowedToSend(true)
     {
         (void)m_mutex.create();
+        m_restId = m_restService.registerPlugin();
     }
 
     /**
@@ -100,18 +101,6 @@ public:
      */
     ~GrabViaRestPlugin()
     {
-        m_client.regOnResponse(nullptr);
-        m_client.regOnClosed(nullptr);
-        m_client.regOnError(nullptr);
-
-        /* Abort any pending TCP request to avoid getting a callback after the
-         * object is destroyed.
-         */
-        m_client.end();
-
-        clearQueue();
-
-        m_mutex.destroy();
     }
 
     /**
@@ -306,7 +295,7 @@ private:
     String                   m_method;            /**< HTTP method. */
     String                   m_url;               /**< REST URL. */
     DynamicJsonDocument      m_filter;            /**< Filter used for the response in JSON format. */
-    AsyncHttpClient          m_client;            /**< Asynchronous HTTP client. */
+    RestService&             m_restService;       /**< RestService used for REST-Api request */
     FileMgrService::FileId   m_iconFileId;        /**< Icon file id. */
     String                   m_format;            /**< Format used to embed the retrieved filtered value. */
     String                   m_delimiter;         /**< Delimiter is used in case several values shall be shown, because of an JSON array. */
@@ -316,40 +305,26 @@ private:
     mutable MutexRecursive   m_mutex;             /**< Mutex to protect against concurrent access. */
     bool                     m_isConnectionError; /**< Is connection error happened? */
     bool                     m_hasTopicChanged;   /**< Has the topic content changed? */
-
-    /**
-     * Defines the message types, which are necessary for HTTP client/server handling.
-     */
-    enum MsgType
-    {
-        MSG_TYPE_INVALID = 0, /**< Invalid message type. */
-        MSG_TYPE_RSP,         /**< A response, caused by a previous request. */
-        MSG_TYPE_CONN_CLOSED, /**< The connection is closed. */
-        MSG_TYPE_CONN_ERROR   /**< A connection error happened. */
-    };
+    int                      m_restId;
+    bool                     m_isAllowedToSend; /**< Is allowed to send REST-Api request? */
 
     /**
      * A message for HTTP client/server handling.
      */
     struct Msg
     {
-        MsgType              type; /**< Message type */
-        DynamicJsonDocument* rsp;  /**< Response, only valid if message type is a response. */
+        bool                 isValidResponse; /**< Message type */
+        DynamicJsonDocument* rsp;             /**< Response, only valid if message type is a response. */
 
         /**
          * Constructs a message.
          */
         Msg() :
-            type(MSG_TYPE_INVALID),
+            isValidResponse(false),
             rsp(nullptr)
         {
         }
     };
-
-    /**
-     * Task proxy used to decouple server responses, which happen in a different task context.
-     */
-    TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
      * Get configuration in JSON.
@@ -373,19 +348,6 @@ private:
      * @return If successful it will return true otherwise false.
      */
     bool startHttpRequest(void);
-
-    /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-
-    /**
-     * Handle asynchronous web response from the server.
-     * This will be called in LwIP context! Don't modify any member here directly!
-     *
-     * @param[in] jsonDoc   Web response as JSON document
-     */
-    void handleAsyncWebResponse(const HttpResponse& rsp);
 
     /**
      * Get value from JSON source by the filter.

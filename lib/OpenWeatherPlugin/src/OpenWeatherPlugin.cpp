@@ -857,6 +857,9 @@ void OpenWeatherPlugin::setViewUnits()
             temperatureUnit = "K";
             windSpeedUnit   = "m/s";
         }
+
+        m_view.setTemperatureUnit(temperatureUnit);
+        m_view.setWindSpeedUnit(windSpeedUnit);
     }
 }
 

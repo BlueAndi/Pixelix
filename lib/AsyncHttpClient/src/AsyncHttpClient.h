@@ -71,8 +71,10 @@ public:
 
     /**
      * Prototype of HTTP response callback for a complete received response.
+     *
+     * @param[in] restId Unique Id to identify plugin, value only has meaning when called by RestService
      */
-    typedef std::function<void(const HttpResponse& rsp)> OnResponse;
+    typedef std::function<void(const int userData, const HttpResponse& rsp)> OnResponse;
 
     /**
      * Prototype of HTTP response callback for a closed connection.
@@ -81,8 +83,10 @@ public:
 
     /**
      * Prototype of HTTP response callback in case a error happened.
+     *
+     * @param[in] restId Unique Id to identify plugin, value only has meaning when called by RestService
      */
-    typedef std::function<void()> OnError;
+    typedef std::function<void(const int userData)> OnError;
 
     /**
      * Constructs a http client.
@@ -180,56 +184,60 @@ public:
      * @param[in] onError   Callback
      */
     void regOnError(const OnError& onError);
-    
+
     /**
      * Send GET request to host.
      *
+     * @param[in] userData Used to identify plugin in RestService
+     *
      * @return If request is successful sent, it will return true otherwise false.
      */
-    bool GET();
+    bool GET(int userData = -1);
 
     /**
      * Send POST request to host.
      *
+     * @param[in] userData  Used to identify plugin in RestService
      * @param[in] payload   Payload, which must be kept alive until response is available!
      * @param[in] size      Payload size in byte
      *
      * @return If request is successful sent, it will return true otherwise false.
      */
-    bool POST(const uint8_t* payload = nullptr, size_t size = 0U);
+    bool POST(int userData = -1, const uint8_t* payload = nullptr, size_t size = 0U);
 
     /**
      * Send POST request to host.
      *
+     * @param[in] userData  Used to identify plugin in RestService, set to -1 if unused
      * @param[in] payload   Payload, which must be kept alive until response is available!
      *
      * @return If request is successful sent, it will return true otherwise false.
      */
-    bool POST(const String& payload);
+    bool POST(int userData, const String& payload);
 
 private:
 
     /** The process task stack size in bytes */
-    static const uint32_t       PROCESS_TASK_STACK_SIZE = 4096U;
+    static const uint32_t PROCESS_TASK_STACK_SIZE  = 4096U;
 
     /** The process task period in ms. */
-    static const uint32_t       PROCESS_TASK_PERIOD     = 20U;
+    static const uint32_t PROCESS_TASK_PERIOD      = 20U;
 
     /** The process task shall run on the APP MCU core. */
-    static const BaseType_t     PROCESS_TASK_RUN_CORE   = APP_CPU_NUM;
+    static const BaseType_t PROCESS_TASK_RUN_CORE  = APP_CPU_NUM;
 
     /** The process task priority shall be equal than the Arduino loop task priority. */
-    static const UBaseType_t    PROCESS_TASK_PRIORITY   = 1U;
+    static const UBaseType_t PROCESS_TASK_PRIORITY = 1U;
 
     /**
      * Max. number of commands which can be queued.
      */
-    static const size_t CMD_QUEUE_SIZE  = 10U;
+    static const size_t CMD_QUEUE_SIZE             = 10U;
 
     /**
      * Max. number of events which can be queued.
      */
-    static const size_t EVT_QUEUE_SIZE  = 10U;
+    static const size_t EVT_QUEUE_SIZE             = 10U;
 
     /**
      * Command ids are used to identify what the user requests.
@@ -245,7 +253,8 @@ private:
      */
     struct Cmd
     {
-        CmdId   id;     /**< The command id identifies the kind of request. */
+        CmdId id;       /**< The command id identifies the kind of request. */
+        int   userData; /**< Used to identify plugin in RestService */
 
         /**
          * The union contains the event id specific parameters.
@@ -258,8 +267,8 @@ private:
              */
             struct
             {
-                const uint8_t*  data;   /**< Command specific data. */
-                size_t          size;   /**< Command specific data size in byte. */
+                const uint8_t* data; /**< Command specific data. */
+                size_t         size; /**< Command specific data size in byte. */
             } data;
 
         } u;
@@ -283,7 +292,7 @@ private:
      */
     struct Event
     {
-        EventId     id;     /**< Event id to identify the kind of notification. */
+        EventId id; /**< Event id to identify the kind of notification. */
 
         /**
          * The union contains the event id specific parameters.
@@ -296,12 +305,12 @@ private:
              */
             struct
             {
-                uint8_t*    data;   /**< Event specific data. */
-                size_t      size;   /**< Event specific data size in byte. */
+                uint8_t* data; /**< Event specific data. */
+                size_t   size; /**< Event specific data size in byte. */
             } data;
 
-            int8_t      error;      /**< Error id, valid only for EVENT_ID_ERROR */
-            uint32_t    timeout;    /**< Timeout in ms, valid only for EVENT_ID_TIMEOUT */
+            int8_t   error;   /**< Error id, valid only for EVENT_ID_ERROR */
+            uint32_t timeout; /**< Timeout in ms, valid only for EVENT_ID_TIMEOUT */
         } u;
     };
 
@@ -310,9 +319,9 @@ private:
      */
     enum ResponsePart
     {
-        RESPONSE_PART_STATUS_LINE = 0,  /**< Response status line */
-        RESPONSE_PART_HEADER,           /**< Response headers */
-        RESPONSE_PART_BODY              /**< Response body */
+        RESPONSE_PART_STATUS_LINE = 0, /**< Response status line */
+        RESPONSE_PART_HEADER,          /**< Response headers */
+        RESPONSE_PART_BODY             /**< Response body */
     };
 
     /**
@@ -320,8 +329,8 @@ private:
      */
     enum TransferCoding
     {
-        TRANSFER_CODING_IDENTITY = 0,   /**< Identity */
-        TRANSFER_CODING_CHUNKED         /**< Chunked */
+        TRANSFER_CODING_IDENTITY = 0, /**< Identity */
+        TRANSFER_CODING_CHUNKED       /**< Chunked */
     };
 
     /**
@@ -336,60 +345,61 @@ private:
     };
 
     /** HTTP port */
-    static const uint16_t   HTTP_PORT   = 80U;
+    static const uint16_t HTTP_PORT  = 80U;
 
     /** HTTPS port */
-    static const uint16_t   HTTPS_PORT  = 443U;
+    static const uint16_t HTTPS_PORT = 443U;
 
-    TaskHandle_t        m_processTaskHandle;    /**< Process task handle */
-    bool                m_processTaskExit;      /**< Flag to signal the process task to exit. */
-    SemaphoreHandle_t   m_processTaskSemaphore; /**< Binary semaphore used to signal the process task exited. */
+    TaskHandle_t          m_processTaskHandle;    /**< Process task handle */
+    bool                  m_processTaskExit;      /**< Flag to signal the process task to exit. */
+    SemaphoreHandle_t     m_processTaskSemaphore; /**< Binary semaphore used to signal the process task exited. */
 
 
-    AsyncClient     m_tcpClient;            /**< Asynchronous TCP client */
-    Queue<Cmd>      m_cmdQueue;             /**< Command queue */
-    Queue<Event>    m_evtQueue;             /**< Event queue */
-    Mutex           m_mutex;                /**< Used to protect against concurrent access. */
-    bool            m_hasGlobalMutex;       /**< Has the task the global mutex? */
+    AsyncClient           m_tcpClient;      /**< Asynchronous TCP client */
+    Queue<Cmd>            m_cmdQueue;       /**< Command queue */
+    Queue<Event>          m_evtQueue;       /**< Event queue */
+    Mutex                 m_mutex;          /**< Used to protect against concurrent access. */
+    bool                  m_hasGlobalMutex; /**< Has the task the global mutex? */
 
     /* Protected data */
-    bool            m_isConnected;          /**< Is a connection established? */
-    bool            m_isReqOpen;            /**< Is a request open? */
+    bool m_isConnected; /**< Is a connection established? */
+    bool m_isReqOpen;   /**< Is a request open? */
 
     /* Non-protected data */
-    OnResponse      m_onRspCallback;        /**< Callback which to call for a complete response. */
-    OnClosed        m_onClosedCallback;     /**< Callback which to call for a closed connection. */
-    OnError         m_onErrorCallback;      /**< Callback which to call for a connection error. */
-    String          m_hostname;             /**< Server hostname */
-    uint16_t        m_port;                 /**< Server port */
-    bool            m_isSecure;             /**< Secure transport (true) or not (false) */
-    String          m_base64Authorization;  /**< Authorization BASE64 encoded */
-    String          m_uri;                  /**< Request URI */
-    String          m_headers;              /**< Additional request headers */
-    String          m_method;               /**< Request method, e.g. GET, PUT, etc. */
-    String          m_userAgent;            /**< User agent */
-    bool            m_isHttpVer10;          /**< Use HTTP/1.0 (true) instead of HTTP/1.1 (false) */
-    bool            m_isKeepAlive;          /**< Keep connection alive or not? */
-    String          m_urlEncodedPars;       /**< URL encoded parameters (application/x-www-form-urlencoded) */
-    const uint8_t*  m_payload;              /**< Request payload */
-    size_t          m_payloadSize;          /**< Request payload size in byte */
+    OnResponse     m_onRspCallback;       /**< Callback which to call for a complete response. */
+    OnClosed       m_onClosedCallback;    /**< Callback which to call for a closed connection. */
+    OnError        m_onErrorCallback;     /**< Callback which to call for a connection error. */
+    String         m_hostname;            /**< Server hostname */
+    uint16_t       m_port;                /**< Server port */
+    bool           m_isSecure;            /**< Secure transport (true) or not (false) */
+    String         m_base64Authorization; /**< Authorization BASE64 encoded */
+    String         m_uri;                 /**< Request URI */
+    String         m_headers;             /**< Additional request headers */
+    String         m_method;              /**< Request method, e.g. GET, PUT, etc. */
+    String         m_userAgent;           /**< User agent */
+    bool           m_isHttpVer10;         /**< Use HTTP/1.0 (true) instead of HTTP/1.1 (false) */
+    bool           m_isKeepAlive;         /**< Keep connection alive or not? */
+    String         m_urlEncodedPars;      /**< URL encoded parameters (application/x-www-form-urlencoded) */
+    const uint8_t* m_payload;             /**< Request payload */
+    size_t         m_payloadSize;         /**< Request payload size in byte */
 
-    ResponsePart    m_rspPart;              /**< Current parsing part of the response */
-    HttpResponse    m_rsp;                  /**< Response */
-    String          m_rspLine;              /**< Single line, used for response parsing */
-    TransferCoding  m_transferCoding;       /**< Transfer coding */
-    size_t          m_contentLength;        /**< Content length in byte */
-    size_t          m_contentIndex;         /**< Content index */
-    size_t          m_chunkSize;            /**< Chunk size in byte */
-    size_t          m_chunkIndex;           /**< Chunk body index */
-    ChunkBodyPart   m_chunkBodyPart;        /**< Current part of chunked response */
+    ResponsePart   m_rspPart;        /**< Current parsing part of the response */
+    HttpResponse   m_rsp;            /**< Response */
+    String         m_rspLine;        /**< Single line, used for response parsing */
+    TransferCoding m_transferCoding; /**< Transfer coding */
+    size_t         m_contentLength;  /**< Content length in byte */
+    size_t         m_contentIndex;   /**< Content index */
+    size_t         m_chunkSize;      /**< Chunk size in byte */
+    size_t         m_chunkIndex;     /**< Chunk body index */
+    ChunkBodyPart  m_chunkBodyPart;  /**< Current part of chunked response */
+    int            m_userData; /**< Used to identify plugin in RestService */
 
     AsyncHttpClient(const AsyncHttpClient& client);
     AsyncHttpClient& operator=(const AsyncHttpClient& client);
 
     /**
      * Create the process task which is responsible to process all commands and events.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool createProcessTask();
@@ -630,16 +640,16 @@ private:
 
     /**
      * Convert LwIP error id to user friendly information.
-     * 
+     *
      * @param[in] error LwIP error id
-     * 
+     *
      * @return User friendly error information. May be nullptr in case of unknown error id.
      */
     const char* errorToStr(int8_t error);
 
     /**
      * Take global mutex to serialize all AsyncHttpClient's.
-     * 
+     *
      * @return If taken, it will return true otherwise false. If already taken, it will return false.
      */
     bool takeGlobalMutex();
@@ -654,6 +664,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* ASYNC_HTTP_CLIENT_H */
+#endif /* ASYNC_HTTP_CLIENT_H */
 
 /** @} */

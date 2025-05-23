@@ -78,12 +78,12 @@
 
 void ConnectedState::entry(StateMachine& sm)
 {
-    SettingsService&    settings        = SettingsService::getInstance();
-    String              infoStr         = "Hostname: ";
-    String              hostname;
-    String              infoStringIp    = "IP: ";
-    String              notifyURL       = "-";
-    bool                isQuiet         = false;
+    SettingsService& settings = SettingsService::getInstance();
+    String           infoStr  = "Hostname: ";
+    String           hostname;
+    String           infoStringIp = "IP: ";
+    String           notifyURL    = "-";
+    bool             isQuiet      = false;
 
     LOG_INFO("Connected.");
 
@@ -92,15 +92,15 @@ void ConnectedState::entry(StateMachine& sm)
     {
         LOG_WARNING("Use default hostname.");
 
-        hostname    = settings.getHostname().getDefault();
-        notifyURL   = settings.getNotifyURL().getDefault();
-        isQuiet     = settings.getQuietMode().getDefault();
+        hostname  = settings.getHostname().getDefault();
+        notifyURL = settings.getNotifyURL().getDefault();
+        isQuiet   = settings.getQuietMode().getDefault();
     }
     else
     {
-        hostname    = settings.getHostname().getValue();
-        notifyURL   = settings.getNotifyURL().getValue();
-        isQuiet     = settings.getQuietMode().getValue();
+        hostname  = settings.getHostname().getValue();
+        notifyURL = settings.getNotifyURL().getValue();
+        isQuiet   = settings.getQuietMode().getValue();
 
         settings.close();
     }
@@ -118,8 +118,8 @@ void ConnectedState::entry(StateMachine& sm)
     }
     else
     {
-        const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
-        const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+        const uint32_t DURATION_NON_SCROLLING = 4000U; /* ms */
+        const uint32_t SCROLLING_REPEAT_NUM   = 2U;
 
         /* Notify about successful network connection. */
         DisplayMgr::getInstance().setNetworkStatus(true);
@@ -185,19 +185,18 @@ void ConnectedState::exit(StateMachine& sm)
 
 void ConnectedState::initHttpClient()
 {
-    m_client.regOnResponse([](const HttpResponse& rsp){
+    m_client.regOnResponse([](const int userData, const HttpResponse& rsp) {
         uint16_t statusCode = rsp.getStatusCode();
 
         if (HttpStatus::STATUS_CODE_OK == statusCode)
         {
             LOG_INFO("Online state reported.");
         }
-
     });
 
-    m_client.regOnError([]() {
+    m_client.regOnError([](const int userData) {
         LOG_WARNING("Connection error happened.");
-   });
+    });
 }
 
 void ConnectedState::pushUrl(const String& pushUrl)
@@ -205,22 +204,22 @@ void ConnectedState::pushUrl(const String& pushUrl)
     /* If a push URL is set, notify about the online status. */
     if (false == pushUrl.isEmpty())
     {
-        String      url             = pushUrl;
-        const char* GET_CMD         = "get ";
-        const char* POST_CMD        = "post ";
-        bool        isGet           = true;
-        bool        isSuccessful    = false;
+        String      url          = pushUrl;
+        const char* GET_CMD      = "get ";
+        const char* POST_CMD     = "post ";
+        bool        isGet        = true;
+        bool        isSuccessful = false;
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
         if (true == url.startsWith(GET_CMD))
         {
-            url = url.substring(strlen(GET_CMD));
+            url   = url.substring(strlen(GET_CMD));
             isGet = true;
         }
         else if (true == url.startsWith(POST_CMD))
         {
-            url = url.substring(strlen(POST_CMD));
+            url   = url.substring(strlen(POST_CMD));
             isGet = false;
         }
         else

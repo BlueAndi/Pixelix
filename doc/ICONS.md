@@ -4,15 +4,15 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-## Alternative Icons
+## Alternative Icons <!-- omit in toc -->
 
-- [Alternative Icons](#alternative-icons)
 - [Purpose](#purpose)
 - [OpenWeatherPlugin](#openweatherplugin)
   - [Color Intense](#color-intense)
   - [Colorless](#colorless)
   - [Animated](#animated)
-- [BTCQuotePlugin](#btcquoteplugin)
+- [Others](#others)
+  - [BTC Quote](#btc-quote)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -73,15 +73,14 @@ Notes:
 
 Designed by [ddijanic](https://github.com/ddijanic)
 
-## BTCQuotePlugin
+## Others
 
-|  |
-| -------- |
-|![BTC_USD](./../doc/images/icons/BTCQuotePluginColorIntense/preview/BTC_USD.png)|
+### BTC Quote
 
-Find them here: [./images/icons/BTCQuotePluginColorIntense/](./images/icons/BTCQuotePluginColorIntense/)
-
-Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
+| Name | Author | Preview | Location |
+| ---- | ------ | ------- | -------- |
+| BTC Quote | [flcu](https://github.com/flcu) | ![BTC_USD](./../doc/images/icons/BTCQuote/preview/btc_usd.png) | [./images/icons/BTCQuote/](./images/icons/BTCQuote/) |
+| BTC Quote Color Intense | [NSD4rKn3SS](https://github.com/NSD4rKn3SS) | ![BTC_USD](./../doc/images/icons/BTCQuoteColorIntense/preview/BTC_USD.png) | [./images/icons/BTCQuoteColorIntense/](./images/icons/BTCQuoteColorIntense/) |
 
 ## Issues, Ideas And Bugs
 

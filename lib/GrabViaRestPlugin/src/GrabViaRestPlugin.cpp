@@ -250,8 +250,6 @@ void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
     {
         m_view.setupTextOnly();
     }
-
-    initHttpClient();
 }
 
 void GrabViaRestPlugin::stop()
@@ -265,15 +263,18 @@ void GrabViaRestPlugin::stop()
 
 void GrabViaRestPlugin::process(bool isConnected)
 {
-    Msg                        msg;
+
     MutexGuard<MutexRecursive> guard(m_mutex);
+    Msg                        msg;
+
 
     PluginWithConfig::process(isConnected);
 
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
      */
-    if (false == m_requestTimer.isTimerRunning())
+    if(m_isAllowedToSend){
+        if (false == m_requestTimer.isTimerRunning())
     {
         if (true == isConnected)
         {
@@ -287,6 +288,7 @@ void GrabViaRestPlugin::process(bool isConnected)
             else
             {
                 m_requestTimer.start(UPDATE_PERIOD);
+                m_isAllowedToSend = false;
             }
         }
     }
@@ -314,50 +316,35 @@ void GrabViaRestPlugin::process(bool isConnected)
             else
             {
                 m_requestTimer.start(UPDATE_PERIOD);
+                m_isAllowedToSend = false;
             }
         }
     }
 
-    if (true == m_taskProxy.receive(msg))
+    if (true == m_restService.getResponse(m_restId, msg.isValidResponse, msg.rsp))
     {
-        switch (msg.type)
+        if (msg.isValidResponse)
         {
-        case MSG_TYPE_INVALID:
-            /* Should never happen. */
-            break;
-
-        case MSG_TYPE_RSP:
             if (nullptr != msg.rsp)
             {
                 handleWebResponse(*msg.rsp);
                 delete msg.rsp;
                 msg.rsp = nullptr;
             }
-            break;
-
-        case MSG_TYPE_CONN_CLOSED:
-            LOG_INFO("Connection closed.");
-
-            if (true == m_isConnectionError)
-            {
-                /* If a request fails, show standard icon and a '?' */
-                m_view.setFormatText("{hc}?");
-
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
-            }
-            m_isConnectionError = false;
-            break;
-
-        case MSG_TYPE_CONN_ERROR:
-            LOG_WARNING("Connection error.");
-            m_isConnectionError = true;
-            break;
-
-        default:
-            /* Should never happen. */
-            break;
         }
+        else
+        {
+            LOG_WARNING("Connection error.");
+
+            /* If a request fails, show standard icon and a '?' */
+            m_view.setFormatText("{hc}?");
+
+            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+        }
+        m_isAllowedToSend = true;
     }
+    }
+    
 }
 
 void GrabViaRestPlugin::update(YAGfx& gfx)
@@ -491,119 +478,35 @@ bool GrabViaRestPlugin::startHttpRequest()
 
     if (false == m_url.isEmpty())
     {
-        if (true == m_client.begin(m_url))
+        if (true == m_method.equalsIgnoreCase("GET"))
         {
-            if (true == m_method.equalsIgnoreCase("GET"))
+            if (false == m_restService.get(m_restId, m_url))
             {
-                if (false == m_client.GET())
-                {
-                    LOG_WARNING("GET %s failed.", m_url.c_str());
-                }
-                else
-                {
-                    status = true;
-                }
-            }
-            else if (true == m_method.equalsIgnoreCase("POST"))
-            {
-                if (false == m_client.POST())
-                {
-                    LOG_WARNING("POST %s failed.", m_url.c_str());
-                }
-                else
-                {
-                    status = true;
-                }
+                LOG_WARNING("GET %s failed.", m_url.c_str());
             }
             else
             {
-                LOG_WARNING("Invalid HTTP method %s.", m_method.c_str());
+                status = true;
             }
+        }
+        else if (true == m_method.equalsIgnoreCase("POST"))
+        {
+            if (false == m_restService.post(m_restId, m_url))
+            {
+                LOG_WARNING("POST %s failed.", m_url.c_str());
+            }
+            else
+            {
+                status = true;
+            }
+        }
+        else
+        {
+            LOG_WARNING("Invalid HTTP method %s.", m_method.c_str());
         }
     }
 
     return status;
-}
-
-void GrabViaRestPlugin::initHttpClient()
-{
-    /* Note: All registered callbacks are running in a different task context!
-     *       Therefore it is not allowed to access a member here directly.
-     *       The processing must be deferred via task proxy.
-     */
-    m_client.regOnResponse(
-        [this](const HttpResponse& rsp) {
-            handleAsyncWebResponse(rsp);
-        });
-
-    m_client.regOnClosed(
-        [this]() {
-            Msg msg;
-
-            msg.type = MSG_TYPE_CONN_CLOSED;
-
-            (void)this->m_taskProxy.send(msg);
-        });
-
-    m_client.regOnError(
-        [this]() {
-            Msg msg;
-
-            msg.type = MSG_TYPE_CONN_ERROR;
-
-            (void)this->m_taskProxy.send(msg);
-        });
-}
-
-void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
-{
-    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
-    {
-        const size_t         JSON_DOC_SIZE = 4096U;
-        DynamicJsonDocument* jsonDoc       = new (std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-        if (nullptr != jsonDoc)
-        {
-            bool        isSuccessful = false;
-            size_t      payloadSize  = 0U;
-            const void* vPayload     = rsp.getPayload(payloadSize);
-            const char* payload      = static_cast<const char*>(vPayload);
-
-            if (true == m_filter.overflowed())
-            {
-                LOG_ERROR("Less memory for filter available.");
-            }
-            else if ((nullptr == payload) ||
-                     (0U == payloadSize))
-            {
-                LOG_ERROR("No payload.");
-            }
-            else
-            {
-                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
-
-                if (DeserializationError::Ok != error.code())
-                {
-                    LOG_WARNING("JSON parse error: %s", error.c_str());
-                }
-                else
-                {
-                    Msg msg;
-
-                    msg.type     = MSG_TYPE_RSP;
-                    msg.rsp      = jsonDoc;
-
-                    isSuccessful = this->m_taskProxy.send(msg);
-                }
-            }
-
-            if (false == isSuccessful)
-            {
-                delete jsonDoc;
-                jsonDoc = nullptr;
-            }
-        }
-    }
 }
 
 void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantConst filter, JsonArray& values)
@@ -772,9 +675,9 @@ void GrabViaRestPlugin::clearQueue()
 {
     Msg msg;
 
-    while (true == m_taskProxy.receive(msg))
+    while (true == m_restService.getResponse(m_restId, msg.isValidResponse, msg.rsp))
     {
-        if (MSG_TYPE_RSP == msg.type)
+        if (true == msg.isValidResponse)
         {
             delete msg.rsp;
             msg.rsp = nullptr;
