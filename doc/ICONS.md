@@ -1,22 +1,23 @@
 # PIXELIX <!-- omit in toc -->
+
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# Alternative Icons
+## Alternative Icons <!-- omit in toc -->
 
-* [Alternative Icons](#alternative-icons)
-* [Purpose](#purpose)
-* [OpenWeatherPlugin](#openweatherplugin)
-  * [Color Intense](#color-intense)
-  * [Colorless](#colorless)
-  * [Animated](#animated)
-* [BTCQuotePlugin](#btcquoteplugin)
-* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-* [License](#license)
-* [Contribution](#contribution)
+- [Purpose](#purpose)
+- [OpenWeatherPlugin](#openweatherplugin)
+  - [Color Intense](#color-intense)
+  - [Colorless](#colorless)
+  - [Animated](#animated)
+- [Others](#others)
+  - [BTC Quote](#btc-quote)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
-# Purpose
+## Purpose
 
 In order to use alternative icons for plugins you simply have to replace the respective ```<iconName>.bmp``` or ```<iconName>.gif``` in the corresponding plugin folder. All plugins can be found in ```/lib/<PLUGIN-NAME>``` and their icons in ```/lib/<PLUGIN-NAME>/web```.
 
@@ -26,9 +27,9 @@ During building the filesystem image they will be automatically grabbed.
 
 In the following you find all available alternative icons classified according to plugin.
 
-# OpenWeatherPlugin
+## OpenWeatherPlugin
 
-## Color Intense
+### Color Intense
 
 |  |  |  |  |
 | -------- | -------- | -------- | -------- |
@@ -39,11 +40,12 @@ In the following you find all available alternative icons classified according t
 Find them here: [./images/icons/OpenWeatherPluginColorIntense/](./images/icons/OpenWeatherPluginColorIntense/)
 
 Notes:
+
 * Only 8x8 icons available.
 
 Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
 
-## Colorless
+### Colorless
 
 |  |  |  |  |
 | -------- | -------- | -------- | -------- |
@@ -55,7 +57,7 @@ Find them here: [./images/icons/OpenWeatherPluginColorLess](./images/icons/OpenW
 
 Designed by [BlueAndi](https://github.com/BlueAndi)
 
-## Animated
+### Animated
 
 |  |  |  |  |
 | -------- | -------- | -------- | -------- |
@@ -66,27 +68,30 @@ Designed by [BlueAndi](https://github.com/BlueAndi)
 Find them here: [./images/icons/OpenWeatherPluginAnimated/](./images/icons/OpenWeatherPluginAnimated/)
 
 Notes:
+
 * Only 8x8 icons available.
 
 Designed by [ddijanic](https://github.com/ddijanic)
 
-# BTCQuotePlugin
+## Others
 
-|  |
-| -------- |
-|![BTC_USD](./../doc/images/icons/BTCQuotePluginColorIntense/preview/BTC_USD.png)|
+### BTC Quote
 
-Find them here: [./images/icons/BTCQuotePluginColorIntense/](./images/icons/BTCQuotePluginColorIntense/)
+| Name | Author | Preview | Location |
+| ---- | ------ | ------- | -------- |
+| BTC Quote | [flcu](https://github.com/flcu) | ![BTC_USD](./../doc/images/icons/BTCQuote/preview/btc_usd.png) | [./images/icons/BTCQuote/](./images/icons/BTCQuote/) |
+| BTC Quote Color Intense | [NSD4rKn3SS](https://github.com/NSD4rKn3SS) | ![BTC_USD](./../doc/images/icons/BTCQuoteColorIntense/preview/BTC_USD.png) | [./images/icons/BTCQuoteColorIntense/](./images/icons/BTCQuoteColorIntense/) |
 
-Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
+## Issues, Ideas And Bugs
 
-# Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-# License
+## License
+
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
 Consider the different licenses of the used third party libraries too!
 
-# Contribution
+## Contribution
+
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
 additional terms or conditions.

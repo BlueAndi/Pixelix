@@ -25,15 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  BTCQuotePlugin view
+ * @brief  OpenMeteoPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup PLUGIN
  *
  * @{
  */
 
-#ifndef BTC_QUOTE_PLUGIN_VIEW_H
-#define BTC_QUOTE_PLUGIN_VIEW_H
+#ifndef OPEN_METEO_PLUGIN_VIEW_H
+#define OPEN_METEO_PLUGIN_VIEW_H
 
 /******************************************************************************
  * Compile Switches
@@ -42,7 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IconTextViewBase.hpp>
+#include <OpenWeatherViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -53,13 +53,13 @@
  *****************************************************************************/
 
 /** Internal plugin functionality. */
-namespace _BTCQuotePlugin
+namespace _OpenMeteoPlugin
 {
 
 /**
- * BTCQuotePlugin view.
+ * OpenMeteoPlugin view.
  */
-class View : public IconTextViewBase
+class View : public OpenWeatherViewBase
 {
 public:
 
@@ -67,7 +67,7 @@ public:
      * Construct the view.
      */
     View() :
-        IconTextViewBase()
+        OpenWeatherViewBase()
     {
     }
 
@@ -78,37 +78,18 @@ public:
     {
     }
 
-    /**
-     * Initialize view, which will prepare the widgets and the default values.
-     * 
-     * @param[in] width     Display width in pixel.
-     * @param[in] height    Display height in pixel.
-     */
-    void init(uint16_t width, uint16_t height) final
-    {
-        IconTextViewBase::init(width, height);
-
-        setFormatText("{hc}?");
-        (void)loadIcon(ICON_PATH);
-    }
-
 private:
-
-    /**
-     * Image path within the filesystem to icon.
-     */
-    static const char*  ICON_PATH;
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _BTCQuotePlugin */
+} /* _OpenMeteoPlugin */
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BTC_QUOTE_PLUGIN_VIEW_H */
+#endif  /* OPEN_METEO_PLUGIN_VIEW_H */
 
 /** @} */

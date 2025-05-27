@@ -39,6 +39,7 @@
 #include <SensorSht3X.h>
 #include <SensorDhtX.h>
 #include <SensorBattery.h>
+#include <SensorHeap.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -113,6 +114,18 @@
 #define SENSOR_ID_BATTERY   SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_DHT_X)
 #endif  /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
 
+#if IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE)
+/**
+ * Heap sensor id.
+ */
+#define SENSOR_ID_HEAP      SENSOR_ID_NEXT(SENSOR_ID_BATTERY)
+#else   /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
+/**
+ * Heap sensor id (not applicable).
+ */
+#define SENSOR_ID_HEAP      SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_BATTERY)
+#endif  /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -153,6 +166,13 @@ static SensorBattery    gBattery;
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
 
+#if IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE)
+
+/** Heap sensor. */
+static SensorHeap       gHeap;
+
+#endif /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
+
 /** A list with all registered sensors. */
 static ISensor*         gSensors[] =
 {
@@ -171,6 +191,10 @@ static ISensor*         gSensors[] =
 #if IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE)
     &gBattery,
 #endif /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
+
+#if IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE)
+    &gHeap,
+#endif /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
 
     nullptr
 };

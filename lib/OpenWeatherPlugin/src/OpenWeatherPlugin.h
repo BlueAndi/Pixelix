@@ -366,6 +366,11 @@ private:
     /** Time for duration tick period in ms */
     static const uint32_t   DURATION_TICK_PERIOD    = SIMPLE_TIMER_SECONDS(1U);
 
+    /**
+     * Image path within the filesystem to weather condition icons.
+     */
+    static const char* IMAGE_PATH;
+
     _OpenWeatherPlugin::View    m_view;                     /**< View with all widgets. */
     OpenWeatherSource           m_sourceId;                 /**< OpenWeather source id. */
     uint32_t                    m_updatePeriod;             /**< Period in ms for requesting data from server. This is used in case the last request to the server was successful. */
@@ -507,6 +512,12 @@ private:
      * weather request status.
      */
     void weatherRequestStarted();
+
+    /**
+     * Set the view units for temperature and wind speed,
+     * according to the configuration.
+     */
+    void setViewUnits();
 };
 
 /******************************************************************************

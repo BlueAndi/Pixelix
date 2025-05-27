@@ -1,49 +1,54 @@
 # PIXELIX <!-- omit in toc -->
+
 ![PIXELIX](../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# SW Architecture  <!-- omit in toc -->
+## SW Architecture  <!-- omit in toc -->
 
-* [Purpose](#purpose)
-* [Scope](#scope)
-* [Context](#context)
-* [Task Deployment](#task-deployment)
-* [Layers](#layers)
-  * [Application](#application)
-  * [Services](#services)
-  * [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal)
-* [System Startup](#system-startup)
-  * [High Level](#high-level)
-* [System States](#system-states)
-* [Details](#details)
-  * [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal-1)
-  * [Graphic Base Functionality](#graphic-base-functionality)
-  * [Widgets](#widgets)
-  * [User Button Handling](#user-button-handling)
-  * [Audio Service](#audio-service)
-  * [Topic Handler Service](#topic-handler-service)
-  * [Plugin Handling](#plugin-handling)
-    * [Static View](#static-view)
-    * [Dynamic View](#dynamic-view)
-  * [Spectrum Analyzer](#spectrum-analyzer)
-  * [Slot Handling](#slot-handling)
-* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-* [License](#license)
-* [Contribution](#contribution)
+- [Purpose](#purpose)
+- [Scope](#scope)
+- [Context](#context)
+- [Task Deployment](#task-deployment)
+- [Layers](#layers)
+  - [Application](#application)
+  - [Services](#services)
+  - [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal)
+- [System Startup](#system-startup)
+  - [High Level](#high-level)
+- [System States](#system-states)
+- [Details](#details)
+  - [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal-1)
+  - [Graphic Base Functionality](#graphic-base-functionality)
+  - [Widgets](#widgets)
+  - [User Button Handling](#user-button-handling)
+  - [Audio Service](#audio-service)
+  - [Topic Handler Service](#topic-handler-service)
+  - [Plugin Handling](#plugin-handling)
+    - [Static View](#static-view)
+    - [Dynamic View](#dynamic-view)
+  - [Spectrum Analyzer](#spectrum-analyzer)
+  - [Slot Handling](#slot-handling)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
-# Purpose
+## Purpose
+
 The SW architecture provides an overview regarding the relationships of different classes and components. It serves for understanding, maintaining, fixing and extending the software.
 
-# Scope
+## Scope
+
 The SW architecture document is valid for the PIXELIX project.
 
-# Context
+## Context
+
 PIXELIX as a system is not complete alone. It interacts with other neighbor systems over different kind of interfaces.
 
 ![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/context.wsd)
 
-# Task Deployment
+## Task Deployment
+
 The diagram shows the task deployment on the esp32 dual core derivates.
 
 ![deployment-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/deployment.wsd)
@@ -70,69 +75,88 @@ The diagram shows the task deployment on the esp32 dual core derivates.
 | updateTask | no-affinity | The DisplayMgr updates the physical display there. |
 | wifi | PRO_CPU | WiFi handling. |
 
-# Layers
+## Layers
+
 ![general-layers](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/general_layers.wsd)
 
-## Application
+### Application
+
 ![app-layer](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/app_layer.wsd)
 
-## Services
+### Services
+
 ![hal-layer](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/service_layer.wsd)
 
-## Hardware Abstraction Layer (HAL)
+### Hardware Abstraction Layer (HAL)
+
 ![hal-layer](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/hal_layer.wsd)
 
-# System Startup
+## System Startup
 
-## High Level
+### High Level
+
 ![startup-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/startup.wsd)
 
-# System States
+## System States
+
 ![system-states-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/system_state_machine.wsd)
 
-# Details
+## Details
 
-## Hardware Abstraction Layer (HAL)
+### Hardware Abstraction Layer (HAL)
+
 ![hal-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/hal.wsd)
 
-## Graphic Base Functionality
+### Graphic Base Functionality
+
 ![gfx-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/gfx.wsd)
 
-## Widgets
+### Widgets
+
 ![widgets-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/widgets.wsd)
 
-## User Button Handling
+### User Button Handling
+
 ![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/button.wsd)
 
-## Audio Service
+### Audio Service
+
 ![audio-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/audio_service.wsd)
 
-## Topic Handler Service
+### Topic Handler Service
+
 ![topic-handler-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/topic_handler_service.wsd)
 
-## Plugin Handling
+### Plugin Handling
 
-### Static View
+#### Static View
+
 ![plugin-service-static-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/plugin-service.wsd)
 
-### Dynamic View
+#### Dynamic View
+
 ![plugin-service-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/plugin-service-dynamic.wsd)
 
 ![plugin-cfg-handling-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/plugin_cfg_handling.wsd)
 
-## Spectrum Analyzer
+### Spectrum Analyzer
+
 ![specturm-analyzer-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/spectrum-analyzer.wsd)
 
-## Slot Handling
+### Slot Handling
+
 ![slot-handling-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/slot_handling.wsd)
 
-# Issues, Ideas And Bugs
+## Issues, Ideas And Bugs
+
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-# License
+## License
+
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
 Consider the different licenses of the used third party libraries too!
 
-# Contribution
+## Contribution
+
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
 additional terms or conditions.

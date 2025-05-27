@@ -99,6 +99,13 @@ public:
     virtual void update(YAGfx& gfx) = 0;
 
     /**
+     * Set the image path for the weather condition icons.
+     * 
+     * @param[in] path  The image path for the weather condition icons.
+     */
+    virtual void setImagePath(const char* path) = 0;
+
+    /**
      * Set the duration in ms, how long the view will be shown on the display.
      * It will be used to derive how long every enabled weather info is shown.
      * All enabled weather infos together will be equal to the configured duration.
@@ -110,11 +117,18 @@ public:
     virtual void setViewDuration(uint32_t duration) = 0;
 
     /**
-     * Set the units to use temperature and wind speed.
+     * Set the unit to use temperature.
      * 
-     * @param[in] units The units which to set.
+     * @param[in] unit The temperature unit.
      */
-    virtual void setUnits(const String& units) = 0;
+    virtual void setTemperatureUnit(const String& unit) = 0;
+
+    /**
+     * Set the unit to use wind speed.
+     * 
+     * @param[in] unit The wind speed unit.
+     */
+    virtual void setWindSpeedUnit(const String& unit) = 0;
 
     /** Weather info */
     enum WeatherInfo : uint8_t

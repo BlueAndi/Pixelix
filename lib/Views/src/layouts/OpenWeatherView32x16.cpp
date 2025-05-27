@@ -50,9 +50,9 @@
 /** UV-index element */
 typedef struct
 {
-    uint8_t     lower;  /**< Lower UV-index value */
-    uint8_t     upper;  /**< Upper UV-index value */
-    const char* color;  /**< Color to show in this UV-index range */
+    uint8_t     lower; /**< Lower UV-index value */
+    uint8_t     upper; /**< Upper UV-index value */
+    const char* color; /**< Color to show in this UV-index range */
 
 } UvIndexElem;
 
@@ -81,71 +81,67 @@ typedef struct
 /**
  * Weather icon of current weather width in pixels.
  */
-static const uint16_t   WEATHER_ICON_CURRENT_WIDTH              = 8U;
+static const uint16_t WEATHER_ICON_CURRENT_WIDTH       = 8U;
 
 /**
  * Weather icon of current weather height in pixels.
  */
-static const uint16_t   WEATHER_ICON_CURRENT_HEIGHT             = CONFIG_LED_MATRIX_HEIGHT;
+static const uint16_t WEATHER_ICON_CURRENT_HEIGHT      = CONFIG_LED_MATRIX_HEIGHT;
 
 /**
  * Weather icon of current weather widget x-coordinate in pixels.
  * Left aligned.
  */
-static const int16_t    WEATHER_ICON_CURRENT_X                  = 0;
+static const int16_t WEATHER_ICON_CURRENT_X            = 0;
 
 /**
  * Weather icon of current weather widget y-coordinate in pixels.
  * Top aligned.
  */
-static const int16_t    WEATHER_ICON_CURRENT_Y                  = 0;
+static const int16_t WEATHER_ICON_CURRENT_Y            = 0;
 
 /**
  * Text width in pixels.
  */
-static const uint16_t   WEATHER_INFO_TEXT_CURRENT_WIDTH         = CONFIG_LED_MATRIX_WIDTH - WEATHER_ICON_CURRENT_WIDTH;
+static const uint16_t WEATHER_INFO_TEXT_CURRENT_WIDTH  = CONFIG_LED_MATRIX_WIDTH - WEATHER_ICON_CURRENT_WIDTH;
 
 /**
  * Text height in pixels.
  */
-static const uint16_t   WEATHER_INFO_TEXT_CURRENT_HEIGHT        = CONFIG_LED_MATRIX_HEIGHT;
+static const uint16_t WEATHER_INFO_TEXT_CURRENT_HEIGHT = CONFIG_LED_MATRIX_HEIGHT;
 
 /**
  * Text widget x-coordinate in pixels.
  * Left aligned, after icon.
  */
-static const int16_t    WEATHER_INFO_TEXT_CURRENT_X             = WEATHER_ICON_CURRENT_WIDTH;
+static const int16_t WEATHER_INFO_TEXT_CURRENT_X       = WEATHER_ICON_CURRENT_WIDTH;
 
 /**
  * Text widget y-coordinate in pixels.
  */
-static const int16_t    WEATHER_INFO_TEXT_CURRENT_Y             = WEATHER_ICON_CURRENT_Y;
+static const int16_t WEATHER_INFO_TEXT_CURRENT_Y       = WEATHER_ICON_CURRENT_Y;
 
 /** The epsilon is used to compare floats. */
-static const float  EPSILON = 0.0001F;
+static const float EPSILON                             = 0.0001F;
 
-/* Initialize image path for the weather condition icons. */
-const char* OpenWeatherView32x16::IMAGE_PATH                 = "/plugins/OpenWeatherPlugin/";
+/* Initialize standard icon file name. */
+const char* OpenWeatherView32x16::STD_ICON             = "std.bmp";
 
-/* Initialize image path for standard icon. */
-const char* OpenWeatherView32x16::IMAGE_PATH_STD_ICON        = "/plugins/OpenWeatherPlugin/openWeather.bmp";
+/* Initialize uvi icon file name. */
+const char* OpenWeatherView32x16::UVI_ICON             = "uvi.bmp";
 
-/* Initialize image path for uvi icon. */
-const char* OpenWeatherView32x16::IMAGE_PATH_UVI_ICON        = "/plugins/OpenWeatherPlugin/uvi.bmp";
+/* Initialize humidity icon file name. */
+const char* OpenWeatherView32x16::HUMIDITY_ICON        = "hum.bmp";
 
-/* Initialize image path for humidity icon. */
-const char* OpenWeatherView32x16::IMAGE_PATH_HUMIDITY_ICON   = "/plugins/OpenWeatherPlugin/hum.bmp";
-
-/* Initialize image path for uvi icon. */
-const char* OpenWeatherView32x16::IMAGE_PATH_WIND_ICON       = "/plugins/OpenWeatherPlugin/wind.bmp";
+/* Initialize wind icon file name. */
+const char* OpenWeatherView32x16::WIND_ICON            = "wind.bmp";
 
 /** UV-index table */
-static const UvIndexElem uvIndexTable[] =
-{
-    { 0U,   3U,     "{#c0ffa0}" },
-    { 3U,   6U,     "{#f8f140}" },
-    { 6U,   8U,     "{#f77820}" },
-    { 8U,   11U,    "{#d80020}" }
+static const UvIndexElem uvIndexTable[]                = {
+    { 0U, 3U, "{#c0ffa0}" },
+    { 3U, 6U, "{#f8f140}" },
+    { 6U, 8U, "{#f77820}" },
+    { 8U, 11U, "{#d80020}" }
 };
 
 /******************************************************************************
@@ -155,11 +151,13 @@ static const UvIndexElem uvIndexTable[] =
 OpenWeatherView32x16::OpenWeatherView32x16() :
     IOpenWeatherView(),
     m_fontType(Fonts::FONT_TYPE_DEFAULT),
+    m_imagePath(nullptr),
     m_weatherIconCurrent(WEATHER_ICON_CURRENT_WIDTH, WEATHER_ICON_CURRENT_HEIGHT, WEATHER_ICON_CURRENT_X, WEATHER_ICON_CURRENT_Y),
     m_weatherInfoCurrentText(WEATHER_INFO_TEXT_CURRENT_WIDTH, WEATHER_INFO_TEXT_CURRENT_HEIGHT, WEATHER_INFO_TEXT_CURRENT_X, WEATHER_INFO_TEXT_CURRENT_Y),
     m_viewDurationTimer(),
     m_viewDuration(0U),
-    m_units("metric"),
+    m_temperatureUnit(),
+    m_windSpeedUnit(),
     m_weatherInfo(WEATHER_INFO_ALL),
     m_weatherInfoId(0U),
     m_weatherInfoCurrent(),
@@ -168,7 +166,7 @@ OpenWeatherView32x16::OpenWeatherView32x16() :
 {
     m_weatherIconCurrent.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     m_weatherIconCurrent.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
-    
+
     m_weatherInfoCurrentText.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     m_weatherInfoCurrentText.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
 }
@@ -195,8 +193,8 @@ void OpenWeatherView32x16::setWeatherInfoCurrent(const WeatherInfoCurrent& info)
             m_isWeatherIconCurrentUpdated = true;
         }
 
-        m_weatherInfoCurrent            = info;
-        m_isWeatherInfoCurrentUpdated   = true;
+        m_weatherInfoCurrent          = info;
+        m_isWeatherInfoCurrentUpdated = true;
     }
 }
 
@@ -213,7 +211,7 @@ uint8_t OpenWeatherView32x16::getWeatherInfoCount() const
     uint8_t count = 0U;
     uint8_t id;
 
-    for(id = 0U; id < 8U; ++id)
+    for (id = 0U; id < 8U; ++id)
     {
         if (0U < (m_weatherInfo & (1U << id)))
         {
@@ -236,7 +234,6 @@ void OpenWeatherView32x16::nextWeatherInfo()
             {
                 m_weatherInfoId = 0U;
             }
-
         }
         while (0U == (m_weatherInfo & (1U << m_weatherInfoId)));
     }
@@ -252,11 +249,12 @@ void OpenWeatherView32x16::updateWeatherInfoCurrentOnView()
     String iconFullPath;
     String text;
 
-    switch(getActiveWeatherInfo())
+    switch (getActiveWeatherInfo())
     {
     case WEATHER_INFO_EMPTY:
-        iconFullPath = IMAGE_PATH_STD_ICON;
-        text = "-";
+        iconFullPath  = m_imagePath;
+        iconFullPath += STD_ICON;
+        text          = "-";
         break;
 
     case WEATHER_INFO_TEMPERATURE:
@@ -264,32 +262,37 @@ void OpenWeatherView32x16::updateWeatherInfoCurrentOnView()
 
         if (true == iconFullPath.isEmpty())
         {
-            iconFullPath = IMAGE_PATH_STD_ICON;
+            iconFullPath  = m_imagePath;
+            iconFullPath += STD_ICON;
         }
 
         appendTemperature(text, m_weatherInfoCurrent.temperature);
         break;
-        
+
     case WEATHER_INFO_HUMIDITY:
-        iconFullPath = IMAGE_PATH_HUMIDITY_ICON;
+        iconFullPath  = m_imagePath;
+        iconFullPath += HUMIDITY_ICON;
 
         appendHumidity(text, m_weatherInfoCurrent.humidity);
         break;
-        
+
     case WEATHER_INFO_WIND_SPEED:
-        iconFullPath = IMAGE_PATH_WIND_ICON;
+        iconFullPath  = m_imagePath;
+        iconFullPath += WIND_ICON;
 
         appendWindSpeed(text, m_weatherInfoCurrent.windSpeed);
         break;
-        
+
     case WEATHER_INFO_UV_INDEX:
-        iconFullPath = IMAGE_PATH_UVI_ICON;
+        iconFullPath  = m_imagePath;
+        iconFullPath += UVI_ICON;
 
         appendUvIndex(text, m_weatherInfoCurrent.uvIndex);
         break;
-        
+
     default:
-        iconFullPath = IMAGE_PATH_STD_ICON;
+        iconFullPath  = m_imagePath;
+        iconFullPath += STD_ICON;
         break;
     }
 
@@ -308,9 +311,9 @@ void OpenWeatherView32x16::handleWeatherInfo()
     /* First time of weather info handling? */
     if (false == m_viewDurationTimer.isTimerRunning())
     {
-        uint32_t duration           = (0U == m_viewDuration) ? VIEW_DURATION_DEFAULT : m_viewDuration;
-        uint8_t  weatherInfoCount   = getWeatherInfoCount();
-        uint32_t minDuration        = (0U == weatherInfoCount) ? VIEW_DURATION_MIN : duration / weatherInfoCount;
+        uint32_t duration         = (0U == m_viewDuration) ? VIEW_DURATION_DEFAULT : m_viewDuration;
+        uint8_t  weatherInfoCount = getWeatherInfoCount();
+        uint32_t minDuration      = (0U == weatherInfoCount) ? VIEW_DURATION_MIN : duration / weatherInfoCount;
 
         if (VIEW_DURATION_MIN > minDuration)
         {
@@ -356,14 +359,17 @@ void OpenWeatherView32x16::handleWeatherInfo()
     }
 }
 
-void OpenWeatherView32x16::getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId, const String&addition) const
+void OpenWeatherView32x16::getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId, const String& addition) const
 {
     fullPath.clear();
 
     if (false == weatherIconId.isEmpty())
     {
-        String fullPathWithoutExt   = IMAGE_PATH + weatherIconId;
-        String fullPathToIcon       = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
+        String fullPathWithoutExt = m_imagePath;
+        String fullPathToIcon;
+
+        fullPathWithoutExt += weatherIconId;
+        fullPathToIcon      = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
 
         /* No specific bitmap icon available? */
         if (false == FILESYSTEM.exists(fullPathToIcon))
@@ -372,7 +378,8 @@ void OpenWeatherView32x16::getIconPathByWeatherIconId(String& fullPath, const St
             fullPathToIcon = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_GIF;
             if (false == FILESYSTEM.exists(fullPathToIcon))
             {
-                fullPathWithoutExt  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
+                fullPathWithoutExt  = m_imagePath;
+                fullPathWithoutExt += weatherIconId.substring(0U, weatherIconId.length() - 1U);
                 fullPathToIcon      = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
 
                 /* No generic bitmap icon available? */
@@ -405,10 +412,10 @@ void OpenWeatherView32x16::getIconPathByWeatherIconId(String& fullPath, const St
 
 const char* OpenWeatherView32x16::uvIndexToColor(uint8_t uvIndex)
 {
-    uint8_t     idx     = 0U;
-    const char* color   = "{#a80081}"; /* Default color */
+    uint8_t     idx   = 0U;
+    const char* color = "{#a80081}"; /* Default color */
 
-    while(UTIL_ARRAY_NUM(uvIndexTable) > idx)
+    while (UTIL_ARRAY_NUM(uvIndexTable) > idx)
     {
         if ((uvIndexTable[idx].lower <= uvIndex) &&
             (uvIndexTable[idx].upper > uvIndex))
@@ -427,8 +434,8 @@ void OpenWeatherView32x16::appendTemperature(String& dst, float temperature, boo
 {
     if (false == std::isnan(temperature))
     {
-        const char* reducePrecision         = (false == noFraction) ? (temperature < -9.9F) ? "%.0f" : "%.1f" : "%.0f";
-        char        tempReducedPrecison[6]  = { 0 };
+        const char* reducePrecision        = (false == noFraction) ? (temperature < -9.9F) ? "%.0f" : "%.1f" : "%.0f";
+        char        tempReducedPrecison[6] = { 0 };
 
         /* Generate temperature string with reduced precision and add unit �C/�F. */
         (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
@@ -437,18 +444,7 @@ void OpenWeatherView32x16::appendTemperature(String& dst, float temperature, boo
 
         if (false == noUnit)
         {
-            if (m_units == "default")
-            {
-                dst += "°K";
-            }
-            else if (m_units == "metric")
-            {
-                dst += "°C";
-            }
-            else
-            {
-                dst += "°F";
-            }
+            dst += m_temperatureUnit;
         }
     }
     else
@@ -472,19 +468,7 @@ void OpenWeatherView32x16::appendWindSpeed(String& dst, float windSpeed)
         (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
 
         dst += windReducedPrecison;
-
-        if (m_units == "default")
-        {
-            dst += "m/s";
-        }
-        else if (m_units == "metric")
-        {
-            dst += "m/s";
-        }
-        else
-        {
-            dst += "mph";
-        }
+        dst += m_windSpeedUnit;
     }
     else
     {

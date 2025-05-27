@@ -2,12 +2,14 @@
     // See http://go.microsoft.com/fwlink/?LinkId=827846
     // for the documentation about the extensions.json format
     "recommendations": [
-        "platformio.platformio-ide",
+        "jebbs.plantuml",
         "ms-vscode.cpptools",
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cpptools-themes",
-        "yzhang.markdown-all-in-one",
-        "jebbs.plantuml"
+        "platformio.platformio-ide",
+        "yzhang.markdown-all-in-one"
     ],
-    "unwantedRecommendations": []
+    "unwantedRecommendations": [
+        "ms-vscode.cpptools-extension-pack"
+    ]
 }

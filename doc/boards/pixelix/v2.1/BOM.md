@@ -1,9 +1,10 @@
 # PIXELIX
+
 ![PIXELIX](../../../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# BOM
+## BOM
 
 | Amount | Description | Package | Part | URL |
 | --- | --- | --- | --- | --- |
@@ -41,8 +42,16 @@
 * Note, you can also use the *Molex 2157591002* plugs for J1*, J2*, J4*, J6* and J8* and the *Molex 2157591003* for J3* and J7*. You also need crimp terminals (e.g. *Wuerth Elektronik 66200113722DEC* or *Molex 2064600021*)
 * Do **NOT** combine connectors and plugs from Molex and Wuerth Elektronik!
 
-# Issues, Ideas And Bugs
+## Issues, Ideas And Bugs
+
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-# License
+## License
+
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

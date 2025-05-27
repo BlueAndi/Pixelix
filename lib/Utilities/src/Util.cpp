@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "Util.h"
 #include <stdio.h>
+#include <cctype>
 
 /******************************************************************************
  * Compiler Switches
@@ -266,6 +267,47 @@ Color Util::colorFromHtml(const String& htmlColor)
     }
 
     return color;
+}
+
+bool Util::isFormatSpecifierInStr(const String& str, char specifier)
+{
+    bool         isFound    = false;
+    int32_t      index      = 0U;
+    const size_t STR_LENGTH = str.length();
+
+    while (STR_LENGTH > index)
+    {
+        index = str.indexOf('%', index);
+
+        if (0 > index)
+        {
+            break;
+        }
+
+        if (STR_LENGTH > (index + 1))
+        {
+            int32_t specifierIndex = index + 1;
+
+            /* Skip flags, width, and precision */
+            while ((STR_LENGTH > specifierIndex) &&
+                   ((str[specifierIndex] == '-') || (str[specifierIndex] == '+') || (str[specifierIndex] == ' ') ||
+                       (str[specifierIndex] == '#') || (str[specifierIndex] == '0') || (0 < std::isdigit(str[specifierIndex])) ||
+                       (str[specifierIndex] == '.')))
+            {
+                ++specifierIndex;
+            }
+
+            if ((STR_LENGTH > specifierIndex) && (specifier == str[specifierIndex]))
+            {
+                isFound = true;
+                break;
+            }
+        }
+
+        ++index;
+    }
+
+    return isFound;
 }
 
 /******************************************************************************

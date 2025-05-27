@@ -302,6 +302,27 @@ public:
     }
 
     /**
+     * Get index of given character.
+     * 
+     * @param[in] ch        Character to search for.
+     * @param[in] fromIndex Start index for search.
+     * 
+     * @return If found, it will return the index otherwise -1.
+     */
+    int indexOf(char ch, unsigned int fromIndex) const
+    {
+        int     index   = -1;
+        size_t  pos     = m_stdStr.find(ch, fromIndex);
+
+        if (std::string::npos != pos)
+        {
+            index = pos;
+        }
+
+        return index;
+    }
+
+    /**
      * Get last index of given string.
      * 
      * @param[in] other   String to search for.

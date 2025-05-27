@@ -1,23 +1,24 @@
 # PIXELIX <!-- omit in toc -->
+
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
 # Building ESP-IDF Libraries for Arduino using custom sdkconfig options
 
-* [Building ESP-IDF Libraries for Arduino using custom sdkconfig options](#building-esp-idf-libraries-for-arduino-using-custom-sdkconfig-options)
-* [Purpose](#purpose)
-* [Instructions](#instructions)
-* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-* [License](#license)
-* [Contribution](#contribution)
+- [Building ESP-IDF Libraries for Arduino using custom sdkconfig options](#building-esp-idf-libraries-for-arduino-using-custom-sdkconfig-options)
+  - [Purpose](#purpose)
+  - [Instructions](#instructions)
+  - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+  - [License](#license)
+  - [Contribution](#contribution)
 
-# Purpose
+## Purpose
 
 This tutorial explains how to re-compile the ESP-IDF Libraries using custom sdkconfig settings that are no usually available for the Arduino Core.
 This has been done in a WSL (Ubuntu) environment to simplify any installation process.
 
-# Instructions
+## Instructions
 
 1. Install all dependencies:
 
@@ -74,13 +75,16 @@ If only the `esp32` libraries are required, the compilation can be reduced by us
 
 5. Replace the libraries in the PlatformIO package folder `.../.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32` with the `./out/tools/sdk/esp32` output folder.
 
-# Issues, Ideas And Bugs
+## Issues, Ideas And Bugs
+
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-# License
+## License
+
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
 Consider the different licenses of the used third party libraries too!
 
-# Contribution
+## Contribution
+
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
 additional terms or conditions.

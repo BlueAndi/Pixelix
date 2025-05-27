@@ -1,38 +1,41 @@
 # PIXELIX <!-- omit in toc -->
+
 ![PIXELIX](../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# Update The Software <!-- omit in toc -->
+## Update The Software <!-- omit in toc -->
 
-* [Purpose](#purpose)
-* [Recommendations](#recommendations)
-  * [Non-Developer](#non-developer)
-  * [Developer](#developer)
-* [Update possibilities](#update-possibilities)
-  * [Use Espressif Flash Download Tool (Windows only)](#use-espressif-flash-download-tool-windows-only)
-  * [Use esptool](#use-esptool)
-    * [Debian Linux](#debian-linux)
-    * [Windows](#windows)
-    * [Common after python and esptool are installed](#common-after-python-and-esptool-are-installed)
-  * [Use VSCode and Platformio](#use-vscode-and-platformio)
-* [Update via USB](#update-via-usb)
-* [Use the browser](#use-the-browser)
-* [Flash Layout Information](#flash-layout-information)
-  * [esp32 / esp32-s2](#esp32--esp32-s2)
-  * [esp32-s3](#esp32-s3)
-  * [Filesystem](#filesystem)
-* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-* [License](#license)
-* [Contribution](#contribution)
+- [Purpose](#purpose)
+- [Recommendations](#recommendations)
+  - [Non-Developer](#non-developer)
+  - [Developer](#developer)
+- [Update possibilities](#update-possibilities)
+  - [Use Espressif Flash Download Tool (Windows only)](#use-espressif-flash-download-tool-windows-only)
+  - [Use esptool](#use-esptool)
+    - [Debian Linux](#debian-linux)
+    - [Windows](#windows)
+    - [Common after python and esptool are installed](#common-after-python-and-esptool-are-installed)
+  - [Use VSCode and Platformio](#use-vscode-and-platformio)
+- [Update via USB](#update-via-usb)
+- [Use the browser](#use-the-browser)
+- [Flash Layout Information](#flash-layout-information)
+  - [esp32 / esp32-s2](#esp32--esp32-s2)
+  - [esp32-s3](#esp32-s3)
+  - [Filesystem](#filesystem)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
-# Purpose
+## Purpose
+
 The software can be uploaded/updated to the development board in 4 different ways. Not all of them can be used in any case. Take a look to the recommendations which variant might be the best for you.
 
-# Recommendations
+## Recommendations
+
 The recommeded way how to program the software to the board depends on the skill level, as well as the available toolchain. Hopefully it helps you to choose the right one.
 
-## Non-Developer
+### Non-Developer
 
 | Use Case | Recommended To Use |
 | -------- | ------------------ |
@@ -40,7 +43,7 @@ The recommeded way how to program the software to the board depends on the skill
 | A development board already used by you. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
 | Pixelix is already running on the development board. Its webinterface is accessible. | Browser |
 
-## Developer
+### Developer
 
 | Use Case | Recommended To Use |
 | -------- | ------------------ |
@@ -49,9 +52,10 @@ The recommeded way how to program the software to the board depends on the skill
 | You like to develop a plugin or change code for a pull request. | VSCode and PlatformIO |
 | Pixelix is already running on the development board. | Browser |
 
-# Update possibilities
+## Update possibilities
 
-## Use Espressif Flash Download Tool (Windows only)
+### Use Espressif Flash Download Tool (Windows only)
+
 1. Download binaries (```Pixelix-v6.0.0.zip```) from the [latest release](https://github.com/BlueAndi/Pixelix/releases).
 2. Unzip to a local folder.
 3. Download the [Espressif Flash Download Tool](https://www.espressif.com/en/support/download/other-tools).
@@ -74,20 +78,23 @@ The recommeded way how to program the software to the board depends on the skill
 18. Now wait until state changes to _FINISH_.
 19. Its complete, close the tool.
 
-## Use esptool
+### Use esptool
 
-### Debian Linux
+#### Debian Linux
+
 1. Update system packages: ```sudo apt-get update```
 3. Install python toolchain: ```sudo apt-get install python3-pip```
 4. Verify successful installation: ```pip3 --version```
 5. Install esptool: ```sudo pip3 install esptool```
 
-### Windows
+#### Windows
+
 1. Download and install latest [Python](https://www.python.org/) version.
 2. During the installation ensure that Python will be set on the path.
 3. Install esptool: ```pip install esptool```
 
-### Common after python and esptool are installed
+#### Common after python and esptool are installed
+
 1. Verify successful esptool installation: ```esptool --version```
 2. Erase flash: ```esptool -c <chip-type> -p <port> erase_flash```
     * Note: Replace &lt;chip-type&gt; with the chip type of your development board, e.g. esp32. Replace &lt;port&gt; with the serial port the development board is connected too, e.g. ```COM4``` on Windows or ```/dev/ttyUSB0``` on Linux.
@@ -96,15 +103,19 @@ The recommeded way how to program the software to the board depends on the skill
     * Replace &lt;port&gt; with the serial port the development board is connected too, e.g. ```COM4``` on Windows or ```/dev/ttyUSB0``` on Linux.
     * Use _DIO_ for &lt;spi-mode&gt; in case of esp32, except esp32-s3 use _QIO_.
 
-## Use VSCode and Platformio
+### Use VSCode and Platformio
+
 If your board is not available out of the box, have a look for the [supported boards by platformio](https://docs.platformio.org/en/latest/platforms/espressif32.html#boards). Copy a board configuration block in the ```platformio.ini``` and overwrite the board configuration (```board = ...```) by using the right board id from [supported boards by platformio](https://docs.platformio.org/en/latest/platforms/espressif32.html#boards).
 
 The update consists of two parts:
+
 * The software.
 * The filesystem.
 
-# Update via USB
+## Update via USB
+
 Steps:
+
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar (click on the head of the ant in the left column).
 3. Software:
@@ -120,11 +131,14 @@ Example:
 
 Note: Sometimes it happens that the _Platform_ sub-menu in the PlatformIO Project Tasks is missing. In this case restart VSCode and it should appear.
 
-# Use the browser
+## Use the browser
+
 Preconditions:
+
 * PIXELIX runs already on the target.
 
 Steps:
+
 1. Build the software via _Project Tasks -> General -> Build All_
 2. Build the filesystem via _Project Tasks -> env:```<choose-your-board>``` -> Platform -> Build File System Image_.
 3. Now in the ```.pio/build/<choose-your-board>``` folder there are two important files:
@@ -134,9 +148,9 @@ Steps:
 5. Jump to Update site.
 6. Select firmware binary (```firmware.bin```) or filesystem binary (```spiffs.bin```/```littlefs.bin```) and click on upload button. Since Pixelix v6.x its possible to update the firmware and filesystem at once. Multi-select both binaries in this case.
 
-# Flash Layout Information
+## Flash Layout Information
 
-## esp32 / esp32-s2
+### esp32 / esp32-s2
 
 | Binary | Address (hex) |
 | ------ | ------------- |
@@ -145,7 +159,7 @@ Steps:
 | firmware.bin | 0x10000 (ota_0) |
 | littlefs.bin | see filesystem table |
 
-## esp32-s3
+### esp32-s3
 
 | Binary | Address (hex) |
 | ------ | ------------- |
@@ -154,7 +168,7 @@ Steps:
 | firmware.bin | 0x10000 (ota_0) |
 | littlefs.bin | see filesystem table |
 
-## Filesystem
+### Filesystem
 
 | Development Board | Flash size in MByte | Address (hex) of littlefs.bin | Partition table |
 | ----------------- | ------------------- | ----------------------------- | --------------- |
@@ -170,13 +184,16 @@ Steps:
 | ulanzi-tc001 | 4 | 0x2d0000 | custom_4MB_no_coredump.csv |
 | wemos_lolin_s2_mini | 4 | 0x2d0000 | custom_4MB_no_coredump.csv |
 
-# Issues, Ideas And Bugs
+## Issues, Ideas And Bugs
+
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-# License
+## License
+
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
 Consider the different licenses of the used third party libraries too!
 
-# Contribution
+## Contribution
+
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
 additional terms or conditions.

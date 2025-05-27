@@ -6,7 +6,7 @@
     }
   },
   "iconFileId": 0,
-  "format": "{hc}%0.1f{0x8e}C",
+  "format": "{hc}%0.1f°C",
   "multiplier": 1,
   "offset": 0
 }

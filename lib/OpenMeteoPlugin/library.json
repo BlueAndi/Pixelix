@@ -1,5 +1,5 @@
 {
-    "name": "BTCQuotePlugin",
+    "name": "OpenMeteoPlugin",
     "version": "0.1.0",
     "description": "....",
     "authors": [{
@@ -12,17 +12,13 @@
     "dependencies": [{
         "name": "Logging"
     }, {
-        "name": "AsyncHttpClient"
-    }, {
         "name": "LittleFS"
-    }, {
-        "name": "Os"
     }, {
         "name": "Plugin"
     }, {
-        "name": "YAWidgets"
-    }, {
         "name": "Views"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

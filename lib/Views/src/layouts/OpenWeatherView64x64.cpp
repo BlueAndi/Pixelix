@@ -51,9 +51,9 @@
 /** UV-index element */
 typedef struct
 {
-    uint8_t     lower;  /**< Lower UV-index value */
-    uint8_t     upper;  /**< Upper UV-index value */
-    const char* color;  /**< Color to show in this UV-index range */
+    uint8_t     lower; /**< Lower UV-index value */
+    uint8_t     upper; /**< Upper UV-index value */
+    const char* color; /**< Color to show in this UV-index range */
 
 } UvIndexElem;
 
@@ -89,139 +89,135 @@ typedef struct
  * |          |          |          |          |          |
  * |          |          |          |          |          |
  * +------------------------------------------------------+
-*/
+ */
 
 /**
  * Weather icon of current weather width in pixels.
  */
-static const uint16_t   WEATHER_ICON_CURRENT_WIDTH              = CONFIG_LED_MATRIX_WIDTH;
+static const uint16_t WEATHER_ICON_CURRENT_WIDTH           = CONFIG_LED_MATRIX_WIDTH;
 
 /**
  * Weather icon of current weather height in pixels.
  */
-static const uint16_t   WEATHER_ICON_CURRENT_HEIGHT             = 16U;
+static const uint16_t WEATHER_ICON_CURRENT_HEIGHT          = 16U;
 
 /**
  * Weather icon of current weather widget x-coordinate in pixels.
  * Left aligned.
  */
-static const int16_t    WEATHER_ICON_CURRENT_X                  = 0;
+static const int16_t WEATHER_ICON_CURRENT_X                = 0;
 
 /**
  * Weather icon of current weather widget y-coordinate in pixels.
  * Top aligned.
  */
-static const int16_t    WEATHER_ICON_CURRENT_Y                  = 0;
+static const int16_t WEATHER_ICON_CURRENT_Y                = 0;
 
 /**
  * Text width in pixels.
  */
-static const uint16_t   WEATHER_INFO_TEXT_CURRENT_WIDTH         = CONFIG_LED_MATRIX_WIDTH;
+static const uint16_t WEATHER_INFO_TEXT_CURRENT_WIDTH      = CONFIG_LED_MATRIX_WIDTH;
 
 /**
  * Text height in pixels.
  */
-static const uint16_t   WEATHER_INFO_TEXT_CURRENT_HEIGHT        = 16U;
+static const uint16_t WEATHER_INFO_TEXT_CURRENT_HEIGHT     = 16U;
 
 /**
  * Text widget x-coordinate in pixels.
  * Left aligned, after icon.
  */
-static const int16_t    WEATHER_INFO_TEXT_CURRENT_X             = 0;
+static const int16_t WEATHER_INFO_TEXT_CURRENT_X           = 0;
 
 /**
  * Text widget y-coordinate in pixels.
  */
-static const int16_t    WEATHER_INFO_TEXT_CURRENT_Y             = WEATHER_ICON_CURRENT_Y + WEATHER_ICON_CURRENT_HEIGHT;
+static const int16_t WEATHER_INFO_TEXT_CURRENT_Y           = WEATHER_ICON_CURRENT_Y + WEATHER_ICON_CURRENT_HEIGHT;
 
 /**
  * Forecast weather day name width in pixels.
  */
-static const uint16_t   WEATHER_FORECAST_DAY_WIDTH              = CONFIG_LED_MATRIX_WIDTH / 5U;
+static const uint16_t WEATHER_FORECAST_DAY_WIDTH           = CONFIG_LED_MATRIX_WIDTH / 5U;
 
 /**
  * Forecast weather day name height in pixels.
  */
-static const uint16_t   WEATHER_FORECAST_DAY_HEIGHT             = 8U;
+static const uint16_t WEATHER_FORECAST_DAY_HEIGHT          = 8U;
 
 /**
  * Border used left and right of the weather forecast names in pixels.
  */
-static const int16_t    WEATHER_FORECAST_DAY_BORDER             = (CONFIG_LED_MATRIX_WIDTH - OpenWeatherView64x64::FORECAST_DAYS * WEATHER_FORECAST_DAY_WIDTH) / 2U;
+static const int16_t WEATHER_FORECAST_DAY_BORDER           = (CONFIG_LED_MATRIX_WIDTH - OpenWeatherView64x64::FORECAST_DAYS * WEATHER_FORECAST_DAY_WIDTH) / 2U;
 
 /**
  * Forecast weather day name text widget y-coordinate in pixels.
  */
-static const int16_t    WEATHER_FORECAST_DAY_Y                  = WEATHER_INFO_TEXT_CURRENT_Y + WEATHER_INFO_TEXT_CURRENT_HEIGHT;
+static const int16_t WEATHER_FORECAST_DAY_Y                = WEATHER_INFO_TEXT_CURRENT_Y + WEATHER_INFO_TEXT_CURRENT_HEIGHT;
 
 /**
  * Weather icon of forecast weather width in pixels.
  */
-static const uint16_t   WEATHER_ICON_FORECAST_WIDTH             = WEATHER_FORECAST_DAY_WIDTH;
+static const uint16_t WEATHER_ICON_FORECAST_WIDTH          = WEATHER_FORECAST_DAY_WIDTH;
 
 /**
  * Weather icon of forecast weather height in pixels.
  */
-static const uint16_t   WEATHER_ICON_FORECAST_HEIGHT            = WEATHER_FORECAST_DAY_HEIGHT;
+static const uint16_t WEATHER_ICON_FORECAST_HEIGHT         = WEATHER_FORECAST_DAY_HEIGHT;
 
 /**
  * Border used left and right of the weather forecast icons in pixels.
  */
-static const uint16_t   WEATHER_ICON_FORECAST_BORDER            = WEATHER_FORECAST_DAY_BORDER;
+static const uint16_t WEATHER_ICON_FORECAST_BORDER         = WEATHER_FORECAST_DAY_BORDER;
 
 /**
  * Weather icon of forecast weather bitmap widget y-coordinate in pixels.
  */
-static const uint16_t   WEATHER_ICON_FORECAST_Y                 = WEATHER_FORECAST_DAY_Y + WEATHER_FORECAST_DAY_HEIGHT;
+static const uint16_t WEATHER_ICON_FORECAST_Y              = WEATHER_FORECAST_DAY_Y + WEATHER_FORECAST_DAY_HEIGHT;
 
 /**
  * Weather forecast temperature width in pixels.
  */
-static const uint16_t   WEATHER_FORECAST_TEMPERATURES_WIDTH     = WEATHER_FORECAST_DAY_WIDTH;
+static const uint16_t WEATHER_FORECAST_TEMPERATURES_WIDTH  = WEATHER_FORECAST_DAY_WIDTH;
 
 /**
  * Weather forecast temperature height in pixels.
  */
-static const uint16_t   WEATHER_FORECAST_TEMPERATURES_HEIGHT    = 16U;
+static const uint16_t WEATHER_FORECAST_TEMPERATURES_HEIGHT = 16U;
 
 /**
  * Border used left and right of the weather forecast temperatures in pixels.
  */
-static const uint16_t   WEATHER_FORECAST_TEMPERATURES_BORDER    = WEATHER_ICON_FORECAST_BORDER;
+static const uint16_t WEATHER_FORECAST_TEMPERATURES_BORDER = WEATHER_ICON_FORECAST_BORDER;
 
 /**
  * Weather forecast temperature text widget y-coordinate in pixels.
  */
-static const uint16_t   WEATHER_FORECAST_TEMPERATURES_Y         = WEATHER_ICON_FORECAST_Y + WEATHER_ICON_FORECAST_HEIGHT;
+static const uint16_t WEATHER_FORECAST_TEMPERATURES_Y      = WEATHER_ICON_FORECAST_Y + WEATHER_ICON_FORECAST_HEIGHT;
 
 /** The epsilon is used to compare floats. */
-static const float      EPSILON                                 = 0.0001F;
+static const float EPSILON                                 = 0.0001F;
 
-/* Initialize image path for the weather condition icons. */
-const char* OpenWeatherView64x64::IMAGE_PATH                        = "/plugins/OpenWeatherPlugin/";
+/* Initialize standard icon file name. */
+const char* OpenWeatherView64x64::STD_ICON                 = "std.bmp";
 
-/* Initialize image path for standard icon. */
-const char* OpenWeatherView64x64::IMAGE_PATH_STD_ICON               = "/plugins/OpenWeatherPlugin/openWeather.bmp";
+/* Initialize standard icon file name. */
+const char* OpenWeatherView64x64::STD_ICON_16X16           = "std_16x16.gif";
 
-/* Initialize image path for standard icon. */
-const char* OpenWeatherView64x64::IMAGE_PATH_STD_ICON_16X16         = "/plugins/OpenWeatherPlugin/openWeather_16x16.gif";
+/* Initialize uvi icon file name. */
+const char* OpenWeatherView64x64::UVI_ICON_16X16           = "uvi_16x16.gif";
 
-/* Initialize image path for uvi icon. */
-const char* OpenWeatherView64x64::IMAGE_PATH_UVI_ICON_16X16         = "/plugins/OpenWeatherPlugin/uvi_16x16.gif";
+/* Initialize humidity icon file name. */
+const char* OpenWeatherView64x64::HUMIDITY_ICON_16X16      = "hum_16x16.gif";
 
-/* Initialize image path for humidity icon. */
-const char* OpenWeatherView64x64::IMAGE_PATH_HUMIDITY_ICON_16X16    = "/plugins/OpenWeatherPlugin/hum_16x16.gif";
-
-/* Initialize image path for uvi icon. */
-const char* OpenWeatherView64x64::IMAGE_PATH_WIND_ICON_16X16        = "/plugins/OpenWeatherPlugin/wind_16x16.gif";
+/* Initialize wind icon file name. */
+const char* OpenWeatherView64x64::WIND_ICON_16X16          = "wind_16x16.gif";
 
 /** UV-index table */
-static const UvIndexElem uvIndexTable[] =
-{
-    { 0U,   3U,     "{#c0ffa0}" },
-    { 3U,   6U,     "{#f8f140}" },
-    { 6U,   8U,     "{#f77820}" },
-    { 8U,   11U,    "{#d80020}" }
+static const UvIndexElem uvIndexTable[]                    = {
+    { 0U, 3U, "{#c0ffa0}" },
+    { 3U, 6U, "{#f8f140}" },
+    { 6U, 8U, "{#f77820}" },
+    { 8U, 11U, "{#d80020}" }
 };
 
 /******************************************************************************
@@ -231,6 +227,7 @@ static const UvIndexElem uvIndexTable[] =
 OpenWeatherView64x64::OpenWeatherView64x64() :
     IOpenWeatherView(),
     m_fontType(Fonts::FONT_TYPE_LARGE),
+    m_imagePath(nullptr),
     m_weatherIconCurrent(WEATHER_ICON_CURRENT_WIDTH, WEATHER_ICON_CURRENT_HEIGHT, WEATHER_ICON_CURRENT_X, WEATHER_ICON_CURRENT_Y),
     m_weatherInfoCurrentText(WEATHER_INFO_TEXT_CURRENT_WIDTH, WEATHER_INFO_TEXT_CURRENT_HEIGHT, WEATHER_INFO_TEXT_CURRENT_X, WEATHER_INFO_TEXT_CURRENT_Y),
     m_forecastDayNames{
@@ -256,7 +253,8 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
     },
     m_viewDurationTimer(),
     m_viewDuration(0U),
-    m_units("metric"),
+    m_temperatureUnit(),
+    m_windSpeedUnit(),
     m_weatherInfo(WEATHER_INFO_ALL),
     m_weatherInfoId(0U),
     m_weatherInfoCurrent(),
@@ -270,11 +268,11 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
 
     m_weatherIconCurrent.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     m_weatherIconCurrent.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
-    
+
     m_weatherInfoCurrentText.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     m_weatherInfoCurrentText.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
 
-    for(day = 0U; day < FORECAST_DAYS; ++day)
+    for (day = 0U; day < FORECAST_DAYS; ++day)
     {
         m_forecastDayNames[day].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
         m_forecastDayNames[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
@@ -299,7 +297,7 @@ void OpenWeatherView64x64::update(YAGfx& gfx)
     m_weatherIconCurrent.update(gfx);
     m_weatherInfoCurrentText.update(gfx);
 
-    for(day = 0U; day < FORECAST_DAYS; ++day)
+    for (day = 0U; day < FORECAST_DAYS; ++day)
     {
         m_forecastDayNames[day].update(gfx);
         m_forecastIcons[day].update(gfx);
@@ -320,8 +318,8 @@ void OpenWeatherView64x64::setWeatherInfoCurrent(const WeatherInfoCurrent& info)
             m_isWeatherIconCurrentUpdated = true;
         }
 
-        m_weatherInfoCurrent            = info;
-        m_isWeatherInfoCurrentUpdated   = true;
+        m_weatherInfoCurrent          = info;
+        m_isWeatherInfoCurrentUpdated = true;
     }
 }
 
@@ -338,8 +336,8 @@ void OpenWeatherView64x64::setWeatherInfoForecast(uint8_t day, const WeatherInfo
                 m_isWeatherIconForecastUpdated[day] = true;
             }
 
-            m_weatherInfoForecast[day]      = info;
-            m_isWeatherInfoForecastUpdated  = true;
+            m_weatherInfoForecast[day]     = info;
+            m_isWeatherInfoForecastUpdated = true;
         }
     }
 }
@@ -357,7 +355,7 @@ uint8_t OpenWeatherView64x64::getWeatherInfoCount() const
     uint8_t count = 0U;
     uint8_t id;
 
-    for(id = 0U; id < 8U; ++id)
+    for (id = 0U; id < 8U; ++id)
     {
         if (0U < (m_weatherInfo & (1U << id)))
         {
@@ -380,7 +378,6 @@ void OpenWeatherView64x64::nextWeatherInfo()
             {
                 m_weatherInfoId = 0U;
             }
-
         }
         while (0U == (m_weatherInfo & (1U << m_weatherInfoId)));
     }
@@ -396,11 +393,12 @@ void OpenWeatherView64x64::updateWeatherInfoCurrentOnView()
     String iconFullPath;
     String text;
 
-    switch(getActiveWeatherInfo())
+    switch (getActiveWeatherInfo())
     {
     case WEATHER_INFO_EMPTY:
-        iconFullPath = IMAGE_PATH_STD_ICON_16X16;
-        text = "-";
+        iconFullPath  = m_imagePath;
+        iconFullPath += STD_ICON_16X16;
+        text          = "-";
         break;
 
     case WEATHER_INFO_TEMPERATURE:
@@ -408,33 +406,37 @@ void OpenWeatherView64x64::updateWeatherInfoCurrentOnView()
 
         if (true == iconFullPath.isEmpty())
         {
-            iconFullPath = IMAGE_PATH_STD_ICON_16X16;
+            iconFullPath  = m_imagePath;
+            iconFullPath += STD_ICON_16X16;
         }
 
         appendTemperature(text, m_weatherInfoCurrent.temperature);
         break;
-        
+
     case WEATHER_INFO_HUMIDITY:
-        iconFullPath = IMAGE_PATH_HUMIDITY_ICON_16X16;
+        iconFullPath  = m_imagePath;
+        iconFullPath += HUMIDITY_ICON_16X16;
 
         appendHumidity(text, m_weatherInfoCurrent.humidity);
         break;
-        
+
     case WEATHER_INFO_WIND_SPEED:
-        iconFullPath = IMAGE_PATH_WIND_ICON_16X16;
+        iconFullPath  = m_imagePath;
+        iconFullPath += WIND_ICON_16X16;
 
         appendWindSpeed(text, m_weatherInfoCurrent.windSpeed);
         break;
-        
+
     case WEATHER_INFO_UV_INDEX:
-        iconFullPath = IMAGE_PATH_UVI_ICON_16X16;
+        iconFullPath  = m_imagePath;
+        iconFullPath += UVI_ICON_16X16;
 
         appendUvIndex(text, m_weatherInfoCurrent.uvIndex);
         break;
-        
+
     default:
-        iconFullPath = IMAGE_PATH_STD_ICON_16X16;
-        text = "-";
+        iconFullPath  = m_imagePath;
+        iconFullPath += STD_ICON_16X16;
         break;
     }
 
@@ -450,20 +452,20 @@ void OpenWeatherView64x64::updateWeatherInfoCurrentOnView()
 
 void OpenWeatherView64x64::updateWeatherInfoForecastOnView()
 {
-    int8_t      day;
-    ClockDrv&   clockDrv            = ClockDrv::getInstance();
-    struct tm   timeInfo            = { 0 };
-    bool        isClockAvailable    = clockDrv.getTime(timeInfo);
-    uint8_t     nextDayOfWeek       = static_cast<uint8_t>(timeInfo.tm_wday + 1) % 7U;
-    
-    for(day = 0U; day < FORECAST_DAYS; ++day)
+    int8_t    day;
+    ClockDrv& clockDrv         = ClockDrv::getInstance();
+    struct tm timeInfo         = { 0 };
+    bool      isClockAvailable = clockDrv.getTime(timeInfo);
+    uint8_t   nextDayOfWeek    = static_cast<uint8_t>(timeInfo.tm_wday + 1) % 7U;
+
+    for (day = 0U; day < FORECAST_DAYS; ++day)
     {
         String temperatures;
 
         if (true == isClockAvailable)
         {
-            const uint32_t  MAX_DAY_NAME_BUFFER_SIZE = 32U;
-            char            dayName[MAX_DAY_NAME_BUFFER_SIZE];
+            const uint32_t MAX_DAY_NAME_BUFFER_SIZE = 32U;
+            char           dayName[MAX_DAY_NAME_BUFFER_SIZE];
 
             timeInfo.tm_wday = nextDayOfWeek;
             if (0U != strftime(dayName, sizeof(dayName), "%a", &timeInfo))
@@ -486,7 +488,8 @@ void OpenWeatherView64x64::updateWeatherInfoForecastOnView()
 
             if (true == iconFullPath.isEmpty())
             {
-                iconFullPath = IMAGE_PATH_STD_ICON;
+                iconFullPath  = m_imagePath;
+                iconFullPath += STD_ICON;
             }
 
             (void)m_forecastIcons[day].load(FILESYSTEM, iconFullPath);
@@ -506,9 +509,9 @@ void OpenWeatherView64x64::handleWeatherInfo()
     /* First time of weather info handling? */
     if (false == m_viewDurationTimer.isTimerRunning())
     {
-        uint32_t duration           = (0U == m_viewDuration) ? VIEW_DURATION_DEFAULT : m_viewDuration;
-        uint8_t  weatherInfoCount   = getWeatherInfoCount();
-        uint32_t minDuration        = (0U == weatherInfoCount) ? VIEW_DURATION_MIN : duration / weatherInfoCount;
+        uint32_t duration         = (0U == m_viewDuration) ? VIEW_DURATION_DEFAULT : m_viewDuration;
+        uint8_t  weatherInfoCount = getWeatherInfoCount();
+        uint32_t minDuration      = (0U == weatherInfoCount) ? VIEW_DURATION_MIN : duration / weatherInfoCount;
 
         if (VIEW_DURATION_MIN > minDuration)
         {
@@ -519,14 +522,14 @@ void OpenWeatherView64x64::handleWeatherInfo()
          * weather info was triggered.
          */
         m_isWeatherIconCurrentUpdated = true;
-        for(uint8_t day = 0U; day < FORECAST_DAYS; ++day)
+        for (uint8_t day = 0U; day < FORECAST_DAYS; ++day)
         {
             m_isWeatherIconForecastUpdated[day] = true;
         }
 
         updateWeatherInfoCurrentOnView();
         updateWeatherInfoForecastOnView();
-        
+
         m_viewDurationTimer.start(minDuration);
     }
     /* Update weather info periodically. */
@@ -566,14 +569,17 @@ void OpenWeatherView64x64::handleWeatherInfo()
     }
 }
 
-void OpenWeatherView64x64::getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId, const String&addition) const
+void OpenWeatherView64x64::getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId, const String& addition) const
 {
     fullPath.clear();
 
     if (false == weatherIconId.isEmpty())
     {
-        String fullPathWithoutExt   = IMAGE_PATH + weatherIconId;
-        String fullPathToIcon       = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
+        String fullPathWithoutExt = m_imagePath;
+        String fullPathToIcon;
+
+        fullPathWithoutExt += weatherIconId;
+        fullPathToIcon      = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
 
         /* No specific bitmap icon available? */
         if (false == FILESYSTEM.exists(fullPathToIcon))
@@ -582,7 +588,8 @@ void OpenWeatherView64x64::getIconPathByWeatherIconId(String& fullPath, const St
             fullPathToIcon = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_GIF;
             if (false == FILESYSTEM.exists(fullPathToIcon))
             {
-                fullPathWithoutExt  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
+                fullPathWithoutExt  = m_imagePath;
+                fullPathWithoutExt += weatherIconId.substring(0U, weatherIconId.length() - 1U);
                 fullPathToIcon      = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
 
                 /* No generic bitmap icon available? */
@@ -615,10 +622,10 @@ void OpenWeatherView64x64::getIconPathByWeatherIconId(String& fullPath, const St
 
 const char* OpenWeatherView64x64::uvIndexToColor(uint8_t uvIndex)
 {
-    uint8_t     idx     = 0U;
-    const char* color   = "{#a80081}"; /* Default color */
+    uint8_t     idx   = 0U;
+    const char* color = "{#a80081}"; /* Default color */
 
-    while(UTIL_ARRAY_NUM(uvIndexTable) > idx)
+    while (UTIL_ARRAY_NUM(uvIndexTable) > idx)
     {
         if ((uvIndexTable[idx].lower <= uvIndex) &&
             (uvIndexTable[idx].upper > uvIndex))
@@ -637,8 +644,8 @@ void OpenWeatherView64x64::appendTemperature(String& dst, float temperature, boo
 {
     if (false == std::isnan(temperature))
     {
-        const char* reducePrecision         = (false == noFraction) ? (temperature < -9.9F) ? "%.0f" : "%.1f" : "%.0f";
-        char        tempReducedPrecison[6]  = { 0 };
+        const char* reducePrecision        = (false == noFraction) ? (temperature < -9.9F) ? "%.0f" : "%.1f" : "%.0f";
+        char        tempReducedPrecison[6] = { 0 };
 
         /* Generate temperature string with reduced precision and add unit °C/°F. */
         (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
@@ -647,18 +654,7 @@ void OpenWeatherView64x64::appendTemperature(String& dst, float temperature, boo
 
         if (false == noUnit)
         {
-            if (m_units == "default")
-            {
-                dst += "°K";
-            }
-            else if (m_units == "metric")
-            {
-                dst += "°C";
-            }
-            else
-            {
-                dst += "°F";
-            }
+            dst += m_temperatureUnit;
         }
     }
     else
@@ -682,19 +678,7 @@ void OpenWeatherView64x64::appendWindSpeed(String& dst, float windSpeed)
         (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
 
         dst += windReducedPrecison;
-
-        if (m_units == "default")
-        {
-            dst += "m/s";
-        }
-        else if (m_units == "metric")
-        {
-            dst += "m/s";
-        }
-        else
-        {
-            dst += "mph";
-        }
+        dst += m_windSpeedUnit;
     }
     else
     {

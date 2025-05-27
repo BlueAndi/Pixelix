@@ -50,8 +50,12 @@
  * Macros
  *****************************************************************************/
 
-/** The number of sensor topics: temperature, humidity, illuminance and battery */
-#define SENSOR_TOPICS_COUNT (4U)
+/**
+ * The number of sensor topics: temperature, humidity, illuminance, battery,
+ * available heap memory, lowest level of available heap memory since boot and
+ * largest block of heap memory that can be allocated.
+ */
+#define SENSOR_TOPICS_COUNT (7U)
 
 /******************************************************************************
  * Types and classes
@@ -85,7 +89,10 @@ typedef struct
 /* Initialize file name where to find the sensor calibration values. */
 const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME      = "/configuration/sensors.json";
 
-/** The provided sensor topics. */
+/**
+ * The provided sensor topics.
+ * Note: Each channel type must be unique, otherwise the first one will be used.
+ */
 static const SensorTopic gSensorTopics[SENSOR_TOPICS_COUNT] = {
     { ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS,
         "/extra/temperature.json",
@@ -98,11 +105,23 @@ static const SensorTopic gSensorTopics[SENSOR_TOPICS_COUNT] = {
         10000U },
     { ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT,
         "/extra/battery.json",
+        10000U },
+    { ISensorChannel::TYPE_FREE_HEAP_BYTES,
+        "/extra/heapAvailable.json",
+        10000U },
+    { ISensorChannel::TYPE_MIN_FREE_HEAP_BYTES,
+        "/extra/heapLowest.json",
+        10000U },
+    { ISensorChannel::TYPE_MAX_ALLOC_HEAP_BYTES,
+        "/extra/heapLargest.json",
         10000U }
 };
 
 /** The runtime sensor topic data. */
 static SensorTopicRunData gSensorLastValue[SENSOR_TOPICS_COUNT] = {
+    { String(), 0U },
+    { String(), 0U },
+    { String(), 0U },
     { String(), 0U },
     { String(), 0U },
     { String(), 0U },
@@ -318,7 +337,7 @@ bool SensorDataProvider::save()
 
                     if (nullptr == channel)
                     {
-                        jsonChannels.add("null");
+                        (void)jsonChannels.add("null");
                     }
                     else
                     {
@@ -378,36 +397,36 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
     switch (channel.getDataType())
     {
     case ISensorChannel::DataType::DATA_TYPE_INVALID:
-        jsonOffset.add("NaN");
+        (void)jsonOffset.add("NaN");
         break;
 
     case ISensorChannel::DataType::DATA_TYPE_UINT32: {
         const SensorChannelUInt32* uint32Channel = reinterpret_cast<const SensorChannelUInt32*>(&channel);
 
-        jsonOffset.add(uint32Channel->getOffset());
+        (void)jsonOffset.add(uint32Channel->getOffset());
     }
     break;
 
     case ISensorChannel::DataType::DATA_TYPE_INT32: {
         const SensorChannelInt32* int32Channel = reinterpret_cast<const SensorChannelInt32*>(&channel);
 
-        jsonOffset.add(int32Channel->getOffset());
+        (void)jsonOffset.add(int32Channel->getOffset());
     }
     break;
 
     case ISensorChannel::DataType::DATA_TYPE_FLOAT32: {
         const SensorChannelFloat32* float32Channel = reinterpret_cast<const SensorChannelFloat32*>(&channel);
 
-        jsonOffset.add(float32Channel->getOffset());
+        (void)jsonOffset.add(float32Channel->getOffset());
     }
     break;
 
     case ISensorChannel::DataType::DATA_TYPE_BOOL:
-        jsonOffset.add("NaN");
+        (void)jsonOffset.add("NaN");
         break;
 
     default:
-        jsonOffset.add("NaN");
+        (void)jsonOffset.add("NaN");
         break;
     }
 }

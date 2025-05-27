@@ -25,16 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  BTCQuotePlugin view
+ * @brief  Heap memory observer driver
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "View.h"
-
-using namespace _BTCQuotePlugin;
+#include "SensorHeap.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -56,12 +54,34 @@ using namespace _BTCQuotePlugin;
  * Local Variables
  *****************************************************************************/
 
-/* Initialize icon path. */
-const char* View::ICON_PATH = "/plugins/BTCQuotePlugin/btc_usd.gif";
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+ISensorChannel* SensorHeap::getChannel(uint8_t index)
+{
+    ISensorChannel* channel = nullptr;
+
+    switch (index)
+    {
+    case 0U:
+        channel = &m_freeHeapChannel;
+        break;
+
+    case 1U:
+        channel = &m_minFreeHeapChannel;
+        break;
+
+    case 2U:
+        channel = &m_maxAllocHeapChannel;
+        break;
+
+    default:
+        break;
+    }
+
+    return channel;
+}
 
 /******************************************************************************
  * Protected Methods

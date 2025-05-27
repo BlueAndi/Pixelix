@@ -54,10 +54,10 @@
  *****************************************************************************/
 
 /** Get number of array elements. */
-#define UTIL_ARRAY_NUM(__arr)   (sizeof(__arr) / sizeof((__arr)[0]))
+#define UTIL_ARRAY_NUM(__arr) (sizeof(__arr) / sizeof((__arr)[0]))
 
 /** Use it to mark not used function parameters. */
-#define UTIL_NOT_USED(__var)    (void)(__var)
+#define UTIL_NOT_USED(__var) (void)(__var)
 
 /******************************************************************************
  * Types and Classes
@@ -188,11 +188,11 @@ extern uint32_t hexToUInt32(const String& str);
 
 /**
  * Minimum between two values, used for compile time calculations.
- * 
+ *
  * @tparam      T    Value type
  * @param[in]   valA Value A
  * @param[in]   valB Value B
- * 
+ *
  * @return The minimum value between A and B.
  */
 template < typename T >
@@ -203,11 +203,11 @@ constexpr T min(T valA, T valB)
 
 /**
  * Maximum between two values, used for compile time calculations.
- * 
+ *
  * @tparam      T    Value type
  * @param[in]   valA Value A
  * @param[in]   valB Value B
- * 
+ *
  * @return The maximum value between A and B.
  */
 template < typename T >
@@ -218,23 +218,34 @@ constexpr T max(T valA, T valB)
 
 /**
  * Convert color to HTML format.
- * 
+ *
  * @param[in] color Color
- * 
+ *
  * @return Color in HTML format
  */
 extern String colorToHtml(const Color& color);
 
 /**
  * Convert color from HTML format.
- * 
+ *
  * @param[in] htmlColor Color in HTML format
- * 
+ *
  * @return Color
  */
 extern Color colorFromHtml(const String& htmlColor);
-}
 
-#endif  /* UTILITY_H */
+/**
+ * Check if a format specifier is in a string.
+ *
+ * @param[in] str       String
+ * @param[in] specifier Format specifier
+ *
+ * @return If the format specifier is in the string, it will return true otherwise false.
+ */
+bool isFormatSpecifierInStr(const String& str, char specifier);
+
+} /* namespace Util */
+
+#endif /* UTILITY_H */
 
 /** @} */

@@ -78,7 +78,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -90,7 +90,7 @@ public:
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the view uses.
      */
     Fonts::FontType getFontType() const override
@@ -100,7 +100,7 @@ public:
 
     /**
      * Set font type.
-     * 
+     *
      * @param[in] fontType  The font type which the view shall use.
      */
     void setFontType(Fonts::FontType fontType) override
@@ -111,18 +111,28 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override;
 
     /**
+     * Set the image path for the weather condition icons.
+     * 
+     * @param[in] path  The image path for the weather condition icons.
+     */
+    void setImagePath(const char* path) override
+    {
+        m_imagePath = path;
+    }
+
+    /**
      * Set the duration in ms, how long the view will be shown on the display.
      * It will be used to derive how long every enabled weather info is shown.
      * All enabled weather infos together will be equal to the configured duration.
-     * 
+     *
      * Note, the view itself decides whether to use it or not.
-     * 
+     *
      * @param[in] duration  View duration in ms
      */
     void setViewDuration(uint32_t duration) override
@@ -137,19 +147,29 @@ public:
     }
 
     /**
-     * Set the units to use temperature and wind speed.
-     * 
-     * @param[in] units The units which to set.
+     * Set the unit to use temperature.
+     *
+     * @param[in] unit The temperature unit.
      */
-    void setUnits(const String& units) override
+    void setTemperatureUnit(const String& unit) override
     {
-        m_units = units;
+        m_temperatureUnit = unit;
+    }
+
+    /**
+     * Set the unit to use wind speed.
+     *
+     * @param[in] unit The wind speed unit.
+     */
+    void setWindSpeedUnit(const String& unit) override
+    {
+        m_windSpeedUnit = unit;
     }
 
     /**
      * Get the enabled weather information.
      * See WeatherInfo for every bit.
-     * 
+     *
      * @return Weather information which is enabled.
      */
     uint8_t getWeatherInfo() const override
@@ -160,7 +180,7 @@ public:
     /**
      * Set weather information, which shall be shown.
      * Use the bitfield WeatherInfo to combine the information by OR.
-     * 
+     *
      * @param[in] weatherInfo   The weather info which to show.
      */
     void setWeatherInfo(uint8_t weatherInfo) override
@@ -168,7 +188,7 @@ public:
         if (m_weatherInfo != weatherInfo)
         {
             m_weatherInfo = weatherInfo;
-            
+
             restartWeatherInfo();
 
             /* Force recalculation of the duration of every weather info. */
@@ -190,19 +210,19 @@ public:
 
     /**
      * Set current weather information.
-     * 
+     *
      * @param[in] info  Weather information
      */
     void setWeatherInfoCurrent(const WeatherInfoCurrent& info) override;
 
     /**
      * Set forecast weather information.
-     * 
+     *
      * Meaning of day:
      * - 0: Forecast for the next day
      * - 1: Forecast in two days
      * - N: Forecast in N days
-     * 
+     *
      * @param[in] day   Weather information for the upcoming day [0; 4].
      * @param[in] info  Weather information
      */
@@ -213,7 +233,7 @@ public:
 
     /**
      * Is the weather forecast feature supported by the view?
-     * 
+     *
      * @return If feature is supported, it will return true otherwise false.
      */
     static constexpr bool isWeatherForecastSupported()
@@ -224,60 +244,58 @@ public:
 protected:
 
     /**
-     * Image path within the filesystem to weather condition icons.
+     * Standard icon file name for 8x8 pixel.
      */
-    static const char*      IMAGE_PATH;
+    static const char* STD_ICON;
 
     /**
-     * Image path within the filesystem to standard icon.
+     * UV index icon file name for 8x8 pixel.
      */
-    static const char*      IMAGE_PATH_STD_ICON;
+    static const char* UVI_ICON;
 
     /**
-     * Image path within the filesystem to UV index icon.
+     * Humidity icon file name for 8x8 pixel.
      */
-    static const char*      IMAGE_PATH_UVI_ICON;
+    static const char* HUMIDITY_ICON;
 
     /**
-     * Image path within the filesystem to humidity icon.
+     * Windspeed icon file name for 8x8 pixel.
      */
-    static const char*      IMAGE_PATH_HUMIDITY_ICON;
-
-    /**
-     * Image path within the filesystem to windspeed icon.
-     */
-    static const char*      IMAGE_PATH_WIND_ICON;
+    static const char* WIND_ICON;
 
     /**
      * Default duration in ms used for the view.
      * If the view duration is INFINITE (value is 0), the default one is used.
      */
-    static const uint32_t   VIEW_DURATION_DEFAULT   = SIMPLE_TIMER_SECONDS(30U);
+    static const uint32_t VIEW_DURATION_DEFAULT = SIMPLE_TIMER_SECONDS(30U);
 
     /**
      * Minimum duration of one single weather information in ms used by the view.
      */
-    static const uint32_t   VIEW_DURATION_MIN       = SIMPLE_TIMER_SECONDS(4U);
+    static const uint32_t VIEW_DURATION_MIN     = SIMPLE_TIMER_SECONDS(4U);
 
-    Fonts::FontType     m_fontType;                     /**< Font type which shall be used if there is no conflict with the layout. */
-    BitmapWidget        m_weatherIconCurrent;           /**< Current weather icon. */
-    TextWidget          m_weatherInfoCurrentText;       /**< Current weather info text. */
-    uint32_t            m_viewDuration;                 /**< The duration in ms, this view will be shown on the display. */
-    SimpleTimer         m_viewDurationTimer;            /**< The timer used to determine which weather info to show on the display. */
-    String              m_units;                        /**< Units (default, metric, imperial) */
-    uint8_t             m_weatherInfo;                  /**< Use the bits to determine which weather info to show. */
-    uint8_t             m_weatherInfoId;                /**< The weather info id is used to mask the weather info flag. Its the number of bit shifts. */
-    WeatherInfoCurrent  m_weatherInfoCurrent;           /**< Current weather information. */
-    bool                m_isWeatherInfoCurrentUpdated;  /**< Is current weather info updated? */
-    bool                m_isWeatherIconCurrentUpdated;  /**< Is the current weather icon updated in the weather info? */
+    Fonts::FontType       m_fontType;                    /**< Font type which shall be used if there is no conflict with the layout. */
+    const char*           m_imagePath;                   /**< Image path within the filesystem to weather condition icons. */
+    BitmapWidget          m_weatherIconCurrent;          /**< Current weather icon. */
+    TextWidget            m_weatherInfoCurrentText;      /**< Current weather info text. */
+    uint32_t              m_viewDuration;                /**< The duration in ms, this view will be shown on the display. */
+    SimpleTimer           m_viewDurationTimer;           /**< The timer used to determine which weather info to show on the display. */
+    String                m_temperatureUnit;             /**< Temperature unit */
+    String                m_windSpeedUnit;               /**< Wind speed unit */
+    uint8_t               m_weatherInfo;                 /**< Use the bits to determine which weather info to show. */
+    uint8_t               m_weatherInfoId;               /**< The weather info id is used to mask the weather info flag. Its the number of bit shifts. */
+    WeatherInfoCurrent    m_weatherInfoCurrent;          /**< Current weather information. */
+    bool                  m_isWeatherInfoCurrentUpdated; /**< Is current weather info updated? */
+    bool                  m_isWeatherIconCurrentUpdated; /**< Is the current weather icon updated in the weather info? */
 
 private:
+
     OpenWeatherView32x8(const OpenWeatherView32x8& other);
     OpenWeatherView32x8& operator=(const OpenWeatherView32x8& other);
 
     /**
      * Get number of enabled weather infos.
-     * 
+     *
      * @return Count of weather infos
      */
     uint8_t getWeatherInfoCount() const;
@@ -289,8 +307,8 @@ private:
 
     /**
      * Get current active weather info.
-     * 
-     * @return Weather info 
+     *
+     * @return Weather info
      */
     WeatherInfo getActiveWeatherInfo() const;
 
@@ -307,22 +325,22 @@ private:
 
     /**
      * Get the full path to the icon in the filesystem by the weather icon id.
-     * 
+     *
      * @param[out]  fullPath        Full path to icon in the filesystem.
      * @param[in]   weatherIconId   The weather icon id.
      * @param[in]   addition        The addition will be added at the tail of the filename.
      */
-    void getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId, const String&addition) const;
+    void getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId, const String& addition) const;
 
     /**
      * Map the UV index value to a color corresponding the the icon.
-    */
+     */
     const char* uvIndexToColor(uint8_t uvIndex);
 
     /**
      * Appends temperature to destination string.
      * If value is invalid, it will write "-".
-     * 
+     *
      * @param[out]  dst             Destination string
      * @param[in]   temperature     Temperature
      * @param[in]   noFraction      No fraction required
@@ -332,7 +350,7 @@ private:
 
     /**
      * Appends humidity with unit to destination string.
-     * 
+     *
      * @param[out]  dst         Destination string
      * @param[in]   humidity    Humidity
      */
@@ -341,7 +359,7 @@ private:
     /**
      * Appends wind speed with unit to destination string.
      * If value is invalid, it will write "-".
-     * 
+     *
      * @param[out]  dst         Destination string
      * @param[in]   windSpeed   Wind speed
      */
@@ -350,7 +368,7 @@ private:
     /**
      * Appends uv-index with unit to destination string.
      * If value is invalid, it will write "-".
-     * 
+     *
      * @param[out]  dst     Destination string
      * @param[in]   uvIndex UV-index
      */
@@ -361,6 +379,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* OPEN_WEATHER_VIEW_32X8_H */
+#endif /* OPEN_WEATHER_VIEW_32X8_H */
 
 /** @} */
