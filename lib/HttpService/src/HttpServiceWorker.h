@@ -58,7 +58,7 @@
 /**
  * The HTTP service worker handles the HTTP requests in the context of a task.
  */
-class HttpServiceWorker : public Task<WorkerQueues>
+class HttpServiceWorker : public Task<WorkerData>
 {
 public:
 
@@ -66,7 +66,7 @@ public:
      * Constructs the HTTP service worker.
      */
     HttpServiceWorker() :
-        Task<WorkerQueues>("HttpServiceWorkerTask")
+        Task<WorkerData>("HttpServiceWorkerTask", DEFAULT_STACK_SIZE)
     {
         ;
     }
@@ -80,6 +80,12 @@ public:
     }
 
 private:
+
+    /** Default stack size for the worker task. */
+    static const size_t DEFAULT_STACK_SIZE                        = 8192U;
+
+    /** Maximum wait time for mutex operations. */
+    static const TickType_t MAX_WAIT_TIME                         = pdMS_TO_TICKS(100U);
 
     /**
      * Copy constructor not allowed.
@@ -100,46 +106,28 @@ private:
     /**
      * Process the worker task.
      *
-     * @param[in] queues    Worker queues used for communication.
+     * @param[in] data  Worker data used for communication.
      */
-    void process(WorkerQueues* queues) final;
+    void process(WorkerData* data) final;
 
     /**
      * Perform the HTTP request.
      *
-     * @param[in]  workerReq        HTTP request to perform.
-     * @param[out] workerRsp        HTTP response.
-     * @param[in]  abortJobQueue    Queue to store aborted job ids.
-     * @param[in]  abortedJobQueue  Queue to signal aborted job ids.
+     * @param[in]  request      Worker request.
+     * @param[out] response     Worker response.
+     * @param[in]  mutex        Mutex to protect the worker data.
+     * @param[in]  jobToAbort   Job id to abort.
      */
-    void performHttpRequest(const WorkerRequest& workerReq, WorkerResponse& workerRsp, Queue<HttpJobId>& abortJobQueue, Queue<HttpJobId>& abortedJobQueue);
+    void performHttpRequest(const WorkerRequest& request, WorkerResponse& response, Mutex& mutex, HttpJobId& jobToAbort);
 
     /**
      * Handle the HTTP response.
      *
      * @param[in]  httpClient   HTTP client which holds the response.
      * @param[in]  handler      Optional response handler which will be called when the response is available.
-     * @param[out] workerRsp    HTTP response.
+     * @param[out] response     Worker response.
      */
-    void handleHttpResponse(HTTPClient& httpClient, IHttpResponseHandler* handler, WorkerResponse& workerRsp);
-
-    /**
-     * Check if the job id is aborted.
-     *
-     * @param[in] abortJobQueue Queue to store aborted job ids.
-     * @param[in] jobId         Job id to check.
-     *
-     * @return If the job id is aborted, it will return true otherwise false.
-     */
-    bool isJobAborted(Queue<HttpJobId>& abortedJobQueue, HttpJobId jobId);
-
-    /**
-     * Signal that the job id is aborted.
-     *
-     * @param[in] abortedJobQueue   Queue to store aborted job ids.
-     * @param[in] jobId             Job id to signal as aborted.
-     */
-    void signalJobAborted(Queue<HttpJobId>& abortedJobQueue, HttpJobId jobId);
+    void handleHttpResponse(HTTPClient& httpClient, IHttpResponseHandler* handler, WorkerResponse& response);
 };
 
 /******************************************************************************

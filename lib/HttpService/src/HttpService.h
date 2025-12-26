@@ -43,7 +43,6 @@
 #include <IService.hpp>
 #include <Mutex.hpp>
 #include <Task.hpp>
-#include <Queue.hpp>
 #include <WString.h>
 #include <HTTPClient.h>
 #include <vector>
@@ -111,8 +110,6 @@ public:
      * worker task when the response streams in. Its not allowed to call any
      * HttpService methods from within the response handler.
      *
-     * Attention, the URL must remain valid until the response is received.
-     *
      * @param[in] url       URL of the HTTP GET request.
      * @param[in] handler   Optional response handler which will be called when the response is available.
      *
@@ -127,7 +124,7 @@ public:
      * worker task when the response streams in. Its not allowed to call any
      * HttpService methods from within the response handler.
      *
-     * Attention, the URL and payload must remain valid until the response is received.
+     * Attention, the payload must remain valid until the response is received.
      *
      * @param[in] url     URL of the HTTP POST request.
      * @param[in] payload Payload of the HTTP POST request.
@@ -171,37 +168,13 @@ private:
      */
     typedef std::vector<WorkerResponse> WorkerResponseList;
 
-    /**
-     * Length of the worker request queue.
-     * Because of the abort mechanism, only one request is allowed at a time.
-     */
-    static const size_t WORKER_REQUEST_QUEUE_LENGTH = 1U;
-
-    /**
-     * Length of the worker response queue.
-     * Because of the abort mechanism, only one response is allowed at a time.
-     */
-    static const size_t WORKER_RESPONSE_QUEUE_LENGTH = 1U;
-
-    /**
-     * Length of the abort job queue.
-     * Because of the abort mechanism, only one request is allowed at a time.
-     */
-    static const size_t WORKER_ABORT_JOB_QUEUE_LENGTH = 1U;
-
-    /**
-     * Length of the aborted job queue.
-     * Because of the abort mechanism, only one aborted job is allowed at a time.
-     */
-    static const size_t WORKER_ABORTED_JOB_QUEUE_LENGTH = 1U;
-
     Mutex               m_mutex;        /**< Mutex to protect against concurrent access. */
     bool                m_isRunning;    /**< Signals the status of the service. True means it is running, false means it is stopped. */
     WorkerRequestList   m_requestList;  /**< List to store pending HTTP requests. */
     WorkerResponseList  m_responseList; /**< List to store received HTTP responses. */
     HttpJobId           m_jobIdCounter; /**< Counter to generate unique job ids. */
     HttpJobId           m_activeJobId;  /**< Currently active job id. */
-    WorkerQueues        m_workerQueues; /**< Queues for worker task. */
+    WorkerData          m_workerData;   /**< Data for worker task. */
     HttpServiceWorker   m_worker;       /**< Worker context for the worker task. */
 
     /**
@@ -215,7 +188,7 @@ private:
         m_responseList(),
         m_jobIdCounter(INVALID_HTTP_JOB_ID),
         m_activeJobId(INVALID_HTTP_JOB_ID),
-        m_workerQueues(),
+        m_workerData(),
         m_worker()
     {
     }
