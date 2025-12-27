@@ -174,8 +174,6 @@ bool SlotList::setPlugin(uint8_t slotId, IPluginMaintenance* plugin)
         {
             m_stickySlot = SLOT_ID_INVALID;
         }
-
-        isSuccessful = true;
     }
 
     return isSuccessful;
