@@ -133,7 +133,7 @@ extern AmbientLight::AmbientLightLevel AmbientLight::getAmbientLightLevel(float 
     uint8_t             levelIndex  = 0U;
     AmbientLightLevel   level       = AMBIENT_LIGHT_LEVEL_MAX;
 
-    while((AMBIENT_LIGHT_LEVEL_MAX >= levelIndex) && (AMBIENT_LIGHT_LEVEL_MAX == level))
+    while((AMBIENT_LIGHT_LEVEL_MAX > levelIndex) && (AMBIENT_LIGHT_LEVEL_MAX == level))
     {
         if (gAmbientLightLevels[levelIndex] >= illuminance)
         {
