@@ -74,7 +74,8 @@ Slot::~Slot()
 Slot::Slot(const Slot& slot) :
     m_plugin(slot.m_plugin),
     m_duration(slot.m_duration),
-    m_isLocked(slot.m_isLocked)
+    m_isLocked(slot.m_isLocked),
+    m_isDisabled(slot.m_isDisabled)
 {
 }
 
@@ -82,9 +83,10 @@ Slot& Slot::operator=(const Slot& slot)
 {
     if (this != (&slot))
     {
-        m_plugin    = slot.m_plugin;
-        m_duration  = slot.m_duration;
-        m_isLocked  = slot.m_isLocked;
+        m_plugin     = slot.m_plugin;
+        m_duration   = slot.m_duration;
+        m_isLocked   = slot.m_isLocked;
+        m_isDisabled = slot.m_isDisabled;
     }
 
     return *this;
