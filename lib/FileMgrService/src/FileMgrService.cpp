@@ -332,6 +332,11 @@ bool FileMgrService::scanForFiles(FileTableEntry* fileTable, const char* fileExt
         fd.close();
     }
 
+    if (true == fdRoot)
+    {
+        fdRoot.close();
+    }
+
     return anyChange;
 }
 
