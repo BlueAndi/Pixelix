@@ -163,7 +163,7 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
 
         if (false == httpClient.begin(*wifiClient, request.url))
         {
-            LOG_WARNING("HTTP request to URL %s failed, unable to connect.", request.url.c_str());
+            LOG_WARNING("HTTP request failed to %s", request.url.c_str());
             response.statusCode = HTTP_CODE_SERVICE_UNAVAILABLE;
         }
         else
