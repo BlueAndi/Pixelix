@@ -65,8 +65,11 @@ bool MemMon::start()
 {
     bool                    isSuccessful        = true;
     esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t caps, const char* functionName) -> void {
-        LOG_ERROR("Failed to allocate memory, size: %u bytes, caps: 0x%04X, func: %s", size, caps, functionName);
-        LOG_ERROR("Largest available HEAP block: %u bytes", heap_caps_get_largest_free_block(MEM_CAPABILITIES));
+        LOG_ERROR("Memory allocation failed.");
+        LOG_ERROR("Size          : %u bytes", size);
+        LOG_ERROR("Capability    : 0x%04X", caps);
+        LOG_ERROR("Function      : %s", functionName);
+        LOG_ERROR("Largest avail.: %u bytes", heap_caps_get_largest_free_block(MEM_CAPABILITIES));
     };
 
     m_timer.start(PROCESSING_CYCLE);
