@@ -182,7 +182,7 @@ bool PluginMgr::load()
     }
     else if (true == jsonDoc.overflowed())
     {
-        LOG_ERROR("JSON document has less memory available.");
+        LOG_ERROR("JSON document size exceeded.");
         isSuccessful = false;
     }
     else
@@ -257,11 +257,16 @@ void PluginMgr::save()
 
     if (true == jsonDoc.overflowed())
     {
-        LOG_ERROR("JSON document has less memory available.");
+        LOG_ERROR("JSON document size exceeded.");
     }
     else if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
         LOG_ERROR("Couldn't save slot configuration.");
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 }
 

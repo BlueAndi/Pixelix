@@ -538,7 +538,7 @@ bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
 
     if (true == m_filter.overflowed())
     {
-        LOG_ERROR("Less memory for filter available.");
+        LOG_ERROR("JSON document size exceeded.");
     }
     else
     {
@@ -635,7 +635,7 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 
     if (true == jsonDocValues.overflowed())
     {
-        LOG_ERROR("Less memory for JSON values available.");
+        LOG_ERROR("JSON document size exceeded.");
 
         /* The last value may be corrupt, throw it away and show the rest. */
         if (0U < valueCount)

@@ -393,7 +393,7 @@ bool VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t paylo
 
     if (true == jsonFilterDoc.overflowed())
     {
-        LOG_ERROR("Less memory for filter available.");
+        LOG_ERROR("JSON document size exceeded.");
     }
     else
     {

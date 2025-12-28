@@ -268,27 +268,41 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
             jsonDocPar["fullPath"] = topicMetaData->fullPath;
         }
 
-        jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
-        if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
+        /* Check for JSON document overflow. */
+        if (true == jsonDoc.overflowed())
         {
-            LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
-
-            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
+            LOG_ERROR("JSON document size exceeded.");
 
             jsonDoc.remove("data");
 
-            /* If a file is available, it will be removed now. */
-            if (false == topicMetaData->fullPath.isEmpty())
-            {
-                (void)FILESYSTEM.remove(topicMetaData->fullPath);
-            }
+            RestUtil::prepareRspError(jsonDoc, "JSON document size exceeded.");
 
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
         }
         else
         {
-            jsonDoc["status"] = "ok";
-            httpStatusCode    = HttpStatus::STATUS_CODE_OK;
+            jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
+            if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
+            {
+                LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
+
+                RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
+
+                jsonDoc.remove("data");
+
+                /* If a file is available, it will be removed now. */
+                if (false == topicMetaData->fullPath.isEmpty())
+                {
+                    (void)FILESYSTEM.remove(topicMetaData->fullPath);
+                }
+
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            }
+            else
+            {
+                jsonDoc["status"] = "ok";
+                httpStatusCode    = HttpStatus::STATUS_CODE_OK;
+            }
         }
     }
     else

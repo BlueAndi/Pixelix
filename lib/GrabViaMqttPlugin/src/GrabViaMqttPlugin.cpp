@@ -495,7 +495,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
 
         if (true == jsonDocValues.overflowed())
         {
-            LOG_ERROR("Less memory for JSON values available.");
+            LOG_ERROR("JSON document size exceeded.");
 
             /* The last value may be corrupt, throw it away and show the rest. */
             if (0U < valueCount)

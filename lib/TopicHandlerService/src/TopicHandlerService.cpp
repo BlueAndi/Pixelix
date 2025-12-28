@@ -132,7 +132,7 @@ void TopicHandlerService::registerTopics(const String& deviceId, const String& e
 
         if (true == topicsDoc.overflowed())
         {
-            LOG_ERROR("JSON document has less memory available.");
+            LOG_ERROR("JSON document size exceeded.");
         }
         /* Handle each topic */
         else if (0U < jsonTopics.size())

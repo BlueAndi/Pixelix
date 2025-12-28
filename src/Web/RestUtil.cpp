@@ -99,7 +99,7 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
 {
     if (true == jsonDoc.overflowed())
     {
-        LOG_ERROR("JSON document has less memory available.");
+        LOG_ERROR("JSON document size exceeded.");
     }
 
     if (nullptr != request)

@@ -582,7 +582,7 @@ bool FileMgrService::load()
     }
     else if (true == jsonDoc.overflowed())
     {
-        LOG_ERROR("JSON document has less memory available.");
+        LOG_ERROR("JSON document size exceeded.");
         isSuccessful = false;
     }
     else
@@ -635,7 +635,7 @@ void FileMgrService::save()
 
     if (true == jsonDoc.overflowed())
     {
-        LOG_ERROR("JSON document has less memory available.");
+        LOG_ERROR("JSON document size exceeded.");
     }
     else if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
