@@ -419,7 +419,8 @@ void RestApiTopicHandler::bodyHandler(AsyncWebServerRequest* request, uint8_t* d
 
 void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest* request)
 {
-    size_t idx = 0U;
+    const int32_t ARRAY_IDX_MAX = 10;
+    size_t        idx           = 0U;
 
     /* Add arguments:
      * - key=value              --> { "key": "value" }
@@ -458,25 +459,47 @@ void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerReque
             /* No additional "." means: key._0_=value */
             if (dotIdx == dot2Idx)
             {
-                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                int32_t arrayIdx    = -1;
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
                 strArrayIdx.remove(strArrayIdx.length() - 1U);
 
-                jsonDocPar[key][strArrayIdx.toInt()] = value;
+                arrayIdx = strArrayIdx.toInt();
+
+                if ((0 > arrayIdx) ||
+                    (ARRAY_IDX_MAX <= arrayIdx))
+                {
+                    LOG_WARNING("Array index %d out of range.", arrayIdx);
+                }
+                else
+                {
+                    jsonDocPar[key][arrayIdx] = value;
+                }
             }
             /* Additional "." means: key._0_.subKey=value */
             else
             {
-                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
-                String subKey      = keyPattern.substring(dot2Idx + 1U);
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  subKey      = keyPattern.substring(dot2Idx + 1U);
+                int32_t arrayIdx    = -1;
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
                 strArrayIdx.remove(strArrayIdx.length() - 1U);
 
-                jsonDocPar[key][strArrayIdx.toInt()][subKey] = value;
+                arrayIdx = strArrayIdx.toInt();
+
+                if ((0 > arrayIdx) ||
+                    (ARRAY_IDX_MAX <= arrayIdx))
+                {
+                    LOG_WARNING("Array index %d out of range.", arrayIdx);
+                }
+                else
+                {
+                    jsonDocPar[key][arrayIdx][subKey] = value;
+                }
             }
         }
     }
