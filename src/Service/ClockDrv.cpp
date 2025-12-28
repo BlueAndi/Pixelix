@@ -122,7 +122,8 @@ void ClockDrv::init()
      * https://github.com/espressif/esp-idf/issues/3046
      * https://newlib.sourceware.narkive.com/6VfBYW7D/how-to-use-a-static-environment
      */
-    strcpy(tzBuffer, m_timeZone.c_str());
+    strncpy(tzBuffer, m_timeZone.c_str(), TZ_MIN_SIZE - 1U);
+    tzBuffer[TZ_MIN_SIZE - 1U] = '\0';
     fillUpWithSpaces(tzBuffer, TZ_MIN_SIZE);
 
     /* Configure NTP:
