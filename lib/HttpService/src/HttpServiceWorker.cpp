@@ -158,7 +158,7 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
     {
         HTTPClient httpClient;
 
-        httpClient.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        httpClient.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
         httpClient.setRedirectLimit(5U);
 
         if (false == httpClient.begin(*wifiClient, request.url))
@@ -234,7 +234,7 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
         if (0 < toRead)
         {
             char*   cBuffer = static_cast<char*>(static_cast<void*>(buffer));
-            int32_t read    = stream.readBytes(cBuffer, (toRead < sizeof(buffer)) ? toRead : sizeof(buffer));
+            int32_t read    = stream.readBytes(cBuffer, sizeof(buffer));
 
             if (0 < read)
             {
@@ -250,8 +250,6 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
                     }
                 }
 
-                ++index;
-
                 /* If a response handler is provided, call it to process the received payload chunk. */
                 if (nullptr != handler)
                 {
@@ -264,6 +262,8 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
                     /* Append data to the response payload. */
                     response.append(buffer, static_cast<size_t>(read));
                 }
+
+                ++index;
             }
         }
 
