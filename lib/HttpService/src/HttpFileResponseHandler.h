@@ -113,6 +113,16 @@ public:
     }
 
     /**
+     * Check if an error occurred during file creation.
+     *
+     * @return If an error occurred, it will return true otherwise false.
+     */
+    bool isError() const
+    {
+        return m_isError;
+    }
+
+    /**
      * This method will be called when a HTTP response is available.
      *
      * @param[in] index     Index of the response chunk, starting from 0.

@@ -64,21 +64,41 @@ void HttpFileResponseHandler::onResponse(uint32_t index, bool isFinal, const uin
 {
     if (0U == index)
     {
-        m_file = FILESYSTEM.open(m_filePath, FILE_WRITE);
+        m_isError = false;
+        m_file    = FILESYSTEM.open(m_filePath, FILE_WRITE);
 
         if (false == m_file)
         {
             LOG_ERROR("Unable to open file %s for writing HTTP response.", m_filePath);
+            m_isError = true;
+        }
+        else
+        {
+            LOG_DEBUG("Writing HTTP response to file %s.", m_filePath);
         }
     }
 
     if (true == m_file)
     {
-        (void)m_file.write(payload, size);
+        if (size != m_file.write(payload, size))
+        {
+            LOG_ERROR("Unable to write HTTP response to file %s.", m_filePath);
+            m_isError = true;
+        }
 
-        if (isFinal == true)
+        if (true == m_isError)
         {
             m_file.close();
+        }
+        else if (true == isFinal)
+        {
+            LOG_DEBUG("Finished writing HTTP response to file %s.", m_filePath);
+            m_file.close();
+        }
+        else
+        {
+            /* Continue writing. */
+            ;
         }
     }
 }
