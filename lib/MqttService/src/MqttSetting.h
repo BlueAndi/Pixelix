@@ -65,18 +65,14 @@ public:
     /**
      * Constructs a MQTT setting.
      */
-    MqttSetting() :
-        m_isEnabled(false),
-        m_useTls(false),
-        m_broker(),
-        m_port(MQTT_PORT),
-        m_user(),
-        m_password(),
-        m_rootCaCert(nullptr),
-        m_clientCert(nullptr),
-        m_clientKey(nullptr)
-    {
-    }
+    MqttSetting();
+
+    /**
+     * Copy constructs a MQTT setting.
+     *
+     * @param[in] other MQTT setting to copy.
+     */
+    MqttSetting(const MqttSetting& other);
 
     /**
      * Destroys a MQTT setting.
@@ -85,6 +81,24 @@ public:
     {
         clear();
     }
+
+    /**
+     * Copy assignment operator.
+     *
+     * @param[in] other MQTT setting to copy.
+     *
+     * @return Reference to this MQTT setting.
+     */
+    MqttSetting& operator=(const MqttSetting& other);
+
+    /**
+     * Move assignment operator.
+     * 
+     * @param[in] other MQTT setting to move.
+     * 
+     * @return Reference to this MQTT setting.
+     */
+    MqttSetting& operator=(MqttSetting&& other);
 
     /**
      * Clear MQTT setting to default values.

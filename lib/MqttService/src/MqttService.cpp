@@ -441,17 +441,23 @@ bool MqttService::setTopic(const String& topic, const JsonObjectConst& jsonValue
     {
         JsonArrayConst jsonMqttSettingsArray = jsonMqttSettings.as<JsonArrayConst>();
         size_t         count                 = (MAX_MQTT_COUNT >= jsonMqttSettingsArray.size()) ? jsonMqttSettingsArray.size() : MAX_MQTT_COUNT;
+        MqttSetting    tempSetting;
 
+        isSuccessful                         = true;
         for (idx = 0U; idx < count; ++idx)
         {
-            if (false == m_settings[idx].fromJson(jsonMqttSettingsArray[idx]))
+            if (false == tempSetting.fromJson(jsonMqttSettingsArray[idx]))
             {
-                LOG_WARNING("Failed to set MQTT setting %u.", idx);
+                LOG_WARNING("Invalid MQTT setting %u.", idx);
+                isSuccessful = false;
+                break;
             }
+
+            m_settings[idx] = std::move(tempSetting);
+            tempSetting.clear();
         }
 
         m_hasSettingsChanged = true;
-        isSuccessful         = true;
     }
 
     if (true == isSuccessful)
