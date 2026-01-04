@@ -60,6 +60,18 @@
  * Public Methods
  *****************************************************************************/
 
+HttpFileResponseHandler& HttpFileResponseHandler::operator=(const HttpFileResponseHandler& other)
+{
+    if (this != &other)
+    {
+        m_filePath = other.m_filePath;
+        m_isError  = other.m_isError;
+        m_file     = File(); /* Do not copy file handle. */
+    }
+
+    return *this;
+}
+
 void HttpFileResponseHandler::onResponse(uint32_t index, bool isFinal, const uint8_t* payload, size_t size)
 {
     if (0U == index)
@@ -69,12 +81,12 @@ void HttpFileResponseHandler::onResponse(uint32_t index, bool isFinal, const uin
 
         if (false == m_file)
         {
-            LOG_ERROR("Unable to open file %s for writing HTTP response.", m_filePath);
+            LOG_ERROR("Unable to open file %s for writing HTTP response.", m_filePath.c_str());
             m_isError = true;
         }
         else
         {
-            LOG_DEBUG("Writing HTTP response to file %s.", m_filePath);
+            LOG_DEBUG("Writing HTTP response to file %s.", m_filePath.c_str());
         }
     }
 
@@ -82,7 +94,7 @@ void HttpFileResponseHandler::onResponse(uint32_t index, bool isFinal, const uin
     {
         if (size != m_file.write(payload, size))
         {
-            LOG_ERROR("Unable to write HTTP response to file %s.", m_filePath);
+            LOG_ERROR("Unable to write HTTP response to file %s.", m_filePath.c_str());
             m_isError = true;
         }
 
@@ -92,7 +104,7 @@ void HttpFileResponseHandler::onResponse(uint32_t index, bool isFinal, const uin
         }
         else if (true == isFinal)
         {
-            LOG_DEBUG("Finished writing HTTP response to file %s.", m_filePath);
+            LOG_DEBUG("Finished writing HTTP response to file %s.", m_filePath.c_str());
             m_file.close();
         }
         else
