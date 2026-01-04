@@ -326,6 +326,12 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
 
         if (0 < strlen(rootCaCert))
         {
+            if (nullptr != m_rootCaCert)
+            {
+                delete[] m_rootCaCert;
+                m_rootCaCert = nullptr;
+            }
+
             m_rootCaCert = new (std::nothrow) char[strlen(rootCaCert) + 1U];
 
             if (nullptr != m_rootCaCert)
@@ -336,6 +342,12 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
 
         if (0 < strlen(clientCert))
         {
+            if (nullptr != m_clientCert)
+            {
+                delete[] m_clientCert;
+                m_clientCert = nullptr;
+            }
+
             m_clientCert = new (std::nothrow) char[strlen(clientCert) + 1U];
 
             if (nullptr != m_clientCert)
@@ -346,6 +358,12 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
 
         if (0 < strlen(clientKey))
         {
+            if (nullptr != m_clientKey)
+            {
+                delete[] m_clientKey;
+                m_clientKey = nullptr;
+            }
+
             m_clientKey = new (std::nothrow) char[strlen(clientKey) + 1U];
 
             if (nullptr != m_clientKey)
