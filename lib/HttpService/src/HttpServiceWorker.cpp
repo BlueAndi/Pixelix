@@ -183,14 +183,16 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
                 break;
 
             default:
-                LOG_WARNING("HTTP request to URL %s failed, unsupported HTTP method %d.", request.url.c_str(), request.method);
+                LOG_WARNING("HTTP request to %s failed.", request.url.c_str());
+                LOG_WARNING("Unsupported HTTP method %d.", request.method);
                 response.statusCode = HTTP_CODE_NOT_IMPLEMENTED;
                 break;
             }
 
             if (0 > httpClientRet)
             {
-                LOG_WARNING("HTTP request to URL %s failed, error: %s", request.url.c_str(), httpClient.errorToString(httpClientRet).c_str());
+                LOG_WARNING("HTTP request to URL %s failed.", request.url.c_str());
+                LOG_WARNING("Error: %s", httpClient.errorToString(httpClientRet).c_str());
                 response.statusCode = HTTP_CODE_BAD_REQUEST;
             }
             else
