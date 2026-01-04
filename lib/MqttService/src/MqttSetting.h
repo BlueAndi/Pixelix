@@ -98,7 +98,7 @@ public:
      * 
      * @return Reference to this MQTT setting.
      */
-    MqttSetting& operator=(MqttSetting&& other);
+    MqttSetting& operator=(MqttSetting&& other) noexcept;
 
     /**
      * Clear MQTT setting to default values.

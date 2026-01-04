@@ -177,7 +177,7 @@ MqttSetting& MqttSetting::operator=(const MqttSetting& other)
     return *this;
 }
 
-MqttSetting& MqttSetting::operator=(MqttSetting&& other)
+MqttSetting& MqttSetting::operator=(MqttSetting&& other) noexcept
 {
     if (this != &other)
     {
