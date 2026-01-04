@@ -180,22 +180,6 @@ private:
     String m_filePath; /**< Path of the file where the payload will be written to. */
     File   m_file;     /**< File handle. */
     bool   m_isError;  /**< Indicates that an error occurred during file creation. */
-
-    /**
-     * Disable copy constructor.
-     *
-     * @param[in] handler   Handler to copy.
-     */
-    HttpFileResponseHandler(const HttpFileResponseHandler& handler)            = delete;
-
-    /**
-     * Disable assignment operator.
-     *
-     * @param[in] handler   Handler to assign.
-     *
-     * @return Assigned handler.
-     */
-    HttpFileResponseHandler& operator=(const HttpFileResponseHandler& handler) = delete;
 };
 
 /******************************************************************************
