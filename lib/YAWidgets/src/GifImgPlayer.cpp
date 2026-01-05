@@ -336,6 +336,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
 
         m_disposalMethod        = player.m_disposalMethod;
 
+        m_imageDataBlockIdx     = player.m_imageDataBlockIdx;
         m_posX                  = player.m_posX;
         m_posY                  = player.m_posY;
         m_isTransparencyEnabled = player.m_isTransparencyEnabled;
