@@ -55,7 +55,7 @@
                 </div>
                 <div class="row">
                     <div class="col-3">
-                        <p>Use STRG + s to save a modified file.</p>
+                        <p>Use CTRL + s to save a modified file.</p>
                     </div>
                     <div class="col-9">
                         <div class="input-group">
@@ -274,14 +274,14 @@
             function listRootFiles(id) {
                 return restClient.listAllFiles("/").then(function(items) {
                     var $menu = $("#" + id);
-                    
+
                     // Create root directory structure with only first-level contents
                     var rootDir = {
                         name: "/",
                         type: "dir",
                         listing: items
                     };
-                    
+
                     var $root = createDirectoryInTree(rootDir).children().appendTo($menu);
 
                     $("#" + id).treed();
@@ -473,7 +473,7 @@
 
                 $.fn.extend({
                     treed: function (o) {
-                        
+
                         // Helper function to toggle a branch
                         function toggleBranch(branch) {
                             var icon = branch.children("i:first").children("svg:first");
@@ -507,19 +507,19 @@
                         tree.addClass("tree");
                         tree.find('li').has("ul").each(function () {
                             var branch = $(this); //li with children ul
-                            
+
                             // Only add icon if it doesn't already exist
                             if (branch.children("i.tree-icon").length === 0) {
                                 branch.prepend("<i class=\"tree-icon\"><svg class=\"rotate270 bg-white\" xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" height=\"10\" viewBox=\"0 0 13 10\"><polygon points=\"2 1, 12 1, 7 9\"></polygon></svg></i>");
                                 branch.addClass('branch');
-                                
+
                                 // Remove old click handlers and add new one
                                 branch.off('click.tree').on('click.tree', function (e) {
                                     if (this == e.target) {
                                         toggleBranch($(this));
                                     }
                                 });
-                                
+
                                 // Initially hide children unless it's the root or already loaded
                                 if (branch.attr("data-loaded") !== "true") {
                                     branch.children().not("i").children().hide();
@@ -602,7 +602,7 @@
                     readOnly: false
                 });
 
-                dialog.show("Loading ...", "<p>Please wait, file informations are loading.</p>")
+                dialog.show("Loading ...", "<p>Please wait, file information is loading.</p>")
                 .then(function() {
                     return listRootFiles("fileTree");
                 })
