@@ -74,6 +74,9 @@ static const char WRITE_WIFI_SSID[]                          = "write wifi ssid"
 /** Command: get ip */
 static const char GET_IP[]                                   = "get ip";
 
+/** Command: get hostname */
+static const char GET_HOSTNAME[]                             = "get hostname";
+
 /** Command: status */
 static const char GET_STATUS[]                               = "get status";
 
@@ -85,6 +88,7 @@ const MiniTerminal::CmdTableEntry MiniTerminal::m_cmdTable[] = {
     { WRITE_WIFI_PASSPHRASE, &MiniTerminal::cmdWriteWifiPassphrase },
     { WRITE_WIFI_SSID, &MiniTerminal::cmdWriteWifiSSID },
     { GET_IP, &MiniTerminal::cmdGetIPAddress },
+    { GET_HOSTNAME, &MiniTerminal::cmdGetHostname },
     { GET_STATUS, &MiniTerminal::cmdGetStatus },
     { HELP, &MiniTerminal::cmdHelp },
 };
@@ -144,8 +148,8 @@ void MiniTerminal::process()
         else if (INPUT_BUFFER_SIZE > (m_writeIndex + 1U))
         {
             /* Valid character? */
-            if ((' ' <= currentChar) &&
-                ('~' >= currentChar))
+            if ((ASCII_SP <= currentChar) &&
+                (ASCII_TILDE >= currentChar))
             {
                 m_input[m_writeIndex] = currentChar;
                 ++m_writeIndex;
@@ -191,21 +195,34 @@ void MiniTerminal::executeCommand(const char* cmdLine)
 
     for (idx = 0U; UTIL_ARRAY_NUM(m_cmdTable) > idx; ++idx)
     {
-        const CmdTableEntry entry = m_cmdTable[idx];
-        const size_t        len   = strlen(entry.cmdStr);
+        const CmdTableEntry entry  = m_cmdTable[idx];
+        const size_t        cmdLen = strlen(entry.cmdStr);
 
-        if (0 == strncmp(cmdLine, entry.cmdStr, len))
+        if (0 == strncmp(cmdLine, entry.cmdStr, cmdLen))
         {
-            const char* par = &cmdLine[len];
+            const char* par = nullptr;
 
-            /* Skip leading whitespaces. */
-            while ((' ' == *par) || ('\t' == *par))
+            /* Get the parameters from the command line. */
+            if (strlen(cmdLine) > cmdLen)
             {
-                ++par;
+                par = &cmdLine[cmdLen];
+
+                /* Skip leading whitespace. */
+                while ((ASCII_SP == *par) || (ASCII_TAB == *par))
+                {
+                    ++par;
+                }
+
+                /* Skip parameters if (truncated) rest of command line is empty. */
+                if (0 == strlen(par))
+                {
+                    par = nullptr;
+                }
             }
 
-            /* Execute the command with its parameters. */
+            /* Execute the command with its parameters (optional). */
             (this->*entry.handler)(par);
+
             break;
         }
     }
@@ -223,8 +240,7 @@ void MiniTerminal::cmdRestart(const char* par)
     RestartMgr::RestartReqStatus status        = RestartMgr::RESTART_REQ_STATUS_ERR;
 
     /* Just restart the application? */
-    if ((nullptr == par) ||
-        ('\0' == *par))
+    if (nullptr == par)
     {
         status = restartMgr.reqRestart(RESTART_DELAY, false);
     }
@@ -270,6 +286,10 @@ void MiniTerminal::cmdWriteWifiPassphrase(const char* par)
             writeSuccessful();
         }
     }
+    else
+    {
+        writeError("Invalid Wifi passphrase.");
+    }
 }
 
 void MiniTerminal::cmdWriteWifiSSID(const char* par)
@@ -292,6 +312,10 @@ void MiniTerminal::cmdWriteWifiSSID(const char* par)
             writeSuccessful();
         }
     }
+    else
+    {
+        writeError("Invalid Wifi SSID.");
+    }
 }
 
 void MiniTerminal::cmdGetIPAddress(const char* par)
@@ -312,6 +336,26 @@ void MiniTerminal::cmdGetIPAddress(const char* par)
     result += "\n";
 
     writeSuccessful(result.c_str());
+}
+
+void MiniTerminal::cmdGetHostname(const char* par)
+{
+    UTIL_NOT_USED(par);
+
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        writeError();
+    }
+    else
+    {
+        String result(settings.getHostname().getValue());
+        settings.close();
+        result += "\n";
+
+        writeSuccessful(result.c_str());
+    }
 }
 
 void MiniTerminal::cmdGetStatus(const char* par)
