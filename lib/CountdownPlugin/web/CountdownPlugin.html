@@ -138,7 +138,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var targetDateInput = document.getElementById("targetDate");
@@ -159,7 +159,7 @@
     
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
                     isJsonResponse: true,
                     parameter: {
                         day: date.getDate(),

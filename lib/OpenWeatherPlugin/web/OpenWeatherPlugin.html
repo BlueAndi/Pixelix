@@ -204,7 +204,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/weather",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/weather",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#sourceId").val(rsp.data.sourceId);
@@ -237,7 +237,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/weather",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/weather",
                     isJsonResponse: true,
                     parameter: {
                         sourceId: $("#sourceId").val(),

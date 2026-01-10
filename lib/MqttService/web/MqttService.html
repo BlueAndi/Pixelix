@@ -258,7 +258,7 @@
 
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/mqttService/mqtt",
+                    url: restClient.getBaseUri() + "/mqttService/mqtt",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var idx;
@@ -306,7 +306,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/mqttService/mqtt",
+                    url: restClient.getBaseUri() + "/mqttService/mqtt",
                     isJsonResponse: true,
                     parameter: {
                         mqttSettings: getMqttSettings()

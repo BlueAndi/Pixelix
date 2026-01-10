@@ -146,23 +146,23 @@ static const ContentTypeElem contentTypeTable[] = {
 
 /** REST API routes */
 static const RestApiRoute gRestApiRoutes[] = {
-    { "/rest/api/v1/display/fadeEffect", HTTP_GET | HTTP_POST, handleFadeEffect, nullptr, nullptr },
-    { "/rest/api/v1/display/slots", HTTP_GET, handleSlots, nullptr, nullptr },
-    { "/rest/api/v1/display/slot/*", HTTP_GET, handleSlot, nullptr, nullptr },
-    { "/rest/api/v1/plugin/install", HTTP_POST, handlePluginInstall, nullptr, nullptr },
-    { "/rest/api/v1/plugin/uninstall", HTTP_POST, handlePluginUninstall, nullptr, nullptr },
-    { "/rest/api/v1/plugins", HTTP_GET, handlePlugins, nullptr, nullptr },
-    { "/rest/api/v1/sensors", HTTP_GET, handleSensors, nullptr, nullptr },
-    { "/rest/api/v1/settings", HTTP_GET, handleSettings, nullptr, nullptr },
-    { "/rest/api/v1/setting", HTTP_GET | HTTP_POST, handleSetting, nullptr, nullptr },
-    { "/rest/api/v1/status", HTTP_GET, handleStatus, nullptr, nullptr },
-    { "/rest/api/v1/fs/file", HTTP_GET, handleFileGet, nullptr, nullptr },
-    { "/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler, nullptr },
-    { "/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete, nullptr, nullptr },
-    { "/rest/api/v1/fs", HTTP_GET, handleFilesystem, nullptr, nullptr },
-    { "/rest/api/v1/partitionChange", HTTP_POST, handlePartitionChange, nullptr, nullptr },
-    { "/rest/api/v1/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable, nullptr, nullptr },
-    { "/rest/api/v1/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr }
+    { "/display/fadeEffect", HTTP_GET | HTTP_POST, handleFadeEffect, nullptr, nullptr },
+    { "/display/slots", HTTP_GET, handleSlots, nullptr, nullptr },
+    { "/display/slot/*", HTTP_GET, handleSlot, nullptr, nullptr },
+    { "/plugin/install", HTTP_POST, handlePluginInstall, nullptr, nullptr },
+    { "/plugin/uninstall", HTTP_POST, handlePluginUninstall, nullptr, nullptr },
+    { "/plugins", HTTP_GET, handlePlugins, nullptr, nullptr },
+    { "/sensors", HTTP_GET, handleSensors, nullptr, nullptr },
+    { "/settings", HTTP_GET, handleSettings, nullptr, nullptr },
+    { "/setting", HTTP_GET | HTTP_POST, handleSetting, nullptr, nullptr },
+    { "/status", HTTP_GET, handleStatus, nullptr, nullptr },
+    { "/fs/file", HTTP_GET, handleFileGet, nullptr, nullptr },
+    { "/fs/file", HTTP_POST, handleFilePost, uploadHandler, nullptr },
+    { "/fs/file", HTTP_DELETE, handleFileDelete, nullptr, nullptr },
+    { "/fs", HTTP_GET, handleFilesystem, nullptr, nullptr },
+    { "/partitionChange", HTTP_POST, handlePartitionChange, nullptr, nullptr },
+    { "/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable, nullptr, nullptr },
+    { "/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr }
 };
 
 /******************************************************************************
@@ -204,8 +204,11 @@ void RestApi::init(AsyncWebServer& srv)
     for (size_t idx = 0; idx < UTIL_ARRAY_NUM(gRestApiRoutes); ++idx)
     {
         const RestApiRoute& route = gRestApiRoutes[idx];
+        String              routePage = BASE_URI;
 
-        (void)srv.on(route.page,
+        routePage += route.page;
+
+        (void)srv.on(routePage.c_str(),
                      route.reqMethodComposite,
                      route.onRequest,
                      route.onUpload,
@@ -385,7 +388,9 @@ static void handleSlot(AsyncWebServerRequest* request)
     }
     else
     {
-        const char* uriWithSlotId = "/rest/api/v1/display/slot/";
+        String uriWithSlotId = RestApi::BASE_URI;
+        
+        uriWithSlotId += "/display/slot/";
 
         if (false == request->url().startsWith(uriWithSlotId))
         {
@@ -395,7 +400,7 @@ static void handleSlot(AsyncWebServerRequest* request)
         else
         {
             uint8_t slotId       = SlotList::SLOT_ID_INVALID;
-            size_t  baseUriLen   = strlen(uriWithSlotId);
+            size_t  baseUriLen   = uriWithSlotId.length();
             bool    slotIdStatus = Util::strToUInt8(request->url().substring(baseUriLen), slotId);
 
             if (false == slotIdStatus)

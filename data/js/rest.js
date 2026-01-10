@@ -13,6 +13,10 @@ pixelix.rest.Client = function(options) {
     }
 };
 
+pixelix.rest.Client.prototype.getBaseUri = function() {
+    return this._baseUri;
+}
+
 pixelix.rest.Client.prototype.listFiles = function(path = "/", page = "0") {
     return utils.makeRequest({
         method: "GET",
@@ -167,7 +171,7 @@ pixelix.rest.Client.prototype.removeFile = function(filename) {
 pixelix.rest.Client.prototype.getPluginInstances = function() {
     return utils.makeRequest({
         method: "GET",
-        url: "/rest/api/v1/display/slots",
+        url: this._baseUri + "/display/slots",
         isJsonResponse: true
     });
 };
@@ -175,7 +179,7 @@ pixelix.rest.Client.prototype.getPluginInstances = function() {
 pixelix.rest.Client.prototype.getSensors = function() {
     return utils.makeRequest({
         method: "GET",
-        url: "/rest/api/v1/sensors",
+        url: this._baseUri + "/sensors",
         isJsonResponse: true
     });
 };
@@ -183,7 +187,7 @@ pixelix.rest.Client.prototype.getSensors = function() {
 pixelix.rest.Client.prototype.getSettingKeys = function() {
     return utils.makeRequest({
         method: "GET",
-        url: "/rest/api/v1/settings",
+        url: this._baseUri + "/settings",
         isJsonResponse: true
     });
 };
@@ -196,7 +200,7 @@ pixelix.rest.Client.prototype.getSettingByKey = function(key) {
     } else {
         promise = utils.makeRequest({
             method: "GET",
-            url: "/rest/api/v1/setting",
+            url: this._baseUri + "/setting",
             isJsonResponse: true,
             parameter: {
                 key: key
@@ -217,7 +221,7 @@ pixelix.rest.Client.prototype.setSetting = function(key, value) {
     } else {
         promise = utils.makeRequest({
             method: "POST",
-            url: "/rest/api/v1/setting",
+            url: this._baseUri + "/setting",
             isJsonResponse: true,
             parameter: {
                 key: key,
@@ -232,7 +236,7 @@ pixelix.rest.Client.prototype.setSetting = function(key, value) {
 pixelix.rest.Client.prototype.restart = function() {
     return utils.makeRequest({
         method: "POST",
-        url: "/rest/api/v1/restart",
+        url: this._baseUri + "/restart",
         isJsonResponse: true
     });
 };
@@ -283,7 +287,7 @@ pixelix.rest.Client.prototype.fileMgrRemoveFile = function(fileId) {
 pixelix.rest.Client.prototype.getDisplayState = function() {
     return utils.makeRequest({
         method: "GET",
-        url: "/rest/api/v1/display/power",
+        url: this._baseUri + "/display/power",
         isJsonResponse: true
     });
 };
@@ -296,7 +300,7 @@ pixelix.rest.Client.prototype.setDisplayState = function(state) {
     } else {
         promise = utils.makeRequest({
             method: "POST",
-            url: "/rest/api/v1/display/power",
+            url: this._baseUri + "/display/power",
             isJsonResponse: true,
             parameter: {
                 state: state

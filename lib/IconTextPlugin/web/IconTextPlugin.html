@@ -174,7 +174,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/iconText",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/iconText",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var justTextInput = document.getElementById(justTextId);
@@ -200,7 +200,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/iconText",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/iconText",
                     isJsonResponse: true,
                     parameter: {
                         text: justText,

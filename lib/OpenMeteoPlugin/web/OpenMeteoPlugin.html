@@ -204,7 +204,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/omweather",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/omweather",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#updatePeriod").val(rsp.data.updatePeriod);
@@ -236,7 +236,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/omweather",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/omweather",
                     isJsonResponse: true,
                     parameter: {
                         updatePeriod: $("#updatePeriod").val(),

@@ -131,7 +131,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/host",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#host").val(rsp.data.host);
@@ -146,7 +146,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/host",
                     isJsonResponse: true,
                     parameter: {
                         host: $("#host").val()
