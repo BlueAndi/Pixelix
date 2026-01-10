@@ -133,7 +133,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#freqBandLen").val(rsp.data.freqBandLen);
@@ -148,7 +148,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
                         freqBandLen: $("#freqBandLen").val()

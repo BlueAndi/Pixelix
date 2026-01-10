@@ -158,12 +158,12 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
     {
         HTTPClient httpClient;
 
-        httpClient.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+        httpClient.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
         httpClient.setRedirectLimit(5U);
 
         if (false == httpClient.begin(*wifiClient, request.url))
         {
-            LOG_WARNING("HTTP request to URL %s failed, unable to connect.", request.url.c_str());
+            LOG_WARNING("HTTP request failed to %s", request.url.c_str());
             response.statusCode = HTTP_CODE_SERVICE_UNAVAILABLE;
         }
         else
@@ -183,14 +183,16 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
                 break;
 
             default:
-                LOG_WARNING("HTTP request to URL %s failed, unsupported HTTP method %d.", request.url.c_str(), request.method);
+                LOG_WARNING("HTTP request to %s failed.", request.url.c_str());
+                LOG_WARNING("Unsupported HTTP method %d.", request.method);
                 response.statusCode = HTTP_CODE_NOT_IMPLEMENTED;
                 break;
             }
 
             if (0 > httpClientRet)
             {
-                LOG_WARNING("HTTP request to URL %s failed, error: %s", request.url.c_str(), httpClient.errorToString(httpClientRet).c_str());
+                LOG_WARNING("HTTP request to URL %s failed.", request.url.c_str());
+                LOG_WARNING("Error: %s", httpClient.errorToString(httpClientRet).c_str());
                 response.statusCode = HTTP_CODE_BAD_REQUEST;
             }
             else
@@ -234,7 +236,7 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
         if (0 < toRead)
         {
             char*   cBuffer = static_cast<char*>(static_cast<void*>(buffer));
-            int32_t read    = stream.readBytes(cBuffer, (toRead < sizeof(buffer)) ? toRead : sizeof(buffer));
+            int32_t read    = stream.readBytes(cBuffer, sizeof(buffer));
 
             if (0 < read)
             {
@@ -250,8 +252,6 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
                     }
                 }
 
-                ++index;
-
                 /* If a response handler is provided, call it to process the received payload chunk. */
                 if (nullptr != handler)
                 {
@@ -264,6 +264,8 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
                     /* Append data to the response payload. */
                     response.append(buffer, static_cast<size_t>(read));
                 }
+
+                ++index;
             }
         }
 

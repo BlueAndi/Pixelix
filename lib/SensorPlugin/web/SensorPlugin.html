@@ -169,7 +169,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
                     isJsonResponse: true
                 }).then(function(rsp) {
 
@@ -208,7 +208,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
                     isJsonResponse: true,
                     parameter: {
                         sensorIndex: $("#sensorList").val(),

@@ -62,7 +62,7 @@ namespace RestApi
 /**
  * REST API base URI.
  */
-static const char BASE_URI[] = "/rest/api/v1";
+static constexpr char BASE_URI[] = "/rest/api/v1";
 
 /******************************************************************************
  * Functions

@@ -284,7 +284,7 @@
                 
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#mode").val(rsp.data.mode);
@@ -345,7 +345,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true,
                     parameter: configJson
                 }).then(function(rsp) {

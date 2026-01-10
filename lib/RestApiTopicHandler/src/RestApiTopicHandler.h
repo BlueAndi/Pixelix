@@ -69,7 +69,9 @@ public:
      */
     RestApiTopicHandler() :
         ITopicHandler(),
-        m_listOfTopicMetaData()
+        m_listOfTopicMetaData(),
+        m_webLoginUser(),
+        m_webLoginPassword()
     {
     }
 
@@ -84,10 +86,7 @@ public:
     /**
      * Start the topic handler.
      */
-    void start() final
-    {
-        /* Nothing to do. */
-    }
+    void start() final;
 
     /**
      * Stop the topic handler.
@@ -199,6 +198,8 @@ private:
     typedef std::vector<TopicMetaData*> ListOfTopicMetaData;
 
     ListOfTopicMetaData                 m_listOfTopicMetaData; /**< List of topic meta data. */
+    String                              m_webLoginUser;        /**< Web login user name, used for basic authentication. */
+    String                              m_webLoginPassword;    /**< Web login password, used for basic authentication. */
 
     RestApiTopicHandler(const RestApiTopicHandler& adapter);
     RestApiTopicHandler& operator=(const RestApiTopicHandler& adapter);

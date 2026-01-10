@@ -178,7 +178,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/signalDetector",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/signalDetector",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var index = 0;
@@ -203,7 +203,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/signalDetector",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/signalDetector",
                     isJsonResponse: true,
                     parameter: {
                         text:  $("#text").val(),

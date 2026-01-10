@@ -130,7 +130,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/ipAddress",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#gruenbeckIP").val(rsp.data.gruenbeckIP);
@@ -145,7 +145,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/ipAddress",
                     isJsonResponse: true,
                     parameter: {
                         gruenbeckIP: $("#gruenbeckIP").val()

@@ -363,7 +363,7 @@ private:
      *
      * @return A formatted (time zone adjusted) time string according to the configured time format.
      */
-    String addCurrentTimeZoneValues(const String& dateTimeString) const;
+    String addCurrentTimeZoneValues(const char* dateTimeString) const;
 };
 
 /******************************************************************************

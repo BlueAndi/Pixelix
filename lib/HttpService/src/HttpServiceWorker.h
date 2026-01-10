@@ -66,7 +66,7 @@ public:
      * Constructs the HTTP service worker.
      */
     HttpServiceWorker() :
-        Task<WorkerData>("HttpServiceWorkerTask", DEFAULT_STACK_SIZE)
+        Task<WorkerData>("HttpServiceWorkerTask", STACK_SIZE)
     {
         ;
     }
@@ -81,8 +81,8 @@ public:
 
 private:
 
-    /** Default stack size for the worker task. */
-    static const size_t DEFAULT_STACK_SIZE                        = 8192U;
+    /** Stack size for the worker task. */
+    static const size_t STACK_SIZE                                = 8192U;
 
     /** Maximum wait time for mutex operations. */
     static const TickType_t MAX_WAIT_TIME                         = pdMS_TO_TICKS(100U);

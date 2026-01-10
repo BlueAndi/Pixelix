@@ -42,6 +42,7 @@
 
 #include <Logging.h>
 #include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,6 +67,24 @@
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void RestApiTopicHandler::start()
+{
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        m_webLoginUser     = settings.getWebLoginUser().getDefault();
+        m_webLoginPassword = settings.getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        m_webLoginUser     = settings.getWebLoginUser().getValue();
+        m_webLoginPassword = settings.getWebLoginPassword().getValue();
+
+        settings.close();
+    }
+}
 
 void RestApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
@@ -101,6 +120,9 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
             topicMetaData->uploadReqFunc = uploadReqFunc;
             topicMetaData->uri           = getUri(entityId, topic);
             topicMetaData->webHandler    = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload, onBody);
+
+            /* Enable basic authentication. */
+            topicMetaData->webHandler->setAuthentication(m_webLoginUser, m_webLoginPassword);
 
             LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 

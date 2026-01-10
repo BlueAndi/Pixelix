@@ -160,7 +160,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/location",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/location",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#longitude").val(rsp.data.longitude);
@@ -177,7 +177,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/location",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/location",
                     isJsonResponse: true,
                     parameter: {
                         latitude: $("#latitude").val(),

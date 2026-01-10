@@ -67,7 +67,7 @@ public:
      * Constructs the file response handler.
      */
     HttpFileResponseHandler() :
-        m_filePath(nullptr),
+        m_filePath(),
         m_file(),
         m_isError(false)
     {
@@ -86,6 +86,30 @@ public:
     }
 
     /**
+     * Constructs the file response handler.
+     *
+     * @param[in] filePath  Path of the file where the payload will be written to.
+     */
+    HttpFileResponseHandler(const String& filePath) :
+        m_filePath(filePath),
+        m_file(),
+        m_isError(false)
+    {
+    }
+
+    /**
+     * Copy constructor.
+     *
+     * @param[in] other Other instance
+     */
+    HttpFileResponseHandler(const HttpFileResponseHandler& other) :
+        m_filePath(other.m_filePath),
+        m_file(),
+        m_isError(other.m_isError)
+    {
+    }
+
+    /**
      * Destroys the file response handler.
      */
     virtual ~HttpFileResponseHandler()
@@ -93,23 +117,52 @@ public:
     }
 
     /**
+     * Assignment operator.
+     *
+     * @param[in] other Other instance
+     *
+     * @return Assigned instance
+     */
+    HttpFileResponseHandler& operator=(const HttpFileResponseHandler& other);
+
+    /**
      * Get file path.
      *
      * @return File path
      */
-    const char* getFilePath() const
+    String getFilePath() const
     {
         return m_filePath;
     }
 
     /**
      * Set file path.
-     * 
+     *
      * @param[in] filePath  File path
      */
     void setFilePath(const char* filePath)
     {
         m_filePath = filePath;
+    }
+
+    /**
+     * Set file path.
+     *
+     * @param[in] filePath  File path
+     */
+    void setFilePath(const String& filePath)
+    {
+        m_filePath = filePath;
+    }
+
+    /**
+     * Check if an error occurred during file creation.
+     *
+     * @return If an error occurred, it will return true otherwise false.
+     */
+    bool isError() const
+    {
+        return m_isError;
     }
 
     /**
@@ -124,25 +177,9 @@ public:
 
 private:
 
-    const char* m_filePath; /**< Path of the file where the payload will be written to. */
-    File        m_file;     /**< File handle. */
-    bool        m_isError;  /**< Indicates that an error occurred during file creation. */
-
-    /**
-     * Disable copy constructor.
-     *
-     * @param[in] handler   Handler to copy.
-     */
-    HttpFileResponseHandler(const HttpFileResponseHandler& handler)            = delete;
-
-    /**
-     * Disable assignment operator.
-     *
-     * @param[in] handler   Handler to assign.
-     *
-     * @return Assigned handler.
-     */
-    HttpFileResponseHandler& operator=(const HttpFileResponseHandler& handler) = delete;
+    String m_filePath; /**< Path of the file where the payload will be written to. */
+    File   m_file;     /**< File handle. */
+    bool   m_isError;  /**< Indicates that an error occurred during file creation. */
 };
 
 /******************************************************************************

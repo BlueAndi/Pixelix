@@ -283,7 +283,7 @@
 
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/timerService/timer",
+                    url: restClient.getBaseUri() + "/timerService/timer",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var idx;
@@ -334,7 +334,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/timerService/timer",
+                    url: restClient.getBaseUri() + "/timerService/timer",
                     isJsonResponse: true,
                     parameter: {
                         timerSettings: getTimerSettings()

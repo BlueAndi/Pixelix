@@ -427,35 +427,41 @@ void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        String sunrise         = jsonSunrise.as<const char*>();
-        String sunset          = jsonSunset.as<const char*>();
+        const char* sunrise    = jsonSunrise.as<const char*>();
+        const char* sunset     = jsonSunset.as<const char*>();
 
-        sunrise                = addCurrentTimeZoneValues(sunrise);
-        sunset                 = addCurrentTimeZoneValues(sunset);
+        m_relevantResponsePart = addCurrentTimeZoneValues(sunrise);
+        m_relevantResponsePart += " / ";
+        m_relevantResponsePart += addCurrentTimeZoneValues(sunset);
 
-        m_relevantResponsePart = sunrise + " / " + sunset;
         m_view.setFormatText(m_relevantResponsePart);
     }
 }
 
-String SunrisePlugin::addCurrentTimeZoneValues(const String& dateTimeString) const
+String SunrisePlugin::addCurrentTimeZoneValues(const char* dateTimeString) const
 {
-    tm        gmTimeInfo;
-    const tm* lcTimeInfo = nullptr;
-    time_t    gmTime;
-    char      timeBuffer[17] = { 0 };
+    char timeBuffer[17] = { 0 };
 
-    /* Example: "2015-05-21T05:05:35+00:00" */
+    if (nullptr != dateTimeString)
+    {
+        tm        utcTimeInfo;
+        const tm* lcTimeInfo = nullptr;
+        time_t    tLocal;
 
-    /* Convert date/time string to GMT time information */
-    (void)strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S", &gmTimeInfo);
+        /* Example: "2015-05-21T05:05:35+00:00" */
 
-    /* Convert to local time */
-    gmTime     = mktime(&gmTimeInfo);
-    lcTimeInfo = localtime(&gmTime);
+        /* Convert date/time string to GMT time information */
+        (void)strptime(dateTimeString, "%Y-%m-%dT%H:%M:%S", &utcTimeInfo);
 
-    /* Convert time information to user friendly string. */
-    (void)strftime(timeBuffer, sizeof(timeBuffer), m_timeFormat.c_str(), lcTimeInfo);
+        /* Convert to local time */
+        utcTimeInfo.tm_isdst  = 0; /* Not daylight saving time. */
+        tLocal                = mktime(&utcTimeInfo);
+        tLocal               += ClockDrv::getInstance().getCurrentTimeZoneOffset();
+        lcTimeInfo            = localtime(&tLocal);
+
+        /* Convert time information to user friendly string. */
+        (void)strftime(timeBuffer, sizeof(timeBuffer), m_timeFormat.c_str(), lcTimeInfo);
+    }
 
     return timeBuffer;
 }

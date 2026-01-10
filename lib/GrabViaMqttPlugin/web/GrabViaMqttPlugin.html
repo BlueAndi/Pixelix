@@ -190,7 +190,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#path").val(rsp.data.path);
@@ -211,7 +211,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true,
                     parameter: {
                         path:  $("#path").val(),

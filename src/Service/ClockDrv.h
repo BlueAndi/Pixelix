@@ -102,6 +102,13 @@ public:
      */
     bool getTzTime(const char* tz, struct tm& timeInfo);
 
+    /**
+     * Get the current time zone offset in seconds.
+     *
+     * @return Current time zone offset in seconds.
+     */
+    long getCurrentTimeZoneOffset() const;
+
 private:
 
     /**

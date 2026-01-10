@@ -337,6 +337,21 @@ void ClockDrv::syncRtcByTime()
     }
 }
 
+long ClockDrv::getCurrentTimeZoneOffset() const
+{
+    time_t now = time(nullptr);
+    tm     gmTimeInfo;
+    tm     localTimeInfo;
+    long   offsetInSec = 0;
+
+    (void)gmtime_r(&now, &gmTimeInfo);
+    (void)localtime_r(&now, &localTimeInfo);
+
+    offsetInSec = static_cast<long>(mktime(&localTimeInfo)) - static_cast<long>(mktime(&gmTimeInfo));
+
+    return offsetInSec;
+}
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/
