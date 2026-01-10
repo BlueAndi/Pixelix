@@ -200,25 +200,14 @@ void MiniTerminal::executeCommand(const char* cmdLine)
 
         if (0 == strncmp(cmdLine, entry.cmdStr, cmdLen))
         {
-            const char* par = nullptr;
+            const char* par = &cmdLine[cmdLen];
 
-            /* Get the parameters from the command line. */
-            if (strlen(cmdLine) > cmdLen)
+            /* Skip leading whitespace. */
+            while ((ASCII_SP == *par) || (ASCII_TAB == *par))
             {
-                par = &cmdLine[cmdLen];
-
-                /* Skip leading whitespace. */
-                while ((ASCII_SP == *par) || (ASCII_TAB == *par))
-                {
-                    ++par;
-                }
-
-                /* Skip parameters if (truncated) rest of command line is empty. */
-                if (0 == strlen(par))
-                {
-                    par = nullptr;
-                }
+                ++par;
             }
+            // NOTE: Allow empty parameters to be able to clear settings values.
 
             /* Execute the command with its parameters (optional). */
             (this->*entry.handler)(par);
@@ -239,8 +228,8 @@ void MiniTerminal::cmdRestart(const char* par)
     RestartMgr&                  restartMgr    = RestartMgr::getInstance();
     RestartMgr::RestartReqStatus status        = RestartMgr::RESTART_REQ_STATUS_ERR;
 
-    /* Just restart the application? */
-    if (nullptr == par)
+    /* Just restart the application if no parameter has been given. */
+    if ('\0' == *par)
     {
         status = restartMgr.reqRestart(RESTART_DELAY, false);
     }
@@ -252,8 +241,8 @@ void MiniTerminal::cmdRestart(const char* par)
     /* Invalid parameter. */
     else
     {
-        /* Nothing to do. */
-        ;
+        writeError((String("Got invalid restart parameter '") + par + "'.\n").c_str());
+        return;
     }
 
     if (RestartMgr::RESTART_REQ_STATUS_OK != status)
@@ -268,53 +257,39 @@ void MiniTerminal::cmdRestart(const char* par)
 
 void MiniTerminal::cmdWriteWifiPassphrase(const char* par)
 {
-    if (nullptr != par)
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(false))
     {
-        SettingsService& settings = SettingsService::getInstance();
-
-        if (false == settings.open(false))
-        {
-            writeError();
-        }
-        else
-        {
-            KeyValueString& wifiPassword = settings.getWifiPassphrase();
-
-            wifiPassword.setValue(par);
-            settings.close();
-
-            writeSuccessful();
-        }
+        writeError("Failed to open settings.\n");
     }
     else
     {
-        writeError("Invalid Wifi passphrase.");
+        KeyValueString& wifiPassword = settings.getWifiPassphrase();
+
+        wifiPassword.setValue(par);
+        settings.close();
+
+        writeSuccessful();
     }
 }
 
 void MiniTerminal::cmdWriteWifiSSID(const char* par)
 {
-    if (nullptr != par)
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(false))
     {
-        SettingsService& settings = SettingsService::getInstance();
-
-        if (false == settings.open(false))
-        {
-            writeError();
-        }
-        else
-        {
-            KeyValueString& wifiSSID = settings.getWifiSSID();
-
-            wifiSSID.setValue(par);
-            settings.close();
-
-            writeSuccessful();
-        }
+        writeError("Failed to open settings.\n");
     }
     else
     {
-        writeError("Invalid Wifi SSID.");
+        KeyValueString& wifiSSID = settings.getWifiSSID();
+
+        wifiSSID.setValue(par);
+        settings.close();
+
+        writeSuccessful();
     }
 }
 
@@ -346,7 +321,7 @@ void MiniTerminal::cmdGetHostname(const char* par)
 
     if (false == settings.open(true))
     {
-        writeError();
+        writeError("Failed to open settings.\n");
     }
     else
     {
