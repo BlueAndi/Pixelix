@@ -324,15 +324,17 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
         m_user     = jsonUser.as<const char*>();
         m_password = jsonPassword.as<const char*>();
 
-        if (0 < strlen(rootCaCert))
+        if (nullptr != rootCaCert)
         {
+            const size_t ROOT_CA_CERT_LEN = strlen(rootCaCert);
+
             if (nullptr != m_rootCaCert)
             {
                 delete[] m_rootCaCert;
                 m_rootCaCert = nullptr;
             }
 
-            m_rootCaCert = new (std::nothrow) char[strlen(rootCaCert) + 1U];
+            m_rootCaCert = new (std::nothrow) char[ROOT_CA_CERT_LEN + 1U];
 
             if (nullptr != m_rootCaCert)
             {
@@ -340,15 +342,17 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
             }
         }
 
-        if (0 < strlen(clientCert))
+        if (nullptr != clientCert)
         {
+            const size_t CLIENT_CERT_LEN = strlen(clientCert);
+
             if (nullptr != m_clientCert)
             {
                 delete[] m_clientCert;
                 m_clientCert = nullptr;
             }
 
-            m_clientCert = new (std::nothrow) char[strlen(clientCert) + 1U];
+            m_clientCert = new (std::nothrow) char[CLIENT_CERT_LEN + 1U];
 
             if (nullptr != m_clientCert)
             {
@@ -356,15 +360,17 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
             }
         }
 
-        if (0 < strlen(clientKey))
+        if (nullptr != clientKey)
         {
+            const size_t CLIENT_KEY_LEN = strlen(clientKey);
+
             if (nullptr != m_clientKey)
             {
                 delete[] m_clientKey;
                 m_clientKey = nullptr;
             }
 
-            m_clientKey = new (std::nothrow) char[strlen(clientKey) + 1U];
+            m_clientKey = new (std::nothrow) char[CLIENT_KEY_LEN + 1U];
 
             if (nullptr != m_clientKey)
             {
