@@ -440,19 +440,21 @@ void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 
 String SunrisePlugin::addCurrentTimeZoneValues(const String& dateTimeString) const
 {
-    tm        gmTimeInfo;
+    tm        utcTimeInfo;
     const tm* lcTimeInfo = nullptr;
-    time_t    gmTime;
+    time_t    tLocal;
     char      timeBuffer[17] = { 0 };
 
     /* Example: "2015-05-21T05:05:35+00:00" */
 
     /* Convert date/time string to GMT time information */
-    (void)strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S", &gmTimeInfo);
+    (void)strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S", &utcTimeInfo);
 
     /* Convert to local time */
-    gmTime     = mktime(&gmTimeInfo);
-    lcTimeInfo = localtime(&gmTime);
+    utcTimeInfo.tm_isdst = 0; /* Not daylight saving time. */
+    tLocal               = mktime(&utcTimeInfo);
+    tLocal              += ClockDrv::getInstance().getCurrentTimeZoneOffset();
+    lcTimeInfo          = localtime(&tLocal);
 
     /* Convert time information to user friendly string. */
     (void)strftime(timeBuffer, sizeof(timeBuffer), m_timeFormat.c_str(), lcTimeInfo);
