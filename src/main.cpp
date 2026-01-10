@@ -314,7 +314,8 @@ static void* main_mbedtls_calloc(size_t count, size_t size)
 {
     void* ptr = ps_calloc(count, size);
 
-    if (nullptr != ptr)
+    /* If it failed, try regular calloc. */
+    if (nullptr == ptr)
     {
         ptr = calloc(count, size);
     }
