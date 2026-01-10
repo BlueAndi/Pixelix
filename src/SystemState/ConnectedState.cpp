@@ -92,7 +92,7 @@ void ConnectedState::entry(StateMachine& sm)
     /* Get some settings. */
     if (false == settings.open(true))
     {
-        LOG_WARNING("Use default hostname.");
+        LOG_WARNING("Using default hostname.");
 
         notifyURL = settings.getNotifyURL().getDefault();
         isQuiet   = settings.getQuietMode().getDefault();
@@ -110,7 +110,7 @@ void ConnectedState::entry(StateMachine& sm)
 
     /* Show hostname and IP. */
     infoStr += WiFi.getHostname();
-    infoStr += " IP: ";
+    infoStr += infoStringIp;
     infoStr += WiFi.localIP().toString();
 
     LOG_INFO(infoStr);

@@ -29,8 +29,8 @@ ___
   - [Special Variants](#special-variants)
 - [Installation](#installation)
 - [Very First Startup](#very-first-startup)
-  - [Variant 1: Configure wifi station SSID and passphrase with the browser](#variant-1-configure-wifi-station-ssid-and-passphrase-with-the-browser)
-  - [Variant 2: Configure wifi station SSID and passphrase with the terminal](#variant-2-configure-wifi-station-ssid-and-passphrase-with-the-terminal)
+  - [Variant 1: Configure WiFi station SSID and passphrase using a browser](#variant-1-configure-wifi-station-ssid-and-passphrase-using-a-browser)
+  - [Variant 2: Configure WiFi station SSID and passphrase using a serial terminal](#variant-2-configure-wifi-station-ssid-and-passphrase-using-a-serial-terminal)
   - [PIXELIX Is Ready](#pixelix-is-ready)
 - [User Interface](#user-interface)
   - [One button control](#one-button-control)
@@ -76,11 +76,11 @@ It doesn't require any cloud connection, even its not required to have a smartho
 
 Please note, that not every feature might be available for all kind of development boards. E.g. for MQTT support you need a development board with 8 MB flash or more, except for the Ulanzi TC001. See the `config<variant>.ini` configuration files in [./config](./config) folder.
 
-| Some impressions |   |
-| - | - |
-| ![TimePlugin](./lib/DateTimePlugin/web/DateTimePlugin1.jpg) | ![DatePlugin](./lib//DateTimePlugin/web/DateTimePlugin2.jpg) |
+| Some impressions                                                           |                                                                |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| ![TimePlugin](./lib/DateTimePlugin/web/DateTimePlugin1.jpg)                | ![DatePlugin](./lib//DateTimePlugin/web/DateTimePlugin2.jpg)   |
 | ![IconTextLampPlugin](./lib/IconTextLampPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/IconTextPlugin/web/IconTextPlugin.jpg) |
-| ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg) | ... |
+| ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg)       | ...                                                            |
 
 ## Original Setup
 
@@ -143,14 +143,14 @@ Note, that the LED panel topology and the display width/height can not be change
 
 ## Very First Startup
 
-If the device starts the very first time, the wifi station SSID and passphrase settings are empty. They can be configured in two possible ways:
+When the device starts for the very first time, the WiFi station SSID and passphrase settings are empty. They can be configured in two possible ways:
 
 1. Using the browser and set them in the captive portal.
-2. Using a terminal connecting via usb.
+2. Using a serial terminal connecting via USB.
 
-### Variant 1: Configure wifi station SSID and passphrase with the browser
+### Variant 1: Configure WiFi station SSID and passphrase using a browser
 
-Restart the device and **keep the button pressed** until it shows the SSID of the wifi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
+Restart the device and **keep the button pressed** until it shows the SSID of the WiFi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
 
 - SSID: **pixelix-&lt;DEVICE-ID&gt;**
 - Passphrase: **Luke, I am your father.**
@@ -162,19 +162,20 @@ Use the following default credentials to get access to the PIXELIX web interface
 - User: **luke**
 - Password: **skywalker**
 
-### Variant 2: Configure wifi station SSID and passphrase with the terminal
+### Variant 2: Configure WiFi station SSID and passphrase using a serial terminal
 
-Connect PIXELIX with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
+Connect PIXELIX to your PC via USB and start a serial terminal. Use the following commands to set the WiFi SSID and passphrase of your home WiFi network:
 
-- Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
-- Write wifi SSID: ```write wifi ssid <your-ssid>```
+- Write WiFi passphrase: ```write wifi passphrase <your-passphrase>```
+- Write WiFi SSID: ```write wifi ssid <your-ssid>```
 - Restart PIXELIX: ```restart```
 - Get IP-address: ```get ip```
+- Get hostname: ```get hostname```
 - Get status: ```get status```
   - A status of 0 means everything is ok.
   - Other than 0, see their meaning in the low [low level error code table](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean). Note, the status of 1 is equal to E1 in the error code table and etc.
 
-Enter ```help``` to get a list of all supported commands.
+Use ```help``` to get a list of all supported commands.
 
 ### PIXELIX Is Ready
 
@@ -239,25 +240,25 @@ Adapt in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LE
 
 ### How to change text properties?
 
-Text properties can be changed using different keywords added to the string to be displayed.  
+Text properties can be changed using different keywords added to the string to be displayed.
 In order to be able to use these keywords, they must be inside curly braces, otherwise they will only be treated as text.
 
 The following keywords are available:
 
-| Keyword                                 | Description                                                                              |
-| --------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `{#RRGGBB}`                             | Set solid text color (`RRGGBB` in hex)                                                   |
-| `{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH}`   | Set linear vertical gradient text color (`RRGGBB` in hex, `OFFSET`/`LENGTH` in pixels)   |
-| `{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH}`   | Set linear horizontal gradient text color (`RRGGBB` in hex, `OFFSET`/`LENGTH` in pixels) |
-| `{stc}`                                 | Activate solid text color                                                                |
-| `{lgtc}`                                | Activate linear gradient text color                                                      |
-| `{hl}`                                  | Horizontal alignment left                                                                |
-| `{hc}`                                  | Horizontal alignment right                                                               |
-| `{hr}`                                  | Horizontal alignment center                                                              |
-| `{vt}`                                  | Vertical alignment top                                                                   |
-| `{vc}`                                  | Vertical alignment center                                                                |
-| `{vb}`                                  | Vertical alignment bottom                                                                |
-| `{0xCC}`                                | Special character code (CC in hex)                                                       |
+| Keyword                               | Description                                                                              |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `{#RRGGBB}`                           | Set solid text color (`RRGGBB` in hex)                                                   |
+| `{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH}` | Set linear vertical gradient text color (`RRGGBB` in hex, `OFFSET`/`LENGTH` in pixels)   |
+| `{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH}` | Set linear horizontal gradient text color (`RRGGBB` in hex, `OFFSET`/`LENGTH` in pixels) |
+| `{stc}`                               | Activate solid text color                                                                |
+| `{lgtc}`                              | Activate linear gradient text color                                                      |
+| `{hl}`                                | Horizontal alignment left                                                                |
+| `{hc}`                                | Horizontal alignment right                                                               |
+| `{hr}`                                | Horizontal alignment center                                                              |
+| `{vt}`                                | Vertical alignment top                                                                   |
+| `{vc}`                                | Vertical alignment center                                                                |
+| `{vb}`                                | Vertical alignment bottom                                                                |
+| `{0xCC}`                              | Special character code (CC in hex)                                                       |
 
 **Notes**:
 
@@ -277,15 +278,15 @@ The following keywords are available:
 
 This is a low level error code. Please have a look into the following table.
 
-| Error code | Description |
-| ---------- | ----------- |
-| E1 | Something happened, which can not be further explained, but was fatal. |
-| E2 | There is a problem with the two-wire (i2c) interface. |
-| E3 | There is no user button available. |
-| E4 | Bad filesystem, did you explicit program the filesystem too? If not, please upload it. |
-| E5 | The display manager didn't start up. |
-| E6 | The system message handler didn't start up. |
-| E7 | One of the services failed to start. |
+| Error code | Description                                                                            |
+| ---------- | -------------------------------------------------------------------------------------- |
+| E1         | Something happened, which can not be further explained, but was fatal.                 |
+| E2         | There is a problem with the two-wire (i2c) interface.                                  |
+| E3         | There is no user button available.                                                     |
+| E4         | Bad filesystem, did you explicit program the filesystem too? If not, please upload it. |
+| E5         | The display manager didn't start up.                                                   |
+| E6         | The system message handler didn't start up.                                            |
+| E7         | One of the services failed to start.                                                   |
 
 Press a button and Pixelix will jump to the Pixelix Updater.
 
@@ -374,28 +375,28 @@ build_flags =
 
 ## Used Libraries
 
-| Library | Description | License |
-| - | - | - |
-| [Arduino](https://github.com/platformio/platform-espressif32) | ESP32 Arduino framework v2.x.x | Apache-2.0 |
-| [PlatformIO](https://platformio.org) | PlatformIO is a cross-platform, cross-architecture, multiple framework, professional tool for embedded systems engineers and for software developers who write applications for embedded products. | Apache-2.0 |
-| [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) | Controlling the LED matrix with hardware support (I2S) | LGPL-3.0 |
-| [ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer) | Webserver | LGPL-3.0 |
-| [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock) | TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets | MIT |
-| [ArduinoJson](https://arduinojson.org/) | JSON handling | MIT |
-| [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils) | Stream utilities | MIT |
-| [Bootstrap](https://getbootstrap.com/) | CSS Framework | MIT |
-| [POPPER JS](https://popper.js.org/) | POPPER JS | MIT |
-| [jQuery](https://jquery.com/) | Javascript librariy for DOM handling | MIT |
-| [Adafruit Unified Sensor Driver](https://github.com/adafruit/Adafruit_Sensor) | A unified sensor abstraction layer. | Apache License 2.0 |
-| [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) | An Arduino library for the DHT series of low-cost temperature/humidity sensors. | MIT |
-| [arduino-sht](https://github.com/Sensirion/arduino-sht) | An Arduino library for reading the SHT3x family of temperature and humidity sensors. | BSD-3-Clause |
-| [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) | Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips | Mixed licenses: MIT, BSD, FreeBSD |
-| [arduinoFFT](https://github.com/kosme/arduinoFFT) | Fast Fourier Transform for Arduino. | GPL 3.0 |
-| [mufonts](https://github.com/muwerk/mufonts) | A collection of fonts compatible with Adafruit GFX library. These fonts were developed when creating various samples for mupplet display code. | MIT |
-| [JSZip](https://github.com/Stuk/jszip) | A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API. | MIT |
-| [JSZipUtils](https://github.com/Stuk/jszip-utils) | A collection of cross-browser utilities to go along with JSZip. | MIT |
-| [FileSaver.js](https://github.com/eligrey/FileSaver.js) | FileSaver.js is the solution to saving files on the client-side. | MIT |
-| [Arduino client for MQTT](https://github.com/knolleary/pubsubclient) | This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT. | MIT |
+| Library                                                                       | Description                                                                                                                                                                                        | License                           |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| [Arduino](https://github.com/platformio/platform-espressif32)                 | ESP32 Arduino framework v2.x.x                                                                                                                                                                     | Apache-2.0                        |
+| [PlatformIO](https://platformio.org)                                          | PlatformIO is a cross-platform, cross-architecture, multiple framework, professional tool for embedded systems engineers and for software developers who write applications for embedded products. | Apache-2.0                        |
+| [NeoPixelBus](https://github.com/Makuna/NeoPixelBus)                          | Controlling the LED matrix with hardware support (I2S)                                                                                                                                             | LGPL-3.0                          |
+| [ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer)          | Webserver                                                                                                                                                                                          | LGPL-3.0                          |
+| [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock)                | TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets                                                                                                        | MIT                               |
+| [ArduinoJson](https://arduinojson.org/)                                       | JSON handling                                                                                                                                                                                      | MIT                               |
+| [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils)                | Stream utilities                                                                                                                                                                                   | MIT                               |
+| [Bootstrap](https://getbootstrap.com/)                                        | CSS Framework                                                                                                                                                                                      | MIT                               |
+| [POPPER JS](https://popper.js.org/)                                           | POPPER JS                                                                                                                                                                                          | MIT                               |
+| [jQuery](https://jquery.com/)                                                 | Javascript librariy for DOM handling                                                                                                                                                               | MIT                               |
+| [Adafruit Unified Sensor Driver](https://github.com/adafruit/Adafruit_Sensor) | A unified sensor abstraction layer.                                                                                                                                                                | Apache License 2.0                |
+| [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) | An Arduino library for the DHT series of low-cost temperature/humidity sensors.                                                                                                                    | MIT                               |
+| [arduino-sht](https://github.com/Sensirion/arduino-sht)                       | An Arduino library for reading the SHT3x family of temperature and humidity sensors.                                                                                                               | BSD-3-Clause                      |
+| [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI)                                | Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips                                      | Mixed licenses: MIT, BSD, FreeBSD |
+| [arduinoFFT](https://github.com/kosme/arduinoFFT)                             | Fast Fourier Transform for Arduino.                                                                                                                                                                | GPL 3.0                           |
+| [mufonts](https://github.com/muwerk/mufonts)                                  | A collection of fonts compatible with Adafruit GFX library. These fonts were developed when creating various samples for mupplet display code.                                                     | MIT                               |
+| [JSZip](https://github.com/Stuk/jszip)                                        | A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API.                                                                                              | MIT                               |
+| [JSZipUtils](https://github.com/Stuk/jszip-utils)                             | A collection of cross-browser utilities to go along with JSZip.                                                                                                                                    | MIT                               |
+| [FileSaver.js](https://github.com/eligrey/FileSaver.js)                       | FileSaver.js is the solution to saving files on the client-side.                                                                                                                                   | MIT                               |
+| [Arduino client for MQTT](https://github.com/knolleary/pubsubclient)          | This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT.                                                                                      | MIT                               |
 
 ## Issues, Ideas And Bugs
 
