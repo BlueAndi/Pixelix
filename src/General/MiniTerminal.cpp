@@ -295,9 +295,9 @@ void MiniTerminal::cmdWriteWifiSSID(const char* par)
 
 void MiniTerminal::cmdGetIPAddress(const char* par)
 {
-    UTIL_NOT_USED(par);
-
     String result;
+
+    UTIL_NOT_USED(par);
 
     if (WIFI_MODE_AP == WiFi.getMode())
     {
@@ -315,9 +315,9 @@ void MiniTerminal::cmdGetIPAddress(const char* par)
 
 void MiniTerminal::cmdGetHostname(const char* par)
 {
-    UTIL_NOT_USED(par);
-
     SettingsService& settings = SettingsService::getInstance();
+
+    UTIL_NOT_USED(par);
 
     if (false == settings.open(true))
     {
@@ -335,10 +335,10 @@ void MiniTerminal::cmdGetHostname(const char* par)
 
 void MiniTerminal::cmdGetStatus(const char* par)
 {
-    UTIL_NOT_USED(par);
-
     ErrorState::ErrorId status = ErrorState::getInstance().getErrorId();
     String              result;
+
+    UTIL_NOT_USED(par);
 
     result += static_cast<int32_t>(status);
     result += "\n";
