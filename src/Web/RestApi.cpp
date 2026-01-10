@@ -84,6 +84,18 @@ typedef enum
 
 } HomeAssistantDiscoveryStatus;
 
+/**
+ * Single REST API route.
+ */
+struct RestApiRoute
+{
+    const char*               page;               /**< Page in the filesystem. */
+    WebRequestMethodComposite reqMethodComposite; /**< Request method composite */
+    ArRequestHandlerFunction  onRequest;          /**< Request handler function. */
+    ArUploadHandlerFunction   onUpload;           /**< Upload handler function. */
+    ArBodyHandlerFunction     onBody;             /**< Body handler function. */
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -132,6 +144,27 @@ static const ContentTypeElem contentTypeTable[] = {
     { ".gz", "application/x-gzip" }
 };
 
+/** REST API routes */
+static const RestApiRoute gRestApiRoutes[] = {
+    { "/rest/api/v1/display/fadeEffect", HTTP_GET | HTTP_POST, handleFadeEffect, nullptr, nullptr },
+    { "/rest/api/v1/display/slots", HTTP_GET, handleSlots, nullptr, nullptr },
+    { "/rest/api/v1/display/slot/*", HTTP_GET, handleSlot, nullptr, nullptr },
+    { "/rest/api/v1/plugin/install", HTTP_POST, handlePluginInstall, nullptr, nullptr },
+    { "/rest/api/v1/plugin/uninstall", HTTP_POST, handlePluginUninstall, nullptr, nullptr },
+    { "/rest/api/v1/plugins", HTTP_GET, handlePlugins, nullptr, nullptr },
+    { "/rest/api/v1/sensors", HTTP_GET, handleSensors, nullptr, nullptr },
+    { "/rest/api/v1/settings", HTTP_GET, handleSettings, nullptr, nullptr },
+    { "/rest/api/v1/setting", HTTP_GET | HTTP_POST, handleSetting, nullptr, nullptr },
+    { "/rest/api/v1/status", HTTP_GET, handleStatus, nullptr, nullptr },
+    { "/rest/api/v1/fs/file", HTTP_GET, handleFileGet, nullptr, nullptr },
+    { "/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler, nullptr },
+    { "/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete, nullptr, nullptr },
+    { "/rest/api/v1/fs", HTTP_GET, handleFilesystem, nullptr, nullptr },
+    { "/rest/api/v1/partitionChange", HTTP_POST, handlePartitionChange, nullptr, nullptr },
+    { "/rest/api/v1/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable, nullptr, nullptr },
+    { "/rest/api/v1/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr }
+};
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -150,23 +183,35 @@ static const ContentTypeElem contentTypeTable[] = {
 
 void RestApi::init(AsyncWebServer& srv)
 {
-    (void)srv.on("/rest/api/v1/display/fadeEffect", handleFadeEffect);
-    (void)srv.on("/rest/api/v1/display/slots", handleSlots);
-    (void)srv.on("/rest/api/v1/display/slot/*", handleSlot);
-    (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
-    (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
-    (void)srv.on("/rest/api/v1/plugins", handlePlugins);
-    (void)srv.on("/rest/api/v1/sensors", handleSensors);
-    (void)srv.on("/rest/api/v1/settings", handleSettings);
-    (void)srv.on("/rest/api/v1/setting", handleSetting);
-    (void)srv.on("/rest/api/v1/status", handleStatus);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_GET, handleFileGet);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete);
-    (void)srv.on("/rest/api/v1/fs", handleFilesystem);
-    (void)srv.on("/rest/api/v1/partitionChange", HTTP_POST, handlePartitionChange);
-    (void)srv.on("/rest/api/v1/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable);
-    (void)srv.on("/rest/api/v1/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus);
+    String           webLoginUser;
+    String           webLoginPassword;
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        webLoginUser     = settings.getWebLoginUser().getDefault();
+        webLoginPassword = settings.getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        webLoginUser     = settings.getWebLoginUser().getValue();
+        webLoginPassword = settings.getWebLoginPassword().getValue();
+
+        settings.close();
+    }
+
+    /* Register all REST API routes. */
+    for (size_t idx = 0; idx < UTIL_ARRAY_NUM(gRestApiRoutes); ++idx)
+    {
+        const RestApiRoute& route = gRestApiRoutes[idx];
+
+        (void)srv.on(route.page,
+                     route.reqMethodComposite,
+                     route.onRequest,
+                     route.onUpload,
+                     route.onBody)
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    }
 }
 
 /**
