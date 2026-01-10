@@ -148,6 +148,11 @@ public:
         gfx.fillScreen(ColorDef::BLACK);
         m_bitmapWidget.update(gfx);
         m_textWidget.update(gfx);
+
+        for (uint8_t idx = 0U; idx < MAX_LAMPS; ++idx)
+        {
+            m_lampWidgets[idx].update(gfx);
+        }
     }
 
     /**
