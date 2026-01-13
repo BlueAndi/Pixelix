@@ -43,6 +43,7 @@
 #include "FileSystem.h"
 #include "RestUtil.h"
 #include "SlotList.h"
+#include "RestartMgr.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -51,7 +52,7 @@
 #include <Logging.h>
 #include <SensorDataProvider.h>
 #include <SettingsService.h>
-#include "RestartMgr.h"
+#include <FileUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -117,7 +118,6 @@ static void                         handleFilesystem(AsyncWebServerRequest* requ
 static void                         handleFileGet(AsyncWebServerRequest* request);
 static const char*                  getContentType(const String& filename);
 static void                         handleFilePost(AsyncWebServerRequest* request);
-static bool                         createDirectories(const String& path);
 static void                         uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final);
 static void                         handleFileDelete(AsyncWebServerRequest* request);
 static bool                         isValidHostname(const String& hostname);
@@ -1571,40 +1571,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
 }
 
 /**
- * Create directories recursively by parsing the given path.
- *
- * @param[in] path  Path to create.
- *
- * @return If successful created, it will return true otherwise false.
- */
-static bool createDirectories(const String& path)
-{
-    bool    status = true;
-    uint8_t idx    = 0U;
-    String  currentPath;
-
-    while ((true == status) && (path.length() > idx))
-    {
-        if ('/' == path[idx])
-        {
-            if (0U < currentPath.length())
-            {
-                if (false == FILESYSTEM.exists(currentPath))
-                {
-                    status = FILESYSTEM.mkdir(currentPath);
-                }
-            }
-        }
-
-        currentPath += path[idx];
-
-        ++idx;
-    }
-
-    return status;
-}
-
-/**
  * File upload handler.
  *
  * @param[in] request   HTTP request.
@@ -1622,7 +1588,7 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
     if (0 == index)
     {
         /* Create directories if not exist. */
-        if (false == createDirectories(filename))
+        if (false == FileUtil::createDirectories(filename))
         {
             isError = true;
         }
