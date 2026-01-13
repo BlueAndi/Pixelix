@@ -267,6 +267,16 @@ private:
      * @return If successful, it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObjectConst& value);
+
+    /**
+     * Connect all MQTT broker connections.
+     */
+    void connectAllBrokers();
+
+    /**
+     * Disconnect all MQTT broker connections.
+     */
+    void disconnectAllBrokers();
 };
 
 /******************************************************************************

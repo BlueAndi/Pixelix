@@ -102,40 +102,11 @@ bool MqttService::start()
 
         if (false == loadSettings())
         {
-            saveSettings();
+            (void)saveSettings();
         }
 
         /* Start MQTT broker connections. */
-        for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
-        {
-            MqttSetting& setting = m_settings[idx];
-
-            if ((true == setting.isEnabled()) &&
-                (false == setting.getBroker().isEmpty()))
-            {
-                m_brokerConnections[idx].setLastWillTopic(m_deviceId + "/status", "online", "offline");
-
-                if (false == m_brokerConnections[idx].setupClient(setting.useTls(),
-                                 setting.getRootCaCert(),
-                                 setting.getClientCert(),
-                                 setting.getClientKey()))
-                {
-                    LOG_WARNING("MQTT client setup for broker %s failed.", setting.getBroker().c_str());
-                }
-                else if (false == m_brokerConnections[idx].connect(m_deviceId,
-                                      setting.getBroker(),
-                                      setting.getPort(),
-                                      setting.getUser(),
-                                      setting.getPassword()))
-                {
-                    LOG_WARNING("MQTT broker connection to %s failed.", setting.getBroker().c_str());
-                }
-                else
-                {
-                    ;
-                }
-            }
-        }
+        connectAllBrokers();
     }
 
     if (false == isSuccessful)
@@ -162,10 +133,7 @@ void MqttService::stop()
     topicHandlerService.unregisterTopic(m_deviceId, ENTITY_ID, TOPIC);
 
     /* Stop MQTT broker connections. */
-    for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
-    {
-        m_brokerConnections[idx].disconnect();
-    }
+    disconnectAllBrokers();
 
     m_mutex.destroy();
 
@@ -443,7 +411,7 @@ bool MqttService::setTopic(const String& topic, const JsonObjectConst& jsonValue
         size_t         count                 = (MAX_MQTT_COUNT >= jsonMqttSettingsArray.size()) ? jsonMqttSettingsArray.size() : MAX_MQTT_COUNT;
         MqttSetting    tempSetting;
 
-        isSuccessful                         = true;
+        isSuccessful = true;
         for (idx = 0U; idx < count; ++idx)
         {
             if (false == tempSetting.fromJson(jsonMqttSettingsArray[idx]))
@@ -463,9 +431,59 @@ bool MqttService::setTopic(const String& topic, const JsonObjectConst& jsonValue
     if (true == isSuccessful)
     {
         isSuccessful = saveSettings();
+
+        if (true == isSuccessful)
+        {
+            disconnectAllBrokers();
+            connectAllBrokers();
+        }
     }
 
     return isSuccessful;
+}
+
+void MqttService::connectAllBrokers()
+{
+    for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
+    {
+        MqttSetting& setting = m_settings[idx];
+
+        if ((true == setting.isEnabled()) &&
+            (false == setting.getBroker().isEmpty()))
+        {
+            m_brokerConnections[idx].setLastWillTopic(m_deviceId + "/status", "online", "offline");
+
+            if (false == m_brokerConnections[idx].setupClient(
+                             setting.useTls(),
+                             setting.getRootCaCert(),
+                             setting.getClientCert(),
+                             setting.getClientKey()))
+            {
+                LOG_WARNING("MQTT client setup for broker %s failed.", setting.getBroker().c_str());
+            }
+            else if (false == m_brokerConnections[idx].connect(
+                                  m_deviceId,
+                                  setting.getBroker(),
+                                  setting.getPort(),
+                                  setting.getUser(),
+                                  setting.getPassword()))
+            {
+                LOG_WARNING("MQTT broker connection to %s failed.", setting.getBroker().c_str());
+            }
+            else
+            {
+                ;
+            }
+        }
+    }
+}
+
+void MqttService::disconnectAllBrokers()
+{
+    for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
+    {
+        m_brokerConnections[idx].disconnect();
+    }
 }
 
 /******************************************************************************
