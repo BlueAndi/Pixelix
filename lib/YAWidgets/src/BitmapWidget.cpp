@@ -38,6 +38,7 @@
 
 #include <YAColor.h>
 #include <Logging.h>
+#include <FileUtil.h>
 
 /******************************************************************************
  * Compiler Switches
