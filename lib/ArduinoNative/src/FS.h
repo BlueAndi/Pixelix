@@ -196,18 +196,50 @@ public:
         return exists(path.c_str());
     }
 
-    bool remove(const char* path);
-    bool remove(const String& path);
+    bool remove(const char* path)
+    {
+        return (0 == std::remove(path));
+    }
 
-    bool rename(const char* pathFrom, const char* pathTo);
-    bool rename(const String& pathFrom, const String& pathTo);
+    bool remove(const String& path)
+    {
+        return remove(path.c_str());
+    }
 
-    bool mkdir(const char *path);
-    bool mkdir(const String &path);
+    bool rename(const char* pathFrom, const char* pathTo)
+    {
+        return (0 == std::rename(pathFrom, pathTo));
+    }
 
-    bool rmdir(const char *path);
-    bool rmdir(const String &path);
+    bool rename(const String& pathFrom, const String& pathTo)
+    {
+        return rename(pathFrom.c_str(), pathTo.c_str());
+    }
+
+    bool mkdir(const char *path)
+    {
+        /* Not implemented */
+        return false;
+    }
+
+    bool mkdir(const String &path)
+    {
+        return mkdir(path.c_str());
+    }
+
+    bool rmdir(const char *path)
+    {
+        /* Not implemented */
+        return false;
+    }
+
+    bool rmdir(const String &path)
+    {
+        return rmdir(path.c_str());
+    }
 };
+
+extern FS NativeFS;
 
 /******************************************************************************
  * Functions

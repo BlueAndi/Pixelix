@@ -42,11 +42,36 @@
  *****************************************************************************/
 
 /**
- * Defines LittleFS as filesystem format (must be 1).
+ * The filesystem Native FS.
  */
-#define FILESYSTEM_USE_LITTLEFS (1)
+#define FILESYSTEM_NATIVE (0)
 
-#if FILESYSTEM_USE_LITTLEFS
+/**
+ * The filesytem SPIFFS.
+ */
+#define FILESYSTEM_SPIFFS (1)
+
+/**
+ * The filesystem LittleFS.
+ */
+#define FILESYSTEM_LITTLEFS (2)
+
+#ifndef CONFIG_FILESYSTEM_TYPE
+/** Select the filesystem type here. */
+#define CONFIG_FILESYSTEM_TYPE FILESYSTEM_NATIVE
+#endif  /* CONFIG_FILESYSTEM_TYPE */
+
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE
+
+/** The used filesystem type. */
+#define FILESYSTEM              NativeFS
+
+/** The filename of the filesystem image. */
+#define FILESYSTEM_FILENAME     "fs.bin"
+
+#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
+
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
 
 /** The used filesystem type. */
 #define FILESYSTEM              LittleFS
@@ -54,14 +79,9 @@
 /** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME     "littlefs.bin"
 
-#endif  /* FILESYSTEM_USE_LITTLEFS */
+#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
 
-/**
- * Defines SPIFFS as filesystem format (must be 1).
- */
-#define FILESYSTEM_USE_SPIFFS   (0)
-
-#if FILESYSTEM_USE_SPIFFS
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
 
 /** The used filesystem type. */
 #define FILESYSTEM              SPIFFS
@@ -69,18 +89,22 @@
 /** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME     "spiffs.bin"
 
-#endif  /* FILESYSTEM_USE_SPIFFS */
+#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#if FILESYSTEM_USE_LITTLEFS
-#include <LittleFS.h>
-#endif  /* FILESYSTEM_USE_LITTLEFS */
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE
+#include <FS.h>
+#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
 
-#if FILESYSTEM_USE_SPIFFS
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
+#include <LittleFS.h>
+#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
+
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
 #include <SPIFFS.h>
-#endif  /* FILESYSTEM_USE_SPIFFS */
+#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
 
 /******************************************************************************
  * Macros
