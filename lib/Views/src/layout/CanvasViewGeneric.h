@@ -60,6 +60,10 @@
 
 /**
  * Generic view for LED matrix with bitmap and canvas.
+ * 
+ * The bitmap widget is used to show an icon, while the canvas widget
+ * is used for drawing. The canvas widget is transparent, so the bitmap
+ * will be visible below the canvas.
  */
 class CanvasViewGeneric : public ICanvasView
 {
@@ -73,6 +77,12 @@ public:
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_canvasWidget(CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_X, CANVAS_Y)
     {
+        /* Center the bitmap. */
+        m_bitmapWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+        m_bitmapWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+
+        /* Enable transparency for canvas widget. */
+        m_canvasWidget.enableTransparency(ColorDef::BLACK);
     }
 
     /**
@@ -121,6 +131,16 @@ public:
     void clearIcon() override
     {
         m_bitmapWidget.clear(ColorDef::BLACK);
+    }
+
+    /**
+     * Is an icon currently shown?
+     *
+     * @return If an icon is shown, it will return true otherwise false.
+     */
+    bool isIconShown() const
+    {
+        return false == m_bitmapWidget.isEmpty();
     }
 
 protected:

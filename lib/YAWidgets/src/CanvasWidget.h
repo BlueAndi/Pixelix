@@ -66,7 +66,7 @@ public:
 
     /**
      * Constructs a canvas widget.
-     * 
+     *
      * @param[in] width     Widget width in pixel.
      * @param[in] height    Widget height in pixel.
      * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
@@ -75,19 +75,23 @@ public:
     CanvasWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
         Widget(WIDGET_TYPE, width, height, x, y),
         YAGfx(),
-        m_bitmap(width, height)
+        m_bitmap(width, height),
+        m_isTransparent(false),
+        m_transparentColor(ColorDef::BLACK)
     {
     }
 
     /**
      * Constructs a canvas widget by copy.
-     * 
+     *
      * @param[in] canvas Source canvas which to copy.
      */
     CanvasWidget(const CanvasWidget& canvas) :
         Widget(canvas),
         YAGfx(),
-        m_bitmap(canvas.m_bitmap)
+        m_bitmap(canvas.m_bitmap),
+        m_isTransparent(canvas.m_isTransparent),
+        m_transparentColor(canvas.m_transparentColor)
     {
     }
 
@@ -100,9 +104,9 @@ public:
 
     /**
      * Assigns a canvas widget.
-     * 
+     *
      * @param[in] canvas Source canvas widget which to assign.
-     * 
+     *
      * @return Canvas widget
      */
     CanvasWidget& operator=(const CanvasWidget& canvas)
@@ -111,7 +115,9 @@ public:
         {
             Widget::operator=(canvas);
 
-            m_bitmap = canvas.m_bitmap;
+            m_bitmap           = canvas.m_bitmap;
+            m_isTransparent    = canvas.m_isTransparent;
+            m_transparentColor = canvas.m_transparentColor;
         }
 
         return *this;
@@ -129,7 +135,7 @@ public:
 
     /**
      * Set widget width.
-     * 
+     *
      * @param[in] width Width in pixel
      */
     void setWidth(uint16_t width) final
@@ -155,7 +161,7 @@ public:
 
     /**
      * Set widget height.
-     * 
+     *
      * @param[in] height Height in pixel
      */
     void setHeight(uint16_t height) final
@@ -199,7 +205,7 @@ public:
 
     /**
      * Draw a single pixel at given position.
-     * 
+     *
      * It will NOT be checked whether the pixel is outside the canvas.
      * The other graphic functions will ensure to draw inside the canvas
      * and may call drawPixel() quite often. This shall keep the processor
@@ -217,15 +223,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
@@ -236,15 +242,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
@@ -255,15 +261,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
@@ -274,15 +280,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
@@ -290,21 +296,49 @@ public:
         return m_bitmap.getFrameBufferYAddr(x, y, length, offset);
     }
 
+    /**
+     * Enable transparency with the given transparent color.
+     *
+     * @param[in] transparentColor Color which shall be treated as transparent.
+     */
+    void enableTransparency(const Color& transparentColor)
+    {
+        m_isTransparent    = true;
+        m_transparentColor = transparentColor;
+    }
+
+    /**
+     * Disable transparency.
+     */
+    void disableTransparency()
+    {
+        m_isTransparent = false;
+    }
+
     /** Widget type string */
-    static const char*      WIDGET_TYPE;
+    static const char* WIDGET_TYPE;
 
 private:
 
-    YAGfxDynamicBitmap m_bitmap; /**< Bitmap which is used to draw inside. */
+    YAGfxDynamicBitmap m_bitmap;           /**< Bitmap which is used to draw inside. */
+    bool               m_isTransparent;    /**< Indicates whether transparency is enabled or not. */
+    Color              m_transparentColor; /**< Transparent color */
 
     /**
      * Paint the widget with the given graphics interface.
-     * 
+     *
      * @param[in] gfx   Graphics interface
      */
     void paint(YAGfx& gfx) override
     {
-        gfx.drawBitmap(0, 0, m_bitmap);
+        if (false == m_isTransparent)
+        {
+            gfx.drawBitmap(0, 0, m_bitmap);
+        }
+        else
+        {
+            gfx.drawBitmap(0, 0, m_bitmap, m_transparentColor);
+        }
     }
 };
 
@@ -312,6 +346,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CANVAS_WIDGET_H */
+#endif /* CANVAS_WIDGET_H */
 
 /** @} */
