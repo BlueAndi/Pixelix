@@ -181,15 +181,18 @@ MqttSetting& MqttSetting::operator=(MqttSetting&& other) noexcept
 {
     if (this != &other)
     {
-        m_isEnabled    = other.m_isEnabled;
-        m_useTls       = other.m_useTls;
-        m_broker       = other.m_broker;
-        m_port         = other.m_port;
-        m_user         = other.m_user;
-        m_password     = other.m_password;
-        m_rootCaCert   = other.m_rootCaCert;
-        m_clientCert   = other.m_clientCert;
-        m_clientKey    = other.m_clientKey;
+        m_isEnabled        = other.m_isEnabled;
+        m_useTls           = other.m_useTls;
+        m_port             = other.m_port;
+
+        /* Take over ownership of the pointers. */
+        m_broker           = std::move(other.m_broker);
+        m_user             = std::move(other.m_user);
+        m_password         = std::move(other.m_password);
+
+        m_rootCaCert       = other.m_rootCaCert;
+        m_clientCert       = other.m_clientCert;
+        m_clientKey        = other.m_clientKey;
 
         other.m_rootCaCert = nullptr;
         other.m_clientCert = nullptr;
@@ -203,10 +206,11 @@ void MqttSetting::clear()
 {
     m_isEnabled = false;
     m_useTls    = false;
-    m_broker    = "";
     m_port      = MQTT_PORT;
-    m_user      = "";
-    m_password  = "";
+
+    m_broker.clear();
+    m_user.clear();
+    m_password.clear();
 
     if (nullptr != m_rootCaCert)
     {
