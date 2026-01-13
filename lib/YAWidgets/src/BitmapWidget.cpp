@@ -63,10 +63,10 @@
 const char* BitmapWidget::WIDGET_TYPE     = "bitmap";
 
 /* Initialize bitmap image filename extension. */
-const char* BitmapWidget::FILE_EXT_BITMAP = ".bmp";
+const char* BitmapWidget::FILE_EXT_BITMAP = "bmp";
 
 /* Initialize GIF image filename extension. */
-const char* BitmapWidget::FILE_EXT_GIF    = ".gif";
+const char* BitmapWidget::FILE_EXT_GIF    = "gif";
 
 /******************************************************************************
  * Public Methods
@@ -136,20 +136,18 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        int32_t index = filename.lastIndexOf(".");
+        String fileExtension = FileUtil::getFileExtension(filename);
 
         /* File extension found? */
-        if (0 <= index)
+        if (false == fileExtension.isEmpty())
         {
-            String fileExt = filename.substring(index);
-
             /* BMP image? */
-            if (true == fileExt.equalsIgnoreCase(FILE_EXT_BITMAP))
+            if (true == fileExtension.equalsIgnoreCase(FILE_EXT_BITMAP))
             {
                 isSuccessful = loadBMP(fs, filename);
             }
             /* GIF image? */
-            else if (true == fileExt.equalsIgnoreCase(FILE_EXT_GIF))
+            else if (true == fileExtension.equalsIgnoreCase(FILE_EXT_GIF))
             {
                 isSuccessful = loadGIF(fs, filename);
             }

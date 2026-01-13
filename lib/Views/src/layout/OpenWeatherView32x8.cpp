@@ -370,23 +370,23 @@ void OpenWeatherView32x8::getIconPathByWeatherIconId(String& fullPath, const Str
         String fullPathToIcon;
 
         fullPathWithoutExt += weatherIconId;
-        fullPathToIcon      = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
+        fullPathToIcon      = fullPathWithoutExt + addition + "." + BitmapWidget::FILE_EXT_BITMAP;
 
         /* No specific bitmap icon available? */
         if (false == FILESYSTEM.exists(fullPathToIcon))
         {
             /* No specific GIF icon available? */
-            fullPathToIcon = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_GIF;
+            fullPathToIcon = fullPathWithoutExt + addition + "." + BitmapWidget::FILE_EXT_GIF;
             if (false == FILESYSTEM.exists(fullPathToIcon))
             {
                 fullPathWithoutExt  = m_imagePath;
                 fullPathWithoutExt += weatherIconId.substring(0U, weatherIconId.length() - 1U);
-                fullPathToIcon      = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
+                fullPathToIcon      = fullPathWithoutExt + addition + "." + BitmapWidget::FILE_EXT_BITMAP;
 
                 /* No generic bitmap icon available? */
                 if (false == FILESYSTEM.exists(fullPathToIcon))
                 {
-                    fullPathToIcon = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_GIF;
+                    fullPathToIcon = fullPathWithoutExt + addition + "." + BitmapWidget::FILE_EXT_GIF;
 
                     /* No generic GIF icon available? */
                     if (true == FILESYSTEM.exists(fullPathToIcon))
