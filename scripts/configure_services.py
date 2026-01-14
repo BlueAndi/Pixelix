@@ -166,6 +166,7 @@ def _generate_web_menu(menu_full_path, service_list):
         service_list (list): List of all service names
     """
     with open(menu_full_path, 'w', encoding="utf-8") as file_desc:
+        file_desc.write("\"use strict\";\n\n")
         file_desc.write("var serviceSubMenu = [\n")
 
         for idx, service_name in enumerate(service_list):
@@ -180,7 +181,7 @@ def _generate_web_menu(menu_full_path, service_list):
             else:
                 file_desc.write(",\n")
 
-        file_desc.write("]\n")
+        file_desc.write("];\n")
 
 def _generate_cpp_service(service_list_full_path, service_list):
     """Generate the Service.cpp source file.

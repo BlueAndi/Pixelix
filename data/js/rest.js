@@ -1,3 +1,5 @@
+"use strict";
+
 var pixelix = window.pixelix || {};
 
 pixelix.rest = {};

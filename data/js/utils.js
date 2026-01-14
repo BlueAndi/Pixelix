@@ -1,3 +1,5 @@
+"use strict";
+
 var utils = window.utils || {};
 
 utils.enableForm = function(formId, enableIt) {
