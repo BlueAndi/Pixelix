@@ -306,7 +306,7 @@ pixelix.rest.Client.prototype.setDisplayState = function(state) {
                 state: state
             }
         });
-    };
+    }
 
     return promise;
 };

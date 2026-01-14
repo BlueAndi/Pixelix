@@ -32,7 +32,7 @@ pixelix.ws.getLogLevelStr = function(logLevel) {
         break;
 
     default:
-        str = "UNKNWON";
+        str = "UNKNOWN";
         break;
     }
 
@@ -76,6 +76,30 @@ pixelix.ws.Client = function(options) {
         if (null !== this._onEvent) {
             this._onEvent(evt);
         }
+    };
+
+    this._quote = function(text) {
+        return "\"" + text + "\"";
+    };
+
+    this._removeQuotes = function(text) {
+        var result = text;
+
+        if ((text.length >= 2) &&
+            (text.charAt(0) === "\"") &&
+            (text.charAt(text.length - 1) === "\"")) {
+            result = text.substring(1, text.length - 1);
+        }
+
+        return result;
+    };
+
+    this._toBoolean = function(value) {
+        return (0 === parseInt(value)) ? false : true;
+    };
+
+    this._boolToInt = function(value) {
+        return (false === value) ? 0 : 1;
     };
 };
 
@@ -180,7 +204,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 rsp.brightness = parseInt(data[0]);
                 rsp.minBrightness = parseInt(data[1]);
                 rsp.maxBrightness = parseInt(data[2]);
-                rsp.automaticBrightnessControl = (1 === parseInt(data[3])) ? true : false;
+                rsp.automaticBrightnessControl = this._toBoolean(data[3]);
                 this._pendingCmd.resolve(rsp);
             } else if ("BUTTON" === this._pendingCmd.name) {
                 this._pendingCmd.resolve(rsp);
@@ -189,20 +213,20 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this._pendingCmd.resolve(rsp);
             } else if ("INSTALL" === this._pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
-                rsp.uid = parseInt(data[1]);
+                rsp.uid = this._removeQuotes(data[1]);
                 this._pendingCmd.resolve(rsp);
             } else if ("IPERF" === this._pendingCmd.name) {
-                rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
+                rsp.isEnabled = this._toBoolean(data[0]);
                 this._pendingCmd.resolve(rsp);
             } else if ("LOG" === this._pendingCmd.name) {
-                rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
+                rsp.isEnabled = this._toBoolean(data[0]);
                 this._pendingCmd.resolve(rsp);
             } else if ("MOVE" === this._pendingCmd.name) {
                 this._pendingCmd.resolve(rsp);
             } else if ("PLUGINS" === this._pendingCmd.name) {
                 rsp.plugins = [];
                 for(index = 0; index < data.length; ++index) {
-                    rsp.plugins.push(data[index].substring(1, data[index].length - 1));
+                    rsp.plugins.push(this._removeQuotes(data[index]));
                 }
                 this._pendingCmd.resolve(rsp);
             } else if ("RESTART" === this._pendingCmd.name) {
@@ -212,13 +236,13 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this._pendingCmd.resolve(rsp);
             } else if ("SLOT" === this._pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
-                rsp.name = data[1].substring(1, data[1].length - 1),
-                rsp.uid = parseInt(data[2]),
-                rsp.alias = data[3].substring(1, data[3].length - 1),
-                rsp.isLocked = (0 == parseInt(data[4])) ? false : true,
-                rsp.isSticky = (0 == parseInt(data[5])) ? false : true,
-                rsp.isDisabled = (0 == parseInt(data[6])) ? false : true,
-                rsp.duration = parseInt(data[7])
+                rsp.name = this._removeQuotes(data[1]);
+                rsp.uid = parseInt(data[2]);
+                rsp.alias = this._removeQuotes(data[3]);
+                rsp.isLocked = this._toBoolean(data[4]);
+                rsp.isSticky = this._toBoolean(data[5]);
+                rsp.isDisabled = this._toBoolean(data[6]);
+                rsp.duration = parseInt(data[7]);
                 this._pendingCmd.resolve(rsp);
             } else if ("SLOTS" === this._pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
@@ -226,12 +250,12 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 elements = 7;
                 for(index = 0; index < (data.length / elements); ++index) {
                     rsp.slots.push({
-                        name: data[elements * index + 0].substring(1, data[elements * index + 0].length - 1),
+                        name: this._removeQuotes(data[elements * index + 0]),
                         uid: parseInt(data[elements * index + 1]),
-                        alias: data[elements * index + 2].substring(1, data[elements * index + 2].length - 1),
-                        isLocked: (0 == parseInt(data[elements * index + 3])) ? false : true,
-                        isSticky: (0 == parseInt(data[elements * index + 4])) ? false : true,
-                        isDisabled: (0 == parseInt(data[elements * index + 5])) ? false : true,
+                        alias: this._removeQuotes(data[elements * index + 2]),
+                        isLocked: this._toBoolean(data[elements * index + 3]),
+                        isSticky: this._toBoolean(data[elements * index + 4]),
+                        isDisabled: this._toBoolean(data[elements * index + 5]),
                         duration: parseInt(data[elements * index + 6])
                     });
                 }
@@ -341,7 +365,7 @@ pixelix.ws.Client.prototype.setBrightness = function(options) {
             par += ";";
             par += options.maxBrightness;
             par += ";";
-            par += (false == options.automaticBrightnessControl) ? 0 : 1;
+            par += this._boolToInt(options.automaticBrightnessControl);
 
             this._sendCmd({
                 name: "BRIGHTNESS",
@@ -377,7 +401,7 @@ pixelix.ws.Client.prototype.install = function(options) {
         } else {
             this._sendCmd({
                 name: "INSTALL",
-                par: "\"" + options.pluginName + "\"",
+                par: this._quote(options.pluginName),
                 resolve: resolve,
                 reject: reject
             });
@@ -426,7 +450,7 @@ pixelix.ws.Client.prototype.setLog = function(options) {
         } else {
             this._sendCmd({
                 name: "LOG",
-                par: (false == options.enable) ? 0 : 1,
+                par: this._boolToInt(options.enable),
                 resolve: resolve,
                 reject: reject
             });
@@ -511,7 +535,7 @@ pixelix.ws.Client.prototype.setSlot = function(options) {
             reject();
         } else {
 
-            par += options.slotId
+            par += options.slotId;
             par += ";";
             
             if ("boolean" !== typeof options.sticky) {
@@ -560,27 +584,27 @@ pixelix.ws.Client.prototype.startIperf = function(options) {
             reject();
         } else {
 
-            if ("string" === typeof options) {
+            if ("object" === typeof options) {
 
                 if ("string" === typeof options.protocol) {
                     par += ";";
                     par += options.protocol;
                 } else {
-                    par += ";DEFAULT"
+                    par += ";DEFAULT";
                 }
 
                 if ("number" === typeof options.interval) {
                     par += ";";
                     par += options.interval;
                 } else {
-                    par += ";DEFAULT"
+                    par += ";DEFAULT";
                 }
 
                 if ("number" === typeof options.time) {
                     par += ";";
                     par += options.time;
                 } else {
-                    par += ";DEFAULT"
+                    par += ";DEFAULT";
                 }
             }
 
