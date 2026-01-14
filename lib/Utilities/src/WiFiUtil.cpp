@@ -34,8 +34,11 @@
  * Includes
  *****************************************************************************/
 #include "WiFiUtil.h"
+
+#ifndef NATIVE
 #include <Esp.h>
 #include <WiFi.h>
+#endif /* NATIVE */
 
 /******************************************************************************
  * Compiler Switches
@@ -105,7 +108,11 @@ extern uint8_t WiFiUtil::getSignalQuality(int8_t rssi)
 
 extern void WiFiUtil::getEFuseMAC(String& macAddr)
 {
+#ifndef NATIVE
     uint64_t    efuseMAC        = ESP.getEfuseMac();
+#else /* NATIVE */
+    uint64_t    efuseMAC        = 0xAABBCCDDEEFF;
+#endif /* NATIVE */
     uint8_t     byte1           = (efuseMAC >> 40U) & 0xffU;
     uint8_t     byte2           = (efuseMAC >> 32U) & 0xffU;
     uint8_t     byte3           = (efuseMAC >> 24U) & 0xffU;
@@ -122,7 +129,11 @@ extern void WiFiUtil::getEFuseMAC(String& macAddr)
 
 extern void WiFiUtil::getChipId(String& chipId)
 {
+#ifndef NATIVE
     uint64_t    efuseMAC        = ESP.getEfuseMac();
+#else /* NATIVE */
+    uint64_t    efuseMAC        = 0xAABBCCDDEEFF;
+#endif /* NATIVE */
     int32_t     highPart        = (efuseMAC >> 8U) & 0x0000ffffU;
     int32_t     lowPart         = (efuseMAC >> 0U) & 0xffffffffU;
     size_t      BUFFER_SIZE     = 13U;
@@ -137,6 +148,8 @@ extern String WiFiUtil::getRSSI()
 {
     String result;
 
+#ifndef NATIVE
+
     /* Only in station mode it makes sense to retrieve the RSSI.
      * Otherwise keep it -100 dbm.
      */
@@ -148,6 +161,10 @@ extern String WiFiUtil::getRSSI()
     {
         result = "-100";
     }
+
+#else /* NATIVE */
+    result = "-100";
+#endif /* NATIVE */
 
     return result;
 }

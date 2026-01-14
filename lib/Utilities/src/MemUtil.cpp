@@ -34,8 +34,11 @@
  * Includes
  *****************************************************************************/
 #include "MemUtil.h"
+
+#ifndef NATIVE
 #include <esp_heap_caps.h>
 #include <esp32-hal-psram.h>
+#endif /* NATIVE */
 
 /******************************************************************************
  * Compiler Switches
@@ -57,10 +60,14 @@
  * Local Variables
  *****************************************************************************/
 
+#ifndef NATIVE
+
 /**
  * Memory capabilities used for heap operations.
  */
 static const uint32_t MEM_CAPABILITIES = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
+
+#endif /* NATIVE */
 
 /******************************************************************************
  * Public Methods
@@ -80,31 +87,51 @@ static const uint32_t MEM_CAPABILITIES = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAUL
 
 extern size_t MemUtil::getTotalHeapSize()
 {
+#ifndef NATIVE
     multi_heap_info_t info;
 
     heap_caps_get_info(&info, MEM_CAPABILITIES);
 
     return info.total_free_bytes + info.total_allocated_bytes;
+#else /* NATIVE */
+    return 0;
+#endif /* NATIVE */
 }
 
 extern size_t MemUtil::getFreeHeapSize()
 {
+#ifndef NATIVE
     return heap_caps_get_free_size(MEM_CAPABILITIES);
+#else /* NATIVE */
+    return 0;
+#endif /* NATIVE */
 }
 
 extern size_t MemUtil::getLargestFreeBlockSize()
 {
+#ifndef NATIVE
     return heap_caps_get_largest_free_block(MEM_CAPABILITIES);
+#else /* NATIVE */
+    return 0;
+#endif /* NATIVE */
 }
 
 extern size_t MemUtil::getMinFreeHeapSize()
 {
+#ifndef NATIVE
     return heap_caps_get_minimum_free_size(MEM_CAPABILITIES);
+#else /* NATIVE */
+    return 0;
+#endif /* NATIVE */
 }
 
 extern bool MemUtil::isPsramAvailable()
 {
+#ifndef NATIVE
     return psramFound();
+#else /* NATIVE */
+    return false;
+#endif /* NATIVE */
 }
 
 /******************************************************************************
