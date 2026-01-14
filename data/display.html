@@ -23,7 +23,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -151,10 +151,10 @@
             var plugins             = [];       // List of all available plugins
             var currentFadeEffect   = 0         // Fade effect [1;3]
             
-            const PIXEL_WIDTH       = 10;               // Width of a single LED in pixels
-            const PIXEL_HEIGTH      = 10;               // Height of a single LED in pixels
-            const DISPLAY_WIDTH     = ~DISPLAY_WIDTH~;  // Width in pixels (Updated by webserver on send)
-            const DISPLAY_HEIGHT    = ~DISPLAY_HEIGHT~; // Height in pixels (Updated by webserver on send)
+            const PIXEL_WIDTH       = 10;                           // Width of a single LED in pixels
+            const PIXEL_HEIGTH      = 10;                           // Height of a single LED in pixels
+            const DISPLAY_WIDTH     = parseInt("~DISPLAY_WIDTH~");  // Width in pixels (Updated by webserver on send)
+            const DISPLAY_HEIGHT    = parseInt("~DISPLAY_HEIGHT~"); // Height in pixels (Updated by webserver on send)
 
             const CANVAS_WIDTH      = (DISPLAY_WIDTH) * PIXEL_WIDTH + (DISPLAY_WIDTH) + 1;
             const CANVAS_HEIGHT     = (DISPLAY_HEIGHT) * PIXEL_HEIGTH + (DISPLAY_HEIGHT) + 1;
