@@ -63,13 +63,12 @@
  * Public Methods
  *****************************************************************************/
 
-void BrightnessCtrl::init(IDisplay& display, uint8_t minBrightnessHardLimit, uint8_t maxBrightnessHardLimit)
+void BrightnessCtrl::init(uint8_t minBrightnessHardLimit, uint8_t maxBrightnessHardLimit)
 {
     SensorDataProvider& sensorDataProv = SensorDataProvider::getInstance();
     uint8_t             sensorIdx      = 0U;
     uint8_t             channelIdx     = 0U;
 
-    m_display                          = &display;
     m_minBrightnessHardLimit           = (minBrightnessHardLimit < maxBrightnessHardLimit) ? minBrightnessHardLimit : maxBrightnessHardLimit;
     m_maxBrightnessHardLimit           = (maxBrightnessHardLimit > minBrightnessHardLimit) ? maxBrightnessHardLimit : minBrightnessHardLimit;
     m_minBrightnessSoftLimit           = m_minBrightnessHardLimit;
@@ -156,7 +155,7 @@ bool BrightnessCtrl::isEnabled() const
 {
     bool isEnabled = false;
 
-    if (m_autoBrightnessTimer.isTimerRunning())
+    if (true == m_autoBrightnessTimer.isTimerRunning())
     {
         isEnabled = true;
     }
@@ -288,11 +287,6 @@ void BrightnessCtrl::setBrightness(uint8_t level)
         {
             m_brightness = level;
         }
-
-        if (nullptr != m_display)
-        {
-            m_display->setBrightness(m_brightness);
-        }
     }
 }
 
@@ -305,7 +299,6 @@ void BrightnessCtrl::setBrightness(uint8_t level)
  *****************************************************************************/
 
 BrightnessCtrl::BrightnessCtrl() :
-    m_display(nullptr),
     m_illuminanceChannel(nullptr),
     m_autoBrightnessTimer(),
     m_brightness(0U),
@@ -385,11 +378,6 @@ void BrightnessCtrl::updateBrightness()
         {
             m_brightness += STEP;
         }
-
-        if (nullptr != m_display)
-        {
-            m_display->setBrightness(m_brightness);
-        }
     }
     else if (m_brightnessGoal < m_brightness)
     {
@@ -400,11 +388,6 @@ void BrightnessCtrl::updateBrightness()
         else
         {
             m_brightness -= STEP;
-        }
-
-        if (nullptr != m_display)
-        {
-            m_display->setBrightness(m_brightness);
         }
     }
     else

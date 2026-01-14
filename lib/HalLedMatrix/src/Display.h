@@ -86,7 +86,7 @@ public:
      */
     bool begin() final
     {
-        m_strip.Begin();
+        m_strip.Begin(); /* Initializes the strip with black color. */
         m_strip.Show();
 
         return true;

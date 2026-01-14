@@ -223,17 +223,6 @@ void InitState::entry(StateMachine& sm)
         /* Load some general configuration parameters from persistent memory. */
         if (true == settings.open(true))
         {
-            /* Enable or disable the automatic display brightness adjustment,
-             * depended on settings. Enable it may fail in case there is no
-             * LDR sensor available.
-             */
-            bool isEnabled = settings.getAutoBrightnessAdjustment().getValue();
-
-            if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
-            {
-                LOG_WARNING("Failed to enable autom. brightness adjustment.");
-            }
-
             /* Set text scroll pause for all text widgets. */
             uint32_t scrollPause = settings.getScrollPause().getValue();
             if (false == TextWidget::setScrollPause(scrollPause))

@@ -83,6 +83,7 @@ bool DisplayMgr::begin()
     uint16_t         maxBrightnessHardLimit        = 0U;
     uint16_t         minBrightnessSoftLimit        = 0U;
     uint16_t         maxBrightnessSoftLimit        = 0U;
+    bool             isAutoBrightnessEnabled       = false;
     uint8_t          fadeEffect                    = 0U;
     SettingsService& settings                      = SettingsService::getInstance();
     BrightnessCtrl&  brightnessCtrl                = BrightnessCtrl::getInstance();
@@ -93,6 +94,7 @@ bool DisplayMgr::begin()
         brightnessPercent             = settings.getBrightness().getDefault();
         minBrightnessSoftLimitPercent = settings.getMinBrightnessSoftLimit().getDefault();
         maxBrightnessSoftLimitPercent = settings.getMaxBrightnessSoftLimit().getDefault();
+        isAutoBrightnessEnabled       = settings.getAutoBrightnessAdjustment().getDefault();
         fadeEffect                    = settings.getFadeEffect().getDefault();
     }
     else
@@ -101,6 +103,7 @@ bool DisplayMgr::begin()
         brightnessPercent             = settings.getBrightness().getValue();
         minBrightnessSoftLimitPercent = settings.getMinBrightnessSoftLimit().getValue();
         maxBrightnessSoftLimitPercent = settings.getMaxBrightnessSoftLimit().getValue();
+        isAutoBrightnessEnabled       = settings.getAutoBrightnessAdjustment().getValue();
         fadeEffect                    = settings.getFadeEffect().getValue();
 
         settings.close();
@@ -117,11 +120,18 @@ bool DisplayMgr::begin()
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
      */
-    brightnessCtrl.init(Display::getInstance(), static_cast<uint8_t>(minBrightnessHardLimit), static_cast<uint8_t>(maxBrightnessHardLimit));
+    brightnessCtrl.init(static_cast<uint8_t>(minBrightnessHardLimit), static_cast<uint8_t>(maxBrightnessHardLimit));
     brightnessCtrl.setSoftLimits(static_cast<uint8_t>(minBrightnessSoftLimit), static_cast<uint8_t>(maxBrightnessSoftLimit));
 
+    /* Set initial brightness (automatic brightness adjustment must be disabled). */
     brightness = (static_cast<uint16_t>(brightnessPercent) * UINT8_MAX) / PERCENT_100;
     brightnessCtrl.setBrightness(static_cast<uint8_t>(brightness));
+
+    /* Enable/Disable automatic brightness adjustment. */
+    if (false == brightnessCtrl.enable(isAutoBrightnessEnabled))
+    {
+        LOG_WARNING("Failed to enable autom. brightness adjustment.");
+    }
 
     /* Set fade effect */
     m_fadeEffectController.selectFadeEffect(static_cast<FadeEffectController::FadeEffect>(fadeEffect));
@@ -1056,8 +1066,8 @@ void DisplayMgr::process()
     /* If no plugin is selected, choose the next one. */
     if (nullptr == m_selectedPlugin)
     {
-        YAGfxDynamicBitmap&        selectedFrameBuffer = m_doubleFrameBuffer.getSelectedFramebuffer();
         MutexGuard<MutexRecursive> guard(m_mutexUpdate);
+        YAGfxDynamicBitmap&        selectedFrameBuffer = m_doubleFrameBuffer.getSelectedFramebuffer();
 
         /* Plugin requested to choose? */
         if (nullptr != m_requestedPlugin)
@@ -1097,7 +1107,6 @@ void DisplayMgr::process()
         else
         {
             selectedFrameBuffer.fillScreen(ColorDef::BLACK);
-            display.clear();
         }
     }
 
@@ -1131,6 +1140,9 @@ void DisplayMgr::update()
 
     /* Update the display buffer. */
     m_fadeEffectController.update(display);
+
+    /* Apply brightness changes safely before LED output to avoid race conditions. */
+    BrightnessCtrl::getInstance().applyBrightness(display);
 
     /* Latch display buffer. */
     display.show();
