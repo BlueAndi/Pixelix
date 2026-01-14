@@ -25,18 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   MemMon.cpp
- * @brief  Memory monitor
+ * @file   MemUtil.cpp
+ * @brief  Memory utility functions
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "MemMon.h"
-
-#include <Logging.h>
-#include <MemUtil.h>
+#include "MemUtil.h"
+#include <esp_heap_caps.h>
+#include <esp32-hal-psram.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,69 +57,14 @@
  * Local Variables
  *****************************************************************************/
 
+/**
+ * Memory capabilities used for heap operations.
+ */
+static const uint32_t MEM_CAPABILITIES = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
-
-bool MemMon::start()
-{
-    bool                    isSuccessful        = true;
-    esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t caps, const char* functionName) -> void {
-        LOG_ERROR("Memory allocation failed.");
-        LOG_ERROR("Size          : %u bytes", size);
-        LOG_ERROR("Capability    : 0x%04X", caps);
-        LOG_ERROR("Function      : %s", functionName);
-        LOG_ERROR("Largest avail.: %u bytes", MemUtil::getLargestFreeBlockSize());
-    };
-
-    m_timer.start(PROCESSING_CYCLE);
-
-    if (ESP_OK != heap_caps_register_failed_alloc_callback(failedAllocCallback))
-    {
-        stop();
-        isSuccessful = false;
-    }
-
-    return isSuccessful;
-}
-
-void MemMon::process()
-{
-    if (true == m_timer.isTimeout())
-    {
-        uint32_t availableHeap       = MemUtil::getFreeHeapSize();         /* Current available heap memory. */
-        uint32_t lowestAvailableHeap = MemUtil::getMinFreeHeapSize();      /* Lowest level of available heap since boot. */
-        uint32_t largestHeapBlock    = MemUtil::getLargestFreeBlockSize(); /* Largest block of heap that can be allocated at once. */
-
-        if (MIN_HEAP_MEMORY >= availableHeap)
-        {
-            LOG_WARNING("Current available heap: %u byte.", availableHeap);
-        }
-
-        if (LOWEST_HEAP_MEMORY >= lowestAvailableHeap)
-        {
-            LOG_WARNING("Lowest available heap: %u byte.", lowestAvailableHeap);
-        }
-
-        if (LARGEST_HEAP_BLOCK_MEMORY > largestHeapBlock)
-        {
-            LOG_WARNING("Largest heap block which can be allocated: %u byte.", largestHeapBlock);
-        }
-
-        /* Any heap corrupt? */
-        if (false == heap_caps_check_integrity_all(true))
-        {
-            LOG_FATAL("----- Heap corrupt! ------");
-        }
-
-        m_timer.restart();
-    }
-}
-
-void MemMon::stop()
-{
-    m_timer.stop();
-}
 
 /******************************************************************************
  * Protected Methods
@@ -133,6 +77,35 @@ void MemMon::stop()
 /******************************************************************************
  * External Functions
  *****************************************************************************/
+
+extern size_t MemUtil::getTotalHeapSize()
+{
+    multi_heap_info_t info;
+
+    heap_caps_get_info(&info, MEM_CAPABILITIES);
+
+    return info.total_free_bytes + info.total_allocated_bytes;
+}
+
+extern size_t MemUtil::getFreeHeapSize()
+{
+    return heap_caps_get_free_size(MEM_CAPABILITIES);
+}
+
+extern size_t MemUtil::getLargestFreeBlockSize()
+{
+    return heap_caps_get_largest_free_block(MEM_CAPABILITIES);
+}
+
+extern size_t MemUtil::getMinFreeHeapSize()
+{
+    return heap_caps_get_minimum_free_size(MEM_CAPABILITIES);
+}
+
+extern bool MemUtil::isPsramAvailable()
+{
+    return psramFound();
+}
 
 /******************************************************************************
  * Local Functions

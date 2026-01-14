@@ -87,6 +87,14 @@ extern void getEFuseMAC(String& macAddr);
  * @param[out] chipId   Chip id
  */
 extern void getChipId(String& chipId);
+
+/**
+ * Get wifi RSSI.
+ *
+ * @return WiFi station SSID
+ */
+extern String getRSSI();
+
 }
 
 #endif  /* WIFI_UTIL_H */

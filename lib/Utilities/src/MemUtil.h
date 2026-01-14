@@ -25,17 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   MemMon.h
- * @brief  Memory monitor
+ * @file   MemUtil.h
+ * @brief  Memory utility functions
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup APP_LAYER
+ * @addtogroup UTILITIES
  *
  * @{
  */
 
-#ifndef MEM_MON_H
-#define MEM_MON_H
+#ifndef MEMUTIL_H
+#define MEMUTIL_H
 
 /******************************************************************************
  * Compile Switches
@@ -45,8 +45,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <SysMsgPlugin.h>
-#include <WString.h>
+#include <stddef.h>
 
 /******************************************************************************
  * Macros
@@ -56,90 +55,51 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * Memory monitor
- */
-class MemMon
+/** Memory utility functions */
+namespace MemUtil
 {
-public:
-
-    /**
-     * Get memory monitor instance.
-     *
-     * @return Memory monitor instance
-     */
-    static MemMon& getInstance()
-    {
-        static MemMon instance; /* singleton idiom to force initialization in the first usage. */
-
-        return instance;
-    }
-
-    /**
-     * Start memory monitor.
-     *
-     * @return If successful started, it will return true otherwise false.
-     */
-    bool start();
-
-    /**
-     * Process memory monitor.
-     */
-    void process();
-
-    /**
-     * Stop memory monitor.
-     */
-    void stop();
-
-    /** Processing cycle in ms. */
-    static const uint32_t PROCESSING_CYCLE        = 60U * 1000U;
-
-    /**
-     * Minimum size of current heap memory in bytes, the monitor starts to warn.
-     * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mbedtls.html#performance-and-memory-tweaks
-     */
-    static const size_t MIN_HEAP_MEMORY           = (60U * 1024U);
-
-    /**
-     * Lowest size of heap memory in bytes, the monitor starts to warn.
-     * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mbedtls.html#performance-and-memory-tweaks
-     */
-    static const size_t LOWEST_HEAP_MEMORY        = (50U * 1024U);
-
-    /**
-     * Minimum size of largest block of heap that can be allocated at once in bytes, the monitor starts to warn.
-     */
-    static const size_t LARGEST_HEAP_BLOCK_MEMORY = CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN;
-
-private:
-
-    SimpleTimer m_timer; /**< Timer used for cyclic processing. */
-
-    /**
-     * Constructs the memory monitor.
-     */
-    MemMon() :
-        m_timer()
-    {
-    }
-
-    /**
-     * Destroys the memory monitor.
-     */
-    ~MemMon()
-    {
-        /* Will never be called. */
-    }
-
-    MemMon(const MemMon& taskMon);
-    MemMon& operator=(const MemMon& taskMon);
-};
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* MEM_MON_H */
+/**
+ * Get total heap size which is available for malloc/new operation.
+ *
+ * @return Heap size in byte.
+ */
+extern size_t getTotalHeapSize();
+
+/**
+ * Get heap size which is available for malloc/new operation.
+ *
+ * @return Heap size in byte.
+ */
+extern size_t getFreeHeapSize();
+
+/**
+ * Get the largest free block of memory able to be allocated.
+ *
+ * @return Size of the largest free block in byte.
+ */
+extern size_t getLargestFreeBlockSize();
+
+/**
+ * Get the minimum free heap size since boot.
+ * 
+ * @return size_t 
+ */
+extern size_t getMinFreeHeapSize();
+
+/**
+ * Check if PSRAM is available.
+ * 
+ * @return true if PSRAM is available, false otherwise.
+ */
+extern bool isPsramAvailable();
+
+} /* namespace MemUtil */
+
+#endif /* MEMUTIL_H */
 
 /** @} */

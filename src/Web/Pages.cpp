@@ -45,6 +45,7 @@
 #include <WiFi.h>
 #include <Esp.h>
 #include <Logging.h>
+#include <MemUtil.h>
 #include <Util.h>
 #include <ArduinoJson.h>
 #include <lwip/init.h>
@@ -94,13 +95,9 @@ static void   htmlPage(AsyncWebServerRequest* request);
 namespace tmpl
 {
 static String getEspChipId();
-static String getEspType();
 static String getFlashChipMode();
 static String getHostname();
 static String getIPAddress();
-static String getRSSI();
-static String getSSID();
-static String getHeapSize();
 }; /* namespace tmpl */
 
 /******************************************************************************
@@ -113,9 +110,6 @@ static const String PLUGIN_PAGE_PATH              = "/plugins/";
 /** Path to the service webpages. */
 static const String SERVICE_PAGE_PATH             = "/services/";
 
-/** Memory capabilities used for memory state requests. */
-static const uint32_t MEM_CAPABILITIES            = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
-
 /**
  * List of all used template keywords and the function how to retrieve the information.
  * The list is alphabetic sorted in ascending order.
@@ -126,15 +120,15 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "ESP_CHIP_REV", []() -> String { return String(ESP.getChipRevision()); } },
     { "ESP_CPU_FREQ", []() -> String { return String(ESP.getCpuFreqMHz()); } },
     { "ESP_SDK_VERSION", []() -> String { return ESP.getSdkVersion(); } },
-    { "ESP_TYPE", tmpl::getEspType },
+    { "ESP_TYPE", []() -> String { return String(CONFIG_IDF_TARGET); } },
     { "FLASH_CHIP_MODE", tmpl::getFlashChipMode },
     { "FLASH_CHIP_SIZE", []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); } },
     { "FLASH_CHIP_SPEED", []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); } },
     { "FREERTOS_VERSION", []() -> String { return tskKERNEL_VERSION_NUMBER; } },
     { "FS_SIZE", []() -> String { return String(FILESYSTEM.totalBytes()); } },
     { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
-    { "HEAP_SIZE", []() -> String { return tmpl::getHeapSize(); } },
-    { "HEAP_SIZE_AVAILABLE", []() -> String { return String(heap_caps_get_free_size(MEM_CAPABILITIES)); } },
+    { "HEAP_SIZE", []() -> String { return String(MemUtil::getTotalHeapSize()); } },
+    { "HEAP_SIZE_AVAILABLE", []() -> String { return String(MemUtil::getFreeHeapSize()); } },
     { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
     { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
     { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
@@ -142,8 +136,8 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "IPV4", tmpl::getIPAddress },
     { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
     { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
-    { "RSSI", tmpl::getRSSI },
-    { "SSID", tmpl::getSSID },
+    { "RSSI", []() -> String { return String(WiFi.RSSI()); } },
+    { "SSID", []() -> String { return WiFi.SSID(); } },
     { "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); } },
     { "SW_REVISION", []() -> String { return Version::getSoftwareRevision(); } },
     { "SW_VERSION", []() -> String { return Version::getSoftwareVersion(); } },
@@ -337,7 +331,7 @@ void Pages::error(AsyncWebServerRequest* request)
  * in every page. It is responsible for the data binding.
  *
  * @param[in] var   Name of variable in the template
- * 
+ *
  * @return The variable content.
  */
 static String tmplPageProcessor(const String& var)
@@ -398,18 +392,6 @@ static String getEspChipId()
     WiFiUtil::getChipId(chipId);
 
     return chipId;
-}
-
-/**
- * Get ESP type.
- *
- * @return ESP type
- */
-static String getEspType()
-{
-    String result = CONFIG_IDF_TARGET;
-
-    return result;
 }
 
 /**
@@ -504,63 +486,6 @@ static String getIPAddress()
     }
 
     return result;
-}
-
-/**
- * Get wifi RSSI.
- *
- * @return WiFi station SSID
- */
-static String getRSSI()
-{
-    String result;
-
-    /* Only in station mode it makes sense to retrieve the RSSI.
-     * Otherwise keep it -100 dbm.
-     */
-    if (WIFI_MODE_STA == WiFi.getMode())
-    {
-        result = WiFi.RSSI();
-    }
-    else
-    {
-        result = "-100";
-    }
-
-    return result;
-}
-
-/**
- * Get wifi station SSID.
- *
- * @return WiFi station SSID
- */
-static String getSSID()
-{
-    String           result;
-    SettingsService& settings = SettingsService::getInstance();
-
-    if (true == settings.open(true))
-    {
-        result = settings.getWifiSSID().getValue();
-        settings.close();
-    }
-
-    return result;
-}
-
-/**
- * Get heap size which is available for malloc/new operation as string.
- *
- * @return Heap size in byte as string.
- */
-static String getHeapSize()
-{
-    multi_heap_info_t info;
-
-    heap_caps_get_info(&info, MEM_CAPABILITIES);
-
-    return String(info.total_free_bytes + info.total_allocated_bytes);
 }
 
 }; /* namespace tmpl */

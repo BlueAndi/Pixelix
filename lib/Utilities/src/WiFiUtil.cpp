@@ -35,6 +35,7 @@
  *****************************************************************************/
 #include "WiFiUtil.h"
 #include <Esp.h>
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -130,6 +131,25 @@ extern void WiFiUtil::getChipId(String& chipId)
     (void)snprintf(buffer, sizeof(buffer), "%04X%08X", highPart, lowPart);
 
     chipId = buffer;
+}
+
+extern String WiFiUtil::getRSSI()
+{
+    String result;
+
+    /* Only in station mode it makes sense to retrieve the RSSI.
+     * Otherwise keep it -100 dbm.
+     */
+    if (WIFI_MODE_STA == WiFi.getMode())
+    {
+        result = WiFi.RSSI();
+    }
+    else
+    {
+        result = "-100";
+    }
+
+    return result;
 }
 
 /******************************************************************************

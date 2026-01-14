@@ -53,6 +53,7 @@
 #include <SensorDataProvider.h>
 #include <SettingsService.h>
 #include <FileUtil.h>
+#include <MemUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -203,10 +204,10 @@ void RestApi::init(AsyncWebServer& srv)
     /* Register all REST API routes. */
     for (size_t idx = 0; idx < UTIL_ARRAY_NUM(gRestApiRoutes); ++idx)
     {
-        const RestApiRoute& route = gRestApiRoutes[idx];
-        String              routePage = BASE_URI;
+        const RestApiRoute& route      = gRestApiRoutes[idx];
+        String              routePage  = BASE_URI;
 
-        routePage += route.page;
+        routePage                     += route.page;
 
         (void)srv.on(routePage.c_str(),
                      route.reqMethodComposite,
@@ -388,9 +389,9 @@ static void handleSlot(AsyncWebServerRequest* request)
     }
     else
     {
-        String uriWithSlotId = RestApi::BASE_URI;
-        
-        uriWithSlotId += "/display/slot/";
+        String uriWithSlotId  = RestApi::BASE_URI;
+
+        uriWithSlotId        += "/display/slot/";
 
         if (false == request->url().startsWith(uriWithSlotId))
         {
@@ -1270,7 +1271,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
 static void handleStatus(AsyncWebServerRequest* request)
 {
     uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE  = 512U;
+    const size_t        JSON_DOC_SIZE  = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1309,19 +1310,22 @@ static void handleStatus(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        hwObj["chipRev"]                = ESP.getChipRevision();
-        hwObj["cpuFreqMhz"]             = ESP.getCpuFreqMHz();
+        hwObj["chipRev"]                       = ESP.getChipRevision();
+        hwObj["cpuFreqMhz"]                    = ESP.getCpuFreqMHz();
 
-        swObj["version"]                = Version::getSoftwareVersion();
-        swObj["revision"]               = Version::getSoftwareRevision();
-        swObj["espSdkVersion"]          = ESP.getSdkVersion();
+        swObj["version"]                       = Version::getSoftwareVersion();
+        swObj["revision"]                      = Version::getSoftwareRevision();
+        swObj["espSdkVersion"]                 = ESP.getSdkVersion();
 
-        internalRamObj["heapSize"]      = ESP.getHeapSize();
-        internalRamObj["availableHeap"] = ESP.getFreeHeap();
+        internalRamObj["heapSize"]             = MemUtil::getTotalHeapSize();        /* [byte] */
+        internalRamObj["availableHeapSize"]    = MemUtil::getFreeHeapSize();         /* [byte] */
+        internalRamObj["minFreeHeapSize"]      = MemUtil::getMinFreeHeapSize();      /* [byte] */
+        internalRamObj["largestFreeBlockSize"] = MemUtil::getLargestFreeBlockSize(); /* [byte] */
+        internalRamObj["isPsramAvailable"]     = MemUtil::isPsramAvailable();        /* [byte] */
 
-        wifiObj["ssid"]                 = ssid;
-        wifiObj["rssi"]                 = rssi;                             /* [dbm] */
-        wifiObj["quality"]              = WiFiUtil::getSignalQuality(rssi); /* [%] */
+        wifiObj["ssid"]                        = ssid;
+        wifiObj["rssi"]                        = rssi;                             /* [dbm] */
+        wifiObj["quality"]                     = WiFiUtil::getSignalQuality(rssi); /* [%] */
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
