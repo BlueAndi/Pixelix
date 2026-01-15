@@ -63,7 +63,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] key       Key
      * @param[in] name      User friendly name
      * @param[in] defValue  Default value
@@ -78,7 +78,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] pref      Preferences
      * @param[in] key       Key
      * @param[in] name      User friendly name
@@ -161,9 +161,9 @@ public:
 
 private:
 
-    const char*     m_key;      /**< Key */
-    const char*     m_name;     /**< Name */
-    bool            m_defValue; /**< Default value */
+    const char* m_key;      /**< Key */
+    const char* m_name;     /**< Name */
+    bool        m_defValue; /**< Default value */
 
     /* An instance shall not be copied. */
     KeyValueBool(const KeyValueBool& kv);
@@ -174,6 +174,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* KEY_VALUE_BOOL_H */
+#endif /* KEY_VALUE_BOOL_H */
 
 /** @} */

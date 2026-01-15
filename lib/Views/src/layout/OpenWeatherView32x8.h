@@ -123,7 +123,7 @@ public:
 
     /**
      * Set the image path for the weather condition icons.
-     * 
+     *
      * @param[in] path  The image path for the weather condition icons.
      */
     void setImagePath(const char* path) override

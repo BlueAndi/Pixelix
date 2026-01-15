@@ -56,13 +56,14 @@
 
 /**
  * View for indicators in each display corner.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class IndicatorView : public IndicatorViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -76,6 +77,6 @@ using IndicatorViewBase = IndicatorView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* INDICATOR_VIEW_BASE_HPP */
+#endif /* INDICATOR_VIEW_BASE_HPP */
 
 /** @} */

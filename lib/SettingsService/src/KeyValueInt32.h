@@ -63,7 +63,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] key       Key
      * @param[in] name      User friendly name
      * @param[in] defValue  Default value
@@ -77,7 +77,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] pref      Preferences
      * @param[in] key       Key
      * @param[in] name      User friendly name
@@ -138,6 +138,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* KEY_VALUE_INT32_H */
+#endif /* KEY_VALUE_INT32_H */
 
 /** @} */

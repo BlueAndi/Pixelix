@@ -108,12 +108,12 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _SysMsgPlugin */
+} // namespace _SysMsgPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SYS_MSG_PLUGIN_VIEW_H */
+#endif /* SYS_MSG_PLUGIN_VIEW_H */
 
 /** @} */

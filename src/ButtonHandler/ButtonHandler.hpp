@@ -28,7 +28,7 @@
  * @file   ButtonHandler.hpp
  * @brief  Button handler
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup BUTTON_HANDLER
  *
  * @{
@@ -60,7 +60,7 @@
 
 /**
  * The button handler executes functions depended on the button state changes.
- * 
+ *
  * One short button pulse : Activate next slot
  * Two short button pulses: Activate next fade effect
  * Keep pressed           : Display brightness increases/decreases
@@ -79,7 +79,7 @@ public:
         ButtonActions(),
         m_stateQueue(),
         m_lastButtonInfo(),
-        m_triggerCnt{0U},
+        m_triggerCnt{ 0U },
         m_timer()
     {
         (void)m_stateQueue.create(STATE_QUEUE_LENGTH);
@@ -87,7 +87,7 @@ public:
 
     /**
      * Destroy the button handler.
-     * 
+     *
      */
     ~ButtonHandler()
     {
@@ -99,8 +99,8 @@ public:
      */
     void process()
     {
-        ButtonInfo  info;
-        uint8_t     buttonIdx   = 0U;
+        ButtonInfo info;
+        uint8_t    buttonIdx = 0U;
 
         /* A new button state change received? */
         if (true == m_stateQueue.receive(&info, 0U))
@@ -162,8 +162,8 @@ public:
                 }
             }
         }
-        
-        while(BUTTON_ID_CNT > buttonIdx)
+
+        while (BUTTON_ID_CNT > buttonIdx)
         {
             /* Skip not connected buttons. */
             if (BUTTON_STATE_NC != m_lastButtonInfo[buttonIdx].state)
@@ -196,10 +196,10 @@ public:
 private:
 
     /** Length of the button info queue. */
-    static const size_t     STATE_QUEUE_LENGTH      = 10U;
+    static const size_t STATE_QUEUE_LENGTH      = 10U;
 
     /** Short pulse threshold in ms. */
-    static const uint32_t   SHORT_PULSE_THRESHOLD   = 400U;
+    static const uint32_t SHORT_PULSE_THRESHOLD = 400U;
 
     /**
      * The button information combines the new button state with a
@@ -207,10 +207,10 @@ private:
      */
     struct ButtonInfo
     {
-        ButtonId    buttonId;   /**< The id of the button. */
-        ButtonState state;      /**< Button state. */
-        bool        firstTime;  /**< First time in the state. */
-        uint32_t    timestamp;  /**< Timestamp about button state reception in ms. */
+        ButtonId    buttonId;  /**< The id of the button. */
+        ButtonState state;     /**< Button state. */
+        bool        firstTime; /**< First time in the state. */
+        uint32_t    timestamp; /**< Timestamp about button state reception in ms. */
 
         ButtonInfo() :
             buttonId(BUTTON_ID_CNT),
@@ -221,32 +221,32 @@ private:
         }
     };
 
-    Queue<ButtonInfo>   m_stateQueue;                       /**< Button info queue */
-    ButtonInfo          m_lastButtonInfo[BUTTON_ID_CNT];    /**< Last handled button info */
-    uint8_t             m_triggerCnt[BUTTON_ID_CNT];        /**< Number of counted button triggers (pressed -> released) */
-    SimpleTimer         m_timer[BUTTON_ID_CNT];             /**< Timer used to detect different pulse variants. */
+    Queue<ButtonInfo> m_stateQueue;                    /**< Button info queue */
+    ButtonInfo        m_lastButtonInfo[BUTTON_ID_CNT]; /**< Last handled button info */
+    uint8_t           m_triggerCnt[BUTTON_ID_CNT];     /**< Number of counted button triggers (pressed -> released) */
+    SimpleTimer       m_timer[BUTTON_ID_CNT];          /**< Timer used to detect different pulse variants. */
 
     /**
      * The observed button will notify about changes.
-     * 
+     *
      * @param[in] buttonId  The id of the button.
      * @param[in] state     New button state.
      */
     void notify(ButtonId buttonId, ButtonState state) override
     {
-        ButtonInfo  info;
+        ButtonInfo info;
 
-        info.buttonId   = buttonId;
-        info.state      = state;
-        info.firstTime  = true;
-        info.timestamp  = millis();
+        info.buttonId  = buttonId;
+        info.state     = state;
+        info.firstTime = true;
+        info.timestamp = millis();
 
         (void)m_stateQueue.sendToBack(info, portMAX_DELAY);
     }
 
     /**
      * Handle button triggers and executing the corresponding action.
-     * 
+     *
      * @param[in] buttonId      The button id.
      * @param[in] triggerCnt    Number of button triggers.
      */
@@ -258,7 +258,7 @@ private:
 
     /**
      * Handle button pressed and executing the corresponding action.
-     * 
+     *
      * @param[in] buttonId  The button id.
      * @param[in] firstTime First time the button is pressed or not.
      */
@@ -277,6 +277,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BUTTON_HANDLER_HPP */
+#endif /* BUTTON_HANDLER_HPP */
 
 /** @} */

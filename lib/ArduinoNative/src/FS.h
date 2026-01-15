@@ -54,15 +54,16 @@
  * Macros
  *****************************************************************************/
 
-#define FILE_READ       "rb"
-#define FILE_WRITE      "wb"
-#define FILE_APPEND     "ab"
+#define FILE_READ "rb"
+#define FILE_WRITE "wb"
+#define FILE_APPEND "ab"
 
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
 
-enum SeekMode {
+enum SeekMode
+{
     SeekSet = 0,
     SeekCur = 1,
     SeekEnd = 2
@@ -71,6 +72,7 @@ enum SeekMode {
 class File
 {
 public:
+
     File(FILE* fd = nullptr) :
         m_fd(fd)
     {
@@ -81,10 +83,10 @@ public:
     }
 
     size_t write(uint8_t data);
-    size_t write(const uint8_t *buf, size_t size);
-    int available();
-    
-    int read()
+    size_t write(const uint8_t* buf, size_t size);
+    int    available();
+
+    int    read()
     {
         int data = -1;
 
@@ -101,15 +103,15 @@ public:
         return data;
     }
 
-    int peek();
-    void flush();
-    
+    int    peek();
+    void   flush();
+
     size_t read(uint8_t* buf, size_t size)
     {
         return fread(buf, 1, size, m_fd);
     }
 
-    size_t readBytes(char *buffer, size_t length)
+    size_t readBytes(char* buffer, size_t length)
     {
         return read(reinterpret_cast<uint8_t*>(buffer), length);
     }
@@ -131,7 +133,7 @@ public:
 
     size_t size() const;
 
-    void close()
+    void   close()
     {
         fclose(m_fd);
         m_fd = nullptr;
@@ -142,21 +144,22 @@ public:
         return (nullptr != m_fd);
     }
 
-    time_t getLastWrite();
+    time_t      getLastWrite();
     const char* name() const;
 
-    boolean isDirectory(void);
-    File openNextFile(const char* mode = FILE_READ);
-    void rewindDirectory(void);
+    boolean     isDirectory(void);
+    File        openNextFile(const char* mode = FILE_READ);
+    void        rewindDirectory(void);
 
 private:
 
-    FILE*   m_fd;
+    FILE* m_fd;
 };
 
 class FS
 {
 public:
+
     FS()
     {
     }
@@ -167,7 +170,7 @@ public:
 
     File open(const char* path, const char* mode = FILE_READ)
     {
-        FILE*   fd = fopen(path, mode);
+        FILE* fd = fopen(path, mode);
 
         return File(fd);
     }
@@ -179,8 +182,8 @@ public:
 
     bool exists(const char* path)
     {
-        bool    itExists    = false;
-        FILE*   fd          = fopen("path", "r");
+        bool  itExists = false;
+        FILE* fd       = fopen("path", "r");
 
         if (nullptr != fd)
         {
@@ -216,24 +219,24 @@ public:
         return rename(pathFrom.c_str(), pathTo.c_str());
     }
 
-    bool mkdir(const char *path)
+    bool mkdir(const char* path)
     {
         /* Not implemented */
         return false;
     }
 
-    bool mkdir(const String &path)
+    bool mkdir(const String& path)
     {
         return mkdir(path.c_str());
     }
 
-    bool rmdir(const char *path)
+    bool rmdir(const char* path)
     {
         /* Not implemented */
         return false;
     }
 
-    bool rmdir(const String &path)
+    bool rmdir(const String& path)
     {
         return rmdir(path.c_str());
     }
@@ -245,6 +248,6 @@ extern FS NativeFS;
  * Functions
  *****************************************************************************/
 
-#endif  /* FS_H */
+#endif /* FS_H */
 
 /** @} */

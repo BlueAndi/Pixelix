@@ -96,12 +96,12 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)WifiStatusPlugin(name, uid);
+        return new (std::nothrow) WifiStatusPlugin(name, uid);
     }
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the plugin uses.
      */
     Fonts::FontType getFontType() const final
@@ -112,10 +112,10 @@ public:
     /**
      * Set font type.
      * The plugin may skip the font type in case it gets conflicts with the layout.
-     * 
+     *
      * A font type change will only be considered if it is set before the start()
      * method is called!
-     * 
+     *
      * @param[in] fontType  The font type which the plugin shall use.
      */
     void setFontType(Fonts::FontType fontType) final
@@ -127,12 +127,12 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
@@ -141,11 +141,11 @@ public:
     /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() final;
-    
+
     /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
@@ -173,17 +173,17 @@ private:
     /**
      * Period in ms which is used to update the status information.
      */
-    const uint32_t  PERIOD  = 1000U;
+    const uint32_t          PERIOD = 1000U;
 
-    _WifiStatusPlugin::View m_view;     /**< View with all widgets. */
-    SimpleTimer             m_timer;    /**< Timer for periodic stuff */
-    bool                    m_toggle;   /**< Toggles the alert in case wifi is disconnected */
+    _WifiStatusPlugin::View m_view;   /**< View with all widgets. */
+    SimpleTimer             m_timer;  /**< Timer for periodic stuff */
+    bool                    m_toggle; /**< Toggles the alert in case wifi is disconnected */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* WIFI_STATUS_PLUGIN_H */
+#endif /* WIFI_STATUS_PLUGIN_H */
 
 /** @} */

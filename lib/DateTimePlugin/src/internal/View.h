@@ -84,18 +84,18 @@ private:
     /**
      * Image path within the filesystem to icon.
      */
-    static const char*  ICON_PATH;
+    static const char* ICON_PATH;
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _DateTimePlugin */
+} // namespace _DateTimePlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* DATE_TIME_PLUGIN_VIEW_H */
+#endif /* DATE_TIME_PLUGIN_VIEW_H */
 
 /** @} */

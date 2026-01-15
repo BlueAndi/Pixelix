@@ -28,7 +28,7 @@
  * @file   RestApi.h
  * @brief  REST pages
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -70,20 +70,20 @@ static constexpr char BASE_URI[] = "/rest/api/v1";
 
 /**
  * Initialize REST interface and register it on the web server.
- * 
+ *
  * @param[in] srv   Web server
  */
 void init(AsyncWebServer& srv);
 
 /**
  * Handle invalid rest path request.
- * 
+ *
  * @param[in] request   HTTP request
  */
 void error(AsyncWebServerRequest* request);
 
-}
+} // namespace RestApi
 
-#endif  /* RESTAPI_H */
+#endif /* RESTAPI_H */
 
 /** @} */

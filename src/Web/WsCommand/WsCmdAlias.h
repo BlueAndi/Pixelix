@@ -57,7 +57,7 @@
 /**
  * Websocket command to get/set plugin alias name
  */
-class WsCmdAlias: public WsCmd
+class WsCmdAlias : public WsCmd
 {
 public:
 
@@ -97,10 +97,10 @@ public:
 
 private:
 
-    bool        m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;       /**< Received number of parameters */
-    uint16_t    m_pluginUid;    /**< Plugin UID */
-    String      m_alias;        /**< Plugin alias name */
+    bool     m_isError;   /**< Any error happened during parameter reception? */
+    uint8_t  m_parCnt;    /**< Received number of parameters */
+    uint16_t m_pluginUid; /**< Plugin UID */
+    String   m_alias;     /**< Plugin alias name */
 
     WsCmdAlias(const WsCmdAlias& cmd);
     WsCmdAlias& operator=(const WsCmdAlias& cmd);
@@ -110,6 +110,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDALIAS_H */
+#endif /* WSCMDALIAS_H */
 
 /** @} */

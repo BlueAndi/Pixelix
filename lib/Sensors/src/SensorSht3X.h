@@ -28,7 +28,7 @@
  * @file   SensorSht3X.h
  * @brief  SHT3x sensor
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SENSORS
  *
  * @{
@@ -67,7 +67,7 @@ public:
 
     /**
      * Constructs the temperature channel of the SHT3x sensor.
-     * 
+     *
      * @param[in] driver    The SHT3x driver.
      */
     Sht3XTemperatureChannel(SHTSensor& driver) :
@@ -85,7 +85,7 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
     Type getType() const final
@@ -96,7 +96,7 @@ public:
     /**
      * Get the temperature.
      * If there is any error, it will return NaN.
-     * 
+     *
      * @return Temperature in °C.
      */
     float getValue() final
@@ -113,7 +113,7 @@ public:
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value in °C.
      */
     float getOffset() const final
@@ -123,7 +123,7 @@ public:
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value in °C.
      */
     void setOffset(float offset) final
@@ -133,8 +133,8 @@ public:
 
 private:
 
-    SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
-    float       m_offset;   /**< Temperature offset in °C for sensor tolerance compensation. */
+    SHTSensor& m_driver; /**< SHT3x sensor driver. */
+    float      m_offset; /**< Temperature offset in °C for sensor tolerance compensation. */
 
     Sht3XTemperatureChannel();
     Sht3XTemperatureChannel(const Sht3XTemperatureChannel& channel);
@@ -150,7 +150,7 @@ public:
 
     /**
      * Constructs the humidity channel of the SHT3x sensor.
-     * 
+     *
      * @param[in] driver    The SHT3x driver.
      */
     Sht3XHumidityChannel(SHTSensor& driver) :
@@ -168,7 +168,7 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
     Type getType() const final
@@ -179,7 +179,7 @@ public:
     /**
      * Get the humidity.
      * If there is any error, it will return NaN.
-     * 
+     *
      * @return Humidity in %.
      */
     float getValue() final
@@ -196,7 +196,7 @@ public:
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value in %.
      */
     float getOffset() const final
@@ -206,7 +206,7 @@ public:
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value in %.
      */
     void setOffset(float offset) final
@@ -216,8 +216,8 @@ public:
 
 private:
 
-    SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
-    float       m_offset;   /**< Humidity offset in % for sensor tolerance compensation. */
+    SHTSensor& m_driver; /**< SHT3x sensor driver. */
+    float      m_offset; /**< Humidity offset in % for sensor tolerance compensation. */
 
     Sht3XHumidityChannel();
     Sht3XHumidityChannel(const Sht3XHumidityChannel& channel);
@@ -233,7 +233,7 @@ public:
 
     /**
      * Constructs the SHT3x sensor.
-     * 
+     *
      * @param[in] model SHT3x sensor model
      */
     SensorSht3X(SHTSensor::SHTSensorType model) :
@@ -264,11 +264,11 @@ public:
 
     /**
      * Get sensor name.
-     * 
+     *
      * @return Sensor name
      */
     const char* getName() const final;
-    
+
     /**
      * Is sensor available?
      * If a sensor is physically not available or the initialization failed (see begin()),
@@ -283,7 +283,7 @@ public:
 
     /**
      * Get number of data channels.
-     * 
+     *
      * @return Number of data channels.
      */
     uint8_t getNumChannels() const final
@@ -293,11 +293,11 @@ public:
 
     /**
      * Get data channel by index.
-     * If sensor is not available or channel index is out of bounds, it will 
+     * If sensor is not available or channel index is out of bounds, it will
      * return nullptr.
-     * 
+     *
      * @param[in] index Index of the data channel.
-     * 
+     *
      * @return Data channel
      */
     ISensorChannel* getChannel(uint8_t index) final;
@@ -314,11 +314,11 @@ private:
         CHANNEL_ID_COUNT            /**< Number of channels */
     };
 
-    SHTSensor               m_driver;               /**< SHT3x sensor driver. */
-    bool                    m_isAvailable;          /**< Is a SHT3x sensor available or not? */
-    Sht3XTemperatureChannel m_temperatureChannel;   /**< Temperature channel */
-    Sht3XHumidityChannel    m_humidityChannel;      /**< Humidity channel */
-    
+    SHTSensor               m_driver;             /**< SHT3x sensor driver. */
+    bool                    m_isAvailable;        /**< Is a SHT3x sensor available or not? */
+    Sht3XTemperatureChannel m_temperatureChannel; /**< Temperature channel */
+    Sht3XHumidityChannel    m_humidityChannel;    /**< Humidity channel */
+
     SensorSht3X();
     SensorSht3X(const SensorSht3X& sensor);
     SensorSht3X& operator=(const SensorSht3X& sensor);
@@ -328,6 +328,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_SHT3X_H */
+#endif /* SENSOR_SHT3X_H */
 
 /** @} */

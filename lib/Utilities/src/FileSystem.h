@@ -59,52 +59,52 @@
 #ifndef CONFIG_FILESYSTEM_TYPE
 /** Select the filesystem type here. */
 #define CONFIG_FILESYSTEM_TYPE FILESYSTEM_NATIVE
-#endif  /* CONFIG_FILESYSTEM_TYPE */
+#endif /* CONFIG_FILESYSTEM_TYPE */
 
 #if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE
 
 /** The used filesystem type. */
-#define FILESYSTEM              NativeFS
+#define FILESYSTEM NativeFS
 
 /** The filename of the filesystem image. */
-#define FILESYSTEM_FILENAME     "fs.bin"
+#define FILESYSTEM_FILENAME "fs.bin"
 
-#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
 
 #if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
 
 /** The used filesystem type. */
-#define FILESYSTEM              LittleFS
+#define FILESYSTEM LittleFS
 
 /** The filename of the filesystem image. */
-#define FILESYSTEM_FILENAME     "littlefs.bin"
+#define FILESYSTEM_FILENAME "littlefs.bin"
 
-#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
 
 #if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
 
 /** The used filesystem type. */
-#define FILESYSTEM              SPIFFS
+#define FILESYSTEM SPIFFS
 
 /** The filename of the filesystem image. */
-#define FILESYSTEM_FILENAME     "spiffs.bin"
+#define FILESYSTEM_FILENAME "spiffs.bin"
 
-#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
 #if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE
 #include <FS.h>
-#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
 
 #if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
 #include <LittleFS.h>
-#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
 
 #if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
 #include <SPIFFS.h>
-#endif  /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
 
 /******************************************************************************
  * Macros
@@ -118,6 +118,6 @@
  * Functions
  *****************************************************************************/
 
-#endif  /* FILESYSTEM_H */
+#endif /* FILESYSTEM_H */
 
 /** @} */

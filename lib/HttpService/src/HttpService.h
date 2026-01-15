@@ -168,14 +168,14 @@ private:
      */
     typedef std::vector<WorkerResponse> WorkerResponseList;
 
-    Mutex               m_mutex;        /**< Mutex to protect against concurrent access. */
-    bool                m_isRunning;    /**< Signals the status of the service. True means it is running, false means it is stopped. */
-    WorkerRequestList   m_requestList;  /**< List to store pending HTTP requests. */
-    WorkerResponseList  m_responseList; /**< List to store received HTTP responses. */
-    HttpJobId           m_jobIdCounter; /**< Counter to generate unique job ids. */
-    HttpJobId           m_activeJobId;  /**< Currently active job id. */
-    WorkerData          m_workerData;   /**< Data for worker task. */
-    HttpServiceWorker   m_worker;       /**< Worker context for the worker task. */
+    Mutex                               m_mutex;        /**< Mutex to protect against concurrent access. */
+    bool                                m_isRunning;    /**< Signals the status of the service. True means it is running, false means it is stopped. */
+    WorkerRequestList                   m_requestList;  /**< List to store pending HTTP requests. */
+    WorkerResponseList                  m_responseList; /**< List to store received HTTP responses. */
+    HttpJobId                           m_jobIdCounter; /**< Counter to generate unique job ids. */
+    HttpJobId                           m_activeJobId;  /**< Currently active job id. */
+    WorkerData                          m_workerData;   /**< Data for worker task. */
+    HttpServiceWorker                   m_worker;       /**< Worker context for the worker task. */
 
     /**
      * Constructs the service instance.

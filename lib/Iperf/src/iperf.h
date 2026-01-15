@@ -42,7 +42,8 @@ extern "C" {
 #define IPERF_SOCKET_RX_TIMEOUT 10
 #define IPERF_SOCKET_ACCEPT_TIMEOUT 5
 
-typedef struct {
+typedef struct
+{
     uint32_t flag;
     uint32_t dip;
     uint32_t sip;
@@ -52,7 +53,7 @@ typedef struct {
     uint32_t time;
 } iperf_cfg_t;
 
-esp_err_t iperf_start(iperf_cfg_t *cfg);
+esp_err_t iperf_start(iperf_cfg_t* cfg);
 
 esp_err_t iperf_stop(void);
 

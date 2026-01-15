@@ -89,6 +89,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* ISLOTPLUGIN_HPP */
+#endif /* ISLOTPLUGIN_HPP */
 
 /** @} */

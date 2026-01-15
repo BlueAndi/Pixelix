@@ -99,28 +99,28 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow) DDPPlugin(name, uid);
+        return new (std::nothrow) DDPPlugin(name, uid);
     }
 
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
 
-   /**
+    /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() final;
@@ -149,14 +149,14 @@ public:
 
 private:
 
-    DDPServer           m_server;       /**< DDP server */
-    Mutex               m_mutex;        /**< Mutex to protect against concurrent access */
-    YAGfxDynamicBitmap  m_framebuffer;  /**< Framebuffer used for synchronization */
-    bool                m_isUpdated;    /**< Is framebuffer updated and ready to show? */
+    DDPServer          m_server;      /**< DDP server */
+    Mutex              m_mutex;       /**< Mutex to protect against concurrent access */
+    YAGfxDynamicBitmap m_framebuffer; /**< Framebuffer used for synchronization */
+    bool               m_isUpdated;   /**< Is framebuffer updated and ready to show? */
 
     /**
      * On data reception, this method will be called from a different context.
-     * 
+     *
      * @param[in] format                Format of the payload data
      * @param[in] offset                Byte offset in display framebuffer where to continue
      * @param[in] bitsPerPixelElement   Bits per pixel in payload data
@@ -171,6 +171,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* DDPPLUGIN_H */
+#endif /* DDPPLUGIN_H */
 
 /** @} */

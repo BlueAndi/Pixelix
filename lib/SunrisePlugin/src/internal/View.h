@@ -81,7 +81,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -98,18 +98,18 @@ private:
     /**
      * Image path within the filesystem to icon.
      */
-    static const char*  ICON_PATH;
+    static const char* ICON_PATH;
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _SunrisePlugin */
+} // namespace _SunrisePlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SUNRISE_PLUGIN_VIEW_H */
+#endif /* SUNRISE_PLUGIN_VIEW_H */
 
 /** @} */

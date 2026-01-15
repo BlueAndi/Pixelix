@@ -57,7 +57,7 @@
 /**
  * Websocket command to get/set logging
  */
-class WsCmdLog: public WsCmd
+class WsCmdLog : public WsCmd
 {
 public:
 
@@ -96,9 +96,9 @@ public:
 
 private:
 
-    bool    m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t m_cnt;          /**< Number of received parameters */
-    bool    m_isLoggingOn;  /**< Is logging output via websocket enabled or disabled? */
+    bool    m_isError;     /**< Any error happened during parameter reception? */
+    uint8_t m_cnt;         /**< Number of received parameters */
+    bool    m_isLoggingOn; /**< Is logging output via websocket enabled or disabled? */
 
     WsCmdLog(const WsCmdLog& cmd);
     WsCmdLog& operator=(const WsCmdLog& cmd);
@@ -108,6 +108,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDLOG_H */
+#endif /* WSCMDLOG_H */
 
 /** @} */

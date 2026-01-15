@@ -86,12 +86,12 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _MultiIconPlugin */
+} // namespace _MultiIconPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* THREE_ICON_PLUGIN_VIEW_H */
+#endif /* THREE_ICON_PLUGIN_VIEW_H */
 
 /** @} */

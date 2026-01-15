@@ -96,9 +96,9 @@ public:
 
     /**
      * Assignment operator.
-     * 
+     *
      * @param[in] other Another LZW decoder.
-     * 
+     *
      * @return Reference to this LZW decoder.
      */
     LzwDecoder& operator=(const LzwDecoder& other);

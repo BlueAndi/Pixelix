@@ -83,17 +83,17 @@ public:
     /**
      * Start the topic handler.
      */
-    virtual void start() = 0;
+    virtual void start()                                                                                                                                                                                       = 0;
 
     /**
      * Stop the topic handler.
      * Topics are NOT unregistered. If necessary, this must be done before.
      */
-    virtual void stop() = 0;
+    virtual void stop()                                                                                                                                                                                        = 0;
 
     /**
      * Register the topic.
-     * 
+     *
      * @param[in] deviceId      The device id which represents the physical device.
      * @param[in] entityId      The entity id which represents the entity of the device.
      * @param[in] topic         The topic name.
@@ -106,27 +106,27 @@ public:
 
     /**
      * Unregister the topic.
-     * 
+     *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    virtual void unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge) = 0;
+    virtual void unregisterTopic(const String& deviceId, const String& entityId, const String& topic, bool purge)                                                                                              = 0;
 
     /**
      * Process the topic handler.
      */
-    virtual void process() = 0;
+    virtual void process()                                                                                                                                                                                     = 0;
 
     /**
      * Notify that the topic has changed.
-     * 
+     *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    virtual void notify(const String& deviceId, const String& entityId, const String& topic) = 0;
+    virtual void notify(const String& deviceId, const String& entityId, const String& topic)                                                                                                                   = 0;
 
 protected:
 
@@ -136,13 +136,12 @@ protected:
     ITopicHandler()
     {
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ITOPICHANDLER_H */
+#endif /* ITOPICHANDLER_H */
 
 /** @} */

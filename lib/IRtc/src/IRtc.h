@@ -71,23 +71,23 @@ public:
     /**
      * Checks for the RTC and if available, it will be initialized
      * and started.
-     * 
+     *
      * @return If no RTC is available, it will return false.
      */
-    virtual bool begin() = 0;
+    virtual bool begin()                            = 0;
 
     /**
      * Get the time from the RTC.
-     * 
+     *
      * @param[out] timeInfo Time destination
-     * 
+     *
      * @return If time info is updated, it will return true otherwise false.
      */
-    virtual bool getTime(struct tm& timeInfo) = 0;
+    virtual bool getTime(struct tm& timeInfo)       = 0;
 
     /**
      * Set the RTC by time.
-     * 
+     *
      * @param[in] timeInfo Time source
      */
     virtual void setTime(const struct tm& timeInfo) = 0;
@@ -100,13 +100,12 @@ protected:
     IRtc()
     {
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* IRTC_H */
+#endif /* IRTC_H */
 
 /** @} */

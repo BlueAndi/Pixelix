@@ -195,7 +195,7 @@ private:
     static const uint32_t BUTTON_TASK_STACKE_SIZE = 2048U;
 
     /** Button task priority. */
-    static const UBaseType_t BUTTON_TASK_PRIORITY  = 1U;
+    static const UBaseType_t BUTTON_TASK_PRIORITY = 1U;
 
     /** MCU core where the button task shall run. */
     static const BaseType_t BUTTON_TASK_RUN_CORE  = APP_CPU_NUM;

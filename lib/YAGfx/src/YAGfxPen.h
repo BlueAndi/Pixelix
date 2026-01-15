@@ -64,6 +64,6 @@ using YAGfxPen = BaseGfxPen<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* YAGFXPEN_H */
+#endif /* YAGFXPEN_H */
 
 /** @} */

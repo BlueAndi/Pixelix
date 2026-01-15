@@ -48,9 +48,8 @@
  *****************************************************************************/
 #include "WsCmd.h"
 
-extern "C"
-{
-    #include "iperf.h"
+extern "C" {
+#include "iperf.h"
 }
 
 /******************************************************************************
@@ -64,7 +63,7 @@ extern "C"
 /**
  * Websocket command to to start/stop iperf
  */
-class WsCmdIperf: public WsCmd
+class WsCmdIperf : public WsCmd
 {
 public:
 
@@ -114,11 +113,11 @@ private:
         CMD_STOP        /**< Stop iperf */
     };
 
-    bool        m_isError;          /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;           /**< Number of received parameters */
-    Cmd         m_cmd;              /**< iperf command */
-    iperf_cfg_t m_cfg;              /**< iperf configuration */
-    bool        m_isIperfRunning;   /**< Is iperf running or not? */
+    bool        m_isError;        /**< Any error happened during parameter reception? */
+    uint8_t     m_parCnt;         /**< Number of received parameters */
+    Cmd         m_cmd;            /**< iperf command */
+    iperf_cfg_t m_cfg;            /**< iperf configuration */
+    bool        m_isIperfRunning; /**< Is iperf running or not? */
 
     WsCmdIperf(const WsCmdIperf& cmd);
     WsCmdIperf& operator=(const WsCmdIperf& cmd);
@@ -135,6 +134,6 @@ private:
 
 #endif /* CONFIG_FEATURE_IPERF == 1 */
 
-#endif  /* WSCMDIPERF_H */
+#endif /* WSCMDIPERF_H */
 
 /** @} */

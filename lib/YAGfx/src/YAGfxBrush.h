@@ -58,12 +58,12 @@
 /**
  * Brush with concrete color.
  */
-using YAGfxBrush = BaseGfxBrush<Color>;
+using YAGfxBrush               = BaseGfxBrush<Color>;
 
 /**
  * Solid brush with a single color.
  */
-using YAGfxSolidBrush = BaseGfxSolidBrush<Color>;
+using YAGfxSolidBrush          = BaseGfxSolidBrush<Color>;
 
 /**
  * Linear gradient brush with two colors.
@@ -74,6 +74,6 @@ using YAGfxLinearGradientBrush = BaseGfxLinearGradientBrush<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* YA_GFX_BRUSH_H */
+#endif /* YA_GFX_BRUSH_H */
 
 /** @} */

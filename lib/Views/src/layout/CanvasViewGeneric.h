@@ -60,7 +60,7 @@
 
 /**
  * Generic view for LED matrix with bitmap and canvas.
- * 
+ *
  * The bitmap widget is used to show an icon, while the canvas widget
  * is used for drawing. The canvas widget is transparent, so the bitmap
  * will be visible below the canvas.
@@ -94,7 +94,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -106,7 +106,7 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override
@@ -148,51 +148,52 @@ protected:
     /**
      * Bitmap width in pixels.
      */
-    static const uint16_t   BITMAP_WIDTH    = CONFIG_LED_MATRIX_WIDTH;
+    static const uint16_t BITMAP_WIDTH  = CONFIG_LED_MATRIX_WIDTH;
 
     /**
      * Bitmap height in pixels.
      */
-    static const uint16_t   BITMAP_HEIGHT   = CONFIG_LED_MATRIX_HEIGHT;
+    static const uint16_t BITMAP_HEIGHT = CONFIG_LED_MATRIX_HEIGHT;
 
     /**
      * Bitmap widget x-coordinate in pixels.
      * Left aligned.
      */
-    static const int16_t    BITMAP_X        = 0;
+    static const int16_t BITMAP_X       = 0;
 
     /**
      * Bitmap widget y-coordinate in pixels.
      * Top aligned.
      */
-    static const int16_t    BITMAP_Y        = 0;
+    static const int16_t BITMAP_Y       = 0;
 
     /**
      * Canvas width in pixels.
      */
-    static const uint16_t   CANVAS_WIDTH    = CONFIG_LED_MATRIX_WIDTH;
+    static const uint16_t CANVAS_WIDTH  = CONFIG_LED_MATRIX_WIDTH;
 
     /**
      * Canvas height in pixels.
      */
-    static const uint16_t   CANVAS_HEIGHT   = CONFIG_LED_MATRIX_HEIGHT;
+    static const uint16_t CANVAS_HEIGHT = CONFIG_LED_MATRIX_HEIGHT;
 
     /**
      * Canvas widget x-coordinate in pixels.
      * Left aligned.
      */
-    static const int16_t    CANVAS_X        = 0;
+    static const int16_t CANVAS_X       = 0;
 
     /**
      * Canvas widget y-coordinate in pixels.
      * Top aligned.
      */
-    static const int16_t    CANVAS_Y        = 0;
+    static const int16_t CANVAS_Y       = 0;
 
-    BitmapWidget    m_bitmapWidget; /**< Bitmap widget used to show a icon. */
-    CanvasWidget    m_canvasWidget; /**< Canvas used for drawing. */
+    BitmapWidget         m_bitmapWidget; /**< Bitmap widget used to show a icon. */
+    CanvasWidget         m_canvasWidget; /**< Canvas used for drawing. */
 
 private:
+
     CanvasViewGeneric(const CanvasViewGeneric& other);
     CanvasViewGeneric& operator=(const CanvasViewGeneric& other);
 };
@@ -201,6 +202,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CANVAS_VIEW_GENERIC_H */
+#endif /* CANVAS_VIEW_GENERIC_H */
 
 /** @} */

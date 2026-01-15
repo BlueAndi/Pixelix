@@ -28,7 +28,7 @@
  * @file   TopicHandlers.h
  * @brief  Topic handler
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup TOPIC_HANDLER_SERVICE
  *
  * @{
@@ -66,15 +66,15 @@ namespace TopicHandlers
 
 /**
  * Get list of all topic handlers.
- * 
+ *
  * @param[out] count    Number of service handlers in the list
- * 
+ *
  * @return List of topic handlers
  */
 extern ITopicHandler** getList(uint8_t& count);
 
-}
+} // namespace TopicHandlers
 
-#endif  /* TOPIC_HANDLER_H */
+#endif /* TOPIC_HANDLER_H */
 
 /** @} */

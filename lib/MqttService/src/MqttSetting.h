@@ -93,9 +93,9 @@ public:
 
     /**
      * Move assignment operator.
-     * 
+     *
      * @param[in] other MQTT setting to move.
-     * 
+     *
      * @return Reference to this MQTT setting.
      */
     MqttSetting& operator=(MqttSetting&& other) noexcept;

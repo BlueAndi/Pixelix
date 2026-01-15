@@ -28,7 +28,7 @@
  * @file   SensorDataProvider.h
  * @brief  Sensor data provider
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SENSORS
  *
  * @{
@@ -70,12 +70,12 @@ public:
 
     /**
      * Get instance of the sensor data provider.
-     * 
+     *
      * @return Sensor data provider
      */
     static SensorDataProvider& getInstance()
     {
-        static SensorDataProvider   instance;
+        static SensorDataProvider instance;
 
         return instance;
     }
@@ -106,16 +106,16 @@ public:
     /**
      * Get number of installed sensor drivers, independed of the physical
      * sensor availability.
-     * 
+     *
      * @return Number of installed sensor drivers.
      */
     uint8_t getNumSensors() const;
 
     /**
      * Get specific sensor by sensor index.
-     * 
+     *
      * @param[in] index Index of the sensor
-     * 
+     *
      * @return If sensor index is valid, it will return the sensor interface otherwise nullptr.
      */
     ISensor* getSensor(uint8_t index);
@@ -123,33 +123,33 @@ public:
     /**
      * Find sensor channel by its data, unit and value data type.
      * It considers the physical sensor availablity.
-     * 
+     *
      * @param[out]  sensorIndex     The index of the sensor.
      * @param[out]  channelIndex    The index of the channel from the sensor.
      * @param[in]   type            The sensor channel type to search for.
      * @param[in]   dataType        The sensor channel data type to search for. Default: disabled
      * @param[in]   sensorStartIdx  The sensor index, where to start to search. Default: 0
      * @param[in]   channelStartIdx The channel index, where to start to search. Default: 0
-     * 
+     *
      * @return If sensor found, it will return its index otherwise INVALID_SENSOR_IDX.
      */
-    bool find(  uint8_t& sensorIndex,
-                uint8_t& channelIndex,
-                ISensorChannel::Type type,
-                ISensorChannel::DataType dataType = ISensorChannel::DATA_TYPE_INVALID,
-                uint8_t sensorStartIdx = 0U,
-                uint8_t channelStartIdx = 0U);
+    bool find(uint8_t&           sensorIndex,
+        uint8_t&                 channelIndex,
+        ISensorChannel::Type     type,
+        ISensorChannel::DataType dataType        = ISensorChannel::DATA_TYPE_INVALID,
+        uint8_t                  sensorStartIdx  = 0U,
+        uint8_t                  channelStartIdx = 0U);
 
     /**
      * Load sensor calibration values from persistent memory.
-     * 
+     *
      * @return If successful loaded, it will return true otherwise false.
      */
     bool load();
 
     /**
      * Save sensor calibration values to persistent memory.
-     * 
+     *
      * @return If successful saved, it will return true otherwise false.
      */
     bool save();
@@ -157,19 +157,19 @@ public:
     /**
      * Invalid sensor index.
      */
-    static const uint8_t    INVALID_SENSOR_IDX  = UINT8_MAX;
+    static const uint8_t INVALID_SENSOR_IDX = UINT8_MAX;
 
 private:
 
     /**
      * Full path to sensor calibration value file.
      */
-    static const char*      SENSOR_CALIB_FILE_NAME;
+    static const char* SENSOR_CALIB_FILE_NAME;
 
     /**
      * Sensor process period in ms.
      */
-    static const uint32_t   SENSOR_PROCESS_PERIOD   = SIMPLE_TIMER_SECONDS(10U);
+    static const uint32_t SENSOR_PROCESS_PERIOD = SIMPLE_TIMER_SECONDS(10U);
 
     /**
      * Hidden implementation to avoid to include here all available sensors directly.
@@ -179,18 +179,18 @@ private:
     /**
      * Device id, used for topic registration.
      */
-    String                  m_deviceId;
+    String m_deviceId;
 
     /**
      * Timer used for cyclic sensor driver processing.
      */
-    SimpleTimer             m_timer;
+    SimpleTimer m_timer;
 
     /**
      * The flag indicates whether the sensor data provider was initialized
      * by begin() or not. Calling end() will reset the flag.
      */
-    bool                    m_isInitialized;
+    bool m_isInitialized;
 
     /**
      * Constructs the sensor data provder.
@@ -208,7 +208,7 @@ private:
 
     /**
      * Add the channel offset value to the JSON array.
-     * 
+     *
      * @param[out]  jsonOffset  JSON offset array
      * @param[in]   channel     Sensor channel
      */
@@ -216,7 +216,7 @@ private:
 
     /**
      * Get the channel offset from the JSON value.
-     * 
+     *
      * @param[out]  channel     Sensor channel
      * @param[in]   jsonOffset  JSON offset value
      */
@@ -242,6 +242,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_DATA_PROVIDER_H */
+#endif /* SENSOR_DATA_PROVIDER_H */
 
 /** @} */

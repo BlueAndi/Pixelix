@@ -91,7 +91,7 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)RainbowPlugin(name, uid);
+        return new (std::nothrow) RainbowPlugin(name, uid);
     }
 
     /**
@@ -105,15 +105,15 @@ public:
 private:
 
     /** Angle step delta in degree, used for the color wheel. */
-    static const uint8_t    ANGLE_DELTA = 1U;
+    static const uint8_t ANGLE_DELTA = 1U;
 
-    uint8_t m_angle;    /**< Current color wheel angle */
+    uint8_t              m_angle; /**< Current color wheel angle */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* RAINBOWPLUGIN_H */
+#endif /* RAINBOWPLUGIN_H */
 
 /** @} */

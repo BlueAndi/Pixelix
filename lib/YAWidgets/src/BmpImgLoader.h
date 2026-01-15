@@ -97,20 +97,20 @@ public:
      */
     enum Ret
     {
-        RET_OK = 0,                     /**< Successful */
-        RET_FILE_NOT_FOUND,             /**< File not found. */
-        RET_FILE_FORMAT_INVALID,        /**< Invalid file format. */
-        RET_FILE_FORMAT_UNSUPPORTED,    /**< File format is not supported. */
-        RET_IMG_TOO_BIG                 /**< Image size is too big. */
+        RET_OK = 0,                  /**< Successful */
+        RET_FILE_NOT_FOUND,          /**< File not found. */
+        RET_FILE_FORMAT_INVALID,     /**< Invalid file format. */
+        RET_FILE_FORMAT_UNSUPPORTED, /**< File format is not supported. */
+        RET_IMG_TOO_BIG              /**< Image size is too big. */
     };
 
     /**
      * Load bitmap image (.bmp) from file system to bitmap buffer.
-     * 
+     *
      * @param[in] fs        File system
      * @param[in] fileName  Name of the file
      * @param[out] bitmap   Bitmap buffer
-     * 
+     *
      * @return If successful, it will return RET_OK. See Ret type for more informations.
      */
     Ret load(FS& fs, const String& fileName, YAGfxDynamicBitmap& bitmap);
@@ -119,7 +119,7 @@ private:
 
     /**
      * Load bitmap file header from file system.
-     * 
+     *
      * @param[in] fd        File descriptor
      * @param[in] header    Bitmap file header
      *
@@ -129,7 +129,7 @@ private:
 
     /**
      * Load device independent header (DIB header) from file system.
-     * 
+     *
      * @param[in] fd        File descriptor
      * @param[in] header    DIB header
      *
@@ -142,6 +142,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BMP_IMG_LOADER_H */
+#endif /* BMP_IMG_LOADER_H */
 
 /** @} */

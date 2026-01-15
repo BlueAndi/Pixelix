@@ -64,6 +64,6 @@ using YAFont = BaseFont<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* YAFONT_H */
+#endif /* YAFONT_H */
 
 /** @} */

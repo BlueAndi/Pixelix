@@ -70,18 +70,18 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
-    virtual void init(uint16_t width, uint16_t height) = 0;
+    virtual void init(uint16_t width, uint16_t height)            = 0;
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    virtual void update(YAGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx)                               = 0;
 
     /**
      * Load icon image from filesystem and show in the slot with the given id.
@@ -95,10 +95,10 @@ public:
 
     /**
      * Clear icon in the slot with the given id.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
      */
-    virtual void clearIcon(uint8_t slotId) = 0;
+    virtual void clearIcon(uint8_t slotId)                        = 0;
 
 protected:
 
@@ -114,6 +114,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* IMULTI_ICON_VIEW_H */
+#endif /* IMULTI_ICON_VIEW_H */
 
 /** @} */

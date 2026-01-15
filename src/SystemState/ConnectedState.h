@@ -28,9 +28,9 @@
  * @file   ConnectedState.h
  * @brief  System state: Connected
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SYS_STATES
- * 
+ *
  * @{
  */
 
@@ -66,7 +66,7 @@ public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
     static ConnectedState& getInstance()
@@ -78,21 +78,21 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm) final;
@@ -104,7 +104,7 @@ private:
     /**
      * Constructs the state.
      */
-    ConnectedState():
+    ConnectedState() :
         m_client()
     {
         initHttpClient();
@@ -124,10 +124,10 @@ private:
      * Register callback function on response reception.
      */
     void initHttpClient(void);
-    
+
     /**
      * Notify via URL that the system is online.
-     * 
+     *
      * @param[in] pushUrl   Push URL
      */
     void pushUrl(const String& pushUrl);
@@ -137,6 +137,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CONNECTEDSTATE_H */
+#endif /* CONNECTEDSTATE_H */
 
 /** @} */

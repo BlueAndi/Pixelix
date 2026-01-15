@@ -72,10 +72,10 @@ public:
 
     /**
      * Open a GIF file.
-     * 
+     *
      * @param[in] fs        Filesystem to use
      * @param[in] fileName  Name of the GIF file.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     virtual bool open(FS& fs, const String& fileName) = 0;
@@ -83,41 +83,41 @@ public:
     /**
      * Close the GIF file.
      */
-    virtual void close() = 0;
+    virtual void close()                              = 0;
 
     /**
      * Read data from GIF.
-     * 
+     *
      * @param[in] buffer    Buffer to fill.
      * @param[in] size      Buffer size in bytes.
-     * 
+     *
      * @return If successful read, it will return true otherwise false.
      */
-    virtual bool read(void* buffer, size_t size) = 0;
+    virtual bool read(void* buffer, size_t size)      = 0;
 
     /**
      * Get file position.
-     * 
+     *
      * @return File position
      */
-    virtual size_t position() = 0;
+    virtual size_t position()                         = 0;
 
     /**
      * Set file position.
-     * 
+     *
      * @param[in] position  File position to set
      * @param[in] mode      The seek mode.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     virtual bool seek(size_t position, SeekMode mode) = 0;
 
     /**
      * If file is opened, it will return true otherwise false.
-     * 
+     *
      * @return File status
      */
-    virtual operator bool() const = 0;
+    virtual operator bool() const                     = 0;
 
 protected:
 
@@ -127,13 +127,12 @@ protected:
     IGifLoader()
     {
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* IGIFLOADER_H */
+#endif /* IGIFLOADER_H */
 
 /** @} */

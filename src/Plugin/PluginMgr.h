@@ -108,7 +108,7 @@ public:
     /**
      * Set the alias name of a plugin.
      * If the plugin has registered a topic handler, the corresponding URIs will be updated.
-     * 
+     *
      * @param[in] plugin    Plugin which to assign the alias name
      * @param[in] alias     Plugin alias name
      * @return If successful, it will return true otherwise false.
@@ -125,10 +125,10 @@ public:
     /**
      * Load plugin installation from persistent memory.
      * It will automatically enable the installed plugins.
-     * 
+     *
      * If a slot already contains a plugin, this slot won't change.
      * If loading fails, no plugin at all will be installed.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool load();
@@ -141,15 +141,15 @@ public:
     /**
      * Filename of slot configuration.
      */
-    static const char*  CONFIG_FILE_NAME;
+    static const char* CONFIG_FILE_NAME;
 
 private:
 
     /** MQTT special characters, which shall not be part of a plugin alias. */
-    static const char*  MQTT_SPECIAL_CHARACTERS;
+    static const char* MQTT_SPECIAL_CHARACTERS;
 
-    PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
-    String          m_deviceId;         /**< Device id, used for topic registration. */
+    PluginFactory      m_pluginFactory; /**< The plugin factory with the plugin type registry. */
+    String             m_deviceId;      /**< Device id, used for topic registration. */
 
     /**
      * Constructs the plugin manager.
@@ -179,7 +179,7 @@ private:
 
     /**
      * Prepares a slot according to the given configuration.
-     * 
+     *
      * @param[in]   slotId      The ID of the slot.
      * @param[in]   jsonSlot    Slot configuration
      */
@@ -218,18 +218,18 @@ private:
     /**
      * Checks whether the alias is valid. It will check for not compliant
      * special characters.
-     * 
+     *
      * @param[in] alias Plugin alias
-     * 
+     *
      * @return If plugin alias is valid, it will return true otherwise false.
      */
     bool isPluginAliasValid(const String& alias);
 
     /**
      * Filters not allowed characters out of the plugin alias.
-     * 
+     *
      * @param[in] alias Plugin alias
-     * 
+     *
      * @return Filtered plugin alias
      */
     String filterPluginAlias(const String& alias);
@@ -291,6 +291,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* PLUGINMGR_H */
+#endif /* PLUGINMGR_H */
 
 /** @} */

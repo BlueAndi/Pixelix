@@ -82,7 +82,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -95,18 +95,18 @@ public:
 
 private:
 
-    bool    m_isTextOnly;   /**< Is text only layout selected? */
+    bool m_isTextOnly; /**< Is text only layout selected? */
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _GrabViaMqttPlugin */
+} // namespace _GrabViaMqttPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* GRAB_VIA_MQTT_PLUGIN_VIEW_H */
+#endif /* GRAB_VIA_MQTT_PLUGIN_VIEW_H */
 
 /** @} */

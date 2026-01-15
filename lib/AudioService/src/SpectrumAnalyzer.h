@@ -28,7 +28,7 @@
  * @file   SpectrumAnalyzer.h
  * @brief  Spectrum analyzer
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup AUDIO_SERVICE
  *
  * @{
@@ -71,10 +71,10 @@ public:
      */
     SpectrumAnalyzer() :
         m_mutex(),
-        m_real{0.0f},
-        m_imag{0.0f},
+        m_real{ 0.0f },
+        m_imag{ 0.0f },
         m_fft(m_real, m_imag, AudioDrv::SAMPLES, AudioDrv::SAMPLE_RATE),
-        m_freqBins{0.0f},
+        m_freqBins{ 0.0f },
         m_freqBinsAreReady(false)
     {
         (void)m_mutex.create();
@@ -91,7 +91,7 @@ public:
     /**
      * The audio driver will call this method to notify about a complete available
      * number of samples.
-     * 
+     *
      * @param[in]   data    Audio sample data buffer
      * @param[in]   size    Number of audio samples
      */
@@ -99,7 +99,7 @@ public:
 
     /**
      * Get the number of frequency bins.
-     * 
+     *
      * @return Number of frequency bins
      */
     size_t getFreqBinsLen() const
@@ -109,22 +109,22 @@ public:
 
     /**
      * Get frequency bins by copy.
-     * 
+     *
      * @param[out]  freqBins    Frequency bin buffer, where to write.
      * @param[in]   len         Length of frequency bin buffer in elements.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool getFreqBins(float* freqBins, size_t len);
 
     /**
      * Are the frequency bins updated and ready?
-     * 
+     *
      * @return If the frequency bins are ready, it will return true otherwise false.
      */
     bool areFreqBinsReady() const
     {
-        MutexGuard<Mutex>   guard(m_mutex);
+        MutexGuard<Mutex> guard(m_mutex);
 
         return m_freqBinsAreReady;
     }
@@ -135,14 +135,14 @@ private:
      * The number of frequency bins over the spectrum. Note, this is always
      * half of the samples, because they are symmetrical around DC.
      */
-    static const uint32_t   FREQ_BINS   = AudioDrv::SAMPLES / 2U;
+    static const uint32_t FREQ_BINS = AudioDrv::SAMPLES / 2U;
 
-    mutable Mutex       m_mutex;                    /**< Mutex used for concurrent access protection. */
-    float               m_real[AudioDrv::SAMPLES];  /**< The real values. */
-    float               m_imag[AudioDrv::SAMPLES];  /**< The imaginary values. */
-    ArduinoFFT<float>   m_fft;                      /**< The FFT algorithm. */
-    float               m_freqBins[FREQ_BINS];      /**< The frequency bins as result of the FFT, with linear magnitude. */
-    bool                m_freqBinsAreReady;         /**< Are the frequency bins ready for the application? */
+    mutable Mutex         m_mutex;                   /**< Mutex used for concurrent access protection. */
+    float                 m_real[AudioDrv::SAMPLES]; /**< The real values. */
+    float                 m_imag[AudioDrv::SAMPLES]; /**< The imaginary values. */
+    ArduinoFFT<float>     m_fft;                     /**< The FFT algorithm. */
+    float                 m_freqBins[FREQ_BINS];     /**< The frequency bins as result of the FFT, with linear magnitude. */
+    bool                  m_freqBinsAreReady;        /**< Are the frequency bins ready for the application? */
 
     SpectrumAnalyzer(const SpectrumAnalyzer& drv);
     SpectrumAnalyzer& operator=(const SpectrumAnalyzer& drv);
@@ -168,6 +168,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SPECTRUM_ANALYZER_H */
+#endif /* SPECTRUM_ANALYZER_H */
 
 /** @} */

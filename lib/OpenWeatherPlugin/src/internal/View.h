@@ -85,12 +85,12 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _OpenWeatherPlugin */
+} // namespace _OpenWeatherPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* OPENWEATHER_PLUGIN_VIEW_H */
+#endif /* OPENWEATHER_PLUGIN_VIEW_H */
 
 /** @} */

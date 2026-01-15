@@ -389,7 +389,7 @@ public:
 
     /**
      * Concatenate string literal with String object.
-     * 
+     *
      * @param[in] lhs   String literal
      * @param[in] rhs   String object
      *

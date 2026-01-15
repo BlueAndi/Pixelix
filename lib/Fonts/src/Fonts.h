@@ -63,9 +63,9 @@ namespace Fonts
  */
 typedef enum
 {
-    FONT_TYPE_DEFAULT = 0,  /**< Default font */
-    FONT_TYPE_NORMAL,       /**< Normal font */
-    FONT_TYPE_LARGE         /**< A font with larger height. */
+    FONT_TYPE_DEFAULT = 0, /**< Default font */
+    FONT_TYPE_NORMAL,      /**< Normal font */
+    FONT_TYPE_LARGE        /**< A font with larger height. */
 
 } FontType;
 
@@ -75,9 +75,9 @@ typedef enum
 
 /**
  * Get font type as string.
- * 
+ *
  * @param[in] type  The font type.
- * 
+ *
  * @return Font type as string.
  */
 extern const char* fontTypeToStr(FontType type);
@@ -85,24 +85,24 @@ extern const char* fontTypeToStr(FontType type);
 /**
  * Get font type from string.
  * If the string is empty or its content is invalid, it will return the default font type.
- * 
+ *
  * @param[in] str   String which contains the font type user friendly.
- * 
+ *
  * @return Font type
  */
 extern FontType strToFontType(const char* str);
 
 /**
  * Get the font by type.
- * 
+ *
  * @param[in] type  Choosen font type.
- * 
+ *
  * @return Reference to the font.
  */
 extern YAFont& getFontByType(FontType type);
 
-}
+} // namespace Fonts
 
-#endif  /* FONTS_HPP */
+#endif /* FONTS_HPP */
 
 /** @} */

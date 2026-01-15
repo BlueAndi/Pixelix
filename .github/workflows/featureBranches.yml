@@ -181,7 +181,7 @@ jobs:
         pip install --upgrade platformio
 
     - name: Run clang-format check
-      run: find lib -iname '*.h' -iname '*.hpp' -o -iname '*.cpp' | xargs clang-format -i --dry-run -Werror
+      run: find src lib -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' | xargs clang-format -i --dry-run -Werror
 
   # Build documentation
   doc:

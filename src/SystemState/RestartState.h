@@ -99,7 +99,7 @@ public:
 private:
 
     /** Wait timer in ms, after that all services will be stopped. */
-    const uint32_t  WAIT_TILL_STOP_SVC  = 500U;
+    const uint32_t WAIT_TILL_STOP_SVC = 500U;
 
     /** Wait timer */
     SimpleTimer m_timer;
@@ -121,13 +121,12 @@ private:
 
     RestartState(const RestartState& state);
     RestartState& operator=(const RestartState& state);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* RESTARTSTATE_H */
+#endif /* RESTARTSTATE_H */
 
 /** @} */

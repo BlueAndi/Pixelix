@@ -57,7 +57,7 @@
 /**
  * Websocket command get plugins information
  */
-class WsCmdPlugins: public WsCmd
+class WsCmdPlugins : public WsCmd
 {
 public:
 
@@ -94,7 +94,7 @@ public:
 
 private:
 
-    bool    m_isError;  /**< Any error happened during parameter reception? */
+    bool m_isError; /**< Any error happened during parameter reception? */
 
     WsCmdPlugins(const WsCmdPlugins& cmd);
     WsCmdPlugins& operator=(const WsCmdPlugins& cmd);
@@ -104,6 +104,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDPLUGINS_H */
+#endif /* WSCMDPLUGINS_H */
 
 /** @} */

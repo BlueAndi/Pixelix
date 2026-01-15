@@ -28,7 +28,7 @@
  * @file   Widget.hpp
  * @brief  Base Widget
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup GFX
  *
  * @{
@@ -74,11 +74,11 @@ public:
     /**
      * Assign content of another widget.
      * Note, its name won't be assigned.
-     * 
+     *
      * @param[in] widget The widget, which to copy.
-     * 
+     *
      * @return Widget
-    */
+     */
     Widget& operator=(const Widget& widget)
     {
         if (&widget != this)
@@ -94,7 +94,7 @@ public:
 
     /**
      * Move the widget to the given position in the canvas.
-     * 
+     *
      * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
      * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
      */
@@ -106,7 +106,7 @@ public:
 
     /**
      * Get current position in the canvas.
-     * 
+     *
      * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
      * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
      */
@@ -118,7 +118,7 @@ public:
 
     /**
      * Get widget width.
-     * 
+     *
      * @return Width in pixel
      */
     uint16_t getWidth() const
@@ -128,7 +128,7 @@ public:
 
     /**
      * Set widget width.
-     * 
+     *
      * @param[in] width Width in pixel
      */
     virtual void setWidth(uint16_t width)
@@ -138,7 +138,7 @@ public:
 
     /**
      * Get widget height.
-     * 
+     *
      * @return Width in pixel
      */
     uint16_t getHeight() const
@@ -148,7 +148,7 @@ public:
 
     /**
      * Set widget height.
-     * 
+     *
      * @param[in] height Height in pixel
      */
     virtual void setHeight(uint16_t height)
@@ -159,7 +159,7 @@ public:
     /**
      * Update/Draw the widget in the canvas with the
      * given graphics interface.
-     * 
+     *
      * @param[in] gfx   Graphics interface
      */
     void update(YAGfx& gfx)
@@ -173,7 +173,7 @@ public:
 
     /**
      * Get widget type as string.
-     * 
+     *
      * @return Widget type string
      */
     const char* getType() const
@@ -184,7 +184,7 @@ public:
     /**
      * Get widget name.
      * If no name is set, an empty string will be returned.
-     * 
+     *
      * @return Name
      */
     const String& getName() const
@@ -194,7 +194,7 @@ public:
 
     /**
      * Set widget name.
-     * 
+     *
      * @param[in] name Name to set
      */
     void setName(const String& name)
@@ -204,7 +204,7 @@ public:
 
     /**
      * Is widget enabled?
-     * 
+     *
      * @return If widget is enabled, it will return true otherwise false.
      */
     bool isEnabled() const
@@ -234,9 +234,9 @@ public:
      * Find widget by its name.
      * Note, it must be overriden by the inherited widget, if it is like a
      * container of widgets.
-     * 
+     *
      * @param[in] name  Widget name to search for
-     * 
+     *
      * @return If widget is found, it will be returned otherwise nullptr.
      */
     virtual Widget* find(const String& name)
@@ -253,20 +253,20 @@ public:
 
 protected:
 
-    const char* m_type;         /**< Widget type string */
-    YAGfxCanvas m_canvas;       /**< Canvas used to draw the widget. */
-    String      m_name;         /**< Widget name for identification. */
-    bool        m_isEnabled;    /**< If widget is enabled, it will be drawn otherwise not. */
+    const char* m_type;      /**< Widget type string */
+    YAGfxCanvas m_canvas;    /**< Canvas used to draw the widget. */
+    String      m_name;      /**< Widget name for identification. */
+    bool        m_isEnabled; /**< If widget is enabled, it will be drawn otherwise not. */
 
     /**
      * Constructs a widget a the given position in the canvas.
-     * 
+     *
      * @param[in] type      Widget type name
      * @param[in] width     Widget width in pixel.
      * @param[in] height    Widget height in pixel.
      * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
      * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
-    */
+     */
     Widget(const char* type, uint16_t width, uint16_t height, int16_t x = 0, int16_t y = 0) :
         m_type(type),
         m_canvas(nullptr, x, y, width, height),
@@ -278,9 +278,9 @@ protected:
     /**
      * Constructs a widget by copying a widget.
      * Note, its name won't be assigned.
-     * 
+     *
      * @param[in] widget The widget, which to copy.
-    */
+     */
     Widget(const Widget& widget) :
         m_type(widget.m_type),
         m_canvas(widget.m_canvas),
@@ -291,7 +291,7 @@ protected:
 
     /**
      * Paint the widget with the given graphics interface.
-     * 
+     *
      * @param[in] gfx   Graphics interface
      */
     virtual void paint(YAGfx& gfx) = 0;
@@ -306,6 +306,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WIDGET_HPP */
+#endif /* WIDGET_HPP */
 
 /** @} */

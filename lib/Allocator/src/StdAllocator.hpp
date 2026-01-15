@@ -61,7 +61,7 @@
  * Standard allocator which uses malloc() and free() for memory management.
  * There is no special memory management implemented. It just allocates raw memory,
  * but does not construct objects.
- * 
+ *
  * Its a stateless allocator.
  */
 class StdAllocator : public IAllocator

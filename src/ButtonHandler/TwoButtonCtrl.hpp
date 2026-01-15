@@ -28,7 +28,7 @@
  * @file   TwoButtonCtrl.hpp
  * @brief  Two button controller
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup BUTTON_HANDLER
  *
  * @{
@@ -56,7 +56,7 @@
 
 /**
  * Used in case two buttons are available to control the application.
- * 
+ *
  * @tparam tButtonLeft  Button id of the left button.
  * @tparam tButtonRight Button id of the right button.
  */
@@ -67,10 +67,10 @@ protected:
 
     /**
      * Handles short button triggers.
-     * 
+     *
      * @param[in]   buttonId    The triggered button.
      * @param[in]   triggerCnt  The number of triggers.
-     * 
+     *
      * @return Returns the action which to execute.
      */
     ButtonActionId handleTriggers(ButtonId buttonId, uint32_t triggerCnt)
@@ -95,9 +95,9 @@ protected:
 
     /**
      * Handles a pressed button.
-     * 
+     *
      * @param[in]   buttonId    The pressed button.
-     * 
+     *
      * @return Returns the action which to execute.
      */
     ButtonActionId handlePressed(ButtonId buttonId)
@@ -122,21 +122,20 @@ protected:
 
     /**
      * Handles short button triggers of the left button.
-     * 
+     *
      * @param[in]   triggerCnt  The number of triggers.
-     * 
+     *
      * @return Returns the action which to execute.
      */
     ButtonActionId handleButtonLeftTriggers(uint32_t triggerCnt)
     {
-        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
-        const ButtonActionId    ACTION_TABLE[]  =
-        {
+        ButtonActionId       action         = BUTTON_ACTION_ID_NO_ACTION;
+        const ButtonActionId ACTION_TABLE[] = {
             /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
             /* 1 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
             /* 2 */ BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON
         };
-        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
+        const size_t TABLE_NUM_ELEMENTS = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 
         if (TABLE_NUM_ELEMENTS > triggerCnt)
         {
@@ -148,22 +147,21 @@ protected:
 
     /**
      * Handles short button triggers of the right button.
-     * 
+     *
      * @param[in]   triggerCnt  The number of triggers.
-     * 
+     *
      * @return Returns the action which to execute.
      */
     ButtonActionId handleButtonRightTriggers(uint32_t triggerCnt)
     {
-        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
-        const ButtonActionId    ACTION_TABLE[]  =
-        {
+        ButtonActionId       action         = BUTTON_ACTION_ID_NO_ACTION;
+        const ButtonActionId ACTION_TABLE[] = {
             /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
             /* 1 */ BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT,
             /* 2 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
             /* 3 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS
         };
-        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
+        const size_t TABLE_NUM_ELEMENTS = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 
         if (TABLE_NUM_ELEMENTS > triggerCnt)
         {
@@ -182,6 +180,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* TWO_BUTTON_CTRL_HPP */
+#endif /* TWO_BUTTON_CTRL_HPP */
 
 /** @} */

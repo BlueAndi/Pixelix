@@ -28,7 +28,7 @@
  * @file   RtcDrv.hpp
  * @brief  RTC driver selector
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup RTC
  *
  * @{
@@ -61,21 +61,22 @@
  */
 typedef enum
 {
-    RTC_TYPE_NONE = 0,  /**< No RTC available */
-    RTC_TYPE_1307,      /**< RTC 1307, 5V */
-    RTC_TYPE_3231       /**< RTC 3231, 3.3V */
+    RTC_TYPE_NONE = 0, /**< No RTC available */
+    RTC_TYPE_1307,     /**< RTC 1307, 5V */
+    RTC_TYPE_3231      /**< RTC 3231, 3.3V */
 
 } RTC_TYPE;
 
 /**
  * RTC driver selector.
- * 
+ *
  * @tparam tRtcType RTC type
  */
 template < RTC_TYPE tRtcType >
 class RtcDrvSelector : public IRtc
 {
 public:
+
     /**
      * Destroy the RTC driver selector object.
      */
@@ -89,6 +90,7 @@ template <>
 class RtcDrvSelector< RTC_TYPE_NONE > : public RtcNoneDrv
 {
 public:
+
     /**
      * Destroy the RTC driver selector object.
      */
@@ -102,6 +104,7 @@ template <>
 class RtcDrvSelector< RTC_TYPE_1307 > : public Rtc1307Drv
 {
 public:
+
     /**
      * Destroy the RTC driver selector object.
      */
@@ -115,6 +118,7 @@ template <>
 class RtcDrvSelector< RTC_TYPE_3231 > : public Rtc3231Drv
 {
 public:
+
     /**
      * Destroy the RTC driver selector object.
      */
@@ -130,6 +134,6 @@ using RtcDrv = RtcDrvSelector<CONFIG_RTC_DRV>;
  * Functions
  *****************************************************************************/
 
-#endif  /* RTC_DRV_H */
+#endif /* RTC_DRV_H */
 
 /** @} */

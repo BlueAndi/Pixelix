@@ -59,13 +59,14 @@
 
 /**
  * View for icon, text and progress bar.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class PlayerView : public PlayerViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -75,10 +76,11 @@ public:
 /**
  * View for icon, text and progress bar for 32x8 display.
  */
-template<>
+template <>
 class PlayerView<LAYOUT_32X8> : public PlayerView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -88,10 +90,11 @@ public:
 /**
  * View for icon, text and progress bar for 32x16 display.
  */
-template<>
+template <>
 class PlayerView<LAYOUT_32X16> : public PlayerView32x16
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -101,10 +104,11 @@ public:
 /**
  * View for icon, text and progress bar for 64x64 display.
  */
-template<>
+template <>
 class PlayerView<LAYOUT_64X64> : public PlayerView64x64
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -118,6 +122,6 @@ using PlayerViewBase = PlayerView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* PLAYER_VIEW_BASE_HPP */
+#endif /* PLAYER_VIEW_BASE_HPP */
 
 /** @} */

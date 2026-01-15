@@ -64,7 +64,7 @@ public:
 
     /**
      * Constructs the JSON file handler.
-     * 
+     *
      * @param[in] fs    Filesystem
      */
     JsonFile(FS& fs) :
@@ -75,7 +75,7 @@ public:
     /**
      * Constructs the JSON file handler, using the same filesystem as the
      * assigned file handler.
-     * 
+     *
      * @param[in] jsonFile  JSON file handler
      */
     JsonFile(const JsonFile& jsonFile) :
@@ -92,35 +92,34 @@ public:
 
     /**
      * Load JSON file.
-     * 
+     *
      * @param[in] fileName  Name of the JSON file.
      * @param[in] doc       JSON document, which shall contain the loaded content.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool load(const String& fileName, JsonDocument& doc);
 
     /**
      * Save JSON file.
-     * 
+     *
      * @param[in] fileName  Name of the JSON file.
      * @param[in] doc       JSON document, which contain the content to save.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool save(const String& fileName, const JsonDocument& doc);
 
 protected:
-
 private:
 
     /**
      * Chunk size in byte, used by buffered stream access.
      * This influences the file read performance.
      */
-    static const size_t CHUNK_SIZE  = 64U;
+    static const size_t CHUNK_SIZE = 64U;
 
-    FS  m_fs;   /**< Filesystem */
+    FS                  m_fs; /**< Filesystem */
 
     JsonFile();
     JsonFile& operator=(const JsonFile& jsonFile);
@@ -130,6 +129,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* JSON_FILE_H */
+#endif /* JSON_FILE_H */
 
 /** @} */

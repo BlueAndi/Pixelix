@@ -76,14 +76,14 @@ extern uint8_t getSignalQuality(int8_t rssi);
 
 /**
  * Get the factory programmed wifi MAC address.
- * 
+ *
  * @param[out] macAddr  MAC address in "00:00:00:00:00:00" syntax.
  */
 extern void getEFuseMAC(String& macAddr);
 
 /**
  * Get the unique chip id.
- * 
+ *
  * @param[out] chipId   Chip id
  */
 extern void getChipId(String& chipId);
@@ -95,8 +95,8 @@ extern void getChipId(String& chipId);
  */
 extern String getRSSI();
 
-}
+} // namespace WiFiUtil
 
-#endif  /* WIFI_UTIL_H */
+#endif /* WIFI_UTIL_H */
 
 /** @} */

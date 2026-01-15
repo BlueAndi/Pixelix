@@ -88,7 +88,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -102,7 +102,7 @@ public:
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the view uses.
      */
     Fonts::FontType getFontType() const override
@@ -112,7 +112,7 @@ public:
 
     /**
      * Set font type.
-     * 
+     *
      * @param[in] fontType  The font type which the view shall use.
      */
     void setFontType(Fonts::FontType fontType) override
@@ -123,7 +123,7 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override
@@ -135,7 +135,7 @@ public:
 
     /**
      * Get text (non-formatted).
-     * 
+     *
      * @return Text
      */
     String getText() const override
@@ -145,7 +145,7 @@ public:
 
     /**
      * Get text (formatted).
-     * 
+     *
      * @return Text
      */
     String getFormatText() const override
@@ -155,7 +155,7 @@ public:
 
     /**
      * Set text (formatted).
-     * 
+     *
      * @param[in] formatText    Formatted text to show.
      */
     void setFormatText(const String& formatText) override
@@ -165,7 +165,7 @@ public:
 
     /**
      * Get canvas for drawing.
-     * 
+     *
      * @return Canvas
      */
     YAGfx& getCanvasGfx() override
@@ -178,57 +178,58 @@ protected:
     /**
      * Canvas size in pixels.
      */
-    static const uint16_t   CANVAS_SIZE     = CONFIG_LED_MATRIX_HEIGHT / 2U;
+    static const uint16_t CANVAS_SIZE   = CONFIG_LED_MATRIX_HEIGHT / 2U;
 
     /**
      * Canvas width in pixels.
      */
-    static const uint16_t   CANVAS_WIDTH    = CANVAS_SIZE;
+    static const uint16_t CANVAS_WIDTH  = CANVAS_SIZE;
 
     /**
      * Canvas height in pixels.
      */
-    static const uint16_t   CANVAS_HEIGHT   = CANVAS_SIZE;
+    static const uint16_t CANVAS_HEIGHT = CANVAS_SIZE;
 
     /**
      * Canvas widget x-coordinate in pixels.
      * Left aligned.
      */
-    static const int16_t    CANVAS_X        = (CONFIG_LED_MATRIX_WIDTH - CANVAS_WIDTH) / 2;
+    static const int16_t CANVAS_X       = (CONFIG_LED_MATRIX_WIDTH - CANVAS_WIDTH) / 2;
 
     /**
      * Canvas widget y-coordinate in pixels.
      * Top aligned.
      */
-    static const int16_t    CANVAS_Y        = 0;
+    static const int16_t CANVAS_Y       = 0;
 
     /**
      * Text width in pixels.
      */
-    static const uint16_t   TEXT_WIDTH      = CONFIG_LED_MATRIX_WIDTH;
+    static const uint16_t TEXT_WIDTH    = CONFIG_LED_MATRIX_WIDTH;
 
     /**
      * Text height in pixels.
      */
-    static const uint16_t   TEXT_HEIGHT     = CONFIG_LED_MATRIX_HEIGHT - CANVAS_HEIGHT;
+    static const uint16_t TEXT_HEIGHT   = CONFIG_LED_MATRIX_HEIGHT - CANVAS_HEIGHT;
 
     /**
      * Text widget x-coordinate in pixels.
      * Left aligned.
      */
-    static const int16_t    TEXT_X          = 0;
+    static const int16_t TEXT_X         = 0;
 
     /**
      * Text widget y-coordinate in pixels.
      * Top aligned, below bitmap.
      */
-    static const int16_t    TEXT_Y          = CANVAS_HEIGHT;
+    static const int16_t TEXT_Y         = CANVAS_HEIGHT;
 
-    Fonts::FontType m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    CanvasWidget    m_canvasWidget; /**< Canvas widget used to draw. */
-    TextWidget      m_textWidget;   /**< Text widget used to show some text. */
+    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
+    CanvasWidget         m_canvasWidget; /**< Canvas widget used to draw. */
+    TextWidget           m_textWidget;   /**< Text widget used to show some text. */
 
 private:
+
     CanvasTextView64x64(const CanvasTextView64x64& other);
     CanvasTextView64x64& operator=(const CanvasTextView64x64& other);
 };
@@ -237,6 +238,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CANVAS_TEXT_VIEW_64X64_H */
+#endif /* CANVAS_TEXT_VIEW_64X64_H */
 
 /** @} */

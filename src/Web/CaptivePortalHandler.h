@@ -28,7 +28,7 @@
  * @file   CaptivePortalHandler.h
  * @brief  Captive portal request handler
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -69,7 +69,7 @@ public:
 
     /**
      * Constructs the captive portal request handler.
-     * 
+     *
      * @param[in] resetReqHandler   Reset request handler
      */
     CaptivePortalHandler(ResetReqHandler resetReqHandler) :
@@ -110,7 +110,7 @@ public:
      * This is important to control the HTTP body parsing. In case of a non-trivial
      * handler, the webserver will parse the body and provides encoded parameters to
      * the request handler.
-     * 
+     *
      * @return Always false.
      */
     bool isRequestHandlerTrivial() const final
@@ -120,7 +120,7 @@ public:
 
 private:
 
-    ResetReqHandler m_resetReqHandler;  /**< Reset request handler */
+    ResetReqHandler m_resetReqHandler; /**< Reset request handler */
 
     CaptivePortalHandler();
     CaptivePortalHandler(const CaptivePortalHandler& handler);
@@ -139,6 +139,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CAPTIVE_PORTAL_HANDLER_H */
+#endif /* CAPTIVE_PORTAL_HANDLER_H */
 
 /** @} */

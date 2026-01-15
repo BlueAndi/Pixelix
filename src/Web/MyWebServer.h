@@ -96,8 +96,8 @@ void process();
  */
 AsyncWebServer& getInstance();
 
-}
+} // namespace MyWebServer
 
-#endif  /* MYWEBSERVER_H */
+#endif /* MYWEBSERVER_H */
 
 /** @} */

@@ -62,7 +62,7 @@
  *
  * If array allocation is used, the number of elements is stored at the beginning
  * of the allocated memory.
- * 
+ *
  * Its a stateless allocator.
  *
  * @tparam T                Type of the objects to allocate.

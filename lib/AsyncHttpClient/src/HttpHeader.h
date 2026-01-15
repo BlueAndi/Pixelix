@@ -96,7 +96,7 @@ public:
 
     /**
      * Constructs a header by copying an existing one.
-     * 
+     *
      * @param[in] other The header which to copy.
      */
     HttpHeader(const HttpHeader& other) :
@@ -177,14 +177,14 @@ public:
 
 private:
 
-    String  m_name;     /**< Header field name */
-    String  m_value;    /**< Header field value */
+    String m_name;  /**< Header field name */
+    String m_value; /**< Header field value */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* HTTP_HEADER_H */
+#endif /* HTTP_HEADER_H */
 
 /** @} */

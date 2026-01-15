@@ -59,13 +59,14 @@
 
 /**
  * View for canvas and text.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class CanvasTextView : public CanvasTextViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -75,10 +76,11 @@ public:
 /**
  * View for canvas and text for 32x8 display.
  */
-template<>
+template <>
 class CanvasTextView<LAYOUT_32X8> : public CanvasTextView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -88,10 +90,11 @@ public:
 /**
  * View for canvas and text for 32x16 display.
  */
-template<>
+template <>
 class CanvasTextView<LAYOUT_32X16> : public CanvasTextView32x16
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -101,10 +104,11 @@ public:
 /**
  * View for canvas and text for 64x64 display.
  */
-template<>
+template <>
 class CanvasTextView<LAYOUT_64X64> : public CanvasTextView64x64
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -118,6 +122,6 @@ using CanvasTextViewBase = CanvasTextView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* CANVAS_TEXT_VIEW_BASE_HPP */
+#endif /* CANVAS_TEXT_VIEW_BASE_HPP */
 
 /** @} */

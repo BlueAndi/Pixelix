@@ -57,7 +57,7 @@
 /**
  * Websocket command to restart system
  */
-class WsCmdRestart: public WsCmd
+class WsCmdRestart : public WsCmd
 {
 public:
 
@@ -94,7 +94,7 @@ public:
 
 private:
 
-    bool    m_isError;  /**< Any error happened during parameter reception? */
+    bool m_isError; /**< Any error happened during parameter reception? */
 
     WsCmdRestart(const WsCmdRestart& cmd);
     WsCmdRestart& operator=(const WsCmdRestart& cmd);
@@ -104,6 +104,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WS_CMD_RESTART_H */
+#endif /* WS_CMD_RESTART_H */
 
 /** @} */

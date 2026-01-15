@@ -71,15 +71,15 @@ public:
     MultiIconView64x64() :
         IMultiIconView(),
         m_bitmapWidgets{
-            {0U, 0U, 0, 0},
-            {0U, 0U, 0, 0},
-            {0U, 0U, 0, 0},
-            {0U, 0U, 0, 0}
+            { 0U, 0U, 0, 0 },
+            { 0U, 0U, 0, 0 },
+            { 0U, 0U, 0, 0 },
+            { 0U, 0U, 0, 0 }
         }
     {
         uint8_t slot = 0U;
 
-        while(MAX_ICON_SLOTS > slot)
+        while (MAX_ICON_SLOTS > slot)
         {
             m_bitmapWidgets[slot].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
             m_bitmapWidgets[slot].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
@@ -97,7 +97,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -109,7 +109,7 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override
@@ -118,7 +118,7 @@ public:
 
         gfx.fillScreen(ColorDef::BLACK);
 
-        while(MAX_ICON_SLOTS > idx)
+        while (MAX_ICON_SLOTS > idx)
         {
             m_bitmapWidgets[idx].update(gfx);
             ++idx;
@@ -154,7 +154,7 @@ public:
 
     /**
      * Clear icon in the slot with the given id.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
      */
     void clearIcon(uint8_t slotId) override
@@ -171,19 +171,20 @@ public:
     /**
      * Max. number of icons.
      */
-    static const uint8_t    MAX_ICON_SLOTS  = 4U;
+    static const uint8_t MAX_ICON_SLOTS = 4U;
 
 protected:
 
-    BitmapWidget    m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
+    BitmapWidget m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
 
 private:
+
     MultiIconView64x64(const MultiIconView64x64& other);
     MultiIconView64x64& operator=(const MultiIconView64x64& other);
 
     /**
      * Get the active number of icon slosts.
-     * 
+     *
      * @return Number of active icon slots
      */
     uint8_t getActiveIconSlots();
@@ -218,6 +219,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* MULTI_ICON_VIEW_64X64_H */
+#endif /* MULTI_ICON_VIEW_64X64_H */
 
 /** @} */

@@ -86,26 +86,26 @@ public:
     /**
      * Create a plugin by name.
      * The plugin UID is automatically generated.
-     * 
+     *
      * @param[in] name  Plugin type name
-     * 
+     *
      * @return If successful, it will return the plugin object pointer otherwise nullptr.
      */
     IPluginMaintenance* createPlugin(const char* name);
 
     /**
      * Create a plugin by name with given UID.
-     * 
+     *
      * @param[in] name  Plugin type name
      * @param[in] uid   Plugin UID
-     * 
+     *
      * @return If successful, it will return the plugin object pointer otherwise nullptr.
      */
     IPluginMaintenance* createPlugin(const char* name, uint16_t uid);
 
     /**
      * Destroy plugin object.
-     * 
+     *
      * @param[in] plugin    The plugin object pointer.
      */
     void destroyPlugin(const IPluginMaintenance* plugin);
@@ -115,7 +115,7 @@ private:
     /** List of plugins type. */
     typedef std::vector<IPluginMaintenance*> ListOfPlugins;
 
-    ListOfPlugins   m_plugins;  /**< List with all produced plugin objects. */
+    ListOfPlugins                            m_plugins; /**< List with all produced plugin objects. */
 
     PluginFactory(const PluginFactory& factory);
     PluginFactory& operator=(const PluginFactory& factory);
@@ -132,6 +132,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* PLUGINFACTORY_H */
+#endif /* PLUGINFACTORY_H */
 
 /** @} */

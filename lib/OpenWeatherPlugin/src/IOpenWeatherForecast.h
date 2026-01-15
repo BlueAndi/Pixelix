@@ -66,29 +66,29 @@ public:
      * Get the min. temperature.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @param[in] day   Forecast day [0; 4]
-     * 
+     *
      * @return Temperature, the unit is according to configuration.
      */
-    virtual float getTemperatureMin(uint8_t day) const = 0;
+    virtual float getTemperatureMin(uint8_t day) const       = 0;
 
     /**
      * Get the max. temperature.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @param[in] day   Forecast day [0; 4]
-     * 
+     *
      * @return Temperature, the unit is according to configuration.
      */
-    virtual float getTemperatureMax(uint8_t day) const = 0;
+    virtual float getTemperatureMax(uint8_t day) const       = 0;
 
     /**
      * Get the weather icon id.
-     * 
+     *
      * @param[in] day   Forecast day [0; 4]
-     * 
+     *
      * @return Weather icon id
      */
     virtual const String getWeatherIconId(uint8_t day) const = 0;
@@ -100,6 +100,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* IOPEN_WEATHER_FORECAST_H */
+#endif /* IOPEN_WEATHER_FORECAST_H */
 
 /** @} */

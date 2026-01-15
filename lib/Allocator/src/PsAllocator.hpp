@@ -60,7 +60,7 @@
  * PSRAM first allocator which uses PSRAM if available, otherwise falls back to
  * standard allocation. It just allocates raw memory, but does not construct objects.
  * It uses ps_malloc() for PSRAM allocation and malloc() for standard allocation.
- * 
+ *
  * Its a stateless allocator.
  */
 class PsAllocator : public IAllocator

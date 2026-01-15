@@ -65,6 +65,6 @@ using YAGfx = BaseGfx<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* YAGFX_H */
+#endif /* YAGFX_H */
 
 /** @} */

@@ -86,14 +86,14 @@ extern size_t getLargestFreeBlockSize();
 
 /**
  * Get the minimum free heap size since boot.
- * 
- * @return size_t 
+ *
+ * @return size_t
  */
 extern size_t getMinFreeHeapSize();
 
 /**
  * Check if PSRAM is available.
- * 
+ *
  * @return true if PSRAM is available, false otherwise.
  */
 extern bool isPsramAvailable();

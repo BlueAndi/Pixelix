@@ -70,15 +70,15 @@ public:
 
     /**
      * Start the service.
-     * 
+     *
      * @return If successful started, it will return true otherwise false.
      */
-    virtual bool start() = 0;
+    virtual bool start()   = 0;
 
     /**
      * Stop the service.
      */
-    virtual void stop() = 0;
+    virtual void stop()    = 0;
 
     /**
      * Process the service.
@@ -93,13 +93,12 @@ protected:
     IService()
     {
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SERVICE_HPP */
+#endif /* SERVICE_HPP */
 
 /** @} */

@@ -141,7 +141,7 @@ public:
     /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -150,14 +150,14 @@ public:
      *     ]
      * }
      * </code>
-     * 
+     *
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
      * values:
      * - Only readable: "r"
      * - Only writeable: "w"
      * - Readable and writeable: "rw"
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -167,7 +167,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Home Assistant MQTT discovery support can be added with the "ha" JSON object inside
      * the "extra" JSON object. The Home Assistant extension supports only loading by file.
      * <code>{.json}
@@ -180,7 +180,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Extra information can be loaded from a file too. This is useful for complex
      * configurations and to keep program memory usage low.
      * <code>{.json}
@@ -191,7 +191,7 @@ public:
      *    }]
      * }
      * </code>
-     * 
+     *
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;

@@ -28,7 +28,7 @@
  * @file   ISensor.hpp
  * @brief  Generic sensor interface
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup HAL
  *
  * @{
@@ -65,20 +65,20 @@ public:
     /**
      * Configures the sensor, so it is able to provide sensor data.
      */
-    virtual void begin() = 0;
+    virtual void begin()                              = 0;
 
     /**
      * Process the sensor driver. Mainly used to read the sensor value and
      * provide its data cached to the sensor channels.
      */
-    virtual void process() = 0;
+    virtual void process()                            = 0;
 
     /**
      * Get sensor name.
-     * 
+     *
      * @return Sensor name
      */
-    virtual const char* getName() const = 0;
+    virtual const char* getName() const               = 0;
 
     /**
      * Is sensor available?
@@ -87,22 +87,22 @@ public:
      *
      * @return If sensor is available, it will return true otherwise false.
      */
-    virtual bool isAvailable() const = 0;
+    virtual bool isAvailable() const                  = 0;
 
     /**
      * Get number of data channels.
-     * 
+     *
      * @return Number of data channels.
      */
-    virtual uint8_t getNumChannels() const = 0;
+    virtual uint8_t getNumChannels() const            = 0;
 
     /**
      * Get data channel by index.
-     * If sensor is not available or channel index is out of bounds, it will 
+     * If sensor is not available or channel index is out of bounds, it will
      * return nullptr.
-     * 
+     *
      * @param[in] index Index of the data channel.
-     * 
+     *
      * @return Data channel
      */
     virtual ISensorChannel* getChannel(uint8_t index) = 0;
@@ -117,13 +117,12 @@ protected:
     }
 
 private:
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ISENSOR_HPP */
+#endif /* ISENSOR_HPP */
 
 /** @} */

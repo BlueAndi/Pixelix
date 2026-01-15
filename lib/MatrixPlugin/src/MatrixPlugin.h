@@ -92,7 +92,7 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)MatrixPlugin(name, uid);
+        return new (std::nothrow) MatrixPlugin(name, uid);
     }
 
     /**
@@ -120,15 +120,15 @@ public:
 private:
 
     /** Display update period in ms. */
-    static const uint32_t   UPDATE_PERIOD   = 100U;
+    static const uint32_t UPDATE_PERIOD = 100U;
 
-    SimpleTimer m_timer;    /**< Updates the display in a slower period than update() is called. */
+    SimpleTimer           m_timer; /**< Updates the display in a slower period than update() is called. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* MATRIXPLUGIN_H */
+#endif /* MATRIXPLUGIN_H */
 
 /** @} */

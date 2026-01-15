@@ -101,23 +101,23 @@ public:
      * Minimum length of the passphrase. Don't change it, because
      * it depends on the lower layer.
      */
-    static const uint8_t    WIFI_AP_PASSPHRASE_MIN_LEN;
+    static const uint8_t WIFI_AP_PASSPHRASE_MIN_LEN;
 
     /** Access point local address */
-    static const IPAddress  LOCAL_IP;
+    static const IPAddress LOCAL_IP;
 
     /** Access point gateway address */
-    static const IPAddress  GATEWAY;
+    static const IPAddress GATEWAY;
 
     /** Access point subnet mask */
-    static const IPAddress  SUBNET;
+    static const IPAddress SUBNET;
 
     /** DNS port */
-    static const uint16_t   DNS_PORT;
+    static const uint16_t DNS_PORT;
 
 private:
 
-    DNSServer   m_dnsServer;    /**< DNS server, used for captive portal. */
+    DNSServer m_dnsServer; /**< DNS server, used for captive portal. */
 
     /**
      * Constructs the state.
@@ -136,13 +136,12 @@ private:
 
     APState(const APState& state);
     APState& operator=(const APState& state);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* APSTATE_H */
+#endif /* APSTATE_H */
 
 /** @} */

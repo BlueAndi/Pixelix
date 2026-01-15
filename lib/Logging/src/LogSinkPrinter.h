@@ -68,7 +68,6 @@ public:
         m_name(),
         m_output(nullptr)
     {
-
     }
 
     /**
@@ -138,54 +137,54 @@ public:
     void send(const Logging::Msg& msg) final;
 
     /** Maximum timestamp string length. */
-    static const size_t     TIMESTAMP_LEN           = 10U;
+    static const size_t TIMESTAMP_LEN           = 10U;
 
     /** Maximum log level string length. */
-    static const size_t     LOG_LEVEL_LEN           = 7U;
+    static const size_t LOG_LEVEL_LEN           = 7U;
 
     /** Maximum filename string length. */
-    static const size_t     FILENAME_LEN            = 22U;
+    static const size_t FILENAME_LEN            = 22U;
 
     /** Maximum divider string length. */
-    static const size_t     DIVIDER_LEN             = 1U;
+    static const size_t DIVIDER_LEN             = 1U;
 
     /** Maximum line number string length. */
-    static const size_t     LINE_LEN                = 5U;
+    static const size_t LINE_LEN                = 5U;
 
     /** The sum of all spaces in between the elements. */
-    static const size_t     SPACES_LEN              = 3U;
+    static const size_t SPACES_LEN              = 3U;
 
     /** The maximum size of the whole log message. */
-    static const size_t     LOG_MESSAGE_BUFFER_SIZE = TIMESTAMP_LEN +
-                                                        LOG_LEVEL_LEN +
-                                                        FILENAME_LEN +
-                                                        DIVIDER_LEN +
-                                                        LINE_LEN +
-                                                        Logging::MESSAGE_BUFFER_SIZE +
-                                                        SPACES_LEN +
-                                                        1U; /* String termination */
+    static const size_t LOG_MESSAGE_BUFFER_SIZE = TIMESTAMP_LEN +
+                                                  LOG_LEVEL_LEN +
+                                                  FILENAME_LEN +
+                                                  DIVIDER_LEN +
+                                                  LINE_LEN +
+                                                  Logging::MESSAGE_BUFFER_SIZE +
+                                                  SPACES_LEN +
+                                                  1U; /* String termination */
 
     /** Divider between filename and line number. */
-    static const char*      DIVIDER;
+    static const char* DIVIDER;
 
     /** This string indicates the user that the log message was cut. */
-    static const char*      STR_CUT_OFF_SEQ;
+    static const char* STR_CUT_OFF_SEQ;
 
     /** Length of the cut off sequence. */
-    static const size_t     STR_CUT_OFF_SEQ_LEN     = 4U;
+    static const size_t STR_CUT_OFF_SEQ_LEN = 4U;
 
     /** Index in the log buffer where the message will begin. */
-    static const size_t     MSG_INDEX               = TIMESTAMP_LEN +
-                                                        LOG_LEVEL_LEN +
-                                                        FILENAME_LEN +
-                                                        DIVIDER_LEN +
-                                                        LINE_LEN +
-                                                        SPACES_LEN;
+    static const size_t MSG_INDEX           = TIMESTAMP_LEN +
+                                    LOG_LEVEL_LEN +
+                                    FILENAME_LEN +
+                                    DIVIDER_LEN +
+                                    LINE_LEN +
+                                    SPACES_LEN;
 
 private:
 
-    String  m_name;     /**< Name of the sink */
-    Print*  m_output;   /**< Log sink output */
+    String m_name;   /**< Name of the sink */
+    Print* m_output; /**< Log sink output */
 
     LogSinkPrinter(const LogSinkPrinter& sink);
     LogSinkPrinter& operator=(const LogSinkPrinter& sink);
@@ -204,6 +203,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* LOG_SINK_PRINTER_H */
+#endif /* LOG_SINK_PRINTER_H */
 
 /** @} */

@@ -98,7 +98,7 @@ public:
 
     /**
      * Register the topic.
-     * 
+     *
      * @param[in] deviceId      The device id which represents the physical device.
      * @param[in] entityId      The entity id which represents the entity of the device.
      * @param[in] topic         The topic name.
@@ -111,7 +111,7 @@ public:
 
     /**
      * Unregister the topic.
-     * 
+     *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
@@ -126,7 +126,7 @@ public:
 
     /**
      * Notify that the topic has changed.
-     * 
+     *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
@@ -138,13 +138,13 @@ private:
     /** A topic state is published by a plugin. */
     struct TopicState
     {
-        String          deviceId;       /**< The device id. */
-        String          entityId;       /**< The entity id. */
-        String          topic;          /**< The topic which provides its state. */
-        GetTopicFunc    getTopicFunc;   /**< Function used to get topic content. */
-        SetTopicFunc    setTopicFunc;   /**< Function used to set topic content. */
-        UploadReqFunc   uploadReqFunc;  /**< Function used to check whether a file upload is allowed. */
-        bool            isPublishReq;   /**< Is it required to publish the state? */
+        String        deviceId;      /**< The device id. */
+        String        entityId;      /**< The entity id. */
+        String        topic;         /**< The topic which provides its state. */
+        GetTopicFunc  getTopicFunc;  /**< Function used to get topic content. */
+        SetTopicFunc  setTopicFunc;  /**< Function used to set topic content. */
+        UploadReqFunc uploadReqFunc; /**< Function used to check whether a file upload is allowed. */
+        bool          isPublishReq;  /**< Is it required to publish the state? */
 
         /** Construct topic state. */
         TopicState() :
@@ -165,25 +165,25 @@ private:
     /**
      * Max. file size in byte.
      */
-    static const size_t MAX_FILE_SIZE   = 1024U;
+    static const size_t MAX_FILE_SIZE = 1024U;
 
     /** MQTT path endpoint for read access. */
-    static const char*  MQTT_ENDPOINT_READ_ACCESS;
+    static const char* MQTT_ENDPOINT_READ_ACCESS;
 
     /** MQTT path endpoint for write access. */
-    static const char*  MQTT_ENDPOINT_WRITE_ACCESS;
+    static const char* MQTT_ENDPOINT_WRITE_ACCESS;
 
-    bool                m_isStarted;            /**< Is the topic handler started? */
-    ListOfTopicStates   m_listOfTopicStates;    /**< List of registered topic states. */
-    bool                m_isMqttConnected;      /**< Is the MQTT connection to the broker established? */
-    HomeAssistantMqtt   m_haExtension;          /**< Home Assistant extension */
+    bool               m_isStarted;         /**< Is the topic handler started? */
+    ListOfTopicStates  m_listOfTopicStates; /**< List of registered topic states. */
+    bool               m_isMqttConnected;   /**< Is the MQTT connection to the broker established? */
+    HomeAssistantMqtt  m_haExtension;       /**< Home Assistant extension */
 
     MqttApiTopicHandler(const MqttApiTopicHandler& adapter);
     MqttApiTopicHandler& operator=(const MqttApiTopicHandler& adapter);
 
     /**
      * Get MQTT base topic.
-     * 
+     *
      * Generates the base topic for the MQTT API according to following pattern:
      * - writeable: DEVICE-ID/[ENTITY-ID/]TOPIC/set
      * - readable:  DEVICE-ID/[ENTITY-ID/]TOPIC/state
@@ -203,7 +203,7 @@ private:
 
     /**
      * Publish topic states, which are requested.
-     * 
+     *
      * Note: Need to be called continously and will only publish one info per
      *       call cycle.
      */
@@ -211,7 +211,7 @@ private:
 
     /**
      * Write topic data.
-     * 
+     *
      * @param[in] deviceId      The device id which represents the physical device.
      * @param[in] entityId      The entity id which represents the entity of the device.
      * @param[in] topic         The topic name.
@@ -224,7 +224,7 @@ private:
 
     /**
      * Publish topic data.
-     * 
+     *
      * @param[in] deviceId      The device id which represents the physical device.
      * @param[in] entityId      The entity id which represents the entity of the device.
      * @param[in] topic         The topic name.
@@ -242,6 +242,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* MQTT_API_TOPIC_HANDLER_H */
+#endif /* MQTT_API_TOPIC_HANDLER_H */
 
 /** @} */

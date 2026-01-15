@@ -86,7 +86,7 @@ public:
      *
      * @param[in] ptr Pointer to memory block to deallocate.
      */
-    virtual void deallocate(void* ptr) noexcept = 0;
+    virtual void deallocate(void* ptr) noexcept  = 0;
 
 protected:
 

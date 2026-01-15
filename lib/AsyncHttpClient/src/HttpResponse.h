@@ -137,7 +137,7 @@ public:
      * Extend payload size in bytes.
      *
      * @param[in] size  Size in bytes
-     * 
+     *
      * @return true on success, false otherwise.
      */
     bool extendPayload(size_t size);
@@ -147,7 +147,7 @@ public:
      *
      * @param[in] payload   Complete or partly payload
      * @param[in] size      Payload size in byte
-     * 
+     *
      * @return true on success, false otherwise.
      */
     bool addPayload(const uint8_t* payload, size_t size);
@@ -177,7 +177,7 @@ public:
      * Get header field value.
      *
      * @param[in] name  Field name
-     * 
+     *
      * @return Field value
      */
     String getHeader(const String& name);
@@ -201,13 +201,13 @@ private:
     /** This type defines a list of HTTP headers. */
     typedef std::vector<HttpHeader> ListOfHeaders;
 
-    String          m_httpVersion;  /**< HTTP version */
-    uint16_t        m_statusCode;   /**< Status code */
-    String          m_reasonPhrase; /**< Reason phrase */
-    ListOfHeaders   m_headers;      /**< List of headers */
-    uint8_t*        m_payload;      /**< Payload */
-    size_t          m_size;         /**< Payload size in byte */
-    size_t          m_wrIndex;      /**< Payload write index */
+    String                          m_httpVersion;  /**< HTTP version */
+    uint16_t                        m_statusCode;   /**< Status code */
+    String                          m_reasonPhrase; /**< Reason phrase */
+    ListOfHeaders                   m_headers;      /**< List of headers */
+    uint8_t*                        m_payload;      /**< Payload */
+    size_t                          m_size;         /**< Payload size in byte */
+    size_t                          m_wrIndex;      /**< Payload write index */
 
     /**
      * Clear headers.
@@ -224,6 +224,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* HTTP_RESPONSE_H */
+#endif /* HTTP_RESPONSE_H */
 
 /** @} */

@@ -28,7 +28,7 @@
  * @file   StatisticValue.hpp
  * @brief  Statistic value
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup UTILITIES
  *
  * @{
@@ -57,7 +57,7 @@
 /**
  * This class can be used to get further statistic relevant informations about
  * a value.
- * 
+ *
  * @tparam T        Data type of the value
  * @tparam zero     The number zero, compliant to the data type of the value.
  * @tparam avgCnt   Number of values for the moving average calculation.
@@ -91,7 +91,7 @@ public:
 
     /**
      * Update the value and derive further information.
-     * 
+     *
      * @param[in] value The value which to observe.
      */
     void update(const T& value)
@@ -119,9 +119,9 @@ public:
         else
         /* Initialize with first given real value. */
         {
-            m_min       = value;
-            m_max       = value;
-            m_isInit    = false;
+            m_min    = value;
+            m_max    = value;
+            m_isInit = false;
         }
 
         /* Calculate the moving average. To avoid running over all values,
@@ -131,10 +131,10 @@ public:
         {
             m_sum -= m_values[m_wrIdx];
         }
-        m_sum += value;
+        m_sum             += value;
 
         /* Handle value FIFO for moving average calculation. */
-        m_values[m_wrIdx] = value;
+        m_values[m_wrIdx]  = value;
         ++m_wrIdx;
 
         if (avgCnt <= m_wrIdx)
@@ -153,18 +153,18 @@ public:
      */
     void reset()
     {
-        m_isInit    = true;
-        m_min       = zero;
-        m_max       = zero;
-        m_current   = zero;
-        m_wrIdx     = 0U;
-        m_cnt       = 0U;
-        m_sum       = zero;
+        m_isInit  = true;
+        m_min     = zero;
+        m_max     = zero;
+        m_current = zero;
+        m_wrIdx   = 0U;
+        m_cnt     = 0U;
+        m_sum     = zero;
     }
 
     /**
      * Get the minimum value, determined during the last value updates.
-     * 
+     *
      * @return Minimum value
      */
     T getMin() const
@@ -174,7 +174,7 @@ public:
 
     /**
      * Get the maximum value, determined during the last value updates.
-     * 
+     *
      * @return Maximum value
      */
     T getMax() const
@@ -184,7 +184,7 @@ public:
 
     /**
      * Get the moving average value, determined during the last value updates.
-     * 
+     *
      * @return Moving average value
      */
     T getAvg() const
@@ -201,7 +201,7 @@ public:
 
     /**
      * Get the last updated value.
-     * 
+     *
      * @return Current value
      */
     T getCurrent() const
@@ -211,21 +211,20 @@ public:
 
 private:
 
-    bool        m_isInit;           /**< Is min. and max. value initialized with the first given value? */
-    T           m_min;              /**< Minimum value, determined during value updates. */
-    T           m_max;              /**< Maximum value, determined during value updates. */
-    T           m_current;          /**< Last updated value. */
-    uint32_t    m_wrIdx;            /**< Write index for the value array, used for moving average calculation. */
-    uint32_t    m_cnt;              /**< Number of values in the value array. */
-    T           m_sum;              /**< Sum over all values in the value array. */
-    T           m_values[avgCnt];   /**< Value array, used for moving average calculation. */
-
+    bool     m_isInit;         /**< Is min. and max. value initialized with the first given value? */
+    T        m_min;            /**< Minimum value, determined during value updates. */
+    T        m_max;            /**< Maximum value, determined during value updates. */
+    T        m_current;        /**< Last updated value. */
+    uint32_t m_wrIdx;          /**< Write index for the value array, used for moving average calculation. */
+    uint32_t m_cnt;            /**< Number of values in the value array. */
+    T        m_sum;            /**< Sum over all values in the value array. */
+    T        m_values[avgCnt]; /**< Value array, used for moving average calculation. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* STATISTIC_VALUE_HPP */
+#endif /* STATISTIC_VALUE_HPP */
 
 /** @} */

@@ -58,7 +58,7 @@
 /**
  * Websocket command to control the virtual user button.
  */
-class WsCmdButton: public WsCmd, public ButtonActions
+class WsCmdButton : public WsCmd, public ButtonActions
 {
 public:
 
@@ -97,8 +97,8 @@ public:
 
 private:
 
-    bool            m_isError;  /**< Any error happened during parameter reception? */
-    ButtonActionId  m_actionId; /**< Id of the action, which to execute. */
+    bool           m_isError;  /**< Any error happened during parameter reception? */
+    ButtonActionId m_actionId; /**< Id of the action, which to execute. */
 
     WsCmdButton(const WsCmdButton& cmd);
     WsCmdButton& operator=(const WsCmdButton& cmd);
@@ -108,6 +108,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDBUTTON_H */
+#endif /* WSCMDBUTTON_H */
 
 /** @} */

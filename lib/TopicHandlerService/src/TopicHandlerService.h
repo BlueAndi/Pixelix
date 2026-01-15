@@ -173,7 +173,7 @@ private:
      * The update counter forces an topic update, independent whether the topic changed.
      * This ensures that the topic content is updated periodically and that in case e.g.
      * Home Assistant restarted, it will receive the topic content.
-     * 
+     *
      * The update counter is decremented every ON_CHANGE_PERIOD.
      */
     static const uint8_t UPDATE_COUNTER_VALUE = 20U;
@@ -314,7 +314,7 @@ private:
     /**
      * Process all topics to check which one has changed.
      * For every changed one, notify the handlers about.
-     * 
+     *
      * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
      */
     void processOnChange(bool forceUpdate);
@@ -322,7 +322,7 @@ private:
     /**
      * Process all plugin topics to check which one has changed.
      * For every changed one, notify the handlers about.
-     * 
+     *
      * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
      */
     void processPluginsOnChange(bool forceUpdate);
@@ -330,7 +330,7 @@ private:
     /**
      * Process all not plugin related topics to check which one has changed.
      * For every changed one, notify the handlers about.
-     * 
+     *
      * @param[in] forceUpdate  If true, the topic content will be updated independent its changed.
      */
     void processOthersOnChange(bool forceUpdate);

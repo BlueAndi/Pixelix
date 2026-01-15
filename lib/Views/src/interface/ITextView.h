@@ -71,50 +71,50 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
-    virtual void init(uint16_t width, uint16_t height) = 0;
+    virtual void init(uint16_t width, uint16_t height)   = 0;
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the view uses.
      */
-    virtual Fonts::FontType getFontType() const = 0;
+    virtual Fonts::FontType getFontType() const          = 0;
 
     /**
      * Set font type.
-     * 
+     *
      * @param[in] fontType  The font type which the view shall use.
      */
-    virtual void setFontType(Fonts::FontType fontType) = 0;
+    virtual void setFontType(Fonts::FontType fontType)   = 0;
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    virtual void update(YAGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx)                      = 0;
 
     /**
      * Get text (non-formatted).
-     * 
+     *
      * @return Text
      */
-    virtual String getText() const = 0;
+    virtual String getText() const                       = 0;
 
     /**
      * Get text (formatted).
-     * 
+     *
      * @return Text
      */
-    virtual String getFormatText() const = 0;
+    virtual String getFormatText() const                 = 0;
 
     /**
      * Set text (formatted).
-     * 
+     *
      * @param[in] formatText    Formatted text to show.
      */
     virtual void setFormatText(const String& formatText) = 0;
@@ -127,13 +127,12 @@ protected:
     ITextView()
     {
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ITEXT_VIEW_H */
+#endif /* ITEXT_VIEW_H */
 
 /** @} */

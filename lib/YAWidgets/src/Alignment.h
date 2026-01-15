@@ -57,28 +57,28 @@
 /** Defines horizontal and vertical alignment. */
 namespace Alignment
 {
-    /** Horizontal alignment. */
-    enum Horizontal
-    {
-        HORIZONTAL_LEFT = 0,    /**< Left aligned */
-        HORIZONTAL_CENTER,      /**< Center aligned */
-        HORIZONTAL_RIGHT        /**< Right aligned */
-    };
+/** Horizontal alignment. */
+enum Horizontal
+{
+    HORIZONTAL_LEFT = 0, /**< Left aligned */
+    HORIZONTAL_CENTER,   /**< Center aligned */
+    HORIZONTAL_RIGHT     /**< Right aligned */
+};
 
-    /** Vertical alignment. */
-    enum Vertical
-    {
-        VERTICAL_TOP = 0,   /**< Top aligned */
-        VERTICAL_CENTER,    /**< Center aligned */
-        VERTICAL_BOTTOM     /**< Bottom aligned */
-    };
+/** Vertical alignment. */
+enum Vertical
+{
+    VERTICAL_TOP = 0, /**< Top aligned */
+    VERTICAL_CENTER,  /**< Center aligned */
+    VERTICAL_BOTTOM   /**< Bottom aligned */
+};
 
-} /* Alignment */
+} // namespace Alignment
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ALIGNMENT_H */
+#endif /* ALIGNMENT_H */
 
 /** @} */

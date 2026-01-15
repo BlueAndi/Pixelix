@@ -56,13 +56,14 @@
 
 /**
  * View for icon and text.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class CanvasView : public CanvasViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -76,6 +77,6 @@ using CanvasViewBase = CanvasView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* CANVAS_VIEW_BASE_HPP */
+#endif /* CANVAS_VIEW_BASE_HPP */
 
 /** @} */

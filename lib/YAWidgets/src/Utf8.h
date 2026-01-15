@@ -63,7 +63,7 @@ namespace Utf8
 
 /**
  * Convert UTF-8 string to internal string representation.
- * 
+ *
  * @param[in]   utf8    UTF-8 string
  * @param[out]  intern  Internal string representation
  */

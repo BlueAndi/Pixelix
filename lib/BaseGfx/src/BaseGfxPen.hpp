@@ -70,7 +70,7 @@ public:
 
     /**
      * Constructs a base graphics pen.
-     * 
+     *
      * @param[in] gfx Base graphics
      */
     BaseGfxPen(BaseGfx<TColor>& gfx) :
@@ -163,16 +163,16 @@ public:
 
 protected:
 
-    BaseGfx<TColor>&    m_gfx;      /**< Base gfx */
-    TColor              m_color;    /**< Pen color */
-    int16_t             m_x;        /**< Pen x-coordinate */
-    int16_t             m_y;        /**< Pen y-coordinate */
+    BaseGfx<TColor>& m_gfx;   /**< Base gfx */
+    TColor           m_color; /**< Pen color */
+    int16_t          m_x;     /**< Pen x-coordinate */
+    int16_t          m_y;     /**< Pen y-coordinate */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_GFX_PEN_HPP */
+#endif /* BASE_GFX_PEN_HPP */
 
 /** @} */

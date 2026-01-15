@@ -85,12 +85,12 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _IconTextPlugin */
+} // namespace _IconTextPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ICON_TEXT_PLUGIN_VIEW_H */
+#endif /* ICON_TEXT_PLUGIN_VIEW_H */
 
 /** @} */

@@ -112,19 +112,18 @@ private:
     /** Fading states. */
     enum FadeState
     {
-        FADE_STATE_INIT = 0,    /**< Initialize fadeing */
-        FADE_STATE_OUT          /**< Fading out is pending */
+        FADE_STATE_INIT = 0, /**< Initialize fadeing */
+        FADE_STATE_OUT       /**< Fading out is pending */
     };
 
-    FadeState   m_state;        /**< Current fading state */
-    int16_t     m_yOffset;      /**< Current y-offset regarding movement */
-
+    FadeState m_state;   /**< Current fading state */
+    int16_t   m_yOffset; /**< Current y-offset regarding movement */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* FADE_MOVE_Y_H */
+#endif /* FADE_MOVE_Y_H */
 
 /** @} */

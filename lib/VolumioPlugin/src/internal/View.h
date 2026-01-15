@@ -70,11 +70,11 @@ public:
      */
     enum Icon
     {
-        ICON_STD = 0,   /**< Standard Volumio icon. */
-        ICON_STOP,      /**< Stop icon. */
-        ICON_PLAY,      /**< Play icon. */
-        ICON_PAUSE,     /**< Pause icon. */
-        ICON_MAX        /**< Max. number of icons. */
+        ICON_STD = 0, /**< Standard Volumio icon. */
+        ICON_STOP,    /**< Stop icon. */
+        ICON_PLAY,    /**< Play icon. */
+        ICON_PAUSE,   /**< Pause icon. */
+        ICON_MAX      /**< Max. number of icons. */
     };
 
     /**
@@ -94,7 +94,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -108,7 +108,7 @@ public:
 
     /**
      * Load dedicated icon.
-     * 
+     *
      * @param[in] type  The icon type which to set.
      */
     void loadIconByType(Icon type);
@@ -118,38 +118,38 @@ private:
     /**
      * Image path within the filesystem to standard icon.
      */
-    static const char*  IMAGE_PATH_STD_ICON;
+    static const char* IMAGE_PATH_STD_ICON;
 
     /**
      * Image path within the filesystem to "stop" icon.
      */
-    static const char*  IMAGE_PATH_STOP_ICON;
+    static const char* IMAGE_PATH_STOP_ICON;
 
     /**
      * Image path within the filesystem to "play" icon.
      */
-    static const char*  IMAGE_PATH_PLAY_ICON;
+    static const char* IMAGE_PATH_PLAY_ICON;
 
     /**
      * Image path within the filesystem to "pause" icon.
      */
-    static const char*  IMAGE_PATH_PAUSE_ICON;
+    static const char* IMAGE_PATH_PAUSE_ICON;
 
     /**
      * Table of icons mapped according to the icon enumeration.
      */
-    static const char*  ICON_TABLE[ICON_MAX];
+    static const char* ICON_TABLE[ICON_MAX];
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _VolumioPlugin */
+} // namespace _VolumioPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* VOLUMIO_PLUGIN_VIEW_H */
+#endif /* VOLUMIO_PLUGIN_VIEW_H */
 
 /** @} */

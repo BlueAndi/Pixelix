@@ -53,13 +53,13 @@
  *****************************************************************************/
 
 /** Default latitude (Berlin) */
-#define DEFAULT_LATITUDE    "52.519"
+#define DEFAULT_LATITUDE "52.519"
 
 /** Default longitude (Berlin) */
-#define DEFAULT_LONGITUDE   "13.376"
+#define DEFAULT_LONGITUDE "13.376"
 
 /** Default units */
-#define DEFAULT_UNITS       "metric"
+#define DEFAULT_UNITS "metric"
 
 /******************************************************************************
  * Types and Classes
@@ -72,117 +72,117 @@ public:
 
     /**
      * Get the API key.
-     * 
+     *
      * @return API key
      */
-    virtual const String& getApiKey() const = 0;
+    virtual const String& getApiKey() const                   = 0;
 
     /**
      * Set the API key.
-     * 
+     *
      * @param[in] apiKey    The API key which to set.
      */
-    virtual void setApiKey(const String& apiKey) = 0;
+    virtual void setApiKey(const String& apiKey)              = 0;
 
     /**
      * Set the API key.
-     * 
+     *
      * @param[in] apiKey    The API key which to set.
      */
-    virtual void setApiKey(const char* apiKey) = 0;
+    virtual void setApiKey(const char* apiKey)                = 0;
 
     /**
      * Get the latitude.
-     * 
+     *
      * @return Latitude
      */
-    virtual const String& getLatitude() const = 0;
+    virtual const String& getLatitude() const                 = 0;
 
     /**
      * Set the latitude.
-     * 
+     *
      * @param[in] latitude  The latitude which to set.
      */
-    virtual void setLatitude(const String& latitude) = 0;
+    virtual void setLatitude(const String& latitude)          = 0;
 
     /**
      * Set the latitude.
-     * 
+     *
      * @param[in] latitude  The latitude which to set.
      */
-    virtual void setLatitude(const char* latitude) = 0;
+    virtual void setLatitude(const char* latitude)            = 0;
 
     /**
      * Get the longitude.
-     * 
+     *
      * @return Longitude
      */
-    virtual const String& getLongitude() const = 0;
+    virtual const String& getLongitude() const                = 0;
 
     /**
      * Set the longitude.
-     * 
+     *
      * @param[in] longitude The longitude which to set.
      */
-    virtual void setLongitude(const String& longitude) = 0;
+    virtual void setLongitude(const String& longitude)        = 0;
 
     /**
      * Set the longitude.
-     * 
+     *
      * @param[in] longitude The longitude which to set.
      */
-    virtual void setLongitude(const char* longitude) = 0;
+    virtual void setLongitude(const char* longitude)          = 0;
 
     /**
      * Get the units which are used for temperature and
      * wind speed.
-     * 
+     *
      * @return Units
      */
-    virtual const String& getUnits() const = 0;
+    virtual const String& getUnits() const                    = 0;
 
     /**
      * Set the units to use temperature and wind speed.
-     * 
+     *
      * @param[in] units The units which to set.
      */
-    virtual void setUnits(const String& units) = 0;
+    virtual void setUnits(const String& units)                = 0;
 
     /**
      * Set the units to use temperature and wind speed.
-     * 
+     *
      * @param[in] units The units which to set.
      */
-    virtual void setUnits(const char* units) = 0;
+    virtual void setUnits(const char* units)                  = 0;
 
     /**
      * Adds the URI to the base URL.
-     * 
+     *
      * @param[out] url  The base URL to use.
      */
-    virtual void getUrl(String& url) const = 0;
+    virtual void getUrl(String& url) const                    = 0;
 
     /**
      * Get the filter which to apply on the response from the weather source.
      * Its a positive filter, which means everything marked with true, will
      * be used. Everything else will not be considered.
-     * 
+     *
      * @param[out] jsonFilterDoc    The filter which to use.
      */
     virtual void getFilter(JsonDocument& jsonFilterDoc) const = 0;
-    
+
     /**
      * Parse a response from the weather source and will update its internal
      * data.
-     * 
+     *
      * @param[out] jsonDoc  The JSON response which to parse.
      */
-    virtual void parse(const JsonDocument& jsonDoc) = 0;
+    virtual void parse(const JsonDocument& jsonDoc)           = 0;
 
     /**
      * Number of forecast days.
      */
-    static const uint8_t    FORECAST_DAYS   = 5U;
+    static const uint8_t FORECAST_DAYS                        = 5U;
 
 protected:
 };
@@ -191,6 +191,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* IOPEN_WEATHER_GENERIC_H */
+#endif /* IOPEN_WEATHER_GENERIC_H */
 
 /** @} */

@@ -63,35 +63,35 @@ namespace Version
 
 /**
  * Get software revision.
- * 
+ *
  * @return Software revision
  */
 const char* getSoftwareRevision();
 
 /**
  * Get short software revision.
- * 
+ *
  * @return Short software revision
  */
 const char* getSoftwareRevisionShort();
 
 /**
  * Get software version.
- * 
+ *
  * @return Software version
  */
 const char* getSoftwareVersion();
 
 /**
  * Get software branch name, the software was built from.
- * 
+ *
  * @return Software branch name
  */
 const char* getSoftwareBranchName();
 
 /**
  * Get target name.
- * 
+ *
  * @return Target name
  */
 const char* getTargetName();

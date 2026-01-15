@@ -28,7 +28,7 @@
  * @file   ButtonActions.h
  * @brief  Button actions
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup BUTTON_HANDLER
  *
  * @{
@@ -68,8 +68,8 @@ enum ButtonActionId
     BUTTON_ACTION_ID_SWEEP_BRIGHTNESS,      /**< Sweep brightness from dark to bright and reverse */
     BUTTON_ACTION_ID_INC_BRIGHTNESS,        /**< Increase display brightness till maximum. */
     BUTTON_ACTION_ID_DEC_BRIGHTNESS,        /**< Decrease display brightness till minimum. */
-    
-    BUTTON_ACTION_ID_MAX                    /**< Max. action id (always the last one) */
+
+    BUTTON_ACTION_ID_MAX /**< Max. action id (always the last one) */
 };
 
 /**
@@ -91,7 +91,7 @@ protected:
 
     /**
      * Destroys the button actions.
-     * 
+     *
      */
     ~ButtonActions()
     {
@@ -99,7 +99,7 @@ protected:
 
     /**
      * Execute action by button action id.
-     * 
+     *
      * @param[in] id        Button action id
      * @param[in] firstTime First time the action will be executed in a cycle.
      */
@@ -107,14 +107,14 @@ protected:
 
     /**
      * Is switch off requested?
-     * 
+     *
      * @return If switch off is requested, it will return true otherwise false.
      */
     bool isSwitchOffRequested()
     {
         bool isSwitchOffRequested = m_isSwitchOffRequested;
 
-        m_isSwitchOffRequested = false;
+        m_isSwitchOffRequested    = false;
 
         return isSwitchOffRequested;
     }
@@ -124,10 +124,10 @@ private:
     /**
      * Brightness delta value in digit used by brightness adjustment.
      */
-    static const uint8_t    BRIGHTNESS_DELTA    = 10U;
+    static const uint8_t BRIGHTNESS_DELTA = 10U;
 
-    bool    m_incBrightness;        /**< If true the brightness will increase otherwise decrease. */
-    bool    m_isSwitchOffRequested; /**< Is switch off requested? */
+    bool                 m_incBrightness;        /**< If true the brightness will increase otherwise decrease. */
+    bool                 m_isSwitchOffRequested; /**< Is switch off requested? */
 
     /**
      * Sweep brightness from dark to bright and then the other way around.
@@ -180,6 +180,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BUTTON_ACTIONS_H */
+#endif /* BUTTON_ACTIONS_H */
 
 /** @} */

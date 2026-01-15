@@ -66,14 +66,14 @@ namespace AmbientLight
  */
 enum AmbientLightLevel
 {
-    AMBIENT_LIGHT_LEVEL_PITCH_BLACK = 0,    /**< Pitch black with 1 Lux */
-    AMBIENT_LIGHT_LEVEL_NIGHT_SKY,          /**< Night sky with 10 Lux */
-    AMBIENT_LIGHT_LEVEL_DARK_ROOM,          /**< Dark room with 50 Lux */
-    AMBIENT_LIGHT_LEVEL_DARK_OVERCAST,      /**< Dark overcast with 500 Lux */
-    AMBIENT_LIGHT_LEVEL_OVERCAST_DAY,       /**< Overcast day with 1000 Lux */
-    AMBIENT_LIGHT_LEVEL_FULL_DAYLIGHT,      /**< Full daylight with 15000 Lux */
-    AMBIENT_LIGHT_LEVEL_FULL_SUNLIGHT,      /**< Full sunlight with more than 15000 Lux */
-    AMBIENT_LIGHT_LEVEL_MAX                 /**< Number of levels */
+    AMBIENT_LIGHT_LEVEL_PITCH_BLACK = 0, /**< Pitch black with 1 Lux */
+    AMBIENT_LIGHT_LEVEL_NIGHT_SKY,       /**< Night sky with 10 Lux */
+    AMBIENT_LIGHT_LEVEL_DARK_ROOM,       /**< Dark room with 50 Lux */
+    AMBIENT_LIGHT_LEVEL_DARK_OVERCAST,   /**< Dark overcast with 500 Lux */
+    AMBIENT_LIGHT_LEVEL_OVERCAST_DAY,    /**< Overcast day with 1000 Lux */
+    AMBIENT_LIGHT_LEVEL_FULL_DAYLIGHT,   /**< Full daylight with 15000 Lux */
+    AMBIENT_LIGHT_LEVEL_FULL_SUNLIGHT,   /**< Full sunlight with more than 15000 Lux */
+    AMBIENT_LIGHT_LEVEL_MAX              /**< Number of levels */
 };
 
 /**
@@ -81,7 +81,7 @@ enum AmbientLightLevel
  * corresponds from 0 to 100000 lux.
  *
  * @param[in] illuminance   Illuminance in lux
- * 
+ *
  * @return Normalized light value
  */
 extern float normalizeIlluminance(float illuminance);
@@ -90,17 +90,17 @@ extern float normalizeIlluminance(float illuminance);
  * Get ambient light level.
  *
  * @param[in] illuminance   Illuminance in lux
- * 
+ *
  * @return Ambient light level
  */
 extern AmbientLightLevel getAmbientLightLevel(float illuminance);
 
-}
+} // namespace AmbientLight
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* AMBIENT_LIGHT_H */
+#endif /* AMBIENT_LIGHT_H */
 
 /** @} */

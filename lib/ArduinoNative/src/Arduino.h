@@ -74,18 +74,18 @@ typedef bool boolean;
 
 /**
  * Get timestamp in ms since the program is running.
- * 
+ *
  * @return Timestamp in ms
  */
 extern unsigned long millis();
 
 /**
  * Get timestamp for log output in ms.
- * 
+ *
  * @return Timestamp in ms
  */
 extern uint32_t esp_log_timestamp(void);
 
-#endif  /* ARDUINO_H */
+#endif /* ARDUINO_H */
 
 /** @} */

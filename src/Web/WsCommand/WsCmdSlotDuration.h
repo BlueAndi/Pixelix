@@ -57,7 +57,7 @@
 /**
  * Websocket command to get/set slot duration
  */
-class WsCmdSlotDuration: public WsCmd
+class WsCmdSlotDuration : public WsCmd
 {
 public:
 
@@ -97,10 +97,10 @@ public:
 
 private:
 
-    bool        m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;       /**< Received number of parameters */
-    uint8_t     m_slotId;       /**< Slot id */
-    uint32_t    m_slotDuration; /**< Slot duration in ms */
+    bool     m_isError;      /**< Any error happened during parameter reception? */
+    uint8_t  m_parCnt;       /**< Received number of parameters */
+    uint8_t  m_slotId;       /**< Slot id */
+    uint32_t m_slotDuration; /**< Slot duration in ms */
 
     WsCmdSlotDuration(const WsCmdSlotDuration& cmd);
     WsCmdSlotDuration& operator=(const WsCmdSlotDuration& cmd);
@@ -110,6 +110,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDSLOTDURATION_H */
+#endif /* WSCMDSLOTDURATION_H */
 
 /** @} */

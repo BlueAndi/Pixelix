@@ -105,7 +105,7 @@ public:
      * @param[in] size      Data buffer size
      * @return Number of written data bytes.
      */
-    virtual size_t write(const uint8_t *buffer, size_t size);
+    virtual size_t write(const uint8_t* buffer, size_t size);
 
     /**
      * Write a single character to the output stream.
@@ -113,7 +113,7 @@ public:
      * @param[in] str   Character
      * @return Number of written characters.
      */
-    size_t write(const char *str);
+    size_t write(const char* str);
 
     /**
      * Write several string characters to the output stream.
@@ -122,7 +122,7 @@ public:
      * @param[in] size      Character buffer size
      * @return Number of written characters.
      */
-    size_t write(const char *buffer, size_t size);
+    size_t write(const char* buffer, size_t size);
 
     /**
      * Print a string.
@@ -130,7 +130,7 @@ public:
      * @param[in] s String
      * @return Number of written characters.
      */
-    size_t print(const String &s);
+    size_t print(const String& s);
 
     /**
      * Print a string.
@@ -170,7 +170,7 @@ public:
      * @param[in] s String
      * @return Number of written characters.
      */
-    size_t println(const String &s);
+    size_t println(const String& s);
 
 private:
 
@@ -188,6 +188,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* PRINT_H */
+#endif /* PRINT_H */
 
 /** @} */

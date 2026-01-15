@@ -70,7 +70,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -78,10 +78,10 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    virtual void update(YAGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx)                    = 0;
 
     /**
      * Load icon image from filesystem.
@@ -90,12 +90,12 @@ public:
      *
      * @return If successul, it will return true otherwise false.
      */
-    virtual bool loadIcon(const String& filename) = 0;
+    virtual bool loadIcon(const String& filename)      = 0;
 
     /**
      * Clear icon.
      */
-    virtual void clearIcon() = 0;
+    virtual void clearIcon()                           = 0;
 
 protected:
 
@@ -105,13 +105,12 @@ protected:
     ICanvasView()
     {
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ICANVAS_VIEW_H */
+#endif /* ICANVAS_VIEW_H */
 
 /** @} */

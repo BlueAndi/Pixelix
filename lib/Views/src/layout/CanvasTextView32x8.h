@@ -88,7 +88,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -102,7 +102,7 @@ public:
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the view uses.
      */
     Fonts::FontType getFontType() const override
@@ -112,7 +112,7 @@ public:
 
     /**
      * Set font type.
-     * 
+     *
      * @param[in] fontType  The font type which the view shall use.
      */
     void setFontType(Fonts::FontType fontType) override
@@ -123,7 +123,7 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override
@@ -135,7 +135,7 @@ public:
 
     /**
      * Get text (non-formatted).
-     * 
+     *
      * @return Text
      */
     String getText() const override
@@ -145,7 +145,7 @@ public:
 
     /**
      * Get text (formatted).
-     * 
+     *
      * @return Text
      */
     String getFormatText() const override
@@ -155,7 +155,7 @@ public:
 
     /**
      * Set text (formatted).
-     * 
+     *
      * @param[in] formatText    Formatted text to show.
      */
     void setFormatText(const String& formatText) override
@@ -165,7 +165,7 @@ public:
 
     /**
      * Get canvas for drawing.
-     * 
+     *
      * @return Canvas
      */
     YAGfx& getCanvasGfx() override
@@ -178,51 +178,52 @@ protected:
     /**
      * Canvas width in pixels.
      */
-    static const uint16_t   CANVAS_WIDTH    = 12U;
+    static const uint16_t CANVAS_WIDTH  = 12U;
 
     /**
      * Canvas height in pixels.
      */
-    static const uint16_t   CANVAS_HEIGHT   = CONFIG_LED_MATRIX_HEIGHT;
+    static const uint16_t CANVAS_HEIGHT = CONFIG_LED_MATRIX_HEIGHT;
 
     /**
      * Canvas widget x-coordinate in pixels.
      * Left aligned.
      */
-    static const int16_t    CANVAS_X        = 0;
+    static const int16_t CANVAS_X       = 0;
 
     /**
      * Canvas widget y-coordinate in pixels.
      * Top aligned.
      */
-    static const int16_t    CANVAS_Y        = 0;
+    static const int16_t CANVAS_Y       = 0;
 
     /**
      * Text width in pixels.
      */
-    static const uint16_t   TEXT_WIDTH      = CONFIG_LED_MATRIX_WIDTH - CANVAS_WIDTH;
+    static const uint16_t TEXT_WIDTH    = CONFIG_LED_MATRIX_WIDTH - CANVAS_WIDTH;
 
     /**
      * Text height in pixels.
      */
-    static const uint16_t   TEXT_HEIGHT     = CONFIG_LED_MATRIX_HEIGHT;
+    static const uint16_t TEXT_HEIGHT   = CONFIG_LED_MATRIX_HEIGHT;
 
     /**
      * Text widget x-coordinate in pixels.
      */
-    static const int16_t    TEXT_X          = CANVAS_WIDTH;
+    static const int16_t TEXT_X         = CANVAS_WIDTH;
 
     /**
      * Text widget y-coordinate in pixels.
      * Top aligned, below bitmap.
      */
-    static const int16_t    TEXT_Y          = 0;
+    static const int16_t TEXT_Y         = 0;
 
-    Fonts::FontType m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    CanvasWidget    m_canvasWidget; /**< Canvas widget used to draw. */
-    TextWidget      m_textWidget;   /**< Text widget used to show some text. */
+    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
+    CanvasWidget         m_canvasWidget; /**< Canvas widget used to draw. */
+    TextWidget           m_textWidget;   /**< Text widget used to show some text. */
 
 private:
+
     CanvasTextView32x8(const CanvasTextView32x8& other);
     CanvasTextView32x8& operator=(const CanvasTextView32x8& other);
 };
@@ -231,6 +232,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CANVAS_TEXT_VIEW_32X8_H */
+#endif /* CANVAS_TEXT_VIEW_32X8_H */
 
 /** @} */

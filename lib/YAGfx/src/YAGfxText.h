@@ -64,6 +64,6 @@ using YAGfxText = BaseGfxText<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* YATEXT_H */
+#endif /* YATEXT_H */
 
 /** @} */

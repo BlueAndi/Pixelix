@@ -62,6 +62,6 @@ using YAGfxCanvas = BaseGfxCanvas<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* YAGFX_CANVAS_H */
+#endif /* YAGFX_CANVAS_H */
 
 /** @} */

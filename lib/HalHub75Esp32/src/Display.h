@@ -120,7 +120,7 @@ public:
          */
         const uint8_t SAFE_LUMINANCE =
             (Board::LedMatrix::supplyCurrentMax * brightness) /
-            (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width *Board::LedMatrix::height);
+            (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width * Board::LedMatrix::height);
 
         m_panel.setBrightness(SAFE_LUMINANCE);
     }
@@ -182,15 +182,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
@@ -201,18 +201,18 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
-    const Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const  final
+    const Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
     {
         return m_ledMatrix.getFrameBufferXAddr(x, y, length, offset);
     }
@@ -220,15 +220,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
@@ -239,15 +239,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
@@ -267,7 +267,7 @@ public:
 
     /**
      * Is display powered on?
-     * 
+     *
      * @return If display is powered on, it will return true otherwise false.
      */
     bool isOn() const final;
@@ -277,28 +277,28 @@ private:
     /**
      * HUB75 I2S pin configuration.
      */
-    static const HUB75_I2S_CFG::i2s_pins    I2S_PINS;
+    static const HUB75_I2S_CFG::i2s_pins I2S_PINS;
 
     /**
      * HUB75 matrix configuration.
      */
-    static const HUB75_I2S_CFG              MATRIX_CFG;
+    static const HUB75_I2S_CFG MATRIX_CFG;
 
     /**
      * HUB75 panel driver.
      */
-    MatrixPanel_I2S_DMA                                                     m_panel;
+    MatrixPanel_I2S_DMA m_panel;
 
     /**
      * The LED matrix framebuffer.
      * This is the drawback for the direct color manipulation via getColor().
      */
-    YAGfxStaticBitmap<Board::LedMatrix::width, Board::LedMatrix::height>    m_ledMatrix;
+    YAGfxStaticBitmap<Board::LedMatrix::width, Board::LedMatrix::height> m_ledMatrix;
 
     /**
      * Is display on?
      */
-    bool                                                                    m_isOn;
+    bool m_isOn;
 
     /**
      * Construct display.
@@ -330,6 +330,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* DISPLAY_H */
+#endif /* DISPLAY_H */
 
 /** @} */

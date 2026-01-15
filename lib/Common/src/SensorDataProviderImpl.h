@@ -28,7 +28,7 @@
  * @file   SensorDataProviderImpl.h
  * @brief  Sensor data provider implementation
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup HAL
  *
  * @{
@@ -64,7 +64,7 @@ public:
 
     /**
      * Constructs the sensor data provider.
-     * 
+     *
      * @param[in] sensors   Array with all installed sensor drivers.
      * @param[in] cnt       Number of sensor drivers in the array sensors.
      */
@@ -94,7 +94,7 @@ public:
     /**
      * Get number of installed sensor drivers, independed of the physical
      * sensor availability.
-     * 
+     *
      * @return Number of installed sensor drivers.
      */
     uint8_t getNumSensors() const
@@ -104,17 +104,17 @@ public:
 
     /**
      * Get specific sensor by sensor index.
-     * 
+     *
      * @param[in] index Index of the sensor
-     * 
+     *
      * @return If sensor index is valid, it will return the sensor interface otherwise nullptr.
      */
     ISensor* getSensor(uint8_t index);
 
 private:
 
-    ISensor**       m_sensors;  /**< A list with all installed sensor drivers. */
-    const uint8_t   m_cnt;      /**< Number of installed sensor drivers. */
+    ISensor**     m_sensors; /**< A list with all installed sensor drivers. */
+    const uint8_t m_cnt;     /**< Number of installed sensor drivers. */
 
     SensorDataProviderImpl();
     SensorDataProviderImpl(const SensorDataProviderImpl& impl);
@@ -125,6 +125,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_DATA_PROVIDER_IMPL_H */
+#endif /* SENSOR_DATA_PROVIDER_IMPL_H */
 
 /** @} */

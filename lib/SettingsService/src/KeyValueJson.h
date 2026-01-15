@@ -64,7 +64,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] key       Key
      * @param[in] name      User friendly name
      * @param[in] defValue  Default value
@@ -83,7 +83,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] pref      Preferences
      * @param[in] key       Key
      * @param[in] name      User friendly name
@@ -190,11 +190,11 @@ public:
 
 private:
 
-    const char*     m_key;      /**< Key */
-    const char*     m_name;     /**< Name */
-    const char*     m_defValue; /**< Default value */
-    size_t          m_min;      /**< Min. length */
-    size_t          m_max;      /**< Max. length */
+    const char* m_key;      /**< Key */
+    const char* m_name;     /**< Name */
+    const char* m_defValue; /**< Default value */
+    size_t      m_min;      /**< Min. length */
+    size_t      m_max;      /**< Max. length */
 
     /* An instance shall not be copied. */
     KeyValueJson(const KeyValueJson& kv);
@@ -205,6 +205,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* KEY_VALUE_JSON_H */
+#endif /* KEY_VALUE_JSON_H */
 
 /** @} */

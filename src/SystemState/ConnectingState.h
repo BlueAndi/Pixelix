@@ -28,9 +28,9 @@
  * @file   ConnectingState.h
  * @brief  System state: Connecting
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SYS_STATES
- * 
+ *
  * @{
  */
 
@@ -66,7 +66,7 @@ public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
     static ConnectingState& getInstance()
@@ -78,47 +78,47 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm) final;
 
     /** Retry delay after a failed connection attempt in ms. */
-    static const uint32_t   RETRY_DELAY             = 30000U;
+    static const uint32_t RETRY_DELAY             = 30000U;
 
     /** Standard wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000U;
+    static const uint32_t SYS_MSG_WAIT_TIME_STD   = 2000U;
 
     /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
+    static const uint32_t SYS_MSG_WAIT_TIME_SHORT = 250U;
 
 private:
 
     /** Remote wifi SSID */
-    String          m_wifiSSID;
+    String m_wifiSSID;
 
     /** Remote wifi passphrase */
-    String          m_wifiPassphrase;
+    String m_wifiPassphrase;
 
     /** Timer, used for retry mechanism. */
-    SimpleTimer     m_retryTimer;
+    SimpleTimer m_retryTimer;
 
     /** Is quiet mode active? Quiet mode no unnecessary system messages on the display. */
-    bool            m_isQuiet;
+    bool m_isQuiet;
 
     /**
      * Constructs the state.
@@ -140,13 +140,12 @@ private:
 
     ConnectingState(const ConnectingState& state);
     ConnectingState& operator=(const ConnectingState& state);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* CONNECTINGSTATE_H */
+#endif /* CONNECTINGSTATE_H */
 
 /** @} */

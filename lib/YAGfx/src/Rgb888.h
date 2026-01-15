@@ -387,7 +387,6 @@ private:
     {
         return (static_cast<uint16_t>(baseColor) * static_cast<uint16_t>(m_intensity)) / MAX_BRIGHT;
     }
-
 };
 
 /******************************************************************************

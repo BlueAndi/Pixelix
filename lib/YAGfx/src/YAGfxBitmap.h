@@ -61,12 +61,12 @@
 using YAGfxBitmap = BaseGfxBitmap<Color>;
 
 /** GFX static bitmap with concrete color.
- * 
+ *
  * @tparam width    Bitmap width in pixels.
  * @tparam height   Bitmap height in pixels.
  */
 template < uint16_t width, uint16_t height >
-using YAGfxStaticBitmap = BaseGfxStaticBitmap<Color, width, height>;
+using YAGfxStaticBitmap  = BaseGfxStaticBitmap<Color, width, height>;
 
 /** GFX dynamic bitmap with concrete color. */
 using YAGfxDynamicBitmap = BaseGfxDynamicBitmap<Color, TypedAllocator<Color, PsAllocator>>;
@@ -75,6 +75,6 @@ using YAGfxDynamicBitmap = BaseGfxDynamicBitmap<Color, TypedAllocator<Color, PsA
  * Functions
  *****************************************************************************/
 
-#endif  /* YAGFX_BITMAP_H */
+#endif /* YAGFX_BITMAP_H */
 
 /** @} */

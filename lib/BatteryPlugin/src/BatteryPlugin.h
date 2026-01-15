@@ -85,12 +85,12 @@ public:
 
     /**
      * Enumeration to choose the page to be displayed.
-     */    
+     */
     enum PageDisplay
     {
-        TEMPERATURE = 0,   /**< Display Temperature in degree Celsius. */
-        HUMIDITY,          /**< Display humidity in %. */
-        PAGE_MAX           /**< Number of pages, use for simple switch (by using a PAGE_MAX as modulo operator) */ 
+        TEMPERATURE = 0, /**< Display Temperature in degree Celsius. */
+        HUMIDITY,        /**< Display humidity in %. */
+        PAGE_MAX         /**< Number of pages, use for simple switch (by using a PAGE_MAX as modulo operator) */
     };
 
     /**
@@ -111,28 +111,28 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow) BatteryPlugin(name, uid);
+        return new (std::nothrow) BatteryPlugin(name, uid);
     }
 
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
 
-   /**
+    /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() final;
@@ -141,12 +141,12 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
-     * 
+     *
      * @param[in] isConnected   The network connection status. If network
      *                          connection is established, it will be true otherwise false.
      */
-    void process(bool isConnected) final; 
-    
+    void process(bool isConnected) final;
+
     /**
      * Update the display.
      * The scheduler will call this method periodically.
@@ -160,19 +160,19 @@ private:
     /**
      * Read sensor only every 10s.
      */
-    static const uint32_t   SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(10U);
+    static const uint32_t SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(10U);
 
-    _BatteryPlugin::View    m_view;                 /**< View with all widgets. */
-    MutexRecursive          m_mutex;                /**< Mutex to protect against concurrent access. */
-    SimpleTimer             m_sensorUpdateTimer;    /**< Time used for cyclic sensor reading. */
-    ISensorChannel*         m_socSensorCh;          /**< Battery sensor SOC channel. */
-    uint32_t                m_stateOfCharge;        /**< Last read state of charge in [0; 100] %. */
+    _BatteryPlugin::View  m_view;              /**< View with all widgets. */
+    MutexRecursive        m_mutex;             /**< Mutex to protect against concurrent access. */
+    SimpleTimer           m_sensorUpdateTimer; /**< Time used for cyclic sensor reading. */
+    ISensorChannel*       m_socSensorCh;       /**< Battery sensor SOC channel. */
+    uint32_t              m_stateOfCharge;     /**< Last read state of charge in [0; 100] %. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BATTERYPLUGIN_H */
+#endif /* BATTERYPLUGIN_H */
 
 /** @} */

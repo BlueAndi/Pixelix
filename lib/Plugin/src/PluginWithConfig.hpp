@@ -61,7 +61,7 @@
 /**
  * This base plugin class handles additional a configuration file in the
  * filesystem to store data persistent.
- * 
+ *
  * Attention: Every derived class must call start(), stop() and process()
  * of this base class to get the configuration file handling working!
  */
@@ -80,12 +80,12 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
@@ -115,7 +115,7 @@ public:
     /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() override
@@ -128,7 +128,7 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
-     * 
+     *
      * @param[in] isConnected   The network connection status. If network
      *                          connection is established, it will be true otherwise false.
      */
@@ -172,7 +172,7 @@ protected:
 
     /**
      * Construct the base plugin.
-     * 
+     *
      * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      * @param[in] fs    The filesystem where to load and save the configuration file.
@@ -189,16 +189,16 @@ protected:
 
     /**
      * Get configuration in JSON.
-     * 
+     *
      * @param[out] cfg  Configuration
      */
-    virtual void getConfiguration(JsonObject& cfg) const = 0;
+    virtual void getConfiguration(JsonObject& cfg) const      = 0;
 
     /**
      * Set configuration in JSON.
-     * 
+     *
      * @param[in] cfg   Configuration
-     * 
+     *
      * @return If successful set, it will return true otherwise false.
      */
     virtual bool setConfiguration(const JsonObjectConst& cfg) = 0;
@@ -214,7 +214,7 @@ protected:
     /**
      * Get full path (path + filename) to plugin instance specific configuration
      * in JSON format.
-     * 
+     *
      * @return Full path to configuration file
      */
     String getFullPathToConfiguration() const
@@ -224,14 +224,14 @@ protected:
 
     /**
      * Get timestamp of the last configuration update in the persistent memory.
-     * 
+     *
      * @return Timestamp in unix time format.
      */
     time_t getLastConfigurationUpdate() const
     {
-        String  configurationFilename   = getFullPathToConfiguration();
-        File    fd                      = m_fs.open(configurationFilename, "r");
-        time_t  timestamp               = 0U;
+        String configurationFilename = getFullPathToConfiguration();
+        File   fd                    = m_fs.open(configurationFilename, "r");
+        time_t timestamp             = 0U;
 
         if (true == fd)
         {
@@ -245,14 +245,14 @@ protected:
     /**
      * Is the configuration in persistent memory updated without using the
      * plugin API?
-     * 
+     *
      * @return If updated, it will return true otherwise false.
      */
     bool isConfigurationUpdated() const
     {
-        bool    isConfigurationUpdated      = false;
-        time_t  timestampOfLastFileUpdate   = getLastConfigurationUpdate();
-        
+        bool   isConfigurationUpdated    = false;
+        time_t timestampOfLastFileUpdate = getLastConfigurationUpdate();
+
         if (timestampOfLastFileUpdate != m_timestampOfLastFileUpdate)
         {
             isConfigurationUpdated = true;
@@ -263,20 +263,20 @@ protected:
 
     /**
      * Saves current configuration to JSON file.
-     * 
+     *
      * @return If successful saved, it will return true otherwise false.
      */
     bool saveConfiguration()
     {
-        bool                status                  = true;
+        bool                status = true;
         JsonFile            jsonFile(m_fs);
-        const size_t        JSON_DOC_SIZE           = 1024U;
+        const size_t        JSON_DOC_SIZE = 1024U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonRootObject          = jsonDoc.to<JsonObject>();
-        String              configurationFilename   = getFullPathToConfiguration();
+        JsonObject          jsonRootObject        = jsonDoc.to<JsonObject>();
+        String              configurationFilename = getFullPathToConfiguration();
 
         getConfiguration(jsonRootObject);
-        
+
         if (false == jsonFile.save(configurationFilename, jsonDoc))
         {
             status = false;
@@ -291,17 +291,17 @@ protected:
 
     /**
      * Load configuration from JSON file.
-     * 
+     *
      * @return If successful loaded, it will return true otherwise false.
      */
     bool loadConfiguration()
     {
-        bool                status                  = true;
+        bool                status = true;
         JsonFile            jsonFile(m_fs);
-        const size_t        JSON_DOC_SIZE           = 1024U;
+        const size_t        JSON_DOC_SIZE = 1024U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObjectConst     jsonRootObject          = jsonDoc.to<JsonObject>();
-        String              configurationFilename   = getFullPathToConfiguration();
+        JsonObjectConst     jsonRootObject        = jsonDoc.to<JsonObject>();
+        String              configurationFilename = getFullPathToConfiguration();
 
         if (false == jsonFile.load(configurationFilename, jsonDoc))
         {
@@ -324,11 +324,11 @@ private:
      */
     static const uint32_t CFG_RELOAD_PERIOD = SIMPLE_TIMER_SECONDS(30U);
 
-    FS&         m_fs;                           /**< Filesystem used to load and save the configuration file. */
-    time_t      m_timestampOfLastFileUpdate;    /**< Configuration in persistent memory written the last time (unix timeformat). */
-    SimpleTimer m_cfgReloadTimer;               /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool        m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
-    bool        m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
+    FS&                   m_fs;                        /**< Filesystem used to load and save the configuration file. */
+    time_t                m_timestampOfLastFileUpdate; /**< Configuration in persistent memory written the last time (unix timeformat). */
+    SimpleTimer           m_cfgReloadTimer;            /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                  m_storeConfigReq;            /**< Is requested to store the configuration in persistent memory? */
+    bool                  m_reloadConfigReq;           /**< Is requested to reload the configuration from persistent memory? */
 
     PluginWithConfig();
     PluginWithConfig(const PluginWithConfig& handler);
@@ -339,6 +339,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* PLUGIN_WITH_CONFIG_HPP */
+#endif /* PLUGIN_WITH_CONFIG_HPP */
 
 /** @} */

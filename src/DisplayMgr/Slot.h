@@ -84,7 +84,7 @@ public:
      * Assign a slot.
      *
      * @param[in] slot  The slot which to assign.
-     * 
+     *
      * @return Slot
      */
     Slot& operator=(const Slot& slot);
@@ -164,7 +164,7 @@ public:
 
     /**
      * Is slot disabled?
-     * 
+     *
      * @return If slot is disabled, it will return true otherwise false.
      */
     bool isDisabled() const;

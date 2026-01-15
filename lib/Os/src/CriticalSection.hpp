@@ -28,7 +28,7 @@
  * @file   CriticalSection.hpp
  * @brief  freeRTOS critical section wrapper
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup OPERATING_SYSTEM
  *
  * @{
@@ -96,11 +96,10 @@ public:
 
 private:
 
-    portMUX_TYPE    m_spinlock; /**< Spinlock */
+    portMUX_TYPE m_spinlock; /**< Spinlock */
 
     CriticalSection(const CriticalSection& CriticalSection);
     CriticalSection& operator=(const CriticalSection& CriticalSection);
-
 };
 
 /**
@@ -113,7 +112,7 @@ public:
 
     /**
      * Creates the critical section guard and enters it.
-     * 
+     *
      * @param[in] critSec The guard uses this critical section for protection.
      */
     CriticalSectionGuard(CriticalSection& critSec) :
@@ -132,18 +131,17 @@ public:
 
 private:
 
-    CriticalSection&    m_criticalSection;  /**< Critical section used for the guard. */
+    CriticalSection& m_criticalSection; /**< Critical section used for the guard. */
 
     CriticalSectionGuard();
     CriticalSectionGuard(const CriticalSectionGuard& guard);
-    CriticalSectionGuard&  operator=(const CriticalSectionGuard& guard);
-
+    CriticalSectionGuard& operator=(const CriticalSectionGuard& guard);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* CRITICAL_SECTION_HPP */
+#endif /* CRITICAL_SECTION_HPP */
 
 /** @} */

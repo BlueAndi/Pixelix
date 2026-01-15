@@ -58,7 +58,7 @@
 /**
  * This class handles a list of slots and provides access functionality by
  * the slot id.
- * 
+ *
  */
 class SlotList
 {
@@ -76,7 +76,7 @@ public:
 
     /**
      * Destroys the slot list.
-     * 
+     *
      */
     ~SlotList()
     {
@@ -85,7 +85,7 @@ public:
 
     /**
      * Constructs the slot list by copy of the given list.
-     * 
+     *
      * @param[in] list  Slot list which shall be copied.
      */
     SlotList(const SlotList& list) :
@@ -99,9 +99,9 @@ public:
     /**
      * Assigns a slot list, which will recreate the slot list and copy the
      * given one.
-     * 
+     *
      * @param[in] list  Slot list which shall be assigned.
-     * 
+     *
      * @return Current slot list
      */
     SlotList& operator=(const SlotList& list);
@@ -109,7 +109,7 @@ public:
     /**
      * Are slots available or not?
      * If slots are not available, create them first @see create().
-     * 
+     *
      * @return If slots are available, it will return true otherwise false.
      */
     bool isAvailable() const
@@ -120,9 +120,9 @@ public:
     /**
      * Checks whether the given slot id is valid or not.
      * If no slots are available, every slot id will be invalid.
-     * 
+     *
      * @param[in] slotId    The slot id to check.
-     * 
+     *
      * @return If slot id is valid, it will return true otherwise false.
      */
     bool isSlotIdValid(uint8_t slotId) const;
@@ -130,9 +130,9 @@ public:
     /**
      * Create slots in the list.
      * This will allocate the slots depended on the given max number of slots.
-     * 
+     *
      * @param[in] maxSlots  The maximum number of slots to create.
-     * 
+     *
      * @return  If the slots were successful created, it will return true otherwise false.
      *          If slots already available, it will return false.
      */
@@ -145,7 +145,7 @@ public:
 
     /**
      * Get the maximum number of slots in the list.
-     * 
+     *
      * @return  The maximum number of slots.
      *          If no slots are available, it will return 0.
      */
@@ -156,7 +156,7 @@ public:
 
     /**
      * Get plugin which is plugged into the slot.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
      *
      * @return Plugin
@@ -165,7 +165,7 @@ public:
 
     /**
      * Get plugin which is plugged into the slot.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
      *
      * @return Plugin
@@ -174,9 +174,9 @@ public:
 
     /**
      * Set plugin to slot.
-     * 
+     *
      * If slot is locked, it will fail.
-     * 
+     *
      * Remove plugin from slot by using nullptr as argument.
      * If the plugin is removed and the slot is sticky, the sticky flag will
      * be cleared.
@@ -190,23 +190,23 @@ public:
 
     /**
      * Get slot by the slot id.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
-     
+
      * @return If slot is available, it will return it otherwise nullptr.
      */
     Slot* getSlot(uint8_t slotId);
 
     /**
      * Get id of a empty and unlocked slot.
-     * 
+     *
      * @return If slot is found, it will return its id otherwise SLOT_ID_INVALID.
      */
     uint8_t getEmptyUnlockedSlot();
 
     /**
      * Is slot empty (no plugin plugged in)?
-     * 
+     *
      * @param[in] slotId    The id of the slot to check.
      *
      * @return The empty status of the slot. If slot id is invalid, it will return false.
@@ -217,7 +217,7 @@ public:
      * Get duration in ms, how long the plugin shall be active.
      *
      * @param[in] slotId    The id of the slot.
-     * 
+     *
      * @return Duration in ms
      */
     uint32_t getDuration(uint8_t slotId) const;
@@ -232,21 +232,21 @@ public:
 
     /**
      * Lock slot to protect the plugin against removing it.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
      */
     void lock(uint8_t slotId);
 
     /**
      * Unlock slot to be able to remove a plugin or plug a new one in.
-     * 
+     *
      * @param[in] slotId    The id of the slot.
      */
     void unlock(uint8_t slotId);
 
     /**
      * Is slot locked?
-     * 
+     *
      * @param[in] slotId    The id of the slot to check.
      *
      * @return The lock status of the slot. If slot id is invalid, it will return false.
@@ -255,34 +255,34 @@ public:
 
     /**
      * Enable slot for scheduling.
-     * 
+     *
      * @param[in] slotId    The id of the slot to enable.
      */
     void enable(uint8_t slotId);
 
     /**
      * Disable slot for scheduling.
-     * 
+     *
      * A sticky slot can't be disabled.
-     * 
+     *
      * @param[in] slotId    The id of the slot to disable.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool disable(uint8_t slotId);
 
     /**
      * Is slot disabled?
-     * 
+     *
      * @param[in] slotId    The id of the slot to check.
-     * 
+     *
      * @return If slot is disabled, it will return true otherwise false.
      */
     bool isDisabled(uint8_t slotId) const;
 
     /**
      * Is slot empty (no plugin plugged in) and unlocked?
-     * 
+     *
      * @param[in] slotId    The id of the slot to check.
      *
      * @return If slot is empty and unlocked, it will return true otherwise false. If slot id is invalid, it will return false.
@@ -291,16 +291,16 @@ public:
 
     /**
      * Get the slot id by plugin UID.
-     * 
+     *
      * @param[in] pluginUid The plugin UID which to search for.
-     * 
+     *
      * @return If plugin slot is found, it will return its slot id otherwise SLOT_ID_INVALID.
      */
     uint8_t getSlotIdByPluginUID(uint16_t pluginUid) const;
 
     /**
      * Get slot which is marked sticky.
-     * 
+     *
      * @return Id of sticky slot. If no slot is sticky, it will return SLOT_ID_INVALID.
      */
     uint8_t getStickySlot() const;
@@ -308,13 +308,13 @@ public:
     /**
      * Set slot sticky. Only one slot can be sticky!
      * If a different slot is already sticky, the sticky flag will be moved.
-     * 
+     *
      * If slot is empty or the plugin is disabled, it will fail.
-     * 
+     *
      * Use SLOT_ID_INVALID to clear the sticky flag. Recommended: clearSticky()
-     * 
+     *
      * @param[in]   slotId  The id of the slot which to set sticky.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool setSlotSticky(uint8_t slotId);
@@ -325,20 +325,19 @@ public:
     void clearSticky();
 
     /** Invalid slot id. */
-    static const uint8_t    SLOT_ID_INVALID = UINT8_MAX;
+    static const uint8_t SLOT_ID_INVALID = UINT8_MAX;
 
 private:
 
-    uint8_t m_maxSlots;     /**< The maximum number of slots. */
-    Slot*   m_slots;        /**< The slots itself. */
-    uint8_t m_stickySlot;   /**< Only one slot can be sticky. If no slot is sticky, it contains a invalid id. */
-
+    uint8_t m_maxSlots;   /**< The maximum number of slots. */
+    Slot*   m_slots;      /**< The slots itself. */
+    uint8_t m_stickySlot; /**< Only one slot can be sticky. If no slot is sticky, it contains a invalid id. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SLOT_LIST_H */
+#endif /* SLOT_LIST_H */
 
 /** @} */

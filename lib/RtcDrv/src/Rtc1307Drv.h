@@ -86,31 +86,31 @@ public:
     /**
      * Checks for the RTC and if available, it will be initialized
      * and started.
-     * 
+     *
      * @return If no RTC is available, it will return false.
      */
     bool begin() final;
 
     /**
      * Get the time from the RTC.
-     * 
+     *
      * @param[out] timeInfo Time destination
-     * 
+     *
      * @return If time info is updated, it will return true otherwise false.
      */
     bool getTime(struct tm& timeInfo) final;
 
     /**
      * Set the RTC by time.
-     * 
+     *
      * @param[in] timeInfo Time source
      */
     void setTime(const struct tm& timeInfo) final;
 
 private:
 
-    bool        m_isInitialized;    /**< Already initialized or not. */
-    RTC_DS1307  m_rtc;              /**< Specific RTC driver. */
+    bool       m_isInitialized; /**< Already initialized or not. */
+    RTC_DS1307 m_rtc;           /**< Specific RTC driver. */
 
     Rtc1307Drv(const Rtc1307Drv& drv);
     Rtc1307Drv& operator=(const Rtc1307Drv& drv);
@@ -120,6 +120,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* RTC1307_DRV_H */
+#endif /* RTC1307_DRV_H */
 
 /** @} */

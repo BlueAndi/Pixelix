@@ -57,7 +57,7 @@
 /**
  * Websocket command to control the fade effects.
  */
-class WsCmdEffect: public WsCmd
+class WsCmdEffect : public WsCmd
 {
 public:
 
@@ -96,9 +96,9 @@ public:
 
 private:
 
-    bool    m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t m_parCnt;       /**< Received number of parameters */
-    uint8_t m_fadeEffect;   /**< Fade effect */
+    bool    m_isError;    /**< Any error happened during parameter reception? */
+    uint8_t m_parCnt;     /**< Received number of parameters */
+    uint8_t m_fadeEffect; /**< Fade effect */
 
     WsCmdEffect(const WsCmdEffect& cmd);
     WsCmdEffect& operator=(const WsCmdEffect& cmd);
@@ -108,6 +108,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDEFFECT_H */
+#endif /* WSCMDEFFECT_H */
 
 /** @} */

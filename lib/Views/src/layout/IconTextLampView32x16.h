@@ -86,7 +86,7 @@ public:
         IIconTextLampView(),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
-        m_textWidget(TEXT_WIDTH_FULL, TEXT_HEIGHT, TEXT_X_FULL, TEXT_Y),    /* Use full width. */
+        m_textWidget(TEXT_WIDTH_FULL, TEXT_HEIGHT, TEXT_X_FULL, TEXT_Y), /* Use full width. */
         m_lampWidgets{ { LAMP_WIDTH, LAMP_HEIGHT, LAMP_0_X, LAMP_Y },
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_1_X, LAMP_Y },
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_2_X, LAMP_Y },

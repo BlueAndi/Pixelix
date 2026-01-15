@@ -209,7 +209,7 @@ public:
 
 private:
 
-    UptimeChannel     m_uptimeChannel;     /**< Channel to retrieve the system uptime. */
+    UptimeChannel m_uptimeChannel; /**< Channel to retrieve the system uptime. */
 
     SensorSystem(const SensorSystem& sensor);
     SensorSystem& operator=(const SensorSystem& sensor);

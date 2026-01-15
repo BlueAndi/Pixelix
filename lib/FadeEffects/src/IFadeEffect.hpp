@@ -74,7 +74,7 @@ public:
     /**
      * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
      */
-    virtual void init() = 0;
+    virtual void init()                                                    = 0;
 
     /**
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
@@ -85,7 +85,7 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual bool fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next) = 0;
+    virtual bool fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)  = 0;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
@@ -108,13 +108,12 @@ protected:
     }
 
 private:
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_IFADEEFFECT_HPP */
+#endif /* BASE_IFADEEFFECT_HPP */
 
 /** @} */

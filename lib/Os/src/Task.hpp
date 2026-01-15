@@ -108,7 +108,7 @@ public:
 
     /**
      * Constructs the task with a custom task function.
-     * 
+     *
      * The default process() method will not be called, but the provided task
      * function will be called periodically.
      *
@@ -154,7 +154,7 @@ public:
      * If the task does not exit within the default timeout, it will be aborted.
      *
      * @param[in] timeout    Timeout in ms for task stop (optional).
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool stop(uint32_t timeout = DEFAULT_TIMEOUT);

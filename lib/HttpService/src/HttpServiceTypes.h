@@ -356,8 +356,8 @@ struct WorkerResponse
                 memcpy(newPayload + this->size, data, dataSize);
 
                 delete[] payload;
-                payload = newPayload;
-                size += dataSize;
+                payload  = newPayload;
+                size    += dataSize;
             }
         }
     }

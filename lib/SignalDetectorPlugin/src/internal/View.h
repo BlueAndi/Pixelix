@@ -85,12 +85,12 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _SignalDetectorPlugin */
+} // namespace _SignalDetectorPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SIGNAL_DETECTOR_PLUGIN_VIEW_H */
+#endif /* SIGNAL_DETECTOR_PLUGIN_VIEW_H */
 
 /** @} */

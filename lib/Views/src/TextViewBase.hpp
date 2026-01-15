@@ -56,13 +56,14 @@
 
 /**
  * View for icon and text.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class TextView : public TextViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -76,6 +77,6 @@ using TextViewBase = TextView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* TEXT_VIEW_BASE_HPP */
+#endif /* TEXT_VIEW_BASE_HPP */
 
 /** @} */

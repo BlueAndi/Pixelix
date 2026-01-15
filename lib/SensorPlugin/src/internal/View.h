@@ -81,7 +81,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -98,12 +98,12 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _SensorPlugin */
+} // namespace _SensorPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_PLUGIN_VIEW_H */
+#endif /* SENSOR_PLUGIN_VIEW_H */
 
 /** @} */

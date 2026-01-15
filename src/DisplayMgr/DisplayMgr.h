@@ -499,7 +499,7 @@ private:
     static const uint32_t STATISTICS_LOG_PERIOD = 4000U; /* [ms] */
     Statistics            m_statistics;                  /**< Statistics data. */
     SimpleTimer           m_statisticsLogTimer;          /**< Statistics log timer. */
-    uint32_t              m_timestampLastUpdate;        /**< Timestamp of last display update. */
+    uint32_t              m_timestampLastUpdate;         /**< Timestamp of last display update. */
 
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 

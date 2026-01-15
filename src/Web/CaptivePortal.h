@@ -77,8 +77,8 @@ void init(AsyncWebServer& srv);
  */
 bool isRestartRequested();
 
-}
+} // namespace CaptivePortal
 
-#endif  /* CAPTIVE_PORTAL_H */
+#endif /* CAPTIVE_PORTAL_H */
 
 /** @} */
