@@ -128,7 +128,7 @@
 
                 restClient.getSettingKeys().then(function(result) {
                     var promise = null;
-                    var promises = []
+                    var promises = [];
                     var index = 0;
 
                     for(index = 0; index < result.data.settings.length; ++index) {
@@ -239,7 +239,7 @@
                         }
 
                         $block.append($formGroup);
-                        $block.append($button)
+                        $block.append($button);
 
                         $("#settings").append($block);
 

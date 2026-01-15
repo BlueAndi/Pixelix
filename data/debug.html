@@ -183,7 +183,7 @@
                     break;
 
                 case 3:
-                    color = "#0EFF00"
+                    color = "#0EFF00";
                     break;
 
                 case 4:
@@ -208,7 +208,7 @@
                 var index           = filter.indexOf(logLevel);
                 var $row            = $("<tr>");
                 var $colTimestamp   = $("<td>").text(evt.timestamp);
-                var $logLevelText   = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level))
+                var $logLevelText   = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level));
                 var $colLogLevel    = $("<td>").append($logLevelText);
                 var $colFilename    = $("<td>").text(evt.filename);
                 var $colLine        = $("<td>").text(evt.line);
