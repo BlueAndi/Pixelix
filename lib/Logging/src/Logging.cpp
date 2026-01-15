@@ -67,12 +67,12 @@ bool Logging::registerSink(LogSink* sink)
     {
         uint8_t index = 0U;
 
-        while((MAX_SINKS > index) && (false == status))
+        while ((MAX_SINKS > index) && (false == status))
         {
             if (nullptr == m_sinks[index])
             {
                 m_sinks[index] = sink;
-                status = true;
+                status         = true;
             }
             else
             {
@@ -88,7 +88,7 @@ void Logging::unregisterSink(LogSink* sink)
 {
     uint8_t index = 0U;
 
-    while((MAX_SINKS > index) && (nullptr != sink))
+    while ((MAX_SINKS > index) && (nullptr != sink))
     {
         if (sink == m_sinks[index])
         {
@@ -110,17 +110,17 @@ void Logging::unregisterSink(LogSink* sink)
 
 bool Logging::selectSink(const String& name)
 {
-    bool    status  = false;
-    uint8_t index   = 0U;
+    bool    status = false;
+    uint8_t index  = 0U;
 
-    while((MAX_SINKS > index) && (false == status))
+    while ((MAX_SINKS > index) && (false == status))
     {
         if (nullptr != m_sinks[index])
         {
             if (m_sinks[index]->getName() == name)
             {
                 m_selectedSink = m_sinks[index];
-                status = true;
+                status         = true;
             }
         }
 
@@ -150,12 +150,12 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
     if ((true == isSeverityEnabled(messageLogLevel)) &&
         (nullptr != m_selectedSink))
     {
-        char            buffer[MESSAGE_BUFFER_SIZE];
-        int             written             = 0;
-        const char*     STR_CUT_OFF_SEQ     = "...";
-        const uint16_t  STR_CUT_OFF_SEQ_LEN = strlen(STR_CUT_OFF_SEQ);
-        va_list         args;
-        Msg             msg;
+        char           buffer[MESSAGE_BUFFER_SIZE];
+        int            written             = 0;
+        const char*    STR_CUT_OFF_SEQ     = "...";
+        const uint16_t STR_CUT_OFF_SEQ_LEN = strlen(STR_CUT_OFF_SEQ);
+        va_list        args;
+        Msg            msg;
 
         va_start(args, format);
         written = vsnprintf(buffer, MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, format, args); /* NOLINT(clang-analyzer-valist.Uninitialized) */
@@ -170,11 +170,11 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
             strncat(buffer, STR_CUT_OFF_SEQ, MESSAGE_BUFFER_SIZE - strlen(buffer) - 1U);
         }
 
-        msg.timestamp   = esp_log_timestamp();
-        msg.level       = messageLogLevel;
-        msg.filename    = getBaseNameFromPath(file);
-        msg.line        = line;
-        msg.str         = buffer;
+        msg.timestamp = esp_log_timestamp();
+        msg.level     = messageLogLevel;
+        msg.filename  = getBaseNameFromPath(file);
+        msg.line      = line;
+        msg.str       = buffer;
 
         m_selectedSink->send(msg);
     }
@@ -191,11 +191,11 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
     {
         Msg msg;
 
-        msg.timestamp   = esp_log_timestamp();
-        msg.level       = messageLogLevel;
-        msg.filename    = getBaseNameFromPath(file);
-        msg.line        = line;
-        msg.str         = message.c_str();
+        msg.timestamp = esp_log_timestamp();
+        msg.level     = messageLogLevel;
+        msg.filename  = getBaseNameFromPath(file);
+        msg.line      = line;
+        msg.str       = message.c_str();
 
         m_selectedSink->send(msg);
     }
@@ -212,11 +212,11 @@ void Logging::processLogMessage(uint32_t timestamp, const String& logger, const 
     {
         Msg msg;
 
-        msg.timestamp   = timestamp;
-        msg.level       = messageLogLevel;
-        msg.filename    = logger.c_str();
-        msg.line        = 0;
-        msg.str         = message.c_str();
+        msg.timestamp = timestamp;
+        msg.level     = messageLogLevel;
+        msg.filename  = logger.c_str();
+        msg.line      = 0;
+        msg.str       = message.c_str();
 
         m_selectedSink->send(msg);
     }

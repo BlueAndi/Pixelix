@@ -56,13 +56,13 @@
  *****************************************************************************/
 
 /* Delimiter of websocket parameters */
-const char   WsCmd::DELIMITER[] = ";";
+const char WsCmd::DELIMITER[] = ";";
 
 /* Positive response code */
-const char    WsCmd::ACK[]       = "ACK";
+const char WsCmd::ACK[]       = "ACK";
 
 /* Negative response code. */
-const char    WsCmd::NACK[]      = "NACK";
+const char WsCmd::NACK[]      = "NACK";
 
 /******************************************************************************
  * Public Methods
@@ -98,9 +98,9 @@ void WsCmd::sendNegativeResponse(AsyncWebSocket* server, uint32_t clientId, cons
 {
     if (nullptr != server)
     {
-        String rsp = NACK;
+        String rsp  = NACK;
 
-        rsp += DELIMITER;
+        rsp        += DELIMITER;
 
         if ((nullptr != msg) &&
             ('\0' != msg[0U]))

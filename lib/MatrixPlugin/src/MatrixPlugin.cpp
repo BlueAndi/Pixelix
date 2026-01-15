@@ -50,22 +50,22 @@
 #if 8U == CONFIG_LED_MATRIX_HEIGHT
 
 /** Scaling factor numerator: 256 * (3/4)^(8/height) */
-static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 192U;
+static constexpr uint16_t SCALE_FACTOR_NUMERATOR = 192U;
 
 #elif 16U == CONFIG_LED_MATRIX_HEIGHT
 
 /** Scaling factor numerator: 256 * (3/4)^(8/height) */
-static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 222U;
+static constexpr uint16_t SCALE_FACTOR_NUMERATOR = 222U;
 
 #elif 32U == CONFIG_LED_MATRIX_HEIGHT
 
 /** Scaling factor numerator: 256 * (3/4)^(8/height) */
-static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 238U;
+static constexpr uint16_t SCALE_FACTOR_NUMERATOR = 238U;
 
 #elif 64U == CONFIG_LED_MATRIX_HEIGHT
 
 /** Scaling factor numerator: 256 * (3/4)^(8/height) */
-static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 246U;
+static constexpr uint16_t SCALE_FACTOR_NUMERATOR = 246U;
 
 #else
 
@@ -74,7 +74,7 @@ static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 246U;
 #endif
 
 /** Scaling factor denominator. */
-static constexpr uint16_t  SCALE_FACTOR_DENOMINATOR    = 256U;
+static constexpr uint16_t SCALE_FACTOR_DENOMINATOR = 256U;
 
 /******************************************************************************
  * Prototypes
@@ -104,22 +104,22 @@ void MatrixPlugin::update(YAGfx& gfx)
     if ((false == m_timer.isTimerRunning()) ||
         (true == m_timer.isTimeout()))
     {
-        const Color     CODE_COLOR(175U, 255U, 175U);
-        const Color     TRAIL_COLOR(27U, 130U, 39U);
+        const Color CODE_COLOR(175U, 255U, 175U);
+        const Color TRAIL_COLOR(27U, 130U, 39U);
 
-        int16_t         x       = 0;
-        int16_t         y       = 0;
-        Color           color;
-        uint8_t         red     = 0U;
-        uint8_t         green   = 0U;
-        uint8_t         blue    = 0U;
+        int16_t     x = 0;
+        int16_t     y = 0;
+        Color       color;
+        uint8_t     red   = 0U;
+        uint8_t     green = 0U;
+        uint8_t     blue  = 0U;
 
         /* Move "matrix code" one pixel row down (higher y value) and fade each
          * pixel a little more to dark to achieve a color trail.
          */
-        for(y = gfx.getHeight() - 1; y > 0; --y)
+        for (y = gfx.getHeight() - 1; y > 0; --y)
         {
-            for(x = 0; x < gfx.getWidth(); ++x)
+            for (x = 0; x < gfx.getWidth(); ++x)
             {
                 /* Get pixel from one row above. */
                 color = gfx.getColor(x, y - 1);
@@ -132,9 +132,9 @@ void MatrixPlugin::update(YAGfx& gfx)
 
                 /* Fade color (destructive) to dark for the trail effect. */
                 color.get(red, green, blue);
-                red = static_cast<uint16_t>(red) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
+                red   = static_cast<uint16_t>(red) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
                 green = static_cast<uint16_t>(green) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
-                blue = static_cast<uint16_t>(blue) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
+                blue  = static_cast<uint16_t>(blue) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
                 color.set(red, green, blue);
 
                 /* Draw pixel at current position. */
@@ -145,7 +145,7 @@ void MatrixPlugin::update(YAGfx& gfx)
         /* The lowest row is handled separately, because the code color must
          * move one row down (higher y value) for the lightning effect.
          */
-        for(x = 0; x < gfx.getWidth(); ++x)
+        for (x = 0; x < gfx.getWidth(); ++x)
         {
             /* Get Pixel */
             color = gfx.getColor(x, 0);
@@ -160,9 +160,9 @@ void MatrixPlugin::update(YAGfx& gfx)
 
             /* Fade color (destructive) to dark. */
             color.get(red, green, blue);
-            red = static_cast<uint16_t>(red) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
+            red   = static_cast<uint16_t>(red) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
             green = static_cast<uint16_t>(green) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
-            blue = static_cast<uint16_t>(blue) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
+            blue  = static_cast<uint16_t>(blue) * SCALE_FACTOR_NUMERATOR / SCALE_FACTOR_DENOMINATOR;
             color.set(red, green, blue);
 
             gfx.drawPixel(x, y, color);

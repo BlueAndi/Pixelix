@@ -97,12 +97,12 @@ void WsCmdSlotDuration::execute(AsyncWebSocket* server, uint32_t clientId)
     }
 
     m_isError = false;
-    m_parCnt = 0U;
+    m_parCnt  = 0U;
 }
 
 void WsCmdSlotDuration::setPar(const char* par)
 {
-    switch(m_parCnt)
+    switch (m_parCnt)
     {
     case 0:
         if (false == Util::strToUInt8(par, m_slotId))

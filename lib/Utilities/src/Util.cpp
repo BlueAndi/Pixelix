@@ -240,7 +240,7 @@ extern String Util::uint32ToHex(uint32_t value)
 
 extern uint32_t Util::hexToUInt32(const char* str)
 {
-    const size_t STR_LEN  = strlen(str);
+    const size_t STR_LEN = strlen(str);
     uint32_t     value   = 0U;
     uint32_t     idx     = 0U;
     bool         isError = false;

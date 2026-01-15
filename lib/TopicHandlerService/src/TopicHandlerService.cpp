@@ -107,7 +107,7 @@ void TopicHandlerService::process()
 
             if (0U == m_updateCounter)
             {
-                forceUpdate = true;
+                forceUpdate     = true;
                 m_updateCounter = UPDATE_COUNTER_VALUE;
             }
 

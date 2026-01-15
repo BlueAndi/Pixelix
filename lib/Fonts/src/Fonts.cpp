@@ -63,27 +63,27 @@
 /**
  * 6pt font for YAGfx: TomThumb
  */
-static YAFont   gFont6pt(&TomThumb);
+static YAFont gFont6pt(&TomThumb);
 
 /**
  * 8pt font for YAGfx: muHeavy8ptRegular
  */
-static YAFont   gFont8pt(&muMatrix8ptRegular);
+static YAFont gFont8pt(&muMatrix8ptRegular);
 
 /**
  * Font type default as string.
  */
-static const char*  FONT_TYPE_DEFAULT_AS_STR = "default";
+static const char* FONT_TYPE_DEFAULT_AS_STR = "default";
 
 /**
  * Font type normal as string.
  */
-static const char*  FONT_TYPE_NORMAL_AS_STR = "normal";
+static const char* FONT_TYPE_NORMAL_AS_STR  = "normal";
 
 /**
  * Font type large as string.
  */
-static const char*  FONT_TYPE_LARGE_AS_STR = "large";
+static const char* FONT_TYPE_LARGE_AS_STR   = "large";
 
 /******************************************************************************
  * Public Methods
@@ -105,7 +105,7 @@ extern const char* Fonts::fontTypeToStr(FontType type)
 {
     const char* fontTypeStr = FONT_TYPE_DEFAULT_AS_STR;
 
-    switch(type)
+    switch (type)
     {
     case FONT_TYPE_DEFAULT:
         /* Nothing to do. */
@@ -148,13 +148,13 @@ extern Fonts::FontType Fonts::strToFontType(const char* str)
     return fontType;
 }
 
-extern YAFont&  Fonts::getFontByType(FontType type)
+extern YAFont& Fonts::getFontByType(FontType type)
 {
-    YAFont* font = &gFont6pt;   /* The normal font is the default font. */
+    YAFont* font = &gFont6pt; /* The normal font is the default font. */
 
     if (FONT_TYPE_LARGE == type)
     {
-        font = &gFont8pt;   /* Large font */
+        font = &gFont8pt; /* Large font */
     }
 
     return *font;

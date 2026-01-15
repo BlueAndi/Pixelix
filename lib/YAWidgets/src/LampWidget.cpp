@@ -56,7 +56,7 @@
  *****************************************************************************/
 
 /* Initialize lamp widget type. */
-const char*     LampWidget::WIDGET_TYPE = "lamp";
+const char* LampWidget::WIDGET_TYPE = "lamp";
 
 /******************************************************************************
  * Public Methods

@@ -98,13 +98,13 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
     {
         const size_t        JSON_DOC_SIZE = 768U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg         = jsonDoc.to<JsonObject>();
+        JsonObject          jsonCfg = jsonDoc.to<JsonObject>();
 
         if (true == mergeConfiguration(jsonCfg, value))
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {

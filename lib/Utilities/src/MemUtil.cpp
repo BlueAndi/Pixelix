@@ -93,7 +93,7 @@ extern size_t MemUtil::getTotalHeapSize()
     heap_caps_get_info(&info, MEM_CAPABILITIES);
 
     return info.total_free_bytes + info.total_allocated_bytes;
-#else /* NATIVE */
+#else  /* NATIVE */
     return 0;
 #endif /* NATIVE */
 }
@@ -102,7 +102,7 @@ extern size_t MemUtil::getFreeHeapSize()
 {
 #ifndef NATIVE
     return heap_caps_get_free_size(MEM_CAPABILITIES);
-#else /* NATIVE */
+#else  /* NATIVE */
     return 0;
 #endif /* NATIVE */
 }
@@ -111,7 +111,7 @@ extern size_t MemUtil::getLargestFreeBlockSize()
 {
 #ifndef NATIVE
     return heap_caps_get_largest_free_block(MEM_CAPABILITIES);
-#else /* NATIVE */
+#else  /* NATIVE */
     return 0;
 #endif /* NATIVE */
 }
@@ -120,7 +120,7 @@ extern size_t MemUtil::getMinFreeHeapSize()
 {
 #ifndef NATIVE
     return heap_caps_get_minimum_free_size(MEM_CAPABILITIES);
-#else /* NATIVE */
+#else  /* NATIVE */
     return 0;
 #endif /* NATIVE */
 }
@@ -129,7 +129,7 @@ extern bool MemUtil::isPsramAvailable()
 {
 #ifndef NATIVE
     return psramFound();
-#else /* NATIVE */
+#else  /* NATIVE */
     return false;
 #endif /* NATIVE */
 }

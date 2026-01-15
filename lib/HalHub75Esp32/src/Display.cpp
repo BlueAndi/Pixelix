@@ -55,8 +55,7 @@
  * Local Variables
  *****************************************************************************/
 
-const HUB75_I2S_CFG::i2s_pins   Display::I2S_PINS =
-{
+const HUB75_I2S_CFG::i2s_pins Display::I2S_PINS = {
     CONFIG_HUB75_R1_PIN,
     CONFIG_HUB75_G1_PIN,
     CONFIG_HUB75_B1_PIN,
@@ -73,8 +72,7 @@ const HUB75_I2S_CFG::i2s_pins   Display::I2S_PINS =
     CONFIG_HUB75_CLK_PIN
 };
 
-const HUB75_I2S_CFG             Display::MATRIX_CFG  =
-{
+const HUB75_I2S_CFG Display::MATRIX_CFG = {
     CONFIG_LED_MATRIX_WIDTH,            /* Panel width */
     CONFIG_LED_MATRIX_HEIGHT,           /* Panel height */
     CONFIG_HUB75_CHAIN_LENGTH,          /* Chain length */
@@ -120,17 +118,19 @@ void Display::show()
         int16_t y;
         int16_t x;
 
-        for(y = 0; y < Board::LedMatrix::height; ++y)
+        for (y = 0; y < Board::LedMatrix::height; ++y)
         {
-            for(x = 0; x < Board::LedMatrix::width; ++x)
+            for (x = 0; x < Board::LedMatrix::width; ++x)
             {
                 Color& color = m_ledMatrix.getColor(x, y);
 
 #if CONFIG_DISPLAY_ROTATE180 != 0
                 m_panel.drawPixelRGB888(
-                    Board::LedMatrix::width - x - 1, 
+                    Board::LedMatrix::width - x - 1,
                     Board::LedMatrix::height - y - 1,
-                    color.getRed(), color.getGreen(), color.getBlue());
+                    color.getRed(),
+                    color.getGreen(),
+                    color.getBlue());
 #else
                 m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
 #endif

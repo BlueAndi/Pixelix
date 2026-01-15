@@ -72,7 +72,7 @@ const char* ProgressBar::WIDGET_TYPE = "progressBar";
 
 void ProgressBar::paint(YAGfx& gfx)
 {
-    switch(m_algorithm)
+    switch (m_algorithm)
     {
     case ALGORITHM_PIXEL_WISE:
         showProgressPixel(gfx);
@@ -94,13 +94,13 @@ void ProgressBar::paint(YAGfx& gfx)
 
 void ProgressBar::showProgressPixel(YAGfx& gfx)
 {
-    uint16_t    width       = m_canvas.getWidth();
-    uint16_t    height      = m_canvas.getHeight();
-    uint16_t    pixelCount  = width * height * m_progress / 100U;
-    int16_t     x           = 0;
-    int16_t     y           = 0;
+    uint16_t width      = m_canvas.getWidth();
+    uint16_t height     = m_canvas.getHeight();
+    uint16_t pixelCount = width * height * m_progress / 100U;
+    int16_t  x          = 0;
+    int16_t  y          = 0;
 
-    while((0U < pixelCount) && (height > y))
+    while ((0U < pixelCount) && (height > y))
     {
         gfx.drawPixel(x, y, m_color);
 
@@ -117,8 +117,8 @@ void ProgressBar::showProgressPixel(YAGfx& gfx)
 
 void ProgressBar::showProgressBar(YAGfx& gfx)
 {
-    uint16_t    width   = m_canvas.getWidth();
-    uint16_t    height  = m_canvas.getHeight();
+    uint16_t width  = m_canvas.getWidth();
+    uint16_t height = m_canvas.getHeight();
 
     if (width > height)
     {

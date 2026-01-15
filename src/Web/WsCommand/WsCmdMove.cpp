@@ -78,8 +78,8 @@ void WsCmdMove::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        uint8_t             srcSlotId   = DisplayMgr::getInstance().getSlotIdByPluginUID(m_uid);
-        IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(srcSlotId);
+        uint8_t             srcSlotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_uid);
+        IPluginMaintenance* plugin    = DisplayMgr::getInstance().getPluginInSlot(srcSlotId);
 
         if (SlotList::SLOT_ID_INVALID == srcSlotId)
         {
@@ -103,12 +103,12 @@ void WsCmdMove::execute(AsyncWebSocket* server, uint32_t clientId)
     }
 
     m_isError = false;
-    m_parCnt = 0U;
+    m_parCnt  = 0U;
 }
 
 void WsCmdMove::setPar(const char* par)
 {
-    switch(m_parCnt)
+    switch (m_parCnt)
     {
     case 0U:
         if (false == Util::strToUInt16(par, m_uid))

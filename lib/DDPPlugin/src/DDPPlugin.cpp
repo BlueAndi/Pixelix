@@ -64,10 +64,10 @@
 
 void DDPPlugin::start(uint16_t width, uint16_t height)
 {
-    String  manufacturer    = "BlueAndi & Friends"; /* Do-It-Yourself project */
-    String  model           = "Pixelix";            /* Use project name */
-    String  version         = "0.1.0";              /* From library.json */
-    String  mac             = WiFi.macAddress();
+    String manufacturer = "BlueAndi & Friends"; /* Do-It-Yourself project */
+    String model        = "Pixelix";            /* Use project name */
+    String version      = "0.1.0";              /* From library.json */
+    String mac          = WiFi.macAddress();
 
     if (false == m_framebuffer.create(width, height))
     {
@@ -81,11 +81,9 @@ void DDPPlugin::start(uint16_t width, uint16_t height)
     {
         m_server.pause();
         m_server.registerDDPCallback(
-            [this](DDPServer::Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)
-            {
+            [this](DDPServer::Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal) {
                 this->onData(format, offset, bitsPerPixel, payload, payloadSize, isFinal);
-            }
-        );
+            });
 
         m_server.notifyUpState();
     }
@@ -163,23 +161,23 @@ void DDPPlugin::onData(DDPServer::Format format, uint32_t offset, uint8_t bitsPe
         (DDPServer::FORMAT_RGB == format) &&
         (8U == bitsPerPixelElement))
     {
-        uint16_t    srcIdx          = 0U;
-        int16_t     x               = (offset % m_framebuffer.getWidth());
-        int16_t     y               = (offset / m_framebuffer.getWidth());
-        uint8_t     bytePerPixel    = (bitsPerPixelElement * 3U) / 8U; /* RGB = 3 base colors */
+        uint16_t srcIdx       = 0U;
+        int16_t  x            = (offset % m_framebuffer.getWidth());
+        int16_t  y            = (offset / m_framebuffer.getWidth());
+        uint8_t  bytePerPixel = (bitsPerPixelElement * 3U) / 8U; /* RGB = 3 base colors */
 
-        while((payloadSize > srcIdx) && (m_framebuffer.getHeight() > y))
+        while ((payloadSize > srcIdx) && (m_framebuffer.getHeight() > y))
         {
-            Color       color;
-            uint32_t    colorCode = 0U;
-            uint8_t     byteIdx = 0U;
+            Color    color;
+            uint32_t colorCode = 0U;
+            uint8_t  byteIdx   = 0U;
 
-            while((bytePerPixel > byteIdx) && (payloadSize > srcIdx))
+            while ((bytePerPixel > byteIdx) && (payloadSize > srcIdx))
             {
                 colorCode <<= 8U;
-                colorCode |= payload[srcIdx];
-                
-                ++srcIdx;                
+                colorCode  |= payload[srcIdx];
+
+                ++srcIdx;
                 ++byteIdx;
             }
 

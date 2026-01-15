@@ -60,98 +60,98 @@
 /**
  * Calculates the next sensor id from the last one.
  */
-#define SENSOR_ID_NEXT(_id)             ((_id) + 1)
+#define SENSOR_ID_NEXT(_id) ((_id) + 1)
 
 /**
  * Route the last sensor id through.
  */
-#define SENSOR_ID_NOT_APPLICABLE(_id)   (_id)
+#define SENSOR_ID_NOT_APPLICABLE(_id) (_id)
 
 #if IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE)
 /**
  * LDR sensor id.
  * Its 0 because its the first sensor in the gSensors list.
  */
-#define SENSOR_ID_LDR       0
-#else   /* IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE) */
+#define SENSOR_ID_LDR 0
+#else /* IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE) */
 /**
  * LDR sensor id.
  * Its -1 because its the first sensor in the gSensors list, but not used.
  */
-#define SENSOR_ID_LDR       -1
+#define SENSOR_ID_LDR -1
 #endif /* IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE)
 /**
  * SHT3x sensor id.
  */
-#define SENSOR_ID_SHT3X     SENSOR_ID_NEXT(SENSOR_ID_LDR)
-#else   /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
+#define SENSOR_ID_SHT3X SENSOR_ID_NEXT(SENSOR_ID_LDR)
+#else /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
 /**
  * SHT3x sensor id (not applicable).
  */
-#define SENSOR_ID_SHT3X     SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_LDR)
-#endif  /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
+#define SENSOR_ID_SHT3X SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_LDR)
+#endif /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE)
 /**
  * DHTx sensor id.
  */
-#define SENSOR_ID_DHT_X     SENSOR_ID_NEXT(SENSOR_ID_SHT3X)
-#else   /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
+#define SENSOR_ID_DHT_X SENSOR_ID_NEXT(SENSOR_ID_SHT3X)
+#else /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
 /**
  * DHTx sensor id (not applicable).
  */
-#define SENSOR_ID_DHT_X     SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_SHT3X)
-#endif  /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
+#define SENSOR_ID_DHT_X SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_SHT3X)
+#endif /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE)
 /**
  * Battery sensor id.
  */
-#define SENSOR_ID_BATTERY   SENSOR_ID_NEXT(SENSOR_ID_DHT_X)
-#else   /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
+#define SENSOR_ID_BATTERY SENSOR_ID_NEXT(SENSOR_ID_DHT_X)
+#else /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
 /**
  * Battery sensor id (not applicable).
  */
-#define SENSOR_ID_BATTERY   SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_DHT_X)
-#endif  /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
+#define SENSOR_ID_BATTERY SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_DHT_X)
+#endif /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE)
 /**
  * Heap sensor id.
  */
-#define SENSOR_ID_HEAP      SENSOR_ID_NEXT(SENSOR_ID_BATTERY)
-#else   /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
+#define SENSOR_ID_HEAP SENSOR_ID_NEXT(SENSOR_ID_BATTERY)
+#else /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
 /**
  * Heap sensor id (not applicable).
  */
-#define SENSOR_ID_HEAP      SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_BATTERY)
-#endif  /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
+#define SENSOR_ID_HEAP SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_BATTERY)
+#endif /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_WIFI_ENABLE)
 /**
  * WiFi sensor id.
  */
-#define SENSOR_ID_WIFI      SENSOR_ID_NEXT(SENSOR_ID_HEAP)
-#else   /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
+#define SENSOR_ID_WIFI SENSOR_ID_NEXT(SENSOR_ID_HEAP)
+#else /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
 /**
  * WiFi sensor id. (not applicable).
  */
-#define SENSOR_ID_WIFI      SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_HEAP)
-#endif  /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
+#define SENSOR_ID_WIFI SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_HEAP)
+#endif /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_SYSTEM_ENABLE)
 /**
  * System sensor id.
  */
-#define SENSOR_ID_SYSTEM    SENSOR_ID_NEXT(SENSOR_ID_WIFI)
-#else   /* IS_ENABLED(CONFIG_SENSOR_SYSTEM_ENABLE) */
+#define SENSOR_ID_SYSTEM SENSOR_ID_NEXT(SENSOR_ID_WIFI)
+#else /* IS_ENABLED(CONFIG_SENSOR_SYSTEM_ENABLE) */
 /**
  * System sensor id. (not applicable).
  */
-#define SENSOR_ID_SYSTEM    SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_WIFI)
-#endif  /* IS_ENABLED(CONFIG_SENSOR_SYSTEM_ENABLE) */
+#define SENSOR_ID_SYSTEM SENSOR_ID_NOT_APPLICABLE(SENSOR_ID_WIFI)
+#endif /* IS_ENABLED(CONFIG_SENSOR_SYSTEM_ENABLE) */
 
 /******************************************************************************
  * Types and classes
@@ -168,55 +168,54 @@
 #if IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE)
 
 /** The LDR is used for automatic display brightness control. */
-static SensorLdr        gLdr(CONFIG_SENSOR_LDR, CONFIG_SENSOR_LDR_SERIES_RESISTANCE);
+static SensorLdr gLdr(CONFIG_SENSOR_LDR, CONFIG_SENSOR_LDR_SERIES_RESISTANCE);
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE)
 
 /** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
-static SensorSht3X      gSht3x(SHTSensor::AUTO_DETECT);
+static SensorSht3X gSht3x(SHTSensor::AUTO_DETECT);
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE)
 
 /** The DHTx sensor. */
-static SensorDhtX       gDhtX(CONFIG_SENSOR_DHT_X_TYPE);
+static SensorDhtX gDhtX(CONFIG_SENSOR_DHT_X_TYPE);
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_DHT_X_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE)
 
 /** Battery sensor. */
-static SensorBattery    gBattery;
+static SensorBattery gBattery;
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_BATTERY_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE)
 
 /** Heap sensor. */
-static SensorHeap       gHeap;
+static SensorHeap gHeap;
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_HEAP_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_WIFI_ENABLE)
 
 /** WiFi sensor. */
-static SensorWiFi       gWiFi;
+static SensorWiFi gWiFi;
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_WIFI_ENABLE) */
 
 #if IS_ENABLED(CONFIG_SENSOR_SYSTEM_ENABLE)
 
 /** System sensor. */
-static SensorSystem       gSystem;
+static SensorSystem gSystem;
 
 #endif /* IS_ENABLED(CONFIG_SENSOR_SYSTEM_ENABLE) */
 
 /** A list with all registered sensors. */
-static ISensor*         gSensors[] =
-{
+static ISensor* gSensors[] = {
 #if IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE)
     &gLdr,
 #endif /* IS_ENABLED(CONFIG_SENSOR_LDR_ENABLE) */
@@ -249,18 +248,17 @@ static ISensor*         gSensors[] =
 };
 
 /** The concrete sensor data provider implementation. */
-static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors) - 1U);
+static SensorDataProviderImpl gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors) - 1U);
 
 /**
  * Default offset table, used to initialize the sensor channel offset once in the very
  * first startup in the SensorDataProvider.
  */
-static const SensorChannelDefaultValue gSensorDefaultValues[] =
-{
-    /*  Sensor id           Channel id  Value as JSON string */
+static const SensorChannelDefaultValue gSensorDefaultValues[] = {
+/*  Sensor id           Channel id  Value as JSON string */
 #if IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE)
-    {   SENSOR_ID_SHT3X,    0U,         "{ offset: -9 }"  }    /* SHT3x temperature offset */
-#endif /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
+    { SENSOR_ID_SHT3X, 0U, "{ offset: -9 }" } /* SHT3x temperature offset */
+#endif                                        /* IS_ENABLED(CONFIG_SENSOR_SHT3X_ENABLE) */
 };
 
 /******************************************************************************

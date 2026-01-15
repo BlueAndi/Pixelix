@@ -59,11 +59,10 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char*     SoundReactivePlugin::TOPIC_CONFIG                       = "config";
+const char* SoundReactivePlugin::TOPIC_CONFIG                         = "config";
 
 /* Initialize the list with the high edge frequency bin of the center band frequency. */
-const uint16_t  SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[]  =
-{
+const uint16_t SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[] = {
     4U,
     5U,
     7U,
@@ -110,10 +109,10 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& v
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonFreqBandLen         = value["freqBandLen"];
+        JsonObject          jsonCfg         = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonFreqBandLen = value["freqBandLen"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -129,14 +128,14 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& v
         if (false == jsonFreqBandLen.isNull())
         {
             jsonCfg["freqBandLen"] = jsonFreqBandLen.as<uint8_t>();
-            isSuccessful = true;
+            isSuccessful           = true;
         }
 
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -150,8 +149,8 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& v
 
 bool SoundReactivePlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -163,12 +162,12 @@ bool SoundReactivePlugin::hasTopicChanged(const String& topic)
 
 void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 {
-    SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    SpectrumAnalyzer*          spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr != spectrumAnalyzer)
     {
-        m_freqBins = new(std::nothrow) float[spectrumAnalyzer->getFreqBinsLen()];
+        m_freqBins = new (std::nothrow) float[spectrumAnalyzer->getFreqBinsLen()];
 
         if (nullptr == m_freqBins)
         {
@@ -184,7 +183,7 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 
 void SoundReactivePlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_decayPeakTimer.stop();
 
@@ -199,8 +198,8 @@ void SoundReactivePlugin::stop()
 
 void SoundReactivePlugin::process(bool isConnected)
 {
-    SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    SpectrumAnalyzer*          spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     PluginWithConfig::process(isConnected);
 
@@ -226,13 +225,13 @@ void SoundReactivePlugin::process(bool isConnected)
 
 void SoundReactivePlugin::update(YAGfx& gfx)
 {
-    int8_t                      bandIdx         = 0U;
-    uint16_t                    barWidth        = gfx.getWidth() / m_numOfFreqBands;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    int8_t                     bandIdx  = 0U;
+    uint16_t                   barWidth = gfx.getWidth() / m_numOfFreqBands;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
-    
-    for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+
+    for (bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
     {
         int16_t peakY = 0;
 
@@ -242,15 +241,15 @@ void SoundReactivePlugin::update(YAGfx& gfx)
          */
         if (2U <= m_barHeight[bandIdx])
         {
-            Color   barColor;
+            Color barColor;
 
             barColor.turnColorWheel((255U / (m_numOfFreqBands + 1U) * bandIdx));
 
-            gfx.fillRect(   bandIdx * barWidth,
-                            gfx.getHeight() - m_barHeight[bandIdx] + 1,
-                            barWidth,
-                            m_barHeight[bandIdx] - 1U,
-                            barColor);
+            gfx.fillRect(bandIdx * barWidth,
+                gfx.getHeight() - m_barHeight[bandIdx] + 1,
+                barWidth,
+                m_barHeight[bandIdx] - 1U,
+                barColor);
         }
 
         /* A peak height of 0 and 1 is handled equal, because is shall always
@@ -262,10 +261,10 @@ void SoundReactivePlugin::update(YAGfx& gfx)
         {
             peakY++;
         }
-        gfx.drawHLine(  bandIdx * barWidth,
-                        peakY,
-                        barWidth,
-                        ColorDef::WHITE);
+        gfx.drawHLine(bandIdx * barWidth,
+            peakY,
+            barWidth,
+            ColorDef::WHITE);
     }
 }
 
@@ -287,8 +286,8 @@ void SoundReactivePlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool SoundReactivePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status          = false;
-    JsonVariantConst    jsonFreqBandLen = jsonCfg["freqBandLen"];
+    bool             status          = false;
+    JsonVariantConst jsonFreqBandLen = jsonCfg["freqBandLen"];
 
     if (false == jsonFreqBandLen.is<uint8_t>())
     {
@@ -305,13 +304,13 @@ bool SoundReactivePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         }
         else
         {
-            MutexGuard<MutexRecursive>  guard(m_mutex);
+            MutexGuard<MutexRecursive> guard(m_mutex);
 
-            m_numOfFreqBands = numOfBands;
+            m_numOfFreqBands  = numOfBands;
 
             m_hasTopicChanged = true;
 
-            status = true;
+            status            = true;
         }
     }
 
@@ -325,7 +324,7 @@ void SoundReactivePlugin::decayPeak()
     {
         uint8_t bandIdx = 0U;
 
-        while(bandIdx < m_numOfFreqBands)
+        while (bandIdx < m_numOfFreqBands)
         {
             if (0U < m_peakHeight[bandIdx])
             {
@@ -341,16 +340,16 @@ void SoundReactivePlugin::decayPeak()
 
 void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
 {
-    float           octaveFreqBands[MAX_FREQ_BANDS];
-    uint16_t        freqBinIdx                      = 0U;
-    float           peak                            = 0.0F;
-    float           avgDigital                      = 0.0F;
-    uint8_t         bandIdx                         = 0U;
+    float    octaveFreqBands[MAX_FREQ_BANDS];
+    uint16_t freqBinIdx = 0U;
+    float    peak       = 0.0F;
+    float    avgDigital = 0.0F;
+    uint8_t  bandIdx    = 0U;
 
     convertToOctaveFreqBands(octaveFreqBands, MAX_FREQ_BANDS, freqBins, freqBinLen);
     avgDigital = calculateAmplitudeAverage(octaveFreqBands, MAX_FREQ_BANDS);
 
-    for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
+    for (bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
     {
         /* If the ampltiude average is lower than the equivalent input noise (from datasheet),
          * the correction factors will be calculated. The amplitude average is used to detect
@@ -358,12 +357,12 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
          */
         if (INMP441_NOISE_FLOOR_DIGITAL > static_cast<int32_t>(avgDigital))
         {
-            constexpr const float   WEIGHT_NEW_VALUE    = 0.1F;
-            constexpr const float   WEIGHT_OLD_VALUE    = 1.0F - WEIGHT_NEW_VALUE;
-            constexpr const float   NOISE_FLOOR         = static_cast<float>(INMP441_NOISE_FLOOR_DIGITAL);
+            constexpr const float WEIGHT_NEW_VALUE = 0.1F;
+            constexpr const float WEIGHT_OLD_VALUE = 1.0F - WEIGHT_NEW_VALUE;
+            constexpr const float NOISE_FLOOR      = static_cast<float>(INMP441_NOISE_FLOOR_DIGITAL);
 
             /* Calculate with weighted average to avoid jumping. */
-            m_corrFactors[bandIdx] = WEIGHT_OLD_VALUE * m_corrFactors[bandIdx] + WEIGHT_NEW_VALUE * (NOISE_FLOOR / octaveFreqBands[bandIdx]);
+            m_corrFactors[bandIdx]                 = WEIGHT_OLD_VALUE * m_corrFactors[bandIdx] + WEIGHT_NEW_VALUE * (NOISE_FLOOR / octaveFreqBands[bandIdx]);
         }
 
         /* Normalize */
@@ -374,11 +373,11 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
          *
          * = sensitivity [dB SPL] + 20 * log10(frequency amplitude digital / sensitivity digital)
          */
-        octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0F * log10f(octaveFreqBands[bandIdx] / static_cast<float>(IMMP441_SENSITIVITY_DIGITAL));
+        octaveFreqBands[bandIdx]  = INMP441_SENSITIVITY_SPL + 20.0F * log10f(octaveFreqBands[bandIdx] / static_cast<float>(IMMP441_SENSITIVITY_DIGITAL));
 
         /* The amplitude shall consider only the dynamic range
-            * by removing the equivalent input noise level.
-            */
+         * by removing the equivalent input noise level.
+         */
         if (INMP441_NOISE_SPL >= octaveFreqBands[bandIdx])
         {
             octaveFreqBands[bandIdx] = HEARING_THRESHOLD;
@@ -399,10 +398,10 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
      * otherwise the bar's will jump driven by silent tones.
      */
     {
-        constexpr const float   WEIGHT_NEW_VALUE    = 0.25F;
-        constexpr const float   WEIGHT_OLD_VALUE    = 1.0F - WEIGHT_NEW_VALUE;
+        constexpr const float WEIGHT_NEW_VALUE = 0.25F;
+        constexpr const float WEIGHT_OLD_VALUE = 1.0F - WEIGHT_NEW_VALUE;
 
-        m_peak = WEIGHT_NEW_VALUE * peak + WEIGHT_OLD_VALUE * m_peak;
+        m_peak                                 = WEIGHT_NEW_VALUE * peak + WEIGHT_OLD_VALUE * m_peak;
 
         if (MIN_DYNAMIC_RANGE > m_peak)
         {
@@ -414,20 +413,20 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
      * If less frequency bands are shown, they will be simply averaged.
      */
     freqBinIdx = 0U;
-    for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
+    for (bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
     {
-        float       avg         = 0.0F;
-        uint16_t    barHeight   = 0U;
-        const float MAX_HEIGHT  = static_cast<float>(m_maxHeight);
+        float       avg        = 0.0F;
+        uint16_t    barHeight  = 0U;
+        const float MAX_HEIGHT = static_cast<float>(m_maxHeight);
 
         if (NUM_OF_BANDS_8 == m_numOfFreqBands)
         {
-            avg = (octaveFreqBands[freqBinIdx] + octaveFreqBands[freqBinIdx + 1U]) / 2.0F;
+            avg         = (octaveFreqBands[freqBinIdx] + octaveFreqBands[freqBinIdx + 1U]) / 2.0F;
             freqBinIdx += 2U;
         }
         else
         {
-            avg = octaveFreqBands[freqBinIdx];
+            avg         = octaveFreqBands[freqBinIdx];
             freqBinIdx += 1U;
         }
 
@@ -450,16 +449,16 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
 
 void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, float* freqBins, size_t freqBinLen)
 {
-    uint16_t    freqBinIdx  = 0U;
-    int32_t     divisor     = 0;
-    uint8_t     bandIdx     = 0U;
+    uint16_t freqBinIdx      = 0U;
+    int32_t  divisor         = 0;
+    uint8_t  bandIdx         = 0U;
 
     /* Sum up the frequency bin results of the spectrum analyzer and
      * create the octave frequency bands.
      */
-    freqBinIdx  = 1U; /* Don't use the first frequency bin, because it contains the DC part. */
+    freqBinIdx               = 1U; /* Don't use the first frequency bin, because it contains the DC part. */
     octaveFreqBands[bandIdx] = 0.0F;
-    while((freqBinLen > freqBinIdx) && (octaveFreqBandsLen > bandIdx))
+    while ((freqBinLen > freqBinIdx) && (octaveFreqBandsLen > bandIdx))
     {
         octaveFreqBands[bandIdx] += static_cast<float>(freqBins[freqBinIdx]);
         ++divisor; /* Count number of added frequency bins. */
@@ -476,7 +475,7 @@ void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_
                 /* Depends on how many frequency bins were added. */
                 octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
 
-                divisor = 0;
+                divisor                   = 0;
             }
 
             ++bandIdx;
@@ -494,11 +493,11 @@ void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_
 
 float SoundReactivePlugin::calculateAmplitudeAverage(float* octaveFreqBands, size_t octaveFreqBandsLen)
 {
-    float   avgDigital  = 0.0F;
-    uint8_t bandIdx     = 0U;
+    float   avgDigital = 0.0F;
+    uint8_t bandIdx    = 0U;
 
     /* Calculate the amplitude average over the spectrum. */
-    for(bandIdx = 0U; bandIdx < octaveFreqBandsLen; ++bandIdx)
+    for (bandIdx = 0U; bandIdx < octaveFreqBandsLen; ++bandIdx)
     {
         avgDigital += octaveFreqBands[bandIdx];
     }

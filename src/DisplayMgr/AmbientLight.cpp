@@ -59,8 +59,7 @@
 /**
  * Ambient light level definitions.
  */
-static const float  gAmbientLightLevels[AmbientLight::AMBIENT_LIGHT_LEVEL_MAX] =
-{
+static const float gAmbientLightLevels[AmbientLight::AMBIENT_LIGHT_LEVEL_MAX] = {
     /* Pitch black with 1 Lux */
     1.0F,
     /* Night sky with 10 Lux */
@@ -80,12 +79,12 @@ static const float  gAmbientLightLevels[AmbientLight::AMBIENT_LIGHT_LEVEL_MAX] =
 /**
  * Lower limit for light luminance normalization in lux.
  */
-static const float  LIMIT_LOW   = 1.0F;
+static const float LIMIT_LOW  = 1.0F;
 
 /**
  * Upper limit for light luminance normalization in lux.
  */
-static const float  LIMIT_HIGH  = 100000.0F;
+static const float LIMIT_HIGH = 100000.0F;
 
 /******************************************************************************
  * Public Methods
@@ -130,10 +129,10 @@ extern float AmbientLight::normalizeIlluminance(float illuminance)
 
 extern AmbientLight::AmbientLightLevel AmbientLight::getAmbientLightLevel(float illuminance)
 {
-    uint8_t             levelIndex  = 0U;
-    AmbientLightLevel   level       = AMBIENT_LIGHT_LEVEL_MAX;
+    uint8_t           levelIndex = 0U;
+    AmbientLightLevel level      = AMBIENT_LIGHT_LEVEL_MAX;
 
-    while((AMBIENT_LIGHT_LEVEL_MAX > levelIndex) && (AMBIENT_LIGHT_LEVEL_MAX == level))
+    while ((AMBIENT_LIGHT_LEVEL_MAX > levelIndex) && (AMBIENT_LIGHT_LEVEL_MAX == level))
     {
         if (gAmbientLightLevels[levelIndex] >= illuminance)
         {

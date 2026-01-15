@@ -71,9 +71,9 @@ using namespace _BatteryPlugin;
 
 void View::drawStateOfCharge(YAGfx& gfx) const
 {
-    uint16_t    widthDependedOnSOC  = (SOC_BAR_WIDTH * m_stateOfCharge) / 100U;
-    int16_t     barXDependedOnSOC   = SOC_BAR_X + SOC_BAR_WIDTH - widthDependedOnSOC;
-    Color       color;
+    uint16_t widthDependedOnSOC = (SOC_BAR_WIDTH * m_stateOfCharge) / 100U;
+    int16_t  barXDependedOnSOC  = SOC_BAR_X + SOC_BAR_WIDTH - widthDependedOnSOC;
+    Color    color;
 
     /* SOC > 70 % */
     if (70U < m_stateOfCharge)

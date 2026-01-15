@@ -91,10 +91,10 @@ typedef struct
 const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME      = "/configuration/sensors.json";
 
 /** Sensor update period for slow changing sensor values. */
-static constexpr uint32_t SENSOR_UPDATE_PERIOD_SLOW = SIMPLE_TIMER_SECONDS(30U);
+static constexpr uint32_t SENSOR_UPDATE_PERIOD_SLOW         = SIMPLE_TIMER_SECONDS(30U);
 
 /** Sensor update period for fast changing sensor values. */
-static constexpr uint32_t SENSOR_UPDATE_PERIOD_FAST = SIMPLE_TIMER_SECONDS(10U);
+static constexpr uint32_t SENSOR_UPDATE_PERIOD_FAST         = SIMPLE_TIMER_SECONDS(10U);
 
 /**
  * The provided sensor topics.
@@ -626,10 +626,10 @@ void SensorDataProvider::registerSensorTopics()
                 return hasChanged;
             };
 
-            entityId += index;
+            entityId           += index;
 
-            jsonDocExtra["ha"] = sensorTopic->extraHAFileName;
-            jsonExtra = jsonDocExtra.as<JsonObjectConst>();
+            jsonDocExtra["ha"]  = sensorTopic->extraHAFileName;
+            jsonExtra           = jsonDocExtra.as<JsonObjectConst>();
 
             topicHandlerService.registerTopic(m_deviceId, entityId, channelName, jsonExtra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
         }

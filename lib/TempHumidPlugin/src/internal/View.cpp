@@ -64,8 +64,7 @@ const char* View::IMAGE_PATH_TEMP_ICON  = "/plugins/TempHumidPlugin/temp.gif";
 const char* View::IMAGE_PATH_HUMID_ICON = "/plugins/TempHumidPlugin/drop.gif";
 
 /* Initialize the icon mapping table. */
-const char* View::ICON_TABLE[ICON_MAX]  =
-{
+const char* View::ICON_TABLE[ICON_MAX]  = {
     /* The order follows the order in the Icon enumeration! */
     View::IMAGE_PATH_TEMP_ICON,
     View::IMAGE_PATH_HUMID_ICON

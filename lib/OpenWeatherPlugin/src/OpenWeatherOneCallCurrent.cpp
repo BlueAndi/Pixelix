@@ -76,10 +76,10 @@ void OpenWeatherOneCallCurrent::getUrl(String& url) const
 
 void OpenWeatherOneCallCurrent::getFilter(JsonDocument& jsonFilterDoc) const
 {
-    JsonObject jsonCurrent = jsonFilterDoc.createNestedObject("current");
+    JsonObject jsonCurrent            = jsonFilterDoc.createNestedObject("current");
 
     /*
-    
+
         {
         "lat": 33.44,
         "lon": -94.04,
@@ -111,24 +111,24 @@ void OpenWeatherOneCallCurrent::getFilter(JsonDocument& jsonFilterDoc) const
             "1h": 0.21
             }
         }
-    
+
     */
 
-    jsonCurrent["temp"]                 = true;
-    jsonCurrent["uvi"]                  = true;
-    jsonCurrent["humidity"]             = true;
-    jsonCurrent["wind_speed"]           = true;
-    jsonCurrent["weather"][0]["icon"]   = true;
+    jsonCurrent["temp"]               = true;
+    jsonCurrent["uvi"]                = true;
+    jsonCurrent["humidity"]           = true;
+    jsonCurrent["wind_speed"]         = true;
+    jsonCurrent["weather"][0]["icon"] = true;
 }
 
 void OpenWeatherOneCallCurrent::parse(const JsonDocument& jsonDoc)
 {
-    JsonVariantConst    jsonCurrent     = jsonDoc["current"];
-    JsonVariantConst    jsonTemperature = jsonCurrent["temp"];
-    JsonVariantConst    jsonUvi         = jsonCurrent["uvi"];
-    JsonVariantConst    jsonHumidity    = jsonCurrent["humidity"];
-    JsonVariantConst    jsonWindSpeed   = jsonCurrent["wind_speed"];
-    JsonVariantConst    jsonIcon        = jsonCurrent["weather"][0]["icon"];
+    JsonVariantConst jsonCurrent     = jsonDoc["current"];
+    JsonVariantConst jsonTemperature = jsonCurrent["temp"];
+    JsonVariantConst jsonUvi         = jsonCurrent["uvi"];
+    JsonVariantConst jsonHumidity    = jsonCurrent["humidity"];
+    JsonVariantConst jsonWindSpeed   = jsonCurrent["wind_speed"];
+    JsonVariantConst jsonIcon        = jsonCurrent["weather"][0]["icon"];
 
     if (false == jsonTemperature.isNull())
     {

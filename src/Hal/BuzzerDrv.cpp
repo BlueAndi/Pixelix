@@ -87,7 +87,7 @@ void BuzzerDrv::play(uint32_t freq)
         }
 
         (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle); /* Change duty cycle immediately. */
+        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);    /* Change duty cycle immediately. */
     }
 }
 
@@ -106,7 +106,7 @@ void BuzzerDrv::play(uint32_t freq, uint16_t dc)
         }
 
         (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle); /* Change duty cycle immediately. */
+        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);    /* Change duty cycle immediately. */
     }
 }
 
@@ -143,4 +143,3 @@ void BuzzerDrv::changeDutyCycle(uint16_t dc)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
-

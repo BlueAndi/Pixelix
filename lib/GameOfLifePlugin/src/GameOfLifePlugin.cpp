@@ -61,9 +61,9 @@
 
 void GameOfLifePlugin::start(uint16_t width, uint16_t height)
 {
-    m_width     = width;
-    m_height    = height;
-    m_gridSize  = ((m_width * m_height) + (BITS - 1U)) / BITS;
+    m_width    = width;
+    m_height   = height;
+    m_gridSize = ((m_width * m_height) + (BITS - 1U)) / BITS;
 
     (void)createGrids();
 }
@@ -75,10 +75,10 @@ void GameOfLifePlugin::stop()
 
 void GameOfLifePlugin::active(YAGfx& gfx)
 {
-    uint8_t index   = 0U;
-    bool    isInit  = true;
+    uint8_t index  = 0U;
+    bool    isInit = true;
 
-    while((GRIDS > index) && (true == isInit))
+    while ((GRIDS > index) && (true == isInit))
     {
         if (nullptr == m_grids[index])
         {
@@ -114,11 +114,11 @@ void GameOfLifePlugin::inactive()
 
 void GameOfLifePlugin::update(YAGfx& gfx)
 {
-    uint8_t index   = 0U;
-    bool    isInit  = true;
+    uint8_t index  = 0U;
+    bool    isInit = true;
 
     /* Check whether grid is initialized or not. */
-    while((GRIDS > index) && (true == isInit))
+    while ((GRIDS > index) && (true == isInit))
     {
         if (nullptr == m_grids[index])
         {
@@ -157,8 +157,8 @@ void GameOfLifePlugin::update(YAGfx& gfx)
     {
         int32_t cellX;
         int32_t cellY;
-        uint8_t inactiveGrid    = (m_activeGrid + 1U) % GRIDS;
-        bool    isStable        = true;
+        uint8_t inactiveGrid = (m_activeGrid + 1U) % GRIDS;
+        bool    isStable     = true;
 
         /* Note: The active grid is the one, where we look how the current state of
          * every cell is. This is the grid, which is shown on the display right now.
@@ -169,9 +169,9 @@ void GameOfLifePlugin::update(YAGfx& gfx)
          */
 
         /* Handle active grid */
-        for(cellY = 0; cellY < m_height; ++cellY)
+        for (cellY = 0; cellY < m_height; ++cellY)
         {
-            for(cellX = 0; cellX < m_width; ++cellX)
+            for (cellX = 0; cellX < m_width; ++cellX)
             {
                 bool    cellState       = getCellState(m_activeGrid, cellX, cellY);
                 uint8_t neighboursAlive = countAliveNeighbours(m_activeGrid, cellX, cellY);
@@ -259,12 +259,12 @@ void GameOfLifePlugin::update(YAGfx& gfx)
 
 bool GameOfLifePlugin::createGrids()
 {
-    bool    status  = true;
-    uint8_t index   = 0U;
+    bool    status = true;
+    uint8_t index  = 0U;
 
-    while((GRIDS > index) && (true == status))
+    while ((GRIDS > index) && (true == status))
     {
-        m_grids[index] = new(std::nothrow) uint32_t[m_gridSize];
+        m_grids[index] = new (std::nothrow) uint32_t[m_gridSize];
 
         if (nullptr == m_grids[index])
         {
@@ -286,7 +286,7 @@ void GameOfLifePlugin::destroyGrids()
 {
     uint8_t index = 0U;
 
-    while(GRIDS > index)
+    while (GRIDS > index)
     {
         if (nullptr != m_grids[index])
         {
@@ -304,9 +304,9 @@ void GameOfLifePlugin::generateInitialPattern(uint8_t gridId)
 
     randomSeed(ESP.getCycleCount());
 
-    while(m_gridSize > gridDataIndex)
+    while (m_gridSize > gridDataIndex)
     {
-        m_grids[gridId][gridDataIndex] = random(INT32_MAX);
+        m_grids[gridId][gridDataIndex]  = random(INT32_MAX);
         m_grids[gridId][gridDataIndex] |= (0 == random(2)) ? 0x00000000 : 0x80000000;
 
         ++gridDataIndex;
@@ -348,11 +348,11 @@ bool GameOfLifePlugin::getCellState(uint8_t gridId, int16_t x, int16_t y)
         (m_width > x) &&
         (m_height > y))
     {
-        uint32_t    cellIndex       = x + m_width * y;
-        uint32_t    cellDataIndex   = cellIndex / BITS;
-        uint8_t     bitIndex        = cellIndex - (cellDataIndex * BITS);
+        uint32_t cellIndex     = x + m_width * y;
+        uint32_t cellDataIndex = cellIndex / BITS;
+        uint8_t  bitIndex      = cellIndex - (cellDataIndex * BITS);
 
-        isAlive = (0 != (m_grids[gridId][cellDataIndex] & (1 << bitIndex)));
+        isAlive                = (0 != (m_grids[gridId][cellDataIndex] & (1 << bitIndex)));
     }
 
     return isAlive;
@@ -391,9 +391,9 @@ void GameOfLifePlugin::setCellState(uint8_t gridId, int16_t x, int16_t y, bool s
         (m_width > x) &&
         (m_height > y))
     {
-        uint32_t    cellIndex       = x + m_width * y;
-        uint32_t    cellDataIndex   = cellIndex / BITS;
-        uint8_t     bitIndex        = cellIndex - (cellDataIndex * BITS);
+        uint32_t cellIndex     = x + m_width * y;
+        uint32_t cellDataIndex = cellIndex / BITS;
+        uint8_t  bitIndex      = cellIndex - (cellDataIndex * BITS);
 
         if (false == state)
         {
@@ -408,11 +408,11 @@ void GameOfLifePlugin::setCellState(uint8_t gridId, int16_t x, int16_t y, bool s
 
 uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_t y)
 {
-    const int16_t   MAX_X   = 3;    /* 3 cells per row */
-    const int16_t   MAX_Y   = 3;    /* 3 cells per column */
-    uint8_t         count   = 0U;
-    int16_t         dX      = 0;
-    int16_t         dY      = 0;
+    const int16_t MAX_X = 3; /* 3 cells per row */
+    const int16_t MAX_Y = 3; /* 3 cells per column */
+    uint8_t       count = 0U;
+    int16_t       dX    = 0;
+    int16_t       dY    = 0;
 
     /* Cell neighbours, marked with a '#':
      * ###
@@ -420,11 +420,11 @@ uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_
      * ###
      */
 
-    for(dY = 0; dY < MAX_Y; ++dY)
+    for (dY = 0; dY < MAX_Y; ++dY)
     {
         int16_t neighbourY = (y - 1) + dY;
 
-        for(dX = 0; dX < MAX_X; ++dX)
+        for (dX = 0; dX < MAX_X; ++dX)
         {
             int16_t neighbourX = (x - 1) + dX;
 
@@ -444,12 +444,12 @@ uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_
 
 void GameOfLifePlugin::update(YAGfx& gfx, uint8_t gridId)
 {
-    int16_t x   = 0;
-    int16_t y   = 0;
+    int16_t x = 0;
+    int16_t y = 0;
 
-    for(y = 0; y < m_height; ++y)
+    for (y = 0; y < m_height; ++y)
     {
-        for(x = 0; x < m_width; ++x)
+        for (x = 0; x < m_width; ++x)
         {
             if (false == getCellState(gridId, x, y))
             {

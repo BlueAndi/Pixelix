@@ -66,10 +66,10 @@
 
 void BatteryPlugin::start(uint16_t width, uint16_t height)
 {
-    uint8_t                     sensorIdx       = 0U;
-    uint8_t                     channelIdx      = 0U;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
+    uint8_t                    sensorIdx  = 0U;
+    uint8_t                    channelIdx = 0U;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    SensorDataProvider&        sensorDataProv = SensorDataProvider::getInstance();
 
     m_view.init(width, height);
 
@@ -87,7 +87,7 @@ void BatteryPlugin::stop()
     m_sensorUpdateTimer.stop();
 }
 
-void BatteryPlugin::process(bool isConnected) 
+void BatteryPlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -103,7 +103,7 @@ void BatteryPlugin::process(bool isConnected)
             {
                 SensorChannelUInt32* channel = static_cast<SensorChannelUInt32*>(m_socSensorCh);
 
-                m_stateOfCharge = channel->getValue();
+                m_stateOfCharge              = channel->getValue();
             }
         }
 

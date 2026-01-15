@@ -1314,7 +1314,7 @@ bool AsyncHttpClient::parseChunkedResponseChunkData(const uint8_t* data, size_t 
 
         /* Abort by set EOF. */
         m_chunkIndex = 0U;
-        isDataEOF = true;
+        isDataEOF    = true;
     }
     else
     {

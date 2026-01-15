@@ -76,14 +76,14 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        String                      msg;
-        uint8_t                     pluginTypeListLength    = 0U;
-        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
-        uint8_t                     idx                     = 0U;
+        String                     msg;
+        uint8_t                    pluginTypeListLength = 0U;
+        const PluginList::Element* pluginTypeList       = PluginList::getList(pluginTypeListLength);
+        uint8_t                    idx                  = 0U;
 
         preparePositiveResponse(msg);
 
-        while(pluginTypeListLength > idx)
+        while (pluginTypeListLength > idx)
         {
             if (0 < idx)
             {

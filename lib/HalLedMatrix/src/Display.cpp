@@ -85,7 +85,7 @@ void Display::show()
     if (true == m_isOn)
     {
         const int16_t height = m_ledMatrix.getHeight();
-        const int16_t width = m_ledMatrix.getWidth();
+        const int16_t width  = m_ledMatrix.getWidth();
 
         for (int16_t y = 0; y < height; ++y)
         {

@@ -63,9 +63,9 @@ FS NativeFS;
 
 size_t File::size() const
 {
-    size_t  fileSize    = 0U;
-    size_t  currPos     = ftell(m_fd);
-    
+    size_t fileSize = 0U;
+    size_t currPos  = ftell(m_fd);
+
     if (0 == fseek(m_fd, 0, SEEK_END))
     {
         long pos = ftell(m_fd);

@@ -90,17 +90,17 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
             String         msg;
             uint8_t        slotId = SlotList::SLOT_ID_INVALID;
 
-            uint32_t       lastColor;          /* The color that started a repeat sequence.   */
-            uint32_t       color      = 0U;    /* Actual color in read order.                 */
-            size_t         index      = 1U;    /* Next value from framebuffer to used.        */
-            uint32_t       repeat     = 0U;    /* Repeat count for current color.             */
-            const uint32_t REPEAT_MAX = 0xFFU; /* Maximum repeat color counter value.         */
+            uint32_t       lastColor;                          /* The color that started a repeat sequence.   */
+            uint32_t       color      = 0U;                    /* Actual color in read order.                 */
+            size_t         index      = 1U;                    /* Next value from framebuffer to used.        */
+            uint32_t       repeat     = 0U;                    /* Repeat count for current color.             */
+            const uint32_t REPEAT_MAX = 0xFFU;                 /* Maximum repeat color counter value.         */
             GetDispState   state      = STATE_GETDISP_COLLECT; /* Frame buffer reading state. */
 
             DisplayMgr::getInstance().getFBCopy(framebuffer, fbLength, &slotId);
 
             preparePositiveResponse(msg);
-            msg += slotId;
+            msg       += slotId;
 
             /* RGB data is send in a "compressed" format using a repeat counter in
              * the upper 8 bits. The send values are <rep>:<r>:<g>:<b>.
@@ -112,7 +112,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
              * A black only 32x8 framebuffer would be send as a single 0xFF000000 value.
              *
              */
-            lastColor = framebuffer[0];
+            lastColor  = framebuffer[0];
 
             while (state != STATE_GETDISP_FINISH)
             {

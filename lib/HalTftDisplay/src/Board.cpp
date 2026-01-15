@@ -61,42 +61,41 @@ using namespace Board;
  *****************************************************************************/
 
 /** Digital output pin: Onboard LED */
-const DOutPin<Pin::onBoardLedPinNo>                 Board::onBoardLedOut;
+const DOutPin<Pin::onBoardLedPinNo> Board::onBoardLedOut;
 
 /** Digital input pin: Button "ok" (input with pull-up) */
-const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP>      Board::buttonOkIn;
+const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP> Board::buttonOkIn;
 
 /** Digital input pin: Button "left" (input with pull-up) */
-const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
+const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP> Board::buttonLeftIn;
 
 /** Digital input pin: Button "right" (input with pull-up) */
-const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
+const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP> Board::buttonRightIn;
 
 /** Digital input pin: Button "reset" (input with pull-up) */
-const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP>   Board::buttonResetIn;
+const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP> Board::buttonResetIn;
 
 /** Analog input pin: LDR in */
-const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
+const AnalogPin<Pin::ldrInPinNo> Board::ldrIn;
 
 /** Digital input pin: DHT Sensor (input with pull-up) */
-const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
+const DInPin<Pin::dhtInPinNo, INPUT_PULLUP> Board::dhtIn;
 
 /** Analog input pin: battery voltage in */
-const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
+const AnalogPin<Pin::batteryInPinNo> Board::batteryVoltageIn;
 
 /** Digital output pin: Buzzer */
-const DOutPin<Pin::buzzerOutPinNo>                  Board::buzzerOut;
+const DOutPin<Pin::buzzerOutPinNo> Board::buzzerOut;
 
 /** Digital output pin: TFT display backlight switch */
-const DOutPin<Pin::tftBackLightPinNo>               Board::tftBackLightOut;
+const DOutPin<Pin::tftBackLightPinNo> Board::tftBackLightOut;
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
 
 /** A list of all used i/o pins, used for initialization. */
-static const IoPin* ioPinList[] =
-{
+static const IoPin* ioPinList[] = {
     &onBoardLedOut,
     &buttonOkIn,
     &buttonLeftIn,
@@ -130,7 +129,7 @@ extern void Board::init()
     uint8_t index = 0U;
 
     /* Initialize all i/o pins */
-    for(index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
+    for (index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
     {
         if (nullptr != ioPinList[index])
         {

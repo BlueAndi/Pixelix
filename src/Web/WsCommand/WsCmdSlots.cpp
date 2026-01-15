@@ -78,10 +78,10 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String      msg;
-        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        uint8_t     stickySlot  = displayMgr.getStickySlot();
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        uint8_t     stickySlot = displayMgr.getStickySlot();
         uint8_t     slotId;
-        uint8_t     maxSlots    = displayMgr.getMaxSlots();
+        uint8_t     maxSlots = displayMgr.getMaxSlots();
 
         preparePositiveResponse(msg);
 
@@ -96,7 +96,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
          * - Information about whether the slot is disabled or not.
          * - Slot duration in ms.
          */
-        for(slotId = 0U; slotId < maxSlots; ++slotId)
+        for (slotId = 0U; slotId < maxSlots; ++slotId)
         {
             IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
             const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
@@ -107,24 +107,24 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
             bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
             uint32_t            duration    = displayMgr.getSlotDuration(slotId);
 
-            msg += DELIMITER;
-            msg += "\"";
-            msg += name;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += uid;
-            msg += DELIMITER;
-            msg += "\"";
-            msg += alias;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += (false == isLocked) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == isSticky) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == isDisabled) ? "0" : "1";
-            msg += DELIMITER;
-            msg += duration;
+            msg                            += DELIMITER;
+            msg                            += "\"";
+            msg                            += name;
+            msg                            += "\"";
+            msg                            += DELIMITER;
+            msg                            += uid;
+            msg                            += DELIMITER;
+            msg                            += "\"";
+            msg                            += alias;
+            msg                            += "\"";
+            msg                            += DELIMITER;
+            msg                            += (false == isLocked) ? "0" : "1";
+            msg                            += DELIMITER;
+            msg                            += (false == isSticky) ? "0" : "1";
+            msg                            += DELIMITER;
+            msg                            += (false == isDisabled) ? "0" : "1";
+            msg                            += DELIMITER;
+            msg                            += duration;
         }
 
         sendResponse(server, clientId, msg);

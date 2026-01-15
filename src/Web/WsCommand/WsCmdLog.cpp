@@ -76,8 +76,8 @@ void WsCmdLog::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        String      msg;
-        LogSink*    selectedSink    = nullptr;
+        String   msg;
+        LogSink* selectedSink = nullptr;
 
         /* Set logging on/off? */
         if (0 < m_cnt)
@@ -109,8 +109,8 @@ void WsCmdLog::execute(AsyncWebSocket* server, uint32_t clientId)
         sendResponse(server, clientId, msg);
     }
 
-    m_cnt       = 0U;
-    m_isError   = false;
+    m_cnt     = 0U;
+    m_isError = false;
 }
 
 void WsCmdLog::setPar(const char* par)

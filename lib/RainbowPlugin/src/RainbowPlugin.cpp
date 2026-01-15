@@ -63,12 +63,12 @@ void RainbowPlugin::update(YAGfx& gfx)
 {
     int16_t x;
     int16_t y;
-    uint8_t angle   = m_angle;
+    uint8_t angle = m_angle;
     Color   color;
 
-    for(x = 0; x < gfx.getWidth(); ++x)
+    for (x = 0; x < gfx.getWidth(); ++x)
     {
-        for(y = 0; y < gfx.getHeight(); ++y)
+        for (y = 0; y < gfx.getHeight(); ++y)
         {
             color.turnColorWheel(angle + y * ANGLE_DELTA);
             gfx.drawPixel(x, y, color);

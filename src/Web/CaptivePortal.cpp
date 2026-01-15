@@ -63,12 +63,12 @@ static void reqRestart();
 /**
  * Captive portal requst handler.
  */
-static CaptivePortalHandler     gCaptivePortalReqHandler(reqRestart);
+static CaptivePortalHandler gCaptivePortalReqHandler(reqRestart);
 
 /**
  * Flag to request a restart.
  */
-static bool                     gIsRestartRequested         = false;
+static bool gIsRestartRequested = false;
 
 /******************************************************************************
  * Public Methods

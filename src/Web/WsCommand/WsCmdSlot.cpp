@@ -79,8 +79,8 @@ void WsCmdSlot::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String      msg;
-        DisplayMgr& displayMgr          = DisplayMgr::getInstance();
-        bool        isSlotConfigDirty   = false;
+        DisplayMgr& displayMgr        = DisplayMgr::getInstance();
+        bool        isSlotConfigDirty = false;
 
         if (FLAG_STATUS_NA != m_stickyFlag)
         {
@@ -139,15 +139,15 @@ void WsCmdSlot::execute(AsyncWebSocket* server, uint32_t clientId)
         }
         else
         {
-            uint8_t             stickySlot  = displayMgr.getStickySlot();
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(m_slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked    = displayMgr.isSlotLocked(m_slotId);
-            bool                isSticky    = (stickySlot == m_slotId) ? true : false;
-            bool                isDisabled  = displayMgr.isSlotDisabled(m_slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(m_slotId);
+            uint8_t             stickySlot = displayMgr.getStickySlot();
+            IPluginMaintenance* plugin     = displayMgr.getPluginInSlot(m_slotId);
+            const char*         name       = (nullptr != plugin) ? plugin->getName() : "";
+            uint16_t            uid        = (nullptr != plugin) ? plugin->getUID() : 0U;
+            String              alias      = (nullptr != plugin) ? plugin->getAlias() : "";
+            bool                isLocked   = displayMgr.isSlotLocked(m_slotId);
+            bool                isSticky   = (stickySlot == m_slotId) ? true : false;
+            bool                isDisabled = displayMgr.isSlotDisabled(m_slotId);
+            uint32_t            duration   = displayMgr.getSlotDuration(m_slotId);
 
             preparePositiveResponse(msg);
 
@@ -181,15 +181,15 @@ void WsCmdSlot::execute(AsyncWebSocket* server, uint32_t clientId)
         sendResponse(server, clientId, msg);
     }
 
-    m_isError   = false;
-    m_parCnt    = 0U;
+    m_isError = false;
+    m_parCnt  = 0U;
 }
 
 void WsCmdSlot::setPar(const char* par)
 {
     uint8_t tmp;
 
-    switch(m_parCnt)
+    switch (m_parCnt)
     {
     /* Slot id*/
     case 0U:

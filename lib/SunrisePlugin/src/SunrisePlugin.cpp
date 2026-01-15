@@ -427,10 +427,10 @@ void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        const char* sunrise    = jsonSunrise.as<const char*>();
-        const char* sunset     = jsonSunset.as<const char*>();
+        const char* sunrise     = jsonSunrise.as<const char*>();
+        const char* sunset      = jsonSunset.as<const char*>();
 
-        m_relevantResponsePart = addCurrentTimeZoneValues(sunrise);
+        m_relevantResponsePart  = addCurrentTimeZoneValues(sunrise);
         m_relevantResponsePart += " / ";
         m_relevantResponsePart += addCurrentTimeZoneValues(sunset);
 

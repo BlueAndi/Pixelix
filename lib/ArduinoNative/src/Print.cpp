@@ -61,30 +61,32 @@
  * Public Methods
  *****************************************************************************/
 
-size_t Print::write(const uint8_t *buffer, size_t size)
+size_t Print::write(const uint8_t* buffer, size_t size)
 {
     size_t n = 0;
-    while(size--) {
+    while (size--)
+    {
         n += write(*buffer++);
     }
     return n;
 }
 
-size_t Print::write(const char *str)
+size_t Print::write(const char* str)
 {
-    if(str == nullptr) {
+    if (str == nullptr)
+    {
         return 0;
     }
 
-    return write(reinterpret_cast<const uint8_t *>(str), strlen(str));
+    return write(reinterpret_cast<const uint8_t*>(str), strlen(str));
 }
 
-size_t Print::write(const char *buffer, size_t size)
+size_t Print::write(const char* buffer, size_t size)
 {
-    return write(reinterpret_cast<const uint8_t *>(buffer), size);
+    return write(reinterpret_cast<const uint8_t*>(buffer), size);
 }
 
-size_t Print::print(const String &s)
+size_t Print::print(const String& s)
 {
     return write(s.c_str(), s.length());
 }
@@ -101,16 +103,22 @@ size_t Print::print(char c)
 
 size_t Print::print(long n, int base)
 {
-    if(base == 0) {
+    if (base == 0)
+    {
         return write(n);
-    } else if(base == 10) {
-        if(n < 0) {
+    }
+    else if (base == 10)
+    {
+        if (n < 0)
+        {
             int t = print('-');
-            n = -n;
+            n     = -n;
             return printNumber(n, 10) + t;
         }
         return printNumber(n, 10);
-    } else {
+    }
+    else
+    {
         return printNumber(n, base);
     }
 }
@@ -120,10 +128,10 @@ size_t Print::println()
     return print("\r\n");
 }
 
-size_t Print::println(const String &s)
+size_t Print::println(const String& s)
 {
-    size_t n = print(s);
-    n += println();
+    size_t n  = print(s);
+    n        += println();
     return n;
 }
 
@@ -137,22 +145,25 @@ size_t Print::println(const String &s)
 
 size_t Print::printNumber(unsigned long n, uint8_t base)
 {
-    char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
-    char *str = &buf[sizeof(buf) - 1];
+    char  buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+    char* str = &buf[sizeof(buf) - 1];
 
-    *str = '\0';
+    *str      = '\0';
 
     // prevent crash if called with base == 1
-    if(base < 2) {
+    if (base < 2)
+    {
         base = 10;
     }
 
-    do {
-        unsigned long m = n;
-        n /= base;
-        char c = m - base * n;
-        *--str = c < 10 ? c + '0' : c + 'A' - 10;
-    } while(n);
+    do
+    {
+        unsigned long m  = n;
+        n               /= base;
+        char c           = m - base * n;
+        *--str           = c < 10 ? c + '0' : c + 'A' - 10;
+    }
+    while (n);
 
     return write(str);
 }

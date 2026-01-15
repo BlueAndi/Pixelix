@@ -89,9 +89,9 @@ void WifiStatusPlugin::update(YAGfx& gfx)
     if ((true == m_timer.isTimerRunning()) &&
         (true == m_timer.isTimeout()))
     {
-        int8_t      rssi                = -100; // dbm
-        uint8_t     quality             = 0U;   // percent
-        wl_status_t connectionStatus    = WiFi.status();
+        int8_t      rssi             = -100; // dbm
+        uint8_t     quality          = 0U;   // percent
+        wl_status_t connectionStatus = WiFi.status();
 
         /* Only in station mode it makes sense to retrieve the RSSI.
          * Otherwise keep it -100 dbm.

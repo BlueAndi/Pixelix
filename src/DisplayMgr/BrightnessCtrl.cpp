@@ -354,12 +354,12 @@ void BrightnessCtrl::applyLightSensorMeasurement(uint32_t dTime, float light)
 
 void BrightnessCtrl::updateBrightnessGoal()
 {
-    float   fCorrectedBrightness    = powf(m_ambientLight, 1.0F / GAMMA);
-    float   fBrightnessDynamicRange = static_cast<float>(m_maxBrightnessSoftLimit - m_minBrightnessSoftLimit);
-    float   fMinBrightness          = static_cast<float>(m_minBrightnessSoftLimit);
-    float   fBrightness             = fMinBrightness + (fBrightnessDynamicRange * fCorrectedBrightness);
+    float fCorrectedBrightness    = powf(m_ambientLight, 1.0F / GAMMA);
+    float fBrightnessDynamicRange = static_cast<float>(m_maxBrightnessSoftLimit - m_minBrightnessSoftLimit);
+    float fMinBrightness          = static_cast<float>(m_minBrightnessSoftLimit);
+    float fBrightness             = fMinBrightness + (fBrightnessDynamicRange * fCorrectedBrightness);
 
-    m_brightnessGoal = static_cast<uint8_t>(fBrightness);
+    m_brightnessGoal              = static_cast<uint8_t>(fBrightness);
 
     LOG_DEBUG("Change brightness goal to %u.", m_brightnessGoal);
 }

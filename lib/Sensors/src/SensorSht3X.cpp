@@ -68,7 +68,7 @@ void SensorSht3X::begin()
     else
     {
         m_isAvailable = true;
-        
+
         /* Only supported for SHT3x sensors */
         m_driver.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
     }
@@ -96,7 +96,7 @@ ISensorChannel* SensorSht3X::getChannel(uint8_t index)
 
     if (true == m_isAvailable)
     {
-        switch(index)
+        switch (index)
         {
         case CHANNEL_ID_TEMPERATURE:
             channel = &m_temperatureChannel;
@@ -105,7 +105,7 @@ ISensorChannel* SensorSht3X::getChannel(uint8_t index)
         case CHANNEL_ID_HUMIDITY:
             channel = &m_humidityChannel;
             break;
-        
+
         default:
             break;
         }

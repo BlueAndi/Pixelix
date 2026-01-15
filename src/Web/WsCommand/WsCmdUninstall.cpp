@@ -80,7 +80,7 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String              rsp;
-        IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
+        IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
 
         if (nullptr == plugin)
         {
@@ -103,8 +103,8 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, uint32_t clientId)
         }
     }
 
-    m_isError   = false;
-    m_slotId    = SlotList::SLOT_ID_INVALID;
+    m_isError = false;
+    m_slotId  = SlotList::SLOT_ID_INVALID;
 }
 
 void WsCmdUninstall::setPar(const char* par)

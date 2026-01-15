@@ -142,7 +142,7 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
 
             /* Specifies which HTTP methods are allowed for cross-origin requests. */
             response->addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-            
+
             /* Defines which HTTP headers can be used in cross-origin requests. */
             response->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 

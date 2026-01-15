@@ -44,127 +44,127 @@
  *****************************************************************************/
 
 /** Bit index for the version in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_VERSION_BIT            (6U)
+#define DDP_HEADER_FLAGS_VERSION_BIT (6U)
 
 /** Bit mask for the version in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_VERSION_MASK           (0x03U)
+#define DDP_HEADER_FLAGS_VERSION_MASK (0x03U)
 
 /** Bit index for the timecode flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_TIMECODE_BIT           (4U)
+#define DDP_HEADER_FLAGS_TIMECODE_BIT (4U)
 
 /** Bit mask for the timecode flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_TIMECODE_MASK          (0x01U)
+#define DDP_HEADER_FLAGS_TIMECODE_MASK (0x01U)
 
 /** Bit index for the storage flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_STORAGE_BIT            (3U)
+#define DDP_HEADER_FLAGS_STORAGE_BIT (3U)
 
 /** Bit mask for the storage flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_STORAGE_MASK           (0x01U)
+#define DDP_HEADER_FLAGS_STORAGE_MASK (0x01U)
 
 /** Bit index for the reply flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_REPLY_BIT              (2U)
+#define DDP_HEADER_FLAGS_REPLY_BIT (2U)
 
 /** Bit mask for the reply flagn in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_REPLY_MASK             (0x01U)
+#define DDP_HEADER_FLAGS_REPLY_MASK (0x01U)
 
 /** Bit index for the query flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_QUERY_BIT              (1U)
+#define DDP_HEADER_FLAGS_QUERY_BIT (1U)
 
 /** Bit mask for the query flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_QUERY_MASK             (0x01U)
+#define DDP_HEADER_FLAGS_QUERY_MASK (0x01U)
 
 /** Bit index for the push flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_PUSH_BIT               (0U)
+#define DDP_HEADER_FLAGS_PUSH_BIT (0U)
 
 /** Bit mask for the push flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_PUSH_MASK              (0x01U)
+#define DDP_HEADER_FLAGS_PUSH_MASK (0x01U)
 
 /** Bit index for the sequence number in the DDP header control byte. */
-#define DDP_HEADER_CONTROL_SEQ_NO_BIT           (0U)
+#define DDP_HEADER_CONTROL_SEQ_NO_BIT (0U)
 
 /** Bit mask for the sequence number in the DDP header control byte. */
-#define DDP_HEADER_CONTROL_SEQ_NO_MASK          (0x0fU)
+#define DDP_HEADER_CONTROL_SEQ_NO_MASK (0x0fU)
 
 /** Bit index for the customer bit in the DDP header data type byte. */
-#define DDP_HEADER_DT_CUSTOM_BIT                (7U)
+#define DDP_HEADER_DT_CUSTOM_BIT (7U)
 
 /** Bit mask for the customer bit in the DDP header data type byte. */
-#define DDP_HEADER_DT_CUSTOM_MASK               (0x01U)
+#define DDP_HEADER_DT_CUSTOM_MASK (0x01U)
 
 /** Bit index for the data type in the DDP header data type byte. */
-#define DDP_HEADER_DT_DATA_TYPE_BIT             (3U)
+#define DDP_HEADER_DT_DATA_TYPE_BIT (3U)
 
 /** Bit mask for the data type in the DDP header data type byte. */
-#define DDP_HEADER_DT_DATA_TYPE_MASK            (0x07U)
+#define DDP_HEADER_DT_DATA_TYPE_MASK (0x07U)
 
 /** Bit index for the pixel size in the DDP header data type byte. */
-#define DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_BIT    (0U)
+#define DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_BIT (0U)
 
 /** Bit mask for the pixel size in the DDP header data type byte. */
-#define DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_MASK   (0x07U)
+#define DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_MASK (0x07U)
 
 /** DDP data type - undefined */
-#define DDP_DATA_TYPE_UNDEFINED                 (0U)
+#define DDP_DATA_TYPE_UNDEFINED (0U)
 
 /** DDP data type - RGB order */
-#define DDP_DATA_TYPE_RGB                       (1U)
+#define DDP_DATA_TYPE_RGB (1U)
 
 /** DDP data type - HSL order */
-#define DDP_DATA_TYPE_HSL                       (2U)
+#define DDP_DATA_TYPE_HSL (2U)
 
 /** DDP data type - RGBW order */
-#define DDP_DATA_TYPE_RGBW                      (3U)
+#define DDP_DATA_TYPE_RGBW (3U)
 
 /** DDP data type - Grayscale (shades of gray) */
-#define DDP_DATA_TYPE_GRAYSCALE                 (4U)
+#define DDP_DATA_TYPE_GRAYSCALE (4U)
 
 /** DDP pixel size - undefined */
-#define DDP_PIXEL_ELEMENT_SIZE_UNDEFINED        (0U)
+#define DDP_PIXEL_ELEMENT_SIZE_UNDEFINED (0U)
 
 /** DDP pixel size - 1 bit per pixel element */
-#define DDP_PIXEL_ELEMENT_SIZE_1                (1U)
+#define DDP_PIXEL_ELEMENT_SIZE_1 (1U)
 
 /** DDP pixel size - 4 bit per pixel element */
-#define DDP_PIXEL_ELEMENT_SIZE_4                (2U)
+#define DDP_PIXEL_ELEMENT_SIZE_4 (2U)
 
 /** DDP pixel size - 8 bit per pixel element */
-#define DDP_PIXEL_ELEMENT_SIZE_8                (3U)
+#define DDP_PIXEL_ELEMENT_SIZE_8 (3U)
 
 /** DDP pixel size - 16 bit per pixel element */
-#define DDP_PIXEL_ELEMENT_SIZE_16               (4U)
+#define DDP_PIXEL_ELEMENT_SIZE_16 (4U)
 
 /** DDP pixel size - 24 bit per pixel element */
-#define DDP_PIXEL_ELEMENT_SIZE_24               (5U)
+#define DDP_PIXEL_ELEMENT_SIZE_24 (5U)
 
 /** DDP pixel size - 32 bit per pixel element */
-#define DDP_PIXEL_ELEMENT_SIZE_32               (6U)
+#define DDP_PIXEL_ELEMENT_SIZE_32 (6U)
 
 /** DDP id - reserved */
-#define DDP_ID_RESERVED                         (0U)
+#define DDP_ID_RESERVED (0U)
 
 /** DDP id - default device */
-#define DDP_ID_DEFAULT                          (1U)
+#define DDP_ID_DEFAULT (1U)
 
 /** DDP id - custom id defined via JSON config */
-#define DDP_ID_CUSTOM                           (2U)
+#define DDP_ID_CUSTOM (2U)
 
 /** DDP id - JSON control */
-#define DDP_ID_JSON_CONTROL                     (246U)
+#define DDP_ID_JSON_CONTROL (246U)
 
 /** DDP id - JSON config */
-#define DDP_ID_JSON_CONFIG                      (250U)
+#define DDP_ID_JSON_CONFIG (250U)
 
 /** DDP id - JSON status */
-#define DDP_ID_JSON_STATUS                      (251U)
+#define DDP_ID_JSON_STATUS (251U)
 
 /** DDP id - DMX legay mode */
-#define DDP_ID_DMX_TRANSIT                      (254U)
+#define DDP_ID_DMX_TRANSIT (254U)
 
 /** DDP id - all devices */
-#define DDP_ID_ALL_DEVICES                      (255U)
+#define DDP_ID_ALL_DEVICES (255U)
 
 /** DDP timecode field size in byte */
-#define DDP_TIMECODE_SIZE                       (4U)
+#define DDP_TIMECODE_SIZE (4U)
 
 /******************************************************************************
  * Types and classes
@@ -184,12 +184,12 @@
 
 bool DDPServer::begin(const String& deviceManufacturer, const String& deviceModel, const String& deviceVersion, const String& deviceMac)
 {
-    bool isSuccessful = false;
+    bool isSuccessful    = false;
 
-    m_deviceManufacturer    = deviceManufacturer;
-    m_deviceModel           = deviceModel;
-    m_deviceVersion         = deviceVersion;
-    
+    m_deviceManufacturer = deviceManufacturer;
+    m_deviceModel        = deviceModel;
+    m_deviceVersion      = deviceVersion;
+
     if (true != deviceMac.isEmpty())
     {
         m_deviceMac = deviceMac;
@@ -197,18 +197,17 @@ bool DDPServer::begin(const String& deviceManufacturer, const String& deviceMode
 
     if (true == m_udpServer.listen(PORT))
     {
-        m_udpServer.onPacket([](void* arg, AsyncUDPPacket& packet)
-        {
-            DDPServer*  tthis = static_cast<DDPServer*>(arg);
+        m_udpServer.onPacket([](void* arg, AsyncUDPPacket& packet) {
+            DDPServer* tthis = static_cast<DDPServer*>(arg);
 
             if (nullptr != tthis)
             {
                 tthis->onPacket(packet);
             }
+        },
+            this);
 
-        }, this);
-
-        m_isPause = false;
+        m_isPause    = false;
 
         isSuccessful = true;
     }
@@ -223,9 +222,9 @@ void DDPServer::end()
 
 void DDPServer::notifyUpState()
 {
-    DDPPacket       ddpReply;
-    const char*     DISCOVERY_RSP       = "{\"status\":{\"update\":\"change\",\"state\":\"up\"}}";
-    const size_t    DISCOVERY_RSP_LEN   = strlen(DISCOVERY_RSP);
+    DDPPacket    ddpReply;
+    const char*  DISCOVERY_RSP     = "{\"status\":{\"update\":\"change\",\"state\":\"up\"}}";
+    const size_t DISCOVERY_RSP_LEN = strlen(DISCOVERY_RSP);
 
     setVersion(ddpReply.header, PROTOCOL_VERSION);
     setReplyFlag(ddpReply.header);
@@ -239,9 +238,9 @@ void DDPServer::notifyUpState()
 
 void DDPServer::notifyDownState()
 {
-    DDPPacket       ddpReply;
-    const char*     DISCOVERY_RSP       = "{\"status\":{\"update\":\"change\",\"state\":\"down\"}}";
-    const size_t    DISCOVERY_RSP_LEN   = strlen(DISCOVERY_RSP);
+    DDPPacket    ddpReply;
+    const char*  DISCOVERY_RSP     = "{\"status\":{\"update\":\"change\",\"state\":\"down\"}}";
+    const size_t DISCOVERY_RSP_LEN = strlen(DISCOVERY_RSP);
 
     setVersion(ddpReply.header, PROTOCOL_VERSION);
     setReplyFlag(ddpReply.header);
@@ -263,40 +262,40 @@ void DDPServer::notifyDownState()
 
 uint16_t DDPServer::getValueInLE(uint16_t valueBE)
 {
-    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueBE);
-    uint16_t        b0          = byteStream[0U];
-    uint16_t        b1          = byteStream[1U];
+    const uint8_t* byteStream = reinterpret_cast<uint8_t*>(&valueBE);
+    uint16_t       b0         = byteStream[0U];
+    uint16_t       b1         = byteStream[1U];
 
     return (b0 << 8U) | (b1 << 0U);
 }
 
 uint32_t DDPServer::getValueInLE(uint32_t valueBE)
 {
-    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueBE);
-    uint32_t        b0          = byteStream[0U];
-    uint32_t        b1          = byteStream[1U];
-    uint32_t        b2          = byteStream[2U];
-    uint32_t        b3          = byteStream[3U];
+    const uint8_t* byteStream = reinterpret_cast<uint8_t*>(&valueBE);
+    uint32_t       b0         = byteStream[0U];
+    uint32_t       b1         = byteStream[1U];
+    uint32_t       b2         = byteStream[2U];
+    uint32_t       b3         = byteStream[3U];
 
     return (b0 << 24U) | (b1 << 16U) | (b2 << 8U) | (b3 << 0U);
 }
 
 uint16_t DDPServer::getValueInBE(uint16_t valueLE)
 {
-    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueLE);
-    uint16_t        b0          = byteStream[0U];
-    uint16_t        b1          = byteStream[1U];
+    const uint8_t* byteStream = reinterpret_cast<uint8_t*>(&valueLE);
+    uint16_t       b0         = byteStream[0U];
+    uint16_t       b1         = byteStream[1U];
 
     return (b0 << 0U) | (b1 << 8U);
 }
 
 uint32_t DDPServer::getValueInBE(uint32_t valueLE)
 {
-    const uint8_t*  byteStream  = reinterpret_cast<uint8_t*>(&valueLE);
-    uint32_t        b0          = byteStream[0U];
-    uint32_t        b1          = byteStream[1U];
-    uint32_t        b2          = byteStream[2U];
-    uint32_t        b3          = byteStream[3U];
+    const uint8_t* byteStream = reinterpret_cast<uint8_t*>(&valueLE);
+    uint32_t       b0         = byteStream[0U];
+    uint32_t       b1         = byteStream[1U];
+    uint32_t       b2         = byteStream[2U];
+    uint32_t       b3         = byteStream[3U];
 
     return (b0 << 0U) | (b1 << 8U) | (b2 << 16U) | (b3 << 24U);
 }
@@ -373,7 +372,7 @@ bool DDPServer::isSeqNoValid(uint8_t seqNo)
     if (SEQ_NO_IGNORE < seqNo)
     {
         uint8_t expectedSeqNo = m_seqNo + 1U;
-        
+
         if (SEQ_NO_MAX < expectedSeqNo)
         {
             expectedSeqNo = SEQ_NO_BEGIN;
@@ -399,7 +398,7 @@ uint8_t DDPServer::getBitsPerPixelElement(const DDPHeader& header)
 {
     uint8_t bitsPerPixelElement = (header.detail.dataType >> DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_BIT) & DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_MASK;
 
-    switch(bitsPerPixelElement)
+    switch (bitsPerPixelElement)
     {
     case DDP_PIXEL_ELEMENT_SIZE_UNDEFINED:
         bitsPerPixelElement = 0U;
@@ -466,22 +465,22 @@ void DDPServer::onPacket(AsyncUDPPacket& udpPacket)
      */
     if (sizeof(DDPHeader) <= udpPacket.length())
     {
-        DDPHeader*  ddpHeader       = reinterpret_cast<DDPHeader*>(udpPacket.data());
-        uint16_t    payloadSize     = getPayloadSize(*ddpHeader);
-        size_t      packetSize      = 0U;
-        uint8_t*    payload         = nullptr;
-        bool        takeOverSeqNo   = false;
+        DDPHeader* ddpHeader     = reinterpret_cast<DDPHeader*>(udpPacket.data());
+        uint16_t   payloadSize   = getPayloadSize(*ddpHeader);
+        size_t     packetSize    = 0U;
+        uint8_t*   payload       = nullptr;
+        bool       takeOverSeqNo = false;
 
         /* Without timecode? */
         if (false == isTimeCodeFlagSet(*ddpHeader))
         {
-            packetSize  = sizeof(DDPHeader) + payloadSize;
-            payload     = &udpPacket.data()[sizeof(DDPHeader)];
+            packetSize = sizeof(DDPHeader) + payloadSize;
+            payload    = &udpPacket.data()[sizeof(DDPHeader)];
         }
         else
         {
             packetSize = sizeof(DDPHeader) + DDP_TIMECODE_SIZE + payloadSize;
-            payload     = &udpPacket.data()[sizeof(DDPHeader) + DDP_TIMECODE_SIZE];
+            payload    = &udpPacket.data()[sizeof(DDPHeader) + DDP_TIMECODE_SIZE];
         }
 
         /* The UDP packet must contain a complete DDP packet. */
@@ -527,8 +526,8 @@ void DDPServer::onPacket(AsyncUDPPacket& udpPacket)
 
 void DDPServer::handleQuery(const DDPHeader& header, uint8_t* payload, uint16_t payloadSize)
 {
-    DDPPacket   ddpReply;
-    String      ddpReplyPayload;
+    DDPPacket ddpReply;
+    String    ddpReplyPayload;
 
     (void)payload;
     (void)payloadSize;
@@ -542,7 +541,7 @@ void DDPServer::handleQuery(const DDPHeader& header, uint8_t* payload, uint16_t 
     /* Discovery? */
     if (DDP_ID_JSON_STATUS == header.detail.id)
     {
-        ddpReplyPayload = "{\"status\":{";
+        ddpReplyPayload  = "{\"status\":{";
 
         ddpReplyPayload += "\"man\":\"" + m_deviceManufacturer + "\",";
         ddpReplyPayload += "\"mod\":\"" + m_deviceModel + "\",";
@@ -552,7 +551,7 @@ void DDPServer::handleQuery(const DDPHeader& header, uint8_t* payload, uint16_t 
         ddpReplyPayload += "\"ntp\":false";
 
         ddpReplyPayload += "}}";
-        
+
         setPayloadSize(ddpReply.header, ddpReplyPayload.length());
         ddpReply.data = reinterpret_cast<const uint8_t*>(ddpReplyPayload.c_str());
     }
@@ -576,10 +575,10 @@ void DDPServer::handleData(const DDPHeader& header, uint8_t* payload, uint16_t p
     /* DMX legay mode data? */
     else if (DDP_ID_DMX_TRANSIT == header.detail.id)
     {
-        uint32_t    universe        = getOffset(header);
-        uint8_t     startCode       = payload[0U];
-        uint8_t*    dmxPayload      = &payload[1U];
-        uint16_t    dmxPayloadSize  = payloadSize - 1U;
+        uint32_t universe       = getOffset(header);
+        uint8_t  startCode      = payload[0U];
+        uint8_t* dmxPayload     = &payload[1U];
+        uint16_t dmxPayloadSize = payloadSize - 1U;
 
         dmxNotify(universe, startCode, dmxPayload, dmxPayloadSize);
     }
@@ -630,8 +629,8 @@ void DDPServer::dmxNotify(uint32_t universe, uint8_t startCode, uint8_t* payload
 bool DDPServer::send(const DDPPacket& packet)
 {
     AsyncUDPMessage udpMessage;
-    bool            isSuccessful    = true;
-    uint16_t        payloadSize     = getPayloadSize(packet.header);
+    bool            isSuccessful = true;
+    uint16_t        payloadSize  = getPayloadSize(packet.header);
 
     if (sizeof(packet.header.raw) != udpMessage.write(packet.header.raw, sizeof(packet.header.raw)))
     {
@@ -656,8 +655,8 @@ bool DDPServer::send(const DDPPacket& packet)
 bool DDPServer::broadcast(const DDPPacket& packet)
 {
     AsyncUDPMessage udpMessage;
-    bool            isSuccessful    = true;
-    uint16_t        payloadSize     = getPayloadSize(packet.header);
+    bool            isSuccessful = true;
+    uint16_t        payloadSize  = getPayloadSize(packet.header);
 
     if (sizeof(packet.header.raw) != udpMessage.write(packet.header.raw, sizeof(packet.header.raw)))
     {

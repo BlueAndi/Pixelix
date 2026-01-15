@@ -64,7 +64,7 @@ static void error(AsyncWebServerRequest* request);
 
 /**
  * The web server instance.
- * 
+ *
  * @return Its not a function, it's a variable! Doxygen just gets confused here.
  */
 static AsyncWebServer gWebServer(WebConfig::WEBSERVER_PORT);

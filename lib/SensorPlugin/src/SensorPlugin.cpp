@@ -91,11 +91,11 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonSensorIndex         = value["sensorIndex"];
-        JsonVariantConst    jsonChannelIndex        = value["channelIndex"];
+        JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonSensorIndex  = value["sensorIndex"];
+        JsonVariantConst    jsonChannelIndex = value["channelIndex"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -111,20 +111,20 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         if (false == jsonSensorIndex.isNull())
         {
             jsonCfg["sensorIndex"] = jsonSensorIndex.as<uint8_t>();
-            isSuccessful = true;
+            isSuccessful           = true;
         }
 
         if (false == jsonChannelIndex.isNull())
         {
             jsonCfg["channelIndex"] = jsonChannelIndex.as<uint8_t>();
-            isSuccessful = true;
+            isSuccessful            = true;
         }
 
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -142,8 +142,8 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
 bool SensorPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -169,14 +169,14 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 
 void SensorPlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     PluginWithConfig::stop();
 }
 
 void SensorPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     PluginWithConfig::process(isConnected);
 }
@@ -204,19 +204,19 @@ void SensorPlugin::update(YAGfx& gfx)
 
 void SensorPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        isAvailable     = (nullptr != m_sensorChannel)  ? true : false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       isAvailable = (nullptr != m_sensorChannel) ? true : false;
 
-    jsonCfg["sensorIndex"]  = m_sensorIdx;
-    jsonCfg["channelIndex"] = m_channelIdx;
-    jsonCfg["isAvailable"]  = isAvailable;
+    jsonCfg["sensorIndex"]                 = m_sensorIdx;
+    jsonCfg["channelIndex"]                = m_channelIdx;
+    jsonCfg["isAvailable"]                 = isAvailable;
 }
 
 bool SensorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status              = false;
-    JsonVariantConst    jsonSensorIndex     = jsonCfg["sensorIndex"];
-    JsonVariantConst    jsonChannelIndex    = jsonCfg["channelIndex"];
+    bool             status           = false;
+    JsonVariantConst jsonSensorIndex  = jsonCfg["sensorIndex"];
+    JsonVariantConst jsonChannelIndex = jsonCfg["channelIndex"];
 
     if (false == jsonSensorIndex.is<uint8_t>())
     {
@@ -230,13 +230,13 @@ bool SensorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_sensorIdx     = jsonSensorIndex.as<uint8_t>();
-        m_channelIdx    = jsonChannelIndex.as<uint8_t>();
-        m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
+        m_sensorIdx       = jsonSensorIndex.as<uint8_t>();
+        m_channelIdx      = jsonChannelIndex.as<uint8_t>();
+        m_sensorChannel   = getChannel(m_sensorIdx, m_channelIdx);
 
         m_hasTopicChanged = true;
 
-        status = true;
+        status            = true;
     }
 
     return status;
@@ -244,8 +244,8 @@ bool SensorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
 void SensorPlugin::update()
 {
-    String          text;
-    const uint32_t  PRECISION   = 2U;
+    String         text;
+    const uint32_t PRECISION = 2U;
 
     if (nullptr == m_sensorChannel)
     {

@@ -69,13 +69,13 @@ IPluginMaintenance* PluginFactory::createPlugin(const char* name)
 
 IPluginMaintenance* PluginFactory::createPlugin(const char* name, uint16_t uid)
 {
-    IPluginMaintenance*         plugin                  = nullptr;
-    uint8_t                     pluginTypeListLength    = 0U;
-    const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
-    uint8_t                     idx                     = 0U;
+    IPluginMaintenance*        plugin               = nullptr;
+    uint8_t                    pluginTypeListLength = 0U;
+    const PluginList::Element* pluginTypeList       = PluginList::getList(pluginTypeListLength);
+    uint8_t                    idx                  = 0U;
 
     /* Walk through registry and find the requested plugin type. */
-    while((nullptr == plugin) && (pluginTypeListLength > idx))
+    while ((nullptr == plugin) && (pluginTypeListLength > idx))
     {
         const PluginList::Element* elem = &pluginTypeList[idx];
 
@@ -107,7 +107,7 @@ void PluginFactory::destroyPlugin(const IPluginMaintenance* plugin)
         {
             ListOfPlugins::iterator it = m_plugins.begin();
 
-            while(it != m_plugins.end())
+            while (it != m_plugins.end())
             {
                 IPluginMaintenance* currentPlugin = *it;
 
@@ -136,9 +136,9 @@ void PluginFactory::destroyPlugin(const IPluginMaintenance* plugin)
 
 uint16_t PluginFactory::generateUID()
 {
-    uint16_t    uid;
-    bool        isFound;
-    
+    uint16_t uid;
+    bool     isFound;
+
     do
     {
         isFound = false;
@@ -149,7 +149,7 @@ uint16_t PluginFactory::generateUID()
             ListOfPlugins::const_iterator it = m_plugins.begin();
 
             /* Ensure that UID is really unique. */
-            while((it != m_plugins.end()) && (false == isFound))
+            while ((it != m_plugins.end()) && (false == isFound))
             {
                 const IPluginMaintenance* currentPlugin = *it;
 
@@ -162,7 +162,7 @@ uint16_t PluginFactory::generateUID()
             }
         }
     }
-    while(true == isFound);
+    while (true == isFound);
 
     return uid;
 }

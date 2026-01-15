@@ -70,8 +70,7 @@ const char* View::IMAGE_PATH_PLAY_ICON  = "/plugins/VolumioPlugin/volumioPlay.bm
 const char* View::IMAGE_PATH_PAUSE_ICON = "/plugins/VolumioPlugin/volumioPause.bmp";
 
 /* Initialize the icon mapping table. */
-const char* View::ICON_TABLE[ICON_MAX]      =
-{
+const char* View::ICON_TABLE[ICON_MAX]  = {
     /* The order follows the order in the Icon enumeration! */
     View::IMAGE_PATH_STD_ICON,
     View::IMAGE_PATH_STOP_ICON,

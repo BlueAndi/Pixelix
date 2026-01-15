@@ -65,8 +65,8 @@
 
 bool AudioService::start()
 {
-    bool        isSuccessful    = true;
-    AudioDrv&   audioDrv        = AudioDrv::getInstance();
+    bool      isSuccessful = true;
+    AudioDrv& audioDrv     = AudioDrv::getInstance();
 
     if ((IoPin::NC == CONFIG_PIN_I2S_WS) ||
         (IoPin::NC == CONFIG_PIN_I2S_SC) ||
@@ -92,8 +92,8 @@ bool AudioService::start()
         else
         {
             uint8_t idx = 0U;
-            
-            while(MAX_TONE_DETECTORS > idx)
+
+            while (MAX_TONE_DETECTORS > idx)
             {
                 if (false == audioDrv.registerObserver(m_audioToneDetector[idx]))
                 {
@@ -120,12 +120,12 @@ bool AudioService::start()
 
 void AudioService::stop()
 {
-    AudioDrv&   audioDrv    = AudioDrv::getInstance();
-    uint8_t     idx         = 0U;
+    AudioDrv& audioDrv = AudioDrv::getInstance();
+    uint8_t   idx      = 0U;
 
     audioDrv.unregisterObserver(m_spectrumAnalyzer);
 
-    while(MAX_TONE_DETECTORS > idx)
+    while (MAX_TONE_DETECTORS > idx)
     {
         audioDrv.unregisterObserver(m_audioToneDetector[idx]);
 

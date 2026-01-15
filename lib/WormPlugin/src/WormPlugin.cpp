@@ -68,7 +68,7 @@ void WormPlugin::start(uint16_t width, uint16_t height)
     UTIL_NOT_USED(width);
     UTIL_NOT_USED(height);
 
-    m_worms = new(std::nothrow) Pos[MAX_WORMS * MAX_WORM_LENGTH];
+    m_worms = new (std::nothrow) Pos[MAX_WORMS * MAX_WORM_LENGTH];
 
     if (nullptr != m_worms)
     {
@@ -107,7 +107,7 @@ void WormPlugin::inactive()
 }
 
 void WormPlugin::update(YAGfx& gfx)
-{    
+{
     if (m_timer.isTimeout())
     {
         if (false == m_isExplosion)
@@ -150,8 +150,8 @@ void WormPlugin::update(YAGfx& gfx)
             {
                 createAllWorms(VDISPLAY_WIDTH, VDISPLAY_HEIGHT);
 
-                m_isExplosion       = false;
-                m_explosionRadius   = 0U;
+                m_isExplosion     = false;
+                m_explosionRadius = 0U;
             }
             else
             {
@@ -172,10 +172,10 @@ void WormPlugin::update(YAGfx& gfx)
 
 void WormPlugin::placeMealRandom(uint16_t width, uint16_t height)
 {
-    uint8_t count       = 0U;
-    uint8_t mealIndex   = 0U;
+    uint8_t count     = 0U;
+    uint8_t mealIndex = 0U;
 
-    while(MAX_MEALS > count)
+    while (MAX_MEALS > count)
     {
         m_meal[mealIndex] = { static_cast<int16_t>(random(width - MEAL_SIZE)), static_cast<int16_t>(random(height - MEAL_SIZE)) };
 
@@ -194,9 +194,9 @@ void WormPlugin::eatMeal(uint8_t mealIndex)
 {
     if (0U < m_mealLen)
     {
-        uint8_t idx = mealIndex;    
+        uint8_t idx = mealIndex;
 
-        while((m_mealLen - 1U) > idx)
+        while ((m_mealLen - 1U) > idx)
         {
             m_meal[idx].x = m_meal[idx + 1U].x;
             m_meal[idx].y = m_meal[idx + 1U].y;
@@ -217,7 +217,7 @@ void WormPlugin::createWorm(uint8_t wormId, uint16_t width, uint16_t height)
         size_t  wormHeadIdx = wormPos + 0U;
         size_t  wormBodyIdx = wormPos + 1U;
         Pos     pos;
-        uint8_t colorAngle  = static_cast<uint8_t>(random(UINT8_MAX + 1U));
+        uint8_t colorAngle = static_cast<uint8_t>(random(UINT8_MAX + 1U));
 
         /* A worm has a random body color. */
         m_wormBodyColor[wormId].turnColorWheel(colorAngle);
@@ -234,12 +234,12 @@ void WormPlugin::createWorm(uint8_t wormId, uint16_t width, uint16_t height)
                 pos.x = static_cast<int16_t>(random(width - 2 * WORM_SIZE) + WORM_SIZE);
                 pos.y = static_cast<int16_t>(random(height - 2 * WORM_SIZE) + WORM_SIZE);
             }
-            while(true == isCollision(pos));
+            while (true == isCollision(pos));
 
             m_worms[wormHeadIdx] = pos;
 
             /* Place one part of the body random */
-            switch(direction)
+            switch (direction)
             {
             case 0:
                 pos.x += 1;
@@ -260,12 +260,11 @@ void WormPlugin::createWorm(uint8_t wormId, uint16_t width, uint16_t height)
             default:
                 break;
             }
-
         }
-        while(true == isCollision(pos));
+        while (true == isCollision(pos));
 
-        m_worms[wormBodyIdx]    = pos;
-        m_wormLen[wormId]       = MIN_WORM_LENGTH;
+        m_worms[wormBodyIdx] = pos;
+        m_wormLen[wormId]    = MIN_WORM_LENGTH;
     }
 }
 
@@ -273,7 +272,7 @@ void WormPlugin::createAllWorms(uint16_t width, uint16_t height)
 {
     uint8_t wormId = 0U;
 
-    while(MAX_WORMS > wormId)
+    while (MAX_WORMS > wormId)
     {
         createWorm(wormId, width, height);
 
@@ -294,12 +293,12 @@ bool WormPlugin::isCollision(const Pos& pos)
     bool    isCollision = false;
     uint8_t wormId      = 0U;
 
-    while((MAX_WORMS > wormId) && (false == isCollision))
+    while ((MAX_WORMS > wormId) && (false == isCollision))
     {
         size_t wormPos = wormPosInArray(wormId);
         size_t idx     = 0U;
 
-        while((m_wormLen[wormId] > idx) && (false == isCollision))
+        while ((m_wormLen[wormId] > idx) && (false == isCollision))
         {
             if ((m_worms[wormPos + idx].x == pos.x) &&
                 (m_worms[wormPos + idx].y == pos.y))
@@ -320,10 +319,10 @@ bool WormPlugin::isCollision(const Pos& pos)
 
 bool WormPlugin::isMealFound(const Pos& pos, uint8_t& idx)
 {
-    bool    isSuccessful    = false;
-    uint8_t mealIdx         = 0U;
+    bool    isSuccessful = false;
+    uint8_t mealIdx      = 0U;
 
-    while((m_mealLen > mealIdx) && (false == isSuccessful))
+    while ((m_mealLen > mealIdx) && (false == isSuccessful))
     {
         if ((m_meal[mealIdx].x == pos.x) &&
             (m_meal[mealIdx].y == pos.y))
@@ -346,17 +345,17 @@ bool WormPlugin::isMealFound(const Pos& pos, uint8_t& idx)
 
 bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
 {
-    bool    isSuccessful        = false;
+    bool isSuccessful = false;
 
     if ((nullptr != m_worms) &&
         (MAX_WORMS > wormId))
     {
-        Pos     possibleMovements[4U];  /* 4 directions are possible left/right/up/down */
+        Pos     possibleMovements[4U]; /* 4 directions are possible left/right/up/down */
         uint8_t count               = 0U;
         size_t  wormPos             = wormPosInArray(wormId);
 
         /* Check for left */
-        possibleMovements[count] = m_worms[wormPos];
+        possibleMovements[count]    = m_worms[wormPos];
         possibleMovements[count].x -= 1;
 
         if (0 > possibleMovements[count].x)
@@ -370,7 +369,7 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
         }
 
         /* Check for right */
-        possibleMovements[count] = m_worms[wormPos];
+        possibleMovements[count]    = m_worms[wormPos];
         possibleMovements[count].x += 1;
 
         if (width <= possibleMovements[count].x)
@@ -384,7 +383,7 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
         }
 
         /* Check for up */
-        possibleMovements[count] = m_worms[wormPos];
+        possibleMovements[count]    = m_worms[wormPos];
         possibleMovements[count].y -= 1;
 
         if (0 > possibleMovements[count].y)
@@ -398,7 +397,7 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
         }
 
         /* Check for down */
-        possibleMovements[count] =m_worms[wormPos];
+        possibleMovements[count]    = m_worms[wormPos];
         possibleMovements[count].y += 1;
 
         if (height <= possibleMovements[count].y)
@@ -423,8 +422,8 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
         /* The worm will move. */
         else
         {
-            uint8_t possibilityIndex    = static_cast<uint8_t>(random(count));
-            uint8_t mealIndex           = 0U;
+            uint8_t possibilityIndex = static_cast<uint8_t>(random(count));
+            uint8_t mealIndex        = 0U;
 
             if (true == isMealFound(possibleMovements[possibilityIndex], mealIndex))
             {
@@ -442,7 +441,7 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
             {
                 size_t idx = m_wormLen[wormId] - 1U;
 
-                while(0 < idx)
+                while (0 < idx)
                 {
                     m_worms[wormPos + idx] = m_worms[wormPos + idx - 1U];
 
@@ -451,7 +450,7 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
 
                 m_worms[wormPos + 0U] = possibleMovements[possibilityIndex];
             }
-            
+
             isSuccessful = true;
         }
     }
@@ -461,10 +460,10 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
 
 bool WormPlugin::moveAllWormsRandom(uint16_t width, uint16_t height)
 {
-    bool    isSuccessful    = false;
-    uint8_t wormId          = 0U;
+    bool    isSuccessful = false;
+    uint8_t wormId       = 0U;
 
-    while(MAX_WORMS > wormId)
+    while (MAX_WORMS > wormId)
     {
         if (true == moveWormRandom(wormId, width, height))
         {
@@ -482,21 +481,21 @@ void WormPlugin::drawWorm(uint8_t wormId, YAGfx& gfx)
     if ((nullptr != m_worms) &&
         (MAX_WORMS > wormId))
     {
-        size_t      wormPos         = wormPosInArray(wormId);
-        size_t      idx             = 1U; /* 0 is the head, body starts at 1. */
-        Color       bodyColor       = m_wormBodyColor[wormId];
-        uint8_t     brightnessDelta = UINT8_MAX / (m_wormLen[wormId] - 1U); /* Consider only the body without head. */
+        size_t  wormPos         = wormPosInArray(wormId);
+        size_t  idx             = 1U; /* 0 is the head, body starts at 1. */
+        Color   bodyColor       = m_wormBodyColor[wormId];
+        uint8_t brightnessDelta = UINT8_MAX / (m_wormLen[wormId] - 1U); /* Consider only the body without head. */
 
         /* Draw worm head */
-        gfx.fillRect(m_worms[wormPos + 0U].x * WORM_SIZE,  m_worms[wormPos + 0U].y * WORM_SIZE, WORM_SIZE, WORM_SIZE, WORM_HEAD_COLOR);
+        gfx.fillRect(m_worms[wormPos + 0U].x * WORM_SIZE, m_worms[wormPos + 0U].y * WORM_SIZE, WORM_SIZE, WORM_SIZE, WORM_HEAD_COLOR);
 
         /* Draw worm body */
-        while(m_wormLen[wormId] > idx)
+        while (m_wormLen[wormId] > idx)
         {
             /* The body gets darker till the end. */
             bodyColor.setIntensity(UINT8_MAX - brightnessDelta * (idx - 1U));
 
-            gfx.fillRect(m_worms[wormPos + idx].x * WORM_SIZE,  m_worms[wormPos + idx].y * WORM_SIZE, WORM_SIZE, WORM_SIZE, bodyColor);
+            gfx.fillRect(m_worms[wormPos + idx].x * WORM_SIZE, m_worms[wormPos + idx].y * WORM_SIZE, WORM_SIZE, WORM_SIZE, bodyColor);
             ++idx;
         }
     }
@@ -506,7 +505,7 @@ void WormPlugin::drawAllWorms(YAGfx& gfx)
 {
     uint8_t wormId = 0U;
 
-    while(MAX_WORMS > wormId)
+    while (MAX_WORMS > wormId)
     {
         drawWorm(wormId, gfx);
         ++wormId;
@@ -517,9 +516,9 @@ void WormPlugin::drawMeal(YAGfx& gfx)
 {
     size_t idx = 0U;
 
-    while(m_mealLen > idx)
+    while (m_mealLen > idx)
     {
-        gfx.fillRect(m_meal[idx].x * MEAL_SIZE,  m_meal[idx].y * MEAL_SIZE, MEAL_SIZE, MEAL_SIZE, MEAL_COLOR);
+        gfx.fillRect(m_meal[idx].x * MEAL_SIZE, m_meal[idx].y * MEAL_SIZE, MEAL_SIZE, MEAL_SIZE, MEAL_COLOR);
         ++idx;
     }
 }

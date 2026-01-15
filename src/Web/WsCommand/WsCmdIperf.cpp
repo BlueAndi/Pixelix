@@ -92,7 +92,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, uint32_t clientId)
         {
             msg += "1";
         }
-        
+
         sendResponse(server, clientId, msg);
     }
     /* Start iperf? */
@@ -105,7 +105,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, uint32_t clientId)
         else
         {
             String msg;
-            
+
             preparePositiveResponse(msg);
 
             msg += "1";
@@ -113,8 +113,13 @@ void WsCmdIperf::execute(AsyncWebSocket* server, uint32_t clientId)
             LOG_INFO("iperf started: mode = %s-%s sip = %u.%u.%u.%u:%u, interval = %us, time = %us",
                 (m_cfg.flag & IPERF_FLAG_TCP) ? "tcp" : "udp",
                 (m_cfg.flag & IPERF_FLAG_SERVER) ? "server" : "client",
-                m_cfg.sip & 0xffU, (m_cfg.sip >> 8) & 0xffU, (m_cfg.sip >> 16) & 0xffU, (m_cfg.sip >>24) & 0xffU, m_cfg.sport,
-                m_cfg.interval, m_cfg.time);
+                m_cfg.sip & 0xffU,
+                (m_cfg.sip >> 8) & 0xffU,
+                (m_cfg.sip >> 16) & 0xffU,
+                (m_cfg.sip >> 24) & 0xffU,
+                m_cfg.sport,
+                m_cfg.interval,
+                m_cfg.time);
 
             sendResponse(server, clientId, msg);
         }
@@ -129,9 +134,9 @@ void WsCmdIperf::execute(AsyncWebSocket* server, uint32_t clientId)
         else
         {
             String msg;
-            
+
             preparePositiveResponse(msg);
-            
+
             msg += "0";
 
             LOG_INFO("iperf stopped.");
@@ -141,12 +146,12 @@ void WsCmdIperf::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");        
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
 
-    m_isError   = false;
-    m_parCnt    = 0U;
-    m_cmd       = CMD_STATUS;
+    m_isError = false;
+    m_parCnt  = 0U;
+    m_cmd     = CMD_STATUS;
 
     setCfgDefault();
 }
@@ -178,7 +183,8 @@ void WsCmdIperf::setPar(const char* par)
             }
             else if (0 == strcmp(par, "TCP"))
             {
-                m_cfg.flag = IPERF_FLAG_SERVER | IPERF_FLAG_TCP;;
+                m_cfg.flag = IPERF_FLAG_SERVER | IPERF_FLAG_TCP;
+                ;
             }
             else if (0 == strcmp(par, "UDP"))
             {
@@ -245,13 +251,13 @@ void WsCmdIperf::setPar(const char* par)
 void WsCmdIperf::setCfgDefault()
 {
     /* Default configuration */
-    m_cfg.flag      = IPERF_FLAG_SERVER | IPERF_FLAG_TCP;
-    m_cfg.sip       = WiFi.localIP();
-    m_cfg.sport     = IPERF_DEFAULT_PORT;
-    m_cfg.dip       = 0U;
-    m_cfg.dport     = IPERF_DEFAULT_PORT;
-    m_cfg.interval  = IPERF_DEFAULT_INTERVAL;
-    m_cfg.time      = IPERF_DEFAULT_TIME;
+    m_cfg.flag     = IPERF_FLAG_SERVER | IPERF_FLAG_TCP;
+    m_cfg.sip      = WiFi.localIP();
+    m_cfg.sport    = IPERF_DEFAULT_PORT;
+    m_cfg.dip      = 0U;
+    m_cfg.dport    = IPERF_DEFAULT_PORT;
+    m_cfg.interval = IPERF_DEFAULT_INTERVAL;
+    m_cfg.time     = IPERF_DEFAULT_TIME;
 }
 
 /******************************************************************************
