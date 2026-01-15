@@ -4,7 +4,7 @@
 ** Copyright 1999 Brian J. Swetland
 ** Copyright 1999 Vassilii Khachaturov
 ** Portions (of vt100.c/vt100.h) copyright Dan Marks
-** Copyright 2020 - 2025 Andreas Merkle <web@blue-andi.de>
+** Copyright 2020 - 2026 Andreas Merkle <web@blue-andi.de>
 ** 
 ** All rights reserved.
 **
