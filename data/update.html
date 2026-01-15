@@ -142,8 +142,9 @@
             }
 
             function updateProgressBar(id, progress) {
-                $("#" + id).css("width", progress + "%").attr("aria-valuenow", progress);
-                $("#" + id).text(progress + "%");
+                var progressInt = Math.round(progress);
+                $("#" + id).css("width", progressInt + "%").attr("aria-valuenow", progressInt);
+                $("#" + id).text(progressInt + "%");
             }
 
             function getConfigurationFiles() {
