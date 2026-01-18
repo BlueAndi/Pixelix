@@ -49,7 +49,7 @@
 #include <YAGfxCanvas.h>
 #include <YAGfxBitmap.h>
 #include <SimpleTimer.hpp>
-#include <IGifLoader.h>
+#include <IImageLoader.h>
 #include <TypedAllocator.hpp>
 #include <PsAllocator.hpp>
 
@@ -131,11 +131,11 @@ public:
      *
      * @param[in] fs        Filesystem to use
      * @param[in] fileName  Name of the GIF file.
-     * @param[in] loader    GIF file loader to use.
+     * @param[in] loader    Image file loader to use.
      *
      * @return Status informtion
      */
-    Ret open(FS& fs, const String& fileName, IGifLoader& loader);
+    Ret open(FS& fs, const String& fileName, IImageLoader& loader);
 
     /**
      * Close the GIF file.
@@ -236,7 +236,7 @@ private:
     PaletteColorAllocator                        m_paletteColorAllocator;  /**< Palette color allocator. */
     DataAllocator                                m_dataAllocator;          /**< uint8_t allocator. */
     YAGfxDynamicBitmap                           m_bitmap;                 /**< The bitmap contains the last drawn scene. */
-    IGifLoader*                                  m_gifLoader;              /**< GIF file loader used to read the file. */
+    IImageLoader*                                m_gifLoader;              /**< GIF file loader used to read the file. */
     YAGfxCanvas                                  m_canvas;                 /**< Canvas used for drawing each scene. Its position and size follows the image descriptor. */
     uint8_t                                      m_bgColorIndex;           /**< Background color index. Used by disposal method. */
     PaletteColor*                                m_globalColorTable;       /**< Global color table. */

@@ -23,6 +23,8 @@
         "name": "Fonts"
     }, {
         "name": "Utilities"
+    }, {
+        "name": "libwebp"
     }],
     "frameworks": "*",
     "platforms": "*"

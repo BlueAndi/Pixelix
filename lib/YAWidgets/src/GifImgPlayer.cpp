@@ -35,8 +35,6 @@
  *****************************************************************************/
 #include "GifImgPlayer.h"
 #include "LzwDecoder.h"
-#include "GifFileLoader.h"
-#include "GifFileToMemLoader.h"
 #include <Logging.h>
 #include <TypedAllocator.hpp>
 
@@ -372,7 +370,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
     return *this;
 }
 
-GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, IGifLoader& loader)
+GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, IImageLoader& loader)
 {
     Ret ret = RET_OK;
 

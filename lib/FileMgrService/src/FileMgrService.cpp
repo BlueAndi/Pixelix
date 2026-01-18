@@ -41,6 +41,7 @@
 #include <SettingsService.h>
 #include <TopicHandlerService.h>
 #include <JsonFile.h>
+#include <BitmapWidget.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,10 +70,6 @@ const char* FileMgrService::ENTITY_ID         = "fileMgrService";
 const char* FileMgrService::TOPIC_FILES       = "files";
 const char* FileMgrService::TOPIC_UPLOAD      = "upload";
 const char* FileMgrService::TOPIC_REMOVE      = "remove";
-const char* FileMgrService::FILE_EXTENSIONS[] = {
-    ".bmp",
-    ".gif"
-};
 
 /******************************************************************************
  * Public Methods
@@ -130,7 +127,7 @@ bool FileMgrService::start()
     }
 
     /* Add new files to file table. */
-    if (true == scanForFiles(m_fileTable, FILE_EXTENSIONS, UTIL_ARRAY_NUM(FILE_EXTENSIONS)))
+    if (true == scanForFiles(m_fileTable, BitmapWidget::IMAGE_FILE_EXTENSIONS, BitmapWidget::IMAGE_FILE_EXTENSIONS_COUNT))
     {
         m_hasFileTableChanged = true;
         m_isDirty             = true;
@@ -467,30 +464,14 @@ bool FileMgrService::isUploadAccepted(const String& topic, const String& srcFile
 
     if (true == topic.equals(TOPIC_UPLOAD))
     {
-        size_t idx;
-
         /* Accept only files with the right file extension. */
-        for (idx = 0U; idx < UTIL_ARRAY_NUM(FILE_EXTENSIONS); ++idx)
-        {
-            int32_t fileExtIdx = srcFilename.lastIndexOf(".");
-
-            if (0 <= fileExtIdx)
-            {
-                String fileExt = srcFilename.substring(fileExtIdx);
-
-                if (true == fileExt.equalsIgnoreCase(FILE_EXTENSIONS[idx]))
-                {
-                    isAccepted = true;
-                    break;
-                }
-            }
-        }
-
-        if (true == isAccepted)
+        if (true == BitmapWidget::isImageTypeSupported(srcFilename))
         {
             dstFilename  = WORKING_DIRECTORY;
             dstFilename += "/";
             dstFilename += srcFilename;
+
+            isAccepted = true;
         }
     }
 

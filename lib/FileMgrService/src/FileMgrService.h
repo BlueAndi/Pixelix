@@ -194,11 +194,6 @@ private:
     static const char* TOPIC_REMOVE;
 
     /**
-     * Supported file extensions.
-     */
-    static const char* FILE_EXTENSIONS[];
-
-    /**
      * Timer period in ms to check whether the file table is dirty and needs
      * to be saved to the configuration file.
      *
