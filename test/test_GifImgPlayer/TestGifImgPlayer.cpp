@@ -34,8 +34,8 @@
  * Includes
  *****************************************************************************/
 #include <unity.h>
-#include <GifFileLoader.h>
-#include <GifFileToMemLoader.h>
+#include <ImageFileLoader.h>
+#include <ImageFileToMemLoader.h>
 #include <GifImgPlayer.h>
 #include <Util.h>
 #include <FS.h>
@@ -70,6 +70,8 @@ static void testGifImgPlayerMemAnimated();
 /** Expected image width. */
 static const uint32_t EXPECTED_DATA_WIDTH = 10U;
 
+/* clang-format off */
+
 /** Expected image data.  */
 static const uint32_t EXPECTED_DATA[]     = {
     /*          0          1          2          3          4          5          6          7          8          9 */
@@ -84,6 +86,8 @@ static const uint32_t EXPECTED_DATA[]     = {
     /* 8 */ 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U,
     /* 9 */ 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U
 };
+
+/* clang-format on */
 
 /******************************************************************************
  * Public Methods
@@ -147,15 +151,15 @@ extern void tearDown(void)
  */
 static void testGifImgPlayerStatic()
 {
-    GifFileLoader gifFileLoader;
-    GifImgPlayer  gifImgPlayer;
-    YAGfxTest     testGfx;
-    YAGfxCanvas   canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS            fileSystem;
-    int32_t       x;
-    int32_t       y;
-    int32_t       width  = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
-    int32_t       height = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
+    ImageFileLoader gifFileLoader;
+    GifImgPlayer    gifImgPlayer;
+    YAGfxTest       testGfx;
+    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS              fileSystem;
+    int32_t         x;
+    int32_t         y;
+    int32_t         width  = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
+    int32_t         height = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
 
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif", gifFileLoader));
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
@@ -195,11 +199,11 @@ static void testGifImgPlayerStatic()
  */
 static void testGifImgPlayerAnimated()
 {
-    GifFileLoader gifFileLoader;
-    GifImgPlayer  gifImgPlayer;
-    YAGfxTest     testGfx;
-    YAGfxCanvas   canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS            fileSystem;
+    ImageFileLoader gifFileLoader;
+    GifImgPlayer    gifImgPlayer;
+    YAGfxTest       testGfx;
+    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS              fileSystem;
 
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif", gifFileLoader));
 
@@ -216,15 +220,15 @@ static void testGifImgPlayerAnimated()
  */
 static void testGifImgPlayerMemStatic()
 {
-    GifFileToMemLoader gifFileLoader;
-    GifImgPlayer       gifImgPlayer;
-    YAGfxTest          testGfx;
-    YAGfxCanvas        canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS                 fileSystem;
-    int32_t            x;
-    int32_t            y;
-    int32_t            width  = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
-    int32_t            height = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
+    ImageFileToMemLoader gifFileLoader;
+    GifImgPlayer         gifImgPlayer;
+    YAGfxTest            testGfx;
+    YAGfxCanvas          canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS                   fileSystem;
+    int32_t              x;
+    int32_t              y;
+    int32_t              width  = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
+    int32_t              height = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
 
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif", gifFileLoader));
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
@@ -264,11 +268,11 @@ static void testGifImgPlayerMemStatic()
  */
 static void testGifImgPlayerMemAnimated()
 {
-    GifFileToMemLoader gifFileLoader;
-    GifImgPlayer       gifImgPlayer;
-    YAGfxTest          testGfx;
-    YAGfxCanvas        canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS                 fileSystem;
+    ImageFileToMemLoader gifFileLoader;
+    GifImgPlayer         gifImgPlayer;
+    YAGfxTest            testGfx;
+    YAGfxCanvas          canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS                   fileSystem;
 
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif", gifFileLoader));
 
