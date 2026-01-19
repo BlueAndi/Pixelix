@@ -48,8 +48,9 @@
 #include <FS.h>
 
 #include "Widget.hpp"
-#include "GifFileToMemLoader.h"
+#include "ImageFileToMemLoader.h"
 #include "GifImgPlayer.h"
+#include "WebpImgPlayer.h"
 #include "Alignment.h"
 
 /******************************************************************************
@@ -65,6 +66,8 @@
  * Supported are the following formats:
  * - Bitmap (.bmp)
  * - GIF image (.gif)
+ * - WebP image (.webp)
+ * - PNG image (.png)
  */
 class BitmapWidget : public Widget
 {
@@ -82,8 +85,9 @@ public:
         Widget(WIDGET_TYPE, width, height, x, y),
         m_imgType(IMG_TYPE_NO_IMAGE),
         m_bitmap(),
-        m_gifFileLoader(),
+        m_imageFileLoader(),
         m_gifPlayer(),
+        m_webpPlayer(),
         m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
         m_vAlign(Alignment::Vertical::VERTICAL_TOP),
         m_hAlignPosX(0),
@@ -100,8 +104,9 @@ public:
         Widget(widget),
         m_imgType(widget.m_imgType),
         m_bitmap(widget.m_bitmap),
-        m_gifFileLoader(widget.m_gifFileLoader),
+        m_imageFileLoader(widget.m_imageFileLoader),
         m_gifPlayer(widget.m_gifPlayer),
+        m_webpPlayer(widget.m_webpPlayer),
         m_hAlign(widget.m_hAlign),
         m_vAlign(widget.m_vAlign),
         m_hAlignPosX(widget.m_hAlignPosX),
@@ -219,6 +224,15 @@ public:
         return IMG_TYPE_NO_IMAGE == m_imgType;
     }
 
+    /**
+     * Check, if the image type is supported.
+     *
+     * @param[in] path  Image file path
+     *
+     * @return If image type is supported, it will return true otherwise false.
+     */
+    static bool isImageTypeSupported(const String& path);
+
     /** Widget type string */
     static const char* WIDGET_TYPE;
 
@@ -232,6 +246,26 @@ public:
      */
     static const char* FILE_EXT_GIF;
 
+    /**
+     * Filename extension of WebP image file.
+     */
+    static const char* FILE_EXT_WEBP;
+
+    /**
+     * Filename extension of PNG image file.
+     */
+    static const char* FILE_EXT_PNG;
+
+    /**
+     * Supported image file extensions.
+     */
+    static const char* IMAGE_FILE_EXTENSIONS[];
+
+    /**
+     * Number of supported image file extensions.
+     */
+    static const size_t IMAGE_FILE_EXTENSIONS_COUNT;
+
 private:
 
     /**
@@ -241,17 +275,20 @@ private:
     {
         IMG_TYPE_NO_IMAGE = 0, /**< No image */
         IMG_TYPE_BMP,          /**< BMP image */
-        IMG_TYPE_GIF           /**< GIF image */
+        IMG_TYPE_GIF,          /**< GIF image */
+        IMG_TYPE_WEBP,         /**< WebP image */
+        IMG_TYPE_PNG           /**< PNG image */
     };
 
-    ImgType               m_imgType;       /**< Current image type. */
-    YAGfxDynamicBitmap    m_bitmap;        /**< Bitmap image. */
-    GifFileToMemLoader    m_gifFileLoader; /**< GIF file loader used to read the file from memory. */
-    GifImgPlayer          m_gifPlayer;     /**< GIF image player. */
-    Alignment::Horizontal m_hAlign;        /**< Horizontal alignment. */
-    Alignment::Vertical   m_vAlign;        /**< Vertical alignment. */
-    int16_t               m_hAlignPosX;    /**< x-coordinate derived from horizontal alignment. */
-    int16_t               m_vAlignPosY;    /**< y-coordinate derived from vertical alignment. */
+    ImgType               m_imgType;         /**< Current image type. */
+    YAGfxDynamicBitmap    m_bitmap;          /**< Bitmap image. */
+    ImageFileToMemLoader  m_imageFileLoader; /**< Image file loader used to read the file from memory. */
+    GifImgPlayer          m_gifPlayer;       /**< GIF image player. */
+    WebpImgPlayer         m_webpPlayer;      /**< WebP image player. */
+    Alignment::Horizontal m_hAlign;          /**< Horizontal alignment. */
+    Alignment::Vertical   m_vAlign;          /**< Vertical alignment. */
+    int16_t               m_hAlignPosX;      /**< x-coordinate derived from horizontal alignment. */
+    int16_t               m_vAlignPosY;      /**< y-coordinate derived from vertical alignment. */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -267,6 +304,14 @@ private:
         else if (IMG_TYPE_GIF == m_imgType)
         {
             (void)m_gifPlayer.play(gfx, m_hAlignPosX, m_vAlignPosY);
+        }
+        else if (IMG_TYPE_WEBP == m_imgType)
+        {
+            (void)m_webpPlayer.play(gfx, m_hAlignPosX, m_vAlignPosY);
+        }
+        else if (IMG_TYPE_PNG == m_imgType)
+        {
+            gfx.drawBitmap(m_hAlignPosX, m_vAlignPosY, m_bitmap);
         }
         else
         {
@@ -299,6 +344,26 @@ private:
      * @return If successful loaded it will return true otherwise false.
      */
     bool loadGIF(FS& fs, const String& filename);
+
+    /**
+     * Load WebP image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadWEBP(FS& fs, const String& filename);
+
+    /**
+     * Load PNG image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadPNG(FS& fs, const String& filename);
 };
 
 /******************************************************************************
