@@ -280,15 +280,14 @@ private:
         IMG_TYPE_PNG           /**< PNG image */
     };
 
-    ImgType               m_imgType;         /**< Current image type. */
-    YAGfxDynamicBitmap    m_bitmap;          /**< Bitmap image. */
-    ImageFileToMemLoader  m_imageFileLoader; /**< Image file loader used to read the file from memory. */
-    GifImgPlayer          m_gifPlayer;       /**< GIF image player. */
-    WebpImgPlayer         m_webpPlayer;      /**< WebP image player. */
-    Alignment::Horizontal m_hAlign;          /**< Horizontal alignment. */
-    Alignment::Vertical   m_vAlign;          /**< Vertical alignment. */
-    int16_t               m_hAlignPosX;      /**< x-coordinate derived from horizontal alignment. */
-    int16_t               m_vAlignPosY;      /**< y-coordinate derived from vertical alignment. */
+    ImgType               m_imgType;       /**< Current image type. */
+    YAGfxDynamicBitmap    m_bitmap;        /**< Bitmap image. */
+    ImageFileToMemLoader  m_gifFileLoader; /**< GIF file loader used to read the file from memory. */
+    GifImgPlayer          m_gifPlayer;     /**< GIF image player. */
+    Alignment::Horizontal m_hAlign;        /**< Horizontal alignment. */
+    Alignment::Vertical   m_vAlign;        /**< Vertical alignment. */
+    int16_t               m_hAlignPosX;    /**< x-coordinate derived from horizontal alignment. */
+    int16_t               m_vAlignPosY;    /**< y-coordinate derived from vertical alignment. */
 
     /**
      * Paint the widget with the given graphics interface.
