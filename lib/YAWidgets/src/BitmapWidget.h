@@ -48,7 +48,7 @@
 #include <FS.h>
 
 #include "Widget.hpp"
-#include "GifFileToMemLoader.h"
+#include "ImageFileToMemLoader.h"
 #include "GifImgPlayer.h"
 #include "Alignment.h"
 
@@ -246,7 +246,7 @@ private:
 
     ImgType               m_imgType;       /**< Current image type. */
     YAGfxDynamicBitmap    m_bitmap;        /**< Bitmap image. */
-    GifFileToMemLoader    m_gifFileLoader; /**< GIF file loader used to read the file from memory. */
+    ImageFileToMemLoader  m_gifFileLoader; /**< GIF file loader used to read the file from memory. */
     GifImgPlayer          m_gifPlayer;     /**< GIF image player. */
     Alignment::Horizontal m_hAlign;        /**< Horizontal alignment. */
     Alignment::Vertical   m_vAlign;        /**< Vertical alignment. */
