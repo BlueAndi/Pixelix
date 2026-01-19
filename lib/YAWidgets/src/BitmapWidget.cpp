@@ -61,13 +61,26 @@
  *****************************************************************************/
 
 /* Initialize bitmap widget type. */
-const char* BitmapWidget::WIDGET_TYPE     = "bitmap";
+const char* BitmapWidget::WIDGET_TYPE             = "bitmap";
 
 /* Initialize bitmap image filename extension. */
-const char* BitmapWidget::FILE_EXT_BITMAP = "bmp";
+const char* BitmapWidget::FILE_EXT_BITMAP         = "bmp";
 
 /* Initialize GIF image filename extension. */
-const char* BitmapWidget::FILE_EXT_GIF    = "gif";
+const char* BitmapWidget::FILE_EXT_GIF            = "gif";
+
+/* Initialize WebP image filename extension. */
+const char* BitmapWidget::FILE_EXT_WEBP           = "webp";
+
+/* Initialize supported image file extensions. */
+const char* BitmapWidget::IMAGE_FILE_EXTENSIONS[] = {
+    FILE_EXT_BITMAP,
+    FILE_EXT_GIF,
+    FILE_EXT_WEBP
+};
+
+/* Initialize number of supported image file extensions. */
+const size_t BitmapWidget::IMAGE_FILE_EXTENSIONS_COUNT = sizeof(BitmapWidget::IMAGE_FILE_EXTENSIONS) / sizeof(BitmapWidget::IMAGE_FILE_EXTENSIONS[0U]);
 
 /******************************************************************************
  * Public Methods
@@ -166,6 +179,24 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
 
     return isSuccessful;
+}
+
+bool BitmapWidget::isImageTypeSupported(const String& path)
+{
+    bool isSupported = false;
+
+    for (size_t idx = 0U; idx < sizeof(IMAGE_FILE_EXTENSIONS) / sizeof(IMAGE_FILE_EXTENSIONS[0U]); ++idx)
+    {
+        const char* ext = IMAGE_FILE_EXTENSIONS[idx];
+
+        if (true == path.endsWith(ext))
+        {
+            isSupported = true;
+            break;
+        }
+    }
+
+    return isSupported;
 }
 
 /******************************************************************************

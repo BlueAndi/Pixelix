@@ -219,6 +219,15 @@ public:
         return IMG_TYPE_NO_IMAGE == m_imgType;
     }
 
+    /**
+     * Check, if the image type is supported.
+     *
+     * @param[in] path  Image file path
+     *
+     * @return If image type is supported, it will return true otherwise false.
+     */
+    static bool isImageTypeSupported(const String& path);
+
     /** Widget type string */
     static const char* WIDGET_TYPE;
 
@@ -231,6 +240,21 @@ public:
      * Filename extension of GIF image file.
      */
     static const char* FILE_EXT_GIF;
+
+    /**
+     * Filename extension of WebP image file.
+     */
+    static const char* FILE_EXT_WEBP;
+
+    /**
+     * Supported image file extensions.
+     */
+    static const char* IMAGE_FILE_EXTENSIONS[];
+
+    /**
+     * Number of supported image file extensions.
+     */
+    static const size_t IMAGE_FILE_EXTENSIONS_COUNT;
 
 private:
 
