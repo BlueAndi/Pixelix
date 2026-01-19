@@ -471,7 +471,7 @@ bool FileMgrService::isUploadAccepted(const String& topic, const String& srcFile
             dstFilename += "/";
             dstFilename += srcFilename;
 
-            isAccepted = true;
+            isAccepted   = true;
         }
     }
 
