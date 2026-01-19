@@ -104,7 +104,7 @@ public:
 
 private:
 
-    YAGfxDynamicBitmap* m_bitmap;      /**< Pointer to target bitmap */
+    YAGfxDynamicBitmap* m_bitmap; /**< Pointer to target bitmap */
 
     /**
      * PNG draw callback function.
