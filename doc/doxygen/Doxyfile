@@ -1095,7 +1095,7 @@ EXCLUDE                = ../../lib/ArduinoNative \
                          ../../lib/HalTftDisplay \
                          ../../lib/Iperf \
                          ../../lib/Fonts/src/TomThumb.h \
-                         ./../lib/libwebp
+                         ../../lib/libwebp
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
