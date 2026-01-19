@@ -66,7 +66,7 @@
  * several frames inside.
  *
  * Uses the libwebp library for decoding.
- * 
+ *
  * Note: For animated WebP images its required to have the complete
  *       WebP file in memory. Because there is no streaming decoder for animated
  *       WebP files available in the libwebp library.
@@ -198,21 +198,21 @@ private:
      */
     typedef TypedAllocator<uint8_t, PsAllocator> DataAllocator;
 
-    DataAllocator          m_dataAllocator;       /**< uint8_t allocator. */
-    uint8_t*               m_webpData;            /**< WebP file data in memory. */
-    size_t                 m_webpDataSize;        /**< Size of WebP file data in bytes. */
-    WebPDemuxer*           m_demuxer;             /**< WebP demuxer. */
-    WebPAnimDecoder*       m_animDecoder;         /**< WebP animation decoder. */
-    YAGfxDynamicBitmap     m_bitmap;              /**< The bitmap contains the current frame. */
-    int16_t                m_width;               /**< Image width in pixels. */
-    int16_t                m_height;              /**< Image height in pixels. */
-    bool                   m_isAnimation;         /**< WebP contains several frames which to animate. */
-    bool                   m_isFinished;          /**< Animation cycle is finished. */
-    uint32_t               m_loopCount;           /**< Number of animation repeats. 0 means infinite. */
-    uint32_t               m_currentLoop;         /**< Current loop iteration. */
-    SimpleTimer            m_timer;               /**< Timer used for animations. */
-    int32_t                m_lastTimestamp;       /**< Last frame timestamp. */
-    bool                   m_hasMoreFrames;       /**< Indicates if more frames are available. */
+    DataAllocator                                m_dataAllocator; /**< uint8_t allocator. */
+    uint8_t*                                     m_webpData;      /**< WebP file data in memory. */
+    size_t                                       m_webpDataSize;  /**< Size of WebP file data in bytes. */
+    WebPDemuxer*                                 m_demuxer;       /**< WebP demuxer. */
+    WebPAnimDecoder*                             m_animDecoder;   /**< WebP animation decoder. */
+    YAGfxDynamicBitmap                           m_bitmap;        /**< The bitmap contains the current frame. */
+    int16_t                                      m_width;         /**< Image width in pixels. */
+    int16_t                                      m_height;        /**< Image height in pixels. */
+    bool                                         m_isAnimation;   /**< WebP contains several frames which to animate. */
+    bool                                         m_isFinished;    /**< Animation cycle is finished. */
+    uint32_t                                     m_loopCount;     /**< Number of animation repeats. 0 means infinite. */
+    uint32_t                                     m_currentLoop;   /**< Current loop iteration. */
+    SimpleTimer                                  m_timer;         /**< Timer used for animations. */
+    int32_t                                      m_lastTimestamp; /**< Last frame timestamp. */
+    bool                                         m_hasMoreFrames; /**< Indicates if more frames are available. */
 
     /**
      * Clean-up and release all allocated memory.
