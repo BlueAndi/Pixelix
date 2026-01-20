@@ -67,6 +67,20 @@ jobs:
     - name: Compile ${{ matrix.environment }} firmware
       run: platformio run --environment ${{ matrix.environment }}
     
+    - name: Determine factory binary name
+      id: factory
+      # Extract board name from environment (remove display suffix like -LED-32x8)
+      run: |
+        BOARD_NAME=$(echo "${{ matrix.environment }}" | sed 's/-LED-.*//; s/-HUB75-.*//; s/-TFT-.*//')
+        FACTORY_BIN="factory_binaries/${BOARD_NAME}-factory.bin"
+        if [ -f "$FACTORY_BIN" ]; then
+          echo "factory_bin=$FACTORY_BIN" >> $GITHUB_OUTPUT
+          echo "Found factory binary: $FACTORY_BIN"
+        else
+          echo "factory_bin=" >> $GITHUB_OUTPUT
+          echo "No factory binary found for: $BOARD_NAME"
+        fi
+
     - name: Deploy ${{ matrix.environment }} firmware
       uses: actions/upload-artifact@v4
       with:
@@ -75,6 +89,7 @@ jobs:
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
+          ${{ github.workspace }}/${{ steps.factory.outputs.factory_bin }}
         retention-days: 5
 
     - name: Build ${{ matrix.environment }} filesystem image
