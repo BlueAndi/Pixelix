@@ -433,6 +433,25 @@ public:
         return std::strtod(m_stdStr.c_str(), nullptr);
     }
 
+    /**
+     * Ends string with given suffix?
+     *
+     * @param[in] suffix    Suffix
+     *
+     * @return If string ends with suffix, it will return true otherwise false.
+     */
+    bool endsWith(const String& suffix) const
+    {
+        bool result = false;
+
+        if (suffix.length() <= length())
+        {
+            result = 0 == m_stdStr.compare(length() - suffix.length(), suffix.length(), suffix.m_stdStr);
+        }
+
+        return result;
+    }
+
 private:
 
     std::string m_stdStr; /**< Internal used std string. */

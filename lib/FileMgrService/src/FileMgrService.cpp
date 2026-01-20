@@ -41,6 +41,7 @@
 #include <SettingsService.h>
 #include <TopicHandlerService.h>
 #include <JsonFile.h>
+#include <BitmapWidget.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,10 +70,6 @@ const char* FileMgrService::ENTITY_ID         = "fileMgrService";
 const char* FileMgrService::TOPIC_FILES       = "files";
 const char* FileMgrService::TOPIC_UPLOAD      = "upload";
 const char* FileMgrService::TOPIC_REMOVE      = "remove";
-const char* FileMgrService::FILE_EXTENSIONS[] = {
-    ".bmp",
-    ".gif"
-};
 
 /******************************************************************************
  * Public Methods
@@ -130,7 +127,7 @@ bool FileMgrService::start()
     }
 
     /* Add new files to file table. */
-    if (true == scanForFiles(m_fileTable, FILE_EXTENSIONS, UTIL_ARRAY_NUM(FILE_EXTENSIONS)))
+    if (true == scanForFiles(m_fileTable))
     {
         m_hasFileTableChanged = true;
         m_isDirty             = true;
@@ -276,7 +273,7 @@ void FileMgrService::clearFileTable(FileTableEntry* fileTable)
     }
 }
 
-bool FileMgrService::scanForFiles(FileTableEntry* fileTable, const char* fileExtension[], size_t count)
+bool FileMgrService::scanForFiles(FileTableEntry* fileTable)
 {
     bool anyChange = false;
     File fdRoot    = FILESYSTEM.open(WORKING_DIRECTORY, "r");
@@ -289,36 +286,25 @@ bool FileMgrService::scanForFiles(FileTableEntry* fileTable, const char* fileExt
         if (false == fd.isDirectory())
         {
             String fullPath = fd.path();
-            size_t idx;
 
-            for (idx = 0U; idx < count; ++idx)
+            if (true == BitmapWidget::isImageTypeSupported(fullPath))
             {
-                int32_t fileExtIdx = fullPath.lastIndexOf(".");
-
-                if (0 <= fileExtIdx)
+                /* Add only new file to file table. */
+                if (FILE_ID_INVALID != getFileId(fileTable, fullPath))
                 {
-                    String fileExt = fullPath.substring(fileExtIdx);
-
-                    if (true == fileExt.equalsIgnoreCase(fileExtension[idx]))
-                    {
-                        /* Add only new file to file table. */
-                        if (FILE_ID_INVALID != getFileId(fileTable, fullPath))
-                        {
-                            /* Nothing to do. */
-                            ;
-                        }
-                        /* Add file to file table. */
-                        else if (false == addFileEntry(fileTable, fd.path()))
-                        {
-                            LOG_WARNING("File table full.");
-                        }
-                        else
-                        {
-                            anyChange = true;
-                        }
-                        break;
-                    }
+                    /* Nothing to do. */
+                    ;
                 }
+                /* Add file to file table. */
+                else if (false == addFileEntry(fileTable, fd.path()))
+                {
+                    LOG_WARNING("File table full.");
+                }
+                else
+                {
+                    anyChange = true;
+                }
+                break;
             }
         }
 
@@ -467,26 +453,8 @@ bool FileMgrService::isUploadAccepted(const String& topic, const String& srcFile
 
     if (true == topic.equals(TOPIC_UPLOAD))
     {
-        size_t idx;
-
         /* Accept only files with the right file extension. */
-        for (idx = 0U; idx < UTIL_ARRAY_NUM(FILE_EXTENSIONS); ++idx)
-        {
-            int32_t fileExtIdx = srcFilename.lastIndexOf(".");
-
-            if (0 <= fileExtIdx)
-            {
-                String fileExt = srcFilename.substring(fileExtIdx);
-
-                if (true == fileExt.equalsIgnoreCase(FILE_EXTENSIONS[idx]))
-                {
-                    isAccepted = true;
-                    break;
-                }
-            }
-        }
-
-        if (true == isAccepted)
+        if (true == BitmapWidget::isImageTypeSupported(srcFilename))
         {
             dstFilename  = WORKING_DIRECTORY;
             dstFilename += "/";

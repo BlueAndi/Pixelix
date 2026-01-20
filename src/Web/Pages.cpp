@@ -51,6 +51,7 @@
 #include <lwip/init.h>
 #include <SettingsService.h>
 #include <FileSystem.h>
+#include <BitmapWidget.h>
 
 #include <mbedtls/version.h>
 #include <freertos/task.h>
@@ -98,6 +99,7 @@ static String getEspChipId();
 static String getFlashChipMode();
 static String getHostname();
 static String getIPAddress();
+static String getImageFileExtensions();
 }; /* namespace tmpl */
 
 /******************************************************************************
@@ -115,6 +117,8 @@ static const String SERVICE_PAGE_PATH             = "/services/";
  * The list is alphabetic sorted in ascending order.
  */
 static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
+    { "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); } },
+    { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } },
     { "ARDUINO_IDF_BRANCH", []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; } },
     { "ESP_CHIP_ID", tmpl::getEspChipId },
     { "ESP_CHIP_REV", []() -> String { return String(ESP.getChipRevision()); } },
@@ -129,6 +133,7 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
     { "HEAP_SIZE", []() -> String { return String(MemUtil::getTotalHeapSize()); } },
     { "HEAP_SIZE_AVAILABLE", []() -> String { return String(MemUtil::getFreeHeapSize()); } },
+    { "IMAGE_FILE_EXTENSIONS", []() -> String { return tmpl::getImageFileExtensions(); } },
     { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
     { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
     { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
@@ -144,9 +149,7 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "TARGET", []() -> String { return Version::getTargetName(); } },
     { "WS_ENDPOINT", []() -> String { return WebConfig::WEBSOCKET_PATH; } },
     { "WS_PORT", []() -> String { return String(WebConfig::WEBSOCKET_PORT); } },
-    { "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; } },
-    { "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); } },
-    { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } }
+    { "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; } }
 };
 
 /**
@@ -483,6 +486,31 @@ static String getIPAddress()
     else
     {
         result = WiFi.localIP().toString();
+    }
+
+    return result;
+}
+
+/**
+ * Get supported image file extensions for BitmapWidget.
+ * The result is a comma separated list of extensions, each starting with a dot.
+ *
+ * @return Comma separated list of supported image file extensions.
+ */
+static String getImageFileExtensions()
+{
+    String  result;
+    uint8_t idx;
+
+    for (idx = 0; idx < BitmapWidget::IMAGE_FILE_EXTENSIONS_COUNT; ++idx)
+    {
+        if (0U < idx)
+        {
+            result += ",";
+        }
+
+        result += ".";
+        result += BitmapWidget::IMAGE_FILE_EXTENSIONS[idx];
     }
 
     return result;
