@@ -69,9 +69,9 @@ typedef struct _BmpV5Header BmpV5Header;
 
 /**
  * Bitmap image loader, which supports images that have
- * - 24/32 bit per pixel
- * - No compression
- * - No palette colors
+ * - 1/4/8/24/32 bit per pixel
+ * - No compression (or bitfields for 32-bit)
+ * - Palette colors (for 1/4/8 bpp)
  * - Resolution of max. 65535 x 65535 pixels
  */
 class BmpImgLoader
@@ -136,6 +136,58 @@ private:
      * @return If successful, it will return true otherwise false.
      */
     bool loadDibHeader(File& fd, BmpV5Header& header);
+
+    /**
+     * Load color palette from file system.
+     *
+     * @param[in] fd            File descriptor
+     * @param[in] numColors     Number of colors in palette
+     * @param[out] palette      Palette array (must be pre-allocated)
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool loadPalette(File& fd, uint32_t numColors, Color* palette);
+
+    /**
+     * Load pixel data from file system to bitmap buffer.
+     *
+     * @param[in] fd            File descriptor
+     * @param[in] bmpFileHeader Bitmap file header
+     * @param[in] dibHeader     DIB header
+     * @param[out] bitmap       Bitmap buffer
+     *
+     * @return If successful, it will return RET_OK. See Ret type for more informations.
+     */
+    Ret loadPixelData(File& fd, const BmpFileHeader& bmpFileHeader, const BmpV5Header& dibHeader, YAGfxDynamicBitmap& bitmap);
+
+    /**
+     * Read a pixel color from a palettized image.
+     *
+     * @param[in] fd            File descriptor
+     * @param[in] offset        Offset to pixel data in file
+     * @param[in] pos           Position within pixel data
+     * @param[in] bpp           Bits per pixel
+     * @param[in] x             X coordinate of pixel (for bit shift calculation)
+     * @param[in] palette       Color palette
+     * @param[in] numColors     Number of colors in palette
+     * @param[out] color        Resulting color
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool readPalettizedPixel(File& fd, uint32_t offset, uint32_t pos, uint16_t bpp, int16_t x, const Color* palette, uint32_t numColors, Color& color);
+
+    /**
+     * Read a pixel color from a direct RGB(A) image.
+     *
+     * @param[in] fd            File descriptor
+     * @param[in] offset        Offset to pixel data in file
+     * @param[in] pos           Position within pixel data
+     * @param[in] bpp           Bits per pixel
+     * @param[out] color        Resulting color
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool readDirectPixel(File& fd, uint32_t offset, uint32_t pos, uint16_t bpp, Color& color);
 };
 
 /******************************************************************************
