@@ -113,7 +113,7 @@ public:
      * @param[in] sortOrder     Sort order.
      * @param[in] page          Page for pagination.
      * @param[in] limit         Number of items per page.
-     * 
+     *
      * @return If request is successful sent, it will return true otherwise false.
      */
     bool request(const char* channelName, const char* userHandle, const char* sortOrder, uint32_t page, uint32_t limit);

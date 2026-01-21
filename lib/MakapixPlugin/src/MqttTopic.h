@@ -60,47 +60,47 @@
 namespace MqttTopic
 {
 
-    /**
-     * Get topic prefix.
-     *
-     * @param[in]  playerKey    The player key.
-     * @param[out] topic        The topic prefix.
-     */
-    void getTopicPrefix(const String& playerKey, String& topic);
+/**
+ * Get topic prefix.
+ *
+ * @param[in]  playerKey    The player key.
+ * @param[out] topic        The topic prefix.
+ */
+void getTopicPrefix(const String& playerKey, String& topic);
 
-    /**
-     * Get command topic.
-     *
-     * @param[in]  playerKey    The player key.
-     * @param[out] topic        The command topic.
-     */
-    void getCommandTopic(const String& playerKey, String& topic);
+/**
+ * Get command topic.
+ *
+ * @param[in]  playerKey    The player key.
+ * @param[out] topic        The command topic.
+ */
+void getCommandTopic(const String& playerKey, String& topic);
 
-    /**
-     * Get status topic.
-     *
-     * @param[in]  playerKey    The player key.
-     * @param[out] topic        The status topic.
-     */
-    void getStatusTopic(const String& playerKey, String& topic);
+/**
+ * Get status topic.
+ *
+ * @param[in]  playerKey    The player key.
+ * @param[out] topic        The status topic.
+ */
+void getStatusTopic(const String& playerKey, String& topic);
 
-    /**
-     * Get request topic.
-     *
-     * @param[in]  playerKey    The player key.
-     * @param[out] topic        The request topic.
-     * @param[in]  requestId    The request id.
-     */
-    void getRequestTopic(const String& playerKey, String& topic, int32_t requestId);
+/**
+ * Get request topic.
+ *
+ * @param[in]  playerKey    The player key.
+ * @param[out] topic        The request topic.
+ * @param[in]  requestId    The request id.
+ */
+void getRequestTopic(const String& playerKey, String& topic, int32_t requestId);
 
-    /**
-     * Get response topic.
-     *
-     * @param[in]  playerKey    The player key.
-     * @param[out] topic        The response topic.
-     * @param[in]  requestId    The request id.
-     */
-    void getResponseTopic(const String& playerKey, String& topic, int32_t requestId);
+/**
+ * Get response topic.
+ *
+ * @param[in]  playerKey    The player key.
+ * @param[out] topic        The response topic.
+ * @param[in]  requestId    The request id.
+ */
+void getResponseTopic(const String& playerKey, String& topic, int32_t requestId);
 
 } /* namespace MqttTopic */
 

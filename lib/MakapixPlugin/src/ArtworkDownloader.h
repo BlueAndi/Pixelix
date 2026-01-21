@@ -80,7 +80,7 @@ public:
     ~ArtworkDownloader()
     {
     }
-    
+
     /**
      * Start artwork download from URL to destination file path.
      *

@@ -121,10 +121,10 @@ bool Channel::play(const char* channelName)
     LOG_INFO("Play channel \"%s\"", channelName);
 
     /* Reset channel parameters. */
-    m_channelId       = strToChannelId(channelName);
-    m_page            = 0U;
-    m_idx             = 0U;
-    m_hasMore         = true;
+    m_channelId = strToChannelId(channelName);
+    m_page      = 0U;
+    m_idx       = 0U;
+    m_hasMore   = true;
 
     /* Request artwork for this channel. */
     if (false == m_requestHandler.request(channelName, nullptr, sortOrderToStr(m_sortOrder), m_page, Constant::CHANNEL_PAGE_ITEM_LIMIT))

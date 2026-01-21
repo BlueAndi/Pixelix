@@ -100,8 +100,8 @@ bool ArtworkDownloader::getStatus(bool& isSuccessful)
     /* No artwork download is pending? */
     if (INVALID_HTTP_JOB_ID == m_httpJobId)
     {
-        isFinished     = true;
-        isSuccessful   = m_isSuccessful;
+        isFinished   = true;
+        isSuccessful = m_isSuccessful;
     }
     else
     {
