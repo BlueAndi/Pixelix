@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">MakapixPlugin</h1>
+                <p><img src="MakapixPlugin.jpg" alt="Screenshot" /></p>
+                <p>This plugin is a Makapix player (<a href="https://makapix.club" target="_blank">https://makapix.club</a>) that plays pixel artwork.</p>
+                <h2>Configuration</h2>
+                <h3>Makapix</h3>
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                    <form id="formConfig" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                            </select>    
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="playerKey">Player key:</label>
+                            <input class="form-control" type="text" id="playerKey" name="playerKey" value="" size="36" />
+                            <small class="form-text">The player key for the Makapix player.</small>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="mqttInstance">MQTT instance:</label>
+                            <input class="form-control" type="number" id="mqttInstance" name="mqttInstance" value="0" />
+                            <small class="form-text">The MQTT instance number to use. 0 is the primary instance, see MQTT service configuration.</small>
+                        </div>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
+                <h3>Playback Control</h3>
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                    <form id="formPlayControl" action="javascript:setChannel(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="channelName">Channel name:</label>
+                            <select class="form-select" id="channelName" name="channelName">
+                                <option value="all">all</option>
+                                <option value="promoted">promoted</option>
+                                <option value="user">user</option>
+                                <option value="by_user">by_user</option>
+                            </select>
+                            <small class="form-text">The channel name to play.</small>
+                        </div>
+                        <input name="submit" type="submit" value="Play Channel"/>
+                        <br /><br />
+                        <input type="button" value="Previous" onClick="playPrev(pluginUid.options[pluginUid.selectedIndex].value)" />
+                        <br /><br />
+                        <input type="button" value="Next" onClick="playNext(pluginUid.options[pluginUid.selectedIndex].value)" />
+                    </form>
+                </div>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var pluginName  = "MakapixPlugin";
+            var restClient  = new pixelix.rest.Client();
+    
+            function enableUI() {
+                utils.enableForm("formConfig", true);
+                utils.enableForm("formPlayControl", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("formConfig", false);
+                utils.enableForm("formPlayControl", false);
+            }
+    
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            optionText = rsp.data.slots[slotIndex].uid;
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                            
+                            $("#pluginUid").append($option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+    
+            function getConfig(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    $("#playerKey").val(rsp.data.playerKey);
+                    $("#mqttInstance").val(rsp.data.mqttInstance);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setConfig(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                    isJsonResponse: true,
+                    parameter: {
+                        playerKey: $("#playerKey").val(),
+                        mqttInstance: $("#mqttInstance").val()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getChannel(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    $("#channelName").val(rsp.data.channelName);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setChannel(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        action: "playChannel",
+                        channelName: $("#channelName").val()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function playNext(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        action: "next"
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function playPrev(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        action: "previous"
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+                menu.create("menu", menu.data);
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getConfig(
+                            select.options[select.selectedIndex].value
+                        );
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

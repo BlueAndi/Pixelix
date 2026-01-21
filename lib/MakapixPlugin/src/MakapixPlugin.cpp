@@ -1,0 +1,840 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @file   MakapixPlugin.cpp
+ * @brief  Makapix player plugin
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+#include "MakapixPlugin.h"
+
+#include <Logging.h>
+#include <ArduinoJson.h>
+#include <MqttService.h>
+#include <HttpService.h>
+#include <FileSystem.h>
+#include <Version.h>
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
+
+/******************************************************************************
+ * Macros
+ *****************************************************************************/
+
+/******************************************************************************
+ * Types and classes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Prototypes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
+
+/** Initialize instance counter. */
+uint32_t MakapixPlugin::instanceCnt           = 0U;
+
+/* Initialize plugin topic. */
+const char* MakapixPlugin::TOPIC_CONFIG       = "makapixCfg";
+const char* MakapixPlugin::TOPIC_PLAY_CONTROL = "makapixPlayCtrl";
+const char* MakapixPlugin::ARTWORK_CACHE_PATH = "/tmp/";
+
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
+    PluginWithConfig(name, uid, FILESYSTEM),
+    m_view(),
+    m_playerKey(),
+    m_mqttInstance(0U),
+    m_mutex(),
+    m_hasTopicChanged(false),
+    m_displayMode(DISPLAY_MODE_PLAY_CHANNEL),
+    m_fileCache(),
+    m_playlist(),
+    m_artworkDownloader(),
+    m_isDownloadingArtwork(false),
+    m_commandHandler(m_playlist),
+    m_channel(m_playlist),
+    m_dwellTimer(),
+    m_currentFilePath(),
+    m_currentPlaylistIdx(m_playlist.selected())
+{
+    MakapixNextArtworkCallback cmdNextArtworkCb =
+        [this]() {
+            this->cmdNextArtwork();
+        };
+    MakapixPrevArtworkCallback cmdPrevArtworkCb =
+        [this]() {
+            this->cmdPrevArtwork();
+        };
+    MakapixPlayChannelCallback cmdPlayChannelCb =
+        [this](const char* channelName) {
+            this->cmdPlayChannel(channelName);
+        };
+    MakapixShowArtworkCallback cmdShowArtworkCb =
+        [this]() {
+            this->cmdShowArtwork();
+        };
+    MakapixNextArtworkCallback channelNextArtworkCb =
+        [this]() {
+            (void)this->nextArtwork();
+        };
+
+    m_commandHandler.init(cmdNextArtworkCb, cmdPrevArtworkCb, cmdPlayChannelCb, cmdShowArtworkCb);
+    m_channel.init(channelNextArtworkCb);
+
+    (void)m_mutex.create();
+}
+
+/**
+ * Destroys the plugin.
+ */
+MakapixPlugin::~MakapixPlugin()
+{
+    m_mutex.destroy();
+}
+
+void MakapixPlugin::getTopics(JsonArray& topics) const
+{
+    (void)topics.add(TOPIC_CONFIG);
+    (void)topics.add(TOPIC_PLAY_CONTROL);
+}
+
+bool MakapixPlugin::getTopic(const String& topic, JsonObject& value) const
+{
+    bool isSuccessful = false;
+
+    /* Configuration topic? */
+    if (true == topic.equals(TOPIC_CONFIG))
+    {
+        getConfiguration(value);
+        isSuccessful = true;
+    }
+    /* Play control topic? */
+    else if (true == topic.equals(TOPIC_PLAY_CONTROL))
+    {
+        value["channel"] = m_channel.getChannelName();
+
+        isSuccessful     = true;
+    }
+    /* Unknown topic. */
+    else
+    {
+        /* Nothing to do. */
+        ;
+    }
+
+    return isSuccessful;
+}
+
+bool MakapixPlugin::setTopic(const String& topic, const JsonObjectConst& value)
+{
+    bool isSuccessful = false;
+
+    /* Configuration topic? */
+    if (true == topic.equals(TOPIC_CONFIG))
+    {
+        const size_t        JSON_DOC_SIZE = 1024U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonPlayerKey    = value["playerKey"];
+        JsonVariantConst    jsonMqttInstance = value["mqttInstance"];
+
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
+
+        if (false == jsonPlayerKey.isNull())
+        {
+            jsonCfg["playerKey"] = jsonPlayerKey.as<String>();
+            isSuccessful         = true;
+        }
+
+        if (false == jsonMqttInstance.isNull())
+        {
+            jsonCfg["mqttInstance"] = jsonMqttInstance.as<uint8_t>();
+            isSuccessful            = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful                 = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
+        }
+    }
+    /* Play control topic? */
+    else if (true == topic.equals(TOPIC_PLAY_CONTROL))
+    {
+        const JsonVariantConst jsonAction = value["action"];
+
+        if (true == jsonAction.is<String>())
+        {
+            const String action = jsonAction.as<String>();
+
+            if (true == action.equals("next"))
+            {
+                cmdNextArtwork();
+                isSuccessful = true;
+            }
+            else if (true == action.equals("previous"))
+            {
+                cmdPrevArtwork();
+                isSuccessful = true;
+            }
+            else if (true == action.equals("playChannel"))
+            {
+                const JsonVariantConst jsonChannelName = value["channelName"];
+
+                if (true == jsonChannelName.is<String>())
+                {
+                    const char* channelName = jsonChannelName.as<const char*>();
+
+                    cmdPlayChannel(channelName);
+                    isSuccessful = true;
+                }
+                else
+                {
+                    LOG_WARNING("JSON channelName not found or invalid type.");
+                }
+            }
+            else
+            {
+                LOG_WARNING("Unknown action '%s'.", action.c_str());
+            }
+        }
+        else
+        {
+            LOG_WARNING("JSON action not found or invalid type.");
+        }
+    }
+    /* Unknown topic. */
+    else
+    {
+        /* Nothing to do. */
+        ;
+    }
+
+    return isSuccessful;
+}
+
+bool MakapixPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
+void MakapixPlugin::start(uint16_t width, uint16_t height)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_view.init(width, height);
+
+    PluginWithConfig::start(width, height);
+
+    if (false == m_fileCache.init(ARTWORK_CACHE_PATH))
+    {
+        LOG_ERROR("Failed to initialize artwork file cache handler.");
+    }
+
+    /* Configure command handler and channel with initial loaded configuration. */
+    m_commandHandler.configure(m_playerKey, m_mqttInstance);
+    m_channel.configure(m_playerKey, m_mqttInstance);
+
+    /* Start dwell timer with 0 to force showing first artwork immediately. */
+    m_dwellTimer.start(0U);
+}
+
+void MakapixPlugin::stop()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_dwellTimer.stop();
+
+    m_commandHandler.unsubscribe();
+
+    /* Abort a pending artwork download. */
+    m_artworkDownloader.abort();
+
+    PluginWithConfig::stop();
+}
+
+void MakapixPlugin::process(bool isConnected)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    PluginWithConfig::process(isConnected);
+
+    m_commandHandler.process();
+    processArtworkDownload();
+    m_channel.process();
+    processDisplayMode();
+    m_view.process();
+}
+
+void MakapixPlugin::update(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_view.update(gfx);
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void MakapixPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["playerKey"]    = m_playerKey;
+    jsonCfg["mqttInstance"] = m_mqttInstance;
+}
+
+bool MakapixPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
+{
+    bool             status           = false;
+    JsonVariantConst jsonPlayerKey    = jsonCfg["playerKey"];
+    JsonVariantConst jsonMqttInstance = jsonCfg["mqttInstance"];
+
+    if (false == jsonPlayerKey.is<String>())
+    {
+        LOG_WARNING("JSON playerKey not found or invalid type.");
+    }
+    else if (false == jsonMqttInstance.is<uint8_t>())
+    {
+        LOG_WARNING("JSON mqttInstance not found or invalid type.");
+    }
+    else if (MqttService::MAX_MQTT_COUNT <= jsonMqttInstance.as<uint8_t>())
+    {
+        LOG_WARNING("JSON mqttInstance value out of range.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        const char*                playerKey    = jsonPlayerKey.as<const char*>();
+        uint8_t                    mqttInstance = jsonMqttInstance.as<uint8_t>();
+
+        if ((m_playerKey != playerKey) ||
+            (m_mqttInstance != mqttInstance))
+        {
+            m_commandHandler.unsubscribe();
+            m_channel.abort();
+
+            m_playerKey       = playerKey;
+            m_mqttInstance    = mqttInstance;
+            m_hasTopicChanged = true;
+
+            m_commandHandler.configure(m_playerKey, m_mqttInstance);
+            m_channel.configure(m_playerKey, m_mqttInstance);
+
+            m_commandHandler.subscribe();
+        }
+
+        status = true;
+    }
+
+    return status;
+}
+
+void MakapixPlugin::processArtworkDownload()
+{
+    /* Any pending artwork download? */
+    if (true == m_isDownloadingArtwork)
+    {
+        bool isSuccessful = false;
+
+        /* Is download finished? */
+        if (true == m_artworkDownloader.getStatus(isSuccessful))
+        {
+            if (false == isSuccessful)
+            {
+                LOG_WARNING("Artwork download failed.");
+
+                m_dwellTimer.restart();
+            }
+            else
+            {
+                String dstFilePath = m_artworkDownloader.getDestinationFilePath();
+
+                if (false == m_view.loadIcon(dstFilePath.c_str()))
+                {
+                    LOG_WARNING("Loading artwork from cache failed.");
+                }
+
+                m_dwellTimer.start(m_playlist.getDwellTime());
+
+                m_currentFilePath = dstFilePath;
+                m_fileCache.addFile(dstFilePath);
+
+                m_commandHandler.notifyStatusUpdate(true);
+            }
+
+            m_isDownloadingArtwork = false;
+        }
+    }
+}
+
+void MakapixPlugin::processDisplayMode()
+{
+    /* No artwork in the playlist? */
+    if (0 == m_playlist.length())
+    {
+        ;
+    }
+    /* Artwork download is pending? */
+    else if (true == m_isDownloadingArtwork)
+    {
+        ;
+    }
+    else if (DISPLAY_MODE_SINGLE_ARTWORK == m_displayMode)
+    {
+        /* If no icon is shown yet, show the selected artwork. */
+        if (false == m_view.isIconShown())
+        {
+            String   artUrl     = m_playlist.getUrl();
+            String   storageKey = m_playlist.getStorageKey();
+            uint32_t dwellTime  = m_playlist.getDwellTime();
+
+            (void)showArtwork(artUrl, storageKey, dwellTime);
+        }
+    }
+    else if (DISPLAY_MODE_PLAY_CHANNEL == m_displayMode)
+    {
+        /* Pending channel request? */
+        if (true == m_channel.isPending())
+        {
+            ;
+        }
+        /* If no icon is shown yet, show the selected artwork. */
+        else if (false == m_view.isIconShown())
+        {
+            String   artUrl     = m_playlist.getUrl();
+            String   storageKey = m_playlist.getStorageKey();
+            uint32_t dwellTime  = m_playlist.getDwellTime();
+
+            (void)showArtwork(artUrl, storageKey, dwellTime);
+        }
+        /* Dwell timer expired? */
+        else if ((true == m_dwellTimer.isTimerRunning()) &&
+                 (true == m_dwellTimer.isTimeout()))
+        {
+            int32_t playlistIdx = m_playlist.selected();
+
+            m_dwellTimer.stop();
+
+            /* Selected artwork in the playlist changed? */
+            if (m_currentPlaylistIdx != playlistIdx)
+            {
+                String   artUrl     = m_playlist.getUrl();
+                String   storageKey = m_playlist.getStorageKey();
+                uint32_t dwellTime  = m_playlist.getDwellTime();
+
+                (void)showArtwork(artUrl, storageKey, dwellTime);
+                m_currentPlaylistIdx = playlistIdx;
+            }
+            /* Otherwise select just next artwork in the playlist. */
+            else
+            {
+                (void)m_channel.playNext();
+            }
+
+            if (false == m_dwellTimer.isTimerRunning())
+            {
+                /* In case showing the artwork failed, restart the dwell timer
+                 * to try again after a short period.
+                 */
+                m_dwellTimer.start(SIMPLE_TIMER_SECONDS(1U));
+            }
+        }
+    }
+    else
+    {
+        /* Invalid display mode. */
+        ;
+    }
+}
+
+bool MakapixPlugin::showArtwork(const String& artUrl, const String& storageKey, uint32_t dwellTime)
+{
+    bool isSuccessful = false;
+
+    if ((false == artUrl.isEmpty()) &&
+        (false == storageKey.isEmpty()))
+    {
+        String artUrlFixed;
+        String dstFilePath;
+
+        fixArtworkUrl(artUrl, artUrlFixed);
+        dstFilePath = getCacheFilePath(artUrlFixed.c_str());
+
+        LOG_INFO("Show artwork %s.", storageKey.c_str());
+
+        /* Artwork already shown?
+         * Use the destination file path as unique identifier.
+         */
+        if (m_currentFilePath == dstFilePath)
+        {
+            LOG_INFO("Artwork is already shown. Ignoring this request.");
+
+            /* Start dwell timer. */
+            m_dwellTimer.start(dwellTime);
+
+            isSuccessful = true;
+        }
+        /* Artwork download is required, but if there is a pending artwork download,
+         * this new request will be ignored.
+         */
+        else if (true == m_isDownloadingArtwork)
+        {
+            LOG_WARNING("Another artwork is currently being downloaded. Ignoring this request.");
+        }
+        else
+        {
+            String cacheFileId    = getCacheFileId(storageKey);
+            String filePath       = m_fileCache.getFilePathById(cacheFileId);
+            bool   downloadNeeded = true;
+
+            /* Artwork is already cached? */
+            if (false == filePath.isEmpty())
+            {
+                LOG_INFO("Artwork is already cached. Load it from cache.");
+
+                if (false == m_view.loadIcon(filePath))
+                {
+                    LOG_WARNING("Loading artwork from cache failed.");
+                    m_fileCache.remove(storageKey);
+                }
+                else
+                {
+                    m_dwellTimer.start(dwellTime);
+
+                    m_currentFilePath = filePath;
+                    downloadNeeded    = false;
+                    isSuccessful      = true;
+                }
+            }
+
+            if (true == downloadNeeded)
+            {
+                /* Download artwork from URL. */
+                if (true == m_artworkDownloader.download(artUrlFixed, dstFilePath))
+                {
+                    m_isDownloadingArtwork = true;
+                    isSuccessful           = true;
+                }
+            }
+
+            if (true == isSuccessful)
+            {
+                /* Notify status update, even if artwork is downloaded.
+                 * The status contains the current artwork information.
+                 */
+                m_commandHandler.notifyStatusUpdate(true);
+            }
+        }
+    }
+
+    return isSuccessful;
+}
+
+bool MakapixPlugin::nextArtwork()
+{
+    bool isSuccessful = false;
+
+    LOG_INFO("Swap to next artwork.");
+
+    if (true == m_playlist.next())
+    {
+        String   storageKey = m_playlist.getStorageKey();
+        String   url        = m_playlist.getUrl();
+        uint32_t dwellTime  = m_playlist.getDwellTime();
+
+        if ((true == storageKey.isEmpty()) ||
+            (true == url.isEmpty()))
+        {
+            ;
+        }
+        else if (false == showArtwork(url, storageKey, dwellTime))
+        {
+            ;
+        }
+        else
+        {
+            m_commandHandler.notifyStatusUpdate(true);
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
+
+bool MakapixPlugin::prevArtwork()
+{
+    bool isSuccessful = false;
+
+    LOG_INFO("Swap to previous artwork.");
+
+    if (true == m_playlist.prev())
+    {
+        String   storageKey = m_playlist.getStorageKey();
+        String   url        = m_playlist.getUrl();
+        uint32_t dwellTime  = m_playlist.getDwellTime();
+
+        if ((true == storageKey.isEmpty()) ||
+            (true == url.isEmpty()))
+        {
+            ;
+        }
+        else if (false == showArtwork(url, storageKey, dwellTime))
+        {
+            ;
+        }
+        else
+        {
+            m_commandHandler.notifyStatusUpdate(true);
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
+
+bool MakapixPlugin::playChannel(const char* channelName)
+{
+    bool isSuccessful = false;
+
+    LOG_INFO("Play channel \"%s\".", channelName);
+
+    if (true == m_channel.play(channelName))
+    {
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+String MakapixPlugin::getCacheFilePath(const char* artUrl) const
+{
+    String filePath;
+
+    /* <HTTP-METHOD>://<HOSTNAME><PATH><STORAGE-KEY>.<FILE-EXTENSISON> */
+
+    if (nullptr != artUrl)
+    {
+        const char* filename = strrchr(artUrl, '/'); /* Filename is at the end. */
+
+        /* No '/' found? */
+        if (nullptr == filename)
+        {
+            LOG_ERROR("Invalid art URL.");
+        }
+        else
+        {
+            const char* storageKey    = strrchr(artUrl, '/');
+            const char* fileExtension = strrchr(artUrl, '.');
+            String      cacheFileId;
+
+            /* No '/' found? */
+            if (nullptr == fileExtension)
+            {
+                LOG_ERROR("Invalid art URL.");
+            }
+            /* No '.' found? */
+            else if (nullptr == fileExtension)
+            {
+                LOG_ERROR("Invalid art URL.");
+            }
+            else
+            {
+                const size_t STORAGE_KEY_LEN = fileExtension - storageKey - 1U;
+
+                ++storageKey;    /* Skip '/' character. */
+                ++fileExtension; /* Skip '.' character. */
+
+                cacheFileId  = getCacheFileId(String(storageKey, STORAGE_KEY_LEN).c_str());
+
+                filePath     = ARTWORK_CACHE_PATH;
+                filePath    += cacheFileId;
+                filePath    += ".";
+                filePath    += fileExtension;
+            }
+        }
+    }
+
+    return filePath;
+}
+
+String MakapixPlugin::getCacheFileId(const String& storageKey) const
+{
+    String  fileId;
+    int32_t dashIdx = storageKey.indexOf('-');
+
+    /* Storage key: <FIRST-BLOCK>-<SECOND-BLOCK>-<THIRD-BLOCK>-<FOURTH-BLOCK>-<FIFTH-BLOCK>
+     * Example    : f373e5e7-9ed6-46a9-b616-313f2670602a -> 9ed6-46a9-b616-313f2670602a
+     */
+
+    if (0 < dashIdx)
+    {
+        /* Because of filename length limitations, truncate storage key by first block. */
+        fileId = storageKey.substring(dashIdx + 1);
+    }
+
+    return fileId;
+}
+
+void MakapixPlugin::fixArtworkUrl(const String& artworkUrl, String& fixedArtworkUrl) const
+{
+    const char*  HTTPS_PREFIX         = "https://dev.makapix.club/api/vault";
+    const char*  HTTP_PREFIX          = "http://vault.makapix.club";
+    const char*  NO_METHOD_PREFIX     = "/api/vault";
+    const size_t HTTPS_PREFIX_LEN     = strlen(HTTPS_PREFIX);
+    const size_t HTTP_PREFIX_LEN      = strlen(HTTP_PREFIX);
+    const size_t NO_METHOD_PREFIX_LEN = strlen(NO_METHOD_PREFIX);
+
+    /* Replace "https" with "http". */
+    if (true == artworkUrl.startsWith(HTTPS_PREFIX))
+    {
+        /* Replace with "http". */
+        fixedArtworkUrl  = HTTP_PREFIX;
+        fixedArtworkUrl += &artworkUrl.c_str()[HTTPS_PREFIX_LEN];
+    }
+    /* Does the URL miss the HTTP method and the hostname? */
+    else if (true == artworkUrl.startsWith(NO_METHOD_PREFIX))
+    {
+        /* Prepend "http://vault.makapix.club". */
+        fixedArtworkUrl  = HTTP_PREFIX;
+        fixedArtworkUrl += &artworkUrl.c_str()[NO_METHOD_PREFIX_LEN];
+    }
+    else
+    {
+        fixedArtworkUrl = artworkUrl;
+    }
+}
+
+void MakapixPlugin::cmdNextArtwork()
+{
+    if (false == nextArtwork())
+    {
+        m_view.showActionIconFail();
+    }
+    else
+    {
+        m_view.showActionIconNext();
+    }
+}
+
+void MakapixPlugin::cmdPrevArtwork()
+{
+    if (false == prevArtwork())
+    {
+        m_view.showActionIconFail();
+    }
+    else
+    {
+        m_view.showActionIconPrev();
+    }
+}
+
+void MakapixPlugin::cmdPlayChannel(const char* channelName)
+{
+    if (false == playChannel(channelName))
+    {
+        m_view.showActionIconFail();
+    }
+    else
+    {
+        m_view.showActionIconPlay();
+    }
+
+    m_displayMode = DISPLAY_MODE_PLAY_CHANNEL;
+}
+
+void MakapixPlugin::cmdShowArtwork()
+{
+    if (0U < m_playlist.length())
+    {
+        String storageKey = m_playlist.getStorageKey();
+        String url        = m_playlist.getUrl();
+
+        if (true == storageKey.isEmpty() ||
+            true == url.isEmpty())
+        {
+            m_view.showActionIconFail();
+        }
+        else if (false == showArtwork(url, storageKey, 0U))
+        {
+            m_view.showActionIconFail();
+        }
+        else
+        {
+            m_view.showActionIconPlay();
+        }
+    }
+
+    m_displayMode = DISPLAY_MODE_SINGLE_ARTWORK;
+}
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

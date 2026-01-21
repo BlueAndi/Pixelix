@@ -1,0 +1,36 @@
+@startuml MakapixPlugin
+
+class "PluginWithConfig" as pluginWithConfig
+
+package "MakapixPlugin" {
+    class "MakapixPlugin" as makapixPlugin
+    class "ArtworkDownloader" as artworkDownloader
+    class "Channel" as channel
+    class "Playlist" as playlist
+    class "CommandHandler" as commandHandler
+    class "RequestHandler" as requestHandler
+    class "MqttTopic" as mqttTopic<<module>>
+}
+
+package "Services" {
+    class "HttpService" as httpService<<singleton>>
+    class "MqttService" as mqttService<<singleton>>
+}
+
+pluginWithConfig <|.. makapixPlugin: <<realize>>
+makapixPlugin --> artworkDownloader
+makapixPlugin --> channel
+makapixPlugin --> playlist
+makapixPlugin --> commandHandler
+
+artworkDownloader .....> httpService: <<use>>
+
+channel --> requestHandler
+
+commandHandler .....> mqttService: <<use>>
+commandHandler ...> mqttTopic: <<use>>
+
+requestHandler ....> mqttService: <<use>>
+requestHandler ..> mqttTopic: <<use>>
+
+@enduml
