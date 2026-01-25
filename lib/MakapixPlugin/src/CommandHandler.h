@@ -199,7 +199,7 @@ private:
     void swapBack();
 
     /**
-     * Show artwork.
+     * Show artwork immediately.
      *
      * @param[in] jsonPayload   The artwork information as JSON object.
      */

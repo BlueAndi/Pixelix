@@ -334,6 +334,7 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
         }
         else
         {
+            /* Add to internal playlist. */
             int32_t playlistIdx = m_playlist.add(postId, storageKey, artUrl, DEFAULT_DWELL_TIME_MS, true);
 
             if (0 > playlistIdx)
@@ -345,6 +346,7 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
                 LOG_INFO("Artwork %s added to playlist.", storageKey);
                 LOG_INFO("Select artwork %s in playlist.", storageKey);
 
+                /* Select it in the playlist to show it immediately. */
                 m_playlist.select(static_cast<uint8_t>(playlistIdx));
 
                 if (nullptr == m_showArtworkCallback)

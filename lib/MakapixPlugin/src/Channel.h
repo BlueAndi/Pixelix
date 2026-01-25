@@ -59,7 +59,7 @@
 /**
  * Makapix channel class.
  *
- * A channel is responsible to fetch artworks from a specific channel
+ * A channel is responsible to fetch artworks from a specific channel id
  * and fill the playlist with it.
  */
 class Channel
@@ -107,7 +107,7 @@ public:
     /**
      * Configure the channel.
      *
-     * @param[in] playerKey      Player key.
+     * @param[in] playerKey     Player key.
      * @param[in] mqttInstance  MQTT instance index.
      */
     void configure(const String& playerKey, uint8_t mqttInstance);
