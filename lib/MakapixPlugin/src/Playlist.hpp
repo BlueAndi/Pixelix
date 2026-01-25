@@ -126,8 +126,7 @@ public:
         if ((nullptr != storageKey) &&
             (nullptr != url) &&
             ('\0' != storageKey[0U]) &&
-            ('\0' != url[0U]) &&
-            (true == isImageFormatSupported(url)))
+            ('\0' != url[0U]))
         {
             if ((MAX_ENTRIES > m_length) ||                         /* Playlist not full? */
                 ((MAX_ENTRIES == m_length) && (true == overwrite))) /* Playlist full, but allowed to overwrite? */
@@ -297,10 +296,26 @@ private:
     /** Playlist entry. */
     struct Entry
     {
-        uint32_t postId;     /**< Artwork post ID. */
-        String   storageKey; /**< Artwork storage key. */
-        String   url;        /**< Artwork URL. */
-        uint32_t dwellTime;  /**< Dwell time in ms. */
+        /**
+         * Artwork post ID, which is the server side database ID.
+         * Its required for status updates.
+         */
+        uint32_t postId;
+
+        /**
+         * Artwork storage key, which is the unique UUID.
+         */
+        String storageKey;
+
+        /**
+         * Artwork URL.
+         */
+        String url;
+
+        /**
+         * Artwork dwell time in milliseconds.
+         */
+        uint32_t dwellTime;
 
         /** Default constructor. */
         Entry() :
@@ -316,47 +331,6 @@ private:
     uint32_t m_beginIdx;              /**< Index of begin playlist entry. */
     uint32_t m_length;                /**< Number of playlist entries. */
     int32_t  m_selectedIdx;           /**< Index of current selected playlist entry. */
-
-    /**
-     * Check if image format is supported.
-     *
-     * @param[in] artworkUrl  Artwork URL
-     *
-     * @return If image format is supported, it will return true otherwise false.
-     */
-    bool isImageFormatSupported(const char* artworkUrl) const
-    {
-        bool isSupported = false;
-
-        if (nullptr != artworkUrl)
-        {
-            const char* extension = strrchr(artworkUrl, '.');
-
-            if (nullptr != extension)
-            {
-                ++extension; /* Skip '.' character. */
-
-                if (0 == strcasecmp("bmp", extension))
-                {
-                    isSupported = true;
-                }
-                else if (0 == strcasecmp("gif", extension))
-                {
-                    isSupported = true;
-                }
-                else
-                {
-                    LOG_WARNING("Image format '%s' is not supported.", extension);
-                }
-            }
-            else
-            {
-                LOG_WARNING("No image format found in artwork URL.");
-            }
-        }
-
-        return isSupported;
-    }
 };
 
 /******************************************************************************

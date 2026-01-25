@@ -72,7 +72,7 @@ static constexpr uint8_t PLAYLIST_MAX_ENTRIES     = 20U;
  * It should be lower than or equal to PLAYLIST_MAX_ENTRIES. But consider the
  * required JSON document size for the MQTT response.
  */
-static constexpr uint32_t CHANNEL_PAGE_ITEM_LIMIT = 5U;
+static constexpr uint32_t CHANNEL_PAGE_ITEM_LIMIT = 4U;
 
 } /* namespace Constant */
 

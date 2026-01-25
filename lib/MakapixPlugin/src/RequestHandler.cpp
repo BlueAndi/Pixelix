@@ -135,10 +135,10 @@ bool RequestHandler::request(const char* channelName, const char* userHandle, co
             const size_t        JSON_DOC_SIZE = 2048U;
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
             String              requestTopic;
-            JsonArray           jsonCriteria           = jsonDoc.createNestedArray("criteria");
-            JsonObject          jsonCriteriaWidthMax   = jsonCriteria.createNestedObject();
-            JsonObject          jsonCriteriaHeightMax  = jsonCriteria.createNestedObject();
-            JsonObject          jsonCriteriaFileFormat = jsonCriteria.createNestedObject();
+            JsonArray           jsonIncludeFields     = jsonDoc.createNestedArray("include_fields");
+            JsonArray           jsonCriteria          = jsonDoc.createNestedArray("criteria");
+            JsonObject          jsonCriteriaWidthMax  = jsonCriteria.createNestedObject();
+            JsonObject          jsonCriteriaHeightMax = jsonCriteria.createNestedObject();
             JsonArray           jsonFileFormats;
             String              requestPayload;
 
@@ -163,22 +163,20 @@ bool RequestHandler::request(const char* channelName, const char* userHandle, co
                 jsonDoc["random_seed"] = millis();
             }
 
-            jsonDoc["cursor"]               = String(page);
-            jsonDoc["limit"]                = limit;
+            jsonDoc["cursor"] = String(page);
+            jsonDoc["limit"]  = limit;
 
-            jsonCriteriaWidthMax["field"]   = "width";
-            jsonCriteriaWidthMax["op"]      = "lte";
-            jsonCriteriaWidthMax["value"]   = CONFIG_LED_MATRIX_WIDTH;
+            jsonIncludeFields.add("width");
+            jsonIncludeFields.add("height");
+            jsonIncludeFields.add("dwell_time_ms");
 
-            jsonCriteriaHeightMax["field"]  = "height";
-            jsonCriteriaHeightMax["op"]     = "lte";
-            jsonCriteriaHeightMax["value"]  = CONFIG_LED_MATRIX_HEIGHT;
+            jsonCriteriaWidthMax["field"]  = "width";
+            jsonCriteriaWidthMax["op"]     = "lte";
+            jsonCriteriaWidthMax["value"]  = CONFIG_LED_MATRIX_WIDTH;
 
-            jsonCriteriaFileFormat["field"] = "file_format";
-            jsonCriteriaFileFormat["op"]    = "in";
-            jsonFileFormats                 = jsonCriteriaFileFormat.createNestedArray("value");
-            (void)jsonFileFormats.add("bmp");
-            (void)jsonFileFormats.add("gif");
+            jsonCriteriaHeightMax["field"] = "height";
+            jsonCriteriaHeightMax["op"]    = "lte";
+            jsonCriteriaHeightMax["value"] = CONFIG_LED_MATRIX_HEIGHT;
 
             if (0U < serializeJson(jsonDoc.as<JsonObject>(), requestPayload))
             {
@@ -240,13 +238,17 @@ void RequestHandler::mqttTopicCallback(const String& topic, const uint8_t* paylo
     }
     else
     {
-        const size_t         JSON_DOC_SIZE = 2048U;
+        const size_t         JSON_DOC_SIZE = 4096U;
         DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
         DeserializationError error = deserializeJson(jsonDoc, payload, size);
 
         if (DeserializationError::Ok != error)
         {
             LOG_WARNING("MQTT payload contains invalid JSON.");
+        }
+        else if (true == jsonDoc.overflowed())
+        {
+            LOG_WARNING("MQTT payload JSON is too large.");
         }
         else if (nullptr == m_onResponseCallback)
         {

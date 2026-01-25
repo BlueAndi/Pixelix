@@ -394,6 +394,13 @@ private:
     void fixArtworkUrl(const String& artworkUrl, String& fixedArtworkUrl) const;
 
     /**
+     * Adjust artwork URL to download only supported image formats.
+     *
+     * @param[in,out] artworkUrl   Artwork URL to adjust.
+     */
+    void adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const;
+
+    /**
      * Command callback to play the next artwork.
      */
     void cmdNextArtwork();

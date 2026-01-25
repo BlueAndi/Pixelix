@@ -41,6 +41,8 @@
 #include <HttpService.h>
 #include <FileSystem.h>
 #include <Version.h>
+#include <BitmapWidget.h>
+#include <FileUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -522,6 +524,7 @@ bool MakapixPlugin::showArtwork(const String& artUrl, const String& storageKey, 
         String dstFilePath;
 
         fixArtworkUrl(artUrl, artUrlFixed);
+        adjustArtworkUrlForSupportedImageFormats(artUrlFixed);
         dstFilePath = getCacheFilePath(artUrlFixed.c_str());
 
         LOG_INFO("Show artwork %s.", storageKey.c_str());
@@ -741,7 +744,7 @@ String MakapixPlugin::getCacheFileId(const String& storageKey) const
 
 void MakapixPlugin::fixArtworkUrl(const String& artworkUrl, String& fixedArtworkUrl) const
 {
-    const char*  HTTPS_PREFIX         = "https://dev.makapix.club/api/vault";
+    const char*  HTTPS_PREFIX         = "https://makapix.club/api/vault";
     const char*  HTTP_PREFIX          = "http://vault.makapix.club";
     const char*  NO_METHOD_PREFIX     = "/api/vault";
     const size_t HTTPS_PREFIX_LEN     = strlen(HTTPS_PREFIX);
@@ -765,6 +768,22 @@ void MakapixPlugin::fixArtworkUrl(const String& artworkUrl, String& fixedArtwork
     else
     {
         fixedArtworkUrl = artworkUrl;
+    }
+}
+
+void MakapixPlugin::adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const
+{
+    bool isSupportedFormat = BitmapWidget::isImageTypeSupported(artworkUrl);
+
+    /* If not, try to adjust the URL to use a supported format. */
+    if (false == isSupportedFormat)
+    {
+        /* Use always the GIF format, becasue its available for static images
+         * and for animations.
+         */
+        String imageFormat = FileUtil::getFileExtension(artworkUrl);
+
+        artworkUrl.replace(imageFormat, "gif");
     }
 }
 
