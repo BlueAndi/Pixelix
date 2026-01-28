@@ -103,6 +103,11 @@ public:
     void showActionIconPlay();
 
     /**
+     * Show "pause" action icon on screen.
+     */
+    void showActionIconPause();
+
+    /**
      * Show "fail" action icon on screen.
      */
     void showActionIconFail();

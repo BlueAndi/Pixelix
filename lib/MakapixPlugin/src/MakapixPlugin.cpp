@@ -96,15 +96,15 @@ MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
 {
     MakapixNextArtworkCallback cmdNextArtworkCb =
         [this]() {
-            this->cmdNextArtwork();
+            (void)this->cmdNextArtwork();
         };
     MakapixPrevArtworkCallback cmdPrevArtworkCb =
         [this]() {
-            this->cmdPrevArtwork();
+            (void)this->cmdPrevArtwork();
         };
     MakapixPlayChannelCallback cmdPlayChannelCb =
         [this](const char* channelName) {
-            this->cmdPlayChannel(channelName);
+            (void)this->cmdPlayChannel(channelName);
         };
     MakapixShowArtworkCallback cmdShowArtworkCb =
         [this]() {
@@ -148,9 +148,7 @@ bool MakapixPlugin::getTopic(const String& topic, JsonObject& value) const
     /* Play control topic? */
     else if (true == topic.equals(TOPIC_PLAY_CONTROL))
     {
-        value["channel"] = m_channel.getChannelName();
-
-        isSuccessful     = true;
+        isSuccessful = cmdGetStatus(value);
     }
     /* Unknown topic. */
     else
@@ -221,13 +219,11 @@ bool MakapixPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
             if (true == action.equals("next"))
             {
-                cmdNextArtwork();
-                isSuccessful = true;
+                isSuccessful = cmdNextArtwork();
             }
             else if (true == action.equals("previous"))
             {
-                cmdPrevArtwork();
-                isSuccessful = true;
+                isSuccessful = cmdPrevArtwork();
             }
             else if (true == action.equals("playChannel"))
             {
@@ -237,13 +233,20 @@ bool MakapixPlugin::setTopic(const String& topic, const JsonObjectConst& value)
                 {
                     const char* channelName = jsonChannelName.as<const char*>();
 
-                    cmdPlayChannel(channelName);
-                    isSuccessful = true;
+                    isSuccessful            = cmdPlayChannel(channelName);
                 }
                 else
                 {
                     LOG_WARNING("JSON channelName not found or invalid type.");
                 }
+            }
+            else if (true == action.equals("pause"))
+            {
+                isSuccessful = cmdPause();
+            }
+            else if (true == action.equals("continue"))
+            {
+                isSuccessful = cmdContinue();
             }
             else
             {
@@ -473,9 +476,14 @@ void MakapixPlugin::processDisplayMode()
 
             (void)showArtwork(artUrl, storageKey, dwellTime);
         }
+        /* Pause? */
+        else if (false == m_dwellTimer.isTimerRunning())
+        {
+            /* Nothing to do. */
+            ;
+        }
         /* Dwell timer expired? */
-        else if ((true == m_dwellTimer.isTimerRunning()) &&
-                 (true == m_dwellTimer.isTimeout()))
+        else if (true == m_dwellTimer.isTimeout())
         {
             int32_t playlistIdx = m_playlist.selected();
 
@@ -504,6 +512,11 @@ void MakapixPlugin::processDisplayMode()
                  */
                 m_dwellTimer.start(SIMPLE_TIMER_SECONDS(1U));
             }
+        }
+        else
+        {
+            /* Nothing to do. */
+            ;
         }
     }
     else
@@ -787,8 +800,11 @@ void MakapixPlugin::adjustArtworkUrlForSupportedImageFormats(String& artworkUrl)
     }
 }
 
-void MakapixPlugin::cmdNextArtwork()
+bool MakapixPlugin::cmdNextArtwork()
 {
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if (false == nextArtwork())
     {
         m_view.showActionIconFail();
@@ -796,11 +812,17 @@ void MakapixPlugin::cmdNextArtwork()
     else
     {
         m_view.showActionIconNext();
+        isSuccessful = true;
     }
+
+    return isSuccessful;
 }
 
-void MakapixPlugin::cmdPrevArtwork()
+bool MakapixPlugin::cmdPrevArtwork()
 {
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if (false == prevArtwork())
     {
         m_view.showActionIconFail();
@@ -808,11 +830,17 @@ void MakapixPlugin::cmdPrevArtwork()
     else
     {
         m_view.showActionIconPrev();
+        isSuccessful = true;
     }
+
+    return isSuccessful;
 }
 
-void MakapixPlugin::cmdPlayChannel(const char* channelName)
+bool MakapixPlugin::cmdPlayChannel(const char* channelName)
 {
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if (false == playChannel(channelName))
     {
         m_view.showActionIconFail();
@@ -820,9 +848,11 @@ void MakapixPlugin::cmdPlayChannel(const char* channelName)
     else
     {
         m_view.showActionIconPlay();
+        m_displayMode = DISPLAY_MODE_PLAY_CHANNEL;
+        isSuccessful  = true;
     }
 
-    m_displayMode = DISPLAY_MODE_PLAY_CHANNEL;
+    return isSuccessful;
 }
 
 void MakapixPlugin::cmdShowArtwork()
@@ -848,6 +878,63 @@ void MakapixPlugin::cmdShowArtwork()
     }
 
     m_displayMode = DISPLAY_MODE_SINGLE_ARTWORK;
+}
+
+bool MakapixPlugin::cmdPause()
+{
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (true == m_dwellTimer.isTimerRunning())
+    {
+        m_dwellTimer.stop();
+        m_view.showActionIconPause();
+        isSuccessful = true;
+    }
+    else
+    {
+        m_view.showActionIconFail();
+    }
+
+    return isSuccessful;
+}
+
+bool MakapixPlugin::cmdContinue()
+{
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (false == m_dwellTimer.isTimerRunning())
+    {
+        m_dwellTimer.start(m_playlist.getDwellTime());
+        m_view.showActionIconPlay();
+        isSuccessful = true;
+    }
+    else
+    {
+        m_view.showActionIconFail();
+    }
+
+    return isSuccessful;
+}
+
+bool MakapixPlugin::cmdGetStatus(JsonObject& jsonStatus) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonStatus["channel"] = m_channel.getChannelName();
+
+    /* Pause? */
+    if (false == m_dwellTimer.isTimerRunning())
+    {
+        jsonStatus["status"] = "paused";
+    }
+    else
+    {
+        jsonStatus["status"] = "playing";
+    }
+
+    return true;
 }
 
 /******************************************************************************

@@ -57,24 +57,29 @@
                         <input name="submit" type="submit" value="Update"/>
                     </form>
                 </div>
+                <hr />
                 <h3>Playback Control</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="formPlayControl" action="javascript:setChannel(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <form id="formPlayControl">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="channelName">Channel name:</label>
-                            <select class="form-select" id="channelName" name="channelName">
-                                <option value="all">all</option>
-                                <option value="promoted">promoted</option>
-                                <option value="user">user</option>
-                                <option value="by_user">by_user</option>
-                            </select>
-                            <small class="form-text">The channel name to play.</small>
+                            <label class="form-label">Playback Controls:</label>
+                            <div class="d-grid gap-2">
+                                <div class="btn-group gap-2" role="group" aria-label="Playback controls">
+                                    <button type="button" id="btnPrev" class="btn btn-primary" onClick="playPrev(pluginUid.options[pluginUid.selectedIndex].value)">Previous</button>
+                                    <button type="button" id="btnPause" class="btn btn-primary" onClick="pause(pluginUid.options[pluginUid.selectedIndex].value)">Pause</button>
+                                    <button type="button" id="btnNext" class="btn btn-primary" onClick="playNext(pluginUid.options[pluginUid.selectedIndex].value)">Next</button>
+                                </div>
+                            </div>
                         </div>
-                        <input name="submit" type="submit" value="Play Channel"/>
-                        <br /><br />
-                        <input type="button" value="Previous" onClick="playPrev(pluginUid.options[pluginUid.selectedIndex].value)" />
-                        <br /><br />
-                        <input type="button" value="Next" onClick="playNext(pluginUid.options[pluginUid.selectedIndex].value)" />
+                        <div class="form-group mb-3">
+                            <label class="form-label">Quick Channel Selection:</label>
+                            <div class="d-grid gap-2">
+                                <button type="button" id="btnAll" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'all')">All</button>
+                                <button type="button" id="btnRecent" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'recent')">Recent Artworks</button>
+                                <button type="button" id="btnPromoted" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'promoted')">Promoted Artworks</button>
+                                <button type="button" id="btnUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'user')">Own Artworks</button>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -84,7 +89,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -181,14 +186,32 @@
                 });
             }
 
-            function getChannel(pluginUid) {
+            function getStatus(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    $("#channelName").val(rsp.data.channelName);
+                    var channel = rsp.data.channel;
+
+                    /* Clear all active states. */
+                    $('#btnAll').removeClass('active');
+                    $('#btnRecent').removeClass('active');
+                    $('#btnPromoted').removeClass('active');
+                    $('#btnUser').removeClass('active');
+
+                    /* Set active state for current channel. */
+                    $('#btn' + channel.charAt(0).toUpperCase() + channel.slice(1)).addClass('active');
+
+                    /* Set pause button state. */
+                    if (rsp.data.status === "paused") {
+                        $('#btnPause').addClass('active');
+                    }
+                    else {
+                        $('#btnPause').removeClass('active');
+                    }
+
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -196,7 +219,7 @@
                 });
             }
 
-            function setChannel(pluginUid) {
+            function playChannel(pluginUid, channelName) {
                 disableUI();
 
                 return utils.makeRequest({
@@ -205,10 +228,10 @@
                     isJsonResponse: true,
                     parameter: {
                         action: "playChannel",
-                        channelName: $("#channelName").val()
+                        channelName: channelName
                     }
                 }).then(function(rsp) {
-                    alert("Ok.");
+                    return getStatus(pluginUid);
                 }).catch(function(rsp) {
                     alert("Failed.");
                 }).finally(function() {
@@ -227,7 +250,29 @@
                         action: "next"
                     }
                 }).then(function(rsp) {
-                    alert("Ok.");
+                    return getStatus(pluginUid);
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function pause(pluginUid) {
+                disableUI();
+
+                var isPaused = $('#btnPause').hasClass('active');
+                var action = isPaused ? "continue" : "pause";
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        action: action
+                    }
+                }).then(function(rsp) {
+                    return getStatus(pluginUid);
                 }).catch(function(rsp) {
                     alert("Failed.");
                 }).finally(function() {
@@ -246,7 +291,7 @@
                         action: "previous"
                     }
                 }).then(function(rsp) {
-                    alert("Ok.");
+                    return getStatus(pluginUid);
                 }).catch(function(rsp) {
                     alert("Failed.");
                 }).finally(function() {
@@ -270,7 +315,11 @@
 
                         return getConfig(
                             select.options[select.selectedIndex].value
-                        );
+                        ).then(function() {
+                            return getStatus(
+                                select.options[select.selectedIndex].value
+                            );
+                        });
                     }
                 });
             });

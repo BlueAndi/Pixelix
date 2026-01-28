@@ -99,14 +99,14 @@ void RequestHandler::process()
 
 bool RequestHandler::request(const char* channelName, const char* userHandle, const char* sortOrder, uint32_t page, uint32_t limit)
 {
-    bool isSuccessful = false;
+    bool         isSuccessful = false;
+    MqttService& mqttService  = MqttService::getInstance();
 
     if ((nullptr != channelName) &&
-        (nullptr != sortOrder))
+        (nullptr != sortOrder) &&
+        (MqttTypes::STATE_CONNECTED == mqttService.getState(m_mqttInstance)))
     {
-
-        MqttService& mqttService = MqttService::getInstance();
-        String       responseTopic;
+        String responseTopic;
 
         LOG_INFO("Request page %u with limit %u for channel %s", page, limit, channelName);
 

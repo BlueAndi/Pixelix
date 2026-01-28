@@ -132,6 +132,23 @@ void View::showActionIconPlay()
     m_actionTimer.start(ACTION_ICON_DISPLAY_TIME);
 }
 
+void View::showActionIconPause()
+{
+    clearActionIcon();
+    m_canvasWidget.drawVLine(
+        ACTION_ICON_POS_X,
+        ACTION_ICON_POS_Y,
+        ACTION_ICON_SIZE,
+        ColorDef::LIGHTGREEN);
+    m_canvasWidget.drawVLine(
+        ACTION_ICON_POS_X + ACTION_ICON_SIZE - 1U,
+        ACTION_ICON_POS_Y,
+        ACTION_ICON_SIZE,
+        ColorDef::LIGHTGREEN);
+
+    m_actionTimer.start(ACTION_ICON_DISPLAY_TIME);
+}
+
 void View::showActionIconFail()
 {
     clearActionIcon();

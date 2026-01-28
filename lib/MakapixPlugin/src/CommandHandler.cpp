@@ -106,7 +106,6 @@ void CommandHandler::process()
          */
         if (MqttTypes::STATE_CONNECTED != m_mqttConnectionState)
         {
-
             subscribe();
             notifyStatusUpdate(true);
             m_statusTimer.start(STATUS_UPDATE_PERIOD);

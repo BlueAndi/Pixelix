@@ -195,8 +195,6 @@ bool Channel::playNext()
         m_idx  = idx;
     }
 
-    isSuccessful = true;
-
     return isSuccessful;
 }
 
