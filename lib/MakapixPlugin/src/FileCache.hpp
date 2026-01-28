@@ -309,10 +309,10 @@ private:
              */
             while (true == fd)
             {
+                String fullPath = fd.path();
+
                 if (false == fd.isDirectory())
                 {
-                    String fullPath = fd.path();
-
                     while (MAX_FILES > fileListIdx)
                     {
                         Entry& entry = m_fileList[fileListIdx];
@@ -328,20 +328,22 @@ private:
                             break;
                         }
                     }
-
-                    /* Remove files, if there are more than MAX_FILES. */
-                    if (MAX_FILES <= fileListIdx)
-                    {
-                        LOG_DEBUG("Removing excess cached file: %s", fullPath.c_str());
-
-                        if (false == FILESYSTEM.remove(fullPath))
-                        {
-                            LOG_WARNING("Failed to remove excess cached file: %s", fullPath.c_str());
-                        }
-                    }
                 }
 
                 fd.close();
+
+                /* Remove files, if there are more than MAX_FILES. */
+                if ((false == fd.isDirectory()) &&
+                    (MAX_FILES <= fileListIdx))
+                {
+                    LOG_WARNING("Removing excess cached file: %s", fullPath.c_str());
+
+                    if (false == FILESYSTEM.remove(fullPath))
+                    {
+                        LOG_WARNING("Failed to remove excess cached file: %s", fullPath.c_str());
+                    }
+                }
+
                 fd = fdRoot.openNextFile();
             }
 

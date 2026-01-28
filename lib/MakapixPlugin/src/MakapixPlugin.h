@@ -402,14 +402,14 @@ private:
 
     /**
      * Command callback to play the next artwork.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool cmdNextArtwork();
 
     /**
      * Command callback to play the previous artwork.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool cmdPrevArtwork();
@@ -418,7 +418,7 @@ private:
      * Command callback to play a channel.
      *
      * @param[in] channelName  Channel name
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool cmdPlayChannel(const char* channelName);
@@ -430,23 +430,23 @@ private:
 
     /**
      * Command callback to pause the playback.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool cmdPause();
 
     /**
      * Command callback to continue the playback.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool cmdContinue();
 
     /**
      * Command callback to get the current status.
-     * 
+     *
      * @param[out] status   Status in JSON format
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool cmdGetStatus(JsonObject& jsonStatus) const;
