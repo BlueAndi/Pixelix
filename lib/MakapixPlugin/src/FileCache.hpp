@@ -218,7 +218,10 @@ public:
             else if (MAX_FILES != oldestIdx)
             {
                 /* Remove oldest file and use its slot. */
-                FILESYSTEM.remove(m_fileList[oldestIdx].filename);
+                if (false == FILESYSTEM.remove(m_fileList[oldestIdx].filename))
+                {
+                    LOG_WARNING("Failed to remove oldest cached file: %s", m_fileList[oldestIdx].filename.c_str());
+                }
 
                 m_fileList[oldestIdx].filename  = filename;
                 m_fileList[oldestIdx].timestamp = currentTime;
@@ -246,7 +249,10 @@ public:
 
                 if (true == filename.startsWith(id))
                 {
-                    FILESYSTEM.remove(entry.filename);
+                    if (false == FILESYSTEM.remove(entry.filename))
+                    {
+                        LOG_WARNING("Failed to remove cached file: %s", entry.filename.c_str());
+                    }
 
                     entry.filename.clear();
                     entry.timestamp = 0U;
@@ -297,8 +303,11 @@ private:
             File    fd          = fdRoot.openNextFile();
             uint8_t fileListIdx = 0U;
 
-            /* Scan for files only flat! */
-            while ((true == fd) && (MAX_FILES > fileListIdx))
+            /* Scan for files only flat!
+             * No subdirectory scanning.
+             * If there are more files than MAX_FILES, the remaining files will be removed.
+             */
+            while (true == fd)
             {
                 if (false == fd.isDirectory())
                 {
@@ -317,6 +326,17 @@ private:
                             entry.filename  = fullPath;
                             entry.timestamp = fd.getLastWrite();
                             break;
+                        }
+                    }
+
+                    /* Remove files, if there are more than MAX_FILES. */
+                    if (MAX_FILES <= fileListIdx)
+                    {
+                        LOG_DEBUG("Removing excess cached file: %s", fullPath.c_str());
+
+                        if (false == FILESYSTEM.remove(fullPath))
+                        {
+                            LOG_WARNING("Failed to remove excess cached file: %s", fullPath.c_str());
                         }
                     }
                 }

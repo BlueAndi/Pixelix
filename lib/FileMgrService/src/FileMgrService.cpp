@@ -425,7 +425,10 @@ bool FileMgrService::uploadTopic(const String& topic, const JsonObjectConst& val
                         LOG_WARNING("File table full.");
 
                         /* Avoid file flooding. */
-                        FILESYSTEM.remove(fullPath);
+                        if (false == FILESYSTEM.remove(fullPath))
+                        {
+                            LOG_WARNING("Failed to remove uploaded file: %s", fullPath.c_str());
+                        }
                     }
                     else
                     {
