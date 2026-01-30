@@ -381,7 +381,7 @@ bool LzwDecoder::getCode(uint32_t& code, const ReadFromInStream& readFromInStrea
     return isSuccessful;
 }
 
-bool LzwDecoder::decompress(uint32_t& code, const WriteToOutStream& writeToOutStreamFunc)
+bool LzwDecoder::decompress(uint32_t code, const WriteToOutStream& writeToOutStreamFunc)
 {
     bool isSuccessful = true;
 
@@ -445,16 +445,16 @@ bool LzwDecoder::decompress(uint32_t& code, const WriteToOutStream& writeToOutSt
             *m_stackPtr = code & 0xFFU;
             ++m_stackPtr;
 
-            do
+            while (m_stackPtr > m_stack)
             {
                 --m_stackPtr;
 
                 if (false == writeToOutStreamFunc(*m_stackPtr))
                 {
                     isSuccessful = false;
+                    break;
                 }
             }
-            while ((m_stackPtr > m_stack) && (true == isSuccessful));
         }
 
         if (true == isSuccessful)
