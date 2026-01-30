@@ -131,7 +131,9 @@ bool ArtworkDownloader::getStatus(bool& isSuccessful)
                 m_isSuccessful = true;
             }
 
-            m_httpJobId = INVALID_HTTP_JOB_ID;
+            m_httpJobId  = INVALID_HTTP_JOB_ID;
+            isFinished   = true;
+            isSuccessful = m_isSuccessful;
         }
     }
 
