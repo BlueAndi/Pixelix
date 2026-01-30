@@ -89,6 +89,8 @@ public:
         m_hAlignPosX(0),
         m_vAlignPosY(0)
     {
+        /* Animated GIF images shall run infinite by default. */
+        m_gifPlayer.setInfiniteAnimation(true);
     }
 
     /**
