@@ -69,7 +69,6 @@ public:
      * Constructs the file cache handler.
      */
     FileCache() :
-        m_path(nullptr),
         m_fileList()
     {
     }
@@ -98,10 +97,8 @@ public:
 
             if ('/' == path[pathLen - 1U])
             {
-                m_path = path;
-
-                FileUtil::createDirectories(m_path);
-                scanForFiles();
+                FileUtil::createDirectories(path);
+                scanForFiles(path);
 
                 isSuccessful = true;
             }
@@ -165,71 +162,75 @@ public:
      */
     void addFile(const String& filename)
     {
-        if (nullptr != m_path)
+        time_t  currentTime = time(nullptr);
+        uint8_t idx;
+        uint8_t emptyIdx   = MAX_FILES;
+        uint8_t oldestIdx  = MAX_FILES;
+        time_t  oldestTime = INT32_MAX;
+
+        LOG_DEBUG("Adding file to cache: %s", filename.c_str());
+
+        /* Search for existing file, empty slot or oldest file. */
+        for (idx = 0U; idx < MAX_FILES; ++idx)
         {
-            time_t  currentTime = time(nullptr);
-            uint8_t emptyIdx    = MAX_FILES;
-            uint8_t oldestIdx   = MAX_FILES;
-            time_t  oldestTime  = UINT32_MAX;
+            Entry& entry = m_fileList[idx];
 
-            /* Search for existing file, empty slot or oldest file. */
-            for (uint8_t idx = 0U; idx < MAX_FILES; ++idx)
+            /* File already exists? */
+            if (true == entry.filename.equals(filename))
             {
-                Entry& entry = m_fileList[idx];
+                /* Update timestamp of existing file. */
+                entry.timestamp = currentTime;
+                break;
+            }
 
-                /* File already exists? */
-                if (true == entry.filename.equals(filename))
-                {
-                    /* Update timestamp of existing file. */
-                    entry.timestamp = currentTime;
-                    break;
-                }
+            /* Empty slot? */
+            if (true == entry.filename.isEmpty())
+            {
+                emptyIdx = idx;
+                break;
+            }
 
-                /* Empty slot? */
-                if (true == entry.filename.isEmpty())
-                {
-                    /* Remember first empty slot. */
-                    if (MAX_FILES == emptyIdx)
-                    {
-                        emptyIdx = idx;
-                    }
-                }
+            /* Remember oldest file. */
+            if (entry.timestamp < oldestTime)
+            {
                 /* Remember oldest file. */
-                else if (entry.timestamp < oldestTime)
-                {
-                    /* Remember oldest file. */
-                    oldestTime = entry.timestamp;
-                    oldestIdx  = idx;
-                }
-                else
-                {
-                    /* Nothing to do. */
-                }
+                oldestTime = entry.timestamp;
+                oldestIdx  = idx;
+            }
+        }
+
+        /* Add new file? */
+        if (MAX_FILES != emptyIdx)
+        {
+            LOG_DEBUG("Adding file to cache (%u): %s", emptyIdx, filename.c_str());
+
+            /* Use empty slot. */
+            m_fileList[emptyIdx].filename  = filename;
+            m_fileList[emptyIdx].timestamp = currentTime;
+        }
+        /* Use oldest slot? */
+        else if (MAX_FILES != oldestIdx)
+        {
+            LOG_DEBUG("Remove oldest cached file: %s", m_fileList[oldestIdx].filename.c_str());
+
+            /* Remove oldest file and use its slot. */
+            if (false == FILESYSTEM.remove(m_fileList[oldestIdx].filename))
+            {
+                LOG_WARNING("Failed to remove oldest cached file: %s", m_fileList[oldestIdx].filename.c_str());
             }
 
-            /* Add new file? */
-            if (MAX_FILES != emptyIdx)
-            {
-                /* Use empty slot. */
-                m_fileList[emptyIdx].filename  = filename;
-                m_fileList[emptyIdx].timestamp = currentTime;
-            }
-            /* Use oldest slot? */
-            else if (MAX_FILES != oldestIdx)
-            {
-                /* Remove oldest file and use its slot. */
-                if (false == FILESYSTEM.remove(m_fileList[oldestIdx].filename))
-                {
-                    LOG_WARNING("Failed to remove oldest cached file: %s", m_fileList[oldestIdx].filename.c_str());
-                }
+            LOG_DEBUG("Adding file to cache (%u): %s", oldestIdx, filename.c_str());
 
-                m_fileList[oldestIdx].filename  = filename;
-                m_fileList[oldestIdx].timestamp = currentTime;
-            }
-            else
-            {
-                /* Nothing to do. */
-            }
+            m_fileList[oldestIdx].filename  = filename;
+            m_fileList[oldestIdx].timestamp = currentTime;
+        }
+        else if (MAX_FILES > idx)
+        {
+            LOG_DEBUG("File cache file (%u) timetamp updated.", idx);
+        }
+        else
+        {
+            LOG_ERROR("Internal file cache error: %s", filename.c_str());
         }
     }
 
@@ -288,18 +289,19 @@ private:
         }
     };
 
-    const char* m_path;                /**< Path where the cached files are stored. */
-    Entry       m_fileList[MAX_FILES]; /**< List of cached files. */
+    Entry m_fileList[MAX_FILES]; /**< List of cached files. */
 
     /**
      * Scan for files in the cache directory.
      * It will setup the internal file list.
+     *
+     * @param[in] path  Path where the cached files are stored.
      */
-    void scanForFiles()
+    void scanForFiles(const char* path)
     {
-        if (nullptr != m_path)
+        if (nullptr != path)
         {
-            File    fdRoot      = FILESYSTEM.open(m_path, "r");
+            File    fdRoot      = FILESYSTEM.open(path, "r");
             File    fd          = fdRoot.openNextFile();
             uint8_t fileListIdx = 0U;
 
@@ -313,20 +315,16 @@ private:
 
                 if (false == fd.isDirectory())
                 {
-                    while (MAX_FILES > fileListIdx)
+                    LOG_DEBUG("Found cached file: %s", fullPath.c_str());
+
+                    if (MAX_FILES > fileListIdx)
                     {
-                        Entry& entry = m_fileList[fileListIdx];
+                        Entry& entry    = m_fileList[fileListIdx];
+
+                        entry.filename  = fullPath;
+                        entry.timestamp = fd.getLastWrite();
 
                         ++fileListIdx;
-
-                        if (true == entry.filename.isEmpty())
-                        {
-                            LOG_DEBUG("Found cached file: %s", fullPath.c_str());
-
-                            entry.filename  = fullPath;
-                            entry.timestamp = fd.getLastWrite();
-                            break;
-                        }
                     }
                 }
 
