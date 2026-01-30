@@ -65,7 +65,7 @@ static constexpr uint8_t CACHE_MAX_FILES          = 10U;
 /**
  * Playlist maximum number of entries.
  */
-static constexpr uint8_t PLAYLIST_MAX_ENTRIES     = 20U;
+static constexpr uint8_t PLAYLIST_MAX_ENTRIES     = 10U;
 
 /**
  * Maximum number of items to add to the playlist once when playing a channel.
