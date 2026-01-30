@@ -65,6 +65,9 @@ bool ArtworkDownloader::download(const char* url, const char* dstFilePath)
 {
     bool isSuccessful = false;
 
+    LOG_DEBUG("Download artwork from URL: %s", url);
+    LOG_DEBUG("Store to file path: %s", dstFilePath);
+
     if ((nullptr != url) &&
         (nullptr != dstFilePath) &&
         (INVALID_HTTP_JOB_ID == m_httpJobId)) /* No pending download! */

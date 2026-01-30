@@ -47,6 +47,8 @@
 #include <stdint.h>
 #include <WString.h>
 #include <Logging.h>
+#include <BitmapWidget.h>
+#include <FileUtil.h>
 
 /******************************************************************************
  * Macros
@@ -97,15 +99,16 @@ public:
      *
      * @param[in] postId       Artwork post ID.
      * @param[in] storageKey   Artwork storage key.
-     * @param[in] url          Artwork URL.
+     * @param[in] storageShard Artwork storage shard.
+     * @param[in] nativeFormat Artwork native format.
      * @param[in] dwellTime    Dwell time in ms.
      * @param[in] overwrite    If true and playlist is full, it will overwrite the oldest entry.
      *
      * @return If successful, it will return the playlist index otherwise -1.
      */
-    int32_t add(uint32_t postId, const String& storageKey, const String& url, uint32_t dwellTime, bool overwrite)
+    int32_t add(uint32_t postId, const String& storageKey, const String& storageShard, const String& nativeFormat, uint32_t dwellTime, bool overwrite)
     {
-        return add(postId, storageKey.c_str(), url.c_str(), dwellTime, overwrite);
+        return add(postId, storageKey.c_str(), storageShard.c_str(), nativeFormat.c_str(), dwellTime, overwrite);
     }
 
     /**
@@ -115,20 +118,23 @@ public:
      *
      * @param[in] postId       Artwork post ID.
      * @param[in] storageKey   Artwork storage key.
-     * @param[in] url          Artwork URL.
+     * @param[in] storageShard Artwork storage shard.
+     * @param[in] nativeFormat Artwork native format.
      * @param[in] dwellTime    Dwell time in ms.
      * @param[in] overwrite    If true and playlist is full, it will overwrite the oldest entry.
      *
      * @return If successful, it will return the playlist index otherwise -1.
      */
-    int32_t add(uint32_t postId, const char* storageKey, const char* url, uint32_t dwellTime, bool overwrite)
+    int32_t add(uint32_t postId, const char* storageKey, const char* storageShard, const char* nativeFormat, uint32_t dwellTime, bool overwrite)
     {
         int32_t playlistIdx = -1;
 
         if ((nullptr != storageKey) &&
-            (nullptr != url) &&
+            (nullptr != storageShard) &&
+            (nullptr != nativeFormat) &&
             ('\0' != storageKey[0U]) &&
-            ('\0' != url[0U]))
+            ('\0' != storageShard[0U]) &&
+            ('\0' != nativeFormat[0U]))
         {
             if ((MAX_ENTRIES > m_length) ||                         /* Playlist not full? */
                 ((MAX_ENTRIES == m_length) && (true == overwrite))) /* Playlist full, but allowed to overwrite? */
@@ -144,12 +150,13 @@ public:
                     m_beginIdx = (m_beginIdx + 1U) % MAX_ENTRIES;
                 }
 
-                m_playlist[insertIdx].postId     = postId;
-                m_playlist[insertIdx].storageKey = storageKey;
-                m_playlist[insertIdx].url        = url;
-                m_playlist[insertIdx].dwellTime  = dwellTime;
+                m_playlist[insertIdx].postId       = postId;
+                m_playlist[insertIdx].storageKey   = storageKey;
+                m_playlist[insertIdx].storageShard = storageShard;
+                m_playlist[insertIdx].nativeFormat = nativeFormat;
+                m_playlist[insertIdx].dwellTime    = dwellTime;
 
-                playlistIdx                      = insertIdx;
+                playlistIdx                        = insertIdx;
             }
         }
 
@@ -190,7 +197,9 @@ public:
 
         if (0U < m_length)
         {
-            postId = m_playlist[m_selectedIdx].postId;
+            const Entry& entry = m_playlist[m_selectedIdx];
+
+            postId             = entry.postId;
         }
 
         return postId;
@@ -207,7 +216,9 @@ public:
 
         if (0U < m_length)
         {
-            storageKey = m_playlist[m_selectedIdx].storageKey;
+            const Entry& entry = m_playlist[m_selectedIdx];
+
+            storageKey         = entry.storageKey;
         }
 
         return storageKey;
@@ -224,7 +235,16 @@ public:
 
         if (0U < m_length)
         {
-            url = m_playlist[m_selectedIdx].url;
+            const Entry& entry  = m_playlist[m_selectedIdx];
+
+            url                 = BASE_URL;
+            url                += entry.storageShard;
+            url                += "/";
+            url                += entry.storageKey;
+            url                += ".";
+            url                += entry.nativeFormat;
+
+            adjustArtworkUrlForSupportedImageFormats(url);
         }
 
         return url;
@@ -241,7 +261,9 @@ public:
 
         if (0U < m_length)
         {
-            dwellTime = m_playlist[m_selectedIdx].dwellTime;
+            const Entry& entry = m_playlist[m_selectedIdx];
+
+            dwellTime          = entry.dwellTime;
         }
 
         return dwellTime;
@@ -310,9 +332,14 @@ private:
         String storageKey;
 
         /**
-         * Artwork URL.
+         * Storage shard used for vault path resolution.
          */
-        String url;
+        String storageShard;
+
+        /**
+         * Artwork native format (e.g. jpg, png, webp).
+         */
+        String nativeFormat;
 
         /**
          * Artwork dwell time in milliseconds.
@@ -323,17 +350,45 @@ private:
         Entry() :
             postId(0U),
             storageKey(),
-            url(),
+            storageShard(),
+            nativeFormat(),
             dwellTime(0U)
         {
         }
     };
 
-    Entry    m_playlist[MAX_ENTRIES]; /**< Playlist entries. */
-    uint32_t m_beginIdx;              /**< Index of begin playlist entry. */
-    uint32_t m_length;                /**< Number of playlist entries. */
-    int32_t  m_selectedIdx;           /**< Index of current selected playlist entry. */
+    /** Base URL for artwork retrieval. */
+    static const char* BASE_URL;
+
+    Entry              m_playlist[MAX_ENTRIES]; /**< Playlist entries. */
+    uint32_t           m_beginIdx;              /**< Index of begin playlist entry. */
+    uint32_t           m_length;                /**< Number of playlist entries. */
+    int32_t            m_selectedIdx;           /**< Index of current selected playlist entry. */
+
+    /**
+     * Adjust artwork URL to download only supported image formats.
+     *
+     * @param[in,out] artworkUrl   Artwork URL to adjust.
+     */
+    void adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const
+    {
+        bool isSupportedFormat = BitmapWidget::isImageTypeSupported(artworkUrl);
+
+        /* If not, try to adjust the URL to use a supported format. */
+        if (false == isSupportedFormat)
+        {
+            /* Use always the GIF format, because it's available for static images
+             * and for animations.
+             */
+            String imageFormat = FileUtil::getFileExtension(artworkUrl);
+
+            artworkUrl.replace(imageFormat, "gif");
+        }
+    }
 };
+
+template <int32_t MAX_ENTRIES>
+const char* Playlist<MAX_ENTRIES>::BASE_URL = "http://vault.makapix.club/";
 
 /******************************************************************************
  * Functions

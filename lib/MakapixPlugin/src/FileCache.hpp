@@ -48,6 +48,7 @@
 #include <FileSystem.h>
 #include <FileUtil.h>
 #include <Logging.h>
+#include <BitmapWidget.h>
 
 /******************************************************************************
  * Macros
@@ -313,7 +314,8 @@ private:
             {
                 String fullPath = fd.path();
 
-                if (false == fd.isDirectory())
+                if ((false == fd.isDirectory()) &&
+                    (true == BitmapWidget::isImageTypeSupported(fullPath)))
                 {
                     LOG_DEBUG("Found cached file: %s", fullPath.c_str());
 
@@ -332,6 +334,7 @@ private:
 
                 /* Remove files, if there are more than MAX_FILES. */
                 if ((false == fd.isDirectory()) &&
+                    (true == BitmapWidget::isImageTypeSupported(fullPath)) &&
                     (MAX_FILES <= fileListIdx))
                 {
                     LOG_WARNING("Removing excess cached file: %s", fullPath.c_str());

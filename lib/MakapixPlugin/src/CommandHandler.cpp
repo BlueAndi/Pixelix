@@ -294,10 +294,11 @@ void CommandHandler::swapBack()
 
 void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
 {
-    JsonVariantConst jsonPostId     = jsonPayload["post_id"];
-    JsonVariantConst jsonStorageKey = jsonPayload["storage_key"];
-    JsonVariantConst jsonArtUrl     = jsonPayload["art_url"];
-    JsonVariantConst jsonCanvas     = jsonPayload["canvas"];
+    JsonVariantConst jsonPostId       = jsonPayload["post_id"];
+    JsonVariantConst jsonStorageKey   = jsonPayload["storage_key"];
+    JsonVariantConst jsonStorageShard = jsonPayload["storage_shard"];
+    JsonVariantConst jsonNativeFormat = jsonPayload["native_format"];
+    JsonVariantConst jsonCanvas       = jsonPayload["canvas"];
 
     if (false == jsonPostId.is<uint32_t>())
     {
@@ -307,9 +308,13 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
     {
         LOG_WARNING("MQTT payload storage_key not found or invalid type.");
     }
-    else if (false == jsonArtUrl.is<const char*>())
+    else if (false == jsonStorageShard.is<const char*>())
     {
-        LOG_WARNING("MQTT payload art_url not found or invalid type.");
+        LOG_WARNING("MQTT payload storage_shard not found or invalid type.");
+    }
+    else if (false == jsonNativeFormat.is<const char*>())
+    {
+        LOG_WARNING("MQTT payload native_format not found or invalid type.");
     }
     else if (false == jsonCanvas.is<const char*>())
     {
@@ -317,12 +322,13 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
     }
     else
     {
-        const char* artUrl     = jsonArtUrl.as<const char*>();
-        uint32_t    postId     = jsonPostId.as<uint32_t>();
-        const char* storageKey = jsonStorageKey.as<const char*>();
-        const char* canvas     = jsonCanvas.as<const char*>();
-        uint16_t    width      = 0U;
-        uint16_t    height     = 0U;
+        uint32_t    postId       = jsonPostId.as<uint32_t>();
+        const char* storageKey   = jsonStorageKey.as<const char*>();
+        const char* storageShard = jsonStorageShard.as<const char*>();
+        const char* nativeFormat = jsonNativeFormat.as<const char*>();
+        const char* canvas       = jsonCanvas.as<const char*>();
+        uint16_t    width        = 0U;
+        uint16_t    height       = 0U;
 
         getWidthHeight(canvas, width, height);
 
@@ -334,7 +340,7 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
         else
         {
             /* Add to internal playlist. */
-            int32_t playlistIdx = m_playlist.add(postId, storageKey, artUrl, DEFAULT_DWELL_TIME_MS, true);
+            int32_t playlistIdx = m_playlist.add(postId, storageKey, storageShard, nativeFormat, DEFAULT_DWELL_TIME_MS, true);
 
             if (0 > playlistIdx)
             {

@@ -386,21 +386,6 @@ private:
     String getCacheFileId(const String& storageKey) const;
 
     /**
-     * Fix artwork URL if needed.
-     *
-     * @param[in]  artworkUrl      Artwork URL.
-     * @param[out] fixedArtworkUrl Fixed artwork URL.
-     */
-    void fixArtworkUrl(const String& artworkUrl, String& fixedArtworkUrl) const;
-
-    /**
-     * Adjust artwork URL to download only supported image formats.
-     *
-     * @param[in,out] artworkUrl   Artwork URL to adjust.
-     */
-    void adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const;
-
-    /**
      * Command callback to play the next artwork.
      *
      * @return If successful, it will return true otherwise false.

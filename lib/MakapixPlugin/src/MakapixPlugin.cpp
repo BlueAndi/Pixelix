@@ -41,8 +41,6 @@
 #include <HttpService.h>
 #include <FileSystem.h>
 #include <Version.h>
-#include <BitmapWidget.h>
-#include <FileUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -561,12 +559,7 @@ bool MakapixPlugin::showArtwork(const String& artUrl, const String& storageKey, 
     if ((false == artUrl.isEmpty()) &&
         (false == storageKey.isEmpty()))
     {
-        String artUrlFixed;
-        String dstFilePath;
-
-        fixArtworkUrl(artUrl, artUrlFixed);
-        adjustArtworkUrlForSupportedImageFormats(artUrlFixed);
-        dstFilePath = getCacheFilePath(artUrlFixed.c_str());
+        String dstFilePath = getCacheFilePath(artUrl.c_str());
 
         /* Artwork already shown?
          * Use the destination file path as unique identifier.
@@ -616,7 +609,7 @@ bool MakapixPlugin::showArtwork(const String& artUrl, const String& storageKey, 
             if (true == downloadNeeded)
             {
                 /* Download artwork from URL. */
-                if (true == m_artworkDownloader.download(artUrlFixed, dstFilePath))
+                if (true == m_artworkDownloader.download(artUrl, dstFilePath))
                 {
                     m_isDownloadingArtwork = true;
                     isSuccessful           = true;
@@ -781,51 +774,6 @@ String MakapixPlugin::getCacheFileId(const String& storageKey) const
     }
 
     return fileId;
-}
-
-void MakapixPlugin::fixArtworkUrl(const String& artworkUrl, String& fixedArtworkUrl) const
-{
-    const char*  HTTPS_PREFIX         = "https://makapix.club/api/vault";
-    const char*  HTTP_PREFIX          = "http://vault.makapix.club";
-    const char*  NO_METHOD_PREFIX     = "/api/vault";
-    const size_t HTTPS_PREFIX_LEN     = strlen(HTTPS_PREFIX);
-    const size_t HTTP_PREFIX_LEN      = strlen(HTTP_PREFIX);
-    const size_t NO_METHOD_PREFIX_LEN = strlen(NO_METHOD_PREFIX);
-
-    /* Replace "https" with "http". */
-    if (true == artworkUrl.startsWith(HTTPS_PREFIX))
-    {
-        /* Replace with "http". */
-        fixedArtworkUrl  = HTTP_PREFIX;
-        fixedArtworkUrl += &artworkUrl.c_str()[HTTPS_PREFIX_LEN];
-    }
-    /* Does the URL miss the HTTP method and the hostname? */
-    else if (true == artworkUrl.startsWith(NO_METHOD_PREFIX))
-    {
-        /* Prepend "http://vault.makapix.club". */
-        fixedArtworkUrl  = HTTP_PREFIX;
-        fixedArtworkUrl += &artworkUrl.c_str()[NO_METHOD_PREFIX_LEN];
-    }
-    else
-    {
-        fixedArtworkUrl = artworkUrl;
-    }
-}
-
-void MakapixPlugin::adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const
-{
-    bool isSupportedFormat = BitmapWidget::isImageTypeSupported(artworkUrl);
-
-    /* If not, try to adjust the URL to use a supported format. */
-    if (false == isSupportedFormat)
-    {
-        /* Use always the GIF format, becasue its available for static images
-         * and for animations.
-         */
-        String imageFormat = FileUtil::getFileExtension(artworkUrl);
-
-        artworkUrl.replace(imageFormat, "gif");
-    }
 }
 
 bool MakapixPlugin::cmdNextArtwork()
