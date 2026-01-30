@@ -80,7 +80,7 @@ const HUB75_I2S_CFG Display::MATRIX_CFG = {
     CONFIG_HUB75_DRIVER,                /* Driver */
     CONFIG_HUB75_LINE_DRIVER,           /* Line driver */
     false,                              /* Use DMA double buffer */
-    HUB75_I2S_CFG::HZ_8M,               /* I2S clock speed */
+    HUB75_I2S_CFG::HZ_15M,              /* I2S clock speed */
     DEFAULT_LAT_BLANKING,               /* How many clock cycles to blank OE before/after LAT signal change. */
     CONFIG_HUB75_CLOCK_PHASE,           /* Clock phase */
     60U,                                /* Min. refresh/scan rate */
