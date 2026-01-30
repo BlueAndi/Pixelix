@@ -110,6 +110,8 @@ public:
 
     /**
      * Add artwork to playlist.
+     * If playlist is full and overwrite is false, the artwork will not be added.
+     * If playlist is fulll and overwrite is true, the oldest artwork will be replaced.
      *
      * @param[in] postId       Artwork post ID.
      * @param[in] storageKey   Artwork storage key.
