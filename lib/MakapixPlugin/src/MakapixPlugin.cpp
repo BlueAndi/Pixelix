@@ -453,11 +453,22 @@ void MakapixPlugin::processDisplayMode()
         /* If no icon is shown yet, show the selected artwork. */
         if (false == m_view.isIconShown())
         {
-            String   artUrl     = m_playlist.getUrl();
-            String   storageKey = m_playlist.getStorageKey();
-            uint32_t dwellTime  = m_playlist.getDwellTime();
+            int32_t selectedIdx = m_playlist.selected();
 
-            (void)showArtwork(artUrl, storageKey, dwellTime);
+            /* Anything selected in the playlist? */
+            if (0 <= selectedIdx)
+            {
+                String   artUrl     = m_playlist.getUrl();
+                String   storageKey = m_playlist.getStorageKey();
+                uint32_t dwellTime  = m_playlist.getDwellTime();
+
+                if (false == showArtwork(artUrl, storageKey, dwellTime))
+                {
+                    LOG_WARNING("Showing artwork failed.");
+                }
+
+                m_currentPlaylistIdx = selectedIdx;
+            }
         }
     }
     else if (DISPLAY_MODE_PLAY_CHANNEL == m_displayMode)
@@ -470,11 +481,22 @@ void MakapixPlugin::processDisplayMode()
         /* If no icon is shown yet, show the selected artwork. */
         else if (false == m_view.isIconShown())
         {
-            String   artUrl     = m_playlist.getUrl();
-            String   storageKey = m_playlist.getStorageKey();
-            uint32_t dwellTime  = m_playlist.getDwellTime();
+            int32_t selectedIdx = m_playlist.selected();
 
-            (void)showArtwork(artUrl, storageKey, dwellTime);
+            /* Anything selected in the playlist? */
+            if (0 <= selectedIdx)
+            {
+                String   artUrl     = m_playlist.getUrl();
+                String   storageKey = m_playlist.getStorageKey();
+                uint32_t dwellTime  = m_playlist.getDwellTime();
+
+                if (false == showArtwork(artUrl, storageKey, dwellTime))
+                {
+                    LOG_WARNING("Showing artwork failed.");
+                }
+
+                m_currentPlaylistIdx = selectedIdx;
+            }
         }
         /* Pause? */
         else if (false == m_dwellTimer.isTimerRunning())
@@ -496,7 +518,11 @@ void MakapixPlugin::processDisplayMode()
                 String   storageKey = m_playlist.getStorageKey();
                 uint32_t dwellTime  = m_playlist.getDwellTime();
 
-                (void)showArtwork(artUrl, storageKey, dwellTime);
+                if (false == showArtwork(artUrl, storageKey, dwellTime))
+                {
+                    LOG_WARNING("Showing artwork failed.");
+                }
+
                 m_currentPlaylistIdx = playlistIdx;
             }
             /* Otherwise select just next artwork in the playlist. */
@@ -530,6 +556,8 @@ bool MakapixPlugin::showArtwork(const String& artUrl, const String& storageKey, 
 {
     bool isSuccessful = false;
 
+    LOG_INFO("Show artwork %s.", storageKey.c_str());
+
     if ((false == artUrl.isEmpty()) &&
         (false == storageKey.isEmpty()))
     {
@@ -539,8 +567,6 @@ bool MakapixPlugin::showArtwork(const String& artUrl, const String& storageKey, 
         fixArtworkUrl(artUrl, artUrlFixed);
         adjustArtworkUrlForSupportedImageFormats(artUrlFixed);
         dstFilePath = getCacheFilePath(artUrlFixed.c_str());
-
-        LOG_INFO("Show artwork %s.", storageKey.c_str());
 
         /* Artwork already shown?
          * Use the destination file path as unique identifier.
@@ -633,6 +659,7 @@ bool MakapixPlugin::nextArtwork()
         }
         else
         {
+            m_currentPlaylistIdx = m_playlist.selected();
             m_commandHandler.notifyStatusUpdate(true);
             isSuccessful = true;
         }
@@ -664,6 +691,7 @@ bool MakapixPlugin::prevArtwork()
         }
         else
         {
+            m_currentPlaylistIdx = m_playlist.selected();
             m_commandHandler.notifyStatusUpdate(true);
             isSuccessful = true;
         }
@@ -873,6 +901,7 @@ void MakapixPlugin::cmdShowArtwork()
         }
         else
         {
+            m_currentPlaylistIdx = m_playlist.selected();
             m_view.showActionIconPlay();
         }
     }
