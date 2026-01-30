@@ -71,7 +71,7 @@ public:
     typedef std::function<bool(uint8_t& data)> ReadFromInStream;
 
     /** Prototype for writing decoded data to output stream. */
-    typedef std::function<bool(uint8_t& data)> WriteToOutStream;
+    typedef std::function<bool(uint8_t data)> WriteToOutStream;
 
     /**
      * Construct a LZW decoder object.
@@ -213,7 +213,7 @@ private:
      *
      * @return If successful, it will return true otherwise false.
      */
-    bool decompress(uint32_t& code, const WriteToOutStream& writeToOutStreamFunc);
+    bool decompress(uint32_t code, const WriteToOutStream& writeToOutStreamFunc);
 };
 
 /******************************************************************************
