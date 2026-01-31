@@ -81,7 +81,7 @@ void ConnectedState::entry(StateMachine& sm)
 {
     SettingsService& settings               = SettingsService::getInstance();
     String           infoStr                = "Hostname: ";
-    String           infoStringIp           = "IP: ";
+    String           infoStringIp           = " IP: ";
     String           notifyURL              = "-";
     bool             isQuiet                = false;
     const uint32_t   DURATION_NON_SCROLLING = 4000U; /* ms */
