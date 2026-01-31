@@ -47,8 +47,6 @@
 #include <stdint.h>
 #include <functional>
 #include <ArduinoJson.h>
-#include "FileCache.hpp"
-#include "Playlist.hpp"
 
 /******************************************************************************
  * Macros
@@ -57,16 +55,6 @@
 /** Constants */
 namespace Constant
 {
-/**
- * Cache maximum number of artwork files.
- */
-static constexpr uint8_t CACHE_MAX_FILES          = 10U;
-
-/**
- * Playlist maximum number of entries.
- */
-static constexpr uint8_t PLAYLIST_MAX_ENTRIES     = 10U;
-
 /**
  * Maximum number of items to add to the playlist once when playing a channel.
  * It should be lower than or equal to PLAYLIST_MAX_ENTRIES. But consider the
@@ -79,12 +67,6 @@ static constexpr uint32_t CHANNEL_PAGE_ITEM_LIMIT = 4U;
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
-
-/** Makapix file cache type. */
-typedef FileCache<Constant::CACHE_MAX_FILES> MakapixFileCache;
-
-/** Makapix playlist type. */
-typedef Playlist<Constant::PLAYLIST_MAX_ENTRIES> MakapixPlaylist;
 
 /** Show artwork callback prototype. */
 typedef std::function<void(void)> MakapixShowArtworkCallback;

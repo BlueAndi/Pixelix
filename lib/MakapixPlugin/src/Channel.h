@@ -47,6 +47,7 @@
 #include <WString.h>
 #include "MakapixTypes.h"
 #include "RequestHandler.h"
+#include "Playlist.h"
 
 /******************************************************************************
  * Macros
@@ -90,7 +91,7 @@ public:
      *
      * @param[in] playlist  Playlist of artworks.
      */
-    Channel(MakapixPlaylist& playlist);
+    Channel(Playlist& playlist);
 
     /**
      * Destroys the request handler.
@@ -163,7 +164,7 @@ public:
 
 private:
 
-    MakapixPlaylist&           m_playlist;            /**< Playlist of artworks. */
+    Playlist&                  m_playlist;            /**< Playlist of artworks. */
     MakapixNextArtworkCallback m_nextArtworkCallback; /**< Next artwork callback. */
     RequestHandler             m_requestHandler;      /**< Request handler. */
     ChannelId                  m_channelId;           /**< Artwork channel id. */

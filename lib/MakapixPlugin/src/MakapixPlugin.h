@@ -55,8 +55,8 @@
 #include <HttpFileResponseHandler.h>
 #include <SimpleTimer.hpp>
 #include <MqttTypes.h>
-#include "FileCache.hpp"
-#include "Playlist.hpp"
+#include "FileCache.h"
+#include "Playlist.h"
 #include "ArtworkDownloader.h"
 #include "CommandHandler.h"
 #include "RequestHandler.h"
@@ -283,7 +283,10 @@ private:
     /**
      * Artwork cache location path where to store downloaded artwork files.
      */
-    static const char*     ARTWORK_CACHE_PATH;
+    static const char* ARTWORK_CACHE_PATH;
+
+    /** Default channel name to play on start. */
+    static const char*     DEFAULT_CHANNEL_NAME;
 
     _MakapixPlugin::View   m_view;                 /**< View with all widgets. */
     String                 m_playerKey;            /**< Makapix player key. */
@@ -291,8 +294,8 @@ private:
     mutable MutexRecursive m_mutex;                /**< Mutex to protect against concurrent access. */
     bool                   m_hasTopicChanged;      /**< Has the topic content changed? */
     DisplayMode            m_displayMode;          /**< Current display mode. */
-    MakapixFileCache       m_fileCache;            /**< File cache for downloaded artwork files. */
-    MakapixPlaylist        m_playlist;             /**< Local playlist of artworks. */
+    FileCache              m_fileCache;            /**< File cache for downloaded artwork files. */
+    Playlist               m_playlist;             /**< Local playlist of artworks. */
     ArtworkDownloader      m_artworkDownloader;    /**< Artwork downloader. */
     bool                   m_isDownloadingArtwork; /**< Is artwork download in progress? */
     CommandHandler         m_commandHandler;       /**< Command handler. */

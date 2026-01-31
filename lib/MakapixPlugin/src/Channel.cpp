@@ -74,7 +74,7 @@ static const char* gSortOrderAsStr[] = {
  * Public Methods
  *****************************************************************************/
 
-Channel::Channel(MakapixPlaylist& playlist) :
+Channel::Channel(Playlist& playlist) :
     m_playlist(playlist),
     m_nextArtworkCallback(nullptr),
     m_requestHandler(),

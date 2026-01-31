@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Playlist.hpp
+ * @file   Playlist.h
  * @brief  Artwork playlist
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef PLAYLIST_HPP
-#define PLAYLIST_HPP
+#ifndef PLAYLIST_H
+#define PLAYLIST_H
 
 /******************************************************************************
  * Compile Switches
@@ -49,6 +49,7 @@
 #include <Logging.h>
 #include <BitmapWidget.h>
 #include <FileUtil.h>
+#include <vector>
 
 /******************************************************************************
  * Macros
@@ -61,19 +62,33 @@
 /**
  * The playlist manages a list of artwork ids.
  */
-template < int32_t MAX_ENTRIES>
 class Playlist
 {
 public:
 
     /**
      * Constructs the playlist.
+     *
+     * @param[in] maxEntries   Maximum number of playlist entries.
      */
-    Playlist() :
+    Playlist(uint16_t maxEntries = PLAYLIST_MAX_ENTRIES) :
+        m_maxEntries(maxEntries),
         m_playlist(),
         m_beginIdx(0U),
-        m_length(0U),
         m_selectedIdx(-1)
+    {
+    }
+
+    /**
+     * Copy constructor.
+     *
+     * @param[in] other    Other playlist
+     */
+    Playlist(const Playlist& other) :
+        m_maxEntries(other.m_maxEntries),
+        m_playlist(other.m_playlist),
+        m_beginIdx(other.m_beginIdx),
+        m_selectedIdx(other.m_selectedIdx)
     {
     }
 
@@ -85,13 +100,22 @@ public:
     }
 
     /**
+     * Assignment operator.
+     *
+     * @param[in] other    Other playlist
+     *
+     * @return This playlist
+     */
+    Playlist& operator=(const Playlist& other);
+
+    /**
      * Get number of entries in playlist.
      *
      * @return Number of entries.
      */
     uint32_t length() const
     {
-        return m_length;
+        return m_playlist.size();
     }
 
     /**
@@ -125,43 +149,7 @@ public:
      *
      * @return If successful, it will return the playlist index otherwise -1.
      */
-    int32_t add(uint32_t postId, const char* storageKey, const char* storageShard, const char* nativeFormat, uint32_t dwellTime, bool overwrite)
-    {
-        int32_t playlistIdx = -1;
-
-        if ((nullptr != storageKey) &&
-            (nullptr != storageShard) &&
-            (nullptr != nativeFormat) &&
-            ('\0' != storageKey[0U]) &&
-            ('\0' != storageShard[0U]) &&
-            ('\0' != nativeFormat[0U]))
-        {
-            if ((MAX_ENTRIES > m_length) ||                         /* Playlist not full? */
-                ((MAX_ENTRIES == m_length) && (true == overwrite))) /* Playlist full, but allowed to overwrite? */
-            {
-                uint8_t insertIdx = (m_beginIdx + m_length) % MAX_ENTRIES;
-
-                if (MAX_ENTRIES > m_length)
-                {
-                    ++m_length;
-                }
-                else
-                {
-                    m_beginIdx = (m_beginIdx + 1U) % MAX_ENTRIES;
-                }
-
-                m_playlist[insertIdx].postId       = postId;
-                m_playlist[insertIdx].storageKey   = storageKey;
-                m_playlist[insertIdx].storageShard = storageShard;
-                m_playlist[insertIdx].nativeFormat = nativeFormat;
-                m_playlist[insertIdx].dwellTime    = dwellTime;
-
-                playlistIdx                        = insertIdx;
-            }
-        }
-
-        return playlistIdx;
-    }
+    int32_t add(uint32_t postId, const char* storageKey, const char* storageShard, const char* nativeFormat, uint32_t dwellTime, bool overwrite);
 
     /**
      * Get index of selected artwork.
@@ -178,142 +166,51 @@ public:
      *
      * @param[in] index   Playlist index.
      */
-    void select(uint32_t index)
-    {
-        if (m_length > index)
-        {
-            m_selectedIdx = index;
-        }
-    }
+    void select(uint32_t index);
 
     /**
      * Get post ID of current selected artwork.
      *
      * @return If successful, it will return the post ID otherwise 0.
      */
-    uint32_t getPostId() const
-    {
-        uint32_t postId = 0U;
-
-        if (0U < m_length)
-        {
-            const Entry& entry = m_playlist[m_selectedIdx];
-
-            postId             = entry.postId;
-        }
-
-        return postId;
-    }
+    uint32_t getPostId() const;
 
     /**
      * Get storage key of current selected artwork.
      *
      * @return If successful, it will return the storage key otherwise an empty string.
      */
-    String getStorageKey() const
-    {
-        String storageKey;
-
-        if (0U < m_length)
-        {
-            const Entry& entry = m_playlist[m_selectedIdx];
-
-            storageKey         = entry.storageKey;
-        }
-
-        return storageKey;
-    }
+    String getStorageKey() const;
 
     /**
      * Get URL of current selected artwork.
      *
      * @return If successful, it will return the URL otherwise an empty string.
      */
-    String getUrl() const
-    {
-        String url;
-
-        if (0U < m_length)
-        {
-            const Entry& entry  = m_playlist[m_selectedIdx];
-
-            url                 = BASE_URL;
-            url                += entry.storageShard;
-            url                += "/";
-            url                += entry.storageKey;
-            url                += ".";
-            url                += entry.nativeFormat;
-
-            adjustArtworkUrlForSupportedImageFormats(url);
-        }
-
-        return url;
-    }
+    String getUrl() const;
 
     /**
      * Get dwell time of current selected artwork.
      *
      * @return If successful, it will return the dwell time in ms otherwise 0.
      */
-    uint32_t getDwellTime() const
-    {
-        uint32_t dwellTime = 0U;
-
-        if (0U < m_length)
-        {
-            const Entry& entry = m_playlist[m_selectedIdx];
-
-            dwellTime          = entry.dwellTime;
-        }
-
-        return dwellTime;
-    }
-
+    uint32_t getDwellTime() const;
     /**
      * Select next artwork in playlist.
      *
      * @return If playlist is empty, it will return false otherwise true.
      */
-    bool next()
-    {
-        bool isSuccessful = false;
-
-        if (0U < m_length)
-        {
-            ++m_selectedIdx;
-            m_selectedIdx %= m_length;
-
-            isSuccessful   = true;
-        }
-
-        return isSuccessful;
-    }
+    bool next();
 
     /**
      * Select previous artwork in playlist.
      *
      * @return If playlist is empty, it will return false otherwise true.
      */
-    bool prev()
-    {
-        bool isSuccessful = false;
+    bool prev();
 
-        if (0U < m_length)
-        {
-            if (0U == m_selectedIdx)
-            {
-                m_selectedIdx = m_length - 1U;
-            }
-            else
-            {
-                --m_selectedIdx;
-            }
-
-            isSuccessful = true;
-        }
-
-        return isSuccessful;
-    }
+    /** Maximum number of playlist entries. */
+    static const uint16_t PLAYLIST_MAX_ENTRIES = 10U;
 
 private:
 
@@ -360,40 +257,28 @@ private:
     /** Base URL for artwork retrieval. */
     static const char* BASE_URL;
 
-    Entry              m_playlist[MAX_ENTRIES]; /**< Playlist entries. */
-    uint32_t           m_beginIdx;              /**< Index of begin playlist entry. */
-    uint32_t           m_length;                /**< Number of playlist entries. */
-    int32_t            m_selectedIdx;           /**< Index of current selected playlist entry. */
+    /**
+     * Playlist type.
+     */
+    typedef std::vector<Entry> PlaylistType;
+
+    uint16_t                   m_maxEntries;  /**< Maximum number of playlist entries. */
+    PlaylistType               m_playlist;    /**< Playlist entries. */
+    uint32_t                   m_beginIdx;    /**< Index of begin playlist entry. */
+    int32_t                    m_selectedIdx; /**< Index of current selected playlist entry. */
 
     /**
      * Adjust artwork URL to download only supported image formats.
      *
      * @param[in,out] artworkUrl   Artwork URL to adjust.
      */
-    void adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const
-    {
-        bool isSupportedFormat = BitmapWidget::isImageTypeSupported(artworkUrl);
-
-        /* If not, try to adjust the URL to use a supported format. */
-        if (false == isSupportedFormat)
-        {
-            /* Use always the GIF format, because it's available for static images
-             * and for animations.
-             */
-            String imageFormat = FileUtil::getFileExtension(artworkUrl);
-
-            artworkUrl.replace(imageFormat, "gif");
-        }
-    }
+    void adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const;
 };
-
-template <int32_t MAX_ENTRIES>
-const char* Playlist<MAX_ENTRIES>::BASE_URL = "http://vault.makapix.club/";
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* PLAYLIST_HPP */
+#endif /* PLAYLIST_H */
 
 /** @} */

@@ -49,6 +49,7 @@
 #include <SimpleTimer.hpp>
 #include <MqttTypes.h>
 #include "MakapixTypes.h"
+#include "Playlist.h"
 
 /******************************************************************************
  * Macros
@@ -76,7 +77,7 @@ public:
      *
      * @param[in] playlist  Playlist of artworks.
      */
-    CommandHandler(MakapixPlaylist& playlist) :
+    CommandHandler(Playlist& playlist) :
         m_playlist(playlist),
         m_nextArtworkCallback(nullptr),
         m_prevArtworkCallback(nullptr),
@@ -157,7 +158,7 @@ private:
      */
     static const uint32_t      DEFAULT_DWELL_TIME_MS = SIMPLE_TIMER_SECONDS(30U);
 
-    MakapixPlaylist&           m_playlist;            /**< Local playlist of artworks. */
+    Playlist&                  m_playlist;            /**< Local playlist of artworks. */
     MakapixNextArtworkCallback m_nextArtworkCallback; /**< Next artwork callback. */
     MakapixPrevArtworkCallback m_prevArtworkCallback; /**< Previous artwork callback. */
     MakapixPlayChannelCallback m_playChannelCallback; /**< Play channel callback. */

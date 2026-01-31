@@ -20,17 +20,19 @@ package "Services" {
 pluginWithConfig <|.. makapixPlugin: <<realize>>
 makapixPlugin --> artworkDownloader
 makapixPlugin --> channel
-makapixPlugin --> playlist
+makapixPlugin ---> playlist
 makapixPlugin --> commandHandler
 
-artworkDownloader .....> httpService: <<use>>
+artworkDownloader .....> httpService: <<uses>>
 
 channel --> requestHandler
+channel ..> playlist: <<uses>>
 
-commandHandler .....> mqttService: <<use>>
-commandHandler ...> mqttTopic: <<use>>
+commandHandler .....> mqttService: <<uses>>
+commandHandler ...> mqttTopic: <<uses>>
+commandHandler ..> playlist: <<uses>>
 
-requestHandler ....> mqttService: <<use>>
-requestHandler ..> mqttTopic: <<use>>
+requestHandler ....> mqttService: <<uses>>
+requestHandler ..> mqttTopic: <<uses>>
 
 @enduml

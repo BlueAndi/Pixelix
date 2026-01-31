@@ -63,12 +63,13 @@
  *****************************************************************************/
 
 /** Initialize instance counter. */
-uint32_t MakapixPlugin::instanceCnt           = 0U;
+uint32_t MakapixPlugin::instanceCnt             = 0U;
 
 /* Initialize plugin topic. */
-const char* MakapixPlugin::TOPIC_CONFIG       = "makapixCfg";
-const char* MakapixPlugin::TOPIC_PLAY_CONTROL = "makapixPlayCtrl";
-const char* MakapixPlugin::ARTWORK_CACHE_PATH = "/tmp/";
+const char* MakapixPlugin::TOPIC_CONFIG         = "makapixCfg";
+const char* MakapixPlugin::TOPIC_PLAY_CONTROL   = "makapixPlayCtrl";
+const char* MakapixPlugin::ARTWORK_CACHE_PATH   = "/tmp/";
+const char* MakapixPlugin::DEFAULT_CHANNEL_NAME = "promoted";
 
 /******************************************************************************
  * Public Methods
@@ -295,9 +296,6 @@ void MakapixPlugin::start(uint16_t width, uint16_t height)
     /* Configure command handler and channel with initial loaded configuration. */
     m_commandHandler.configure(m_playerKey, m_mqttInstance);
     m_channel.configure(m_playerKey, m_mqttInstance);
-
-    /* Start dwell timer with 0 to force showing first artwork immediately. */
-    m_dwellTimer.start(0U);
 }
 
 void MakapixPlugin::stop()
