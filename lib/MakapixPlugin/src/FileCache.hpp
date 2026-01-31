@@ -169,8 +169,6 @@ public:
         uint8_t oldestIdx  = MAX_FILES;
         time_t  oldestTime = INT32_MAX;
 
-        LOG_DEBUG("Adding file to cache: %s", filename.c_str());
-
         /* Search for existing file, empty slot or oldest file. */
         for (idx = 0U; idx < MAX_FILES; ++idx)
         {
