@@ -83,7 +83,7 @@ const HUB75_I2S_CFG Display::MATRIX_CFG = {
     HUB75_I2S_CFG::HZ_15M,              /* I2S clock speed */
     DEFAULT_LAT_BLANKING,               /* How many clock cycles to blank OE before/after LAT signal change. */
     CONFIG_HUB75_CLOCK_PHASE,           /* Clock phase */
-    60U,                                /* Min. refresh/scan rate */
+    72U,                                /* Min. refresh/scan rate */
     CONFIG_HUB75_PIXEL_COLOR_DEPTH_BITS /* Pixel color depth bits, e.g. 8 bits means 8 bit per color, therefore 24 bit for RGB. */
 };
 
