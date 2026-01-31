@@ -73,7 +73,7 @@ jobs:
 
     - name: Deploy ${{ matrix.environment }}
       if: startsWith(github.ref_type, 'refs/tags/v')
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.environment }}
         path: |
@@ -196,7 +196,7 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v2
 
     - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1.9.8
+      uses: mattnotmitt/doxygen-action@v1
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'
@@ -213,7 +213,7 @@ jobs:
     needs: [build, check, doc]
     steps:
     - name: Deploy release artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         path: ${{ github.workspace }}/artifacts
 
@@ -226,7 +226,7 @@ jobs:
       working-directory: ${{ github.workspace }}/artifacts
 
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
       env:

@@ -217,10 +217,10 @@ jobs:
         pip install --upgrade platformio
 
     - name: Set up graphviz
-      uses: ts-graphviz/setup-graphviz@v2.0.2
+      uses: ts-graphviz/setup-graphviz@v2
 
     - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1.9.8
+      uses: mattnotmitt/doxygen-action@v1
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'
