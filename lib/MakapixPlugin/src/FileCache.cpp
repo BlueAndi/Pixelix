@@ -278,7 +278,7 @@ void FileCache::scanForFiles(const char* path)
             /* Remove files, if there are more than m_maxEntries. */
             if ((false == fd.isDirectory()) &&
                 (true == BitmapWidget::isImageTypeSupported(fullPath)) &&
-                (m_maxEntries <= fileListIdx))
+                (m_maxEntries < fileListIdx))
             {
                 LOG_WARNING("Removing excess cached file: %s", fullPath.c_str());
 
