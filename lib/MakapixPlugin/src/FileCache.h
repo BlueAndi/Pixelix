@@ -82,9 +82,9 @@ public:
      *
      * @param[in] other Another file cache handler.
      */
-    FileCache(const FileCache&) :
-        m_maxEntries(0U),
-        m_fileList()
+    FileCache(const FileCache& other) :
+        m_maxEntries(other.m_maxEntries),
+        m_fileList(other.m_fileList)
     {
     }
 
