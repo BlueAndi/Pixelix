@@ -74,8 +74,7 @@
                         <div class="form-group mb-3">
                             <label class="form-label">Quick Channel Selection:</label>
                             <div class="d-grid gap-2">
-                                <button type="button" id="btnAll" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'all')">All</button>
-                                <button type="button" id="btnRecent" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'recent')">Recent Artworks</button>
+                                <button type="button" id="btnAll" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'all')">Recent Artworks</button>
                                 <button type="button" id="btnPromoted" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'promoted')">Promoted Artworks</button>
                                 <button type="button" id="btnUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'user')">Own Artworks</button>
                             </div>
@@ -197,7 +196,6 @@
 
                     /* Clear all active states. */
                     $('#btnAll').removeClass('active');
-                    $('#btnRecent').removeClass('active');
                     $('#btnPromoted').removeClass('active');
                     $('#btnUser').removeClass('active');
 
