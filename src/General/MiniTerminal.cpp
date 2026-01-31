@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,6 +74,9 @@ static const char WRITE_WIFI_SSID[]                          = "write wifi ssid"
 /** Command: get ip */
 static const char GET_IP[]                                   = "get ip";
 
+/** Command: get hostname */
+static const char GET_HOSTNAME[]                             = "get hostname";
+
 /** Command: status */
 static const char GET_STATUS[]                               = "get status";
 
@@ -85,6 +88,7 @@ const MiniTerminal::CmdTableEntry MiniTerminal::m_cmdTable[] = {
     { WRITE_WIFI_PASSPHRASE, &MiniTerminal::cmdWriteWifiPassphrase },
     { WRITE_WIFI_SSID, &MiniTerminal::cmdWriteWifiSSID },
     { GET_IP, &MiniTerminal::cmdGetIPAddress },
+    { GET_HOSTNAME, &MiniTerminal::cmdGetHostname },
     { GET_STATUS, &MiniTerminal::cmdGetStatus },
     { HELP, &MiniTerminal::cmdHelp },
 };
@@ -144,8 +148,8 @@ void MiniTerminal::process()
         else if (INPUT_BUFFER_SIZE > (m_writeIndex + 1U))
         {
             /* Valid character? */
-            if ((' ' <= currentChar) &&
-                ('~' >= currentChar))
+            if ((ASCII_SP <= currentChar) &&
+                (ASCII_TILDE >= currentChar))
             {
                 m_input[m_writeIndex] = currentChar;
                 ++m_writeIndex;
@@ -191,21 +195,23 @@ void MiniTerminal::executeCommand(const char* cmdLine)
 
     for (idx = 0U; UTIL_ARRAY_NUM(m_cmdTable) > idx; ++idx)
     {
-        const CmdTableEntry entry = m_cmdTable[idx];
-        const size_t        len   = strlen(entry.cmdStr);
+        const CmdTableEntry entry  = m_cmdTable[idx];
+        const size_t        cmdLen = strlen(entry.cmdStr);
 
-        if (0 == strncmp(cmdLine, entry.cmdStr, len))
+        if (0 == strncmp(cmdLine, entry.cmdStr, cmdLen))
         {
-            const char* par = &cmdLine[len];
+            const char* par = &cmdLine[cmdLen];
 
-            /* Skip leading whitespaces. */
-            while ((' ' == *par) || ('\t' == *par))
+            /* Skip leading whitespace. */
+            while ((ASCII_SP == *par) || (ASCII_TAB == *par))
             {
                 ++par;
             }
+            // NOTE: Allow empty parameters to be able to clear settings values.
 
-            /* Execute the command with its parameters. */
+            /* Execute the command with its parameters (optional). */
             (this->*entry.handler)(par);
+
             break;
         }
     }
@@ -222,9 +228,8 @@ void MiniTerminal::cmdRestart(const char* par)
     RestartMgr&                  restartMgr    = RestartMgr::getInstance();
     RestartMgr::RestartReqStatus status        = RestartMgr::RESTART_REQ_STATUS_ERR;
 
-    /* Just restart the application? */
-    if ((nullptr == par) ||
-        ('\0' == *par))
+    /* Just restart the application if no parameter has been given. */
+    if ('\0' == *par)
     {
         status = restartMgr.reqRestart(RESTART_DELAY, false);
     }
@@ -236,8 +241,8 @@ void MiniTerminal::cmdRestart(const char* par)
     /* Invalid parameter. */
     else
     {
-        /* Nothing to do. */
-        ;
+        writeError((String("Got invalid restart parameter '") + par + "'.\n").c_str());
+        return;
     }
 
     if (RestartMgr::RESTART_REQ_STATUS_OK != status)
@@ -252,53 +257,47 @@ void MiniTerminal::cmdRestart(const char* par)
 
 void MiniTerminal::cmdWriteWifiPassphrase(const char* par)
 {
-    if (nullptr != par)
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(false))
     {
-        SettingsService& settings = SettingsService::getInstance();
+        writeError("Failed to open settings.\n");
+    }
+    else
+    {
+        KeyValueString& wifiPassword = settings.getWifiPassphrase();
 
-        if (false == settings.open(false))
-        {
-            writeError();
-        }
-        else
-        {
-            KeyValueString& wifiPassword = settings.getWifiPassphrase();
+        wifiPassword.setValue(par);
+        settings.close();
 
-            wifiPassword.setValue(par);
-            settings.close();
-
-            writeSuccessful();
-        }
+        writeSuccessful();
     }
 }
 
 void MiniTerminal::cmdWriteWifiSSID(const char* par)
 {
-    if (nullptr != par)
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(false))
     {
-        SettingsService& settings = SettingsService::getInstance();
+        writeError("Failed to open settings.\n");
+    }
+    else
+    {
+        KeyValueString& wifiSSID = settings.getWifiSSID();
 
-        if (false == settings.open(false))
-        {
-            writeError();
-        }
-        else
-        {
-            KeyValueString& wifiSSID = settings.getWifiSSID();
+        wifiSSID.setValue(par);
+        settings.close();
 
-            wifiSSID.setValue(par);
-            settings.close();
-
-            writeSuccessful();
-        }
+        writeSuccessful();
     }
 }
 
 void MiniTerminal::cmdGetIPAddress(const char* par)
 {
-    UTIL_NOT_USED(par);
-
     String result;
+
+    UTIL_NOT_USED(par);
 
     if (WIFI_MODE_AP == WiFi.getMode())
     {
@@ -314,12 +313,32 @@ void MiniTerminal::cmdGetIPAddress(const char* par)
     writeSuccessful(result.c_str());
 }
 
-void MiniTerminal::cmdGetStatus(const char* par)
+void MiniTerminal::cmdGetHostname(const char* par)
 {
+    SettingsService& settings = SettingsService::getInstance();
+
     UTIL_NOT_USED(par);
 
+    if (false == settings.open(true))
+    {
+        writeError("Failed to open settings.\n");
+    }
+    else
+    {
+        String result(settings.getHostname().getValue());
+        settings.close();
+        result += "\n";
+
+        writeSuccessful(result.c_str());
+    }
+}
+
+void MiniTerminal::cmdGetStatus(const char* par)
+{
     ErrorState::ErrorId status = ErrorState::getInstance().getErrorId();
     String              result;
+
+    UTIL_NOT_USED(par);
 
     result += static_cast<int32_t>(status);
     result += "\n";

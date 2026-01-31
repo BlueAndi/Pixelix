@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,16 +66,16 @@ namespace RestUtil
 
 /**
  * Prepare JSON document for success response.
- * 
+ *
  * @param[out]  jsonDoc JSON document
- * 
+ *
  * @return JSON object where to add additional data.
  */
 JsonVariant prepareRspSuccess(JsonDocument& jsonDoc);
 
 /**
  * Prepare JSON document for error response.
- * 
+ *
  * @param[out]  jsonDoc JSON document where to add error response.
  * @param[in]   msg     Error message
  */
@@ -83,22 +83,22 @@ void prepareRspError(JsonDocument& jsonDoc, const char* msg);
 
 /**
  * Prepare JSON document for concrete error response: HTTP method not supported.
- * 
+ *
  * @param[out]  jsonDoc JSON document where to add error response.
  */
 void prepareRspErrorHttpMethodNotSupported(JsonDocument& jsonDoc);
 
 /**
  * Send a application/json response to the client back.
- * 
+ *
  * @param[in] request           Client request
  * @param[in] jsonDoc           JSON response document
  * @param[in] httpStatusCode    HTTP status code
  */
 void sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& jsonDoc, uint32_t httpStatusCode);
 
-}
+} // namespace RestUtil
 
-#endif  /* REST_UTIL_H */
+#endif /* REST_UTIL_H */
 
 /** @} */

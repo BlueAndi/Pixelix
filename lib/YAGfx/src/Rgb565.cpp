@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,11 +63,11 @@ void Rgb565::turnColorWheel(uint8_t wheelPos)
 {
     const uint8_t COL_PARTS = 3U;
     const uint8_t COL_RANGE = UINT8_MAX / COL_PARTS;
-    uint8_t  red;
-    uint8_t  green;
-    uint8_t  blue;
+    uint8_t       red;
+    uint8_t       green;
+    uint8_t       blue;
 
-    wheelPos                = UINT8_MAX - wheelPos;
+    wheelPos = UINT8_MAX - wheelPos;
 
     /* Red + Blue ? */
     if (wheelPos < COL_RANGE)
@@ -81,18 +81,18 @@ void Rgb565::turnColorWheel(uint8_t wheelPos)
     {
         wheelPos -= COL_RANGE;
 
-        red     = 0U;
-        green   = COL_PARTS * wheelPos;
-        blue    = UINT8_MAX - wheelPos * COL_PARTS;
+        red       = 0U;
+        green     = COL_PARTS * wheelPos;
+        blue      = UINT8_MAX - wheelPos * COL_PARTS;
     }
     /* Red + Green */
     else
     {
         wheelPos -= ((COL_PARTS - 1U) * COL_RANGE);
 
-        red     = COL_PARTS * wheelPos;
-        green   = UINT8_MAX - wheelPos * COL_PARTS;
-        blue    = 0U;
+        red       = COL_PARTS * wheelPos;
+        green     = UINT8_MAX - wheelPos * COL_PARTS;
+        blue      = 0U;
     }
 
     m_color565 = ColorUtil::to565(red, green, blue);

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,7 +84,7 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
     Type getType() const final
@@ -94,14 +94,14 @@ public:
 
     /**
      * Get data value.
-     * 
+     *
      * @return Sensor data value in lux.
      */
     float getValue() final;
 
     /**
      * Set LDR sensor driver.
-     * 
+     *
      * @param[in] driver    LDR driver
      */
     void setDriver(SensorLdr* driver)
@@ -111,7 +111,7 @@ public:
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value in lux.
      */
     float getOffset() const final
@@ -121,7 +121,7 @@ public:
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value in lux.
      */
     void setOffset(float offset) final
@@ -131,8 +131,8 @@ public:
 
 private:
 
-    SensorLdr*  m_driver;   /**< LDR sensor driver. */
-    float       m_offset;   /**< Illuminance offset in lux for sensor tolerance compensation. */
+    SensorLdr* m_driver; /**< LDR sensor driver. */
+    float      m_offset; /**< Illuminance offset in lux for sensor tolerance compensation. */
 
     LdrChannelIlluminance(const LdrChannelIlluminance& channel);
     LdrChannelIlluminance& operator=(const LdrChannelIlluminance& channel);
@@ -149,18 +149,18 @@ public:
     /** Supported LDR types. */
     enum LdrType
     {
-        LDR_TYPE_GL5516 = 0,    /**< GL5516 */
-        LDR_TYPE_GL5528,        /**< GL5528 */
-        LDR_TYPE_GL5537_1,      /**< GL5537-1 */
-        LDR_TYPE_GL5537_2,      /**< GL5537-2 */
-        LDR_TYPE_GL5539,        /**< GL5539 */
-        LDR_TYPE_GL5549,        /**< GL5549 */
-        LDR_TYPE_MAX            /**< Number of supported LDR types. */
+        LDR_TYPE_GL5516 = 0, /**< GL5516 */
+        LDR_TYPE_GL5528,     /**< GL5528 */
+        LDR_TYPE_GL5537_1,   /**< GL5537-1 */
+        LDR_TYPE_GL5537_2,   /**< GL5537-2 */
+        LDR_TYPE_GL5539,     /**< GL5539 */
+        LDR_TYPE_GL5549,     /**< GL5549 */
+        LDR_TYPE_MAX         /**< Number of supported LDR types. */
     };
 
     /**
      * Constructs the driver for the LDR.
-     * 
+     *
      * @param[in] ldrType       The type of the LDR.
      * @param[in] resistance    The series resistance in Ohm.
      */
@@ -201,7 +201,7 @@ public:
 
     /**
      * Get sensor name.
-     * 
+     *
      * @return Sensor name
      */
     const char* getName() const final;
@@ -217,7 +217,7 @@ public:
 
     /**
      * Get number of data channels.
-     * 
+     *
      * @return Number of data channels.
      */
     uint8_t getNumChannels() const final
@@ -227,11 +227,11 @@ public:
 
     /**
      * Get data channel by index.
-     * If sensor is not available or channel index is out of bounds, it will 
+     * If sensor is not available or channel index is out of bounds, it will
      * return nullptr.
-     * 
+     *
      * @param[in] index Index of the data channel.
-     * 
+     *
      * @return Data channel
      */
     ISensorChannel* getChannel(uint8_t index) final;
@@ -245,10 +245,10 @@ public:
 
 private:
 
-    bool                    m_isAvailable;          /**< Is a sensor available or not? */
-    LdrChannelIlluminance   m_illuminanceChannel;   /**< Illuminance channel. */
-    LdrType                 m_ldrType;              /**< Type of the LDR. */
-    float                   m_resistance;           /**< The series restistance in Ohm. */
+    bool                  m_isAvailable;        /**< Is a sensor available or not? */
+    LdrChannelIlluminance m_illuminanceChannel; /**< Illuminance channel. */
+    LdrType               m_ldrType;            /**< Type of the LDR. */
+    float                 m_resistance;         /**< The series restistance in Ohm. */
 
     SensorLdr();
     SensorLdr(const SensorLdr& sensor);
@@ -259,6 +259,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_LDR_H */
+#endif /* SENSOR_LDR_H */
 
 /** @} */

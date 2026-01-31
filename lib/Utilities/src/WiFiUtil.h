@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,19 +76,27 @@ extern uint8_t getSignalQuality(int8_t rssi);
 
 /**
  * Get the factory programmed wifi MAC address.
- * 
+ *
  * @param[out] macAddr  MAC address in "00:00:00:00:00:00" syntax.
  */
 extern void getEFuseMAC(String& macAddr);
 
 /**
  * Get the unique chip id.
- * 
+ *
  * @param[out] chipId   Chip id
  */
 extern void getChipId(String& chipId);
-}
 
-#endif  /* WIFI_UTIL_H */
+/**
+ * Get wifi RSSI.
+ *
+ * @return WiFi station SSID
+ */
+extern String getRSSI();
+
+} // namespace WiFiUtil
+
+#endif /* WIFI_UTIL_H */
 
 /** @} */

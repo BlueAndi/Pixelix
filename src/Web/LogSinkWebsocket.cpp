@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,26 +63,26 @@ void LogSinkWebsocket::send(const Logging::Msg& msg)
 {
     if (nullptr != m_output)
     {
-        String      buffer;
-        const char  DELIMITER = ';';
+        String     buffer;
+        const char DELIMITER  = ';';
 
-        buffer += "EVT";
-        buffer += DELIMITER;
-        buffer += "LOG";
-        buffer += DELIMITER;
-        buffer += msg.timestamp;
-        buffer += DELIMITER;
-        buffer += msg.level;
-        buffer += DELIMITER;
-        buffer += '"';
-        buffer += msg.filename;
-        buffer += '"';
-        buffer += DELIMITER;
-        buffer += msg.line;
-        buffer += DELIMITER;
-        buffer += '"';
-        buffer += msg.str;
-        buffer += '"';
+        buffer               += "EVT";
+        buffer               += DELIMITER;
+        buffer               += "LOG";
+        buffer               += DELIMITER;
+        buffer               += msg.timestamp;
+        buffer               += DELIMITER;
+        buffer               += msg.level;
+        buffer               += DELIMITER;
+        buffer               += '"';
+        buffer               += msg.filename;
+        buffer               += '"';
+        buffer               += DELIMITER;
+        buffer               += msg.line;
+        buffer               += DELIMITER;
+        buffer               += '"';
+        buffer               += msg.str;
+        buffer               += '"';
 
         (void)m_output->print(buffer);
     }

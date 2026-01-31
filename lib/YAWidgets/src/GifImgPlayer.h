@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -160,9 +160,12 @@ public:
 
     /**
      * Is one complete frame loop cycle done?
+     *
      * If the trailer is found in the GIF data stream, it means its the end.
      * Animations will automatically start again, depended on the loop counter value,
      * which is part of the GIF stream.
+     *
+     * Note, the GIF must be opened, otherwise it will return false.
      *
      * @return If one complete frame loop cycle is done, it will return true otherwise false.
      */
@@ -172,7 +175,36 @@ public:
     }
 
     /**
+     * Is the opened GIF an animation?
+     *
+     * Note, the GIF must be opened, otherwise it will return false.
+     *
+     * @return If the opened GIF is an animation, it will return true otherwise false.
+     */
+    bool isAnimation() const
+    {
+        return m_isAnimation;
+    }
+
+    /**
+     * Set infinite animation mode.
+     *
+     * If enabled, the animation will run infinite, regardless of the loop count
+     * which is part of the GIF data stream.
+     *
+     * This general setting has effect only for animated GIFs.
+     * There must no GIF be opened to set it.
+     *
+     * @param[in] enable    Enable/disable infinite animation mode.
+     */
+    void setInfiniteAnimation(bool enable)
+    {
+        m_isInfiniteLoop = enable;
+    }
+
+    /**
      * Get image width.
+     *
      * Note, the GIF must be opened, otherwise it will return 0.
      *
      * @return Image width in pixels
@@ -184,6 +216,7 @@ public:
 
     /**
      * Get image height.
+     *
      * Note, the GIF must be opened, otherwise it will return 0.
      *
      * @return Image height in pixels
@@ -260,6 +293,7 @@ private:
     SimpleTimer m_timer;          /**< Timer used for animations. */
     bool        m_isAnimation;    /**< GIF contais several scenes which to animate. */
     bool        m_isFinished;     /**< Scenes are finished. */
+    bool        m_isInfiniteLoop; /**< Animation is in infinite loop mode. It will overrule any loop count. */
 
     /**
      * Copy global color table from another one.

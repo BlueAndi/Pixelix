@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,8 +55,8 @@
  * Local Variables
  *****************************************************************************/
 
-const char* LogSinkPrinter::DIVIDER         = ":";      /* If you change, don't forget to update the DIVIDER_LEN! */
-const char* LogSinkPrinter::STR_CUT_OFF_SEQ = "...\n";  /* If you change, don't forget to update the STR_CUT_OFF_SEQ_LEN! */
+const char* LogSinkPrinter::DIVIDER         = ":";     /* If you change, don't forget to update the DIVIDER_LEN! */
+const char* LogSinkPrinter::STR_CUT_OFF_SEQ = "...\n"; /* If you change, don't forget to update the STR_CUT_OFF_SEQ_LEN! */
 
 /******************************************************************************
  * Public Methods
@@ -66,18 +66,18 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
 {
     if (nullptr != m_output)
     {
-        char            buffer[LOG_MESSAGE_BUFFER_SIZE] = { 0 };
-        const size_t    BUFFER_SIZE_CUT_OFF             = LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN + 1U;
-        const size_t    MAX_LOG_MSG_LEN                 = LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN - 1U;
-        const char*     STR_LOG_LEVEL                   = logLevelToString(msg.level);
-        int             written                         = 0;
-        int             writtenTotal                    = 0;
+        char         buffer[LOG_MESSAGE_BUFFER_SIZE]  = { 0 };
+        const size_t BUFFER_SIZE_CUT_OFF              = LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN + 1U;
+        const size_t MAX_LOG_MSG_LEN                  = LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN - 1U;
+        const char*  STR_LOG_LEVEL                    = logLevelToString(msg.level);
+        int          written                          = 0;
+        int          writtenTotal                     = 0;
 
         /* Timestamp */
-        written = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%u", msg.timestamp);
-        writtenTotal += written;
+        written                                       = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%u", msg.timestamp);
+        writtenTotal                                 += written;
 
-        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && (TIMESTAMP_LEN >= written))
+        while ((BUFFER_SIZE_CUT_OFF > writtenTotal) && (TIMESTAMP_LEN >= written))
         {
             buffer[writtenTotal] = ' ';
             ++written;
@@ -86,14 +86,14 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
 
         /* Log level */
         written = 0;
-        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && ('\0' != STR_LOG_LEVEL[written]))
+        while ((BUFFER_SIZE_CUT_OFF > writtenTotal) && ('\0' != STR_LOG_LEVEL[written]))
         {
             buffer[writtenTotal] = STR_LOG_LEVEL[written];
             ++written;
             ++writtenTotal;
         }
 
-        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && (LOG_LEVEL_LEN >= written))
+        while ((BUFFER_SIZE_CUT_OFF > writtenTotal) && (LOG_LEVEL_LEN >= written))
         {
             buffer[writtenTotal] = ' ';
             ++written;
@@ -102,7 +102,7 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
 
         /* Filename */
         written = 0;
-        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && ('\0' != msg.filename[written]))
+        while ((BUFFER_SIZE_CUT_OFF > writtenTotal) && ('\0' != msg.filename[written]))
         {
             buffer[writtenTotal] = msg.filename[written];
             ++written;
@@ -111,7 +111,7 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
 
         /* Divider */
         written = 0;
-        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && ('\0' != DIVIDER[written]))
+        while ((BUFFER_SIZE_CUT_OFF > writtenTotal) && ('\0' != DIVIDER[written]))
         {
             buffer[writtenTotal] = DIVIDER[written];
             ++written;
@@ -121,12 +121,12 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
         /* Line number */
         if (BUFFER_SIZE_CUT_OFF > writtenTotal)
         {
-            written = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%d", msg.line);
+            written       = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%d", msg.line);
             writtenTotal += written;
         }
 
         written = 0;
-        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && (MSG_INDEX > writtenTotal))
+        while ((BUFFER_SIZE_CUT_OFF > writtenTotal) && (MSG_INDEX > writtenTotal))
         {
             buffer[writtenTotal] = ' ';
             ++written;
@@ -147,7 +147,7 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
         /* Message */
         if (BUFFER_SIZE_CUT_OFF > writtenTotal)
         {
-            written = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%s\n", msg.str);
+            written       = snprintf(&buffer[writtenTotal], BUFFER_SIZE_CUT_OFF - writtenTotal, "%s\n", msg.str);
             writtenTotal += written;
         }
 
@@ -178,33 +178,33 @@ const char* LogSinkPrinter::logLevelToString(const Logging::LogLevel logLevel) c
 
     switch (logLevel)
     {
-        case Logging::LOG_LEVEL_FATAL:
-            logLevelString = "FATAL  ";
-            break;
-
-        case Logging::LOG_LEVEL_ERROR:
-            logLevelString = "ERROR  ";
+    case Logging::LOG_LEVEL_FATAL:
+        logLevelString = "FATAL  ";
         break;
 
-        case Logging::LOG_LEVEL_WARNING:
-            logLevelString = "WARNING";
-            break;
+    case Logging::LOG_LEVEL_ERROR:
+        logLevelString = "ERROR  ";
+        break;
 
-        case Logging::LOG_LEVEL_INFO:
-            logLevelString = "INFO   ";
-            break;
+    case Logging::LOG_LEVEL_WARNING:
+        logLevelString = "WARNING";
+        break;
 
-        case Logging::LOG_LEVEL_DEBUG:
-            logLevelString = "DEBUG  ";
-            break;
+    case Logging::LOG_LEVEL_INFO:
+        logLevelString = "INFO   ";
+        break;
 
-        case Logging::LOG_LEVEL_TRACE:
-            logLevelString = "TRACE  ";
-            break;
+    case Logging::LOG_LEVEL_DEBUG:
+        logLevelString = "DEBUG  ";
+        break;
 
-        default:
-            logLevelString = "UNKNOWN";
-            break;
+    case Logging::LOG_LEVEL_TRACE:
+        logLevelString = "TRACE  ";
+        break;
+
+    default:
+        logLevelString = "UNKNOWN";
+        break;
     }
 
     return logLevelString;

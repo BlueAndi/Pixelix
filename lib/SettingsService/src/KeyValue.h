@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,13 +64,13 @@ public:
     /** Value types */
     enum Type
     {
-        TYPE_UNKNOWN = 0,   /**< Unknown type */
-        TYPE_UINT8,         /**< uint8_t type */
-        TYPE_STRING,        /**< String type */
-        TYPE_BOOL,          /**< bool type */
-        TYPE_INT32,         /**< int32_t type */
-        TYPE_JSON,          /**< JSON type */
-        TYPE_UINT32         /**< uint32_t type */
+        TYPE_UNKNOWN = 0, /**< Unknown type */
+        TYPE_UINT8,       /**< uint8_t type */
+        TYPE_STRING,      /**< String type */
+        TYPE_BOOL,        /**< bool type */
+        TYPE_INT32,       /**< int32_t type */
+        TYPE_JSON,        /**< JSON type */
+        TYPE_UINT32       /**< uint32_t type */
     };
 
     /**
@@ -82,7 +82,7 @@ public:
 
     /**
      * Set the persistent storage where the key value pair shall be read/write.
-     * 
+     *
      * @param[in] pref  Persistent storage
      */
     void setPersistentStorage(Preferences& pref)
@@ -95,7 +95,7 @@ public:
      *
      * @return Value type
      */
-    virtual Type getValueType() const = 0;
+    virtual Type getValueType() const   = 0;
 
     /**
      * Get user friendly name of key value pair.
@@ -109,11 +109,11 @@ public:
      *
      * @return Key
      */
-    virtual const char* getKey() const = 0;
+    virtual const char* getKey() const  = 0;
 
 protected:
 
-    Preferences*    m_preferences;  /**< Persistent storage */
+    Preferences* m_preferences; /**< Persistent storage */
 
     /**
      * Constructs a key value pair.
@@ -125,19 +125,18 @@ protected:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] pref  Persistent storage
      */
     KeyValue(Preferences& pref) :
         m_preferences(&pref)
     {
     }
-
 };
 
 /**
  * Key value pair with number as value.
- * 
+ *
  * @tparam T Number type
  */
 template < typename T >
@@ -147,7 +146,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] key       Key
      * @param[in] name      User friendly name
      * @param[in] defValue  Default value
@@ -166,7 +165,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] pref      Preferences
      * @param[in] key       Key
      * @param[in] name      User friendly name
@@ -236,7 +235,7 @@ public:
      *
      * @return Value
      */
-    virtual T getValue() const = 0;
+    virtual T getValue() const     = 0;
 
     /**
      * Set value.
@@ -257,11 +256,11 @@ public:
 
 protected:
 
-    const char*     m_key;      /**< Key */
-    const char*     m_name;     /**< Name */
-    T               m_defValue; /**< Default value */
-    T               m_min;      /**< Min. length */
-    T               m_max;      /**< Max. length */
+    const char* m_key;      /**< Key */
+    const char* m_name;     /**< Name */
+    T           m_defValue; /**< Default value */
+    T           m_min;      /**< Min. length */
+    T           m_max;      /**< Max. length */
 
 private:
 
@@ -274,6 +273,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* KEY_VALUE_H */
+#endif /* KEY_VALUE_H */
 
 /** @} */

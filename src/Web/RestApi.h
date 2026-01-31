@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   RestApi.h
  * @brief  REST pages
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -62,7 +62,7 @@ namespace RestApi
 /**
  * REST API base URI.
  */
-static const char BASE_URI[] = "/rest/api/v1";
+static constexpr char BASE_URI[] = "/rest/api/v1";
 
 /******************************************************************************
  * Functions
@@ -70,20 +70,20 @@ static const char BASE_URI[] = "/rest/api/v1";
 
 /**
  * Initialize REST interface and register it on the web server.
- * 
+ *
  * @param[in] srv   Web server
  */
 void init(AsyncWebServer& srv);
 
 /**
  * Handle invalid rest path request.
- * 
+ *
  * @param[in] request   HTTP request
  */
 void error(AsyncWebServerRequest* request);
 
-}
+} // namespace RestApi
 
-#endif  /* RESTAPI_H */
+#endif /* RESTAPI_H */
 
 /** @} */

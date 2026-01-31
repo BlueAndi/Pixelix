@@ -24,7 +24,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -59,11 +59,11 @@
                     <div class="tab-pane fade show active" id="logging" role="tabpanel" aria-labelledby="logging-tab">
                         <br />
                         <div class="btn-toolbar" role="toolbar" aria-label="Log Toolbar">
-                            <div class="btn-group mr-2" role="group" aria-label="Log Control">
+                            <div class="btn-group me-2" role="group" aria-label="Log Control">
                                 <button class="btn btn-light" id="buttonLog" type="button" onclick="toggleLogging();" disabled>Start</button>
                                 <button class="btn btn-light" type="button" onclick="clearLog();" disabled>Clear</button>
                             </div>
-                            <div class="btn-group mr-2" role="group" aria-label="Log Levels">
+                            <div class="btn-group me-2" role="group" aria-label="Log Levels">
                                 <button type="button" class="btn btn-outline-log-level-info" id="buttonInfo" aria-pressed="true">INFO</button>
                                 <button type="button" class="btn btn-outline-log-level-warning" id="buttonWarning" aria-pressed="true">WARNING</button>
                                 <button type="button" class="btn btn-outline-log-level-error" id="buttonError" aria-pressed="true">ERROR</button>
@@ -114,7 +114,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -183,7 +183,7 @@
                     break;
 
                 case 3:
-                    color = "#0EFF00"
+                    color = "#0EFF00";
                     break;
 
                 case 4:
@@ -208,7 +208,7 @@
                 var index           = filter.indexOf(logLevel);
                 var $row            = $("<tr>");
                 var $colTimestamp   = $("<td>").text(evt.timestamp);
-                var $logLevelText   = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level))
+                var $logLevelText   = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level));
                 var $colLogLevel    = $("<td>").append($logLevelText);
                 var $colFilename    = $("<td>").text(evt.filename);
                 var $colLine        = $("<td>").text(evt.line);

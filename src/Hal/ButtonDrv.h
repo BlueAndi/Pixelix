@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -195,7 +195,7 @@ private:
     static const uint32_t BUTTON_TASK_STACKE_SIZE = 2048U;
 
     /** Button task priority. */
-    static const UBaseType_t BUTTON_TASK_PRIORITY  = 1U;
+    static const UBaseType_t BUTTON_TASK_PRIORITY = 1U;
 
     /** MCU core where the button task shall run. */
     static const BaseType_t BUTTON_TASK_RUN_CORE  = APP_CPU_NUM;

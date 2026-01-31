@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,9 +69,9 @@ public:
      */
     enum Icon
     {
-        ICON_TEMPERATURE = 0,   /**< Temperature icon. */
-        ICON_HUMIDITY,          /**< Humidity icon. */
-        ICON_MAX                /**< Max. number of icons. */
+        ICON_TEMPERATURE = 0, /**< Temperature icon. */
+        ICON_HUMIDITY,        /**< Humidity icon. */
+        ICON_MAX              /**< Max. number of icons. */
     };
 
     /**
@@ -91,7 +91,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -105,7 +105,7 @@ public:
 
     /**
      * Load dedicated icon.
-     * 
+     *
      * @param[in] type  The icon type which to set.
      */
     void loadIconByType(Icon type);
@@ -114,29 +114,29 @@ private:
 
     /**
      * Path to the temperature icon
-     */    
-    static const char*  IMAGE_PATH_TEMP_ICON;
+     */
+    static const char* IMAGE_PATH_TEMP_ICON;
 
     /**
      * Path to the humidity icon
      */
-    static const char*  IMAGE_PATH_HUMID_ICON;
+    static const char* IMAGE_PATH_HUMID_ICON;
 
     /**
      * Table of icons mapped according to the icon enumeration.
      */
-    static const char*  ICON_TABLE[ICON_MAX];
+    static const char* ICON_TABLE[ICON_MAX];
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _TempHumidPlugin */
+} // namespace _TempHumidPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* TEMP_HUMID_PLUGIN_VIEW_H */
+#endif /* TEMP_HUMID_PLUGIN_VIEW_H */
 
 /** @} */

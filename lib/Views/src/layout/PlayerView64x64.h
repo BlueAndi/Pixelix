@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -91,7 +91,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -105,7 +105,7 @@ public:
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the view uses.
      */
     Fonts::FontType getFontType() const override
@@ -115,7 +115,7 @@ public:
 
     /**
      * Set font type.
-     * 
+     *
      * @param[in] fontType  The font type which the view shall use.
      */
     void setFontType(Fonts::FontType fontType) override
@@ -126,7 +126,7 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override
@@ -138,7 +138,7 @@ public:
 
     /**
      * Get text (non-formatted).
-     * 
+     *
      * @return Text
      */
     String getText() const override
@@ -148,7 +148,7 @@ public:
 
     /**
      * Get text (formatted).
-     * 
+     *
      * @return Text
      */
     String getFormatText() const override
@@ -158,7 +158,7 @@ public:
 
     /**
      * Set text (formatted).
-     * 
+     *
      * @param[in] formatText    Formatted text to show.
      */
     void setFormatText(const String& formatText) override
@@ -185,7 +185,7 @@ public:
 
     /**
      * Set progress in % [0; 100].
-     * 
+     *
      * @param[in] progress  Progress as number from 0 to 100.
      */
     void setProgress(uint8_t progress) override
@@ -198,77 +198,78 @@ protected:
     /**
      * Bitmap size in pixels.
      */
-    static const uint16_t   BITMAP_SIZE         = CONFIG_LED_MATRIX_HEIGHT / 2U;
+    static const uint16_t BITMAP_SIZE         = CONFIG_LED_MATRIX_HEIGHT / 2U;
 
     /**
      * Bitmap width in pixels.
      */
-    static const uint16_t   BITMAP_WIDTH        = BITMAP_SIZE;
+    static const uint16_t BITMAP_WIDTH        = BITMAP_SIZE;
 
     /**
      * Bitmap height in pixels.
      */
-    static const uint16_t   BITMAP_HEIGHT       = BITMAP_SIZE;
+    static const uint16_t BITMAP_HEIGHT       = BITMAP_SIZE;
 
     /**
      * Bitmap widget x-coordinate in pixels.
      * Left aligned.
      */
-    static const int16_t    BITMAP_X            = (CONFIG_LED_MATRIX_WIDTH - BITMAP_WIDTH) / 2;
+    static const int16_t BITMAP_X             = (CONFIG_LED_MATRIX_WIDTH - BITMAP_WIDTH) / 2;
 
     /**
      * Bitmap widget y-coordinate in pixels.
      * Top aligned.
      */
-    static const int16_t    BITMAP_Y            = 0;
+    static const int16_t BITMAP_Y             = 0;
 
     /**
      * Text width in pixels.
      */
-    static const uint16_t   TEXT_WIDTH          = CONFIG_LED_MATRIX_WIDTH;
+    static const uint16_t TEXT_WIDTH          = CONFIG_LED_MATRIX_WIDTH;
 
     /**
      * Text height in pixels.
      */
-    static const uint16_t   TEXT_HEIGHT         = CONFIG_LED_MATRIX_HEIGHT - BITMAP_HEIGHT - 2U;
+    static const uint16_t TEXT_HEIGHT         = CONFIG_LED_MATRIX_HEIGHT - BITMAP_HEIGHT - 2U;
 
     /**
      * Text widget x-coordinate in pixels.
      */
-    static const int16_t    TEXT_X              = 0;
+    static const int16_t TEXT_X               = 0;
 
     /**
      * Text widget y-coordinate in pixels.
      * Top aligned, below bitmap.
      */
-    static const int16_t    TEXT_Y              = CONFIG_LED_MATRIX_HEIGHT - BITMAP_HEIGHT + 2;
+    static const int16_t TEXT_Y               = CONFIG_LED_MATRIX_HEIGHT - BITMAP_HEIGHT + 2;
 
     /**
      * Progress bar width in pixels.
      */
-    static const uint16_t   PROGRESS_BAR_WIDTH  = CONFIG_LED_MATRIX_WIDTH;
+    static const uint16_t PROGRESS_BAR_WIDTH  = CONFIG_LED_MATRIX_WIDTH;
 
     /**
      * Progress bar height in pixels.
      */
-    static const uint16_t   PROGRESS_BAR_HEIGHT = 2U;
+    static const uint16_t PROGRESS_BAR_HEIGHT = 2U;
 
     /**
      * Progress bar x-coordinate in pixels.
      */
-    static const int16_t    PROGRESS_BAR_X      = 0;
+    static const int16_t PROGRESS_BAR_X       = 0;
 
     /**
      * Progress bar y-coordinate in pixels.
      */
-    static const int16_t    PROGRESS_BAR_Y      = CONFIG_LED_MATRIX_HEIGHT - BITMAP_HEIGHT;
+    static const int16_t PROGRESS_BAR_Y       = CONFIG_LED_MATRIX_HEIGHT - BITMAP_HEIGHT;
 
-    Fonts::FontType m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    BitmapWidget    m_bitmapWidget; /**< Bitmap widget used to show a icon. */
-    TextWidget      m_textWidget;   /**< Text widget used to show some text. */
-    ProgressBar     m_progressBar;  /**< Progress bar for the music. */
+    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
+    BitmapWidget         m_bitmapWidget; /**< Bitmap widget used to show a icon. */
+    TextWidget           m_textWidget;   /**< Text widget used to show some text. */
+    ProgressBar          m_progressBar;  /**< Progress bar for the music. */
 
 private:
+
     PlayerView64x64(const PlayerView64x64& other);
     PlayerView64x64& operator=(const PlayerView64x64& other);
 };
@@ -277,6 +278,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* PLAYER_VIEW_64X64_H */
+#endif /* PLAYER_VIEW_64X64_H */
 
 /** @} */

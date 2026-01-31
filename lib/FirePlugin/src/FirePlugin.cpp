@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,7 +64,7 @@ void FirePlugin::start(uint16_t width, uint16_t height)
     if (nullptr == m_heat)
     {
         m_heatSize = width * height;
-        m_heat = new(std::nothrow) uint8_t[m_heatSize];
+        m_heat     = new (std::nothrow) uint8_t[m_heatSize];
 
         if (nullptr == m_heat)
         {
@@ -103,13 +103,13 @@ void FirePlugin::update(YAGfx& gfx)
         return;
     }
 
-    for(x = 0; x < gfx.getWidth(); ++x)
+    for (x = 0; x < gfx.getWidth(); ++x)
     {
         /* Step 1) Cool down every cell a little bit */
-        for(y = 0; y < gfx.getHeight(); ++y)
+        for (y = 0; y < gfx.getHeight(); ++y)
         {
-            uint8_t     coolDownTemperature = random(0, ((COOLING * 10U) / gfx.getHeight()) + 2U);
-            uint32_t    heatPos             = x + y * gfx.getWidth();
+            uint8_t  coolDownTemperature = random(0, ((COOLING * 10U) / gfx.getHeight()) + 2U);
+            uint32_t heatPos             = x + y * gfx.getWidth();
 
             if (coolDownTemperature >= m_heat[heatPos])
             {
@@ -122,9 +122,9 @@ void FirePlugin::update(YAGfx& gfx)
         }
 
         /* Step 2) Heat from each cell drifts 'up' and diffuses a little bit */
-        for(y = 0; y < (gfx.getHeight() - 1U); ++y)
+        for (y = 0; y < (gfx.getHeight() - 1U); ++y)
         {
-            uint16_t    diffusHeat  = 0U;
+            uint16_t diffusHeat = 0U;
 
             if ((gfx.getHeight() - 2U) > y)
             {
@@ -147,9 +147,9 @@ void FirePlugin::update(YAGfx& gfx)
         /* Step 3) Randomly ignite new 'sparks' of heat near the bottom */
         if (random(0, 255) < SPARKING)
         {
-            uint8_t     randValue   = random(160, 255);
-            uint32_t    heatPos     = x + (gfx.getHeight() - 1U) * gfx.getWidth();
-            uint16_t    heat        = m_heat[heatPos] + randValue;
+            uint8_t  randValue = random(160, 255);
+            uint32_t heatPos   = x + (gfx.getHeight() - 1U) * gfx.getWidth();
+            uint16_t heat      = m_heat[heatPos] + randValue;
 
             if (UINT8_MAX < heat)
             {
@@ -162,7 +162,7 @@ void FirePlugin::update(YAGfx& gfx)
         }
 
         /* Step 4) Map from heat cells to LED colors */
-        for(y = 0; y < gfx.getHeight(); ++y)
+        for (y = 0; y < gfx.getHeight(); ++y)
         {
             gfx.drawPixel(x, y, heatColor(m_heat[x + y * gfx.getWidth()]));
         }
@@ -184,28 +184,28 @@ Color FirePlugin::heatColor(uint8_t temperature)
     /* Scale 'heat' down from 0-255 to 0-191, which can then be easily divided
      * into three equal 'thirds' of 64 units each.
      */
-    uint8_t t192        = (static_cast<uint16_t>(temperature) * 191U) >> 8U;
+    uint8_t t192       = (static_cast<uint16_t>(temperature) * 191U) >> 8U;
 
     /* Calculate a value that ramps up from zero to 255 in each 'third' of the scale. */
-    uint8_t heatRamp    = t192 & 0x3fU; /* 0..63 */
+    uint8_t heatRamp   = t192 & 0x3fU; /* 0..63 */
 
     /* Scale up to 0..252 */
-    heatRamp <<= 2;
+    heatRamp         <<= 2;
 
     /* Now figure out which third of the spectrum we're in. */
     if (t192 & 0x80U)
     {
         /* We're in the hottest third */
-        heatColor.setRed(255U);         /* Full red */
-        heatColor.setGreen(255U);       /* Full green */
-        heatColor.setBlue(heatRamp);    /* Ramp up blue */
+        heatColor.setRed(255U);      /* Full red */
+        heatColor.setGreen(255U);    /* Full green */
+        heatColor.setBlue(heatRamp); /* Ramp up blue */
     }
     else if (t192 & 0x40U)
     {
         /* We're in the middle third */
-        heatColor.setRed(255U);         /* Full red */
-        heatColor.setGreen(heatRamp);   /* Ramp up green */
-        heatColor.setBlue(0U);          /* No blue */
+        heatColor.setRed(255U);       /* Full red */
+        heatColor.setGreen(heatRamp); /* Ramp up green */
+        heatColor.setBlue(0U);        /* No blue */
     }
     else
     {

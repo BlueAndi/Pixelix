@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,12 +58,12 @@
 /**
  * Brush with concrete color.
  */
-using YAGfxBrush = BaseGfxBrush<Color>;
+using YAGfxBrush               = BaseGfxBrush<Color>;
 
 /**
  * Solid brush with a single color.
  */
-using YAGfxSolidBrush = BaseGfxSolidBrush<Color>;
+using YAGfxSolidBrush          = BaseGfxSolidBrush<Color>;
 
 /**
  * Linear gradient brush with two colors.
@@ -74,6 +74,6 @@ using YAGfxLinearGradientBrush = BaseGfxLinearGradientBrush<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* YA_GFX_BRUSH_H */
+#endif /* YA_GFX_BRUSH_H */
 
 /** @} */

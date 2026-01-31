@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -91,38 +91,38 @@ private:
     /**
      * Number of signal signal strength bars.
      */
-    static const uint8_t    WIFI_BARS               = 4U;
+    static const uint8_t WIFI_BARS             = 4U;
 
     /**
      * Number of spaces between bars.
      */
-    static const uint8_t    WIFI_BAR_SPACES         = WIFI_BARS - 1U;
+    static const uint8_t WIFI_BAR_SPACES       = WIFI_BARS - 1U;
 
     /**
      * Width in pixel of a single signal strength bar.
      */
-    static const uint16_t   WIFI_BAR_WIDTH          = (2U * CANVAS_WIDTH) / (2U * WIFI_BARS + WIFI_BAR_SPACES);
+    static const uint16_t WIFI_BAR_WIDTH       = (2U * CANVAS_WIDTH) / (2U * WIFI_BARS + WIFI_BAR_SPACES);
 
     /**
      * Width in pixel of a bar space. It shall be half of the bar width.
      */
-    static const uint16_t   WIFI_BAR_SPACE_WIDTH    = WIFI_BAR_WIDTH / 2U;
+    static const uint16_t WIFI_BAR_SPACE_WIDTH = WIFI_BAR_WIDTH / 2U;
 
     /**
      * Height in pixel of the lowest signal strength bar.
      */
-    static const uint16_t   WIFI_BAR_HEIGHT         = CANVAS_HEIGHT / 4U;
+    static const uint16_t WIFI_BAR_HEIGHT      = CANVAS_HEIGHT / 4U;
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _WifiStatusPlugin */
+} // namespace _WifiStatusPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* CANVAS_TEXT_PLUGIN_VIEW_H */
+#endif /* CANVAS_TEXT_PLUGIN_VIEW_H */
 
 /** @} */

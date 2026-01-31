@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -102,40 +102,11 @@ bool MqttService::start()
 
         if (false == loadSettings())
         {
-            saveSettings();
+            (void)saveSettings();
         }
 
         /* Start MQTT broker connections. */
-        for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
-        {
-            MqttSetting& setting = m_settings[idx];
-
-            if ((true == setting.isEnabled()) &&
-                (false == setting.getBroker().isEmpty()))
-            {
-                m_brokerConnections[idx].setLastWillTopic(m_deviceId + "/status", "online", "offline");
-
-                if (false == m_brokerConnections[idx].setupClient(setting.useTls(),
-                                 setting.getRootCaCert(),
-                                 setting.getClientCert(),
-                                 setting.getClientKey()))
-                {
-                    LOG_WARNING("MQTT client setup for broker %s failed.", setting.getBroker().c_str());
-                }
-                else if (false == m_brokerConnections[idx].connect(m_deviceId,
-                                      setting.getBroker(),
-                                      setting.getPort(),
-                                      setting.getUser(),
-                                      setting.getPassword()))
-                {
-                    LOG_WARNING("MQTT broker connection to %s failed.", setting.getBroker().c_str());
-                }
-                else
-                {
-                    ;
-                }
-            }
-        }
+        connectAllBrokers();
     }
 
     if (false == isSuccessful)
@@ -162,10 +133,7 @@ void MqttService::stop()
     topicHandlerService.unregisterTopic(m_deviceId, ENTITY_ID, TOPIC);
 
     /* Stop MQTT broker connections. */
-    for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
-    {
-        m_brokerConnections[idx].disconnect();
-    }
+    disconnectAllBrokers();
 
     m_mutex.destroy();
 
@@ -317,7 +285,7 @@ void MqttService::clear()
 bool MqttService::loadSettings()
 {
     bool                isSuccessful = false;
-    const size_t        JSON_SIZE    = 4096U;
+    const size_t        JSON_SIZE    = 8192U;
     DynamicJsonDocument jsonDoc(JSON_SIZE);
     JsonFile            jsonFile(FILESYSTEM);
 
@@ -369,7 +337,7 @@ bool MqttService::loadSettings()
 bool MqttService::saveSettings()
 {
     bool                isSuccessful = false;
-    const size_t        JSON_SIZE    = 4096U;
+    const size_t        JSON_SIZE    = 8192U;
     DynamicJsonDocument jsonDoc(JSON_SIZE);
     JsonArray           jsonMqttSettings = jsonDoc.createNestedArray("mqttSettings");
     JsonFile            jsonFile(FILESYSTEM);
@@ -441,25 +409,81 @@ bool MqttService::setTopic(const String& topic, const JsonObjectConst& jsonValue
     {
         JsonArrayConst jsonMqttSettingsArray = jsonMqttSettings.as<JsonArrayConst>();
         size_t         count                 = (MAX_MQTT_COUNT >= jsonMqttSettingsArray.size()) ? jsonMqttSettingsArray.size() : MAX_MQTT_COUNT;
+        MqttSetting    tempSetting;
 
+        isSuccessful = true;
         for (idx = 0U; idx < count; ++idx)
         {
-            if (false == m_settings[idx].fromJson(jsonMqttSettingsArray[idx]))
+            if (false == tempSetting.fromJson(jsonMqttSettingsArray[idx]))
             {
-                LOG_WARNING("Failed to set MQTT setting %u.", idx);
+                LOG_WARNING("Invalid MQTT setting %u.", idx);
+                isSuccessful = false;
+                break;
             }
+
+            m_settings[idx] = std::move(tempSetting);
+            tempSetting.clear();
         }
 
         m_hasSettingsChanged = true;
-        isSuccessful         = true;
     }
 
     if (true == isSuccessful)
     {
         isSuccessful = saveSettings();
+
+        if (true == isSuccessful)
+        {
+            disconnectAllBrokers();
+            connectAllBrokers();
+        }
     }
 
     return isSuccessful;
+}
+
+void MqttService::connectAllBrokers()
+{
+    for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
+    {
+        MqttSetting& setting = m_settings[idx];
+
+        if ((true == setting.isEnabled()) &&
+            (false == setting.getBroker().isEmpty()))
+        {
+            m_brokerConnections[idx].setLastWillTopic(m_deviceId + "/status", "online", "offline");
+
+            if (false == m_brokerConnections[idx].setupClient(
+                             setting.useTls(),
+                             setting.getRootCaCert(),
+                             setting.getClientCert(),
+                             setting.getClientKey()))
+            {
+                LOG_WARNING("MQTT client setup for broker %s failed.", setting.getBroker().c_str());
+            }
+            else if (false == m_brokerConnections[idx].connect(
+                                  m_deviceId,
+                                  setting.getBroker(),
+                                  setting.getPort(),
+                                  setting.getUser(),
+                                  setting.getPassword()))
+            {
+                LOG_WARNING("MQTT broker connection to %s failed.", setting.getBroker().c_str());
+            }
+            else
+            {
+                ;
+            }
+        }
+    }
+}
+
+void MqttService::disconnectAllBrokers()
+{
+    for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
+    {
+        m_brokerConnections[idx].disconnect();
+    }
 }
 
 /******************************************************************************

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -107,7 +107,7 @@ void TopicHandlerService::process()
 
             if (0U == m_updateCounter)
             {
-                forceUpdate = true;
+                forceUpdate     = true;
                 m_updateCounter = UPDATE_COUNTER_VALUE;
             }
 
@@ -132,7 +132,7 @@ void TopicHandlerService::registerTopics(const String& deviceId, const String& e
 
         if (true == topicsDoc.overflowed())
         {
-            LOG_ERROR("JSON document has less memory available.");
+            LOG_ERROR("JSON document size exceeded.");
         }
         /* Handle each topic */
         else if (0U < jsonTopics.size())

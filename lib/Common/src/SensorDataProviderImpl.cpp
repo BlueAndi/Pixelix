@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ void SensorDataProviderImpl::begin()
 {
     uint8_t index = 0U;
 
-    for(index = 0U; index < m_cnt; ++index)
+    for (index = 0U; index < m_cnt; ++index)
     {
         if (nullptr != m_sensors[index])
         {
@@ -76,7 +76,7 @@ void SensorDataProviderImpl::process()
 {
     uint8_t index = 0U;
 
-    for(index = 0U; index < m_cnt; ++index)
+    for (index = 0U; index < m_cnt; ++index)
     {
         if (nullptr != m_sensors[index])
         {
@@ -87,7 +87,7 @@ void SensorDataProviderImpl::process()
 
 ISensor* SensorDataProviderImpl::getSensor(uint8_t index)
 {
-    ISensor*    sensor  = nullptr;
+    ISensor* sensor = nullptr;
 
     if (m_cnt > index)
     {

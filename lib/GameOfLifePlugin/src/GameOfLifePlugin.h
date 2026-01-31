@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -95,7 +95,7 @@ public:
     {
         uint8_t index = 0U;
 
-        while(GRIDS > index)
+        while (GRIDS > index)
         {
             m_grids[index] = nullptr;
             ++index;
@@ -120,28 +120,28 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)GameOfLifePlugin(name, uid);
+        return new (std::nothrow) GameOfLifePlugin(name, uid);
     }
 
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
-    
-   /**
+
+    /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() final;
@@ -171,28 +171,28 @@ public:
 private:
 
     /** Number of grids */
-    static const uint8_t    GRIDS                   = 2U;
+    static const uint8_t GRIDS                 = 2U;
 
     /** Bits per grid data, derived from uint32_t. */
-    static const uint8_t    BITS                    = 32U;
+    static const uint8_t BITS                  = 32U;
 
     /** Display update period in ms */
-    static const uint32_t   DISPLAY_PERIOD          = 250U;
+    static const uint32_t DISPLAY_PERIOD       = 250U;
 
     /** Restart period in ms after grid is stable. */
-    static const uint32_t   RESTART_PERIOD          = SIMPLE_TIMER_SECONDS(1U);
+    static const uint32_t RESTART_PERIOD       = SIMPLE_TIMER_SECONDS(1U);
 
     /** Force restart period in ms. */
-    static const uint32_t   FORCE_RESTART_PERIOD    = SIMPLE_TIMER_SECONDS(10U);
+    static const uint32_t FORCE_RESTART_PERIOD = SIMPLE_TIMER_SECONDS(10U);
 
-    uint8_t     m_activeGrid;           /**< Current active grid */
-    uint32_t    m_gridSize;             /**< Size of one grid in number of elements */
-    uint32_t*   m_grids[GRIDS];         /**< Two grids as playfields. */
-    uint16_t    m_width;                /**< Grid width */
-    uint16_t    m_height;               /**< Grid height */
-    SimpleTimer m_displayTimer;         /**< Timer, used for cyclic display update. */
-    SimpleTimer m_restartTimer;         /**< Timer, used to restart the whole game of life if grid is stable. */
-    SimpleTimer m_forceRestartTimer;    /**< Timer, used to force a restart of the whole game of life. */
+    uint8_t               m_activeGrid;        /**< Current active grid */
+    uint32_t              m_gridSize;          /**< Size of one grid in number of elements */
+    uint32_t*             m_grids[GRIDS];      /**< Two grids as playfields. */
+    uint16_t              m_width;             /**< Grid width */
+    uint16_t              m_height;            /**< Grid height */
+    SimpleTimer           m_displayTimer;      /**< Timer, used for cyclic display update. */
+    SimpleTimer           m_restartTimer;      /**< Timer, used to restart the whole game of life if grid is stable. */
+    SimpleTimer           m_forceRestartTimer; /**< Timer, used to force a restart of the whole game of life. */
 
     /**
      * Create all grids.
@@ -258,6 +258,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* GAMEOFLIFEPLUGIN_H */
+#endif /* GAMEOFLIFEPLUGIN_H */
 
 /** @} */

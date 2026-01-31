@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,7 +84,7 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
     Type getType() const final
@@ -94,14 +94,14 @@ public:
 
     /**
      * Get data value.
-     * 
+     *
      * @return Sensor data value in %.
      */
     uint32_t getValue() final;
 
     /**
      * Set battery sensor driver.
-     * 
+     *
      * @param[in] driver    Battery driver
      */
     void setDriver(SensorBattery* driver)
@@ -111,7 +111,7 @@ public:
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value in lux.
      */
     uint32_t getOffset() const final
@@ -121,7 +121,7 @@ public:
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value in %.
      */
     void setOffset(uint32_t offset) final
@@ -131,8 +131,8 @@ public:
 
 private:
 
-    SensorBattery*  m_driver;   /**< Battery sensor driver. */
-    uint32_t        m_offset;   /**< State of Charge offset in percent. */
+    SensorBattery* m_driver; /**< Battery sensor driver. */
+    uint32_t       m_offset; /**< State of Charge offset in percent. */
 
     BatteryChannelSoC(const BatteryChannelSoC& channel);
     BatteryChannelSoC& operator=(const BatteryChannelSoC& channel);
@@ -181,7 +181,7 @@ public:
 
     /**
      * Get sensor name.
-     * 
+     *
      * @return Sensor name
      */
     const char* getName() const final
@@ -200,7 +200,7 @@ public:
 
     /**
      * Get number of data channels.
-     * 
+     *
      * @return Number of data channels.
      */
     uint8_t getNumChannels() const final
@@ -210,11 +210,11 @@ public:
 
     /**
      * Get data channel by index.
-     * If sensor is not available or channel index is out of bounds, it will 
+     * If sensor is not available or channel index is out of bounds, it will
      * return nullptr.
-     * 
+     *
      * @param[in] index Index of the data channel.
-     * 
+     *
      * @return Data channel
      */
     ISensorChannel* getChannel(uint8_t index) final;
@@ -238,22 +238,22 @@ private:
     };
 
     /** Raw ADC value for a empty battery (0%). Note, this is for the Ulanzi TC001. */
-    static const uint16_t   ADC_RAW_EMPTY   = 2160U;
+    static const uint16_t ADC_RAW_EMPTY = 2160U;
 
     /** Raw ADC value for a full battery (100%). Note, this is for the Ulanzi TC001. */
-    static const uint16_t   ADC_RAW_FULL    = 2500U;
+    static const uint16_t ADC_RAW_FULL  = 2500U;
 
-    bool                    m_isAvailable;  /**< Is a sensor available or not? */
-    BatteryChannelSoC       m_socChannel;   /**< State of charge channel. */
-    uint16_t                m_adcRawAvg;    /**< Moving average of raw battery ADC value. */
-    bool                    m_isInit;       /**< First time the battery ADC value is read? */
+    bool                  m_isAvailable; /**< Is a sensor available or not? */
+    BatteryChannelSoC     m_socChannel;  /**< State of charge channel. */
+    uint16_t              m_adcRawAvg;   /**< Moving average of raw battery ADC value. */
+    bool                  m_isInit;      /**< First time the battery ADC value is read? */
 
     SensorBattery(const SensorBattery& sensor);
     SensorBattery& operator=(const SensorBattery& sensor);
 
     /**
      * Get the moving average of the battery ADC raw value.
-     * 
+     *
      * @return Moving average of battery AC raw value in digits.
      */
     uint16_t getAdcRawAvg();
@@ -263,6 +263,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_BATTERY_H */
+#endif /* SENSOR_BATTERY_H */
 
 /** @} */

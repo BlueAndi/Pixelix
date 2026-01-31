@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,13 +59,14 @@
 
 /**
  * View for date and time.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class DateTimeView : public DateTimeViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -75,10 +76,11 @@ public:
 /**
  * View for date and time for 32x8 display.
  */
-template<>
+template <>
 class DateTimeView<LAYOUT_32X8> : public DateTimeView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -88,10 +90,11 @@ public:
 /**
  * View for date and time for 32x16 display.
  */
-template<>
+template <>
 class DateTimeView<LAYOUT_32X16> : public DateTimeView32x16
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -101,10 +104,11 @@ public:
 /**
  * View for date and time for 64x64 display.
  */
-template<>
+template <>
 class DateTimeView<LAYOUT_64X64> : public DateTimeView64x64
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -118,6 +122,6 @@ using DateTimeViewBase = DateTimeView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* DATE_TIME_VIEW_BASE_HPP */
+#endif /* DATE_TIME_VIEW_BASE_HPP */
 
 /** @} */

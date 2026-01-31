@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,7 +43,7 @@
 #define STREAMUTILS_ENABLE_EEPROM 0
 #include <StreamUtils.h>
 
-#endif  /* NATIVE */
+#endif /* NATIVE */
 
 /******************************************************************************
  * Compiler Switches
@@ -71,17 +71,17 @@
 
 bool JsonFile::load(const String& fileName, JsonDocument& doc)
 {
-    bool    isSuccessful    = false;
-    File    fd              = m_fs.open(fileName, "r");
+    bool isSuccessful = false;
+    File fd           = m_fs.open(fileName, "r");
 
     if (true == fd)
     {
 #ifdef NATIVE
-        DeserializationError    error   = deserializeJson(doc, fd);
-#else   /* NATIVE */
-        ReadBufferingStream     bufferedStream(fd, CHUNK_SIZE);
-        DeserializationError    error   = deserializeJson(doc, bufferedStream);
-#endif  /* NATIVE */
+        DeserializationError error = deserializeJson(doc, fd);
+#else  /* NATIVE */
+        ReadBufferingStream  bufferedStream(fd, CHUNK_SIZE);
+        DeserializationError error = deserializeJson(doc, bufferedStream);
+#endif /* NATIVE */
 
         if (DeserializationError::Ok == error.code())
         {
@@ -96,29 +96,29 @@ bool JsonFile::load(const String& fileName, JsonDocument& doc)
 
 bool JsonFile::save(const String& fileName, const JsonDocument& doc)
 {
-    bool    isSuccessful    = false;
-    File    fd              = m_fs.open(fileName, "w");
+    bool isSuccessful = false;
+    File fd           = m_fs.open(fileName, "w");
 
     if (true == fd)
     {
 #ifndef NATIVE
-        WriteBufferingStream    bufferedStream(fd, CHUNK_SIZE);
-#endif  /* NATIVE */
+        WriteBufferingStream bufferedStream(fd, CHUNK_SIZE);
+#endif /* NATIVE */
 
-        size_t                  write   = measureJsonPretty(doc);
-        
-#ifdef NATIVE        
+        size_t write = measureJsonPretty(doc);
+
+#ifdef NATIVE
         if (write == serializeJsonPretty(doc, fd))
-#else   /* NATIVE */
+#else  /* NATIVE */
         if (write == serializeJsonPretty(doc, bufferedStream))
-#endif  /* NATIVE */
+#endif /* NATIVE */
         {
             isSuccessful = true;
         }
 
 #ifndef NATIVE
         bufferedStream.flush();
-#endif  /* NATIVE*/
+#endif /* NATIVE*/
 
         fd.close();
     }

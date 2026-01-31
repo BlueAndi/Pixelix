@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -143,7 +143,7 @@ public:
      * @param[out] isValidRsp  Does Response have a payload
      * @param[out] payload     Content of the Response. The output variable is move-assigned.
      *
-     * @return If a response is available, it will return true otherwise false. 
+     * @return If a response is available, it will return true otherwise false.
      */
     bool getResponse(uint32_t restId, bool& isValidRsp, DynamicJsonDocument& payload);
 

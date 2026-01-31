@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -336,6 +336,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
 
         m_disposalMethod        = player.m_disposalMethod;
 
+        m_imageDataBlockIdx     = player.m_imageDataBlockIdx;
         m_posX                  = player.m_posX;
         m_posY                  = player.m_posY;
         m_isTransparencyEnabled = player.m_isTransparencyEnabled;
@@ -1117,6 +1118,10 @@ bool GifImgPlayer::parseGraphicControlExentsion()
             {
                 GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : error - no global color table available\n");
             }
+            else if (gce.transparentColorIndex >= m_globalColorTableLength)
+            {
+                GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : warning - transparent color index out of range\n");
+            }
             else
             {
                 GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : 0x%02X%02X%02X\n",
@@ -1346,15 +1351,62 @@ bool GifImgPlayer::readFromCodeStream(uint8_t& data)
 
 bool GifImgPlayer::writeToIndexStream(uint8_t data)
 {
-    bool          isSuccessful     = false;
-    PaletteColor* colorTable       = (nullptr != m_localColorTable) ? m_localColorTable : m_globalColorTable;
-    size_t        colorTableLength = (nullptr != m_localColorTable) ? m_localColorTableLength : m_globalColorTableLength;
+    bool          isSuccessful      = false;
+    PaletteColor* colorTable        = (nullptr != m_localColorTable) ? m_localColorTable : m_globalColorTable;
+    size_t        colorTableLength  = (nullptr != m_localColorTable) ? m_localColorTableLength : m_globalColorTableLength;
+    bool          isColorIndexValid = false;
+
+    /* No transparency enabled? */
+    if (false == m_isTransparencyEnabled)
+    {
+        if (colorTableLength <= data)
+        {
+            GIF_IMG_PLAYER_LOG_DEBUG("Error(%d): Invalid color index %u for color table length %u\n", __LINE__, data, static_cast<uint32_t>(colorTableLength));
+        }
+        else
+        {
+            isColorIndexValid = true;
+        }
+    }
+    /* Transparency enabled? */
+    else
+    {
+        /* Check if the color index is not the transparent one. */
+        if (m_transparentColorIndex != data)
+        {
+            if (colorTableLength <= data)
+            {
+                GIF_IMG_PLAYER_LOG_DEBUG("Error(%d): Invalid color index %u for color table length %u\n", __LINE__, data, static_cast<uint32_t>(colorTableLength));
+            }
+            else
+            {
+                isColorIndexValid = true;
+            }
+        }
+        /* The color index is the transparent one.
+         * Therefore its allowed even if it is out of range.
+         */
+        else
+        {
+            isColorIndexValid = true;
+        }
+    }
 
     /* Color table must be available and
      * the color index must be part of it.
      */
-    if ((nullptr != colorTable) &&
-        (colorTableLength > data))
+    if (nullptr == colorTable)
+    {
+        GIF_IMG_PLAYER_LOG_DEBUG("Error(%d): No color table\n", __LINE__);
+    }
+    /* Abort if the transparent color index is out of range,
+     * except transparent color index
+     */
+    else if (false == isColorIndexValid)
+    {
+        ;
+    }
+    else
     {
         /* If transparency is not enabled or
          * it is enabled and the color index is not transparent,

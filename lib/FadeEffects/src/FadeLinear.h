@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -110,24 +110,24 @@ public:
      * If the fade effect shall take place 1s and the call period is 20ms, it will need a
      * fading step of 5 digits.
      */
-    static const uint8_t FADING_STEP    = 5U;
+    static const uint8_t FADING_STEP = 5U;
 
 private:
 
     /** Fading states. */
     enum FadeState
     {
-        FADE_STATE_INIT = 0,    /**< Initialize fadeing */
-        FADE_STATE_IN,          /**< Fading in is pending */
-        FADE_STATE_OUT          /**< Fading out is pending */
+        FADE_STATE_INIT = 0, /**< Initialize fadeing */
+        FADE_STATE_IN,       /**< Fading in is pending */
+        FADE_STATE_OUT       /**< Fading out is pending */
     };
 
-    FadeState   m_state;        /**< Current fading state */
-    uint8_t     m_intensity;    /**< Current color intensity [0; 255] - 0: min. bright / 255: max. bright */
+    FadeState m_state;     /**< Current fading state */
+    uint8_t   m_intensity; /**< Current color intensity [0; 255] - 0: min. bright / 255: max. bright */
 
     /**
      * Dim bitmap to a specific intensity.
-     * 
+     *
      * @param[inout] bitmap The bitmap which to dim down/up.
      * @param[in] intensity The intensity to set.
      */
@@ -138,6 +138,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* FADE_LINEAR_H */
+#endif /* FADE_LINEAR_H */
 
 /** @} */

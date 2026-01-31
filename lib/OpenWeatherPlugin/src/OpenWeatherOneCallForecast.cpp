@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,11 +76,11 @@ void OpenWeatherOneCallForecast::getUrl(String& url) const
 
 void OpenWeatherOneCallForecast::getFilter(JsonDocument& jsonFilterDoc) const
 {
-    uint8_t     day;
-    JsonArray   jsonDaily   = jsonFilterDoc.createNestedArray("daily");
+    uint8_t   day;
+    JsonArray jsonDaily = jsonFilterDoc.createNestedArray("daily");
 
     /*
-    
+
         {
         "lat":33.44,
         "lon":-94.04,
@@ -130,27 +130,27 @@ void OpenWeatherOneCallForecast::getFilter(JsonDocument& jsonFilterDoc) const
             },
             ...
         ]
-    
+
     */
 
-   for(day = 0U; day < FORECAST_DAYS; ++day)
-   {
-        jsonDaily[day]["temp"]["min"]           = true;
-        jsonDaily[day]["temp"]["max"]           = true;
-        jsonDaily[day]["weather"][0]["icon"]    = true;
-   }
+    for (day = 0U; day < FORECAST_DAYS; ++day)
+    {
+        jsonDaily[day]["temp"]["min"]        = true;
+        jsonDaily[day]["temp"]["max"]        = true;
+        jsonDaily[day]["weather"][0]["icon"] = true;
+    }
 }
 
 void OpenWeatherOneCallForecast::parse(const JsonDocument& jsonDoc)
 {
-    uint8_t             day;
-    JsonVariantConst    jsonDaily   = jsonDoc["daily"];
+    uint8_t          day;
+    JsonVariantConst jsonDaily = jsonDoc["daily"];
 
-    for(day = 0U; day < FORECAST_DAYS; ++day)
+    for (day = 0U; day < FORECAST_DAYS; ++day)
     {
-        JsonVariantConst    jsonTemperatureMin  = jsonDaily[day]["temp"]["min"];
-        JsonVariantConst    jsonTemperatureMax  = jsonDaily[day]["temp"]["max"];
-        JsonVariantConst    jsonIcon            = jsonDaily[day]["weather"][0]["icon"];
+        JsonVariantConst jsonTemperatureMin = jsonDaily[day]["temp"]["min"];
+        JsonVariantConst jsonTemperatureMax = jsonDaily[day]["temp"]["max"];
+        JsonVariantConst jsonIcon           = jsonDaily[day]["weather"][0]["icon"];
 
         if (false == jsonTemperatureMin.isNull())
         {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,13 +63,12 @@
  * Public Methods
  *****************************************************************************/
 
-void BrightnessCtrl::init(IDisplay& display, uint8_t minBrightnessHardLimit, uint8_t maxBrightnessHardLimit)
+void BrightnessCtrl::init(uint8_t minBrightnessHardLimit, uint8_t maxBrightnessHardLimit)
 {
     SensorDataProvider& sensorDataProv = SensorDataProvider::getInstance();
     uint8_t             sensorIdx      = 0U;
     uint8_t             channelIdx     = 0U;
 
-    m_display                          = &display;
     m_minBrightnessHardLimit           = (minBrightnessHardLimit < maxBrightnessHardLimit) ? minBrightnessHardLimit : maxBrightnessHardLimit;
     m_maxBrightnessHardLimit           = (maxBrightnessHardLimit > minBrightnessHardLimit) ? maxBrightnessHardLimit : minBrightnessHardLimit;
     m_minBrightnessSoftLimit           = m_minBrightnessHardLimit;
@@ -156,7 +155,7 @@ bool BrightnessCtrl::isEnabled() const
 {
     bool isEnabled = false;
 
-    if (m_autoBrightnessTimer.isTimerRunning())
+    if (true == m_autoBrightnessTimer.isTimerRunning())
     {
         isEnabled = true;
     }
@@ -288,11 +287,6 @@ void BrightnessCtrl::setBrightness(uint8_t level)
         {
             m_brightness = level;
         }
-
-        if (nullptr != m_display)
-        {
-            m_display->setBrightness(m_brightness);
-        }
     }
 }
 
@@ -305,7 +299,6 @@ void BrightnessCtrl::setBrightness(uint8_t level)
  *****************************************************************************/
 
 BrightnessCtrl::BrightnessCtrl() :
-    m_display(nullptr),
     m_illuminanceChannel(nullptr),
     m_autoBrightnessTimer(),
     m_brightness(0U),
@@ -361,12 +354,12 @@ void BrightnessCtrl::applyLightSensorMeasurement(uint32_t dTime, float light)
 
 void BrightnessCtrl::updateBrightnessGoal()
 {
-    float   fCorrectedBrightness    = powf(m_ambientLight, 1.0F / GAMMA);
-    float   fBrightnessDynamicRange = static_cast<float>(m_maxBrightnessSoftLimit - m_minBrightnessSoftLimit);
-    float   fMinBrightness          = static_cast<float>(m_minBrightnessSoftLimit);
-    float   fBrightness             = fMinBrightness + (fBrightnessDynamicRange * fCorrectedBrightness);
+    float fCorrectedBrightness    = powf(m_ambientLight, 1.0F / GAMMA);
+    float fBrightnessDynamicRange = static_cast<float>(m_maxBrightnessSoftLimit - m_minBrightnessSoftLimit);
+    float fMinBrightness          = static_cast<float>(m_minBrightnessSoftLimit);
+    float fBrightness             = fMinBrightness + (fBrightnessDynamicRange * fCorrectedBrightness);
 
-    m_brightnessGoal = static_cast<uint8_t>(fBrightness);
+    m_brightnessGoal              = static_cast<uint8_t>(fBrightness);
 
     LOG_DEBUG("Change brightness goal to %u.", m_brightnessGoal);
 }
@@ -385,11 +378,6 @@ void BrightnessCtrl::updateBrightness()
         {
             m_brightness += STEP;
         }
-
-        if (nullptr != m_display)
-        {
-            m_display->setBrightness(m_brightness);
-        }
     }
     else if (m_brightnessGoal < m_brightness)
     {
@@ -400,11 +388,6 @@ void BrightnessCtrl::updateBrightness()
         else
         {
             m_brightness -= STEP;
-        }
-
-        if (nullptr != m_display)
-        {
-            m_display->setBrightness(m_brightness);
         }
     }
     else

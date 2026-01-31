@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,7 @@
 #include "FileSystem.h"
 #include "RestUtil.h"
 #include "SlotList.h"
+#include "RestartMgr.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -51,7 +52,8 @@
 #include <Logging.h>
 #include <SensorDataProvider.h>
 #include <SettingsService.h>
-#include "RestartMgr.h"
+#include <FileUtil.h>
+#include <MemUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -84,10 +86,23 @@ typedef enum
 
 } HomeAssistantDiscoveryStatus;
 
+/**
+ * Single REST API route.
+ */
+struct RestApiRoute
+{
+    const char*               page;               /**< Page in the filesystem. */
+    WebRequestMethodComposite reqMethodComposite; /**< Request method composite */
+    ArRequestHandlerFunction  onRequest;          /**< Request handler function. */
+    ArUploadHandlerFunction   onUpload;           /**< Upload handler function. */
+    ArBodyHandlerFunction     onBody;             /**< Body handler function. */
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
+static bool                         parseStringBool(const String& str, bool& outValue);
 static void                         handleFadeEffect(AsyncWebServerRequest* request);
 static void                         getSlotInfo(JsonObject& slot, uint16_t slotId);
 static void                         handleSlots(AsyncWebServerRequest* request);
@@ -105,7 +120,6 @@ static void                         handleFilesystem(AsyncWebServerRequest* requ
 static void                         handleFileGet(AsyncWebServerRequest* request);
 static const char*                  getContentType(const String& filename);
 static void                         handleFilePost(AsyncWebServerRequest* request);
-static bool                         createDirectories(const String& path);
 static void                         uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final);
 static void                         handleFileDelete(AsyncWebServerRequest* request);
 static bool                         isValidHostname(const String& hostname);
@@ -114,6 +128,7 @@ static HomeAssistantDiscoveryStatus disableHomeAssistantAutomaticDiscovery();
 static void                         handleHomeAssistantAutomaticDiscoveryDisable(AsyncWebServerRequest* request);
 static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus();
 static void                         handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* request);
+static bool                         isPathSafe(const String& path);
 
 /******************************************************************************
  * Local Variables
@@ -130,6 +145,27 @@ static const ContentTypeElem contentTypeTable[] = {
     { ".jpg", "image/jpg" },
     { ".ico", "image/x-icon" },
     { ".gz", "application/x-gzip" }
+};
+
+/** REST API routes */
+static const RestApiRoute gRestApiRoutes[] = {
+    { "/display/fadeEffect", HTTP_GET | HTTP_POST, handleFadeEffect, nullptr, nullptr },
+    { "/display/slots", HTTP_GET, handleSlots, nullptr, nullptr },
+    { "/display/slot/*", HTTP_GET, handleSlot, nullptr, nullptr },
+    { "/plugin/install", HTTP_POST, handlePluginInstall, nullptr, nullptr },
+    { "/plugin/uninstall", HTTP_POST, handlePluginUninstall, nullptr, nullptr },
+    { "/plugins", HTTP_GET, handlePlugins, nullptr, nullptr },
+    { "/sensors", HTTP_GET, handleSensors, nullptr, nullptr },
+    { "/settings", HTTP_GET, handleSettings, nullptr, nullptr },
+    { "/setting", HTTP_GET | HTTP_POST, handleSetting, nullptr, nullptr },
+    { "/status", HTTP_GET, handleStatus, nullptr, nullptr },
+    { "/fs/file", HTTP_GET, handleFileGet, nullptr, nullptr },
+    { "/fs/file", HTTP_POST, handleFilePost, uploadHandler, nullptr },
+    { "/fs/file", HTTP_DELETE, handleFileDelete, nullptr, nullptr },
+    { "/fs", HTTP_GET, handleFilesystem, nullptr, nullptr },
+    { "/partitionChange", HTTP_POST, handlePartitionChange, nullptr, nullptr },
+    { "/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable, nullptr, nullptr },
+    { "/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr }
 };
 
 /******************************************************************************
@@ -150,23 +186,38 @@ static const ContentTypeElem contentTypeTable[] = {
 
 void RestApi::init(AsyncWebServer& srv)
 {
-    (void)srv.on("/rest/api/v1/display/fadeEffect", handleFadeEffect);
-    (void)srv.on("/rest/api/v1/display/slots", handleSlots);
-    (void)srv.on("/rest/api/v1/display/slot/*", handleSlot);
-    (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
-    (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
-    (void)srv.on("/rest/api/v1/plugins", handlePlugins);
-    (void)srv.on("/rest/api/v1/sensors", handleSensors);
-    (void)srv.on("/rest/api/v1/settings", handleSettings);
-    (void)srv.on("/rest/api/v1/setting", handleSetting);
-    (void)srv.on("/rest/api/v1/status", handleStatus);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_GET, handleFileGet);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete);
-    (void)srv.on("/rest/api/v1/fs", handleFilesystem);
-    (void)srv.on("/rest/api/v1/partitionChange", HTTP_POST, handlePartitionChange);
-    (void)srv.on("/rest/api/v1/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable);
-    (void)srv.on("/rest/api/v1/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus);
+    String           webLoginUser;
+    String           webLoginPassword;
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        webLoginUser     = settings.getWebLoginUser().getDefault();
+        webLoginPassword = settings.getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        webLoginUser     = settings.getWebLoginUser().getValue();
+        webLoginPassword = settings.getWebLoginPassword().getValue();
+
+        settings.close();
+    }
+
+    /* Register all REST API routes. */
+    for (size_t idx = 0; idx < UTIL_ARRAY_NUM(gRestApiRoutes); ++idx)
+    {
+        const RestApiRoute& route      = gRestApiRoutes[idx];
+        String              routePage  = BASE_URI;
+
+        routePage                     += route.page;
+
+        (void)srv.on(routePage.c_str(),
+                     route.reqMethodComposite,
+                     route.onRequest,
+                     route.onUpload,
+                     route.onBody)
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    }
 }
 
 /**
@@ -193,6 +244,37 @@ void RestApi::error(AsyncWebServerRequest* request)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Parse a string to a boolean value.
+ *
+ * @param[in]  str       The string to parse ("true" or "false").
+ * @param[out] outValue  The parsed boolean value.
+ *
+ * @return true if parsing was successful, false otherwise.
+ */
+static bool parseStringBool(const String& str, bool& outValue)
+{
+    bool isSuccessful = false;
+
+    if (str == "true")
+    {
+        outValue     = true;
+        isSuccessful = true;
+    }
+    else if (str == "false")
+    {
+        outValue     = false;
+        isSuccessful = true;
+    }
+    else
+    {
+        /* Parsing failed. */
+        ;
+    }
+
+    return isSuccessful;
+}
 
 /**
  * Activate next fade effect.
@@ -340,7 +422,9 @@ static void handleSlot(AsyncWebServerRequest* request)
     }
     else
     {
-        const char* uriWithSlotId = "/rest/api/v1/display/slot/";
+        String uriWithSlotId  = RestApi::BASE_URI;
+
+        uriWithSlotId        += "/display/slot/";
 
         if (false == request->url().startsWith(uriWithSlotId))
         {
@@ -350,7 +434,7 @@ static void handleSlot(AsyncWebServerRequest* request)
         else
         {
             uint8_t slotId       = SlotList::SLOT_ID_INVALID;
-            size_t  baseUriLen   = strlen(uriWithSlotId);
+            size_t  baseUriLen   = uriWithSlotId.length();
             bool    slotIdStatus = Util::strToUInt8(request->url().substring(baseUriLen), slotId);
 
             if (false == slotIdStatus)
@@ -397,15 +481,7 @@ static void handleSlot(AsyncWebServerRequest* request)
                         const String& stickyFlagStr = request->arg("sticky");
                         bool          stickyFlag    = false;
 
-                        if (stickyFlagStr == "true")
-                        {
-                            stickyFlag = true;
-                        }
-                        else if (stickyFlagStr == "false")
-                        {
-                            stickyFlag = false;
-                        }
-                        else
+                        if (false == parseStringBool(stickyFlagStr, stickyFlag))
                         {
                             RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
                             httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
@@ -447,15 +523,7 @@ static void handleSlot(AsyncWebServerRequest* request)
                         const String& disableFlagStr = request->arg("disable");
                         bool          disableFlag    = false;
 
-                        if (disableFlagStr == "true")
-                        {
-                            disableFlag = true;
-                        }
-                        else if (disableFlagStr == "false")
-                        {
-                            disableFlag = false;
-                        }
-                        else
+                        if (false == parseStringBool(disableFlagStr, disableFlag))
                         {
                             RestUtil::prepareRspError(jsonDoc, "Invalid disable flag.");
                             httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
@@ -1220,7 +1288,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
 static void handleStatus(AsyncWebServerRequest* request)
 {
     uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE  = 512U;
+    const size_t        JSON_DOC_SIZE  = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1259,19 +1327,22 @@ static void handleStatus(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        hwObj["chipRev"]                = ESP.getChipRevision();
-        hwObj["cpuFreqMhz"]             = ESP.getCpuFreqMHz();
+        hwObj["chipRev"]                       = ESP.getChipRevision();
+        hwObj["cpuFreqMhz"]                    = ESP.getCpuFreqMHz();
 
-        swObj["version"]                = Version::getSoftwareVersion();
-        swObj["revision"]               = Version::getSoftwareRevision();
-        swObj["espSdkVersion"]          = ESP.getSdkVersion();
+        swObj["version"]                       = Version::getSoftwareVersion();
+        swObj["revision"]                      = Version::getSoftwareRevision();
+        swObj["espSdkVersion"]                 = ESP.getSdkVersion();
 
-        internalRamObj["heapSize"]      = ESP.getHeapSize();
-        internalRamObj["availableHeap"] = ESP.getFreeHeap();
+        internalRamObj["heapSize"]             = MemUtil::getTotalHeapSize();        /* [byte] */
+        internalRamObj["availableHeapSize"]    = MemUtil::getFreeHeapSize();         /* [byte] */
+        internalRamObj["minFreeHeapSize"]      = MemUtil::getMinFreeHeapSize();      /* [byte] */
+        internalRamObj["largestFreeBlockSize"] = MemUtil::getLargestFreeBlockSize(); /* [byte] */
+        internalRamObj["isPsramAvailable"]     = MemUtil::isPsramAvailable();        /* [byte] */
 
-        wifiObj["ssid"]                 = ssid;
-        wifiObj["rssi"]                 = rssi;                             /* [dbm] */
-        wifiObj["quality"]              = WiFiUtil::getSignalQuality(rssi); /* [%] */
+        wifiObj["ssid"]                        = ssid;
+        wifiObj["rssi"]                        = rssi;                             /* [dbm] */
+        wifiObj["quality"]                     = WiFiUtil::getSignalQuality(rssi); /* [%] */
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1521,40 +1592,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
 }
 
 /**
- * Create directories recursively by parsing the given path.
- *
- * @param[in] path  Path to create.
- *
- * @return If successful created, it will return true otherwise false.
- */
-static bool createDirectories(const String& path)
-{
-    bool    status = true;
-    uint8_t idx    = 0U;
-    String  currentPath;
-
-    while ((true == status) && (path.length() > idx))
-    {
-        if ('/' == path[idx])
-        {
-            if (0U < currentPath.length())
-            {
-                if (false == FILESYSTEM.exists(currentPath))
-                {
-                    status = FILESYSTEM.mkdir(currentPath);
-                }
-            }
-        }
-
-        currentPath += path[idx];
-
-        ++idx;
-    }
-
-    return status;
-}
-
-/**
  * File upload handler.
  *
  * @param[in] request   HTTP request.
@@ -1572,7 +1609,7 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
     if (0 == index)
     {
         /* Create directories if not exist. */
-        if (false == createDirectories(filename))
+        if (false == FileUtil::createDirectories(filename))
         {
             isError = true;
         }
@@ -1644,126 +1681,140 @@ static void handleFileDelete(AsyncWebServerRequest* request)
     }
     else
     {
-        const char*   WILDCARD    = "*";
-        const String& path        = request->arg("path");
-        int32_t       lastSlash   = path.lastIndexOf('/');
-        String        dir         = (0 <= lastSlash) ? path.substring(0U, static_cast<size_t>(lastSlash)) : "/";
-        String        filename    = (0 <= lastSlash) ? path.substring(static_cast<size_t>(lastSlash + 1)) : path;
-        int32_t       wildcardPos = filename.indexOf('*');
-        bool          anyRemoved  = false;
+        const String& path      = request->arg("path");
+        int32_t       lastSlash = path.lastIndexOf('/');
+        String        dir       = (0 <= lastSlash) ? path.substring(0U, static_cast<size_t>(lastSlash)) : "/";
+        String        filename  = (0 <= lastSlash) ? path.substring(static_cast<size_t>(lastSlash + 1)) : path;
 
-        LOG_INFO("File \"%s\" removal requested.", path.c_str());
-
-        /* Wildcard used, but not allowed in directory part. */
-        if (0 <= dir.indexOf(WILDCARD))
+        /* Validate path to prevent directory traversal attacks.
+         * Note: We allow wildcards in filename, but check directory part for traversal.
+         */
+        if (false == isPathSafe(dir))
         {
-            RestUtil::prepareRspError(jsonDoc, "Wildcard not allowed in directory part.");
+            RestUtil::prepareRspError(jsonDoc, "Invalid path: directory traversal not allowed.");
             httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
-        }
-        else if (0 <= wildcardPos)
-        {
-            File dirFile = FILESYSTEM.open(dir, "r");
 
-            if ((false == dirFile) || (false == dirFile.isDirectory()))
-            {
-                RestUtil::prepareRspError(jsonDoc, "Invalid directory.");
-                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-            }
-            else
-            {
-                File file = dirFile.openNextFile();
-
-                while (true == file)
-                {
-                    String fname = String(file.name());
-
-                    if (false == file.isDirectory())
-                    {
-                        bool   match    = false;
-                        String fullPath = String(file.path());
-
-                        /* Check if filename matches wildcard pattern. */
-                        if (filename == WILDCARD)
-                        {
-                            match = true;
-                        }
-                        else
-                        {
-                            int32_t startPos   = filename.indexOf(WILDCARD);
-                            String  prefix     = filename.substring(0U, static_cast<size_t>(startPos));
-                            String  suffix     = filename.substring(static_cast<size_t>(startPos + 1));
-                            int32_t fnameSlash = fname.lastIndexOf('/');
-                            String  fnameOnly;
-
-                            if (0 <= fnameSlash)
-                            {
-                                fnameOnly = fname.substring(static_cast<size_t>(fnameSlash + 1));
-                            }
-                            else
-                            {
-                                fnameOnly = fname;
-                            }
-
-                            if ((0U == prefix.length()) && (0U == suffix.length()))
-                            {
-                                match = true;
-                            }
-                            else if (0U == prefix.length())
-                            {
-                                match = fnameOnly.endsWith(suffix);
-                            }
-                            else if (0U == suffix.length())
-                            {
-                                match = fnameOnly.startsWith(prefix);
-                            }
-                            else
-                            {
-                                match = (fnameOnly.startsWith(prefix) && fnameOnly.endsWith(suffix));
-                            }
-                        }
-
-                        file.close();
-
-                        if (true == match)
-                        {
-                            LOG_DEBUG("Remove file \"%s\".", fullPath.c_str());
-
-                            if (true == FILESYSTEM.remove(fullPath))
-                            {
-                                anyRemoved = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        file.close();
-                    }
-
-                    file = dirFile.openNextFile();
-                }
-                dirFile.close();
-
-                if (true == anyRemoved)
-                {
-                    (void)RestUtil::prepareRspSuccess(jsonDoc);
-                }
-                else
-                {
-                    RestUtil::prepareRspError(jsonDoc, "No matching files found to remove.");
-                    httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-                }
-            }
+            RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
         }
         else
         {
-            if (false == FILESYSTEM.remove(path))
+            const char* WILDCARD    = "*";
+            int32_t     wildcardPos = filename.indexOf('*');
+            bool        anyRemoved  = false;
+
+            LOG_INFO("File \"%s\" removal requested.", path.c_str());
+
+            /* Wildcard used, but not allowed in directory part. */
+            if (0 <= dir.indexOf(WILDCARD))
             {
-                RestUtil::prepareRspError(jsonDoc, "Failed to remove file.");
-                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                RestUtil::prepareRspError(jsonDoc, "Wildcard not allowed in directory part.");
+                httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
+            }
+            else if (0 <= wildcardPos)
+            {
+                File dirFile = FILESYSTEM.open(dir, "r");
+
+                if ((false == dirFile) || (false == dirFile.isDirectory()))
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Invalid directory.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                }
+                else
+                {
+                    File file = dirFile.openNextFile();
+
+                    while (true == file)
+                    {
+                        String fname = String(file.name());
+
+                        if (false == file.isDirectory())
+                        {
+                            bool   match    = false;
+                            String fullPath = String(file.path());
+
+                            /* Check if filename matches wildcard pattern. */
+                            if (filename == WILDCARD)
+                            {
+                                match = true;
+                            }
+                            else
+                            {
+                                int32_t startPos   = filename.indexOf(WILDCARD);
+                                String  prefix     = filename.substring(0U, static_cast<size_t>(startPos));
+                                String  suffix     = filename.substring(static_cast<size_t>(startPos + 1));
+                                int32_t fnameSlash = fname.lastIndexOf('/');
+                                String  fnameOnly;
+
+                                if (0 <= fnameSlash)
+                                {
+                                    fnameOnly = fname.substring(static_cast<size_t>(fnameSlash + 1));
+                                }
+                                else
+                                {
+                                    fnameOnly = fname;
+                                }
+
+                                if ((0U == prefix.length()) && (0U == suffix.length()))
+                                {
+                                    match = true;
+                                }
+                                else if (0U == prefix.length())
+                                {
+                                    match = fnameOnly.endsWith(suffix);
+                                }
+                                else if (0U == suffix.length())
+                                {
+                                    match = fnameOnly.startsWith(prefix);
+                                }
+                                else
+                                {
+                                    match = (fnameOnly.startsWith(prefix) && fnameOnly.endsWith(suffix));
+                                }
+                            }
+
+                            file.close();
+
+                            if (true == match)
+                            {
+                                LOG_DEBUG("Remove file \"%s\".", fullPath.c_str());
+
+                                if (true == FILESYSTEM.remove(fullPath))
+                                {
+                                    anyRemoved = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            file.close();
+                        }
+
+                        file = dirFile.openNextFile();
+                    }
+                    dirFile.close();
+
+                    if (true == anyRemoved)
+                    {
+                        (void)RestUtil::prepareRspSuccess(jsonDoc);
+                    }
+                    else
+                    {
+                        RestUtil::prepareRspError(jsonDoc, "No matching files found to remove.");
+                        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    }
+                }
             }
             else
             {
-                (void)RestUtil::prepareRspSuccess(jsonDoc);
+                if (false == FILESYSTEM.remove(path))
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Failed to remove file.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                }
+                else
+                {
+                    (void)RestUtil::prepareRspSuccess(jsonDoc);
+                }
             }
         }
     }
@@ -1773,7 +1824,11 @@ static void handleFileDelete(AsyncWebServerRequest* request)
 
 /**
  * Check the given hostname and returns whether it is valid or not.
- * Validation is according to RFC952.
+ * Validation is according to RFC952 (https://www.rfc-editor.org/rfc/rfc952.txt):
+ * - Must start with a letter (A-Z, a-z)
+ * - May contain letters, digits (0-9), and hyphens (-)
+ * - Must not end with a hyphen
+ * - Length must be within configured limits
  *
  * @param[in] hostname  Hostname which to validate
  *
@@ -1820,8 +1875,9 @@ static bool isValidHostname(const String& hostname)
             }
             else if ('-' == hostname[index])
             {
-                /* No - at the begin */
-                if (0U == index)
+                /* No leading nor trailing hyphen. */
+                if ((0U == index) ||
+                    (hostname.length() - 1U == index))
                 {
                     isValid = false;
                 }
@@ -2075,4 +2131,34 @@ static void handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* r
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Validate filesystem path to prevent directory traversal attacks.
+ *
+ * @param[in] path  Path to validate
+ *
+ * @return true if path is safe, false if path contains traversal sequences.
+ */
+static bool isPathSafe(const String& path)
+{
+    bool isSafe = true;
+
+    /* Reject paths containing directory traversal sequences */
+    if (0 <= path.indexOf(".."))
+    {
+        isSafe = false;
+    }
+    /* Ensure path starts with / for absolute paths within filesystem */
+    else if ((false == path.isEmpty()) && ('/' != path.charAt(0)))
+    {
+        isSafe = false;
+    }
+    else
+    {
+        /* Path is safe. */
+        ;
+    }
+
+    return isSafe;
 }

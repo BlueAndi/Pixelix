@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -80,8 +80,8 @@ bool FadeLinear::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
     if ((Color::MAX_BRIGHT - FADING_STEP) <= m_intensity)
     {
         dimBitmap(next, Color::MAX_BRIGHT);
-        m_state     = FADE_STATE_INIT;
-        isFinished  = true;
+        m_state    = FADE_STATE_INIT;
+        isFinished = true;
     }
     else
     {
@@ -110,8 +110,8 @@ bool FadeLinear::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
     if ((Color::MIN_BRIGHT + FADING_STEP) >= m_intensity)
     {
         dimBitmap(prev, Color::MIN_BRIGHT);
-        m_state     = FADE_STATE_INIT;
-        isFinished  = true;
+        m_state    = FADE_STATE_INIT;
+        isFinished = true;
     }
     else
     {
@@ -134,14 +134,14 @@ bool FadeLinear::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 
 void FadeLinear::dimBitmap(YAGfxBitmap& bitmap, uint8_t intensity)
 {
-    uint16_t    width   = bitmap.getWidth();
-    uint16_t    height  = bitmap.getHeight();
-    int16_t     x;
-    int16_t     y;
+    uint16_t width  = bitmap.getWidth();
+    uint16_t height = bitmap.getHeight();
+    int16_t  x;
+    int16_t  y;
 
-    for(y = 0; y < height; ++y)
+    for (y = 0; y < height; ++y)
     {
-        for(x = 0; x < width; ++x)
+        for (x = 0; x < width; ++x)
         {
             bitmap.getColor(x, y).setIntensity(intensity);
         }

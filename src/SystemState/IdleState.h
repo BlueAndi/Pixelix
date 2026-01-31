@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,9 @@
  * @file   IdleState.h
  * @brief  System state: Idle
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SYS_STATES
- * 
+ *
  * @{
  */
 
@@ -64,7 +64,7 @@ public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
     static IdleState& getInstance()
@@ -76,27 +76,27 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm) final;
 
     /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
+    static const uint32_t SYS_MSG_WAIT_TIME_SHORT = 250U;
 
 private:
 
@@ -113,16 +113,15 @@ private:
     ~IdleState()
     {
     }
-    
+
     IdleState(const IdleState& state);
     IdleState& operator=(const IdleState& state);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* IDLESTATE_H */
+#endif /* IDLESTATE_H */
 
 /** @} */

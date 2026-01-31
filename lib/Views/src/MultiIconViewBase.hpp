@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,13 +59,14 @@
 
 /**
  * View for multiple icons.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class MultiIconView : public MultiIconViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -75,10 +76,11 @@ public:
 /**
  * View for multiple icons for 32x8 display.
  */
-template<>
+template <>
 class MultiIconView<LAYOUT_32X8> : public MultiIconView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -88,10 +90,11 @@ public:
 /**
  * View for multiple icons for 32x16 display.
  */
-template<>
+template <>
 class MultiIconView<LAYOUT_32X16> : public MultiIconView32x16
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -101,10 +104,11 @@ public:
 /**
  * View for multiple icons for 64x64 display.
  */
-template<>
+template <>
 class MultiIconView<LAYOUT_64X64> : public MultiIconView64x64
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -118,6 +122,6 @@ using MultiIconViewBase = MultiIconView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* MULTI_ICON_VIEW_BASE_HPP */
+#endif /* MULTI_ICON_VIEW_BASE_HPP */
 
 /** @} */

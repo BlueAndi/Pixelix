@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,7 +86,7 @@ public:
      *
      * @param[in] ptr Pointer to memory block to deallocate.
      */
-    virtual void deallocate(void* ptr) noexcept = 0;
+    virtual void deallocate(void* ptr) noexcept  = 0;
 
 protected:
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,7 @@ void SensorSht3X::begin()
     else
     {
         m_isAvailable = true;
-        
+
         /* Only supported for SHT3x sensors */
         m_driver.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
     }
@@ -96,7 +96,7 @@ ISensorChannel* SensorSht3X::getChannel(uint8_t index)
 
     if (true == m_isAvailable)
     {
-        switch(index)
+        switch (index)
         {
         case CHANNEL_ID_TEMPERATURE:
             channel = &m_temperatureChannel;
@@ -105,7 +105,7 @@ ISensorChannel* SensorSht3X::getChannel(uint8_t index)
         case CHANNEL_ID_HUMIDITY:
             channel = &m_humidityChannel;
             break;
-        
+
         default:
             break;
         }

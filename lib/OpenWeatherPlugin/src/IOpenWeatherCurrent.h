@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,14 +66,14 @@ public:
      * Get the temperature.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @return Temperature, the unit is according to configuration.
      */
-    virtual float getTemperature() const = 0;
+    virtual float getTemperature() const           = 0;
 
     /**
      * Get the weather icon id.
-     * 
+     *
      * @return Weather icon id
      */
     virtual const String& getWeatherIconId() const = 0;
@@ -82,26 +82,26 @@ public:
      * Get the UV-index.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @return UV-index.
      */
-    virtual float getUvIndex() const = 0;
+    virtual float getUvIndex() const               = 0;
 
     /**
      * Get the humidity.
-     * 
+     *
      * @return Humidity in %.
      */
-    virtual int getHumidity() const = 0;
+    virtual int getHumidity() const                = 0;
 
     /**
      * Get the wind speed.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @return Wind speed, the unit is according to configuration.
      */
-    virtual float getWindSpeed() const = 0;
+    virtual float getWindSpeed() const             = 0;
 
 protected:
 };
@@ -110,6 +110,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* IOPEN_WEATHER_CURRENT_H */
+#endif /* IOPEN_WEATHER_CURRENT_H */
 
 /** @} */

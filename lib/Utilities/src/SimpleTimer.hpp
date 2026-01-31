@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   SimpleTimer.hpp
  * @brief  Simple timer
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup UTILITIES
  *
  * @{
@@ -52,16 +52,16 @@
  *****************************************************************************/
 
 /** Convert [s] to [ms] for easier timer handling. */
-#define SIMPLE_TIMER_SECONDS(__timeInS)     ((__timeInS) * 1000U)
+#define SIMPLE_TIMER_SECONDS(__timeInS) ((__timeInS) * 1000U)
 
 /** Convert [m] to [ms] for easier timer handling. */
-#define SIMPLE_TIMER_MINUTES(__timeInMin)   SIMPLE_TIMER_SECONDS((__timeInMin) * 60U)
+#define SIMPLE_TIMER_MINUTES(__timeInMin) SIMPLE_TIMER_SECONDS((__timeInMin) * 60U)
 
 /** Convert [h] to [ms] for easier timer handling. */
-#define SIMPLE_TIMER_HOURS(__timeInHours)   SIMPLE_TIMER_MINUTES((__timeInHours) * 60U)
+#define SIMPLE_TIMER_HOURS(__timeInHours) SIMPLE_TIMER_MINUTES((__timeInHours) * 60U)
 
 /** Convert [d] to [ms] for easier timer handling. */
-#define SIMPLE_TIMER_DAYS(__timeInDays)     SIMPLE_TIMER_HOURS((__timeInDays) * 24U)
+#define SIMPLE_TIMER_DAYS(__timeInDays) SIMPLE_TIMER_HOURS((__timeInDays) * 24U)
 
 /******************************************************************************
  * Types and Classes
@@ -94,7 +94,7 @@ public:
 
     /**
      * Constructs a simple timer by assign one.
-     * 
+     *
      * @param[in] sTimer    Simple timer, which to assign.
      */
     SimpleTimer(const SimpleTimer& sTimer) :
@@ -107,9 +107,9 @@ public:
 
     /**
      * Copy a simple timer.
-     * 
+     *
      * @param[in] sTimer    Simple timer, which to copy.
-     * 
+     *
      * @return Simple timer
      */
     SimpleTimer& operator=(const SimpleTimer& sTimer)
@@ -127,7 +127,7 @@ public:
 
     /**
      * Start timer with the given duration.
-     * 
+     *
      * @param[in] duration  Duration in ms
      */
     void start(uint32_t duration)
@@ -159,7 +159,7 @@ public:
 
     /**
      * Is timer running?
-     * 
+     *
      * @return If timer is running, it will return true otherwise false.
      */
     bool isTimerRunning() const
@@ -170,7 +170,7 @@ public:
     /**
      * Is timeout?
      * If timer is not running, it will always return false.
-     * 
+     *
      * @return If timeout it will return true, otherwise false.
      */
     bool isTimeout()
@@ -178,7 +178,7 @@ public:
         bool isTimeout = false;
 
         if (true == m_isRunning)
-        {            
+        {
             if (false == m_isTimeout)
             {
                 uint32_t delta = millis() - m_start;
@@ -197,16 +197,16 @@ public:
 
 private:
 
-    bool        m_isRunning;    /**< Timer is running or not. */
-    bool        m_isTimeout;    /**< Timer timeout active or not. */
-    uint32_t    m_duration;     /**< Duration in ms */
-    uint32_t    m_start;        /**< Timestamp at start time */
+    bool     m_isRunning; /**< Timer is running or not. */
+    bool     m_isTimeout; /**< Timer timeout active or not. */
+    uint32_t m_duration;  /**< Duration in ms */
+    uint32_t m_start;     /**< Timestamp at start time */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SIMPLETIMER_HPP */
+#endif /* SIMPLETIMER_HPP */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,12 +63,12 @@ void RainbowPlugin::update(YAGfx& gfx)
 {
     int16_t x;
     int16_t y;
-    uint8_t angle   = m_angle;
+    uint8_t angle = m_angle;
     Color   color;
 
-    for(x = 0; x < gfx.getWidth(); ++x)
+    for (x = 0; x < gfx.getWidth(); ++x)
     {
-        for(y = 0; y < gfx.getHeight(); ++y)
+        for (y = 0; y < gfx.getHeight(); ++y)
         {
             color.turnColorWheel(angle + y * ANGLE_DELTA);
             gfx.drawPixel(x, y, color);

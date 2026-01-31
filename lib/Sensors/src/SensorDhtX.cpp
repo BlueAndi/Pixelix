@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,11 +61,11 @@
 
 void SensorDhtX::begin()
 {
-    float temperature   = NAN;
-    float humidity      = NAN;
+    float temperature = NAN;
+    float humidity    = NAN;
 
     m_driver.begin();
-    
+
     /* Detect whether a sensor is available. */
     temperature = m_driver.readTemperature();
     humidity    = m_driver.readHumidity();
@@ -82,18 +82,18 @@ void SensorDhtX::begin()
 
 const char* SensorDhtX::getName() const
 {
-    const char* sensorName  = "?";
+    const char* sensorName = "?";
 
-    switch(m_model)
+    switch (m_model)
     {
     case MODEL_DHT11:
         sensorName = "DHT11";
         break;
-    
+
     case MODEL_DHT12:
         sensorName = "DHT12";
         break;
-    
+
     case MODEL_DHT21:
         sensorName = "DHT21";
         break;
@@ -115,7 +115,7 @@ ISensorChannel* SensorDhtX::getChannel(uint8_t index)
 
     if (true == m_isAvailable)
     {
-        switch(index)
+        switch (index)
         {
         case CHANNEL_ID_TEMPERATURE:
             channel = &m_temperatureChannel;
@@ -124,7 +124,7 @@ ISensorChannel* SensorDhtX::getChannel(uint8_t index)
         case CHANNEL_ID_HUMIDITY:
             channel = &m_humidityChannel;
             break;
-        
+
         default:
             break;
         }

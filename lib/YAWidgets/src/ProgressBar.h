@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   ProgressBar.h
  * @brief  Progress bar
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup GFX
  *
  * @{
@@ -75,7 +75,7 @@ public:
 
     /**
      * Constructs a progress bar widget.
-     * 
+     *
      * @param[in] width     Widget width in pixel.
      * @param[in] height    Widget height in pixel.
      * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
@@ -91,7 +91,7 @@ public:
 
     /**
      * Constructs the progress bar, by assigning another.
-     * 
+     *
      * @param[in] widget Progress bar, which to assign.
      */
     ProgressBar(const ProgressBar& widget) :
@@ -111,9 +111,9 @@ public:
 
     /**
      * Assign the content of a progress bar widget.
-     * 
+     *
      * @param[in] widget Widget, which to assign
-     * 
+     *
      * @return Progress bar widget
      */
     ProgressBar& operator=(const ProgressBar& widget)
@@ -121,7 +121,7 @@ public:
         if (&widget != this)
         {
             Widget::operator=(widget);
-            
+
             m_progress  = widget.m_progress;
             m_color     = widget.m_color;
             m_algorithm = widget.m_algorithm;
@@ -132,7 +132,7 @@ public:
 
     /**
      * Set progress in % [0; 100].
-     * 
+     *
      * @param[in] progress  Progress as number from 0 to 100.
      */
     void setProgress(uint8_t progress)
@@ -149,7 +149,7 @@ public:
 
     /**
      * Set progress bar color.
-     * 
+     *
      * @param[in] color Progress bar color
      */
     void setColor(const Color& color)
@@ -159,7 +159,7 @@ public:
 
     /**
      * Set algorithm how to show progress on the display.
-     * 
+     *
      * @param[in] algorithm Algorithm
      */
     void setAlgo(Algorithm algorithm)
@@ -171,31 +171,31 @@ public:
     }
 
     /** Widget type string */
-    static const char*  WIDGET_TYPE;
+    static const char* WIDGET_TYPE;
 
 private:
 
-    uint8_t     m_progress;     /**< Progress in % [0; 100]. */
-    Color       m_color;        /**< Color of the progress bar */
-    Algorithm   m_algorithm;    /**< Choosen algorithm */
+    uint8_t   m_progress;  /**< Progress in % [0; 100]. */
+    Color     m_color;     /**< Color of the progress bar */
+    Algorithm m_algorithm; /**< Choosen algorithm */
 
     /**
      * Paint the widget with the given graphics interface.
-     * 
+     *
      * @param[in] gfx   Graphics interface
      */
     void paint(YAGfx& gfx) override;
-    
+
     /**
      * Fill the display pixel wise depended on current progress.
-     * 
+     *
      * @param[in] gfx Graphics interface
      */
     void showProgressPixel(YAGfx& gfx);
 
     /**
      * Show current progress as bar over the longer dimension.
-     * 
+     *
      * @param[in] gfx Graphics interface
      */
     void showProgressBar(YAGfx& gfx);
@@ -205,6 +205,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* PROGRESSBAR_H */
+#endif /* PROGRESSBAR_H */
 
 /** @} */

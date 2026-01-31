@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +42,7 @@
 
 #include <Logging.h>
 #include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,6 +67,24 @@
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void RestApiTopicHandler::start()
+{
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        m_webLoginUser     = settings.getWebLoginUser().getDefault();
+        m_webLoginPassword = settings.getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        m_webLoginUser     = settings.getWebLoginUser().getValue();
+        m_webLoginPassword = settings.getWebLoginPassword().getValue();
+
+        settings.close();
+    }
+}
 
 void RestApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
@@ -101,6 +120,9 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
             topicMetaData->uploadReqFunc = uploadReqFunc;
             topicMetaData->uri           = getUri(entityId, topic);
             topicMetaData->webHandler    = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload, onBody);
+
+            /* Enable basic authentication. */
+            topicMetaData->webHandler->setAuthentication(m_webLoginUser, m_webLoginPassword);
 
             LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 
@@ -175,7 +197,7 @@ String RestApiTopicHandler::getUri(const String& entityId, const String& topic) 
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE = 4096U;
+    const size_t        JSON_DOC_SIZE = 8192U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj        = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
@@ -268,27 +290,41 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
             jsonDocPar["fullPath"] = topicMetaData->fullPath;
         }
 
-        jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
-        if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
+        /* Check for JSON document overflow. */
+        if (true == jsonDoc.overflowed())
         {
-            LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
-
-            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
+            LOG_ERROR("JSON document size exceeded.");
 
             jsonDoc.remove("data");
 
-            /* If a file is available, it will be removed now. */
-            if (false == topicMetaData->fullPath.isEmpty())
-            {
-                (void)FILESYSTEM.remove(topicMetaData->fullPath);
-            }
+            RestUtil::prepareRspError(jsonDoc, "JSON document size exceeded.");
 
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
         }
         else
         {
-            jsonDoc["status"] = "ok";
-            httpStatusCode    = HttpStatus::STATUS_CODE_OK;
+            jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
+            if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
+            {
+                LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
+
+                RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
+
+                jsonDoc.remove("data");
+
+                /* If a file is available, it will be removed now. */
+                if (false == topicMetaData->fullPath.isEmpty())
+                {
+                    (void)FILESYSTEM.remove(topicMetaData->fullPath);
+                }
+
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            }
+            else
+            {
+                jsonDoc["status"] = "ok";
+                httpStatusCode    = HttpStatus::STATUS_CODE_OK;
+            }
         }
     }
     else
@@ -419,7 +455,8 @@ void RestApiTopicHandler::bodyHandler(AsyncWebServerRequest* request, uint8_t* d
 
 void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest* request)
 {
-    size_t idx = 0U;
+    const int32_t ARRAY_IDX_MAX = 10;
+    size_t        idx           = 0U;
 
     /* Add arguments:
      * - key=value              --> { "key": "value" }
@@ -458,25 +495,47 @@ void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerReque
             /* No additional "." means: key._0_=value */
             if (dotIdx == dot2Idx)
             {
-                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                int32_t arrayIdx    = -1;
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
                 strArrayIdx.remove(strArrayIdx.length() - 1U);
 
-                jsonDocPar[key][strArrayIdx.toInt()] = value;
+                arrayIdx = strArrayIdx.toInt();
+
+                if ((0 > arrayIdx) ||
+                    (ARRAY_IDX_MAX <= arrayIdx))
+                {
+                    LOG_WARNING("Array index %d out of range.", arrayIdx);
+                }
+                else
+                {
+                    jsonDocPar[key][arrayIdx] = value;
+                }
             }
             /* Additional "." means: key._0_.subKey=value */
             else
             {
-                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
-                String subKey      = keyPattern.substring(dot2Idx + 1U);
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  subKey      = keyPattern.substring(dot2Idx + 1U);
+                int32_t arrayIdx    = -1;
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
                 strArrayIdx.remove(strArrayIdx.length() - 1U);
 
-                jsonDocPar[key][strArrayIdx.toInt()][subKey] = value;
+                arrayIdx = strArrayIdx.toInt();
+
+                if ((0 > arrayIdx) ||
+                    (ARRAY_IDX_MAX <= arrayIdx))
+                {
+                    LOG_WARNING("Array index %d out of range.", arrayIdx);
+                }
+                else
+                {
+                    jsonDocPar[key][arrayIdx][subKey] = value;
+                }
             }
         }
     }

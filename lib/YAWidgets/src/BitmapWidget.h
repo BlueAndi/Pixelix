@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -219,6 +219,15 @@ public:
         return IMG_TYPE_NO_IMAGE == m_imgType;
     }
 
+    /**
+     * Check, if the image type is supported.
+     *
+     * @param[in] path  Image file path
+     *
+     * @return If image type is supported, it will return true otherwise false.
+     */
+    static bool isImageTypeSupported(const String& path);
+
     /** Widget type string */
     static const char* WIDGET_TYPE;
 
@@ -231,6 +240,16 @@ public:
      * Filename extension of GIF image file.
      */
     static const char* FILE_EXT_GIF;
+
+    /**
+     * Supported image file extensions.
+     */
+    static const char* IMAGE_FILE_EXTENSIONS[];
+
+    /**
+     * Number of supported image file extensions.
+     */
+    static const size_t IMAGE_FILE_EXTENSIONS_COUNT;
 
 private:
 

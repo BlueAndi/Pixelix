@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ void WsCmdAlias::execute(AsyncWebSocket* server, uint32_t clientId)
         String msg;
 
         if (2U == m_parCnt)
-        {                    
+        {
             (void)DisplayMgr::getInstance().setPluginAliasName(m_pluginUid, m_alias);
         }
 
@@ -94,12 +94,12 @@ void WsCmdAlias::execute(AsyncWebSocket* server, uint32_t clientId)
     }
 
     m_isError = false;
-    m_parCnt = 0U;
+    m_parCnt  = 0U;
 }
 
 void WsCmdAlias::setPar(const char* par)
 {
-    switch(m_parCnt)
+    switch (m_parCnt)
     {
     case 0:
         if (false == Util::strToUInt16(par, m_pluginUid))

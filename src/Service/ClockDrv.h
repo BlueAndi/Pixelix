@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -101,6 +101,13 @@ public:
      * @return If time is not synchronized, it will return false otherwise true.
      */
     bool getTzTime(const char* tz, struct tm& timeInfo);
+
+    /**
+     * Get the current time zone offset in seconds.
+     *
+     * @return Current time zone offset in seconds.
+     */
+    long getCurrentTimeZoneOffset() const;
 
 private:
 

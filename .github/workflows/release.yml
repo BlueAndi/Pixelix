@@ -27,7 +27,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-s3-devkitc-1-n16r8v-LED-32x16", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-s3-devkitc-1-n16r8v-LED-32x16", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "lilygo-t-display-s3-TFT-64x16", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
@@ -67,21 +67,36 @@ jobs:
     - name: Compile ${{ matrix.environment }} firmware
       run: platformio run --environment ${{ matrix.environment }}
     
+    - name: Determine factory binary name
+      id: factory
+      # Extract board name from environment (remove display suffix like -LED-32x8)
+      run: |
+        BOARD_NAME=$(echo "${{ matrix.environment }}" | sed 's/-LED-.*//; s/-HUB75-.*//; s/-TFT-.*//')
+        FACTORY_BIN="factory_binaries/${BOARD_NAME}-factory.bin"
+        if [ -f "$FACTORY_BIN" ]; then
+          echo "factory_bin=$FACTORY_BIN" >> $GITHUB_OUTPUT
+          echo "Found factory binary: $FACTORY_BIN"
+        else
+          echo "factory_bin=" >> $GITHUB_OUTPUT
+          echo "No factory binary found for: $BOARD_NAME"
+        fi
+
     - name: Deploy ${{ matrix.environment }} firmware
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.environment }}_firmware
         path: |
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
+          ${{ github.workspace }}/${{ steps.factory.outputs.factory_bin }}
         retention-days: 5
 
     - name: Build ${{ matrix.environment }} filesystem image
       run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
     - name: Deploy ${{ matrix.environment }} filesystem image
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.environment }}_filesystem
         path: |
@@ -96,7 +111,7 @@ jobs:
     needs: [build]
     steps:
     - name: Download release artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         path: ${{ github.workspace }}/artifacts
 
@@ -109,7 +124,7 @@ jobs:
       working-directory: ${{ github.workspace }}/artifacts
 
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.event.inputs.tag_name }}
         files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip

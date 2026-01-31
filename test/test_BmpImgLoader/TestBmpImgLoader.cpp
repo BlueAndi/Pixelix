@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -157,4 +157,40 @@ static void testBmpImgLoader()
 
     /* Load valid bitmap file. */
     TEST_ASSERT_EQUAL(BmpImgLoader::RET_OK, loader.load(localFileSystem, "./test/test_BmpImgLoader/test24bpp.bmp", bitmap));
+
+    /* Load test image:
+     * 2x2 pixels
+     * (0, 0) blue
+     * (1, 0) green
+     * (0, 1) red
+     * (1, 1) white
+     * 24 bpp, no compression
+     * Palette colors
+     */
+    bitmap.release();
+    TEST_ASSERT_EQUAL(BmpImgLoader::RET_OK, loader.load(localFileSystem, "./test/test_BmpImgLoader/test24bppPalette.bmp", bitmap));
+    TEST_ASSERT_EQUAL_UINT16(2, bitmap.getWidth());
+    TEST_ASSERT_EQUAL_UINT16(2, bitmap.getHeight());
+    TEST_ASSERT_EQUAL_UINT32(0x0000ff, bitmap.getColor(0, 0));
+    TEST_ASSERT_EQUAL_UINT32(0x00ff00, bitmap.getColor(1, 0));
+    TEST_ASSERT_EQUAL_UINT32(0xff0000, bitmap.getColor(0, 1));
+    TEST_ASSERT_EQUAL_UINT32(0xffffff, bitmap.getColor(1, 1));
+
+    /* Load test image:
+     * 2x2 pixels
+     * (0, 0) blue
+     * (1, 0) green
+     * (0, 1) red
+     * (1, 1) white
+     * 32 bpp, no compression
+     * Palette colors
+     */
+    bitmap.release();
+    TEST_ASSERT_EQUAL(BmpImgLoader::RET_OK, loader.load(localFileSystem, "./test/test_BmpImgLoader/test32bppPalette.bmp", bitmap));
+    TEST_ASSERT_EQUAL_UINT16(2, bitmap.getWidth());
+    TEST_ASSERT_EQUAL_UINT16(2, bitmap.getHeight());
+    TEST_ASSERT_EQUAL_UINT32(0x0000ff, bitmap.getColor(0, 0));
+    TEST_ASSERT_EQUAL_UINT32(0x00ff00, bitmap.getColor(1, 0));
+    TEST_ASSERT_EQUAL_UINT32(0xff0000, bitmap.getColor(0, 1));
+    TEST_ASSERT_EQUAL_UINT32(0xffffff, bitmap.getColor(1, 1));
 }

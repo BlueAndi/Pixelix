@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,7 +73,7 @@ SlotList& SlotList::operator=(const SlotList& list)
         {
             uint8_t idx = 0U;
 
-            for(idx = 0U; idx < m_maxSlots; ++idx)
+            for (idx = 0U; idx < m_maxSlots; ++idx)
             {
                 m_slots[idx] = list.m_slots[idx];
             }
@@ -110,11 +110,11 @@ bool SlotList::create(uint8_t maxSlots)
         (0 < maxSlots) &&
         (SLOT_ID_INVALID > maxSlots))
     {
-        m_slots = new(std::nothrow) Slot[maxSlots];
+        m_slots = new (std::nothrow) Slot[maxSlots];
 
         if (nullptr != m_slots)
         {
-            m_maxSlots = maxSlots;
+            m_maxSlots   = maxSlots;
 
             isSuccessful = true;
         }
@@ -128,10 +128,10 @@ void SlotList::destroy()
     if (nullptr != m_slots)
     {
         delete[] m_slots;
-        
-        m_slots         = nullptr;
-        m_maxSlots      = 0U;
-        m_stickySlot    = SLOT_ID_INVALID;
+
+        m_slots      = nullptr;
+        m_maxSlots   = 0U;
+        m_stickySlot = SLOT_ID_INVALID;
     }
 }
 
@@ -174,8 +174,6 @@ bool SlotList::setPlugin(uint8_t slotId, IPluginMaintenance* plugin)
         {
             m_stickySlot = SLOT_ID_INVALID;
         }
-
-        isSuccessful = true;
     }
 
     return isSuccessful;
@@ -201,7 +199,7 @@ uint8_t SlotList::getEmptyUnlockedSlot()
     {
         slotId = 0U;
 
-        while((m_maxSlots > slotId) && (false == isSlotEmptyAndUnlocked(slotId)))
+        while ((m_maxSlots > slotId) && (false == isSlotEmptyAndUnlocked(slotId)))
         {
             ++slotId;
         }
@@ -337,7 +335,7 @@ uint8_t SlotList::getSlotIdByPluginUID(uint16_t pluginUid) const
 
     if (nullptr != m_slots)
     {
-        while(m_maxSlots > slotId)
+        while (m_maxSlots > slotId)
         {
             if (false == m_slots[slotId].isEmpty())
             {
@@ -374,8 +372,8 @@ bool SlotList::setSlotSticky(uint8_t slotId)
         if ((false == m_slots[slotId].isEmpty()) &&
             (false == m_slots[slotId].isDisabled()))
         {
-            m_stickySlot    = slotId;
-            isSuccessful    = true;
+            m_stickySlot = slotId;
+            isSuccessful = true;
         }
     }
 

@@ -166,6 +166,7 @@ def _generate_web_menu(menu_full_path, plugin_list):
         plugin_list (list): List of all plugin names
     """
     with open(menu_full_path, 'w', encoding="utf-8") as file_desc:
+        file_desc.write("\"use strict\";\n\n")
         file_desc.write("var pluginSubMenu = [\n")
 
         for idx, plugin_name in enumerate(plugin_list):
@@ -180,7 +181,7 @@ def _generate_web_menu(menu_full_path, plugin_list):
             else:
                 file_desc.write(",\n")
 
-        file_desc.write("]\n")
+        file_desc.write("];\n")
 
 def _generate_cpp_plugin_list(plugin_list_full_path, plugin_list):
     """Generate the PluginList.cpp source file.

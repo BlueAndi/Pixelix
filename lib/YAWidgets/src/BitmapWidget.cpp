@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,7 @@
 
 #include <YAColor.h>
 #include <Logging.h>
+#include <FileUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,13 +61,22 @@
  *****************************************************************************/
 
 /* Initialize bitmap widget type. */
-const char* BitmapWidget::WIDGET_TYPE     = "bitmap";
+const char* BitmapWidget::WIDGET_TYPE             = "bitmap";
 
 /* Initialize bitmap image filename extension. */
-const char* BitmapWidget::FILE_EXT_BITMAP = ".bmp";
+const char* BitmapWidget::FILE_EXT_BITMAP         = "bmp";
 
 /* Initialize GIF image filename extension. */
-const char* BitmapWidget::FILE_EXT_GIF    = ".gif";
+const char* BitmapWidget::FILE_EXT_GIF            = "gif";
+
+/* Initialize supported image file extensions. */
+const char* BitmapWidget::IMAGE_FILE_EXTENSIONS[] = {
+    FILE_EXT_BITMAP,
+    FILE_EXT_GIF
+};
+
+/* Initialize number of supported image file extensions. */
+const size_t BitmapWidget::IMAGE_FILE_EXTENSIONS_COUNT = sizeof(BitmapWidget::IMAGE_FILE_EXTENSIONS) / sizeof(BitmapWidget::IMAGE_FILE_EXTENSIONS[0U]);
 
 /******************************************************************************
  * Public Methods
@@ -136,20 +146,18 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        int32_t index = filename.lastIndexOf(".");
+        String fileExtension = FileUtil::getFileExtension(filename);
 
         /* File extension found? */
-        if (0 <= index)
+        if (false == fileExtension.isEmpty())
         {
-            String fileExt = filename.substring(index);
-
             /* BMP image? */
-            if (true == fileExt.equalsIgnoreCase(FILE_EXT_BITMAP))
+            if (true == fileExtension.equalsIgnoreCase(FILE_EXT_BITMAP))
             {
                 isSuccessful = loadBMP(fs, filename);
             }
             /* GIF image? */
-            else if (true == fileExt.equalsIgnoreCase(FILE_EXT_GIF))
+            else if (true == fileExtension.equalsIgnoreCase(FILE_EXT_GIF))
             {
                 isSuccessful = loadGIF(fs, filename);
             }
@@ -167,6 +175,24 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
 
     return isSuccessful;
+}
+
+bool BitmapWidget::isImageTypeSupported(const String& path)
+{
+    bool isSupported = false;
+
+    for (size_t idx = 0U; idx < sizeof(IMAGE_FILE_EXTENSIONS) / sizeof(IMAGE_FILE_EXTENSIONS[0U]); ++idx)
+    {
+        const char* ext = IMAGE_FILE_EXTENSIONS[idx];
+
+        if (true == path.endsWith(ext))
+        {
+            isSupported = true;
+            break;
+        }
+    }
+
+    return isSupported;
 }
 
 /******************************************************************************

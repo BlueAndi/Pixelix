@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   SensorDhtX.h
  * @brief  DHTx sensor
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SENSORS
  *
  * @{
@@ -67,7 +67,7 @@ public:
 
     /**
      * Constructs the temperature channel of the DHTx sensor.
-     * 
+     *
      * @param[in] driver    The DHTx driver.
      */
     DhtXTemperatureChannel(DHT& driver) :
@@ -85,7 +85,7 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
     Type getType() const final
@@ -96,7 +96,7 @@ public:
     /**
      * Get the temperature.
      * If there is any error, it will return NaN.
-     * 
+     *
      * @return Temperature in °C.
      */
     float getValue() final
@@ -116,7 +116,7 @@ public:
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value in °C.
      */
     float getOffset() const final
@@ -126,7 +126,7 @@ public:
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value in °C.
      */
     void setOffset(float offset) final
@@ -136,8 +136,8 @@ public:
 
 private:
 
-    DHT&    m_driver;   /**< DHTx sensor driver. */
-    float   m_offset;   /**< Temperature offset in °C for sensor tolerance compensation. */
+    DHT&  m_driver; /**< DHTx sensor driver. */
+    float m_offset; /**< Temperature offset in °C for sensor tolerance compensation. */
 
     DhtXTemperatureChannel();
     DhtXTemperatureChannel(const DhtXTemperatureChannel& channel);
@@ -153,7 +153,7 @@ public:
 
     /**
      * Constructs the humidity channel of the DHTx sensor.
-     * 
+     *
      * @param[in] driver    The DHTx driver.
      */
     DhtXHumidityChannel(DHT& driver) :
@@ -171,7 +171,7 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
     Type getType() const final
@@ -182,7 +182,7 @@ public:
     /**
      * Get the humidity.
      * If there is any error, it will return NaN.
-     * 
+     *
      * @return Humidity in %.
      */
     float getValue() final
@@ -202,7 +202,7 @@ public:
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value in %.
      */
     float getOffset() const final
@@ -212,7 +212,7 @@ public:
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value in %.
      */
     void setOffset(float offset) final
@@ -222,8 +222,8 @@ public:
 
 private:
 
-    DHT&    m_driver;   /**< DHTx sensor driver. */
-    float   m_offset;   /**< Humidity offset in % for sensor tolerance compensation. */
+    DHT&  m_driver; /**< DHTx sensor driver. */
+    float m_offset; /**< Humidity offset in % for sensor tolerance compensation. */
 
     DhtXHumidityChannel();
     DhtXHumidityChannel(const DhtXHumidityChannel& channel);
@@ -242,15 +242,15 @@ public:
      */
     enum Model
     {
-        MODEL_DHT11     = 11,   /**< DHT11 */
-        MODEL_DHT12     = 12,   /**< DHT12 */
-        MODEL_DHT21     = 21,   /**< DHT21 or AM2301 */
-        MODEL_DHT22     = 22    /**< DHT22 */
+        MODEL_DHT11 = 11, /**< DHT11 */
+        MODEL_DHT12 = 12, /**< DHT12 */
+        MODEL_DHT21 = 21, /**< DHT21 or AM2301 */
+        MODEL_DHT22 = 22  /**< DHT22 */
     };
 
     /**
      * Constructs the DHTx sensor.
-     * 
+     *
      * @param[in] model DHTx sensor model
      */
     SensorDhtX(Model model) :
@@ -285,11 +285,11 @@ public:
 
     /**
      * Get sensor name.
-     * 
+     *
      * @return Sensor name
      */
     const char* getName() const final;
-    
+
     /**
      * Is sensor available?
      * If a sensor is physically not available or the initialization failed (see begin()),
@@ -304,7 +304,7 @@ public:
 
     /**
      * Get number of data channels.
-     * 
+     *
      * @return Number of data channels.
      */
     uint8_t getNumChannels() const final
@@ -314,11 +314,11 @@ public:
 
     /**
      * Get data channel by index.
-     * If sensor is not available or channel index is out of bounds, it will 
+     * If sensor is not available or channel index is out of bounds, it will
      * return nullptr.
-     * 
+     *
      * @param[in] index Index of the data channel.
-     * 
+     *
      * @return Data channel
      */
     ISensorChannel* getChannel(uint8_t index) final;
@@ -335,12 +335,12 @@ private:
         CHANNEL_ID_COUNT            /**< Number of channels */
     };
 
-    DHT                     m_driver;               /**< DHTx sensor driver. */
-    Model                   m_model;                /**< DHTx sensor model */
-    bool                    m_isAvailable;          /**< Is a DHTx sensor available or not? */
-    DhtXTemperatureChannel  m_temperatureChannel;   /**< Temperature channel */
-    DhtXHumidityChannel     m_humidityChannel;      /**< Humidity channel */
-    
+    DHT                    m_driver;             /**< DHTx sensor driver. */
+    Model                  m_model;              /**< DHTx sensor model */
+    bool                   m_isAvailable;        /**< Is a DHTx sensor available or not? */
+    DhtXTemperatureChannel m_temperatureChannel; /**< Temperature channel */
+    DhtXHumidityChannel    m_humidityChannel;    /**< Humidity channel */
+
     SensorDhtX();
     SensorDhtX(const SensorDhtX& sensor);
     SensorDhtX& operator=(const SensorDhtX& sensor);
@@ -350,6 +350,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_DHTX_H */
+#endif /* SENSOR_DHTX_H */
 
 /** @} */

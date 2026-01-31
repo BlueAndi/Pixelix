@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -85,7 +85,7 @@ void Display::show()
     if (true == m_isOn)
     {
         const int16_t height = m_ledMatrix.getHeight();
-        const int16_t width = m_ledMatrix.getWidth();
+        const int16_t width  = m_ledMatrix.getWidth();
 
         for (int16_t y = 0; y < height; ++y)
         {

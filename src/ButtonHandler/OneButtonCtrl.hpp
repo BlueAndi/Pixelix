@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   OneButtonCtrl.hpp
  * @brief  One button controller
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup BUTTON_HANDLER
  *
  * @{
@@ -56,7 +56,7 @@
 
 /**
  * Used in case only one button is available to control the application.
- * 
+ *
  * @tparam tButtonOk    Button id of the single button.
  */
 template < ButtonId tButtonOk >
@@ -66,10 +66,10 @@ protected:
 
     /**
      * Handles short button triggers.
-     * 
+     *
      * @param[in]   buttonId    The triggered button.
      * @param[in]   triggerCnt  The number of triggers.
-     * 
+     *
      * @return Returns the action which to execute.
      */
     ButtonActionId handleTriggers(ButtonId buttonId, uint32_t triggerCnt)
@@ -86,9 +86,9 @@ protected:
 
     /**
      * Handles a pressed button.
-     * 
+     *
      * @param[in]   buttonId    The pressed button.
-     * 
+     *
      * @return Returns the action which to execute.
      */
     ButtonActionId handlePressed(ButtonId buttonId)
@@ -105,16 +105,15 @@ protected:
 
     /**
      * Handles short button triggers.
-     * 
+     *
      * @param[in]   triggerCnt  The number of triggers.
-     * 
+     *
      * @return Returns the action which to execute.
      */
     ButtonActionId handleButtonOkTriggers(uint32_t triggerCnt)
     {
-        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
-        const ButtonActionId    ACTION_TABLE[]  =
-        {
+        ButtonActionId       action         = BUTTON_ACTION_ID_NO_ACTION;
+        const ButtonActionId ACTION_TABLE[] = {
             /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
             /* 1 */ BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT,
             /* 2 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
@@ -122,7 +121,7 @@ protected:
             /* 4 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS,
             /* 5 */ BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON
         };
-        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
+        const size_t TABLE_NUM_ELEMENTS = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 
         if (TABLE_NUM_ELEMENTS > triggerCnt)
         {
@@ -141,6 +140,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* ONE_BUTTON_CTRL_HPP */
+#endif /* ONE_BUTTON_CTRL_HPP */
 
 /** @} */

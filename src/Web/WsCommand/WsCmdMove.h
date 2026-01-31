@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@
 /**
  * Websocket command to move a plugin to a different slot.
  */
-class WsCmdMove: public WsCmd
+class WsCmdMove : public WsCmd
 {
 public:
 
@@ -99,10 +99,10 @@ public:
 
 private:
 
-    bool        m_isError;  /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;   /**< Received number of parameters */
-    uint16_t    m_uid;      /**< UID of plugin, which to move */
-    uint8_t     m_slotId;   /**< Slot id of destination slot */
+    bool     m_isError; /**< Any error happened during parameter reception? */
+    uint8_t  m_parCnt;  /**< Received number of parameters */
+    uint16_t m_uid;     /**< UID of plugin, which to move */
+    uint8_t  m_slotId;  /**< Slot id of destination slot */
 
     WsCmdMove(const WsCmdMove& cmd);
     WsCmdMove& operator=(const WsCmdMove& cmd);
@@ -112,6 +112,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDMOVE_H */
+#endif /* WSCMDMOVE_H */
 
 /** @} */

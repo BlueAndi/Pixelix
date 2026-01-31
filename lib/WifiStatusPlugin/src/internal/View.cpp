@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,13 +73,13 @@ void View::updateWifiStatus(uint8_t quality)
      *    ## ## ##
      * ## ## ## ##
      */
-    for(index = 0U; index < WIFI_BARS; ++index)
+    for (index = 0U; index < WIFI_BARS; ++index)
     {
-        uint8_t     qualityRangeMin = (100U / WIFI_BARS) * index;
-        int16_t     height          = WIFI_BAR_HEIGHT * (index + 1U);
-        int16_t     x               = (WIFI_BAR_WIDTH * index) + (index * WIFI_BAR_SPACE_WIDTH);
-        int16_t     y               = (WIFI_BARS - index - 1) * WIFI_BAR_HEIGHT;
-        Color       color           = ColorDef::GRAY;
+        uint8_t qualityRangeMin = (100U / WIFI_BARS) * index;
+        int16_t height          = WIFI_BAR_HEIGHT * (index + 1U);
+        int16_t x               = (WIFI_BAR_WIDTH * index) + (index * WIFI_BAR_SPACE_WIDTH);
+        int16_t y               = (WIFI_BARS - index - 1) * WIFI_BAR_HEIGHT;
+        Color   color           = ColorDef::GRAY;
 
         if (qualityRangeMin < quality)
         {

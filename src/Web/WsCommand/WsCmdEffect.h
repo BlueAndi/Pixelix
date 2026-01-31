@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +57,7 @@
 /**
  * Websocket command to control the fade effects.
  */
-class WsCmdEffect: public WsCmd
+class WsCmdEffect : public WsCmd
 {
 public:
 
@@ -96,9 +96,9 @@ public:
 
 private:
 
-    bool    m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t m_parCnt;       /**< Received number of parameters */
-    uint8_t m_fadeEffect;   /**< Fade effect */
+    bool    m_isError;    /**< Any error happened during parameter reception? */
+    uint8_t m_parCnt;     /**< Received number of parameters */
+    uint8_t m_fadeEffect; /**< Fade effect */
 
     WsCmdEffect(const WsCmdEffect& cmd);
     WsCmdEffect& operator=(const WsCmdEffect& cmd);
@@ -108,6 +108,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDEFFECT_H */
+#endif /* WSCMDEFFECT_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   WsCmdSlots.h
  * @brief  Websocket command get slots information
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -57,7 +57,7 @@
 /**
  * Websocket command get slots information
  */
-class WsCmdSlots: public WsCmd
+class WsCmdSlots : public WsCmd
 {
 public:
 
@@ -79,7 +79,7 @@ public:
 
     /**
      * Execute command.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] clientId  Websocket client ID
      */
@@ -87,14 +87,14 @@ public:
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.
-     * 
+     *
      * @param[in] par   Parameter string
      */
     void setPar(const char* par) final;
 
 private:
 
-    bool    m_isError;  /**< Any error happened during parameter reception? */
+    bool m_isError; /**< Any error happened during parameter reception? */
 
     WsCmdSlots(const WsCmdSlots& cmd);
     WsCmdSlots& operator=(const WsCmdSlots& cmd);
@@ -104,6 +104,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDSLOTS_H */
+#endif /* WSCMDSLOTS_H */
 
 /** @} */

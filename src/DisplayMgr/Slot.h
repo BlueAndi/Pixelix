@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,7 +84,7 @@ public:
      * Assign a slot.
      *
      * @param[in] slot  The slot which to assign.
-     * 
+     *
      * @return Slot
      */
     Slot& operator=(const Slot& slot);
@@ -164,7 +164,7 @@ public:
 
     /**
      * Is slot disabled?
-     * 
+     *
      * @return If slot is disabled, it will return true otherwise false.
      */
     bool isDisabled() const;

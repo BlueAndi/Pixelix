@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@
 #include "MemMon.h"
 
 #include <Logging.h>
+#include <MemUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -65,8 +66,11 @@ bool MemMon::start()
 {
     bool                    isSuccessful        = true;
     esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t caps, const char* functionName) -> void {
-        LOG_ERROR("Failed to allocate memory, size: %u bytes, caps: 0x%04X, func: %s", size, caps, functionName);
-        LOG_ERROR("Largest available HEAP block: %u bytes", heap_caps_get_largest_free_block(MEM_CAPABILITIES));
+        LOG_ERROR("Memory allocation failed.");
+        LOG_ERROR("Size          : %u bytes", size);
+        LOG_ERROR("Capability    : 0x%04X", caps);
+        LOG_ERROR("Function      : %s", functionName);
+        LOG_ERROR("Largest avail.: %u bytes", MemUtil::getLargestFreeBlockSize());
     };
 
     m_timer.start(PROCESSING_CYCLE);
@@ -84,9 +88,9 @@ void MemMon::process()
 {
     if (true == m_timer.isTimeout())
     {
-        uint32_t availableHeap       = heap_caps_get_free_size(MEM_CAPABILITIES);          /* Current available heap memory. */
-        uint32_t lowestAvailableHeap = heap_caps_get_minimum_free_size(MEM_CAPABILITIES);  /* Lowest level of available heap since boot. */
-        uint32_t largestHeapBlock    = heap_caps_get_largest_free_block(MEM_CAPABILITIES); /* Largest block of heap that can be allocated at once. */
+        uint32_t availableHeap       = MemUtil::getFreeHeapSize();         /* Current available heap memory. */
+        uint32_t lowestAvailableHeap = MemUtil::getMinFreeHeapSize();      /* Lowest level of available heap since boot. */
+        uint32_t largestHeapBlock    = MemUtil::getLargestFreeBlockSize(); /* Largest block of heap that can be allocated at once. */
 
         if (MIN_HEAP_MEMORY >= availableHeap)
         {

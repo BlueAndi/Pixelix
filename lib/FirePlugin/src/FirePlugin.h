@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -111,28 +111,28 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow) FirePlugin(name, uid);
+        return new (std::nothrow) FirePlugin(name, uid);
     }
 
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
 
-   /**
+    /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() final;
@@ -161,21 +161,21 @@ public:
 
 private:
 
-    uint8_t*    m_heat;     /**< Heat temperature [0; 255] */
-    size_t      m_heatSize; /**< Number of heat temperatures */
+    uint8_t* m_heat;     /**< Heat temperature [0; 255] */
+    size_t   m_heatSize; /**< Number of heat temperatures */
 
     /**
      * Cooling: How much does the air cool as it rises?
      * Less cooling => taller flames.
      * More cooling => shorter flames.
      */
-    static const uint8_t    COOLING     = 60U;
+    static const uint8_t COOLING  = 60U;
 
     /**
      * Sparking: What chance (out of 255) is there that a new spark will be lit?
      * Higher chance = more roaring fire.  Lower chance = more flickery fire.
      */
-    static const uint8_t    SPARKING    = 120U;
+    static const uint8_t SPARKING = 120U;
 
     /**
      * Approximates a 'black body radiation' spectrum for a given 'heat' level.
@@ -191,6 +191,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* FIREPLUGIN_H */
+#endif /* FIREPLUGIN_H */
 
 /** @} */

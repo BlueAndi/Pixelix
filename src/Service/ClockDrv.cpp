@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,7 +122,8 @@ void ClockDrv::init()
      * https://github.com/espressif/esp-idf/issues/3046
      * https://newlib.sourceware.narkive.com/6VfBYW7D/how-to-use-a-static-environment
      */
-    strcpy(tzBuffer, m_timeZone.c_str());
+    strncpy(tzBuffer, m_timeZone.c_str(), TZ_MIN_SIZE - 1U);
+    tzBuffer[TZ_MIN_SIZE - 1U] = '\0';
     fillUpWithSpaces(tzBuffer, TZ_MIN_SIZE);
 
     /* Configure NTP:
@@ -334,6 +335,21 @@ void ClockDrv::syncRtcByTime()
 
         m_syncRtcByNtpTimer.restart();
     }
+}
+
+long ClockDrv::getCurrentTimeZoneOffset() const
+{
+    time_t now = time(nullptr);
+    tm     gmTimeInfo;
+    tm     localTimeInfo;
+    long   offsetInSec = 0;
+
+    (void)gmtime_r(&now, &gmTimeInfo);
+    (void)localtime_r(&now, &localTimeInfo);
+
+    offsetInSec = static_cast<long>(mktime(&localTimeInfo)) - static_cast<long>(mktime(&gmTimeInfo));
+
+    return offsetInSec;
 }
 
 /******************************************************************************

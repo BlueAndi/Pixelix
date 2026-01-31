@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,18 +74,18 @@ typedef bool boolean;
 
 /**
  * Get timestamp in ms since the program is running.
- * 
+ *
  * @return Timestamp in ms
  */
 extern unsigned long millis();
 
 /**
  * Get timestamp for log output in ms.
- * 
+ *
  * @return Timestamp in ms
  */
 extern uint32_t esp_log_timestamp(void);
 
-#endif  /* ARDUINO_H */
+#endif /* ARDUINO_H */
 
 /** @} */

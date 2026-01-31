@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   WsCmdSlot.h
  * @brief  Websocket command set slot properties
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -57,7 +57,7 @@
 /**
  * Websocket command get slots information
  */
-class WsCmdSlot: public WsCmd
+class WsCmdSlot : public WsCmd
 {
 public:
 
@@ -83,7 +83,7 @@ public:
 
     /**
      * Execute command.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] clientId  Websocket client ID
      */
@@ -91,7 +91,7 @@ public:
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.
-     * 
+     *
      * @param[in] par   Parameter string
      */
     void setPar(const char* par) final;
@@ -106,11 +106,11 @@ private:
         FLAG_STATUS_TRUE    /**< Set flag to true. */
     };
 
-    bool        m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;       /**< Number of received parameters */
-    uint16_t    m_slotId;       /**< Slot id the command relates to. */
-    FlagStatus  m_stickyFlag;   /**< Slot sticky flag. */
-    FlagStatus  m_isDisabled;   /**< Slot is disabled flag. */
+    bool       m_isError;    /**< Any error happened during parameter reception? */
+    uint8_t    m_parCnt;     /**< Number of received parameters */
+    uint16_t   m_slotId;     /**< Slot id the command relates to. */
+    FlagStatus m_stickyFlag; /**< Slot sticky flag. */
+    FlagStatus m_isDisabled; /**< Slot is disabled flag. */
 
     WsCmdSlot(const WsCmdSlot& cmd);
     WsCmdSlot& operator=(const WsCmdSlot& cmd);
@@ -120,6 +120,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDSLOT_H */
+#endif /* WSCMDSLOT_H */
 
 /** @} */

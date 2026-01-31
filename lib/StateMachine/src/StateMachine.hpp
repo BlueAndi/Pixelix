@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   StateMachine.hpp
  * @brief  Abstract state machine
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup STATE_MACHINE
  *
  * @{
@@ -79,24 +79,24 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
-    virtual void entry(StateMachine& sm) = 0;
+    virtual void entry(StateMachine& sm)   = 0;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     virtual void process(StateMachine& sm) = 0;
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
-    virtual void exit(StateMachine& sm) = 0;
+    virtual void exit(StateMachine& sm)    = 0;
 
 private:
 
@@ -122,7 +122,7 @@ public:
 
     /**
      * Constructs a state machine and set the starting state.
-     * 
+     *
      * @param[in] state Starting state
      */
     explicit StateMachine(AbstractState& state) :
@@ -133,7 +133,7 @@ public:
 
     /**
      * Get current state.
-     * 
+     *
      * @return Current state
      */
     AbstractState* getState()
@@ -143,7 +143,7 @@ public:
 
     /**
      * Set next state.
-     * 
+     *
      * @param[in] state Next state
      */
     void setState(AbstractState& state)
@@ -167,8 +167,8 @@ public:
             }
 
             /* Change state */
-            m_currentState  = m_nextState;
-            m_nextState     = nullptr;
+            m_currentState = m_nextState;
+            m_nextState    = nullptr;
 
             /* Enter new state */
             m_currentState->entry(*this);
@@ -187,8 +187,8 @@ public:
 
 private:
 
-    AbstractState*  m_currentState; /**< Current active state */
-    AbstractState*  m_nextState;    /**< Next state */
+    AbstractState* m_currentState; /**< Current active state */
+    AbstractState* m_nextState;    /**< Next state */
 
     StateMachine(const StateMachine& sm);
     StateMachine& operator=(const StateMachine& sm);
@@ -198,6 +198,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* STATEMACHINE_HPP */
+#endif /* STATEMACHINE_HPP */
 
 /** @} */

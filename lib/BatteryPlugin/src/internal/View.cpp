@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,9 +71,9 @@ using namespace _BatteryPlugin;
 
 void View::drawStateOfCharge(YAGfx& gfx) const
 {
-    uint16_t    widthDependedOnSOC  = (SOC_BAR_WIDTH * m_stateOfCharge) / 100U;
-    int16_t     barXDependedOnSOC   = SOC_BAR_X + SOC_BAR_WIDTH - widthDependedOnSOC;
-    Color       color;
+    uint16_t widthDependedOnSOC = (SOC_BAR_WIDTH * m_stateOfCharge) / 100U;
+    int16_t  barXDependedOnSOC  = SOC_BAR_X + SOC_BAR_WIDTH - widthDependedOnSOC;
+    Color    color;
 
     /* SOC > 70 % */
     if (70U < m_stateOfCharge)

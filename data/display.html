@@ -23,7 +23,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -117,7 +117,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -151,13 +151,13 @@
             var plugins             = [];       // List of all available plugins
             var currentFadeEffect   = 0         // Fade effect [1;3]
             
-            const PIXEL_WIDTH       = 10;               // Width of a single LED in pixels
-            const PIXEL_HEIGTH      = 10;               // Height of a single LED in pixels
-            const DISPLAY_WIDTH     = ~DISPLAY_WIDTH~;  // Width in pixels (Updated by webserver on send)
-            const DISPLAY_HEIGHT    = ~DISPLAY_HEIGHT~; // Height in pixels (Updated by webserver on send)
+            const PIXEL_WIDTH       = 10;                           // Width of a single LED in pixels
+            const PIXEL_HEIGHT      = 10;                           // Height of a single LED in pixels
+            const DISPLAY_WIDTH     = parseInt("~DISPLAY_WIDTH~");  // Width in pixels (Updated by webserver on send)
+            const DISPLAY_HEIGHT    = parseInt("~DISPLAY_HEIGHT~"); // Height in pixels (Updated by webserver on send)
 
             const CANVAS_WIDTH      = (DISPLAY_WIDTH) * PIXEL_WIDTH + (DISPLAY_WIDTH) + 1;
-            const CANVAS_HEIGHT     = (DISPLAY_HEIGHT) * PIXEL_HEIGTH + (DISPLAY_HEIGHT) + 1;
+            const CANVAS_HEIGHT     = (DISPLAY_HEIGHT) * PIXEL_HEIGHT + (DISPLAY_HEIGHT) + 1;
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -193,7 +193,7 @@
                     ctx.lineWidth   = "1";
                     ctx.strokeStyle = color;
                     ctx.fillStyle   = color;
-                    ctx.fillRect(x * PIXEL_WIDTH + x + 1, y * PIXEL_HEIGTH + y + 1, PIXEL_WIDTH, PIXEL_HEIGTH);
+                    ctx.fillRect(x * PIXEL_WIDTH + x + 1, y * PIXEL_HEIGHT + y + 1, PIXEL_WIDTH, PIXEL_HEIGHT);
                 }
             }
 
@@ -559,8 +559,8 @@
                             .attr("class", "btn btn-dark")
                             .attr("id", "sticky" + index)
                             .attr("onclick", "handleStickySlot(" + index + ")")
-                            .attr("data-toggle", "tooltip")
-                            .attr("data-placement", "top")
+                            .attr("data-bs-toggle", "tooltip")
+                            .attr("data-bs-placement", "top")
                             .attr("title", "If the sticky flag is set, the slot scheduler will be disabled and the slot with the sticky flag will be shown.")
                             .text((false === rsp.slots[index].isSticky) ? "-" : "S");
 
@@ -569,8 +569,8 @@
                             .attr("id", "slotStatus" + index)
                             .attr("type", "button")
                             .attr("onclick", "handleSlotStatus(" + index + ")")
-                            .attr("data-toggle", "tooltip")
-                            .attr("data-placement", "top")
+                            .attr("data-bs-toggle", "tooltip")
+                            .attr("data-bs-placement", "top")
                             .attr("title", "Every enabled slot will be shown during slot scheduling, except there is a sticky slot. Disabled slots are skipped by the slot scheduler.")
                             .text((false === rsp.slots[index].isDisabled) ? "✓" : "-");
 

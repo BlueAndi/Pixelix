@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -93,14 +93,14 @@ bool Rtc1307Drv::getTime(struct tm& timeInfo)
 
         memset(&timeInfo, 0, sizeof(struct tm));
 
-        timeInfo.tm_sec     = dateTime.second();
-        timeInfo.tm_min     = dateTime.minute();
-        timeInfo.tm_hour    = dateTime.hour();
-        timeInfo.tm_mday    = dateTime.day();
-        timeInfo.tm_mon     = dateTime.month() - 1;
-        timeInfo.tm_year    = dateTime.year() - 1900;
+        timeInfo.tm_sec  = dateTime.second();
+        timeInfo.tm_min  = dateTime.minute();
+        timeInfo.tm_hour = dateTime.hour();
+        timeInfo.tm_mday = dateTime.day();
+        timeInfo.tm_mon  = dateTime.month() - 1;
+        timeInfo.tm_year = dateTime.year() - 1900;
 
-        isSuccess = true;
+        isSuccess        = true;
     }
 
     return isSuccess;
@@ -110,14 +110,13 @@ void Rtc1307Drv::setTime(const struct tm& timeInfo)
 {
     if (true == m_isInitialized)
     {
-        DateTime    time(
+        DateTime time(
             timeInfo.tm_year + 1900,
             timeInfo.tm_mon + 1,
             timeInfo.tm_mday,
             timeInfo.tm_hour,
             timeInfo.tm_min,
-            timeInfo.tm_sec
-        );
+            timeInfo.tm_sec);
         m_rtc.adjust(time);
     }
 }

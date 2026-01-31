@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,7 @@
 /**
  * Divide and round at compile time.
  */
-#define DIVIDE_AND_ROUND(_dividend, _divisor)   (((_dividend) + (_divisor) / 2U) / (_divisor))
+#define DIVIDE_AND_ROUND(_dividend, _divisor) (((_dividend) + (_divisor) / 2U) / (_divisor))
 
 /******************************************************************************
  * Types and Classes
@@ -87,7 +87,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -112,7 +112,7 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) final
@@ -123,7 +123,7 @@ public:
 
     /**
      * Set the state-of-charge in percent.
-     * 
+     *
      * @param[in] soc   State-of-charge in percent
      */
     void setStateOfCharge(uint8_t soc)
@@ -136,72 +136,72 @@ private:
     /**
      * Bitmap width in pixels.
      */
-    static const uint16_t   BATTERY_SYMBOL_WIDTH    = CONFIG_LED_MATRIX_WIDTH;
+    static const uint16_t BATTERY_SYMBOL_WIDTH  = CONFIG_LED_MATRIX_WIDTH;
 
     /**
      * Bitmap height in pixels.
      */
-    static const uint16_t   BATTERY_SYMBOL_HEIGHT   = CONFIG_LED_MATRIX_HEIGHT;
+    static const uint16_t BATTERY_SYMBOL_HEIGHT = CONFIG_LED_MATRIX_HEIGHT;
 
     /**
      * Space left and right to the border in pixel.
      * It shall be 12.5 % of the widget width.
      */
-    static const uint16_t   SPACE_LEFT_AND_RIGHT    = DIVIDE_AND_ROUND(BATTERY_SYMBOL_WIDTH, 8U);
+    static const uint16_t SPACE_LEFT_AND_RIGHT  = DIVIDE_AND_ROUND(BATTERY_SYMBOL_WIDTH, 8U);
 
     /**
      * Space top and bottom to the border in pixel.
      * It shall be 12.5 % of the widget width.
      */
-    static const uint16_t   SPACE_TOP_AND_BOTTOM    = DIVIDE_AND_ROUND(BATTERY_SYMBOL_HEIGHT, 8U);
+    static const uint16_t SPACE_TOP_AND_BOTTOM  = DIVIDE_AND_ROUND(BATTERY_SYMBOL_HEIGHT, 8U);
 
     /**
      * Battery border in pixel.
      */
-    static const uint16_t   BATTERY_BORDER          = 1U;
+    static const uint16_t BATTERY_BORDER        = 1U;
 
     /**
      * Battery pole width in pixel.
      * It shall be 5 % of the widget width.
      */
-    static const uint16_t   BATTERY_POLE_WIDTH      = DIVIDE_AND_ROUND(BATTERY_SYMBOL_WIDTH, 20U);
+    static const uint16_t BATTERY_POLE_WIDTH    = DIVIDE_AND_ROUND(BATTERY_SYMBOL_WIDTH, 20U);
 
     /**
      * Battery pole height in pixel.
      */
-    static const uint16_t   BATTERY_POLE_HEIGHT     = BATTERY_SYMBOL_HEIGHT - 2U * (SPACE_TOP_AND_BOTTOM + 2U * BATTERY_BORDER);
+    static const uint16_t BATTERY_POLE_HEIGHT   = BATTERY_SYMBOL_HEIGHT - 2U * (SPACE_TOP_AND_BOTTOM + 2U * BATTERY_BORDER);
 
     /**
      * Battery width in pixel.
      */
-    static const uint16_t   BATTERY_WIDTH           = BATTERY_SYMBOL_WIDTH - 2U * SPACE_LEFT_AND_RIGHT - BATTERY_POLE_WIDTH;
+    static const uint16_t BATTERY_WIDTH         = BATTERY_SYMBOL_WIDTH - 2U * SPACE_LEFT_AND_RIGHT - BATTERY_POLE_WIDTH;
 
     /**
      * Battery height in pixel.
      */
-    static const uint16_t   BATTERY_HEIGHT          = BATTERY_SYMBOL_HEIGHT - 2U * SPACE_TOP_AND_BOTTOM;
+    static const uint16_t BATTERY_HEIGHT        = BATTERY_SYMBOL_HEIGHT - 2U * SPACE_TOP_AND_BOTTOM;
 
     /**
      * State of capacity bar x-coordinate in pixel.
      */
-    static const int16_t    SOC_BAR_X               = SPACE_LEFT_AND_RIGHT + BATTERY_POLE_WIDTH + BATTERY_BORDER;
+    static const int16_t SOC_BAR_X              = SPACE_LEFT_AND_RIGHT + BATTERY_POLE_WIDTH + BATTERY_BORDER;
 
     /**
      * State of capacity bar y-coordinate in pixel.
      */
-    static const int16_t    SOC_BAR_Y               = SPACE_TOP_AND_BOTTOM + BATTERY_BORDER;
+    static const int16_t SOC_BAR_Y              = SPACE_TOP_AND_BOTTOM + BATTERY_BORDER;
 
     /**
      * State of capacity bar width in pixel.
      */
-    static const uint16_t   SOC_BAR_WIDTH           = BATTERY_WIDTH - 2U * BATTERY_BORDER;
+    static const uint16_t SOC_BAR_WIDTH         = BATTERY_WIDTH - 2U * BATTERY_BORDER;
 
     /**
      * State of capacity bar height in pixel.
      */
-    static const uint16_t   SOC_BAR_HEIGHT          = BATTERY_HEIGHT - 2U * BATTERY_BORDER;
+    static const uint16_t SOC_BAR_HEIGHT        = BATTERY_HEIGHT - 2U * BATTERY_BORDER;
 
-    uint8_t m_stateOfCharge;    /**< Battery state of charge in %. */
+    uint8_t               m_stateOfCharge; /**< Battery state of charge in %. */
 
     View(const View& other);
     View& operator=(const View& other);
@@ -214,12 +214,12 @@ private:
     void drawStateOfCharge(YAGfx& gfx) const;
 };
 
-} /* _BatteryPlugin */
+} // namespace _BatteryPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BATTERY_PLUGIN_VIEW_H */
+#endif /* BATTERY_PLUGIN_VIEW_H */
 
 /** @} */

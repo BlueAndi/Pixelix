@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -114,12 +114,7 @@ public:
 
 private:
 
-    /**
-     * Memory capabilities used for heap operations.
-     */
-    static const uint32_t MEM_CAPABILITIES = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
-
-    SimpleTimer           m_timer; /**< Timer used for cyclic processing. */
+    SimpleTimer m_timer; /**< Timer used for cyclic processing. */
 
     /**
      * Constructs the memory monitor.

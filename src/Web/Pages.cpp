@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,11 +45,13 @@
 #include <WiFi.h>
 #include <Esp.h>
 #include <Logging.h>
+#include <MemUtil.h>
 #include <Util.h>
 #include <ArduinoJson.h>
 #include <lwip/init.h>
 #include <SettingsService.h>
 #include <FileSystem.h>
+#include <BitmapWidget.h>
 
 #include <mbedtls/version.h>
 #include <freertos/task.h>
@@ -94,13 +96,10 @@ static void   htmlPage(AsyncWebServerRequest* request);
 namespace tmpl
 {
 static String getEspChipId();
-static String getEspType();
 static String getFlashChipMode();
 static String getHostname();
 static String getIPAddress();
-static String getRSSI();
-static String getSSID();
-static String getHeapSize();
+static String getImageFileExtensions();
 }; /* namespace tmpl */
 
 /******************************************************************************
@@ -113,28 +112,28 @@ static const String PLUGIN_PAGE_PATH              = "/plugins/";
 /** Path to the service webpages. */
 static const String SERVICE_PAGE_PATH             = "/services/";
 
-/** Memory capabilities used for memory state requests. */
-static const uint32_t MEM_CAPABILITIES            = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
-
 /**
  * List of all used template keywords and the function how to retrieve the information.
  * The list is alphabetic sorted in ascending order.
  */
 static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
+    { "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); } },
+    { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } },
     { "ARDUINO_IDF_BRANCH", []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; } },
     { "ESP_CHIP_ID", tmpl::getEspChipId },
     { "ESP_CHIP_REV", []() -> String { return String(ESP.getChipRevision()); } },
     { "ESP_CPU_FREQ", []() -> String { return String(ESP.getCpuFreqMHz()); } },
     { "ESP_SDK_VERSION", []() -> String { return ESP.getSdkVersion(); } },
-    { "ESP_TYPE", tmpl::getEspType },
+    { "ESP_TYPE", []() -> String { return String(CONFIG_IDF_TARGET); } },
     { "FLASH_CHIP_MODE", tmpl::getFlashChipMode },
     { "FLASH_CHIP_SIZE", []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); } },
     { "FLASH_CHIP_SPEED", []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); } },
     { "FREERTOS_VERSION", []() -> String { return tskKERNEL_VERSION_NUMBER; } },
     { "FS_SIZE", []() -> String { return String(FILESYSTEM.totalBytes()); } },
     { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
-    { "HEAP_SIZE", []() -> String { return tmpl::getHeapSize(); } },
-    { "HEAP_SIZE_AVAILABLE", []() -> String { return String(heap_caps_get_free_size(MEM_CAPABILITIES)); } },
+    { "HEAP_SIZE", []() -> String { return String(MemUtil::getTotalHeapSize()); } },
+    { "HEAP_SIZE_AVAILABLE", []() -> String { return String(MemUtil::getFreeHeapSize()); } },
+    { "IMAGE_FILE_EXTENSIONS", []() -> String { return tmpl::getImageFileExtensions(); } },
     { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
     { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
     { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
@@ -142,17 +141,15 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "IPV4", tmpl::getIPAddress },
     { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
     { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
-    { "RSSI", tmpl::getRSSI },
-    { "SSID", tmpl::getSSID },
+    { "RSSI", []() -> String { return String(WiFi.RSSI()); } },
+    { "SSID", []() -> String { return WiFi.SSID(); } },
     { "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); } },
     { "SW_REVISION", []() -> String { return Version::getSoftwareRevision(); } },
     { "SW_VERSION", []() -> String { return Version::getSoftwareVersion(); } },
     { "TARGET", []() -> String { return Version::getTargetName(); } },
     { "WS_ENDPOINT", []() -> String { return WebConfig::WEBSOCKET_PATH; } },
     { "WS_PORT", []() -> String { return String(WebConfig::WEBSOCKET_PORT); } },
-    { "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; } },
-    { "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); } },
-    { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } }
+    { "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; } }
 };
 
 /**
@@ -337,7 +334,7 @@ void Pages::error(AsyncWebServerRequest* request)
  * in every page. It is responsible for the data binding.
  *
  * @param[in] var   Name of variable in the template
- * 
+ *
  * @return The variable content.
  */
 static String tmplPageProcessor(const String& var)
@@ -398,18 +395,6 @@ static String getEspChipId()
     WiFiUtil::getChipId(chipId);
 
     return chipId;
-}
-
-/**
- * Get ESP type.
- *
- * @return ESP type
- */
-static String getEspType()
-{
-    String result = CONFIG_IDF_TARGET;
-
-    return result;
 }
 
 /**
@@ -507,60 +492,28 @@ static String getIPAddress()
 }
 
 /**
- * Get wifi RSSI.
+ * Get supported image file extensions for BitmapWidget.
+ * The result is a comma separated list of extensions, each starting with a dot.
  *
- * @return WiFi station SSID
+ * @return Comma separated list of supported image file extensions.
  */
-static String getRSSI()
+static String getImageFileExtensions()
 {
-    String result;
+    String  result;
+    uint8_t idx;
 
-    /* Only in station mode it makes sense to retrieve the RSSI.
-     * Otherwise keep it -100 dbm.
-     */
-    if (WIFI_MODE_STA == WiFi.getMode())
+    for (idx = 0; idx < BitmapWidget::IMAGE_FILE_EXTENSIONS_COUNT; ++idx)
     {
-        result = WiFi.RSSI();
-    }
-    else
-    {
-        result = "-100";
-    }
+        if (0U < idx)
+        {
+            result += ",";
+        }
 
-    return result;
-}
-
-/**
- * Get wifi station SSID.
- *
- * @return WiFi station SSID
- */
-static String getSSID()
-{
-    String           result;
-    SettingsService& settings = SettingsService::getInstance();
-
-    if (true == settings.open(true))
-    {
-        result = settings.getWifiSSID().getValue();
-        settings.close();
+        result += ".";
+        result += BitmapWidget::IMAGE_FILE_EXTENSIONS[idx];
     }
 
     return result;
-}
-
-/**
- * Get heap size which is available for malloc/new operation as string.
- *
- * @return Heap size in byte as string.
- */
-static String getHeapSize()
-{
-    multi_heap_info_t info;
-
-    heap_caps_get_info(&info, MEM_CAPABILITIES);
-
-    return String(info.total_free_bytes + info.total_allocated_bytes);
 }
 
 }; /* namespace tmpl */

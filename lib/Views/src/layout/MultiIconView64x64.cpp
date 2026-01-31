@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,7 +72,7 @@ uint8_t MultiIconView64x64::getActiveIconSlots()
     uint8_t cnt = 0U;
     uint8_t idx = 0U;
 
-    while(MAX_ICON_SLOTS > idx)
+    while (MAX_ICON_SLOTS > idx)
     {
         BitmapWidget& bitmapWidget = m_bitmapWidgets[idx];
 
@@ -91,12 +91,12 @@ void MultiIconView64x64::reorder()
 {
     uint8_t cnt = getActiveIconSlots();
 
-    switch(cnt)
+    switch (cnt)
     {
     case 0U:
         /* Nothing to do. */
         break;
-    
+
     case 1U:
         /*      +-------+
          *      |       |
@@ -147,7 +147,7 @@ void MultiIconView64x64::applyLayout1()
     uint8_t cnt = 0U;
     uint8_t idx = 0U;
 
-    while((MAX_ICON_SLOTS > idx) && (1U > cnt))
+    while ((MAX_ICON_SLOTS > idx) && (1U > cnt))
     {
         BitmapWidget& bitmapWidget = m_bitmapWidgets[idx];
 
@@ -169,7 +169,7 @@ void MultiIconView64x64::applyLayout2()
     uint8_t cnt = 0U;
     uint8_t idx = 0U;
 
-    while((MAX_ICON_SLOTS > idx) && (2U > cnt))
+    while ((MAX_ICON_SLOTS > idx) && (2U > cnt))
     {
         BitmapWidget& bitmapWidget = m_bitmapWidgets[idx];
 
@@ -200,7 +200,7 @@ void MultiIconView64x64::applyLayout3()
     uint8_t cnt = 0U;
     uint8_t idx = 0U;
 
-    while((MAX_ICON_SLOTS > idx) && (3U > cnt))
+    while ((MAX_ICON_SLOTS > idx) && (3U > cnt))
     {
         BitmapWidget& bitmapWidget = m_bitmapWidgets[idx];
 
@@ -237,7 +237,7 @@ void MultiIconView64x64::applyLayout4()
     uint8_t cnt = 0U;
     uint8_t idx = 0U;
 
-    while((MAX_ICON_SLOTS > idx) && (4U > cnt))
+    while ((MAX_ICON_SLOTS > idx) && (4U > cnt))
     {
         BitmapWidget& bitmapWidget = m_bitmapWidgets[idx];
 

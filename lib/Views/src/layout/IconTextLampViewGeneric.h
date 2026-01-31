@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -135,6 +135,11 @@ public:
         gfx.fillScreen(ColorDef::BLACK);
         m_bitmapWidget.update(gfx);
         m_textWidget.update(gfx);
+
+        for (uint8_t idx = 0U; idx < MAX_LAMPS; ++idx)
+        {
+            m_lampWidgets[idx].update(gfx);
+        }
     }
 
     /**

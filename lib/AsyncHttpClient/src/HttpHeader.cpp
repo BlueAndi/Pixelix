@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ HttpHeader& HttpHeader::operator=(const HttpHeader& hdr)
 {
     if (this != &hdr)
     {
-        m_name = hdr.m_name;
+        m_name  = hdr.m_name;
         m_value = hdr.m_value;
     }
 
@@ -76,11 +76,11 @@ void HttpHeader::parse(const String& line)
 
     if (0 <= idx)
     {
-        m_name = line.substring(0, idx);
+        m_name  = line.substring(0, idx);
         m_value = line.substring(idx + 2);
 
         /* There may be CRLF at the end, which must be removed. */
-        idx = m_value.indexOf("\r\n");
+        idx     = m_value.indexOf("\r\n");
 
         if (0 <= idx)
         {

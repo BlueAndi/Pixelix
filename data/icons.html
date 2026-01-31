@@ -23,7 +23,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -52,6 +52,22 @@
                 <p>These icons are stored on the Pixelix device in the <strong>/configuration</strong> directory.</p>
                 <p>They can be used to customize the appearance of some plugins.</p>
                 <p>The number in [ ] brackets represents the icon file id, required by the plugins to display the correct icon.</p>
+                <div class="mb-3">
+                    <label class="form-label">Zoom Level:</label>
+                    <div class="btn-group" role="group" aria-label="Zoom controls">
+                        <input type="radio" class="btn-check" name="zoomOptions" id="zoomOriginal" value="1" checked autocomplete="off" onchange="updateZoom()">
+                        <label class="btn btn-outline-primary" for="zoomOriginal">Original</label>
+
+                        <input type="radio" class="btn-check" name="zoomOptions" id="zoom2x" value="2" autocomplete="off" onchange="updateZoom()">
+                        <label class="btn btn-outline-primary" for="zoom2x">2x</label>
+
+                        <input type="radio" class="btn-check" name="zoomOptions" id="zoom4x" value="4" autocomplete="off" onchange="updateZoom()">
+                        <label class="btn btn-outline-primary" for="zoom4x">4x</label>
+
+                        <input type="radio" class="btn-check" name="zoomOptions" id="zoom8x" value="8" autocomplete="off" onchange="updateZoom()">
+                        <label class="btn btn-outline-primary" for="zoom8x">8x</label>
+                    </div>
+                </div>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="overview">
                 </div>
                 <h2 class="mt-3">Upload</h2>
@@ -59,7 +75,7 @@
                     <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(icon.files)">
                         <div class="form-group mb-3">
                             <label class="form-label" for="icon">Icon:</label>
-                            <input class="form-control" id="icon" type="file" accept=".bmp,.gif" />    
+                            <input class="form-control" id="icon" type="file" accept="~IMAGE_FILE_EXTENSIONS~" />    
                         </div>
                         <input name="submit" type="submit" value="Update" />
                     </form>
@@ -68,6 +84,7 @@
                 <p>The bitmap files are limited to:</p>
                 <ul>
                     <li>24 or 32 bits per pixel.</li>
+                    <li>1, 2 or 4 bits per pixel with palette.</li>
                     <li>1 plane.</li>
                     <li>No compression.</li>
                 </ul>
@@ -98,7 +115,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -120,6 +137,25 @@
             var restClient = new pixelix.rest.Client();
             var lametricIconUrl = "";
             var lametricIconFileName = "";
+            var currentZoom = 1;
+
+            function updateZoom() {
+                var selectedZoom = parseInt(document.querySelector('input[name="zoomOptions"]:checked').value);
+                currentZoom = selectedZoom;
+                
+                var images = document.querySelectorAll('#overview img');
+                images.forEach(function(img) {
+                    if (currentZoom === 1) {
+                        img.style.imageRendering = 'auto';
+                        img.style.width = 'auto';
+                        img.style.height = 'auto';
+                    } else {
+                        img.style.imageRendering = 'pixelated';
+                        img.style.width = (img.naturalWidth * currentZoom) + 'px';
+                        img.style.height = (img.naturalHeight * currentZoom) + 'px';
+                    }
+                });
+            }
 
             function enableUI() {
                 utils.enableForm("myFormIcon", true);
@@ -185,7 +221,18 @@
                                 .text("[" + idx + "]");
                             $img = $("<img>")
                                 .attr("src", jsonRsp.fileTable[idx].fullPath)
-                                .attr("alt", "Preview");
+                                .attr("alt", "Preview")
+                                .on('load', function() {
+                                    if (currentZoom === 1) {
+                                        this.style.imageRendering = 'auto';
+                                        this.style.width = 'auto';
+                                        this.style.height = 'auto';
+                                    } else {
+                                        this.style.imageRendering = 'pixelated';
+                                        this.style.width = (this.naturalWidth * currentZoom) + 'px';
+                                        this.style.height = (this.naturalHeight * currentZoom) + 'px';
+                                    }
+                                });
                             $name = $("<p>")
                                 .text(jsonRsp.fileTable[idx].fullPath.replace(/^.*[\\\/]/, ''));
                             $div = $("<div>")

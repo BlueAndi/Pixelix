@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ public:
     /**
      * Checks for the RTC and if available, it will be initialized
      * and started.
-     * 
+     *
      * @return If no RTC is available, it will return false.
      */
     bool begin() final
@@ -90,9 +90,9 @@ public:
 
     /**
      * Get the time from the RTC.
-     * 
+     *
      * @param[out] timeInfo Time destination
-     * 
+     *
      * @return If time info is updated, it will return true otherwise false.
      */
     bool getTime(struct tm& timeInfo) final
@@ -104,10 +104,10 @@ public:
 
     /**
      * Set the RTC by time.
-     * 
+     *
      * @param[in] timeInfo Time source
      */
-    void  setTime(const struct tm& timeInfo) final
+    void setTime(const struct tm& timeInfo) final
     {
         (void)timeInfo;
     }
@@ -122,6 +122,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* RTCNONE_DRV_H */
+#endif /* RTCNONE_DRV_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -96,7 +96,7 @@ public:
 
     /**
      * Constructs a header by copying an existing one.
-     * 
+     *
      * @param[in] other The header which to copy.
      */
     HttpHeader(const HttpHeader& other) :
@@ -177,14 +177,14 @@ public:
 
 private:
 
-    String  m_name;     /**< Header field name */
-    String  m_value;    /**< Header field value */
+    String m_name;  /**< Header field name */
+    String m_value; /**< Header field value */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* HTTP_HEADER_H */
+#endif /* HTTP_HEADER_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -194,11 +194,6 @@ private:
     static const char* TOPIC_REMOVE;
 
     /**
-     * Supported file extensions.
-     */
-    static const char* FILE_EXTENSIONS[];
-
-    /**
      * Timer period in ms to check whether the file table is dirty and needs
      * to be saved to the configuration file.
      *
@@ -271,14 +266,13 @@ private:
 
     /**
      * Scan for files and setup file table.
+     * The file extensions supported by BitmapWidget are used to filter the files.
      *
      * @param[in] fileTable File table where to add the entry.
-     * @param[in] fileExtension File extensions
-     * @param[in] count         Number of file extensions
      *
      * @return If any new file found and added, it will return true otherwise false.
      */
-    bool scanForFiles(FileTableEntry* fileTable, const char* fileExtension[], size_t count);
+    bool scanForFiles(FileTableEntry* fileTable);
 
     /**
      * Remove file table entries if their file doesn't exist anymore.

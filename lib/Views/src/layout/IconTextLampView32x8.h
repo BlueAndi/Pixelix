@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -87,7 +87,7 @@ public:
         IIconTextLampView(),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
-        m_textWidget(TEXT_WIDTH_FULL, TEXT_HEIGHT, TEXT_X_FULL, TEXT_Y),    /* Use full width. */
+        m_textWidget(TEXT_WIDTH_FULL, TEXT_HEIGHT, TEXT_X_FULL, TEXT_Y), /* Use full width. */
         m_lampWidgets{ { LAMP_WIDTH, LAMP_HEIGHT, LAMP_0_X, LAMP_Y },
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_1_X, LAMP_Y },
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_2_X, LAMP_Y },
@@ -149,6 +149,11 @@ public:
         gfx.fillScreen(ColorDef::BLACK);
         m_bitmapWidget.update(gfx);
         m_textWidget.update(gfx);
+
+        for (uint8_t idx = 0U; idx < MAX_LAMPS; ++idx)
+        {
+            m_lampWidgets[idx].update(gfx);
+        }
     }
 
     /**

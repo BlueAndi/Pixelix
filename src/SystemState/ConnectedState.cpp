@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -81,7 +81,7 @@ void ConnectedState::entry(StateMachine& sm)
 {
     SettingsService& settings               = SettingsService::getInstance();
     String           infoStr                = "Hostname: ";
-    String           infoStringIp           = "IP: ";
+    String           infoStringIp           = " IP: ";
     String           notifyURL              = "-";
     bool             isQuiet                = false;
     const uint32_t   DURATION_NON_SCROLLING = 4000U; /* ms */
@@ -92,7 +92,7 @@ void ConnectedState::entry(StateMachine& sm)
     /* Get some settings. */
     if (false == settings.open(true))
     {
-        LOG_WARNING("Use default hostname.");
+        LOG_WARNING("Using default hostname.");
 
         notifyURL = settings.getNotifyURL().getDefault();
         isQuiet   = settings.getQuietMode().getDefault();
@@ -110,7 +110,7 @@ void ConnectedState::entry(StateMachine& sm)
 
     /* Show hostname and IP. */
     infoStr += WiFi.getHostname();
-    infoStr += " IP: ";
+    infoStr += infoStringIp;
     infoStr += WiFi.localIP().toString();
 
     LOG_INFO(infoStr);

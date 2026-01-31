@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,27 +75,27 @@ bool FadeMoveX::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 
 bool FadeMoveX::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
-    bool    isFinished  = false;
+    bool    isFinished = false;
     int16_t x;
     int16_t y;
 
     if (FADE_STATE_OUT != m_state)
     {
-        m_state     = FADE_STATE_OUT;
-        m_xOffset   = 0;
+        m_state   = FADE_STATE_OUT;
+        m_xOffset = 0;
     }
 
-    for(x = 0; x < (gfx.getWidth() - m_xOffset); ++x)
+    for (x = 0; x < (gfx.getWidth() - m_xOffset); ++x)
     {
-        for(y = 0; y < gfx.getHeight(); ++y)
+        for (y = 0; y < gfx.getHeight(); ++y)
         {
             gfx.drawPixel(x, y, prev.getColor(x + m_xOffset, y));
         }
     }
 
-    for(x = gfx.getWidth() - m_xOffset; x < gfx.getWidth(); ++x)
+    for (x = gfx.getWidth() - m_xOffset; x < gfx.getWidth(); ++x)
     {
-        for(y = 0; y < gfx.getHeight(); ++y)
+        for (y = 0; y < gfx.getHeight(); ++y)
         {
             gfx.drawPixel(x, y, next.getColor((x + m_xOffset) - gfx.getWidth(), y));
         }
@@ -105,8 +105,8 @@ bool FadeMoveX::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 
     if (gfx.getWidth() <= m_xOffset)
     {
-        m_state     = FADE_STATE_INIT;
-        isFinished  = true;
+        m_state    = FADE_STATE_INIT;
+        isFinished = true;
     }
 
     return isFinished;

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,9 +52,9 @@
 /** LDR specific constants. */
 typedef struct
 {
-    const char* name;           /**< User friendly name */
-    const float multiplicator;  /**< Multiplicator used for illimunance calculation. Equ.: 10 ^ ( b / gamma gradient )*/
-    const float exponent;       /**< Exponent used for illimunance calculation. Equ.: -1 / gamma gradient */
+    const char* name;          /**< User friendly name */
+    const float multiplicator; /**< Multiplicator used for illimunance calculation. Equ.: 10 ^ ( b / gamma gradient )*/
+    const float exponent;      /**< Exponent used for illimunance calculation. Equ.: -1 / gamma gradient */
 
 } Ldr;
 
@@ -68,7 +68,7 @@ typedef struct
 
 /**
  * The constants for all supported LDR types.
- * 
+ *
  * Get the required information from the datasheet:
  * - gamma gradient
  * - resistance at 10 Lux (use the average)
@@ -102,21 +102,20 @@ typedef struct
  * I = [ ( 10 ^ b ) ^ ( 1 / gamma gradient ) ] / [ R_LDR ^ ( 1 / gamma gradient ) ]
  * I = [ 10 ^ ( b / gamma gradient ) ] / R_LDR ^ ( 1 / gamma gradient )
  * I = [ 10 ^ ( b / gamma gradient ) ] * R_LDR ^ ( -1 / gamma gradient )
- * 
+ *
  * I = MULTIPLICATOR * R_LDR ^ EXPONENT
- * 
+ *
  * => MULTIPLICATOR = 10 ^ ( b / gamma gradient )
  * => EXPONENT = -1 / gamma gradient
  *
  */
-static const Ldr LDR_CONSTANTS[] =
-{
-    { "GL5516",     562500000.0F,       -2.0F       },
-    { "GL5528",     91233029.9336F,     -1.6667F    },
-    { "GL5537-1",   213746993.3346F,    -1.6667F    },
-    { "GL5537-2",   37529382.2835F,     -1.4286F    },
-    { "GL5539",     12411565.9487F,     -1.25F      },
-    { "GL5549",     5639135.2390F,      -1.1111F    }
+static const Ldr LDR_CONSTANTS[] = {
+    { "GL5516", 562500000.0F, -2.0F },
+    { "GL5528", 91233029.9336F, -1.6667F },
+    { "GL5537-1", 213746993.3346F, -1.6667F },
+    { "GL5537-2", 37529382.2835F, -1.4286F },
+    { "GL5539", 12411565.9487F, -1.25F },
+    { "GL5549", 5639135.2390F, -1.1111F }
 };
 
 /******************************************************************************
@@ -164,39 +163,39 @@ ISensorChannel* SensorLdr::getChannel(uint8_t index)
 
 float SensorLdr::getIlluminance()
 {
-    const uint16_t  ADC_UINT16      = Board::ldrIn.read();
-    float           illuminance     = 0.0F;
-    const float     MULTIPLICATOR   = LDR_CONSTANTS[m_ldrType].multiplicator;
-    const float     EXPONENT        = LDR_CONSTANTS[m_ldrType].exponent;
+    const uint16_t ADC_UINT16    = Board::ldrIn.read();
+    float          illuminance   = 0.0F;
+    const float    MULTIPLICATOR = LDR_CONSTANTS[m_ldrType].multiplicator;
+    const float    EXPONENT      = LDR_CONSTANTS[m_ldrType].exponent;
 
     /* Calculation of R_LDR from the ADC value:
-    * The schematic contains a voltage divider with R = 1 kOhm connected to GND.
-    * The supply voltage Vcc is 3.3 V.
-    * The ADC resolution is 4096.
-    *
-    * I = Vcc / ( R_LDR + R )
-    *
-    * V_R = R * I
-    * V_R = R * ( Vcc / ( R_LDR + R ) )
-    * V_R = R * Vcc / ( R_LDR + R )
-    *
-    * ADC = ( ADC resolution - 1 ) * V_R / Vcc
-    * ADC = ( ADC resolution - 1 ) * R * Vcc / ( ( R_LDR + R ) * Vcc )
-    * ADC = ( ADC resolution - 1 ) * R / ( R_LDR + R )
-    * ADC * ( R_LDR + R ) = ( ADC resolution - 1 ) * R
-    * ADC * R_LDR + ADC * R = ( ADC resolution - 1 ) * R
-    * ADC * R_LDR = ( ADC resolution - 1 ) * R - ADC * R
-    * R_LDR = [ ( ADC resolution - 1 ) * R - ADC * R ] / ADC
-    * R_LDR = ( ADC_max * R - ADC * R ) / ADC
-    *
-    * Final calculation of I [Lux]:
-    * I = 5179474.6792312 * R_LDR ^ -1.42857142857143
-    * I = 5179474.6792312 * [ ( ADC_max * R - ADC * R ) / ADC ] ^ -1.42857142857143
-    */
-    const float ADC_MAX             = static_cast<float>(Board::adcResolution - 1U);
-    const float ADC_FLOAT           = static_cast<float>(ADC_UINT16);
+     * The schematic contains a voltage divider with R = 1 kOhm connected to GND.
+     * The supply voltage Vcc is 3.3 V.
+     * The ADC resolution is 4096.
+     *
+     * I = Vcc / ( R_LDR + R )
+     *
+     * V_R = R * I
+     * V_R = R * ( Vcc / ( R_LDR + R ) )
+     * V_R = R * Vcc / ( R_LDR + R )
+     *
+     * ADC = ( ADC resolution - 1 ) * V_R / Vcc
+     * ADC = ( ADC resolution - 1 ) * R * Vcc / ( ( R_LDR + R ) * Vcc )
+     * ADC = ( ADC resolution - 1 ) * R / ( R_LDR + R )
+     * ADC * ( R_LDR + R ) = ( ADC resolution - 1 ) * R
+     * ADC * R_LDR + ADC * R = ( ADC resolution - 1 ) * R
+     * ADC * R_LDR = ( ADC resolution - 1 ) * R - ADC * R
+     * R_LDR = [ ( ADC resolution - 1 ) * R - ADC * R ] / ADC
+     * R_LDR = ( ADC_max * R - ADC * R ) / ADC
+     *
+     * Final calculation of I [Lux]:
+     * I = 5179474.6792312 * R_LDR ^ -1.42857142857143
+     * I = 5179474.6792312 * [ ( ADC_max * R - ADC * R ) / ADC ] ^ -1.42857142857143
+     */
+    const float ADC_MAX          = static_cast<float>(Board::adcResolution - 1U);
+    const float ADC_FLOAT        = static_cast<float>(ADC_UINT16);
 
-    illuminance = MULTIPLICATOR * powf( ( ADC_MAX * m_resistance - ADC_FLOAT * m_resistance ) / ADC_FLOAT, EXPONENT );
+    illuminance                  = MULTIPLICATOR * powf((ADC_MAX * m_resistance - ADC_FLOAT * m_resistance) / ADC_FLOAT, EXPONENT);
 
     return illuminance;
 }

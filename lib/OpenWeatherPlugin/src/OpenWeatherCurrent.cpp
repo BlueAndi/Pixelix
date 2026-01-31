@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,7 +74,7 @@ void OpenWeatherCurrent::getUrl(String& url) const
 void OpenWeatherCurrent::getFilter(JsonDocument& jsonFilterDoc) const
 {
     /*
-    
+
         {
         "coord": {
             "lon": 10.99,
@@ -124,7 +124,7 @@ void OpenWeatherCurrent::getFilter(JsonDocument& jsonFilterDoc) const
         "name": "Zocca",
         "cod": 200
         }
-    
+
     */
 
     jsonFilterDoc["main"]["temp"]       = true;
@@ -135,10 +135,10 @@ void OpenWeatherCurrent::getFilter(JsonDocument& jsonFilterDoc) const
 
 void OpenWeatherCurrent::parse(const JsonDocument& jsonDoc)
 {
-    JsonVariantConst    jsonTemperature = jsonDoc["main"]["temp"];
-    JsonVariantConst    jsonHumidity    = jsonDoc["main"]["humidity"];
-    JsonVariantConst    jsonWindSpeed   = jsonDoc["wind"]["speed"];
-    JsonVariantConst    jsonIcon        = jsonDoc["weather"][0]["icon"];
+    JsonVariantConst jsonTemperature = jsonDoc["main"]["temp"];
+    JsonVariantConst jsonHumidity    = jsonDoc["main"]["humidity"];
+    JsonVariantConst jsonWindSpeed   = jsonDoc["wind"]["speed"];
+    JsonVariantConst jsonIcon        = jsonDoc["weather"][0]["icon"];
 
     if (false == jsonTemperature.isNull())
     {

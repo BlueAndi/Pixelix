@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -389,7 +389,7 @@ public:
 
     /**
      * Concatenate string literal with String object.
-     * 
+     *
      * @param[in] lhs   String literal
      * @param[in] rhs   String object
      *
@@ -431,6 +431,25 @@ public:
     double toDouble(void) const
     {
         return std::strtod(m_stdStr.c_str(), nullptr);
+    }
+
+    /**
+     * Ends string with given suffix?
+     *
+     * @param[in] suffix    Suffix
+     *
+     * @return If string ends with suffix, it will return true otherwise false.
+     */
+    bool endsWith(const String& suffix) const
+    {
+        bool result = false;
+
+        if (suffix.length() <= length())
+        {
+            result = 0 == m_stdStr.compare(length() - suffix.length(), suffix.length(), suffix.m_stdStr);
+        }
+
+        return result;
     }
 
 private:

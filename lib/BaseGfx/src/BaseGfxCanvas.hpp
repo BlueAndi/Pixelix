@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,7 @@
  * The canvas ensures the graphic operations take place inside a dedicated
  * window. The window itself can be moved to a position inside the parent
  * canvas.
- * 
+ *
  * @tparam TColor The color representation.
  */
 template < typename TColor >
@@ -71,7 +71,7 @@ public:
 
     /**
      * Constructs a canvas.
-     * 
+     *
      * @param[in] parentGfx The graphic operations of the parent canvas.
      * @param[in] offsX     The x offset in the parent canvas.
      * @param[in] offsY     The y offset in the parent canvas.
@@ -90,7 +90,7 @@ public:
 
     /**
      * Constructs a canvas by copy.
-     * 
+     *
      * @param[in] canvas    Source canvas which to copy.
      */
     BaseGfxCanvas(const BaseGfxCanvas& canvas) :
@@ -112,9 +112,9 @@ public:
 
     /**
      * Assigns a canvas.
-     * 
+     *
      * @param[in] canvas    Source canvas which to assign.
-     * 
+     *
      * @return Canvas
      */
     BaseGfxCanvas& operator=(const BaseGfxCanvas& canvas)
@@ -133,7 +133,7 @@ public:
 
     /**
      * Get the parent canvas graphic operations.
-     * 
+     *
      * @return Parent graphic functions
      */
     BaseGfx<TColor>* getParentGfx() const
@@ -143,7 +143,7 @@ public:
 
     /**
      * Set parent canvas graphic operations.
-     * 
+     *
      * @param[in] gfx   Parent graphic functions
      */
     void setParentGfx(BaseGfx<TColor>& gfx)
@@ -153,7 +153,7 @@ public:
 
     /**
      * Get x offset in the parent canvas.
-     * 
+     *
      * @return x offset in the parent canvas
      */
     int16_t getOffsetX() const
@@ -163,7 +163,7 @@ public:
 
     /**
      * Set x offset in the parent canvas.
-     * 
+     *
      * @param[in] offsX x offset in the parent canvas
      */
     void setOffsetX(int16_t offsX)
@@ -173,7 +173,7 @@ public:
 
     /**
      * Get y offset in the parent canvas.
-     * 
+     *
      * @return y offset in the parent canvas
      */
     int16_t getOffsetY() const
@@ -183,7 +183,7 @@ public:
 
     /**
      * Set y offset in the parent canvas.
-     * 
+     *
      * @param[in] offsY y offset in the parent canvas
      */
     void setOffsetY(int16_t offsY)
@@ -193,7 +193,7 @@ public:
 
     /**
      * Set canvas width in pixels.
-     * 
+     *
      * @param[in] width Canvas width in pixels
      */
     void setWidth(uint16_t width)
@@ -203,7 +203,7 @@ public:
 
     /**
      * Set canvas height in pixels.
-     * 
+     *
      * @param[in] height Canvas height in pixels
      */
     void setHeight(uint16_t height)
@@ -242,8 +242,8 @@ public:
      */
     TColor& getColor(int16_t x, int16_t y) final
     {
-        static TColor   trash;
-        TColor*         pixel   = &trash;
+        static TColor trash;
+        TColor*       pixel = &trash;
 
         if ((nullptr != m_parentGfx) &&
             (0 <= x) &&
@@ -254,7 +254,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            pixel = &m_parentGfx->getColor(absX, absY);
+            pixel        = &m_parentGfx->getColor(absX, absY);
         }
 
         return *pixel;
@@ -270,8 +270,8 @@ public:
      */
     const TColor& getColor(int16_t x, int16_t y) const final
     {
-        static TColor   trash;
-        const TColor*   pixel   = &trash;
+        static TColor trash;
+        const TColor* pixel = &trash;
 
         if ((nullptr != m_parentGfx) &&
             (0 <= x) &&
@@ -282,7 +282,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            pixel = &m_parentGfx->getColor(absX, absY);
+            pixel        = &m_parentGfx->getColor(absX, absY);
         }
 
         return *pixel;
@@ -313,15 +313,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
@@ -334,7 +334,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+            addr         = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
         }
 
         return addr;
@@ -343,15 +343,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
@@ -364,7 +364,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
+            addr         = m_parentGfx->getFrameBufferXAddr(absX, absY, length, offset);
         }
 
         return addr;
@@ -373,15 +373,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
@@ -394,7 +394,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
+            addr         = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
         }
 
         return addr;
@@ -403,15 +403,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
@@ -424,7 +424,7 @@ public:
             int16_t absX = x + m_offsX;
             int16_t absY = y + m_offsY;
 
-            addr = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
+            addr         = m_parentGfx->getFrameBufferYAddr(absX, absY, length, offset);
         }
 
         return addr;
@@ -432,18 +432,17 @@ public:
 
 private:
 
-    BaseGfx<TColor>*    m_parentGfx;    /**< The parent graphic operations. */
-    int16_t             m_offsX;        /**< The x offset in the parent canvas. */
-    int16_t             m_offsY;        /**< The y offset in the parent canvas. */
-    uint16_t            m_width;        /**< Canvas width in pixels. */
-    uint16_t            m_height;       /**< Canvas height in pixels. */
-
+    BaseGfx<TColor>* m_parentGfx; /**< The parent graphic operations. */
+    int16_t          m_offsX;     /**< The x offset in the parent canvas. */
+    int16_t          m_offsY;     /**< The y offset in the parent canvas. */
+    uint16_t         m_width;     /**< Canvas width in pixels. */
+    uint16_t         m_height;    /**< Canvas height in pixels. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_GFX_CANVAS_HPP */
+#endif /* BASE_GFX_CANVAS_HPP */
 
 /** @} */

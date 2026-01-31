@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -499,7 +499,7 @@ private:
     static const uint32_t STATISTICS_LOG_PERIOD = 4000U; /* [ms] */
     Statistics            m_statistics;                  /**< Statistics data. */
     SimpleTimer           m_statisticsLogTimer;          /**< Statistics log timer. */
-    uint32_t              m_timestampLastUpdate;        /**< Timestamp of last display update. */
+    uint32_t              m_timestampLastUpdate;         /**< Timestamp of last display update. */
 
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 

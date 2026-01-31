@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +54,7 @@
  *****************************************************************************/
 
 /** Use it to mark not used function parameters. */
-#define PLUGIN_NOT_USED(__var)  (void)(__var)
+#define PLUGIN_NOT_USED(__var) (void)(__var)
 
 /******************************************************************************
  * Types and Classes
@@ -98,7 +98,7 @@ public:
 
     /**
      * Set instance alias name, which is more user friendly than the UID.
-     * 
+     *
      * @param[in] alias Plugin instance alias name
      */
     void setAlias(const String& alias) final
@@ -108,7 +108,7 @@ public:
 
     /**
      * Get instance alias name.
-     * 
+     *
      * @return Plugin instance alias name
      */
     String getAlias() const final
@@ -118,7 +118,7 @@ public:
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the plugin uses.
      */
     Fonts::FontType getFontType() const override
@@ -129,10 +129,10 @@ public:
     /**
      * Set font type.
      * The plugin may skip the font type in case it gets conflicts with the layout.
-     * 
+     *
      * A font type change will only be considered if it is set before the start()
      * method is called!
-     * 
+     *
      * @param[in] fontType  The font type which the plugin shall use.
      */
     void setFontType(Fonts::FontType fontType) override
@@ -143,7 +143,7 @@ public:
     /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -152,14 +152,14 @@ public:
      *     ]
      * }
      * </code>
-     * 
+     *
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
      * values:
      * - Only readable: "r"
      * - Only writeable: "w"
      * - Readable and writeable: "rw"
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -169,7 +169,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Home Assistant MQTT discovery support can be added with the "ha" JSON object inside
      * the "extra" JSON object. The Home Assistant extension supports only loading by file.
      * <code>{.json}
@@ -182,7 +182,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Extra information can be loaded from a file too. This is useful for complex
      * configurations and to keep program memory usage low.
      * <code>{.json}
@@ -193,7 +193,7 @@ public:
      *    }]
      * }
      * </code>
-     * 
+     *
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const override
@@ -204,10 +204,10 @@ public:
     /**
      * Get a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[out]  value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool getTopic(const String& topic, JsonObject& value) const override
@@ -221,10 +221,10 @@ public:
     /**
      * Set a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[in]   value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObjectConst& value) override
@@ -239,9 +239,9 @@ public:
      * Has the topic content changed since last time?
      * Every readable volatile topic shall support this. Otherwise the topic
      * handlers might not be able to provide updated information.
-     * 
+     *
      * @param[in] topic The topic which to check.
-     * 
+     *
      * @return If the topic content changed since last time, it will return true otherwise false.
      */
     bool hasTopicChanged(const String& topic) override
@@ -252,11 +252,11 @@ public:
 
     /**
      * Is a upload request accepted or rejected?
-     * 
+     *
      * @param[in] topic         The topic which the upload belongs to.
      * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
      * @param[in] dstFilename   The destination filename, after storing the uploaded file.
-     * 
+     *
      * @return If accepted it will return true otherwise false.
      */
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) override
@@ -310,12 +310,12 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
@@ -328,7 +328,7 @@ public:
     /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() override
@@ -339,7 +339,7 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
-     * 
+     *
      * @param[in] isConnected   The network connection status. If network
      *                          connection is established, it will be true otherwise false.
      */
@@ -372,7 +372,7 @@ public:
     /**
      * Generate the full path for any plugin instance specific kind of configuration
      * file.
-     * 
+     *
      * @param[in] uid       The plugin UID
      * @param[in] extension Full path filename
      *
@@ -390,7 +390,7 @@ public:
 
 protected:
 
-    bool    m_isEnabled;    /**< Plugin is enabled or disabled */
+    bool m_isEnabled; /**< Plugin is enabled or disabled */
 
     /**
      * Constructs the plugin.
@@ -409,9 +409,9 @@ protected:
 
 private:
 
-    const uint16_t  m_uid;      /**< Unique id */
-    String          m_alias;    /**< Alias name */
-    const char*     m_name;     /**< Plugin name */
+    const uint16_t m_uid;   /**< Unique id */
+    String         m_alias; /**< Alias name */
+    const char*    m_name;  /**< Plugin name */
 
     Plugin();
     Plugin(const Plugin& plugin);
@@ -422,6 +422,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* PLUGIN_HPP */
+#endif /* PLUGIN_HPP */
 
 /** @} */

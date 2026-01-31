@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   Mutex.hpp
  * @brief  freeRTOS mutex wrapper
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup OPERATING_SYSTEM
  *
  * @{
@@ -81,7 +81,7 @@ public:
 
     /**
      * Create mutex.
-     * 
+     *
      * @return If successful created, it will return true otherwise false.
      */
     bool create()
@@ -115,7 +115,7 @@ public:
 
     /**
      * Is mutex allocated?
-     * 
+     *
      * @return If mutex is allocated it will return true otherwise false.
      */
     bool isAllocated() const
@@ -126,9 +126,9 @@ public:
     /**
      * Take the mutex.
      * If blockTime is portMAX_DELAY, it will wait infinite.
-     * 
+     *
      * @param[in] blockTime Max. time in ticks, it shall wait for the mutex.
-     * 
+     *
      * @return If mutex is taken, it will return true otherwise false.
      */
     bool take(TickType_t blockTime)
@@ -148,7 +148,7 @@ public:
 
     /**
      * Give the mutex.
-     * 
+     *
      * @return If mutex is given, it will return true otherwise false.
      */
     bool give()
@@ -168,11 +168,10 @@ public:
 
 private:
 
-    SemaphoreHandle_t   m_mutexHandle;  /**< Mutex handle */
+    SemaphoreHandle_t m_mutexHandle; /**< Mutex handle */
 
     Mutex(const Mutex& mutex);
     Mutex& operator=(const Mutex& mutex);
-
 };
 
 /**
@@ -200,7 +199,7 @@ public:
 
     /**
      * Create mutex.
-     * 
+     *
      * @return If successful created, it will return true otherwise false.
      */
     bool create()
@@ -234,7 +233,7 @@ public:
 
     /**
      * Is mutex allocated?
-     * 
+     *
      * @return If mutex is allocated it will return true otherwise false.
      */
     bool isAllocated() const
@@ -245,9 +244,9 @@ public:
     /**
      * Take the mutex.
      * If blockTime is portMAX_DELAY, it will wait infinite.
-     * 
+     *
      * @param[in] blockTime Max. time in ticks, it shall wait for the mutex.
-     * 
+     *
      * @return If mutex is taken, it will return true otherwise false.
      */
     bool take(TickType_t blockTime)
@@ -267,7 +266,7 @@ public:
 
     /**
      * Give the mutex.
-     * 
+     *
      * @return If mutex is given, it will return true otherwise false.
      */
     bool give()
@@ -287,17 +286,16 @@ public:
 
 private:
 
-    SemaphoreHandle_t   m_mutexHandle;  /**< Mutex handle */
+    SemaphoreHandle_t m_mutexHandle; /**< Mutex handle */
 
     MutexRecursive(const MutexRecursive& mutex);
     MutexRecursive& operator=(const MutexRecursive& mutex);
-
 };
 
 /**
  * The mutex guard takes the mutex at creation and gives it back during
  * destruction.
- * 
+ *
  * @tparam T    Kind of mutex
  */
 template < typename T >
@@ -308,7 +306,7 @@ public:
     /**
      * Creates the mutex guard and takes the mutex.
      * It will wait infinite, till it gets it.
-     * 
+     *
      * @param[in] mutex The guard uses this mutex for protection.
      */
     MutexGuard(T& mutex) :
@@ -327,18 +325,17 @@ public:
 
 private:
 
-    T&  m_mutex;    /**< Mutex used for the guard. */
+    T& m_mutex; /**< Mutex used for the guard. */
 
     MutexGuard();
     MutexGuard(const MutexGuard& guard);
-    MutexGuard&  operator=(const MutexGuard& guard);
-
+    MutexGuard& operator=(const MutexGuard& guard);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* MUTEX_HPP */
+#endif /* MUTEX_HPP */
 
 /** @} */

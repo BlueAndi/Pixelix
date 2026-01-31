@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,45 +42,69 @@
  *****************************************************************************/
 
 /**
- * Defines LittleFS as filesystem format (must be 1).
+ * The filesystem Native FS.
  */
-#define FILESYSTEM_USE_LITTLEFS (1)
-
-#if FILESYSTEM_USE_LITTLEFS
-
-/** The used filesystem type. */
-#define FILESYSTEM              LittleFS
-
-/** The filename of the filesystem image. */
-#define FILESYSTEM_FILENAME     "littlefs.bin"
-
-#endif  /* FILESYSTEM_USE_LITTLEFS */
+#define FILESYSTEM_NATIVE (0)
 
 /**
- * Defines SPIFFS as filesystem format (must be 1).
+ * The filesytem SPIFFS.
  */
-#define FILESYSTEM_USE_SPIFFS   (0)
+#define FILESYSTEM_SPIFFS (1)
 
-#if FILESYSTEM_USE_SPIFFS
+/**
+ * The filesystem LittleFS.
+ */
+#define FILESYSTEM_LITTLEFS (2)
+
+#ifndef CONFIG_FILESYSTEM_TYPE
+/** Select the filesystem type here. */
+#define CONFIG_FILESYSTEM_TYPE FILESYSTEM_NATIVE
+#endif /* CONFIG_FILESYSTEM_TYPE */
+
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE
 
 /** The used filesystem type. */
-#define FILESYSTEM              SPIFFS
+#define FILESYSTEM NativeFS
 
 /** The filename of the filesystem image. */
-#define FILESYSTEM_FILENAME     "spiffs.bin"
+#define FILESYSTEM_FILENAME "fs.bin"
 
-#endif  /* FILESYSTEM_USE_SPIFFS */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
+
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
+
+/** The used filesystem type. */
+#define FILESYSTEM LittleFS
+
+/** The filename of the filesystem image. */
+#define FILESYSTEM_FILENAME "littlefs.bin"
+
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
+
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
+
+/** The used filesystem type. */
+#define FILESYSTEM SPIFFS
+
+/** The filename of the filesystem image. */
+#define FILESYSTEM_FILENAME "spiffs.bin"
+
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#if FILESYSTEM_USE_LITTLEFS
-#include <LittleFS.h>
-#endif  /* FILESYSTEM_USE_LITTLEFS */
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE
+#include <FS.h>
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
 
-#if FILESYSTEM_USE_SPIFFS
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
+#include <LittleFS.h>
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
+
+#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
 #include <SPIFFS.h>
-#endif  /* FILESYSTEM_USE_SPIFFS */
+#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
 
 /******************************************************************************
  * Macros
@@ -94,6 +118,6 @@
  * Functions
  *****************************************************************************/
 
-#endif  /* FILESYSTEM_H */
+#endif /* FILESYSTEM_H */
 
 /** @} */

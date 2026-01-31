@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,6 +90,12 @@ typedef struct
 /* Initialize file name where to find the sensor calibration values. */
 const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME      = "/configuration/sensors.json";
 
+/** Sensor update period for slow changing sensor values. */
+static constexpr uint32_t SENSOR_UPDATE_PERIOD_SLOW         = SIMPLE_TIMER_SECONDS(30U);
+
+/** Sensor update period for fast changing sensor values. */
+static constexpr uint32_t SENSOR_UPDATE_PERIOD_FAST         = SIMPLE_TIMER_SECONDS(10U);
+
 /**
  * The provided sensor topics.
  * Note: Each channel type must be unique, otherwise the first one will be used.
@@ -97,31 +103,31 @@ const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME      = "/configuration/se
 static const SensorTopic gSensorTopics[SENSOR_TOPICS_COUNT] = {
     { ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS,
         "/extra/temperature.json",
-        30000U },
+        SENSOR_UPDATE_PERIOD_SLOW },
     { ISensorChannel::TYPE_HUMIDITY_PERCENT,
         "/extra/humidity.json",
-        30000U },
+        SENSOR_UPDATE_PERIOD_SLOW },
     { ISensorChannel::TYPE_ILLUMINANCE_LUX,
         "/extra/illuminance.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT,
         "/extra/battery.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_FREE_HEAP_BYTES,
         "/extra/heapAvailable.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_MIN_FREE_HEAP_BYTES,
         "/extra/heapLowest.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_MAX_ALLOC_HEAP_BYTES,
         "/extra/heapLargest.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_SIGNAL_STRENGTH_DBM,
         "/extra/wifiSignalStrength.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_UPTIME_S,
         "/extra/uptime.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST }
 };
 
 /** The runtime sensor topic data. */
@@ -620,10 +626,10 @@ void SensorDataProvider::registerSensorTopics()
                 return hasChanged;
             };
 
-            entityId += index;
+            entityId           += index;
 
-            jsonDocExtra["ha"] = sensorTopic->extraHAFileName;
-            jsonExtra = jsonDocExtra.as<JsonObjectConst>();
+            jsonDocExtra["ha"]  = sensorTopic->extraHAFileName;
+            jsonExtra           = jsonDocExtra.as<JsonObjectConst>();
 
             topicHandlerService.registerTopic(m_deviceId, entityId, channelName, jsonExtra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
         }

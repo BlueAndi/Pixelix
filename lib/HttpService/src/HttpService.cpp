@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,23 +74,11 @@ bool HttpService::start()
     }
     else
     {
-        if (false == m_workerQueues.requestQueue.create(WORKER_REQUEST_QUEUE_LENGTH))
+        if (false == m_workerData.mutex.create())
         {
             isSuccessful = false;
         }
-        else if (false == m_workerQueues.responseQueue.create(WORKER_RESPONSE_QUEUE_LENGTH))
-        {
-            isSuccessful = false;
-        }
-        else if (false == m_workerQueues.abortJobQueue.create(WORKER_ABORT_JOB_QUEUE_LENGTH))
-        {
-            isSuccessful = false;
-        }
-        else if (false == m_workerQueues.abortedJobQueue.create(WORKER_ABORTED_JOB_QUEUE_LENGTH))
-        {
-            isSuccessful = false;
-        }
-        else if (false == m_worker.start(&m_workerQueues))
+        else if (false == m_worker.start(&m_workerData))
         {
             isSuccessful = false;
         }
@@ -123,10 +111,7 @@ void HttpService::stop()
     m_requestList.clear();
     m_responseList.clear();
 
-    m_workerQueues.responseQueue.destroy();
-    m_workerQueues.requestQueue.destroy();
-    m_workerQueues.abortJobQueue.destroy();
-    m_workerQueues.abortedJobQueue.destroy();
+    m_workerData.mutex.destroy();
 
     m_mutex.destroy();
 
@@ -143,38 +128,35 @@ void HttpService::process()
 
     if (true == m_isRunning)
     {
-        WorkerResponse workerRsp;
-
-        /* Handle received HTTP responses. */
-        if (true == m_workerQueues.responseQueue.receive(&workerRsp, 0U))
+        if (true == m_workerData.mutex.take(0U))
         {
-            m_responseList.push_back(workerRsp);
-
-            /* Clear active job id. */
-            m_activeJobId = INVALID_HTTP_JOB_ID;
-        }
-
-        /* Handle pending HTTP requests. */
-        if (INVALID_HTTP_JOB_ID == m_activeJobId)
-        {
-            /* Check for new requests to process. */
-            if (false == m_requestList.empty())
+            /* Handle received HTTP responses. */
+            if (INVALID_HTTP_JOB_ID != m_workerData.response.jobId)
             {
-                WorkerRequest request = m_requestList.front();
+                m_responseList.emplace_back(m_workerData.response);
 
-                /* Send request to worker task. */
-                if (false == m_workerQueues.requestQueue.sendToBack(request, portMAX_DELAY))
+                /* Clear worker response. */
+                m_workerData.response = WorkerResponse();
+
+                /* Clear active job id. */
+                m_activeJobId         = INVALID_HTTP_JOB_ID;
+            }
+
+            /* Handle pending HTTP requests. */
+            if (INVALID_HTTP_JOB_ID == m_activeJobId)
+            {
+                /* Check for new requests to process. */
+                if (false == m_requestList.empty())
                 {
-                    LOG_WARNING("Sending HTTP request job id %u to worker failed, request queue full.", request.jobId);
-                }
-                else
-                {
-                    m_activeJobId = request.jobId;
+                    m_workerData.request = m_requestList.front();
+                    m_activeJobId        = m_workerData.request.jobId;
 
                     /* Remove the request from the list. */
                     (void)m_requestList.erase(m_requestList.begin());
                 }
             }
+
+            (void)m_workerData.mutex.give();
         }
     }
 }
@@ -184,7 +166,7 @@ HttpJobId HttpService::get(const char* url, IHttpResponseHandler* handler)
     HttpJobId         jobId = INVALID_HTTP_JOB_ID;
     MutexGuard<Mutex> guard(m_mutex);
 
-    if (true == m_isRunning)
+    if ((true == m_isRunning) && (nullptr != url))
     {
         WorkerRequest request;
 
@@ -195,7 +177,9 @@ HttpJobId HttpService::get(const char* url, IHttpResponseHandler* handler)
         request.size    = 0U;
         request.handler = handler;
 
-        m_requestList.push_back(request);
+        m_requestList.emplace_back(request);
+
+        jobId = request.jobId;
     }
 
     return jobId;
@@ -206,7 +190,7 @@ HttpJobId HttpService::post(const char* url, const uint8_t* payload, size_t size
     HttpJobId         jobId = INVALID_HTTP_JOB_ID;
     MutexGuard<Mutex> guard(m_mutex);
 
-    if (true == m_isRunning)
+    if ((true == m_isRunning) && (nullptr != url))
     {
         WorkerRequest request;
 
@@ -217,7 +201,9 @@ HttpJobId HttpService::post(const char* url, const uint8_t* payload, size_t size
         request.size    = size;
         request.handler = handler;
 
-        m_requestList.push_back(request);
+        m_requestList.emplace_back(request);
+
+        jobId = request.jobId;
     }
 
     return jobId;
@@ -233,7 +219,7 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
         WorkerResponse workerRsp;
 
         /* Search for the response with the given job id. */
-        for (auto it = m_responseList.begin(); it != m_responseList.end(); ++it)
+        for (WorkerResponseList::iterator it = m_responseList.begin(); it != m_responseList.end(); ++it)
         {
             if (jobId == it->jobId)
             {
@@ -244,6 +230,17 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
                 isAvailable = true;
                 break;
             }
+        }
+
+        if (true == isAvailable)
+        {
+            response.statusCode = workerRsp.statusCode;
+
+            /* Move memory ownership from worker response to HTTP response. */
+            response.payload    = workerRsp.payload;
+            response.size       = workerRsp.size;
+            workerRsp.payload   = nullptr;
+            workerRsp.size      = 0U;
         }
     }
 
@@ -277,13 +274,37 @@ void HttpService::abortJob(HttpJobId jobId)
             {
                 HttpJobId abortedJobId = INVALID_HTTP_JOB_ID;
 
-                (void)m_workerQueues.abortJobQueue.sendToBack(jobId, portMAX_DELAY);
-                (void)m_workerQueues.abortedJobQueue.receive(&abortedJobId, portMAX_DELAY);
+                (void)m_workerData.mutex.take(portMAX_DELAY);
+                m_workerData.jobToAbort = jobId;
+                (void)m_workerData.mutex.give();
 
-                if (jobId == abortedJobId)
+                /* Wait till the job is aborted. */
+                while (1)
                 {
-                    isAborted     = true;
-                    m_activeJobId = INVALID_HTTP_JOB_ID;
+                    if (true == m_workerData.mutex.take(0U))
+                    {
+                        /* Aborted? */
+                        if (INVALID_HTTP_JOB_ID != m_workerData.abortedJob)
+                        {
+                            isAborted               = true;
+                            m_workerData.abortedJob = INVALID_HTTP_JOB_ID;
+                            (void)m_workerData.mutex.give();
+                            break;
+                        }
+                        /* No pending job anymore? */
+                        if (INVALID_HTTP_JOB_ID == m_workerData.jobToAbort)
+                        {
+                            m_activeJobId = INVALID_HTTP_JOB_ID;
+                            (void)m_workerData.mutex.give();
+                            break;
+                        }
+                        /* Wait until worker aborted the job. */
+                        else
+                        {
+                            (void)m_workerData.mutex.give();
+                            delay(1U);
+                        }
+                    }
                 }
             }
         }

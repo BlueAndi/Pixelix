@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   WsCmd.h
  * @brief  Abstract websocket command
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -63,7 +63,7 @@ public:
 
     /**
      * Constructs a websocket command.
-     * 
+     *
      * @param[in] cmd   Command string
      */
     WsCmd(const char* cmd) :
@@ -80,7 +80,7 @@ public:
 
     /**
      * Get command string.
-     * 
+     *
      * @return Command string
      */
     const char* getCmd() const
@@ -90,7 +90,7 @@ public:
 
     /**
      * Execute command.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] clientId  Websocket client ID
      */
@@ -98,49 +98,49 @@ public:
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.
-     * 
+     *
      * @param[in] par   Parameter string
      */
-    virtual void setPar(const char* par) = 0;
+    virtual void setPar(const char* par)                            = 0;
 
 protected:
 
     /** Delimiter of websocket parameters */
-    static const char    DELIMITER[];
+    static const char DELIMITER[];
 
     /** Positive response code */
-    static const char    ACK[];
+    static const char ACK[];
 
     /** Negative response code. */
-    static const char    NACK[];
+    static const char NACK[];
 
     /**
      * Prepare a positive response message.
      * The last added element will always be a delimiter.
-     * 
+     *
      * @param[out] msg  Message to prepare
      */
     void preparePositiveResponse(String& msg)
     {
-        msg = ACK;
+        msg  = ACK;
         msg += DELIMITER;
     }
 
     /**
      * Prepare a negative response message.
      * The last added element will always be a delimiter.
-     * 
+     *
      * @param[out] msg  Message to prepare
      */
     void prepareNegativeResponse(String& msg)
     {
-        msg = NACK;
+        msg  = NACK;
         msg += DELIMITER;
     }
 
     /**
      * Send a response to the client.
-     * 
+     *
      * @param[in] server    Websocket server which is used to send a message to the client.
      * @param[in] clientId  The client id the message belongs to.
      * @param[in] msg       The response messsage.
@@ -152,7 +152,7 @@ protected:
 
     /**
      * Send positive response to the client.
-     * 
+     *
      * @param[in] server    Websocket server which is used to send a message to the client.
      * @param[in] clientId  The client id the message belongs to.
      * @param[in] msg       The negative response messsage.
@@ -161,7 +161,7 @@ protected:
 
     /**
      * Send negative response to the client.
-     * 
+     *
      * @param[in] server    Websocket server which is used to send a message to the client.
      * @param[in] clientId  The client id the message belongs to.
      */
@@ -169,7 +169,7 @@ protected:
 
     /**
      * Send negative response to the client.
-     * 
+     *
      * @param[in] server    Websocket server which is used to send a message to the client.
      * @param[in] clientId  The client id the message belongs to.
      * @param[in] msg       The negative response messsage.
@@ -178,7 +178,7 @@ protected:
 
 private:
 
-    const char* m_cmd;  /**< Command */
+    const char* m_cmd; /**< Command */
 
     WsCmd();
     WsCmd(const WsCmd& cmd);
@@ -189,6 +189,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMD_H */
+#endif /* WSCMD_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,10 +73,10 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
-    uint8_t                     sensorIdx       = 0U;
-    uint8_t                     channelIdx      = 0U;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
+    uint8_t                    sensorIdx  = 0U;
+    uint8_t                    channelIdx = 0U;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    SensorDataProvider&        sensorDataProv = SensorDataProvider::getInstance();
 
     m_view.init(width, height);
 
@@ -100,7 +100,7 @@ void TempHumidPlugin::stop()
     /* Nothing to do. */
 }
 
-void TempHumidPlugin::process(bool isConnected) 
+void TempHumidPlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -114,8 +114,8 @@ void TempHumidPlugin::process(bool isConnected)
         {
             if (ISensorChannel::DATA_TYPE_FLOAT32 == m_temperatureSensorCh->getDataType())
             {
-                SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_temperatureSensorCh);
-                float                   temperature = channel->getValue();
+                SensorChannelFloat32* channel     = static_cast<SensorChannelFloat32*>(m_temperatureSensorCh);
+                float                 temperature = channel->getValue();
 
                 if (!isnan(temperature))
                 {
@@ -130,8 +130,8 @@ void TempHumidPlugin::process(bool isConnected)
         {
             if (ISensorChannel::DATA_TYPE_FLOAT32 == m_humiditySensorCh->getDataType())
             {
-                SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_humiditySensorCh);
-                float                   humidity    = channel->getValue();
+                SensorChannelFloat32* channel  = static_cast<SensorChannelFloat32*>(m_humiditySensorCh);
+                float                 humidity = channel->getValue();
 
                 if (!isnan(humidity))
                 {
@@ -148,7 +148,8 @@ void TempHumidPlugin::process(bool isConnected)
     /* Set time to show page - either 10s or slot_time / 4
      * read here because otherwise we do not get config changes during runtime in slot_time.
      */
-    if (nullptr != m_slotInterf) {
+    if (nullptr != m_slotInterf)
+    {
         m_pageTime = m_slotInterf->getDuration() / 4U;
 
         if (DEFAULT_PAGE_TIME > m_pageTime)
@@ -160,8 +161,8 @@ void TempHumidPlugin::process(bool isConnected)
 
 void TempHumidPlugin::update(YAGfx& gfx)
 {
-    bool                        showPage = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                       showPage = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false == m_timer.isTimerRunning())
     {
@@ -172,9 +173,9 @@ void TempHumidPlugin::update(YAGfx& gfx)
     {
         /* Switch to next page */
         ++m_page;
-        m_page %= PAGE_MAX;
+        m_page   %= PAGE_MAX;
 
-        showPage = true;
+        showPage  = true;
         m_timer.restart();
     }
     else
@@ -184,7 +185,7 @@ void TempHumidPlugin::update(YAGfx& gfx)
 
     if (true == showPage)
     {
-        switch(m_page)
+        switch (m_page)
         {
         case TEMPERATURE:
             handleTemperature();
@@ -220,11 +221,11 @@ void TempHumidPlugin::handleTemperature()
     }
     else
     {
-        char    valueReducedPrecison[10] = { 0 };   /* Holds a value in lower precision for display. */
-        String  text;
+        char   valueReducedPrecison[10] = { 0 }; /* Holds a value in lower precision for display. */
+        String text;
 
         /* Generate temperature string with reduced precision and add unit °C. */
-        (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temperature < -9.9F) ? "%.0f" : "%.1f" , m_temperature);
+        (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temperature < -9.9F) ? "%.0f" : "%.1f", m_temperature);
         text  = "{hc}";
         text += valueReducedPrecison;
         text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
@@ -243,14 +244,14 @@ void TempHumidPlugin::handleHumidity()
     }
     else
     {
-        char    valueReducedPrecison[10] = { 0 };   /* Holds a value in lower precision for display. */
-        String  text;
+        char   valueReducedPrecison[10] = { 0 }; /* Holds a value in lower precision for display. */
+        String text;
 
         (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3.0f", m_humidity);
         text  = "{hc}";
         text += valueReducedPrecison;
         text += ISensorChannel::channelTypeToUnit(m_humiditySensorCh->getType());
-        
+
         m_view.setFormatText(text);
     }
 }

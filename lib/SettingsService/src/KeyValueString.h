@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in]   key         The key of the key value pair.
      * @param[in]   name        The name of the key value pair.
      * @param[in]   defValue    The default value of the key value pair.
@@ -84,7 +84,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in]   pref        Preferences storage.
      * @param[in]   key         The key of the key value pair.
      * @param[in]   name        The name of the key value pair.
@@ -188,16 +188,16 @@ public:
      */
     String getDefault() const
     {
-        String defValue = m_defValue;
+        String defValue  = m_defValue;
 
-        defValue += m_uniqueId;
+        defValue        += m_uniqueId;
 
         return defValue;
     }
 
     /**
      * Contains it a secret value?
-     * 
+     *
      * @return If its a secret value, it will return true otherwise false.
      */
     bool isSecret() const
@@ -207,7 +207,7 @@ public:
 
     /**
      * Set unique id used to make the default value unique.
-     * 
+     *
      * @param[in] uniqueId  The unique id.
      */
     void setUniqueId(const String& uniqueId)
@@ -217,13 +217,13 @@ public:
 
 private:
 
-    const char*     m_key;      /**< Key */
-    const char*     m_name;     /**< Name */
-    const char*     m_defValue; /**< Default value */
-    const size_t    m_min;      /**< Min. length */
-    const size_t    m_max;      /**< Max. length */
-    const bool      m_isSecret; /**< Is the value a secret value? */
-    String          m_uniqueId; /**< Unique id to make the default value unique. */
+    const char*  m_key;      /**< Key */
+    const char*  m_name;     /**< Name */
+    const char*  m_defValue; /**< Default value */
+    const size_t m_min;      /**< Min. length */
+    const size_t m_max;      /**< Max. length */
+    const bool   m_isSecret; /**< Is the value a secret value? */
+    String       m_uniqueId; /**< Unique id to make the default value unique. */
 
     /* An instance shall not be copied. */
     KeyValueString(const KeyValueString& kv);
@@ -234,6 +234,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* KEY_VALUE_STRING_H */
+#endif /* KEY_VALUE_STRING_H */
 
 /** @} */

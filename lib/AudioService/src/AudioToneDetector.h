@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   AudioToneDetector.h
  * @brief  Audio tone detector by using Goertzel algorithm
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup AUDIO_SERVICE
  *
  * @{
@@ -60,7 +60,7 @@
 
 /**
  * Audio tone detection by using the Goertzel algorithm.
- * 
+ *
  * https://en.wikipedia.org/wiki/Goertzel_algorithm
  */
 class AudioToneDetector : public IAudioObserver
@@ -95,7 +95,7 @@ public:
 
     /**
      * Get the target frequency.
-     * 
+     *
      * @return Target frequency in Hz
      */
     float getTargetFreq() const
@@ -105,7 +105,7 @@ public:
 
     /**
      * Set the target frequency.
-     * 
+     *
      * @param[in] freq  Target frequency in Hz
      */
     void setTargetFreq(float freq)
@@ -119,7 +119,7 @@ public:
 
     /**
      * Get the min. duration which the target frequency must be present.
-     * 
+     *
      * @return Min. duration in ms
      */
     uint32_t getMinDuration() const
@@ -129,7 +129,7 @@ public:
 
     /**
      * Set the min. duration which the target frequency must be present.
-     * 
+     *
      * @param[in] duration  Min. duration in ms
      */
     void setMinDuration(uint32_t duration)
@@ -139,7 +139,7 @@ public:
 
     /**
      * Get the magntiude threshold.
-     * 
+     *
      * @return Magnitude threshold
      */
     float getThreshold() const
@@ -150,7 +150,7 @@ public:
     /**
      * Set the magnitude threshold. The audio signal must be greater than the
      * threshold to be recognized.
-     * 
+     *
      * @param[in] threshold Magnitude threshold
      */
     void setThreshold(float threshold)
@@ -160,7 +160,7 @@ public:
 
     /**
      * Is the target frequency detected?
-     * 
+     *
      * @return If audio signal is detected, it will return true otherwise false.
      */
     bool isTargetFreqDetected()
@@ -170,14 +170,14 @@ public:
         /* Reset detection flag.
          * This is done here to ensure the application doesn't miss it.
          */
-        m_isDetected = false;
+        m_isDetected    = false;
 
         return isDetected;
     }
 
     /**
      * Get the last magnitude which was greater than the threshold.
-     * 
+     *
      * @return Last magnitude
      */
     float getLastMagnitude() const
@@ -188,7 +188,7 @@ public:
     /**
      * The audio driver will call this method to notify about a complete available
      * number of samples.
-     * 
+     *
      * @param[in]   data    Audio sample data buffer
      * @param[in]   size    Number of audio samples
      */
@@ -197,21 +197,21 @@ public:
     /**
      * The epsilon is used to determine a 0 floating value.
      */
-    static constexpr float  EPSILON         = 0.0001f;
+    static constexpr float EPSILON = 0.0001f;
 
 private:
 
-    mutable Mutex   m_mutex;            /**< Mutex used for concurrent access protection. */
-    float           m_targetFreq;       /**< Target frequency in Hz */
-    float           m_omega;            /**< Precomputed angle velocity */
-    float           m_cosValue;         /**< Precomputed cosinus value */
-    float           m_sinValue;         /**< Precomputed sinus value */
-    float           m_coeff;            /**< Precomputed coefficient */
-    float           m_threshold;        /**< Threshold for target frequency detection. */
-    uint32_t        m_minDuration;      /**< The min. duration the target frequency must be active in ms.*/
-    bool            m_isDetected;       /**< Is target frequency detected? */
-    SimpleTimer     m_timer;            /**< Timer used for target frequency detection. */
-    float           m_lastMagntiude;    /**< Last magnitude which was greater than the threshold. */
+    mutable Mutex m_mutex;         /**< Mutex used for concurrent access protection. */
+    float         m_targetFreq;    /**< Target frequency in Hz */
+    float         m_omega;         /**< Precomputed angle velocity */
+    float         m_cosValue;      /**< Precomputed cosinus value */
+    float         m_sinValue;      /**< Precomputed sinus value */
+    float         m_coeff;         /**< Precomputed coefficient */
+    float         m_threshold;     /**< Threshold for target frequency detection. */
+    uint32_t      m_minDuration;   /**< The min. duration the target frequency must be active in ms.*/
+    bool          m_isDetected;    /**< Is target frequency detected? */
+    SimpleTimer   m_timer;         /**< Timer used for target frequency detection. */
+    float         m_lastMagntiude; /**< Last magnitude which was greater than the threshold. */
 
     AudioToneDetector(const AudioToneDetector& drv);
     AudioToneDetector& operator=(const AudioToneDetector& drv);
@@ -223,20 +223,20 @@ private:
 
     /**
      * Apply Hanning windowing to sample data.
-     * 
+     *
      * @param[in] data          Sample data
      * @param[in] sampleIndex   Sample index
      * @param[in] samples       Number of samples
-     * 
+     *
      * @return Sample data after windowing
      */
     float applyHanningWindow(float data, uint32_t sampleIndex, uint32_t samples);
 
     /**
      * Apply Hanning windowing correction factor for the magnitude.
-     * 
+     *
      * @param[in] data Sample data
-     * 
+     *
      * @return Sample data after correction
      */
     float applyHanningMagnitudeCorrection(float data);
@@ -250,6 +250,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* AUDIO_TONE_DETECTOR_H */
+#endif /* AUDIO_TONE_DETECTOR_H */
 
 /** @} */

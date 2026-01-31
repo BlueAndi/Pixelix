@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -78,7 +78,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String              msg;
-        IPluginMaintenance* plugin  = PluginMgr::getInstance().install(m_pluginName.c_str());
+        IPluginMaintenance* plugin = PluginMgr::getInstance().install(m_pluginName.c_str());
 
         if (nullptr == plugin)
         {

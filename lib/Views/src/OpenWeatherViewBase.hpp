@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include "Layouts.h"
-//#include "./layout/OpenWeatherViewGeneric.h"
+// #include "./layout/OpenWeatherViewGeneric.h"
 #include "./layout/OpenWeatherView32x8.h"
 #include "./layout/OpenWeatherView32x16.h"
 #include "./layout/OpenWeatherView64x64.h"
@@ -59,13 +59,14 @@
 
 /**
  * View for OpenWeather.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class OpenWeatherView : public OpenWeatherView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -75,10 +76,11 @@ public:
 /**
  * View for OpenWeather for 32x8 display.
  */
-template<>
+template <>
 class OpenWeatherView<LAYOUT_32X8> : public OpenWeatherView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -88,10 +90,11 @@ public:
 /**
  * View for OpenWeather for 32x16 display.
  */
-template<>
+template <>
 class OpenWeatherView<LAYOUT_32X16> : public OpenWeatherView32x16
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -101,10 +104,11 @@ public:
 /**
  * View for OpenWeather for 64x64 display.
  */
-template<>
+template <>
 class OpenWeatherView<LAYOUT_64X64> : public OpenWeatherView64x64
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -118,6 +122,6 @@ using OpenWeatherViewBase = OpenWeatherView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* OPEN_WEATHER_VIEW_BASE_HPP */
+#endif /* OPEN_WEATHER_VIEW_BASE_HPP */
 
 /** @} */

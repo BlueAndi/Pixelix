@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,13 +59,14 @@
 
 /**
  * View for icon and text.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class IconTextView : public IconTextViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -75,10 +76,11 @@ public:
 /**
  * View for icon and text for 32x8 display.
  */
-template<>
+template <>
 class IconTextView<LAYOUT_32X8> : public IconTextView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -88,10 +90,11 @@ public:
 /**
  * View for canvas and text for 32x16 display.
  */
-template<>
+template <>
 class IconTextView<LAYOUT_32X16> : public IconTextView32x16
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -101,10 +104,11 @@ public:
 /**
  * View for icon and text for 64x64 display.
  */
-template<>
+template <>
 class IconTextView<LAYOUT_64X64> : public IconTextView64x64
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -118,6 +122,6 @@ using IconTextViewBase = IconTextView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* ICON_TEXT_VIEW_BASE_HPP */
+#endif /* ICON_TEXT_VIEW_BASE_HPP */
 
 /** @} */

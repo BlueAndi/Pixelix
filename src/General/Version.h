@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,35 +63,35 @@ namespace Version
 
 /**
  * Get software revision.
- * 
+ *
  * @return Software revision
  */
 const char* getSoftwareRevision();
 
 /**
  * Get short software revision.
- * 
+ *
  * @return Short software revision
  */
 const char* getSoftwareRevisionShort();
 
 /**
  * Get software version.
- * 
+ *
  * @return Software version
  */
 const char* getSoftwareVersion();
 
 /**
  * Get software branch name, the software was built from.
- * 
+ *
  * @return Software branch name
  */
 const char* getSoftwareBranchName();
 
 /**
  * Get target name.
- * 
+ *
  * @return Target name
  */
 const char* getTargetName();

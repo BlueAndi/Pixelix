@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -372,7 +372,7 @@ bool DateTimeView64x64::mergeConfiguration(JsonObject& jsonMerged, const JsonObj
  * Get the Minute Sinus value
  *
  * @param[in] angle Minute angle, must be multiple of 6°  (360 °/ 60 minutes)
- * 
+ *
  * @return sinus value for angle (scaled by 10.000)
  */
 static int16_t getMinuteSinus(uint16_t angle)
@@ -409,7 +409,7 @@ static int16_t getMinuteSinus(uint16_t angle)
  * Get the Minute Cosinus value
  *
  * @param[in] angle Minute angle, must be multiple of 6° (360 °/ 60 minutes)
- * 
+ *
  * @return cosinus value for angle (scaled by 10.000)
  */
 static int16_t getMinuteCosinus(uint16_t angle)

@@ -23,7 +23,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -102,7 +102,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -142,8 +142,9 @@
             }
 
             function updateProgressBar(id, progress) {
-                $("#" + id).css("width", progress + "%").attr("aria-valuenow", progress);
-                $("#" + id).text(progress + "%");
+                var progressInt = Math.round(progress);
+                $("#" + id).css("width", progressInt + "%").attr("aria-valuenow", progressInt);
+                $("#" + id).text(progressInt + "%");
             }
 
             function getConfigurationFiles() {
@@ -153,7 +154,7 @@
                     for(index = 0; index < items.length; ++index) {
                         fileUrlList.push({
                             name: items[index].name,
-                            url: "/rest/api/v1/fs/file?path=" + encodeURIComponent(items[index].name)
+                            url: restClient.getBaseUri() + "/fs/file?path=" + encodeURIComponent(items[index].name)
                         });
                     }
 
@@ -328,7 +329,7 @@
             function disableHomeAssistantAutomaticDiscovery() {
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/homeAssistant/automaticDiscovery/disable",
+                    url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/disable",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     dialog.showInfo("<p>HomeAssistant automatic discovery is now disabled. </p>");   
@@ -346,7 +347,7 @@
                                 
                 utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/partitionChange",
+                    url: restClient.getBaseUri() + "/partitionChange",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     return dialog.showInfo(`<p>Reload in ${seconds}s</p>`);
@@ -383,7 +384,7 @@
 
                 utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/homeAssistant/automaticDiscovery/status",
+                    url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/status",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     if(rsp.data && rsp.data.status === "enabled") {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +61,7 @@
  * Standard allocator which uses malloc() and free() for memory management.
  * There is no special memory management implemented. It just allocates raw memory,
  * but does not construct objects.
- * 
+ *
  * Its a stateless allocator.
  */
 class StdAllocator : public IAllocator

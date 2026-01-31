@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +57,7 @@
 /**
  * Websocket command to get/set plugin alias name
  */
-class WsCmdAlias: public WsCmd
+class WsCmdAlias : public WsCmd
 {
 public:
 
@@ -97,10 +97,10 @@ public:
 
 private:
 
-    bool        m_isError;      /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;       /**< Received number of parameters */
-    uint16_t    m_pluginUid;    /**< Plugin UID */
-    String      m_alias;        /**< Plugin alias name */
+    bool     m_isError;   /**< Any error happened during parameter reception? */
+    uint8_t  m_parCnt;    /**< Received number of parameters */
+    uint16_t m_pluginUid; /**< Plugin UID */
+    String   m_alias;     /**< Plugin alias name */
 
     WsCmdAlias(const WsCmdAlias& cmd);
     WsCmdAlias& operator=(const WsCmdAlias& cmd);
@@ -110,6 +110,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDALIAS_H */
+#endif /* WSCMDALIAS_H */
 
 /** @} */

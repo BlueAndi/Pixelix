@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,11 +68,11 @@
  *****************************************************************************/
 
 /* Set a minimum of 8 digits for the passphrase. It shall not be lower than 8 digits! */
-const uint8_t   APState::WIFI_AP_PASSPHRASE_MIN_LEN     = 8U;
+const uint8_t APState::WIFI_AP_PASSPHRASE_MIN_LEN = 8U;
 
 /**
  * Set access point local address.
- * 
+ *
  * The ip-address shall be from a public ip-address space and not from a private one,
  * like 192.168.0.0/16 or 172.16.0.0/12. This is required to get a pop-up notification
  * on Samsung mobile devices (Android OS) after wifi connection, which routes the
@@ -87,7 +87,7 @@ const IPAddress APState::GATEWAY(192U, 169U, 4U, 1U);
 const IPAddress APState::SUBNET(255U, 255U, 255U, 0U);
 
 /* Set DNS port */
-const uint16_t  APState::DNS_PORT                       = 53U;
+const uint16_t APState::DNS_PORT = 53U;
 
 /******************************************************************************
  * Public Methods
@@ -95,10 +95,10 @@ const uint16_t  APState::DNS_PORT                       = 53U;
 
 void APState::entry(StateMachine& sm)
 {
-    String              hostname;
-    String              wifiApSSID;
-    String              wifiApPassphrase;
-    SettingsService&    settings            = SettingsService::getInstance();
+    String           hostname;
+    String           wifiApSSID;
+    String           wifiApPassphrase;
+    SettingsService& settings = SettingsService::getInstance();
 
     LOG_INFO("Setup access point.");
 
@@ -116,9 +116,9 @@ void APState::entry(StateMachine& sm)
     }
     else
     {
-        hostname            = settings.getHostname().getValue();
-        wifiApSSID          = settings.getWifiApSSID().getValue();
-        wifiApPassphrase    = settings.getWifiApPassphrase().getValue();
+        hostname         = settings.getHostname().getValue();
+        wifiApSSID       = settings.getWifiApSSID().getValue();
+        wifiApPassphrase = settings.getWifiApPassphrase().getValue();
 
         settings.close();
     }
@@ -139,9 +139,9 @@ void APState::entry(StateMachine& sm)
     /* Passphrase must be greater or equal than 8 digits. */
     else if (WIFI_AP_PASSPHRASE_MIN_LEN > wifiApPassphrase.length())
     {
-        String errorStr = "Wifi AP passphrase must have at least ";
-        errorStr += WIFI_AP_PASSPHRASE_MIN_LEN;
-        errorStr += " digits.";
+        String errorStr  = "Wifi AP passphrase must have at least ";
+        errorStr        += WIFI_AP_PASSPHRASE_MIN_LEN;
+        errorStr        += " digits.";
 
         /* Fatal error */
         LOG_FATAL(errorStr);
@@ -176,8 +176,8 @@ void APState::entry(StateMachine& sm)
     /* Wifi access point successful up. */
     else
     {
-        String infoStr = "SSID: ";
-        infoStr += wifiApSSID;
+        String infoStr  = "SSID: ";
+        infoStr        += wifiApSSID;
 
         /* Start DNS and redirect to webserver. */
         if (false == m_dnsServer.start(DNS_PORT, "*", WiFi.softAPIP()))

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -223,17 +223,6 @@ void InitState::entry(StateMachine& sm)
         /* Load some general configuration parameters from persistent memory. */
         if (true == settings.open(true))
         {
-            /* Enable or disable the automatic display brightness adjustment,
-             * depended on settings. Enable it may fail in case there is no
-             * LDR sensor available.
-             */
-            bool isEnabled = settings.getAutoBrightnessAdjustment().getValue();
-
-            if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
-            {
-                LOG_WARNING("Failed to enable autom. brightness adjustment.");
-            }
-
             /* Set text scroll pause for all text widgets. */
             uint32_t scrollPause = settings.getScrollPause().getValue();
             if (false == TextWidget::setScrollPause(scrollPause))

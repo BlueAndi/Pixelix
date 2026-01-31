@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,7 +71,7 @@ public:
     typedef std::function<bool(uint8_t& data)> ReadFromInStream;
 
     /** Prototype for writing decoded data to output stream. */
-    typedef std::function<bool(uint8_t& data)> WriteToOutStream;
+    typedef std::function<bool(uint8_t data)> WriteToOutStream;
 
     /**
      * Construct a LZW decoder object.
@@ -96,9 +96,9 @@ public:
 
     /**
      * Assignment operator.
-     * 
+     *
      * @param[in] other Another LZW decoder.
-     * 
+     *
      * @return Reference to this LZW decoder.
      */
     LzwDecoder& operator=(const LzwDecoder& other);
@@ -213,7 +213,7 @@ private:
      *
      * @return If successful, it will return true otherwise false.
      */
-    bool decompress(uint32_t& code, const WriteToOutStream& writeToOutStreamFunc);
+    bool decompress(uint32_t code, const WriteToOutStream& writeToOutStreamFunc);
 };
 
 /******************************************************************************

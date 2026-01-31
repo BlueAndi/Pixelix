@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   Pages.h
  * @brief  Web pages
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -65,20 +65,20 @@ namespace Pages
 
 /**
  * Initialize all web pages and register them on the web server.
- * 
+ *
  * @param[in] srv   Web server
  */
 void init(AsyncWebServer& srv);
 
 /**
  * Error web page used in case a requested path was not found.
- * 
+ *
  * @param[in] request   Web request
  */
 void error(AsyncWebServerRequest* request);
 
-}
+} // namespace Pages
 
-#endif  /* PAGES_H */
+#endif /* PAGES_H */
 
 /** @} */

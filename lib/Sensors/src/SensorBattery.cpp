@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -85,7 +85,7 @@ ISensorChannel* SensorBattery::getChannel(uint8_t index)
 
     if (true == m_isAvailable)
     {
-        switch(index)
+        switch (index)
         {
         case CHANNEL_ID_SOC:
             channel = &m_socChannel;
@@ -101,8 +101,8 @@ ISensorChannel* SensorBattery::getChannel(uint8_t index)
 
 float SensorBattery::getStateOfCharge()
 {
-    uint32_t stateOfCharge  = 0U;
-    uint16_t adcRawAvg      = getAdcRawAvg();
+    uint32_t stateOfCharge = 0U;
+    uint16_t adcRawAvg     = getAdcRawAvg();
 
     if (ADC_RAW_FULL <= adcRawAvg)
     {
@@ -110,7 +110,7 @@ float SensorBattery::getStateOfCharge()
     }
     else if (ADC_RAW_EMPTY < adcRawAvg)
     {
-        stateOfCharge = adcRawAvg - ADC_RAW_EMPTY;
+        stateOfCharge  = adcRawAvg - ADC_RAW_EMPTY;
         stateOfCharge *= 100U;
         stateOfCharge /= ADC_RAW_FULL - ADC_RAW_EMPTY;
     }
@@ -137,7 +137,7 @@ uint16_t SensorBattery::getAdcRawAvg()
     if (true == m_isInit)
     {
         m_adcRawAvg = ADC_BATTERY_VOLTAGE;
-        m_isInit = false;
+        m_isInit    = false;
     }
     else
     {

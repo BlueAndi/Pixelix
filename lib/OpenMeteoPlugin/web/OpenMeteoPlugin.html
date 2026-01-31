@@ -23,7 +23,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -36,67 +36,69 @@
                 <p><img src="OpenMeteoPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows the current weather condition (icon and temperature) and one aditional information (see configuration below) provided by <a href="https://open-meteo.com" target="_blank">Open-Meteo</a>.</p>
                 <h2>Configuration</h2>
-                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="pluginUid">Plugin UID:</label>
-                        <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                        </select>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="updatePeriod">Update period in minutes:</label>
-                        <input class="form-control" type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="latitude">Latitude:</label>
-                        <input class="form-control" type="text" id="latitude" name="latitude" value="The latitude" />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="longitude">Longitude:</label>
-                        <input class="form-control" type="text" id="longitude" name="longitude" value="The longitude" />
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="temperatureUnit">Temperature unit:</label>
-                        <select class="form-select" id="temperatureUnit" size="1">
-                            <option value="celsius">°C</option>
-                            <option value="fahrenheit">°F</option>
-                        </select>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="windSpeedUnit">Wind speed unit:</label>
-                        <select class="form-select" id="windSpeedUnit" size="1">
-                            <option value="ms">m/s</option>
-                            <option value="kmh">km/h</option>
-                            <option value="mph">mph</option>
-                            <option value="kn">kn</option>
-                        </select>
-                    </div>
-                    <div class="form-group mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="temperature" name="weatherInfo" value="1" />
-                            <label class="form-label" for="temperature">Temperature</label>
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                            </select>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="humidity" name="weatherInfo" value="2" />
-                            <label class="form-label" for="humidity">Humidity</label>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="updatePeriod">Update period in minutes:</label>
+                            <input class="form-control" type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="windSpeed" name="weatherInfo" value="4" />
-                            <label class="form-label" for="windSpeed">Wind speed</label>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="latitude">Latitude:</label>
+                            <input class="form-control" type="text" id="latitude" name="latitude" value="The latitude" />
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="uvIndex" name="weatherInfo" value="8" />
-                            <label class="form-label" for="uvIndex">UV-index</label>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="longitude">Longitude:</label>
+                            <input class="form-control" type="text" id="longitude" name="longitude" value="The longitude" />
                         </div>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="units">Units:</label>
-                        <select class="form-select" id="units" size="1">
-                            <option value="metric">metric</option>
-                            <option value="imperial">imperial</option>
-                        </select>
-                    </div>
-                    <input name="submit" type="submit" value="Update"/>
-                </form>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="temperatureUnit">Temperature unit:</label>
+                            <select class="form-select" id="temperatureUnit" size="1">
+                                <option value="celsius">°C</option>
+                                <option value="fahrenheit">°F</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="windSpeedUnit">Wind speed unit:</label>
+                            <select class="form-select" id="windSpeedUnit" size="1">
+                                <option value="ms">m/s</option>
+                                <option value="kmh">km/h</option>
+                                <option value="mph">mph</option>
+                                <option value="kn">kn</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="temperature" name="weatherInfo" value="1" />
+                                <label class="form-label" for="temperature">Temperature</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="humidity" name="weatherInfo" value="2" />
+                                <label class="form-label" for="humidity">Humidity</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="windSpeed" name="weatherInfo" value="4" />
+                                <label class="form-label" for="windSpeed">Wind speed</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="uvIndex" name="weatherInfo" value="8" />
+                                <label class="form-label" for="uvIndex">UV-index</label>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="units">Units:</label>
+                            <select class="form-select" id="units" size="1">
+                                <option value="metric">metric</option>
+                                <option value="imperial">imperial</option>
+                            </select>
+                        </div>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
             </div>
         </main>
 
@@ -104,7 +106,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -204,7 +206,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/omweather",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/omweather",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#updatePeriod").val(rsp.data.updatePeriod);
@@ -236,7 +238,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/omweather",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/omweather",
                     isJsonResponse: true,
                     parameter: {
                         updatePeriod: $("#updatePeriod").val(),

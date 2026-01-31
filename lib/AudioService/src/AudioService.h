@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @file   AudioService.h
  * @brief  Audio service
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup AUDIO_SERVICE
  *
  * @{
@@ -67,7 +67,7 @@ public:
 
     /**
      * Get the audio service instance.
-     * 
+     *
      * @return Audio service instance
      */
     static AudioService& getInstance()
@@ -79,7 +79,7 @@ public:
 
     /**
      * Start the audio service.
-     * 
+     *
      * @return If successful started, it will return true otherwise false.
      */
     bool start() final;
@@ -96,7 +96,7 @@ public:
 
     /**
      * Get the spectrum analyzer.
-     * 
+     *
      * @return Spectrum analyzer instance otherwise nullptr
      */
     SpectrumAnalyzer* getSpectrumAnalyzer()
@@ -106,9 +106,9 @@ public:
 
     /**
      * Get the audio tone detector.
-     * 
+     *
      * @param[in] id    Tone detector id
-     * 
+     *
      * @return Tone detector instance otherwise nullptr
      */
     AudioToneDetector* getAudioToneDetector(uint8_t id)
@@ -127,12 +127,12 @@ public:
      * The max. number of tone detectors, which the service
      * can provide.
      */
-    static const uint8_t    MAX_TONE_DETECTORS  = 2U;
+    static const uint8_t MAX_TONE_DETECTORS = 2U;
 
 private:
 
-    SpectrumAnalyzer    m_spectrumAnalyzer;
-    AudioToneDetector   m_audioToneDetector[MAX_TONE_DETECTORS];
+    SpectrumAnalyzer  m_spectrumAnalyzer;
+    AudioToneDetector m_audioToneDetector[MAX_TONE_DETECTORS];
 
     AudioService(const AudioService& drv);
     AudioService& operator=(const AudioService& drv);
@@ -164,6 +164,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* AUDIO_SERVICE_H */
+#endif /* AUDIO_SERVICE_H */
 
 /** @} */

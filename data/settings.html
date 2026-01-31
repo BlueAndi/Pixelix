@@ -23,7 +23,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -58,7 +58,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -128,7 +128,7 @@
 
                 restClient.getSettingKeys().then(function(result) {
                     var promise = null;
-                    var promises = []
+                    var promises = [];
                     var index = 0;
 
                     for(index = 0; index < result.data.settings.length; ++index) {
@@ -239,7 +239,7 @@
                         }
 
                         $block.append($formGroup);
-                        $block.append($button)
+                        $block.append($button);
 
                         $("#settings").append($block);
 

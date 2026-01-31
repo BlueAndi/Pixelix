@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -119,8 +119,8 @@ public:
 
 private:
 
-    const uint8_t   m_pinNo;    /**< Arduino pin number */
-    const uint8_t   m_pinMode;  /**< Arduino pin mode */
+    const uint8_t m_pinNo;   /**< Arduino pin number */
+    const uint8_t m_pinMode; /**< Arduino pin mode */
 
     /* An instance shall not be copied. */
     IoPin(const IoPin& ioPin);
@@ -187,7 +187,6 @@ template < uint8_t pinNo, uint8_t pinMode >
 class DInPin : public IoPin
 {
 public:
-
 private:
 
     /**
@@ -374,6 +373,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* IO_H */
+#endif /* IO_H */
 
 /** @} */

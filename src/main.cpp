@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -115,6 +115,10 @@
  * Prototypes
  *****************************************************************************/
 
+#ifdef BOARD_HAS_PSRAM
+static void* main_mbedtls_calloc(size_t count, size_t size);
+#endif /* BOARD_HAS_PSRAM */
+
 /******************************************************************************
  * Variables
  *****************************************************************************/
@@ -191,6 +195,11 @@ void setup()
 
     /* Set severity for Pixelix logging system. */
     Logging::getInstance().setLogLevel(CONFIG_LOG_SEVERITY);
+
+#ifdef BOARD_HAS_PSRAM
+    /* Set mbedTLS memory allocation functions to use PSRAM if available. */
+    mbedtls_platform_set_calloc_free(main_mbedtls_calloc, free);
+#endif /* BOARD_HAS_PSRAM */
 
     /* Setup memory monitoring. */
     MemMon::getInstance().start();
@@ -290,3 +299,28 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char* pcTaskName)
 }
 
 #endif /* (configCHECK_FOR_STACK_OVERFLOW > 0) */
+
+#ifdef BOARD_HAS_PSRAM
+
+/**
+ * mbedTLS memory allocation function using PSRAM if available.
+ *
+ * @param count Number of elements to allocate.
+ * @param size  Size of each element.
+ *
+ * @return Pointer to allocated memory or nullptr if allocation failed
+ */
+static void* main_mbedtls_calloc(size_t count, size_t size)
+{
+    void* ptr = ps_calloc(count, size);
+
+    /* If it failed, try regular calloc. */
+    if (nullptr == ptr)
+    {
+        ptr = calloc(count, size);
+    }
+
+    return ptr;
+}
+
+#endif /* BOARD_HAS_PSRAM */

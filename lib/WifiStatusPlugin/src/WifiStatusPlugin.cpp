@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -89,9 +89,9 @@ void WifiStatusPlugin::update(YAGfx& gfx)
     if ((true == m_timer.isTimerRunning()) &&
         (true == m_timer.isTimeout()))
     {
-        int8_t      rssi                = -100; // dbm
-        uint8_t     quality             = 0U;   // percent
-        wl_status_t connectionStatus    = WiFi.status();
+        int8_t      rssi             = -100; // dbm
+        uint8_t     quality          = 0U;   // percent
+        wl_status_t connectionStatus = WiFi.status();
 
         /* Only in station mode it makes sense to retrieve the RSSI.
          * Otherwise keep it -100 dbm.

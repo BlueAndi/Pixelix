@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -97,7 +97,7 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)TestPlugin(name, uid);
+        return new (std::nothrow) TestPlugin(name, uid);
     }
 
     /**
@@ -110,15 +110,14 @@ public:
 
 private:
 
-    uint8_t     m_page;     /**< Number of page, which to show */
-    SimpleTimer m_timer;    /**< Timer for changing page */
-
+    uint8_t     m_page;  /**< Number of page, which to show */
+    SimpleTimer m_timer; /**< Timer for changing page */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* TEST_PLUGIN_H */
+#endif /* TEST_PLUGIN_H */
 
 /** @} */

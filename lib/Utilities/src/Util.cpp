@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -240,7 +240,7 @@ extern String Util::uint32ToHex(uint32_t value)
 
 extern uint32_t Util::hexToUInt32(const char* str)
 {
-    const size_t STR_LEN  = strlen(str);
+    const size_t STR_LEN = strlen(str);
     uint32_t     value   = 0U;
     uint32_t     idx     = 0U;
     bool         isError = false;

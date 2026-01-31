@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,8 +76,8 @@ public:
     SoundReactivePlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
         m_mutex(),
-        m_barHeight{0U},
-        m_peakHeight{0U},
+        m_barHeight{ 0U },
+        m_peakHeight{ 0U },
         m_numOfFreqBands(NUM_OF_BANDS_16),
         m_decayPeakTimer(),
         m_maxHeight(0U),
@@ -90,7 +90,7 @@ public:
 
         (void)m_mutex.create();
 
-        for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
+        for (bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
         {
             m_corrFactors[bandIdx] = 1.0f;
         }
@@ -119,13 +119,13 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)SoundReactivePlugin(name, uid);
+        return new (std::nothrow) SoundReactivePlugin(name, uid);
     }
 
     /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -134,14 +134,14 @@ public:
      *     ]
      * }
      * </code>
-     * 
+     *
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
      * values:
      * - Only readable: "r"
      * - Only writeable: "w"
      * - Readable and writeable: "rw"
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -151,7 +151,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
      * the "extra" JSON object.
      * <code>{.json}
@@ -166,7 +166,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Extra information can be loaded from a file too. This is useful for complex
      * configurations and to keep program memory usage low.
      * <code>{.json}
@@ -177,7 +177,7 @@ public:
      *    }]
      * }
      * </code>
-     * 
+     *
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -185,10 +185,10 @@ public:
     /**
      * Get a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[out]  value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool getTopic(const String& topic, JsonObject& value) const final;
@@ -196,10 +196,10 @@ public:
     /**
      * Set a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[in]   value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObjectConst& value) final;
@@ -208,9 +208,9 @@ public:
      * Is the topic content changed since last time?
      * Every readable volatile topic shall support this. Otherwise the topic
      * handlers might not be able to provide updated information.
-     * 
+     *
      * @param[in] topic The topic which to check.
-     * 
+     *
      * @return If the topic content changed since last time, it will return true otherwise false.
      */
     bool hasTopicChanged(const String& topic) final;
@@ -219,17 +219,17 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
-    
+
     /**
      * Stop the plugin. This is called only once during plugin lifetime.
      */
@@ -239,7 +239,7 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
-     * 
+     *
      * @param[in] isConnected   The network connection status. If network
      *                          connection is established, it will be true otherwise false.
      */
@@ -258,116 +258,116 @@ private:
     /* Supported number of frequency bands. */
     enum NumOfBands
     {
-        NUM_OF_BANDS_8  = 8,    /**< 8 bands */
-        NUM_OF_BANDS_16 = 16    /**< 16 bands */
+        NUM_OF_BANDS_8  = 8, /**< 8 bands */
+        NUM_OF_BANDS_16 = 16 /**< 16 bands */
     };
 
     /**
      * Plugin topic, used to read/write the configuration.
      */
-    static const char*              TOPIC_CONFIG;
+    static const char* TOPIC_CONFIG;
 
     /**
      * The max. number of frequency bands, the plugin supports.
      * If you change this, the number of frequency bins which to sum up
      * must be calculated again.
      */
-    static const uint8_t            MAX_FREQ_BANDS              = 16U;
+    static const uint8_t MAX_FREQ_BANDS                        = 16U;
 
     /**
      * Period in which the peak of a bar will be decayed in ms.
      */
-    static const uint32_t           DECAY_PEAK_PERIOD           = 100U;
+    static const uint32_t DECAY_PEAK_PERIOD                    = 100U;
 
     /**
      * INMP441 data word bit width.
      */
-    static const constexpr uint8_t  INMP441_DATA_WORD_BITS      = 24U;
+    static const constexpr uint8_t INMP441_DATA_WORD_BITS      = 24U;
 
     /**
      * INMP441 nominal sensitivity in dbFS at 1 kHz.
      */
-    static const constexpr float    INMP441_SENSITIVITY         = -26.0f;
+    static const constexpr float INMP441_SENSITIVITY           = -26.0f;
 
     /**
      * INMP441 the applied sound pressure level by measuring the sensitivity
      * at 1 kHz.
      */
-    static const constexpr float    INMP441_SENSITIVITY_SPL     = 94.0f;
+    static const constexpr float INMP441_SENSITIVITY_SPL       = 94.0f;
 
     /**
      * INMP441 the noise floor in dbFS.
      */
-    static const constexpr float    INMP441_NOISE_FLOOR         = -87.0f;
+    static const constexpr float INMP441_NOISE_FLOOR           = -87.0f;
 
     /**
      * The calculated full scale value of the INMP441.
      */
-    static const constexpr int32_t  INMP441_FULL_SCALE          = (1 << (INMP441_DATA_WORD_BITS - 1)) - 1;
+    static const constexpr int32_t INMP441_FULL_SCALE          = (1 << (INMP441_DATA_WORD_BITS - 1)) - 1;
 
     /**
      * INMP441 the nominal sensitivity as digital value.
      * = 10^(sensitivity [dbFS] / 20) * full scale
      */
-    static const constexpr int32_t  IMMP441_SENSITIVITY_DIGITAL = powf(10.0f, INMP441_SENSITIVITY / 20.0f) * INMP441_FULL_SCALE;
+    static const constexpr int32_t IMMP441_SENSITIVITY_DIGITAL = powf(10.0f, INMP441_SENSITIVITY / 20.0f) * INMP441_FULL_SCALE;
 
     /**
      * INMP441 the noise floor as digital value.
      * = 10^(noise floor [dbFS] / 20) * full scale
      */
-    static const constexpr int32_t  INMP441_NOISE_FLOOR_DIGITAL = powf(10.0f, INMP441_NOISE_FLOOR / 20.0f) * INMP441_FULL_SCALE;
+    static const constexpr int32_t INMP441_NOISE_FLOOR_DIGITAL = powf(10.0f, INMP441_NOISE_FLOOR / 20.0f) * INMP441_FULL_SCALE;
 
     /**
      * INMP441 the max. sound pressure level in db SPL.
      * = sensitivity [db SPL] + 20 * log10(full scale / sensitivity digital)
      */
-    static const constexpr int32_t  INMP441_MAX_SPL             = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_FULL_SCALE) / IMMP441_SENSITIVITY_DIGITAL);
+    static const constexpr int32_t INMP441_MAX_SPL             = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_FULL_SCALE) / IMMP441_SENSITIVITY_DIGITAL);
 
     /**
      * INMP441 the equivalent input noise in db SPL.
      * = sensitivity [db SPL] + 20 * log10(noise floor digital / sensitivity digital)
      */
-    static const constexpr int32_t  INMP441_NOISE_SPL           = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_NOISE_FLOOR_DIGITAL) / IMMP441_SENSITIVITY_DIGITAL);
+    static const constexpr int32_t INMP441_NOISE_SPL           = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_NOISE_FLOOR_DIGITAL) / IMMP441_SENSITIVITY_DIGITAL);
 
     /**
      * The human hearing threshold in dB SPL.
      */
-    static const constexpr float    HEARING_THRESHOLD           = 0.0f;
+    static const constexpr float HEARING_THRESHOLD             = 0.0f;
 
     /**
      * Minimum dynamic range in dB SPL, on the y-axis.
      */
-    static const constexpr float    MIN_DYNAMIC_RANGE           = 40.0f;
+    static const constexpr float MIN_DYNAMIC_RANGE             = 40.0f;
 
     /**
      * List with the high edge frequency bin of the center band frequency.
      * This list is valid for 16 bands.
      */
-    static const uint16_t           LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
+    static const uint16_t  LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
 
-    mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
-    uint16_t                m_barHeight[MAX_FREQ_BANDS];    /**< The current height of every bar, which represents a frequency band. */
-    uint16_t                m_peakHeight[MAX_FREQ_BANDS];   /**< The peak of every bar, which represents the peak in the frequency band. */
-    NumOfBands              m_numOfFreqBands;               /**< Current configured number of frequency bands, which to show. 8/16 are supported. */
-    SimpleTimer             m_decayPeakTimer;               /**< Periodically decays the peak of a bar. */
-    uint16_t                m_maxHeight;                    /**< Max. height of a bar in pixel. */
-    float*                  m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
-    float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
-    float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
-    bool                    m_hasTopicChanged;              /**< Has the topic content changed? */
+    mutable MutexRecursive m_mutex;                       /**< Mutex to protect against concurrent access. */
+    uint16_t               m_barHeight[MAX_FREQ_BANDS];   /**< The current height of every bar, which represents a frequency band. */
+    uint16_t               m_peakHeight[MAX_FREQ_BANDS];  /**< The peak of every bar, which represents the peak in the frequency band. */
+    NumOfBands             m_numOfFreqBands;              /**< Current configured number of frequency bands, which to show. 8/16 are supported. */
+    SimpleTimer            m_decayPeakTimer;              /**< Periodically decays the peak of a bar. */
+    uint16_t               m_maxHeight;                   /**< Max. height of a bar in pixel. */
+    float*                 m_freqBins;                    /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
+    float                  m_corrFactors[MAX_FREQ_BANDS]; /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
+    float                  m_peak;                        /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
+    bool                   m_hasTopicChanged;             /**< Has the topic content changed? */
 
     /**
      * Get configuration in JSON.
-     * 
+     *
      * @param[out] jsonCfg   Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
-     * 
+     *
      * @param[in] jsonCfg   Configuration
-     * 
+     *
      * @return If successful set, it will return true otherwise false.
      */
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
@@ -379,7 +379,7 @@ private:
 
     /**
      * Handle frequency bins.
-     * 
+     *
      * @param[out]  freqBins    Frequency bin buffer
      * @param[in]   freqBinLen  Length of frequency bin buffer in elements.
      */
@@ -387,7 +387,7 @@ private:
 
     /**
      * Convert the frequency bins to octave frequency bands.
-     * 
+     *
      * @param[out]  octaveFreqBands     Array of octave frequency bands
      * @param[in]   octaveFreqBandsLen  Number of octave frequency bands
      * @param[in]   freqBins            Array of frequency bins
@@ -397,10 +397,10 @@ private:
 
     /**
      * Calculate the average over the amplitudes of the octave frequency bands.
-     * 
+     *
      * @param[in] octaveFreqBands       Array of octave frequency bands
      * @param[in] octaveFreqBandsLen    Number of octave frequency bands
-     * 
+     *
      * @return Average amplitude value
      */
     float calculateAmplitudeAverage(float* octaveFreqBands, size_t octaveFreqBandsLen);
@@ -410,6 +410,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SOUND_REACTIVE_PLUGIN_H */
+#endif /* SOUND_REACTIVE_PLUGIN_H */
 
 /** @} */

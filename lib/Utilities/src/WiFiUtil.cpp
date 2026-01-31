@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,11 @@
  * Includes
  *****************************************************************************/
 #include "WiFiUtil.h"
+
+#ifndef NATIVE
 #include <Esp.h>
+#include <WiFi.h>
+#endif /* NATIVE */
 
 /******************************************************************************
  * Compiler Switches
@@ -74,13 +78,13 @@
 
 extern uint8_t WiFiUtil::getSignalQuality(int8_t rssi)
 {
-    uint8_t         signalQuality       = 0U;
-    const int8_t    RSSI_INVALID        = 0;    /* Invalid dBm value */
-    const int8_t    RSSI_HIGH           = -50;  /* dBm */
-    const int8_t    RSSI_UNUSABLE       = -100; /* dBm */
-    const uint8_t   SIGNAL_QUALITY_FULL = 100U; /* % */
-    const uint8_t   SIGNAL_QUALITY_BAD  = 0U;   /* % */
-    const uint8_t   CONVERSION_FACTOR   = 100U / static_cast<uint8_t>(RSSI_HIGH - RSSI_UNUSABLE);
+    uint8_t       signalQuality       = 0U;
+    const int8_t  RSSI_INVALID        = 0;    /* Invalid dBm value */
+    const int8_t  RSSI_HIGH           = -50;  /* dBm */
+    const int8_t  RSSI_UNUSABLE       = -100; /* dBm */
+    const uint8_t SIGNAL_QUALITY_FULL = 100U; /* % */
+    const uint8_t SIGNAL_QUALITY_BAD  = 0U;   /* % */
+    const uint8_t CONVERSION_FACTOR   = 100U / static_cast<uint8_t>(RSSI_HIGH - RSSI_UNUSABLE);
 
     if (RSSI_INVALID == rssi)
     {
@@ -104,15 +108,19 @@ extern uint8_t WiFiUtil::getSignalQuality(int8_t rssi)
 
 extern void WiFiUtil::getEFuseMAC(String& macAddr)
 {
-    uint64_t    efuseMAC        = ESP.getEfuseMac();
-    uint8_t     byte1           = (efuseMAC >> 40U) & 0xffU;
-    uint8_t     byte2           = (efuseMAC >> 32U) & 0xffU;
-    uint8_t     byte3           = (efuseMAC >> 24U) & 0xffU;
-    uint8_t     byte4           = (efuseMAC >> 16U) & 0xffU;
-    uint8_t     byte5           = (efuseMAC >>  8U) & 0xffU;
-    uint8_t     byte6           = (efuseMAC >>  0U) & 0xffU;
-    size_t      BUFFER_SIZE     = 18U;
-    char        buffer[BUFFER_SIZE];
+#ifndef NATIVE
+    uint64_t efuseMAC = ESP.getEfuseMac();
+#else  /* NATIVE */
+    uint64_t efuseMAC = 0xAABBCCDDEEFF;
+#endif /* NATIVE */
+    uint8_t byte1       = (efuseMAC >> 40U) & 0xffU;
+    uint8_t byte2       = (efuseMAC >> 32U) & 0xffU;
+    uint8_t byte3       = (efuseMAC >> 24U) & 0xffU;
+    uint8_t byte4       = (efuseMAC >> 16U) & 0xffU;
+    uint8_t byte5       = (efuseMAC >> 8U) & 0xffU;
+    uint8_t byte6       = (efuseMAC >> 0U) & 0xffU;
+    size_t  BUFFER_SIZE = 18U;
+    char    buffer[BUFFER_SIZE];
 
     (void)snprintf(buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X", byte6, byte5, byte4, byte3, byte2, byte1);
 
@@ -121,15 +129,44 @@ extern void WiFiUtil::getEFuseMAC(String& macAddr)
 
 extern void WiFiUtil::getChipId(String& chipId)
 {
-    uint64_t    efuseMAC        = ESP.getEfuseMac();
-    int32_t     highPart        = (efuseMAC >> 8U) & 0x0000ffffU;
-    int32_t     lowPart         = (efuseMAC >> 0U) & 0xffffffffU;
-    size_t      BUFFER_SIZE     = 13U;
-    char        buffer[BUFFER_SIZE];
+#ifndef NATIVE
+    uint64_t efuseMAC = ESP.getEfuseMac();
+#else  /* NATIVE */
+    uint64_t efuseMAC = 0xAABBCCDDEEFF;
+#endif /* NATIVE */
+    int32_t highPart    = (efuseMAC >> 8U) & 0x0000ffffU;
+    int32_t lowPart     = (efuseMAC >> 0U) & 0xffffffffU;
+    size_t  BUFFER_SIZE = 13U;
+    char    buffer[BUFFER_SIZE];
 
     (void)snprintf(buffer, sizeof(buffer), "%04X%08X", highPart, lowPart);
 
     chipId = buffer;
+}
+
+extern String WiFiUtil::getRSSI()
+{
+    String result;
+
+#ifndef NATIVE
+
+    /* Only in station mode it makes sense to retrieve the RSSI.
+     * Otherwise keep it -100 dbm.
+     */
+    if (WIFI_MODE_STA == WiFi.getMode())
+    {
+        result = WiFi.RSSI();
+    }
+    else
+    {
+        result = "-100";
+    }
+
+#else  /* NATIVE */
+    result = "-100";
+#endif /* NATIVE */
+
+    return result;
 }
 
 /******************************************************************************

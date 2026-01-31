@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -78,7 +78,7 @@ void OpenWeatherForecast::getFilter(JsonDocument& jsonFilterDoc) const
     uint8_t day;
 
     /*
-    
+
         {
         "cod": "200",
         "message": 0,
@@ -210,14 +210,14 @@ void OpenWeatherForecast::getFilter(JsonDocument& jsonFilterDoc) const
             "sunset": 1647367827
         }
         }
-    
+
     */
 
-    for(day = 0U; day < FORECAST_DAYS; ++day)
+    for (day = 0U; day < FORECAST_DAYS; ++day)
     {
-        jsonFilterDoc["list"][day]["main"]["temp_min"]      = true;
-        jsonFilterDoc["list"][day]["main"]["temp_max"]      = true;
-        jsonFilterDoc["list"][day]["weather"][0]["icon"]    = true;
+        jsonFilterDoc["list"][day]["main"]["temp_min"]   = true;
+        jsonFilterDoc["list"][day]["main"]["temp_max"]   = true;
+        jsonFilterDoc["list"][day]["weather"][0]["icon"] = true;
     }
 }
 
@@ -225,11 +225,11 @@ void OpenWeatherForecast::parse(const JsonDocument& jsonDoc)
 {
     uint8_t day;
 
-    for(day = 0U; day < FORECAST_DAYS; ++day)
+    for (day = 0U; day < FORECAST_DAYS; ++day)
     {
-        JsonVariantConst    jsonTemperatureMin  = jsonDoc["list"][day]["main"]["temp_min"];
-        JsonVariantConst    jsonTemperatureMax  = jsonDoc["list"][day]["main"]["temp_max"];
-        JsonVariantConst    jsonIcon            = jsonDoc["list"][day]["weather"][0]["icon"];
+        JsonVariantConst jsonTemperatureMin = jsonDoc["list"][day]["main"]["temp_min"];
+        JsonVariantConst jsonTemperatureMax = jsonDoc["list"][day]["main"]["temp_max"];
+        JsonVariantConst jsonIcon           = jsonDoc["list"][day]["weather"][0]["icon"];
 
         if (false == jsonTemperatureMin.isNull())
         {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -89,7 +89,7 @@ public:
 
     /**
      * Get the API key.
-     * 
+     *
      * @return API key
      */
     const String& getApiKey() const final
@@ -99,7 +99,7 @@ public:
 
     /**
      * Set the API key.
-     * 
+     *
      * @param[in] apiKey    The API key which to set.
      */
     void setApiKey(const String& apiKey) final
@@ -109,7 +109,7 @@ public:
 
     /**
      * Set the API key.
-     * 
+     *
      * @param[in] apiKey    The API key which to set.
      */
     void setApiKey(const char* apiKey) final
@@ -119,7 +119,7 @@ public:
 
     /**
      * Get the latitude.
-     * 
+     *
      * @return Latitude
      */
     const String& getLatitude() const final
@@ -129,7 +129,7 @@ public:
 
     /**
      * Set the latitude.
-     * 
+     *
      * @param[in] latitude  The latitude which to set.
      */
     void setLatitude(const String& latitude) final
@@ -139,7 +139,7 @@ public:
 
     /**
      * Set the latitude.
-     * 
+     *
      * @param[in] latitude  The latitude which to set.
      */
     void setLatitude(const char* latitude) final
@@ -149,7 +149,7 @@ public:
 
     /**
      * Get the longitude.
-     * 
+     *
      * @return Longitude
      */
     const String& getLongitude() const final
@@ -159,7 +159,7 @@ public:
 
     /**
      * Set the longitude.
-     * 
+     *
      * @param[in] longitude The longitude which to set.
      */
     void setLongitude(const String& longitude) final
@@ -169,7 +169,7 @@ public:
 
     /**
      * Set the longitude.
-     * 
+     *
      * @param[in] longitude The longitude which to set.
      */
     void setLongitude(const char* longitude) final
@@ -180,7 +180,7 @@ public:
     /**
      * Get the units which are used for temperature and
      * wind speed.
-     * 
+     *
      * @return Units
      */
     const String& getUnits() const final
@@ -190,7 +190,7 @@ public:
 
     /**
      * Set the units to use temperature and wind speed.
-     * 
+     *
      * @param[in] units The units which to set.
      */
     void setUnits(const String& units) final
@@ -200,7 +200,7 @@ public:
 
     /**
      * Set the units to use temperature and wind speed.
-     * 
+     *
      * @param[in] units The units which to set.
      */
     void setUnits(const char* units) final
@@ -210,7 +210,7 @@ public:
 
     /**
      * Adds the URI to the base URL.
-     * 
+     *
      * @param[out] url  The base URL to use.
      */
     void getUrl(String& url) const final;
@@ -219,7 +219,7 @@ public:
      * Get the filter which to apply on the response from the weather source.
      * Its a positive filter, which means everything marked with true, will
      * be used. Everything else will not be considered.
-     * 
+     *
      * @param[out] jsonFilterDoc    The filter which to use.
      */
     void getFilter(JsonDocument& jsonFilterDoc) const final;
@@ -227,7 +227,7 @@ public:
     /**
      * Parse a response from the weather source and will update its internal
      * data.
-     * 
+     *
      * @param[out] jsonDoc  The JSON response which to parse.
      */
     void parse(const JsonDocument& jsonDoc) final;
@@ -236,7 +236,7 @@ public:
      * Get the temperature.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @return Temperature, the unit is according to configuration.
      */
     float getTemperature() const final
@@ -246,7 +246,7 @@ public:
 
     /**
      * Get the weather icon id.
-     * 
+     *
      * @return Weather icon id
      */
     const String& getWeatherIconId() const final
@@ -258,7 +258,7 @@ public:
      * Get the UV-index.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @return UV-index.
      */
     float getUvIndex() const final
@@ -268,7 +268,7 @@ public:
 
     /**
      * Get the humidity.
-     * 
+     *
      * @return Humidity in %.
      */
     int getHumidity() const final
@@ -280,7 +280,7 @@ public:
      * Get the wind speed.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @return Wind speed, the unit is according to configuration.
      */
     float getWindSpeed() const final
@@ -290,15 +290,15 @@ public:
 
 private:
 
-    String  m_apiKey;           /**< OpenWeather API Key */
-    String  m_latitude;         /**< The latitude. */
-    String  m_longitude;        /**< The longitude. */
-    String  m_units;            /**< The units to use for temperature and wind speed. */
-    float   m_temperature;      /**< Temperature, unit according to configuration. */
-    String  m_weatherIconId;    /**< Weather icon id. */
-    float   m_uvIndex;          /**< UV-index */
-    int     m_humidity;         /**< Humidity in %. */
-    float   m_windSpeed;        /**< Wind speed, unit according to configuration. */
+    String m_apiKey;        /**< OpenWeather API Key */
+    String m_latitude;      /**< The latitude. */
+    String m_longitude;     /**< The longitude. */
+    String m_units;         /**< The units to use for temperature and wind speed. */
+    float  m_temperature;   /**< Temperature, unit according to configuration. */
+    String m_weatherIconId; /**< Weather icon id. */
+    float  m_uvIndex;       /**< UV-index */
+    int    m_humidity;      /**< Humidity in %. */
+    float  m_windSpeed;     /**< Wind speed, unit according to configuration. */
 
     /* Not allowed. */
     OpenWeatherCurrent(const OpenWeatherCurrent& other);
@@ -309,6 +309,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* OPENWEATHERCURRENT_H */
+#endif /* OPENWEATHERCURRENT_H */
 
 /** @} */

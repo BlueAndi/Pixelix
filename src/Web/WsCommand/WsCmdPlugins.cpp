@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,14 +76,14 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        String                      msg;
-        uint8_t                     pluginTypeListLength    = 0U;
-        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
-        uint8_t                     idx                     = 0U;
+        String                     msg;
+        uint8_t                    pluginTypeListLength = 0U;
+        const PluginList::Element* pluginTypeList       = PluginList::getList(pluginTypeListLength);
+        uint8_t                    idx                  = 0U;
 
         preparePositiveResponse(msg);
 
-        while(pluginTypeListLength > idx)
+        while (pluginTypeListLength > idx)
         {
             if (0 < idx)
             {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -455,10 +455,9 @@ void GrabViaMqttPlugin::subscribe()
 
     if (false == m_path.isEmpty())
     {
-        (void)mqttService.subscribe(MqttService::PRIMARY_MQTT_INST, m_path,
-            [this](const String& topic, const uint8_t* payload, size_t size) {
-                this->mqttTopicCallback(topic, payload, size);
-            });
+        (void)mqttService.subscribe(MqttService::PRIMARY_MQTT_INST, m_path, [this](const String& topic, const uint8_t* payload, size_t size) {
+            this->mqttTopicCallback(topic, payload, size);
+        });
     }
 }
 
@@ -495,7 +494,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
 
         if (true == jsonDocValues.overflowed())
         {
-            LOG_ERROR("Less memory for JSON values available.");
+            LOG_ERROR("JSON document size exceeded.");
 
             /* The last value may be corrupt, throw it away and show the rest. */
             if (0U < valueCount)

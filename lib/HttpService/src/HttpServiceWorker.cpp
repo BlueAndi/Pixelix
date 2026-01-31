@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,63 +68,72 @@
  * Private Methods
  *****************************************************************************/
 
-void HttpServiceWorker::process(WorkerQueues* queues)
+void HttpServiceWorker::process(WorkerData* data)
 {
-    if (nullptr != queues)
+    if (nullptr != data)
     {
-        const TickType_t MAX_WAIT_TIME = pdMS_TO_TICKS(100U);
-        WorkerRequest    request;
-
-        /* Wait for a new HTTP request. */
-        if (true == queues->requestQueue.receive(&request, MAX_WAIT_TIME))
+        /* Check for next HTTP request. */
+        if (true == data->mutex.take(MAX_WAIT_TIME))
         {
-            WorkerResponse workerRsp;
-
-            /* Check if the job is aborted. */
-            if (true == isJobAborted(queues->abortJobQueue, request.jobId))
+            /* HTTP request available and previous response processed? */
+            if ((INVALID_HTTP_JOB_ID != data->request.jobId) &&
+                (INVALID_HTTP_JOB_ID == data->response.jobId))
             {
-                LOG_INFO("HTTP job id %u is aborted before performing the request.", request.jobId);
-                signalJobAborted(queues->abortedJobQueue, request.jobId);
-            }
-            else
-            {
-                /* Perform the HTTP request. */
-                performHttpRequest(request, workerRsp, queues->abortJobQueue, queues->abortedJobQueue);
+                WorkerResponse response;
 
-                /* Check if the job is aborted meanwhile. */
-                if (true == isJobAborted(queues->abortJobQueue, request.jobId))
+                /* Response must have the same job id as the request. */
+                response.jobId = data->request.jobId;
+
+                /* Check if the job is aborted. */
+                if (data->jobToAbort == data->request.jobId)
                 {
-                    LOG_INFO("HTTP job id %u is aborted after performing the request.", request.jobId);
-                    signalJobAborted(queues->abortedJobQueue, request.jobId);
+                    LOG_INFO("HTTP job id %u is aborted before performing the request.", data->request.jobId);
 
-                    /* Clean-up */
-                    if (nullptr != workerRsp.payload)
-                    {
-                        delete[] workerRsp.payload;
-
-                        workerRsp.payload = nullptr;
-                        workerRsp.size    = 0U;
-                    }
+                    data->jobToAbort = INVALID_HTTP_JOB_ID;
+                    data->abortedJob = data->request.jobId;
                 }
                 else
                 {
-                    /* Send back the HTTP response. */
-                    (void)queues->responseQueue.sendToBack(workerRsp, MAX_WAIT_TIME);
+                    /* Release mutex before performing the HTTP request. */
+                    (void)data->mutex.give();
+
+                    /* Perform the HTTP request. */
+                    performHttpRequest(data->request, response, data->mutex, data->jobToAbort);
+
+                    /* Wait until mutex is available to store the response. */
+                    (void)data->mutex.take(portMAX_DELAY);
+
+                    /* Check if the job is aborted meanwhile. */
+                    if (data->jobToAbort == data->request.jobId)
+                    {
+                        LOG_INFO("HTTP job id %u is aborted after performing the request.", data->request.jobId);
+
+                        data->jobToAbort = INVALID_HTTP_JOB_ID;
+                        data->abortedJob = data->request.jobId;
+                    }
+                    else
+                    {
+                        /* Send back the HTTP response. */
+                        data->response = response;
+                    }
                 }
+
+                /* Clear the request. */
+                data->request = WorkerRequest();
             }
+
+            (void)data->mutex.give();
         }
     }
 }
 
-void HttpServiceWorker::performHttpRequest(const WorkerRequest& workerReq, WorkerResponse& workerRsp, Queue<HttpJobId>& abortJobQueue, Queue<HttpJobId>& abortedJobQueue)
+void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerResponse& response, Mutex& mutex, HttpJobId& jobToAbort)
 {
-    const char*  PREFIX_HTTPS        = "https://";
-    const size_t PREFIX_HTTPS_LENGTH = strlen(PREFIX_HTTPS);
-
-    WiFiClient*  wifiClient          = nullptr;
+    const char* PREFIX_HTTPS = "https://";
+    WiFiClient* wifiClient   = nullptr;
 
     /* HTTP over TLS required? */
-    if (0 == strncmp(workerReq.url, PREFIX_HTTPS, PREFIX_HTTPS_LENGTH))
+    if (true == request.url.startsWith(PREFIX_HTTPS))
     {
         WiFiClientSecure* secureClient = new WiFiClientSecure();
 
@@ -142,67 +151,78 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& workerReq, Worke
 
     if (nullptr == wifiClient)
     {
-        LOG_WARNING("HTTP request to URL %s failed, no heap memory available.", workerReq.url);
-        workerRsp.statusCode = HTTP_CODE_INTERNAL_SERVER_ERROR;
+        LOG_WARNING("HTTP request to URL %s failed, no heap memory available.", request.url.c_str());
+        response.statusCode = HTTP_CODE_INTERNAL_SERVER_ERROR;
     }
     else
     {
         HTTPClient httpClient;
 
-        if (false == httpClient.begin(*wifiClient, workerReq.url))
+        httpClient.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+        httpClient.setRedirectLimit(5U);
+
+        if (false == httpClient.begin(*wifiClient, request.url))
         {
-            LOG_WARNING("HTTP request to URL %s failed, unable to connect.", workerReq.url);
-            workerRsp.statusCode = HTTP_CODE_SERVICE_UNAVAILABLE;
+            LOG_WARNING("HTTP request failed to %s", request.url.c_str());
+            response.statusCode = HTTP_CODE_SERVICE_UNAVAILABLE;
         }
         else
         {
             int httpClientRet = 0;
 
-            switch (workerReq.method)
+            LOG_DEBUG("HTTP client connected.");
+
+            switch (request.method)
             {
             case HTTP_METHOD_GET:
                 httpClientRet = httpClient.GET();
                 break;
 
             case HTTP_METHOD_POST:
-                httpClientRet = httpClient.POST(const_cast<uint8_t*>(workerReq.payload), workerReq.size);
+                httpClientRet = httpClient.POST(const_cast<uint8_t*>(request.payload), request.size);
                 break;
 
             default:
-                LOG_WARNING("HTTP request to URL %s failed, unsupported HTTP method %d.", workerReq.url, workerReq.method);
-                workerRsp.statusCode = HTTP_CODE_NOT_IMPLEMENTED;
+                LOG_WARNING("HTTP request to %s failed.", request.url.c_str());
+                LOG_WARNING("Unsupported HTTP method %d.", request.method);
+                response.statusCode = HTTP_CODE_NOT_IMPLEMENTED;
                 break;
             }
 
             if (0 > httpClientRet)
             {
-                LOG_WARNING("HTTP request to URL %s failed, error: %s", workerReq.url, httpClient.errorToString(httpClientRet).c_str());
-                workerRsp.statusCode = HTTP_CODE_BAD_REQUEST;
+                LOG_WARNING("HTTP request to URL %s failed.", request.url.c_str());
+                LOG_WARNING("Error: %s", httpClient.errorToString(httpClientRet).c_str());
+                response.statusCode = HTTP_CODE_BAD_REQUEST;
             }
             else
             {
-                workerRsp.statusCode = static_cast<t_http_codes>(httpClientRet);
+                response.statusCode = static_cast<t_http_codes>(httpClientRet);
 
-                if (HTTP_CODE_OK == workerRsp.statusCode)
+                LOG_DEBUG("HTTP client received response with status code %d.", httpClientRet);
+
+                (void)mutex.take(portMAX_DELAY);
+
+                if (HTTP_CODE_OK == response.statusCode)
                 {
-                    if (true == isJobAborted(abortJobQueue, workerReq.jobId))
+                    if (request.jobId != jobToAbort)
                     {
-                        LOG_INFO("HTTP job id %u is aborted after performing the request.", workerReq.jobId);
-                        signalJobAborted(abortedJobQueue, workerReq.jobId);
-                    }
-                    else
-                    {
-                        handleHttpResponse(httpClient, workerReq.handler, workerRsp);
+                        handleHttpResponse(httpClient, request.handler, response);
                     }
                 }
+
+                (void)mutex.give();
             }
 
             httpClient.end();
         }
+
+        delete wifiClient;
+        wifiClient = nullptr;
     }
 }
 
-void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponseHandler* handler, WorkerResponse& workerRsp)
+void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponseHandler* handler, WorkerResponse& response)
 {
     int32_t     contentLength = httpClient.getSize(); /* Get size of the payload. If no Content-Length header present, size will be -1. */
     uint8_t     buffer[1024U];
@@ -216,7 +236,7 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
         if (0 < toRead)
         {
             char*   cBuffer = static_cast<char*>(static_cast<void*>(buffer));
-            int32_t read    = stream.readBytes(cBuffer, (toRead < sizeof(buffer)) ? toRead : sizeof(buffer));
+            int32_t read    = stream.readBytes(cBuffer, sizeof(buffer));
 
             if (0 < read)
             {
@@ -232,8 +252,6 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
                     }
                 }
 
-                ++index;
-
                 /* If a response handler is provided, call it to process the received payload chunk. */
                 if (nullptr != handler)
                 {
@@ -241,60 +259,19 @@ void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponse
 
                     handler->onResponse(index, isFinal, buffer, static_cast<size_t>(read));
                 }
-                /* If its the first chunk, allocate the payload buffer. */
-                else if (nullptr == workerRsp.payload)
-                {
-                    workerRsp.payload = new (std::nothrow) uint8_t[read];
-
-                    if (nullptr != workerRsp.payload)
-                    {
-                        memcpy(workerRsp.payload, buffer, read);
-                        workerRsp.size = read;
-                    }
-                }
-                /* Subsequent chunks, reallocate the payload buffer. */
                 else
                 {
-                    uint8_t* newPayload = new (std::nothrow) uint8_t[workerRsp.size + read];
-
-                    if (nullptr != newPayload)
-                    {
-                        memcpy(newPayload, workerRsp.payload, workerRsp.size);
-                        memcpy(newPayload + workerRsp.size, buffer, read);
-
-                        delete[] workerRsp.payload;
-
-                        workerRsp.payload  = newPayload;
-                        workerRsp.size    += read;
-                    }
+                    /* Append data to the response payload. */
+                    response.append(buffer, static_cast<size_t>(read));
                 }
+
+                ++index;
             }
         }
 
         /* Give other tasks a chance to run. */
         delay(1U);
     }
-}
-
-bool HttpServiceWorker::isJobAborted(Queue<HttpJobId>& abortedJobQueue, HttpJobId jobId)
-{
-    bool      isAborted    = false;
-    HttpJobId jobIdToAbort = INVALID_HTTP_JOB_ID;
-
-    if (true == abortedJobQueue.receive(&jobIdToAbort, 0U))
-    {
-        if (jobId == jobIdToAbort)
-        {
-            isAborted = true;
-        }
-    }
-
-    return isAborted;
-}
-
-void HttpServiceWorker::signalJobAborted(Queue<HttpJobId>& abortedJobQueue, HttpJobId jobId)
-{
-    (void)abortedJobQueue.sendToBack(jobId, portMAX_DELAY);
 }
 
 /******************************************************************************

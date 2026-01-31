@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,15 +55,17 @@
  * Local Variables
  *****************************************************************************/
 
+FS NativeFS;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
 size_t File::size() const
 {
-    size_t  fileSize    = 0U;
-    size_t  currPos     = ftell(m_fd);
-    
+    size_t fileSize = 0U;
+    size_t currPos  = ftell(m_fd);
+
     if (0 == fseek(m_fd, 0, SEEK_END))
     {
         long pos = ftell(m_fd);

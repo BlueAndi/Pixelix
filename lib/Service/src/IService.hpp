@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,15 +70,15 @@ public:
 
     /**
      * Start the service.
-     * 
+     *
      * @return If successful started, it will return true otherwise false.
      */
-    virtual bool start() = 0;
+    virtual bool start()   = 0;
 
     /**
      * Stop the service.
      */
-    virtual void stop() = 0;
+    virtual void stop()    = 0;
 
     /**
      * Process the service.
@@ -93,13 +93,12 @@ protected:
     IService()
     {
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SERVICE_HPP */
+#endif /* SERVICE_HPP */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -98,13 +98,13 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
     {
         const size_t        JSON_DOC_SIZE = 768U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg         = jsonDoc.to<JsonObject>();
+        JsonObject          jsonCfg = jsonDoc.to<JsonObject>();
 
         if (true == mergeConfiguration(jsonCfg, value))
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
