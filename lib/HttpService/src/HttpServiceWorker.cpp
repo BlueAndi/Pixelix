@@ -203,12 +203,9 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
 
                 (void)mutex.take(portMAX_DELAY);
 
-                if (HTTP_CODE_OK == response.statusCode)
+                if (request.jobId != jobToAbort)
                 {
-                    if (request.jobId != jobToAbort)
-                    {
-                        handleHttpResponse(httpClient, request.handler, response);
-                    }
+                    handleHttpResponse(httpClient, request.handler, response);
                 }
 
                 (void)mutex.give();

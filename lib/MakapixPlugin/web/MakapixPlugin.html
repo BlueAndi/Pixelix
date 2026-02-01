@@ -44,6 +44,9 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="setup-tab" data-bs-toggle="tab" data-bs-target="#setup" type="button" role="tab" aria-controls="setup" aria-selected="false">Setup</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration" type="button" role="tab" aria-controls="registration" aria-selected="false">Registration</button>
+                    </li>
                 </ul>
                 
                 <!-- Tab Content -->
@@ -138,6 +141,51 @@
                                 </table>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Registration Tab -->
+                    <div class="tab-pane fade" id="registration" role="tabpanel" aria-labelledby="registration-tab">
+                        <p>The Makapix plugin requires registration with the Makapix service to function properly. This process involves provisioning the Pixelix device with a unique player key.</p>
+                        <h3>Player Provisioning</h3>
+                        <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                            <form id="formProvision">
+                                <div class="form-group mb-3">
+                                    <p>Click the button below to provision a new Makapix player. This will generate a unique player key and registration code.</p>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="btnProvision" class="btn btn-primary" onClick="provisionPlayer(pluginUid.options[pluginUid.selectedIndex].value)">Provision Player</button>
+                                        <button type="button" id="btnGetProvisionStatus" class="btn btn-secondary" onClick="getProvisionStatus(pluginUid.options[pluginUid.selectedIndex].value)">Get Provision Status</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div id="provisionResult" style="display:none;" class="mt-3 p-3 bg-body border rounded">
+                                <h5>Provisioning Result</h5>
+                                <table class="table table-sm mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Player Key:</strong></td>
+                                            <td><code id="resultPlayerKey"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Registration Code:</strong></td>
+                                            <td><code id="resultRegistrationCode"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Expires At:</strong></td>
+                                            <td><code id="resultExpiresAt"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>MQTT Broker Host:</strong></td>
+                                            <td><code id="resultMqttHost"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>MQTT Broker Port:</strong></td>
+                                            <td><code id="resultMqttPort"></code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -351,6 +399,55 @@
                     return getStatus(pluginUid);
                 }).catch(function(rsp) {
                     alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getProvisionStatus(pluginUid) {
+                var payload = {};
+                
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                    isJsonResponse: true,
+                    parameter: payload
+                }).then(function(rsp) {
+                    if (rsp.data.status === "pending") {
+                        alert("Provisioning is still pending. Please try again later.");
+                    }
+                    else if (rsp.data.status === "completed") {
+                        $("#resultPlayerKey").text(rsp.data.playerKey);
+                        $("#resultRegistrationCode").text(rsp.data.registrationCode);
+                        $("#resultExpiresAt").text(rsp.data.registrationCodeExpiresAt);
+                        $("#resultMqttHost").text(rsp.data.mqttBroker.host);
+                        $("#resultMqttPort").text(rsp.data.mqttBroker.port);
+                        $("#provisionResult").show();
+                    }
+                    else {
+                        alert("Provisioning not started.");
+                    }
+                }).catch(function(rsp) {
+                    alert("Failed to get provision status. Please try again.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function provisionPlayer(pluginUid) {
+                var payload = {};
+                disableUI();
+                
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                    isJsonResponse: true,
+                    parameter: payload
+                }).then(function(rsp) {
+                    alert("Makapix player provision is pending. Please wait...");
+                }).catch(function(rsp) {
+                    alert("Failed to provision player. Please try again.");
                 }).finally(function() {
                     enableUI();
                 });

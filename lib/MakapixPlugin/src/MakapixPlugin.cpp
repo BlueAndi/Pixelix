@@ -63,13 +63,15 @@
  *****************************************************************************/
 
 /** Initialize instance counter. */
-uint32_t MakapixPlugin::instanceCnt             = 0U;
+uint32_t MakapixPlugin::instanceCnt              = 0U;
 
 /* Initialize plugin topic. */
-const char* MakapixPlugin::TOPIC_CONFIG         = "makapixCfg";
-const char* MakapixPlugin::TOPIC_PLAY_CONTROL   = "makapixPlayCtrl";
-const char* MakapixPlugin::ARTWORK_CACHE_PATH   = "/tmp/";
-const char* MakapixPlugin::DEFAULT_CHANNEL_NAME = "promoted";
+const char* MakapixPlugin::TOPIC_CONFIG          = "makapixCfg";
+const char* MakapixPlugin::TOPIC_PLAY_CONTROL    = "makapixPlayCtrl";
+const char* MakapixPlugin::TOPIC_PROVISION       = "makapixProvision";
+const char* MakapixPlugin::ARTWORK_CACHE_PATH    = "/tmp/";
+const char* MakapixPlugin::DEFAULT_CHANNEL_NAME  = "promoted";
+const char* MakapixPlugin::MAKAPIX_PROVISION_URL = "https://makapix.club/api/player/provision";
 
 /******************************************************************************
  * Public Methods
@@ -91,7 +93,13 @@ MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
     m_channel(m_playlist),
     m_dwellTimer(),
     m_currentFilePath(),
-    m_currentPlaylistIdx(m_playlist.selected())
+    m_currentPlaylistIdx(m_playlist.selected()),
+    m_provisionHttpJobId(INVALID_HTTP_JOB_ID),
+    m_provisionPayload(),
+    m_registrationCode(),
+    m_registrationCodeExpiresAt(),
+    m_mqttBrokerHost(),
+    m_mqttBrokerPort(0U)
 {
     MakapixNextArtworkCallback cmdNextArtworkCb =
         [this]() {
@@ -132,6 +140,7 @@ void MakapixPlugin::getTopics(JsonArray& topics) const
 {
     (void)topics.add(TOPIC_CONFIG);
     (void)topics.add(TOPIC_PLAY_CONTROL);
+    (void)topics.add(TOPIC_PROVISION);
 }
 
 bool MakapixPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -148,6 +157,11 @@ bool MakapixPlugin::getTopic(const String& topic, JsonObject& value) const
     else if (true == topic.equals(TOPIC_PLAY_CONTROL))
     {
         isSuccessful = cmdGetStatus(value);
+    }
+    /* Provision topic? */
+    else if (true == topic.equals(TOPIC_PROVISION))
+    {
+        isSuccessful = cmdGetProvisionStatus(value);
     }
     /* Unknown topic. */
     else
@@ -257,6 +271,11 @@ bool MakapixPlugin::setTopic(const String& topic, const JsonObjectConst& value)
             LOG_WARNING("JSON action not found or invalid type.");
         }
     }
+    /* Provision topic? */
+    else if (true == topic.equals(TOPIC_PROVISION))
+    {
+        isSuccessful = cmdProvisionPlayer(value);
+    }
     /* Unknown topic. */
     else
     {
@@ -323,6 +342,7 @@ void MakapixPlugin::process(bool isConnected)
     m_channel.process();
     processDisplayMode();
     m_view.process();
+    processProvision();
 }
 
 void MakapixPlugin::update(YAGfx& gfx)
@@ -910,6 +930,145 @@ bool MakapixPlugin::cmdGetStatus(JsonObject& jsonStatus) const
     }
 
     return true;
+}
+
+bool MakapixPlugin::cmdGetProvisionStatus(JsonObject& jsonStatus) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    /* Is a player provision pending? */
+    if (INVALID_HTTP_JOB_ID != m_provisionHttpJobId)
+    {
+        jsonStatus["status"] = "pending";
+    }
+    else if (true == m_registrationCode.isEmpty())
+    {
+        jsonStatus["status"] = "idle";
+    }
+    else
+    {
+        jsonStatus["status"]                    = "completed";
+        jsonStatus["playerKey"]                 = m_playerKey;
+        jsonStatus["registrationCode"]          = m_registrationCode;
+        jsonStatus["registrationCodeExpiresAt"] = m_registrationCodeExpiresAt;
+        jsonStatus["mqttBroker"]                = JsonObject();
+        jsonStatus["mqttBroker"]["host"]        = m_mqttBrokerHost;
+        jsonStatus["mqttBroker"]["port"]        = m_mqttBrokerPort;
+    }
+
+    return true;
+}
+
+bool MakapixPlugin::cmdProvisionPlayer(const JsonObjectConst& jsonCmd)
+{
+    bool                       isSuccessful = false;
+    HttpService&               httpService  = HttpService::getInstance();
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    UTIL_NOT_USED(jsonCmd);
+
+    /* Provision only allowed if no player key is set. */
+    if (false == m_playerKey.isEmpty())
+    {
+        LOG_WARNING("Player is already provisioned.");
+    }
+    /* Is a provision already pending? */
+    if (INVALID_HTTP_JOB_ID != m_provisionHttpJobId)
+    {
+        LOG_WARNING("Player provision is already pending.");
+    }
+    /* Start provision. */
+    else
+    {
+        m_provisionPayload    = "{\"device_model\":\"Pixelix\",\"firmware_version\":\"";
+        m_provisionPayload   += Version::getSoftwareVersion();
+        m_provisionPayload   += "\"}";
+
+        m_provisionHttpJobId  = httpService.post(MAKAPIX_PROVISION_URL,
+            reinterpret_cast<const uint8_t*>(m_provisionPayload.c_str()),
+            m_provisionPayload.length());
+
+        if (INVALID_HTTP_JOB_ID != m_provisionHttpJobId)
+        {
+            LOG_DEBUG("Player provision http job id: %u", m_provisionHttpJobId);
+
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
+
+void MakapixPlugin::processProvision()
+{
+    /* Is a player provision pending? */
+    if (INVALID_HTTP_JOB_ID != m_provisionHttpJobId)
+    {
+        HttpService& httpService = HttpService::getInstance();
+        HttpRsp      httpResponse;
+
+        if (true == httpService.getResponse(m_provisionHttpJobId, httpResponse))
+        {
+            if ((HTTP_CODE_OK != httpResponse.statusCode) &&
+                (HTTP_CODE_CREATED != httpResponse.statusCode))
+            {
+                LOG_WARNING("Player provision HTTP request failed with status code %d.", httpResponse.statusCode);
+            }
+            else
+            {
+                DynamicJsonDocument  jsonDoc(1024U);
+                DeserializationError error = deserializeJson(jsonDoc, httpResponse.payload);
+
+                if (DeserializationError::Ok != error)
+                {
+                    LOG_WARNING("Player provision response JSON deserialization failed: %s", error.c_str());
+                }
+                else
+                {
+                    JsonVariantConst jsonPlayerKey                 = jsonDoc["player_key"];
+                    JsonVariantConst jsonRegistrationCode          = jsonDoc["registration_code"];
+                    JsonVariantConst jsonRegistrationCodeExpiresAt = jsonDoc["registration_code_expires_at"];
+                    JsonVariantConst jsonMqttBrokerHost            = jsonDoc["mqtt_broker"]["host"];
+                    JsonVariantConst jsonMqttBrokerPort            = jsonDoc["mqtt_broker"]["port"];
+
+                    if (false == jsonPlayerKey.is<String>())
+                    {
+                        LOG_WARNING("Player provision response JSON player_key not found or invalid type.");
+                    }
+                    else if (false == jsonRegistrationCode.is<String>())
+                    {
+                        LOG_WARNING("Player provision response JSON registration_code not found or invalid type.");
+                    }
+                    else if (false == jsonRegistrationCodeExpiresAt.is<String>())
+                    {
+                        LOG_WARNING("Player provision response JSON registration_code_expires_at not found or invalid type.");
+                    }
+                    else if (false == jsonMqttBrokerHost.is<String>())
+                    {
+                        LOG_WARNING("Player provision response JSON mqtt_broker.host not found or invalid type.");
+                    }
+                    else if (false == jsonMqttBrokerPort.is<uint16_t>())
+                    {
+                        LOG_WARNING("Player provision response JSON mqtt_broker.port not found or invalid type.");
+                    }
+                    else
+                    {
+                        m_playerKey                 = jsonPlayerKey.as<String>();
+                        m_registrationCode          = jsonRegistrationCode.as<String>();
+                        m_registrationCodeExpiresAt = jsonRegistrationCodeExpiresAt.as<String>();
+                        m_mqttBrokerHost            = jsonMqttBrokerHost.as<String>();
+                        m_mqttBrokerPort            = jsonMqttBrokerPort.as<uint16_t>();
+
+                        m_hasTopicChanged           = true;
+
+                        LOG_INFO("Player provision successful.");
+                    }
+                }
+            }
+
+            m_provisionHttpJobId = INVALID_HTTP_JOB_ID;
+        }
+    }
 }
 
 /******************************************************************************

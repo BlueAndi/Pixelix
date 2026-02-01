@@ -13,13 +13,13 @@ def register_makapix_player() -> int:
     """
     status = 0
 
-    url = "https://dev.makapix.club/api/player/provision"
+    url = "https://makapix.club/api/player/provision"
     headers = {
         "Content-Type": "application/json"
     }
     payload = {
         "device_model": "Pixelix",
-        "firmware_version": "9.0.0"
+        "firmware_version": "9.0.2"
     }
 
     response = post(url, json=payload, headers=headers, timeout=10)
