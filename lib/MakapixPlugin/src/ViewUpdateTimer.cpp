@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,19 +66,19 @@ static constexpr uint32_t calcUpdateTime(uint32_t count);
  *****************************************************************************/
 
 /** Coefficient A for view update algorithm. */
-static constexpr uint32_t COEFFICIENT_A                 = (21575 / 18);
+static constexpr uint32_t COEFFICIENT_A             = (21575 / 18);
 
 /** Coefficient B for view update algorithm. */
-static constexpr uint32_t COEFFICIENT_B                 = (63435 / 18);
+static constexpr uint32_t COEFFICIENT_B             = (63435 / 18);
 
 /** Coefficient C for view update algorithm. */
-static constexpr uint32_t COEFFICIENT_C                 = (42048 / 18);
+static constexpr uint32_t COEFFICIENT_C             = (42048 / 18);
 
-/** 
+/**
  * View event update periods in seconds.
  * These are absolute times and require adjustment to get the relative timeouts.
  */
-static const uint32_t     VIEW_EVENT_UPDATE_PERIODS_S[] = {
+static const uint32_t VIEW_EVENT_UPDATE_PERIODS_S[] = {
     calcUpdateTime(1U), /*  0 h  0 min 10 s */
     calcUpdateTime(2U), /*  0 h  1 min 20 s */
     calcUpdateTime(3U), /*  0 h 42 min 26 s */
@@ -150,7 +150,7 @@ uint32_t ViewUpdateTimer::getPeriodMs() const
         periodMs = SIMPLE_TIMER_SECONDS(VIEW_EVENT_UPDATE_PERIODS_S[idx]);
 
         /* Subtract already elapsed periods. */
-        while(0U < idx)
+        while (0U < idx)
         {
             periodMs -= SIMPLE_TIMER_SECONDS(VIEW_EVENT_UPDATE_PERIODS_S[idx - 1U]);
             --idx;

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -294,29 +294,29 @@ private:
     static const char* DEFAULT_CHANNEL_NAME;
 
     /** Makapix player provision URL. */
-    static const char*          MAKAPIX_PROVISION_URL;
+    static const char*     MAKAPIX_PROVISION_URL;
 
-    _MakapixPlugin::View        m_view;                      /**< View with all widgets. */
-    String                      m_playerKey;                 /**< Makapix player key. */
-    uint8_t                     m_mqttInstance;              /**< MQTT instance index. */
-    mutable MutexRecursive      m_mutex;                     /**< Mutex to protect against concurrent access. */
-    bool                        m_hasTopicChanged;           /**< Has the topic content changed? */
-    DisplayMode                 m_displayMode;               /**< Current display mode. */
-    FileCache                   m_fileCache;                 /**< File cache for downloaded artwork files. */
-    Playlist                    m_playlist;                  /**< Local playlist of artworks. */
-    ArtworkDownloader           m_artworkDownloader;         /**< Artwork downloader. */
-    bool                        m_isDownloadingArtwork;      /**< Is artwork download in progress? */
-    CommandHandler              m_commandHandler;            /**< Command handler. */
-    Channel                     m_channel;                   /**< Artwork channel. */
-    SimpleTimer                 m_dwellTimer;                /**< Timer for dwell time between artwork changes. */
-    String                      m_currentFilePath;           /**< Current artwork file path. */
-    int32_t                     m_currentPlaylistIdx;        /**< Current playlist index. */
-    HttpJobId                   m_provisionHttpJobId;        /**< HTTP job id for player provision. */
-    String                      m_provisionPayload;          /**< Payload used for player provision. */
-    String                      m_registrationCode;          /**< Registration code received from Makapix. */
-    String                      m_registrationCodeExpiresAt; /**< Registration code expiration time. */
-    String                      m_mqttBrokerHost;            /**< MQTT broker host received from Makapix. */
-    uint16_t                    m_mqttBrokerPort;            /**< MQTT broker port received from Makapix. */
+    _MakapixPlugin::View   m_view;                      /**< View with all widgets. */
+    String                 m_playerKey;                 /**< Makapix player key. */
+    uint8_t                m_mqttInstance;              /**< MQTT instance index. */
+    mutable MutexRecursive m_mutex;                     /**< Mutex to protect against concurrent access. */
+    bool                   m_hasTopicChanged;           /**< Has the topic content changed? */
+    DisplayMode            m_displayMode;               /**< Current display mode. */
+    FileCache              m_fileCache;                 /**< File cache for downloaded artwork files. */
+    Playlist               m_playlist;                  /**< Local playlist of artworks. */
+    ArtworkDownloader      m_artworkDownloader;         /**< Artwork downloader. */
+    bool                   m_isDownloadingArtwork;      /**< Is artwork download in progress? */
+    CommandHandler         m_commandHandler;            /**< Command handler. */
+    Channel                m_channel;                   /**< Artwork channel. */
+    SimpleTimer            m_dwellTimer;                /**< Timer for dwell time between artwork changes. */
+    String                 m_currentFilePath;           /**< Current artwork file path. */
+    int32_t                m_currentPlaylistIdx;        /**< Current playlist index. */
+    HttpJobId              m_provisionHttpJobId;        /**< HTTP job id for player provision. */
+    String                 m_provisionPayload;          /**< Payload used for player provision. */
+    String                 m_registrationCode;          /**< Registration code received from Makapix. */
+    String                 m_registrationCodeExpiresAt; /**< Registration code expiration time. */
+    String                 m_mqttBrokerHost;            /**< MQTT broker host received from Makapix. */
+    uint16_t               m_mqttBrokerPort;            /**< MQTT broker port received from Makapix. */
 
     /**
      * Get configuration in JSON.
@@ -346,7 +346,7 @@ private:
 
     /**
      * Show artwork that is selected in the playlist and start dwell timer.
-     * 
+     *
      * If artwork is cached, it will be shown directly otherwise it will be downloaded first.
      * If a download is in progress, it will fail.
      *
