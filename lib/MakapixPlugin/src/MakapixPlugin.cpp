@@ -847,6 +847,8 @@ bool MakapixPlugin::cmdPause()
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
+    LOG_INFO("Pause playback.");
+
     if (true == m_dwellTimer.isTimerRunning())
     {
         m_dwellTimer.stop();
@@ -865,6 +867,8 @@ bool MakapixPlugin::cmdContinue()
 {
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
+
+    LOG_INFO("Continue playback.");
 
     if (false == m_dwellTimer.isTimerRunning())
     {
@@ -940,7 +944,7 @@ bool MakapixPlugin::cmdProvisionPlayer(const JsonObjectConst& jsonCmd)
         LOG_WARNING("Player is already provisioned.");
     }
     /* Is a provision already pending? */
-    if (INVALID_HTTP_JOB_ID != m_provisionHttpJobId)
+    else if (INVALID_HTTP_JOB_ID != m_provisionHttpJobId)
     {
         LOG_WARNING("Player provision is already pending.");
     }
