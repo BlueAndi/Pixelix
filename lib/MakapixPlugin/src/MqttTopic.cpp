@@ -100,6 +100,12 @@ void MqttTopic::getResponseTopic(const String& playerKey, String& topic, int32_t
     topic += "/response/" + String(requestId);
 }
 
+void MqttTopic::getViewUpdateTopic(const String& playerKey, String& topic)
+{
+    getTopicPrefix(playerKey, topic);
+    topic += "/view";
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/

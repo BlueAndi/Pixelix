@@ -89,7 +89,7 @@ MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
     m_playlist(),
     m_artworkDownloader(),
     m_isDownloadingArtwork(false),
-    m_commandHandler(m_playlist),
+    m_commandHandler(m_playlist, m_channel),
     m_channel(m_playlist),
     m_dwellTimer(),
     m_currentFilePath(),
@@ -444,7 +444,7 @@ void MakapixPlugin::processArtworkDownload()
                 m_currentFilePath = dstFilePath;
                 m_fileCache.addFile(dstFilePath);
 
-                m_commandHandler.notifyStatusUpdate(true);
+                m_commandHandler.setPostId(m_playlist.getPostId());
             }
 
             m_isDownloadingArtwork = false;
@@ -474,16 +474,14 @@ void MakapixPlugin::processDisplayMode()
             /* Anything selected in the playlist? */
             if (0 <= selectedIdx)
             {
-                String   artUrl     = m_playlist.getUrl();
-                String   storageKey = m_playlist.getStorageKey();
-                uint32_t dwellTime  = m_playlist.getDwellTime();
-
-                if (false == showArtwork(artUrl, storageKey, dwellTime))
+                if (false == showArtwork())
                 {
                     LOG_WARNING("Showing artwork failed.");
                 }
-
-                m_currentPlaylistIdx = selectedIdx;
+                else
+                {
+                    m_currentPlaylistIdx = selectedIdx;
+                }
             }
         }
     }
@@ -502,16 +500,14 @@ void MakapixPlugin::processDisplayMode()
             /* Anything selected in the playlist? */
             if (0 <= selectedIdx)
             {
-                String   artUrl     = m_playlist.getUrl();
-                String   storageKey = m_playlist.getStorageKey();
-                uint32_t dwellTime  = m_playlist.getDwellTime();
-
-                if (false == showArtwork(artUrl, storageKey, dwellTime))
+                if (false == showArtwork())
                 {
                     LOG_WARNING("Showing artwork failed.");
                 }
-
-                m_currentPlaylistIdx = selectedIdx;
+                else
+                {
+                    m_currentPlaylistIdx = selectedIdx;
+                }
             }
         }
         /* Pause? */
@@ -530,16 +526,14 @@ void MakapixPlugin::processDisplayMode()
             /* Selected artwork in the playlist changed? */
             if (m_currentPlaylistIdx != playlistIdx)
             {
-                String   artUrl     = m_playlist.getUrl();
-                String   storageKey = m_playlist.getStorageKey();
-                uint32_t dwellTime  = m_playlist.getDwellTime();
-
-                if (false == showArtwork(artUrl, storageKey, dwellTime))
+                if (false == showArtwork())
                 {
                     LOG_WARNING("Showing artwork failed.");
                 }
-
-                m_currentPlaylistIdx = playlistIdx;
+                else
+                {
+                    m_currentPlaylistIdx = playlistIdx;
+                }
             }
             /* Otherwise select just next artwork in the playlist. */
             else
@@ -568,78 +562,79 @@ void MakapixPlugin::processDisplayMode()
     }
 }
 
-bool MakapixPlugin::showArtwork(const String& artUrl, const String& storageKey, uint32_t dwellTime)
+bool MakapixPlugin::showArtwork()
 {
     bool isSuccessful = false;
 
-    LOG_INFO("Show artwork %s.", storageKey.c_str());
-
-    if ((false == artUrl.isEmpty()) &&
-        (false == storageKey.isEmpty()))
+    if (0U < m_playlist.length())
     {
-        String dstFilePath = getCacheFilePath(artUrl.c_str());
+        String   artUrl     = m_playlist.getUrl();
+        String   storageKey = m_playlist.getStorageKey();
+        uint32_t dwellTime  = m_playlist.getDwellTime();
+        uint32_t postId     = m_playlist.getPostId();
 
-        /* Artwork already shown?
-         * Use the destination file path as unique identifier.
-         */
-        if (m_currentFilePath == dstFilePath)
+        LOG_INFO("Show artwork %s.", storageKey.c_str());
+
+        if ((false == artUrl.isEmpty()) &&
+            (false == storageKey.isEmpty()))
         {
-            LOG_INFO("Artwork is already shown. Ignoring this request.");
+            String dstFilePath = getCacheFilePath(artUrl.c_str());
 
-            /* Start dwell timer. */
-            m_dwellTimer.start(dwellTime);
-
-            isSuccessful = true;
-        }
-        /* Artwork download is required, but if there is a pending artwork download,
-         * this new request will be ignored.
-         */
-        else if (true == m_isDownloadingArtwork)
-        {
-            LOG_WARNING("Another artwork is currently being downloaded. Ignoring this request.");
-        }
-        else
-        {
-            String cacheFileId    = getCacheFileId(storageKey);
-            String filePath       = m_fileCache.getFilePathById(cacheFileId);
-            bool   downloadNeeded = true;
-
-            /* Artwork is already cached? */
-            if (false == filePath.isEmpty())
+            /* Artwork already shown?
+             * Use the destination file path as unique identifier.
+             */
+            if (m_currentFilePath == dstFilePath)
             {
-                LOG_INFO("Artwork is already cached. Load it from cache.");
+                LOG_INFO("Artwork is already shown. Ignoring this request.");
 
-                if (false == m_view.loadIcon(filePath))
-                {
-                    LOG_WARNING("Loading artwork from cache failed.");
-                    m_fileCache.remove(storageKey);
-                }
-                else
-                {
-                    m_dwellTimer.start(dwellTime);
+                /* Start dwell timer. */
+                m_dwellTimer.start(dwellTime);
 
-                    m_currentFilePath = filePath;
-                    downloadNeeded    = false;
-                    isSuccessful      = true;
-                }
+                isSuccessful = true;
             }
-
-            if (true == downloadNeeded)
+            /* Artwork download is required, but if there is a pending artwork download,
+             * this new request will be ignored.
+             */
+            else if (true == m_isDownloadingArtwork)
             {
-                /* Download artwork from URL. */
-                if (true == m_artworkDownloader.download(artUrl, dstFilePath))
-                {
-                    m_isDownloadingArtwork = true;
-                    isSuccessful           = true;
-                }
+                LOG_WARNING("Another artwork is currently being downloaded. Ignoring this request.");
             }
-
-            if (true == isSuccessful)
+            else
             {
-                /* Notify status update, even if artwork is downloaded.
-                 * The status contains the current artwork information.
-                 */
-                m_commandHandler.notifyStatusUpdate(true);
+                String cacheFileId    = getCacheFileId(storageKey);
+                String filePath       = m_fileCache.getFilePathById(cacheFileId);
+                bool   downloadNeeded = true;
+
+                /* Artwork is already cached? */
+                if (false == filePath.isEmpty())
+                {
+                    LOG_INFO("Artwork is already cached. Load it from cache.");
+
+                    if (false == m_view.loadIcon(filePath))
+                    {
+                        LOG_WARNING("Loading artwork from cache failed.");
+                        m_fileCache.remove(storageKey);
+                    }
+                    else
+                    {
+                        m_dwellTimer.start(dwellTime);
+                        m_commandHandler.setPostId(postId);
+
+                        m_currentFilePath = filePath;
+                        downloadNeeded    = false;
+                        isSuccessful      = true;
+                    }
+                }
+
+                if (true == downloadNeeded)
+                {
+                    /* Download artwork from URL. */
+                    if (true == m_artworkDownloader.download(artUrl, dstFilePath))
+                    {
+                        m_isDownloadingArtwork = true;
+                        isSuccessful           = true;
+                    }
+                }
             }
         }
     }
@@ -655,24 +650,14 @@ bool MakapixPlugin::nextArtwork()
 
     if (true == m_playlist.next())
     {
-        String   storageKey = m_playlist.getStorageKey();
-        String   url        = m_playlist.getUrl();
-        uint32_t dwellTime  = m_playlist.getDwellTime();
-
-        if ((true == storageKey.isEmpty()) ||
-            (true == url.isEmpty()))
-        {
-            ;
-        }
-        else if (false == showArtwork(url, storageKey, dwellTime))
+        if (false == showArtwork())
         {
             ;
         }
         else
         {
             m_currentPlaylistIdx = m_playlist.selected();
-            m_commandHandler.notifyStatusUpdate(true);
-            isSuccessful = true;
+            isSuccessful         = true;
         }
     }
 
@@ -687,24 +672,14 @@ bool MakapixPlugin::prevArtwork()
 
     if (true == m_playlist.prev())
     {
-        String   storageKey = m_playlist.getStorageKey();
-        String   url        = m_playlist.getUrl();
-        uint32_t dwellTime  = m_playlist.getDwellTime();
-
-        if ((true == storageKey.isEmpty()) ||
-            (true == url.isEmpty()))
-        {
-            ;
-        }
-        else if (false == showArtwork(url, storageKey, dwellTime))
+        if (false == showArtwork())
         {
             ;
         }
         else
         {
             m_currentPlaylistIdx = m_playlist.selected();
-            m_commandHandler.notifyStatusUpdate(true);
-            isSuccessful = true;
+            isSuccessful         = true;
         }
     }
 
@@ -853,15 +828,7 @@ void MakapixPlugin::cmdShowArtwork()
 {
     if (0U < m_playlist.length())
     {
-        String storageKey = m_playlist.getStorageKey();
-        String url        = m_playlist.getUrl();
-
-        if (true == storageKey.isEmpty() ||
-            true == url.isEmpty())
-        {
-            m_view.showActionIconFail();
-        }
-        else if (false == showArtwork(url, storageKey, 0U))
+        if (false == showArtwork())
         {
             m_view.showActionIconFail();
         }

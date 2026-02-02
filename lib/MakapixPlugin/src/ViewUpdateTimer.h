@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   MqttTopic.h
- * @brief  Makapix MQTT topics
+ * @file   ViewUpdateTimer.h
+ * @brief  View update timer used to send view updates via MQTT periodically.
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup PLUGIN
@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef MQTT_TOPIC_H
-#define MQTT_TOPIC_H
+#ifndef VIEW_UPDATE_TIMER_H
+#define VIEW_UPDATE_TIMER_H
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <WString.h>
+#include <stdint.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -55,67 +56,68 @@
  *****************************************************************************/
 
 /**
- * Makapix MQTT topics.
+ * View update timer class.
+ * Used to send view updates via MQTT periodically.
  */
-namespace MqttTopic
+class ViewUpdateTimer
 {
+public:
 
-/**
- * Get topic prefix.
- *
- * @param[in]  playerKey    The player key.
- * @param[out] topic        The topic prefix.
- */
-void getTopicPrefix(const String& playerKey, String& topic);
+    /**
+     * Constructs the view update timer.
+     */
+    ViewUpdateTimer() :
+        m_timer(),
+        m_idx(0U),
+        m_isLongTerm(false)
+    {
+    }
 
-/**
- * Get command topic.
- *
- * @param[in]  playerKey    The player key.
- * @param[out] topic        The command topic.
- */
-void getCommandTopic(const String& playerKey, String& topic);
+    /**
+     * Destroys the view update timer.
+     */
+    ~ViewUpdateTimer()
+    {
+    }
 
-/**
- * Get status topic.
- *
- * @param[in]  playerKey    The player key.
- * @param[out] topic        The status topic.
- */
-void getStatusTopic(const String& playerKey, String& topic);
+    /**
+     * Start the view update timer.
+     * It will reset the timer and start it.
+     */
+    void start();
 
-/**
- * Get request topic.
- *
- * @param[in]  playerKey    The player key.
- * @param[out] topic        The request topic.
- * @param[in]  requestId    The request id.
- */
-void getRequestTopic(const String& playerKey, String& topic, int32_t requestId);
+    /**
+     * Start next view update period.
+     * It will adjust the timer period to the next one.
+     */
+    void startNext();
 
-/**
- * Get response topic.
- *
- * @param[in]  playerKey    The player key.
- * @param[out] topic        The response topic.
- * @param[in]  requestId    The request id.
- */
-void getResponseTopic(const String& playerKey, String& topic, int32_t requestId);
+    /**
+     * Is timeout?
+     * Note, if timer is not running, it will always return false.
+     *
+     * @return If timeout, it will return true otherwise false.
+     */
+    bool isTimeout();
 
-/**
- * Get view update topic.
- *
- * @param[in]  playerKey    The player key.
- * @param[out] topic        The view update topic.
- */
-void getViewUpdateTopic(const String& playerKey, String& topic);
+public:
 
-} /* namespace MqttTopic */
+    SimpleTimer m_timer;      /**< Timer to send view updates via MQTT. */
+    uint8_t     m_idx;        /**< Current index in view update sequence. */
+    bool        m_isLongTerm; /**< Indicates whether long term updates are active or not. */
+
+    /**
+     * Get current period in milliseconds.
+     *
+     * @return Period in milliseconds.
+     */
+    uint32_t getPeriodMs() const;
+};
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* MQTT_TOPIC_H */
+#endif /* VIEW_UPDATE_TIMER_H */
 
 /** @} */

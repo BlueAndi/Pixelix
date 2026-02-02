@@ -151,6 +151,16 @@ public:
     const char* getChannelName() const;
 
     /**
+     * Get channel artwork sort order.
+     *
+     * @return Artwork sort order.
+     */
+    SortOrder getSortOrder() const
+    {
+        return m_sortOrder;
+    }
+
+    /**
      * Check if play request is pending.
      *
      * @return If a play request is pending, it will return true otherwise false.

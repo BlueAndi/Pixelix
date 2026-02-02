@@ -50,6 +50,8 @@
 #include <MqttTypes.h>
 #include "MakapixTypes.h"
 #include "Playlist.h"
+#include "Channel.h"
+#include "ViewUpdateTimer.h"
 
 /******************************************************************************
  * Macros
@@ -63,7 +65,8 @@
  * Makapix command handler class.
  *
  * The command handler is responsible to handle incoming commands via MQTT.
- * It also sends periodic status updates via MQTT.
+ * It sends periodic status updates via MQTT.
+ * It sends view updates via MQTT.
  *
  * It adds artworks to the playlist via commands and triggers playlist actions
  * like next/previous artwork or play channel.
@@ -76,9 +79,11 @@ public:
      * Constructs the command handler.
      *
      * @param[in] playlist  Playlist of artworks.
+     * @param[in] channel   Channel to play artworks from.
      */
-    CommandHandler(Playlist& playlist) :
+    CommandHandler(Playlist& playlist, const Channel& channel) :
         m_playlist(playlist),
+        m_channel(channel),
         m_nextArtworkCallback(nullptr),
         m_prevArtworkCallback(nullptr),
         m_playChannelCallback(nullptr),
@@ -86,7 +91,9 @@ public:
         m_playerKey(),
         m_mqttInstance(0U),
         m_statusTimer(),
-        m_mqttConnectionState(MqttTypes::STATE_DISCONNECTED)
+        m_mqttConnectionState(MqttTypes::STATE_DISCONNECTED),
+        m_artworkPostId(0U),
+        m_viewUpdateTimer()
     {
     }
 
@@ -139,19 +146,28 @@ public:
     void unsubscribe();
 
     /**
+     * Set the artwork post ID, which is currently shown on the display.
+     *
+     * @param[in] postId   Artwork post ID
+     */
+    void setPostId(uint32_t postId);
+
+    /**
      * Notify status update via MQTT.
      * This includes player key, current post ID, firmware version and online status.
      *
      * @param[in] isOnline  Online status
+     * 
+     * @return If status update notification was sent, it will return true otherwise false.
      */
-    void notifyStatusUpdate(bool isOnline);
+    bool notifyStatusUpdate(bool isOnline);
 
 private:
 
     /**
      * Status update period in milliseconds.
      */
-    static const uint32_t STATUS_UPDATE_PERIOD       = SIMPLE_TIMER_SECONDS(60U);
+    static const uint32_t STATUS_UPDATE_PERIOD       = SIMPLE_TIMER_MINUTES(5U);
 
     /**
      * Default dwell time in milliseconds.
@@ -159,6 +175,7 @@ private:
     static const uint32_t      DEFAULT_DWELL_TIME_MS = SIMPLE_TIMER_SECONDS(30U);
 
     Playlist&                  m_playlist;            /**< Local playlist of artworks. */
+    const Channel&             m_channel;             /**< Channel to play artworks from. */
     MakapixNextArtworkCallback m_nextArtworkCallback; /**< Next artwork callback. */
     MakapixPrevArtworkCallback m_prevArtworkCallback; /**< Previous artwork callback. */
     MakapixPlayChannelCallback m_playChannelCallback; /**< Play channel callback. */
@@ -167,6 +184,8 @@ private:
     uint8_t                    m_mqttInstance;        /**< MQTT instance index. */
     SimpleTimer                m_statusTimer;         /**< Timer for periodic status updates via MQTT. */
     MqttTypes::State           m_mqttConnectionState; /**< MQTT connection state. */
+    uint32_t                   m_artworkPostId;       /**< Artwork post ID, which is currently shown on the display. */
+    ViewUpdateTimer            m_viewUpdateTimer;     /**< Timer for view updates via MQTT. */
 
     CommandHandler()                                            = delete;
     CommandHandler(const CommandHandler& cmdHandler)            = delete;
@@ -221,6 +240,13 @@ private:
      * @param[out] height   Height in pixel.
      */
     void getWidthHeight(const char* canvas, uint16_t& width, uint16_t& height) const;
+
+    /**
+     * Notify view update via MQTT.
+     * 
+     * @return If view update notification was sent, it will return true otherwise false.
+     */
+    bool notifyViewUpdate();
 };
 
 /******************************************************************************

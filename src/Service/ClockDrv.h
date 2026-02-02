@@ -93,6 +93,15 @@ public:
     bool getTime(struct tm& timeInfo);
 
     /**
+     * Get the UTC time.
+     *
+     * @param[out] timeInfo Time information.
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
+     */
+    bool getTimeUtc(struct tm& timeInfo);
+
+    /**
      * Get the time by considering the given time zone.
      *
      * @param[in]   tz          Time zone string

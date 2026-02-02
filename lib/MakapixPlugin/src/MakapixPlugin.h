@@ -345,17 +345,14 @@ private:
     void processDisplayMode();
 
     /**
-     * Show artwork and start dwell timer.
+     * Show artwork that is selected in the playlist and start dwell timer.
+     * 
      * If artwork is cached, it will be shown directly otherwise it will be downloaded first.
      * If a download is in progress, it will fail.
      *
-     * @param[in] artUrl       Artwork URL.
-     * @param[in] storageKey   Storage key.
-     * @param[in] dwellTime    Dwell time in ms.
-     *
      * @return If successful, it will return true otherwise false.
      */
-    bool showArtwork(const String& artUrl, const String& storageKey, uint32_t dwellTime);
+    bool showArtwork();
 
     /**
      * Show next artwork from playlist.
