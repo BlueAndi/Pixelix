@@ -35,19 +35,19 @@ To find out which part shall be connected to which pin of your development board
 
 ### Overview
 
-| Eval. Board                      | MCU      | Frequency | SRAM (DRAM/IRAM) | PSRAM | Flash      |
-| -------------------------------- | -------- | --------- | ---------------- | ----- | ---------- |
-| Adafruit ESP32 Feather V2        | ESP32    | 240 MHz   | 520 kB (320/200) | 2 MB  | 8 MB       |
-| Adafruit MatrixPortal ESP32-S3   | ESP32-S3 | 240 MHz   | 520 kB (320/200) | 2 MB  | 8 MB       |
-| AZ-Delivery ESP-32 Dev Kit C V4  | ESP32    | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
-| DOIT ESP32 DEVKIT V1             | ESP32    | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
-| ESP32-S3 DEVKITC-1-N16R8V        | ESP32-S3 | 240 MHz   | 520 kB (320/200) | 8 MB  | 16 MB      |
-| ESP32 NodeMCU                    | ESP32    | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
-| LILYGO&reg; TTGO ESP32 T-Display | ESP32    | 240 MHz   | 520 kB (320/200) | -     | 4 or 16 MB |
-| LILYGO&reg; ESP32 T-Display S3   | ESP32-S3 | 240 MHz   | 520 kB (320/200) | 8 MB  | 16 MB      |
-| M5Stack Core ESP32               | ESP32    | 240 MHz   | 520 kB (320/200) | -     | 16 MB      |
-| WEMOS Lolin S2 Mini              | ESP32-S2 | 240 MHz   | 520 kB (320/200) | 2 MB  | 4 MB       |
-| Ulanzi TC001                     | ESP32    | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
+| Eval. Board                      | MCU      | Cores | Frequency | SRAM (DRAM/IRAM) | PSRAM | Flash      |
+| -------------------------------- | -------- | ----- | --------- | ---------------- | ----- | ---------- |
+| Adafruit ESP32 Feather V2        | ESP32    | 2     | 240 MHz   | 520 kB (320/200) | 2 MB  | 8 MB       |
+| Adafruit MatrixPortal ESP32-S3   | ESP32-S3 | 2     | 240 MHz   | 520 kB (320/200) | 2 MB  | 8 MB       |
+| AZ-Delivery ESP-32 Dev Kit C V4  | ESP32    | 2     | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
+| DOIT ESP32 DEVKIT V1             | ESP32    | 2     | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
+| ESP32-S3 DEVKITC-1-N16R8V        | ESP32-S3 | 2     | 240 MHz   | 520 kB (320/200) | 8 MB  | 16 MB      |
+| ESP32 NodeMCU                    | ESP32    | 2     | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
+| LILYGO&reg; TTGO ESP32 T-Display | ESP32    | 2     | 240 MHz   | 520 kB (320/200) | -     | 4 or 16 MB |
+| LILYGO&reg; ESP32 T-Display S3   | ESP32-S3 | 2     | 240 MHz   | 520 kB (320/200) | 8 MB  | 16 MB      |
+| M5Stack Core ESP32               | ESP32    | 2     | 240 MHz   | 520 kB (320/200) | -     | 16 MB      |
+| WEMOS Lolin S2 Mini              | ESP32-S2 | 1     | 240 MHz   | 520 kB (320/200) | 2 MB  | 4 MB       |
+| Ulanzi TC001                     | ESP32    | 2     | 240 MHz   | 520 kB (320/200) | -     | 4 MB       |
 
 ### Adafruit ESP32 Feather V2
 
