@@ -360,6 +360,11 @@
                 }
                 else if (channelName === "hashtag") {
                     parameter.hashtag = $("#hashtag").val();
+
+                    /* Remove leading '#' if present. */
+                    if (parameter.hashtag.startsWith("#")) {
+                        parameter.hashtag = parameter.hashtag.substring(1);
+                    }
                 }
 
                 disableUI();

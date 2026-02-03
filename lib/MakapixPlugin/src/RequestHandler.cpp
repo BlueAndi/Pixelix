@@ -153,12 +153,12 @@ bool RequestHandler::request(const char* channelName, const char* sortOrder, con
 
             if (nullptr != userSqid)
             {
-                jsonDoc["channel_user_sqid"] = userSqid;
+                jsonDoc["user_handle"] = userSqid;
             }
 
             if (nullptr != hashtag)
             {
-                jsonDoc["channel_hashtag"] = hashtag;
+                jsonDoc["hashtag"] = hashtag;
             }
 
             jsonDoc["sort"] = sortOrder;
