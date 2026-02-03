@@ -24,6 +24,7 @@ Each plugin is identified by its unique UID.
   - [FirePlugin](#fireplugin)
   - [GameOfLifePlugin](#gameoflifeplugin)
   - [GruenbeckPlugin](#gruenbeckplugin)
+  - [MakapixPlugin](#makapixplugin)
   - [MatrixPlugin](#matrixplugin)
   - [OpenMeteoPlugin](#openmeteoplugin)
   - [OpenWeatherPlugin](#openweatherplugin)
@@ -109,31 +110,31 @@ The plugin setup a server supporting the Distributed Display Protocol (DDP), whi
 
 Supported formats:
 
-* RGB with 24-bit per pixel
+- RGB with 24-bit per pixel
 
 #### xlights Configuration
 
-* Add Ethernet controller
-    * Name: Pixelix
-    * IP Address: &lt;IP-ADDRESS&gt;
-    * Protocol: DDP
-* Add layout
-    * Create new matrix
-        * Name: Matrix8x32
-    * Matrix
-        * Strings: 8
-        * Nodes/String: 32
-        * Strands/String: 1
-        * Starting Location: Top Left
-        * Controller: Pixelix
-    * Controller Connection
-        * Port: 1
-        * Protocol: LED Panel Matrix
-    * String Properties
-        * String Type: RGB Nodes
-    * Appearance
-        * Pixel Size: 10
-        * Pixel Style: Square
+- Add Ethernet controller
+  - Name: Pixelix
+  - IP Address: &lt;IP-ADDRESS&gt;
+  - Protocol: DDP
+- Add layout
+  - Create new matrix
+    - Name: Matrix8x32
+  - Matrix
+    - Strings: 8
+    - Nodes/String: 32
+    - Strands/String: 1
+    - Starting Location: Top Left
+    - Controller: Pixelix
+  - Controller Connection
+    - Port: 1
+    - Protocol: LED Panel Matrix
+  - String Properties
+    - String Type: RGB Nodes
+  - Appearance
+    - Pixel Size: 10
+    - Pixel Style: Square
 
 ### FirePlugin
 
@@ -147,6 +148,10 @@ The GameOfLifePlugin shows the game of life game on the display.
 
 The GruenbeckPlugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.\
 The IP address of the Gruenbeck webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.8.0#/GruenbeckPlugin).
+
+### MakapixPlugin
+
+This plugin is a Makapix player ([https://makapix.club](https://makapix.club)) that plays pixel artwork.
 
 ### MatrixPlugin
 
@@ -163,7 +168,7 @@ The coordinates (latitude & longitude) of your location and the desired addition
 
 The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
 Information provided by [OpenWeather](https://openweathermap.org/).\
-In order to use the plugin an API key is necessary, see https://openweathermap.org/appid for further information.\
+In order to use the plugin an API key is necessary, see [https://openweathermap.org/appid](https://openweathermap.org/appid) for further information.\
 The coordinates (latitude & longitude) of your location, your API key and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.8.0#/OpenWeatherPlugin).
 
 ### RainbowPlugin
