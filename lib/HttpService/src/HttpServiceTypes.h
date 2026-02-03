@@ -331,20 +331,20 @@ struct WorkerResponse
 
     /**
      * Move assignment operator.
-     * 
+     *
      * @param[in] other   Other HTTP response to move from.
-     * 
+     *
      * @return Reference to this HTTP response.
      */
     WorkerResponse& operator=(WorkerResponse&& other) noexcept
     {
         if (this != &other)
         {
-            jobId      = other.jobId;
-            statusCode = other.statusCode;
-            payload    = other.payload;
-            size       = other.size;
-    
+            jobId         = other.jobId;
+            statusCode    = other.statusCode;
+            payload       = other.payload;
+            size          = other.size;
+
             other.payload = nullptr;
             other.size    = 0U;
         }
