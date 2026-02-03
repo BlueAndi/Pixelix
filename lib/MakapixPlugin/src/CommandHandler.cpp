@@ -212,7 +212,7 @@ bool CommandHandler::notifyStatusUpdate(bool isOnline)
 
             MqttTopic::getStatusTopic(m_playerKey, statusTopic);
 
-            if (true == mqttService.publish(m_mqttInstance, statusTopic.c_str(), payload.c_str(), payload.length()))
+            if (true == mqttService.publish(m_mqttInstance, statusTopic.c_str(), payload.c_str()))
             {
                 isSuccessful = true;
             }
@@ -468,6 +468,22 @@ bool CommandHandler::notifyViewUpdate()
         jsonObj["play_order"] = m_channel.getSortOrder();
         jsonObj["channel"]    = m_channel.getChannelName();
 
+        if (Channel::CHANNEL_ID_BY_USER == m_channel.getChannelId())
+        {
+            jsonObj["channel_user_sqid"] = m_channel.getUserSqid();
+        }
+        else if (Channel::CHANNEL_ID_HASHTAG == m_channel.getChannelId())
+        {
+            jsonObj["channel_hashtag"] = m_channel.getHashtag();
+        }
+        else
+        {
+            /* Nothing to do. */
+            ;
+        }
+
+        jsonObj["request_ack"] = true;
+
         if (0U < serializeJson(jsonObj, payload))
         {
             MqttService& mqttService = MqttService::getInstance();
@@ -475,7 +491,7 @@ bool CommandHandler::notifyViewUpdate()
 
             MqttTopic::getStatusTopic(m_playerKey, statusTopic);
 
-            if (true == mqttService.publish(m_mqttInstance, statusTopic.c_str(), payload.c_str(), payload.length()))
+            if (true == mqttService.publish(m_mqttInstance, statusTopic.c_str(), payload.c_str()))
             {
                 isSuccessful = true;
             }
