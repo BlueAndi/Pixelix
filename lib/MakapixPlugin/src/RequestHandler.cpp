@@ -97,7 +97,7 @@ void RequestHandler::process()
     }
 }
 
-bool RequestHandler::request(const char* channelName, const char* userHandle, const char* sortOrder, uint32_t page, uint32_t limit)
+bool RequestHandler::request(const char* channelName, const char* sortOrder, const char* userSqid, const char* hashtag, uint32_t page, uint32_t limit)
 {
     bool         isSuccessful = false;
     MqttService& mqttService  = MqttService::getInstance();
@@ -151,9 +151,14 @@ bool RequestHandler::request(const char* channelName, const char* userHandle, co
             jsonDoc["player_key"]   = m_playerKey;
             jsonDoc["channel"]      = channelName;
 
-            if (nullptr != userHandle)
+            if (nullptr != userSqid)
             {
-                jsonDoc["user_handle"] = userHandle;
+                jsonDoc["channel_user_sqid"] = userSqid;
+            }
+
+            if (nullptr != hashtag)
+            {
+                jsonDoc["channel_hashtag"] = hashtag;
             }
 
             jsonDoc["sort"] = sortOrder;

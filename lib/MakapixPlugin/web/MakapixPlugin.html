@@ -39,7 +39,10 @@
                 <!-- Tab Navigation -->
                 <ul class="nav nav-tabs" id="makapixTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="configuration-tab" data-bs-toggle="tab" data-bs-target="#configuration" type="button" role="tab" aria-controls="configuration" aria-selected="true">Configuration</button>
+                        <button class="nav-link active" id="playbackControl-tab" data-bs-toggle="tab" data-bs-target="#playbackControl" type="button" role="tab" aria-controls="playbackControl" aria-selected="true">Playback Control</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="configuration-tab" data-bs-toggle="tab" data-bs-target="#configuration" type="button" role="tab" aria-controls="configuration" aria-selected="false">Configuration</button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="setup-tab" data-bs-toggle="tab" data-bs-target="#setup" type="button" role="tab" aria-controls="setup" aria-selected="false">Setup</button>
@@ -51,30 +54,8 @@
                 
                 <!-- Tab Content -->
                 <div class="tab-content mt-3" id="makapixTabContent">
-                    <!-- Configuration Tab -->
-                    <div class="tab-pane fade show active" id="configuration" role="tabpanel" aria-labelledby="configuration-tab">
-                        <h3>Makapix</h3>
-                        <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                            <form id="formConfig" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                                <div class="form-group mb-3">
-                                    <label class="form-label" for="pluginUid">Plugin UID:</label>
-                                    <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                                    </select>    
-                                </div>
-                                <div class="form-group mb-3">
-                                    <label class="form-label" for="playerKey">Player key:</label>
-                                    <input class="form-control" type="text" id="playerKey" name="playerKey" value="" size="36" />
-                                    <small class="form-text">The player key for the Makapix player.</small>
-                                </div>
-                                <div class="form-group mb-3">
-                                    <label class="form-label" for="mqttInstance">MQTT instance:</label>
-                                    <input class="form-control" type="number" id="mqttInstance" name="mqttInstance" value="0" />
-                                    <small class="form-text">The MQTT instance number to use. 0 is the primary instance, see MQTT service configuration.</small>
-                                </div>
-                                <input name="submit" type="submit" value="Update"/>
-                            </form>
-                        </div>
-                        <hr />
+                    <!-- Playback Control Tab -->
+                    <div class="tab-pane fade show active" id="playbackControl" role="tabpanel" aria-labelledby="playbackControl-tab">
                         <h3>Playback Control</h3>
                         <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                             <form id="formPlayControl">
@@ -94,8 +75,41 @@
                                         <button type="button" id="btnAll" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'all')">Recent Artworks</button>
                                         <button type="button" id="btnPromoted" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'promoted')">Promoted Artworks</button>
                                         <button type="button" id="btnUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'user')">Own Artworks</button>
+                                        <div class="input-group mb-2">
+                                            <button type="button" id="btnByUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'by_user')">Artwork By User</button>
+                                            <input type="text" id="userSqid" class="form-control" placeholder="Enter username" maxlength="64" />
+                                        </div>
+                                        <div class="input-group">
+                                            <button type="button" id="btnByHashtag" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'hashtag')">Artwork By Hashtag</button>
+                                            <input type="text" id="hashtag" class="form-control" placeholder="Enter hashtag" maxlength="64" />
+                                        </div>
                                     </div>
                                 </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Tab -->
+                    <div class="tab-pane fade" id="configuration" role="tabpanel" aria-labelledby="configuration-tab">
+                        <h3>Makapix</h3>
+                        <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                            <form id="formConfig" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="pluginUid">Plugin UID:</label>
+                                    <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                                    </select>    
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="playerKey">Player key:</label>
+                                    <input class="form-control" type="text" id="playerKey" name="playerKey" value="" size="36" />
+                                    <small class="form-text">The player key for the Makapix player.</small>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="mqttInstance">MQTT instance:</label>
+                                    <input class="form-control" type="number" id="mqttInstance" name="mqttInstance" value="0" />
+                                    <small class="form-text">The MQTT instance number to use. 0 is the primary instance, see MQTT service configuration.</small>
+                                </div>
+                                <input name="submit" type="submit" value="Update"/>
                             </form>
                         </div>
                     </div>
@@ -300,17 +314,28 @@
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var channel = rsp.data.channel;
+                    var status = rsp.data.status;
 
                     /* Clear all active states. */
                     $('#btnAll').removeClass('active');
                     $('#btnPromoted').removeClass('active');
                     $('#btnUser').removeClass('active');
+                    $('#btnByUser').removeClass('active');
+                    $('#btnByHashtag').removeClass('active');
 
                     /* Set active state for current channel. */
                     $('#btn' + channel.charAt(0).toUpperCase() + channel.slice(1)).addClass('active');
 
+                    if (rsp.data.userSquid !== undefined) {
+                        $("#userSqid").val(rsp.data.userSquid);
+                    }
+
+                    if (rsp.data.hashtag !== undefined) {
+                        $("#hashtag").val(rsp.data.hashtag);
+                    }
+
                     /* Set pause button state. */
-                    if (rsp.data.status === "paused") {
+                    if (status === "paused") {
                         $('#btnPause').addClass('active');
                     }
                     else {
@@ -325,16 +350,25 @@
             }
 
             function playChannel(pluginUid, channelName) {
+                var parameter = {
+                    action: "playChannel",
+                    channelName: channelName
+                };
+
+                if (channelName === "by_user") {
+                    parameter.userSqid = $("#userSqid").val();
+                }
+                else if (channelName === "hashtag") {
+                    parameter.hashtag = $("#hashtag").val();
+                }
+
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
                     isJsonResponse: true,
-                    parameter: {
-                        action: "playChannel",
-                        channelName: channelName
-                    }
+                    parameter: parameter
                 }).then(function(rsp) {
                     return getStatus(pluginUid);
                 }).catch(function(rsp) {

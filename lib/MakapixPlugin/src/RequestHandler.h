@@ -109,14 +109,15 @@ public:
      * It will abort any pending request.
      *
      * @param[in] channelName   The channel name.
-     * @param[in] userHandle    The user handle is only required for channel CHANNEL_BY_USER.
      * @param[in] sortOrder     Sort order.
+     * @param[in] userSqid      The user sqid is only required for channel "by_user".
+     * @param[in] hashtag       The hashtag is only required for channel "hashtag".
      * @param[in] page          Page for pagination.
      * @param[in] limit         Number of items per page.
      *
      * @return If request is successful sent, it will return true otherwise false.
      */
-    bool request(const char* channelName, const char* userHandle, const char* sortOrder, uint32_t page, uint32_t limit);
+    bool request(const char* channelName, const char* sortOrder, const char* userSqid, const char* hashtag, uint32_t page, uint32_t limit);
 
     /**
      * Check if a request is pending.

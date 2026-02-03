@@ -417,10 +417,12 @@ private:
      * Command callback to play a channel.
      *
      * @param[in] channelName  Channel name
+     * @param[in] userSqid     User SQID (only for "by_user" channel)
+     * @param[in] hashtag      Hashtag (only for "hashtag" channel)
      *
      * @return If successful, it will return true otherwise false.
      */
-    bool cmdPlayChannel(const char* channelName);
+    bool cmdPlayChannel(const char* channelName, const char* userSqid = nullptr, const char* hashtag = nullptr);
 
     /**
      * Command callback to show the current selected artwork.

@@ -70,10 +70,11 @@ public:
     /** This type defines the different channel ids. */
     typedef enum
     {
-        CHANNEL_ID_ALL = 0,  /**< Recent posts from all users (respects visibility settings) */
-        CHANNEL_ID_PROMOTED, /**< Only promoted posts (editor picks, frontpage, etc.) */
-        CHANNEL_ID_USER,     /**< Posts from the player owner's account */
-        CHANNEL_ID_BY_USER   /**< Posts from an arbitrary user specified by user_handle */
+        CHANNEL_ID_ALL = 0,  /**< Recent posts from all users (respects visibility settings). */
+        CHANNEL_ID_PROMOTED, /**< Only promoted posts (editor picks, frontpage, etc.). */
+        CHANNEL_ID_USER,     /**< Posts from the player owner's account. */
+        CHANNEL_ID_BY_USER,  /**< Posts from an arbitrary user specified by user_handle. */
+        CHANNEL_ID_HASHTAG   /**< Posts containing a specific hashtag. */
 
     } ChannelId;
 
@@ -120,6 +121,10 @@ public:
 
     /**
      * Play the channel.
+     * Supports "all", "promoted", "user", "by_user" and "hashtag".
+     *
+     * Note that "by_user" and "hashtag" channels require additional parameters
+     * which have to be set via setUserSqid() and setHashtag() before calling this method.
      *
      * @param[in] channelName   The channel name.
      *
@@ -129,6 +134,9 @@ public:
 
     /**
      * Play the channel.
+     *
+     * Note that "by_user" and "hashtag" channels require additional parameters
+     * which have to be set via setUserSqid() and setHashtag() before calling this method.
      *
      * @param[in] channelId   The channel id.
      *
@@ -151,6 +159,16 @@ public:
     const char* getChannelName() const;
 
     /**
+     * Get current channel id.
+     *
+     * @return Current channel id.
+     */
+    ChannelId getChannelId() const
+    {
+        return m_channelId;
+    }
+
+    /**
      * Get channel artwork sort order.
      *
      * @return Artwork sort order.
@@ -158,6 +176,56 @@ public:
     SortOrder getSortOrder() const
     {
         return m_sortOrder;
+    }
+
+    /**
+     * Set channel artwork sort order.
+     *
+     * @param[in] sortOrder   Artwork sort order.
+     */
+    void setSortOrder(SortOrder sortOrder)
+    {
+        m_sortOrder = sortOrder;
+    }
+
+    /**
+     * Get user SQID for user specific requests.
+     *
+     * @return User SQID.
+     */
+    const char* getUserSqid() const
+    {
+        return m_userSqid.c_str();
+    }
+
+    /**
+     * Set user SQID for user specific requests.
+     *
+     * @param[in] userSqid   User SQID.
+     */
+    void setUserSqid(const char* userSqid)
+    {
+        m_userSqid = userSqid;
+    }
+
+    /**
+     * Get hashtag for hashtag specific requests.
+     *
+     * @return Hashtag.
+     */
+    const char* getHashtag() const
+    {
+        return m_hashtag.c_str();
+    }
+
+    /**
+     * Set hashtag for hashtag specific requests.
+     *
+     * @param[in] hashtag   Hashtag.
+     */
+    void setHashtag(const char* hashtag)
+    {
+        m_hashtag = hashtag;
     }
 
     /**
@@ -179,7 +247,8 @@ private:
     RequestHandler             m_requestHandler;      /**< Request handler. */
     ChannelId                  m_channelId;           /**< Artwork channel id. */
     SortOrder                  m_sortOrder;           /**< Artwork channel sort order. */
-    String                     m_userHandle;          /**< User handle for user specific requests. */
+    String                     m_userSqid;            /**< User SQID for user specific requests. */
+    String                     m_hashtag;             /**< Hashtag for hashtag specific requests. */
     uint32_t                   m_page;                /**< Current page for pagination. */
     uint32_t                   m_idx;                 /**< Current index within the page. */
     uint32_t                   m_total;               /**< Total number of artworks available. */

@@ -240,13 +240,27 @@ bool MakapixPlugin::setTopic(const String& topic, const JsonObjectConst& value)
             }
             else if (true == action.equals("playChannel"))
             {
-                const JsonVariantConst jsonChannelName = value["channelName"];
+                JsonVariantConst jsonChannelName = value["channelName"];
+                JsonVariantConst jsonUserSqid    = value["userSqid"];
+                JsonVariantConst jsonHashtag     = value["hashtag"];
 
                 if (true == jsonChannelName.is<String>())
                 {
                     const char* channelName = jsonChannelName.as<const char*>();
+                    const char* userSqid    = nullptr;
+                    const char* hashtag     = nullptr;
 
-                    isSuccessful            = cmdPlayChannel(channelName);
+                    if (false == jsonUserSqid.isNull())
+                    {
+                        userSqid = jsonUserSqid.as<const char*>();
+                    }
+
+                    if (false == jsonHashtag.isNull())
+                    {
+                        hashtag = jsonHashtag.as<const char*>();
+                    }
+
+                    isSuccessful = cmdPlayChannel(channelName, userSqid, hashtag);
                 }
                 else
                 {
@@ -805,10 +819,22 @@ bool MakapixPlugin::cmdPrevArtwork()
     return isSuccessful;
 }
 
-bool MakapixPlugin::cmdPlayChannel(const char* channelName)
+bool MakapixPlugin::cmdPlayChannel(const char* channelName, const char* userSqid, const char* hashtag)
 {
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
+
+    /* Set additional parameters for "by_user" channel.*/
+    if (nullptr != userSqid)
+    {
+        m_channel.setUserSqid(userSqid);
+    }
+
+    /* Set additional parameters for "hashtag" channel.*/
+    if (nullptr != hashtag)
+    {
+        m_channel.setHashtag(hashtag);
+    }
 
     if (false == playChannel(channelName))
     {
@@ -888,7 +914,9 @@ bool MakapixPlugin::cmdGetStatus(JsonObject& jsonStatus) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonStatus["channel"] = m_channel.getChannelName();
+    jsonStatus["channel"]  = m_channel.getChannelName();
+    jsonStatus["userSqid"] = m_channel.getUserSqid();
+    jsonStatus["hashtag"]  = m_channel.getHashtag();
 
     /* Pause? */
     if (false == m_dwellTimer.isTimerRunning())

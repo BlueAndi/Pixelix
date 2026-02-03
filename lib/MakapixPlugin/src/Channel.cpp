@@ -60,7 +60,8 @@ static const char* gChannelAsStr[] = {
     "all",
     "promoted",
     "user",
-    "by_user"
+    "by_user",
+    "hashtag"
 };
 
 /** Sort order as string. */
@@ -80,7 +81,8 @@ Channel::Channel(Playlist& playlist) :
     m_requestHandler(),
     m_channelId(CHANNEL_ID_ALL),
     m_sortOrder(SORT_ORDER_SERVER),
-    m_userHandle(),
+    m_userSqid(),
+    m_hashtag(),
     m_page(0U),
     m_idx(0U),
     m_total(0U),
@@ -116,7 +118,9 @@ void Channel::process()
 
 bool Channel::play(const char* channelName)
 {
-    bool isSuccessful = false;
+    bool        isSuccessful = false;
+    const char* userSqid     = nullptr;
+    const char* hashtag      = nullptr;
 
     LOG_INFO("Play channel \"%s\"", channelName);
 
@@ -126,8 +130,21 @@ bool Channel::play(const char* channelName)
     m_idx       = 0U;
     m_hasMore   = true;
 
+    if (CHANNEL_ID_BY_USER == m_channelId)
+    {
+        userSqid = m_userSqid.c_str();
+    }
+    else if (CHANNEL_ID_HASHTAG == m_channelId)
+    {
+        hashtag = m_hashtag.c_str();
+    }
+    else
+    {
+        /* Do nothing. */
+    }
+
     /* Request artwork for this channel. */
-    if (false == m_requestHandler.request(channelName, nullptr, sortOrderToStr(m_sortOrder), m_page, Constant::CHANNEL_PAGE_ITEM_LIMIT))
+    if (false == m_requestHandler.request(channelName, sortOrderToStr(m_sortOrder), userSqid, hashtag, m_page, Constant::CHANNEL_PAGE_ITEM_LIMIT))
     {
         LOG_WARNING("Failed to request new artwork for channel \"%s\".", channelName);
     }
@@ -157,7 +174,10 @@ bool Channel::playNext()
     /* Next artwork to request? */
     if (m_total <= idx)
     {
-        idx = 0U;
+        const char* userSqid = nullptr;
+        const char* hashtag  = nullptr;
+
+        idx                  = 0U;
 
         if (false == m_hasMore)
         {
@@ -168,8 +188,21 @@ bool Channel::playNext()
             ++page;
         }
 
+        if (CHANNEL_ID_BY_USER == m_channelId)
+        {
+            userSqid = m_userSqid.c_str();
+        }
+        else if (CHANNEL_ID_HASHTAG == m_channelId)
+        {
+            hashtag = m_hashtag.c_str();
+        }
+        else
+        {
+            /* Do nothing. */
+        }
+
         /* Request next artwork for this channel. */
-        if (false == m_requestHandler.request(channelIdToStr(m_channelId), nullptr, sortOrderToStr(m_sortOrder), page, Constant::CHANNEL_PAGE_ITEM_LIMIT))
+        if (false == m_requestHandler.request(channelIdToStr(m_channelId), sortOrderToStr(m_sortOrder), userSqid, hashtag, page, Constant::CHANNEL_PAGE_ITEM_LIMIT))
         {
             LOG_WARNING("Failed to request next artwork for channel \"%s\".", channelIdToStr(m_channelId));
         }
