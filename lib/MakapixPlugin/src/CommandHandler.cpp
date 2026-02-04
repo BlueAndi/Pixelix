@@ -487,11 +487,11 @@ bool CommandHandler::notifyViewUpdate()
         if (0U < serializeJson(jsonObj, payload))
         {
             MqttService& mqttService = MqttService::getInstance();
-            String       statusTopic;
+            String       viewUpdateTopic;
 
-            MqttTopic::getStatusTopic(m_playerKey, statusTopic);
+            MqttTopic::getViewUpdateTopic(m_playerKey, viewUpdateTopic);
 
-            if (true == mqttService.publish(m_mqttInstance, statusTopic.c_str(), payload.c_str()))
+            if (true == mqttService.publish(m_mqttInstance, viewUpdateTopic.c_str(), payload.c_str()))
             {
                 isSuccessful = true;
             }
