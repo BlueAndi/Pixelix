@@ -118,6 +118,17 @@
  * Functions
  *****************************************************************************/
 
+/** Filesystem interface. */
+namespace FileSystem
+{
+
+/**
+ * Initialize the filesystem.
+ */
+extern bool init();
+
+} /* namespace FileSystem */
+
 #endif /* FILESYSTEM_H */
 
 /** @} */
