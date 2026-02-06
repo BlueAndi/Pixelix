@@ -92,6 +92,8 @@ MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
     m_commandHandler(m_playlist, m_channel),
     m_channel(m_playlist),
     m_dwellTimer(),
+    m_isPaused(false),
+    m_isActive(false),
     m_currentFilePath(),
     m_currentPlaylistIdx(m_playlist.selected()),
     m_provisionHttpJobId(INVALID_HTTP_JOB_ID),
@@ -359,6 +361,29 @@ void MakapixPlugin::process(bool isConnected)
     processProvision();
 }
 
+void MakapixPlugin::active(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    UTIL_NOT_USED(gfx);
+
+    if (false == m_isPaused)
+    {
+        m_dwellTimer.resume();
+    }
+
+    m_isActive = true;
+}
+
+void MakapixPlugin::inactive()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_dwellTimer.stop();
+
+    m_isActive = false;
+}
+
 void MakapixPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
@@ -442,7 +467,10 @@ void MakapixPlugin::processArtworkDownload()
             {
                 LOG_WARNING("Artwork download failed.");
 
-                m_dwellTimer.restart();
+                if (false == m_isPaused)
+                {
+                    m_dwellTimer.resume();
+                }
             }
             else
             {
@@ -454,6 +482,11 @@ void MakapixPlugin::processArtworkDownload()
                 }
 
                 m_dwellTimer.start(m_playlist.getDwellTime());
+
+                if (true == m_isPaused)
+                {
+                    m_dwellTimer.stop();
+                }
 
                 m_currentFilePath = dstFilePath;
                 m_fileCache.addFile(dstFilePath);
@@ -601,8 +634,12 @@ bool MakapixPlugin::showArtwork()
             {
                 LOG_INFO("Artwork is already shown. Ignoring this request.");
 
-                /* Start dwell timer. */
-                m_dwellTimer.start(dwellTime);
+                m_dwellTimer.restart();
+
+                if (true == m_isPaused)
+                {
+                    m_dwellTimer.stop();
+                }
 
                 isSuccessful = true;
             }
@@ -632,6 +669,12 @@ bool MakapixPlugin::showArtwork()
                     else
                     {
                         m_dwellTimer.start(dwellTime);
+
+                        if (true == m_isPaused)
+                        {
+                            m_dwellTimer.stop();
+                        }
+
                         m_commandHandler.setPostId(postId);
 
                         m_currentFilePath = filePath;
@@ -870,44 +913,48 @@ void MakapixPlugin::cmdShowArtwork()
 
 bool MakapixPlugin::cmdPause()
 {
-    bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     LOG_INFO("Pause playback.");
 
-    if (true == m_dwellTimer.isTimerRunning())
+    /* Player is playing? */
+    if (false == m_isPaused)
     {
+        /* Pause it. */
+        m_isPaused = true;
         m_dwellTimer.stop();
-        m_view.showActionIconPause();
-        isSuccessful = true;
-    }
-    else
-    {
-        m_view.showActionIconFail();
+
+        /* If plugin is active, show pause icon. */
+        if (true == m_isActive)
+        {
+            m_view.showActionIconPause();
+        }
     }
 
-    return isSuccessful;
+    return true;
 }
 
 bool MakapixPlugin::cmdContinue()
 {
-    bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     LOG_INFO("Continue playback.");
 
-    if (false == m_dwellTimer.isTimerRunning())
+    /* Player is paused? */
+    if (true == m_isPaused)
     {
-        m_dwellTimer.start(m_playlist.getDwellTime());
-        m_view.showActionIconPlay();
-        isSuccessful = true;
-    }
-    else
-    {
-        m_view.showActionIconFail();
+        /* Resume. */
+        m_isPaused = false;
+
+        /* If plugin is active, resume dwell timer and show play icon. */
+        if (true == m_isActive)
+        {
+            m_dwellTimer.resume();
+            m_view.showActionIconPlay();
+        }
     }
 
-    return isSuccessful;
+    return true;
 }
 
 bool MakapixPlugin::cmdGetStatus(JsonObject& jsonStatus) const
@@ -919,7 +966,7 @@ bool MakapixPlugin::cmdGetStatus(JsonObject& jsonStatus) const
     jsonStatus["hashtag"]  = m_channel.getHashtag();
 
     /* Pause? */
-    if (false == m_dwellTimer.isTimerRunning())
+    if (true == m_isPaused)
     {
         jsonStatus["status"] = "paused";
     }

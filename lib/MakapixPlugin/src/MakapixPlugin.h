@@ -247,6 +247,22 @@ public:
     void process(bool isConnected) final;
 
     /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     * Overwrite it if your plugin needs to know this.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void active(YAGfx& gfx) final;
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     * Overwrite it if your plugin needs to know this.
+     */
+    void inactive() final;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
@@ -309,6 +325,8 @@ private:
     CommandHandler         m_commandHandler;            /**< Command handler. */
     Channel                m_channel;                   /**< Artwork channel. */
     SimpleTimer            m_dwellTimer;                /**< Timer for dwell time between artwork changes. */
+    bool                   m_isPaused;                  /**< Is the playback paused? */
+    bool                   m_isActive;                  /**< Is the plugin active? */
     String                 m_currentFilePath;           /**< Current artwork file path. */
     int32_t                m_currentPlaylistIdx;        /**< Current playlist index. */
     HttpJobId              m_provisionHttpJobId;        /**< HTTP job id for player provision. */

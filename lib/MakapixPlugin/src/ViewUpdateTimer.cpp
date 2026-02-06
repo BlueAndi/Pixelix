@@ -122,6 +122,16 @@ bool ViewUpdateTimer::isTimeout()
     return m_timer.isTimeout();
 }
 
+void ViewUpdateTimer::pause()
+{
+    m_timer.stop();
+}
+
+void ViewUpdateTimer::play()
+{
+    m_timer.resume();
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

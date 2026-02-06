@@ -222,6 +222,16 @@ bool CommandHandler::notifyStatusUpdate(bool isOnline)
     return isSuccessful;
 }
 
+void CommandHandler::pause()
+{
+    m_viewUpdateTimer.pause();
+}
+
+void CommandHandler::play()
+{
+    m_viewUpdateTimer.play();
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

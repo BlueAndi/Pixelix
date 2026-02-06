@@ -100,6 +100,18 @@ public:
      */
     bool isTimeout();
 
+    /**
+     * Pause the playback.
+     * It will stop the view update timer.
+     */
+    void pause();
+
+    /**
+     * Resume the playback.
+     * It will resume the view update timer.
+     */
+    void play();
+
 public:
 
     SimpleTimer m_timer;      /**< Timer to send view updates via MQTT. */
