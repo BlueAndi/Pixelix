@@ -304,7 +304,6 @@ bool FileMgrService::scanForFiles(FileTableEntry* fileTable)
                 {
                     anyChange = true;
                 }
-                break;
             }
         }
 
