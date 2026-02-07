@@ -34,7 +34,6 @@
  * Includes
  *****************************************************************************/
 #include "FileUtil.h"
-#include "FileSystem.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -72,7 +71,7 @@
  * External Functions
  *****************************************************************************/
 
-bool FileUtil::createDirectories(const String& path)
+bool FileUtil::createDirectories(const String& path, fs::FS& fs)
 {
     bool    status = true;
     uint8_t idx    = 0U;
@@ -84,9 +83,9 @@ bool FileUtil::createDirectories(const String& path)
         {
             if (0U < currentPath.length())
             {
-                if (false == FILESYSTEM.exists(currentPath))
+                if (false == fs.exists(currentPath))
                 {
-                    status = FILESYSTEM.mkdir(currentPath);
+                    status = fs.mkdir(currentPath);
                 }
             }
         }

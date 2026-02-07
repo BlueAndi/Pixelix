@@ -46,6 +46,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <WString.h>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -63,10 +64,11 @@ namespace FileUtil
  * Create directories recursively by parsing the given path.
  *
  * @param[in] path  Path to create.
+ * @param[in] fs    Filesystem to use for creating the directories. Default is the standard filesystem.
  *
  * @return If successful created, it will return true otherwise false.
  */
-extern bool createDirectories(const String& path);
+extern bool createDirectories(const String& path, fs::FS& fs = FILESYSTEM);
 
 /**
  * Get file name from file path.
