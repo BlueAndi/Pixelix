@@ -133,6 +133,8 @@ namespace FileSystem
 
 /**
  * Initialize the filesystem.
+ *
+ * @return If successful, it will return true otherwise false.
  */
 extern bool init();
 
