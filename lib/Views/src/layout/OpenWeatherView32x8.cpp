@@ -300,7 +300,7 @@ void OpenWeatherView32x8::updateWeatherInfoCurrentOnView()
     /* Change icon only if its really necessary to avoid restarting animated icon. */
     if (true == m_isWeatherIconCurrentUpdated)
     {
-        (void)m_weatherIconCurrent.load(FILESYSTEM, iconFullPath);
+        (void)m_weatherIconCurrent.load(iconFullPath, FILESYSTEM);
         m_isWeatherIconCurrentUpdated = false;
     }
 

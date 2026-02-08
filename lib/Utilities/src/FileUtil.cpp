@@ -71,7 +71,7 @@
  * External Functions
  *****************************************************************************/
 
-bool FileUtil::createDirectories(const String& path, fs::FS& fs)
+bool FileUtil::createDirectories(const String& path, FS& fs)
 {
     bool    status = true;
     uint8_t idx    = 0U;

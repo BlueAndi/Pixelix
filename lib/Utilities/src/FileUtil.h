@@ -68,7 +68,7 @@ namespace FileUtil
  *
  * @return If successful created, it will return true otherwise false.
  */
-extern bool createDirectories(const String& path, fs::FS& fs = FILESYSTEM);
+extern bool createDirectories(const String& path, FS& fs = FILESYSTEM);
 
 /**
  * Get file name from file path.

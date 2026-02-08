@@ -182,12 +182,12 @@ public:
      * The canvas width and height won't be updated. If required, update them
      * explicit.
      *
-     * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
+     * @param[in] fs        Filesystem instance
      *
      * @return If successful loaded it will return true otherwise false.
      */
-    bool load(FS& fs, const String& filename);
+    bool load(const String& filename, FS& fs);
 
     /**
      * Set the horizontal alignment.
