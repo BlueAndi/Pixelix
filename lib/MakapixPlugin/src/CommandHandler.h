@@ -70,6 +70,9 @@
  *
  * It adds artworks to the playlist via commands and triggers playlist actions
  * like next/previous artwork or play channel.
+ *
+ * Playlist and channel shall exist during the whole
+ * lifetime of the view update, otherwise the behavior is undefined.
  */
 class CommandHandler
 {
@@ -92,8 +95,7 @@ public:
         m_mqttInstance(0U),
         m_statusTimer(),
         m_mqttConnectionState(MqttTypes::STATE_DISCONNECTED),
-        m_artworkPostId(0U),
-        m_viewUpdateTimer()
+        m_artworkPostId(0U)
     {
     }
 
@@ -162,18 +164,6 @@ public:
      */
     bool notifyStatusUpdate(bool isOnline);
 
-    /**
-     * Pause the playback.
-     * It will stop the view update timer.
-     */
-    void pause();
-
-    /**
-     * Resume the playback.
-     * It will resume the view update timer.
-     */
-    void play();
-
 private:
 
     /**
@@ -197,7 +187,6 @@ private:
     SimpleTimer                m_statusTimer;         /**< Timer for periodic status updates via MQTT. */
     MqttTypes::State           m_mqttConnectionState; /**< MQTT connection state. */
     uint32_t                   m_artworkPostId;       /**< Artwork post ID, which is currently shown on the display. */
-    ViewUpdateTimer            m_viewUpdateTimer;     /**< Timer for view updates via MQTT. */
 
     CommandHandler()                                            = delete;
     CommandHandler(const CommandHandler& cmdHandler)            = delete;
@@ -252,13 +241,6 @@ private:
      * @param[out] height   Height in pixel.
      */
     void getWidthHeight(const char* canvas, uint16_t& width, uint16_t& height) const;
-
-    /**
-     * Notify view update via MQTT.
-     *
-     * @return If view update notification was sent, it will return true otherwise false.
-     */
-    bool notifyViewUpdate();
 };
 
 /******************************************************************************

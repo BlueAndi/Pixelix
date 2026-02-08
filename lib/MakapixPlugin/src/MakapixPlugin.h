@@ -62,6 +62,7 @@
 #include "RequestHandler.h"
 #include "Channel.h"
 #include "MakapixTypes.h"
+#include "ViewUpdate.h"
 
 /******************************************************************************
  * Macros
@@ -312,23 +313,25 @@ private:
     /** Makapix player provision URL. */
     static const char*     MAKAPIX_PROVISION_URL;
 
-    _MakapixPlugin::View   m_view;                      /**< View with all widgets. */
-    String                 m_playerKey;                 /**< Makapix player key. */
-    uint8_t                m_mqttInstance;              /**< MQTT instance index. */
-    mutable MutexRecursive m_mutex;                     /**< Mutex to protect against concurrent access. */
-    bool                   m_hasTopicChanged;           /**< Has the topic content changed? */
-    DisplayMode            m_displayMode;               /**< Current display mode. */
-    FileCache              m_fileCache;                 /**< File cache for downloaded artwork files. */
-    Playlist               m_playlist;                  /**< Local playlist of artworks. */
-    ArtworkDownloader      m_artworkDownloader;         /**< Artwork downloader. */
-    bool                   m_isDownloadingArtwork;      /**< Is artwork download in progress? */
-    CommandHandler         m_commandHandler;            /**< Command handler. */
-    Channel                m_channel;                   /**< Artwork channel. */
-    SimpleTimer            m_dwellTimer;                /**< Timer for dwell time between artwork changes. */
-    bool                   m_isPaused;                  /**< Is the playback paused? */
-    bool                   m_isActive;                  /**< Is the plugin active? */
-    String                 m_currentFilePath;           /**< Current artwork file path. */
-    int32_t                m_currentPlaylistIdx;        /**< Current playlist index. */
+    _MakapixPlugin::View   m_view;                 /**< View with all widgets. */
+    String                 m_playerKey;            /**< Makapix player key. */
+    uint8_t                m_mqttInstance;         /**< MQTT instance index. */
+    mutable MutexRecursive m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                   m_hasTopicChanged;      /**< Has the topic content changed? */
+    DisplayMode            m_displayMode;          /**< Current display mode. */
+    FileCache              m_fileCache;            /**< File cache for downloaded artwork files. */
+    Playlist               m_playlist;             /**< Local playlist of artworks. */
+    ArtworkDownloader      m_artworkDownloader;    /**< Artwork downloader. */
+    bool                   m_isDownloadingArtwork; /**< Is artwork download in progress? */
+    CommandHandler         m_commandHandler;       /**< Command handler. */
+    Channel                m_channel;              /**< Artwork channel. */
+    SimpleTimer            m_dwellTimer;           /**< Timer for dwell time between artwork changes. */
+    bool                   m_isPaused;             /**< Is the playback paused? */
+    bool                   m_isActive;             /**< Is the plugin active? */
+    String                 m_currentFilePath;      /**< Current artwork file path. */
+    int32_t                m_currentPlaylistIdx;   /**< Current playlist index. */
+    ViewUpdate             m_viewUpdate;           /**< View update for MQTT updates. */
+
     HttpJobId              m_provisionHttpJobId;        /**< HTTP job id for player provision. */
     String                 m_provisionPayload;          /**< Payload used for player provision. */
     String                 m_registrationCode;          /**< Registration code received from Makapix. */
@@ -389,15 +392,6 @@ private:
      * @return If successful, it will return true otherwise false.
      */
     bool prevArtwork();
-
-    /**
-     * Play a channel by its name.
-     *
-     * @param[in] channelName  Channel name
-     *
-     * @return If successful, it will return true otherwise false.
-     */
-    bool playChannel(const char* channelName);
 
     /**
      * Get cache file path for artwork URL.

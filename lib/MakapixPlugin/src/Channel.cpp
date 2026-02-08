@@ -116,11 +116,9 @@ void Channel::process()
     m_requestHandler.process();
 }
 
-bool Channel::play(const char* channelName)
+bool Channel::play(const char* channelName, const char* userSqid, const char* hashtag)
 {
-    bool        isSuccessful = false;
-    const char* userSqid     = nullptr;
-    const char* hashtag      = nullptr;
+    bool isSuccessful = false;
 
     LOG_INFO("Play channel \"%s\"", channelName);
 
@@ -129,6 +127,16 @@ bool Channel::play(const char* channelName)
     m_page      = 0U;
     m_idx       = 0U;
     m_hasMore   = true;
+
+    if (nullptr != userSqid)
+    {
+        m_userSqid = userSqid;
+    }
+
+    if (nullptr != hashtag)
+    {
+        m_hashtag = hashtag;
+    }
 
     if (CHANNEL_ID_BY_USER == m_channelId)
     {
@@ -156,9 +164,9 @@ bool Channel::play(const char* channelName)
     return isSuccessful;
 }
 
-bool Channel::play(ChannelId channelId)
+bool Channel::play(ChannelId channelId, const char* userSqid, const char* hashtag)
 {
-    return play(channelIdToStr(channelId));
+    return play(channelIdToStr(channelId), userSqid, hashtag);
 }
 
 bool Channel::playNext()

@@ -96,6 +96,7 @@ MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
     m_isActive(false),
     m_currentFilePath(),
     m_currentPlaylistIdx(m_playlist.selected()),
+    m_viewUpdate(m_channel),
     m_provisionHttpJobId(INVALID_HTTP_JOB_ID),
     m_provisionPayload(),
     m_registrationCode(),
@@ -328,9 +329,10 @@ void MakapixPlugin::start(uint16_t width, uint16_t height)
         LOG_ERROR("Failed to initialize artwork file cache handler.");
     }
 
-    /* Configure command handler and channel with initial loaded configuration. */
+    /* Configure with initial loaded configuration. */
     m_commandHandler.configure(m_playerKey, m_mqttInstance);
     m_channel.configure(m_playerKey, m_mqttInstance);
+    m_viewUpdate.configure(m_playerKey, m_mqttInstance);
 }
 
 void MakapixPlugin::stop()
@@ -359,6 +361,7 @@ void MakapixPlugin::process(bool isConnected)
     processDisplayMode();
     m_view.process();
     processProvision();
+    m_viewUpdate.process();
 }
 
 void MakapixPlugin::active(YAGfx& gfx)
@@ -443,6 +446,7 @@ bool MakapixPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
             m_commandHandler.configure(m_playerKey, m_mqttInstance);
             m_channel.configure(m_playerKey, m_mqttInstance);
+            m_viewUpdate.configure(m_playerKey, m_mqttInstance);
 
             m_commandHandler.subscribe();
         }
@@ -491,7 +495,7 @@ void MakapixPlugin::processArtworkDownload()
                 m_currentFilePath = dstFilePath;
                 m_fileCache.addFile(dstFilePath);
 
-                m_commandHandler.setPostId(m_playlist.getPostId());
+                m_viewUpdate.setPostId(m_playlist.getPostId());
             }
 
             m_isDownloadingArtwork = false;
@@ -675,7 +679,7 @@ bool MakapixPlugin::showArtwork()
                             m_dwellTimer.stop();
                         }
 
-                        m_commandHandler.setPostId(postId);
+                        m_viewUpdate.setPostId(postId);
 
                         m_currentFilePath = filePath;
                         downloadNeeded    = false;
@@ -738,20 +742,6 @@ bool MakapixPlugin::prevArtwork()
             m_currentPlaylistIdx = m_playlist.selected();
             isSuccessful         = true;
         }
-    }
-
-    return isSuccessful;
-}
-
-bool MakapixPlugin::playChannel(const char* channelName)
-{
-    bool isSuccessful = false;
-
-    LOG_INFO("Play channel \"%s\".", channelName);
-
-    if (true == m_channel.play(channelName))
-    {
-        isSuccessful = true;
     }
 
     return isSuccessful;
@@ -867,19 +857,7 @@ bool MakapixPlugin::cmdPlayChannel(const char* channelName, const char* userSqid
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* Set additional parameters for "by_user" channel.*/
-    if (nullptr != userSqid)
-    {
-        m_channel.setUserSqid(userSqid);
-    }
-
-    /* Set additional parameters for "hashtag" channel.*/
-    if (nullptr != hashtag)
-    {
-        m_channel.setHashtag(hashtag);
-    }
-
-    if (false == playChannel(channelName))
+    if (false == m_channel.play(channelName, userSqid, hashtag))
     {
         m_view.showActionIconFail();
     }

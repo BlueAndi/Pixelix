@@ -3,13 +3,16 @@
 class "PluginWithConfig" as pluginWithConfig
 
 package "MakapixPlugin" {
-    class "MakapixPlugin" as makapixPlugin
     class "ArtworkDownloader" as artworkDownloader
     class "Channel" as channel
-    class "Playlist" as playlist
     class "CommandHandler" as commandHandler
-    class "RequestHandler" as requestHandler
+    class "FileCache" as fileCache
+    class "MakapixPlugin" as makapixPlugin
     class "MqttTopic" as mqttTopic<<module>>
+    class "Playlist" as playlist
+    class "RequestHandler" as requestHandler
+    class "ViewUpdate" as viewUpdate
+    class "ViewUpdateTimer" as viewUpdateTimer
 }
 
 package "Services" {
@@ -19,9 +22,11 @@ package "Services" {
 
 pluginWithConfig <|.. makapixPlugin: <<realize>>
 makapixPlugin --> artworkDownloader
-makapixPlugin --> channel
-makapixPlugin ---> playlist
+makapixPlugin ---> channel
+makapixPlugin ----> playlist
 makapixPlugin --> commandHandler
+makapixPlugin --> fileCache
+makapixPlugin --> viewUpdate
 
 artworkDownloader .....> httpService: <<uses>>
 
@@ -34,5 +39,9 @@ commandHandler ..> playlist: <<uses>>
 
 requestHandler ....> mqttService: <<uses>>
 requestHandler ..> mqttTopic: <<uses>>
+
+viewUpdate --> viewUpdateTimer
+viewUpdate ..> mqttTopic: <<uses>>
+viewUpdate ..> channel: <<uses>>
 
 @enduml

@@ -127,10 +127,12 @@ public:
      * which have to be set via setUserSqid() and setHashtag() before calling this method.
      *
      * @param[in] channelName   The channel name.
+     * @param[in] userSqid      User SQID (only for "by_user" channel)
+     * @param[in] hashtag       Hashtag (only for "hashtag" channel)
      *
      * @return If successful, it will return true otherwise false.
      */
-    bool play(const char* channelName);
+    bool play(const char* channelName, const char* userSqid = nullptr, const char* hashtag = nullptr);
 
     /**
      * Play the channel.
@@ -138,11 +140,13 @@ public:
      * Note that "by_user" and "hashtag" channels require additional parameters
      * which have to be set via setUserSqid() and setHashtag() before calling this method.
      *
-     * @param[in] channelId   The channel id.
+     * @param[in] channelId The channel id.
+     * @param[in] userSqid  User SQID (only for "by_user" channel)
+     * @param[in] hashtag   Hashtag (only for "hashtag" channel)
      *
      * @return If successful, it will return true otherwise false.
      */
-    bool play(ChannelId channelId);
+    bool play(ChannelId channelId, const char* userSqid = nullptr, const char* hashtag = nullptr);
 
     /**
      * Play next artwork.
@@ -199,16 +203,6 @@ public:
     }
 
     /**
-     * Set user SQID for user specific requests.
-     *
-     * @param[in] userSqid   User SQID.
-     */
-    void setUserSqid(const char* userSqid)
-    {
-        m_userSqid = userSqid;
-    }
-
-    /**
      * Get hashtag for hashtag specific requests.
      *
      * @return Hashtag.
@@ -216,16 +210,6 @@ public:
     const char* getHashtag() const
     {
         return m_hashtag.c_str();
-    }
-
-    /**
-     * Set hashtag for hashtag specific requests.
-     *
-     * @param[in] hashtag   Hashtag.
-     */
-    void setHashtag(const char* hashtag)
-    {
-        m_hashtag = hashtag;
     }
 
     /**

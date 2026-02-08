@@ -119,16 +119,6 @@ void CommandHandler::process()
             notifyStatusUpdate(true);
             m_statusTimer.restart();
         }
-
-        /* Time to send view update? */
-        if ((true == m_viewUpdateTimer.m_timer.isTimerRunning()) &&
-            (true == m_viewUpdateTimer.isTimeout()))
-        {
-            if (true == notifyViewUpdate())
-            {
-                m_viewUpdateTimer.startNext();
-            }
-        }
         break;
     };
 
@@ -183,7 +173,6 @@ void CommandHandler::setPostId(uint32_t postId)
     if (m_artworkPostId != postId)
     {
         m_artworkPostId = postId;
-        m_viewUpdateTimer.start();
         notifyStatusUpdate(true);
     }
 }
@@ -220,16 +209,6 @@ bool CommandHandler::notifyStatusUpdate(bool isOnline)
     }
 
     return isSuccessful;
-}
-
-void CommandHandler::pause()
-{
-    m_viewUpdateTimer.pause();
-}
-
-void CommandHandler::play()
-{
-    m_viewUpdateTimer.play();
 }
 
 /******************************************************************************
@@ -448,67 +427,6 @@ void CommandHandler::getWidthHeight(const char* canvas, uint16_t& width, uint16_
             }
         }
     }
-}
-
-bool CommandHandler::notifyViewUpdate()
-{
-    bool isSuccessful = false;
-
-    if (false == m_playerKey.isEmpty())
-    {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonObj = jsonDoc.to<JsonObject>();
-        String              payload;
-        struct tm           tmUtc = { 0 };
-        char                tUtcIso8601[25U];
-
-        LOG_INFO("Notify view update for post id %u.", m_artworkPostId);
-
-        (void)ClockDrv::getInstance().getTimeUtc(tmUtc);
-
-        /* Format as ISO 8601 (YYYY-MM-DDThh:mm:ssZ) */
-        strftime(tUtcIso8601, sizeof(tUtcIso8601), "%Y-%m-%dT%H:%M:%SZ", &tmUtc);
-
-        jsonObj["player_key"] = m_playerKey;
-        jsonObj["post_id"]    = m_artworkPostId;
-        jsonObj["timestamp"]  = tUtcIso8601;
-        jsonObj["timezone"]   = ""; /* Reserved, shall be empty. */
-        jsonObj["intent"]     = "channel";
-        jsonObj["play_order"] = m_channel.getSortOrder();
-        jsonObj["channel"]    = m_channel.getChannelName();
-
-        if (Channel::CHANNEL_ID_BY_USER == m_channel.getChannelId())
-        {
-            jsonObj["channel_user_sqid"] = m_channel.getUserSqid();
-        }
-        else if (Channel::CHANNEL_ID_HASHTAG == m_channel.getChannelId())
-        {
-            jsonObj["channel_hashtag"] = m_channel.getHashtag();
-        }
-        else
-        {
-            /* Nothing to do. */
-            ;
-        }
-
-        jsonObj["request_ack"] = true;
-
-        if (0U < serializeJson(jsonObj, payload))
-        {
-            MqttService& mqttService = MqttService::getInstance();
-            String       viewUpdateTopic;
-
-            MqttTopic::getViewUpdateTopic(m_playerKey, viewUpdateTopic);
-
-            if (true == mqttService.publish(m_mqttInstance, viewUpdateTopic.c_str(), payload.c_str()))
-            {
-                isSuccessful = true;
-            }
-        }
-    }
-
-    return isSuccessful;
 }
 
 /******************************************************************************
