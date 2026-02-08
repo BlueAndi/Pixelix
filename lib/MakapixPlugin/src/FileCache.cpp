@@ -34,6 +34,7 @@
  * Includes
  *****************************************************************************/
 #include "FileCache.h"
+#include "MakapixTypes.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -80,7 +81,7 @@ bool FileCache::init(const char* path)
 
         if ('/' == path[pathLen - 1U])
         {
-            FileUtil::createDirectories(path);
+            FileUtil::createDirectories(path, FILE_CACHE_FS);
             scanForFiles(path);
 
             isSuccessful = true;
@@ -183,7 +184,7 @@ void FileCache::addFile(const String& filename)
             LOG_DEBUG("Remove oldest cached file: %s", oldestEntry->filename.c_str());
 
             /* Remove oldest file and use its slot. */
-            if (false == FILESYSTEM.remove(oldestEntry->filename))
+            if (false == FILE_CACHE_FS.remove(oldestEntry->filename))
             {
                 LOG_WARNING("Failed to remove oldest cached file: %s", oldestEntry->filename.c_str());
             }
@@ -214,7 +215,7 @@ void FileCache::remove(const char* id)
 
             if (true == filename.startsWith(id))
             {
-                if (false == FILESYSTEM.remove(entry.filename))
+                if (false == FILE_CACHE_FS.remove(entry.filename))
                 {
                     LOG_WARNING("Failed to remove cached file: %s", entry.filename.c_str());
                 }
@@ -241,7 +242,7 @@ void FileCache::scanForFiles(const char* path)
 {
     if (nullptr != path)
     {
-        File    fdRoot      = FILESYSTEM.open(path, "r");
+        File    fdRoot      = FILE_CACHE_FS.open(path, "r");
         File    fd          = fdRoot.openNextFile();
         uint8_t fileListIdx = 0U;
 
@@ -282,7 +283,7 @@ void FileCache::scanForFiles(const char* path)
             {
                 LOG_WARNING("Removing excess cached file: %s", fullPath.c_str());
 
-                if (false == FILESYSTEM.remove(fullPath))
+                if (false == FILE_CACHE_FS.remove(fullPath))
                 {
                     LOG_WARNING("Failed to remove excess cached file: %s", fullPath.c_str());
                 }

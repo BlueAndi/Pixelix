@@ -476,7 +476,7 @@ void MakapixPlugin::processArtworkDownload()
             {
                 String dstFilePath = m_artworkDownloader.getDestinationFilePath();
 
-                if (false == m_view.loadIcon(dstFilePath.c_str()))
+                if (false == m_view.loadIcon(dstFilePath, FILE_CACHE_FS))
                 {
                     LOG_WARNING("Loading artwork from cache failed.");
                 }
@@ -661,7 +661,7 @@ bool MakapixPlugin::showArtwork()
                 {
                     LOG_INFO("Artwork is already cached. Load it from cache.");
 
-                    if (false == m_view.loadIcon(filePath))
+                    if (false == m_view.loadIcon(filePath, FILE_CACHE_FS))
                     {
                         LOG_WARNING("Loading artwork from cache failed.");
                         m_fileCache.remove(storageKey);

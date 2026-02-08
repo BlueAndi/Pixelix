@@ -47,6 +47,7 @@
 #include <WString.h>
 #include <HttpServiceTypes.h>
 #include <HttpFileResponseHandler.h>
+#include "MakapixTypes.h"
 
 /******************************************************************************
  * Macros
@@ -67,7 +68,7 @@ public:
      * Constructs the artwork downloader.
      */
     ArtworkDownloader() :
-        m_httpFileResponseHandler(),
+        m_httpFileResponseHandler(FILE_CACHE_FS),
         m_dstFilePath(),
         m_httpJobId(INVALID_HTTP_JOB_ID),
         m_isSuccessful(false)

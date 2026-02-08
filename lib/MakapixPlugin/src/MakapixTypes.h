@@ -47,10 +47,23 @@
 #include <stdint.h>
 #include <functional>
 #include <ArduinoJson.h>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+#if CONFIG_FILESYSTEM_PSRAMFS_ENABLE == 0
+
+/** Use standard filesystem for file cache. */
+#define FILE_CACHE_FS FILESYSTEM
+
+#else
+
+/** Use PSRAM filesystem for file cache. */
+#define FILE_CACHE_FS PSRamFS
+
+#endif /* CONFIG_FILESYSTEM_PSRAMFS_ENABLE == 0 */
 
 /** Constants */
 namespace Constant

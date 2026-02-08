@@ -56,6 +56,11 @@
  */
 #define FILESYSTEM_LITTLEFS (2)
 
+/**
+ * The filesystem PSRAMFS.
+ */
+#define FILELSYSTEM_PSRAMFS (3)
+
 #ifndef CONFIG_FILESYSTEM_TYPE
 /** Select the filesystem type here. */
 #define CONFIG_FILESYSTEM_TYPE FILESYSTEM_NATIVE
@@ -69,9 +74,7 @@
 /** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME "fs.bin"
 
-#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_NATIVE */
-
-#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
+#elif CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS
 
 /** The used filesystem type. */
 #define FILESYSTEM LittleFS
@@ -79,9 +82,7 @@
 /** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME "littlefs.bin"
 
-#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_LITTLEFS */
-
-#if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
+#elif CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
 
 /** The used filesystem type. */
 #define FILESYSTEM SPIFFS
@@ -89,7 +90,11 @@
 /** The filename of the filesystem image. */
 #define FILESYSTEM_FILENAME "spiffs.bin"
 
-#endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
+#else /* CONFIG_FILESYSTEM_TYPE == FILELSYSTEM_PSRAMFS */
+
+#error "Unsupported filesystem type selected. Please check the configuration."
+
+#endif /* CONFIG_FILESYSTEM_TYPE */
 
 /******************************************************************************
  * Includes
@@ -105,6 +110,10 @@
 #if CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS
 #include <SPIFFS.h>
 #endif /* CONFIG_FILESYSTEM_TYPE == FILESYSTEM_SPIFFS */
+
+#if CONFIG_FILESYSTEM_PSRAMFS_ENABLE == 1
+#include <PSRamFS.h>
+#endif /* CONFIG_FILESYSTEM_PSRAMFS_ENABLE == 1 */
 
 /******************************************************************************
  * Macros
