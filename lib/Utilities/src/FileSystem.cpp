@@ -99,11 +99,7 @@ bool FileSystem::init()
 
     if (true == isSuccessful)
     {
-        /* Use half of the available PSRAM for the filesystem. */
-        // const size_t PSRAMFS_SIZE = ESP.getFreePsram() / 2U;
-        const size_t PSRAMFS_SIZE = 4194304U;
-
-        if (false == PSRamFS.setPartitionSize(PSRAMFS_SIZE))
+        if (false == PSRamFS.setPartitionSize(CONFIG_FILESYSTEM_PSRAMFS_SIZE))
         {
             isSuccessful = false;
         }
