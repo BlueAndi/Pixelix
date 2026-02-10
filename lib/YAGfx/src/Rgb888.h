@@ -350,12 +350,17 @@ public:
 
     /**
      * Convert color information to RGB565 format.
+     * The intensity will be considered in the conversion.
      *
      * @return Color value (RGB) in 16 bit format
      */
     uint16_t toRgb565() const
     {
-        return ColorUtil::to565(m_red, m_green, m_blue);
+        uint8_t red   = getRed();
+        uint8_t green = getGreen();
+        uint8_t blue  = getBlue();
+
+        return ColorUtil::to565(red, green, blue);
     }
 
     /**
