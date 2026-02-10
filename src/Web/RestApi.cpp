@@ -324,32 +324,18 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
  */
 static void getSlotInfo(JsonObject& slot, uint16_t slotId)
 {
-    DisplayMgr&         displayMgr = DisplayMgr::getInstance();
-    uint8_t             stickySlot = displayMgr.getStickySlot();
-    IPluginMaintenance* plugin     = displayMgr.getPluginInSlot(slotId);
-    const char*         name       = (nullptr != plugin) ? plugin->getName() : "";
-    uint16_t            uid        = (nullptr != plugin) ? plugin->getUID() : 0U;
-    String              alias      = (nullptr != plugin) ? plugin->getAlias() : "";
-    bool                isLocked   = displayMgr.isSlotLocked(slotId);
-    uint32_t            duration   = displayMgr.getSlotDuration(slotId);
-    bool                isDisabled = displayMgr.isSlotDisabled(slotId);
+    DisplayMgr&            displayMgr = DisplayMgr::getInstance();
+    DisplayMgr::SlotConfig config;
 
-    slot["name"]                   = name;
-    slot["uid"]                    = uid;
-    slot["alias"]                  = alias;
+    (void)displayMgr.getSlotConfig(slotId, config);
 
-    if (stickySlot != slotId)
-    {
-        slot["isSticky"] = false;
-    }
-    else
-    {
-        slot["isSticky"] = true;
-    }
-
-    slot["isLocked"]   = isLocked;
-    slot["duration"]   = duration;
-    slot["isDisabled"] = isDisabled;
+    slot["name"]       = config.name;
+    slot["uid"]        = config.uid;
+    slot["alias"]      = config.alias;
+    slot["isSticky"]   = config.isSticky;
+    slot["isLocked"]   = config.isLocked;
+    slot["duration"]   = config.duration;
+    slot["isDisabled"] = config.isDisabled;
 }
 
 /**
@@ -380,7 +366,6 @@ static void handleSlots(AsyncWebServerRequest* request)
         JsonArray   slotArray  = dataObj.createNestedArray("slots");
         uint8_t     slotId     = 0U;
         DisplayMgr& displayMgr = DisplayMgr::getInstance();
-        uint8_t     stickySlot = displayMgr.getStickySlot();
 
         /* Add max. number of slots */
         dataObj["maxSlots"]    = displayMgr.getMaxSlots();

@@ -357,6 +357,18 @@ uint8_t SlotList::getSlotIdByPluginUID(uint16_t pluginUid) const
     return slotId;
 }
 
+bool SlotList::isSticky(uint8_t slotId) const
+{
+    bool isSticky = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        isSticky = (m_stickySlot == slotId);
+    }
+
+    return isSticky;
+}
+
 uint8_t SlotList::getStickySlot() const
 {
     return m_stickySlot;

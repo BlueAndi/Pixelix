@@ -79,9 +79,8 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
     {
         String      msg;
         DisplayMgr& displayMgr = DisplayMgr::getInstance();
-        uint8_t     stickySlot = displayMgr.getStickySlot();
+        uint8_t     maxSlots   = displayMgr.getMaxSlots();
         uint8_t     slotId;
-        uint8_t     maxSlots = displayMgr.getMaxSlots();
 
         preparePositiveResponse(msg);
 
@@ -98,33 +97,28 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
          */
         for (slotId = 0U; slotId < maxSlots; ++slotId)
         {
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked    = displayMgr.isSlotLocked(slotId);
-            bool                isSticky    = (stickySlot == slotId) ? true : false;
-            bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
+            DisplayMgr::SlotConfig config;
 
-            msg                            += DELIMITER;
-            msg                            += "\"";
-            msg                            += name;
-            msg                            += "\"";
-            msg                            += DELIMITER;
-            msg                            += uid;
-            msg                            += DELIMITER;
-            msg                            += "\"";
-            msg                            += alias;
-            msg                            += "\"";
-            msg                            += DELIMITER;
-            msg                            += (false == isLocked) ? "0" : "1";
-            msg                            += DELIMITER;
-            msg                            += (false == isSticky) ? "0" : "1";
-            msg                            += DELIMITER;
-            msg                            += (false == isDisabled) ? "0" : "1";
-            msg                            += DELIMITER;
-            msg                            += duration;
+            (void)displayMgr.getSlotConfig(slotId, config);
+
+            msg += DELIMITER;
+            msg += "\"";
+            msg += config.name;
+            msg += "\"";
+            msg += DELIMITER;
+            msg += config.uid;
+            msg += DELIMITER;
+            msg += "\"";
+            msg += config.alias;
+            msg += "\"";
+            msg += DELIMITER;
+            msg += (false == config.isLocked) ? "0" : "1";
+            msg += DELIMITER;
+            msg += (false == config.isSticky) ? "0" : "1";
+            msg += DELIMITER;
+            msg += (false == config.isDisabled) ? "0" : "1";
+            msg += DELIMITER;
+            msg += config.duration;
         }
 
         sendResponse(server, clientId, msg);

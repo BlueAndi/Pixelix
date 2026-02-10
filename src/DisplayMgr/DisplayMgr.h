@@ -51,6 +51,7 @@
 #include <Mutex.hpp>
 #include <Task.hpp>
 #include <IndicatorViewBase.hpp>
+#include <Fonts.h>
 
 #include "IPluginMaintenance.hpp"
 #include "SlotList.h"
@@ -77,6 +78,20 @@
 class DisplayMgr
 {
 public:
+
+    /** Slot configuration. */
+    typedef struct
+    {
+        String          name;       /**< Plugin name. */
+        uint16_t        uid;        /**< Plugin UID. */
+        String          alias;      /**< Plugin alias name. */
+        Fonts::FontType fontType;   /**< Font type. */
+        uint32_t        duration;   /**< Duration in ms, how long the plugin will be shown. */
+        bool            isLocked;   /**< Is the slot locked? */
+        bool            isSticky;   /**< Is the slot sticky? */
+        bool            isDisabled; /**< Is the slot disabled? */
+
+    } SlotConfig;
 
     /**
      * Get display manager instance.
@@ -207,6 +222,16 @@ public:
      * @return Plugin which is installed in given slot.
      */
     IPluginMaintenance* getPluginInSlot(uint8_t slotId);
+
+    /**
+     * Get slot configuration.
+     *
+     * @param[in] slotId    Slot id, where to get configuration.
+     * @param[out] config   Slot configuration
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool getSlotConfig(uint8_t slotId, SlotConfig& config) const;
 
     /**
      * Get slot which is marked sticky.

@@ -452,6 +452,43 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
     return plugin;
 }
 
+bool DisplayMgr::getSlotConfig(uint8_t slotId, SlotConfig& config) const
+{
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+
+    if (true == m_slotList.isSlotIdValid(slotId))
+    {
+        const IPluginMaintenance* plugin = m_slotList.getPlugin(slotId);
+
+        /* No plugin in slot? */
+        if (nullptr == plugin)
+        {
+            config.name     = "";
+            config.uid      = 0U;
+            config.alias    = "";
+            config.fontType = Fonts::FontType::FONT_TYPE_DEFAULT;
+        }
+        /* Plugin in slot. */
+        else
+        {
+            config.name     = plugin->getName();
+            config.uid      = plugin->getUID();
+            config.alias    = plugin->getAlias();
+            config.fontType = plugin->getFontType();
+        }
+
+        config.duration   = m_slotList.getDuration(slotId);
+        config.isLocked   = m_slotList.isLocked(slotId);
+        config.isSticky   = m_slotList.isSticky(slotId);
+        config.isDisabled = m_slotList.isDisabled(slotId);
+
+        isSuccessful      = true;
+    }
+
+    return isSuccessful;
+}
+
 uint8_t DisplayMgr::getStickySlot() const
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
