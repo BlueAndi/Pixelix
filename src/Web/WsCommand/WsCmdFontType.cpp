@@ -25,18 +25,18 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   WsCmdSlots.cpp
- * @brief  Websocket command get slots information
+ * @file   WsCmdFontType.cpp
+ * @brief  Websocket command to get/set plugin font type
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdSlots.h"
+#include "WsCmdFontType.h"
 #include "DisplayMgr.h"
-#include "SlotList.h"
 
+#include <Logging.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -63,7 +63,7 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
+void WsCmdFontType::execute(AsyncWebSocket* server, uint32_t clientId)
 {
     if (nullptr == server)
     {
@@ -77,73 +77,48 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        String      msg;
-        DisplayMgr& displayMgr = DisplayMgr::getInstance();
-        uint8_t     stickySlot = displayMgr.getStickySlot();
-        uint8_t     slotId;
-        uint8_t     maxSlots = displayMgr.getMaxSlots();
+        String msg;
+
+        if (2U == m_parCnt)
+        {
+            (void)DisplayMgr::getInstance().setPluginFontType(m_pluginUid, m_fontType);
+        }
 
         preparePositiveResponse(msg);
 
-        msg += displayMgr.getMaxSlots();
-
-        /* Provides for every slot:
-         * - Name of plugin.
-         * - Plugin UID.
-         * - Plugin alias name.
-         * - Plugin font type.
-         * - Information about whether the slot is locked or not.
-         * - Information about whether the slot is sticky or not.
-         * - Information about whether the slot is disabled or not.
-         * - Slot duration in ms.
-         */
-        for (slotId = 0U; slotId < maxSlots; ++slotId)
-        {
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            Fonts::FontType     fontType    = (nullptr != plugin) ? plugin->getFontType() : Fonts::FontType::FONT_TYPE_DEFAULT;
-            bool                isLocked    = displayMgr.isSlotLocked(slotId);
-            bool                isSticky    = (stickySlot == slotId) ? true : false;
-            bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
-
-            msg                            += DELIMITER;
-            msg                            += "\"";
-            msg                            += name;
-            msg                            += "\"";
-            msg                            += DELIMITER;
-            msg                            += uid;
-            msg                            += DELIMITER;
-            msg                            += "\"";
-            msg                            += alias;
-            msg                            += "\"";
-            msg                            += DELIMITER;
-            msg                            += "\"";
-            msg                            += Fonts::fontTypeToStr(fontType);
-            msg                            += "\"";
-            msg                            += DELIMITER;
-            msg                            += (false == isLocked) ? "0" : "1";
-            msg                            += DELIMITER;
-            msg                            += (false == isSticky) ? "0" : "1";
-            msg                            += DELIMITER;
-            msg                            += (false == isDisabled) ? "0" : "1";
-            msg                            += DELIMITER;
-            msg                            += duration;
-        }
+        msg += "\"";
+        msg += DisplayMgr::getInstance().getPluginFontType(m_pluginUid);
+        msg += "\"";
 
         sendResponse(server, clientId, msg);
     }
 
     m_isError = false;
+    m_parCnt  = 0U;
 }
 
-void WsCmdSlots::setPar(const char* par)
+void WsCmdFontType::setPar(const char* par)
 {
-    UTIL_NOT_USED(par);
+    switch (m_parCnt)
+    {
+    case 0:
+        if (false == Util::strToUInt16(par, m_pluginUid))
+        {
+            LOG_ERROR("Conversion failed: %s", par);
+            m_isError = true;
+        }
+        break;
 
-    m_isError = true;
+    case 1:
+        m_fontType = Fonts::strToFontType(par);
+        break;
+
+    default:
+        m_isError = true;
+        break;
+    }
+
+    ++m_parCnt;
 }
 
 /******************************************************************************
