@@ -269,31 +269,31 @@ protected:
     static const int16_t TEXT_X_FULL      = 0;
 
     /** Distance between two lamps in pixel. */
-    static const uint8_t LAMP_DISTANCE    = 1U;
+    static const uint16_t LAMP_DISTANCE   = 1U;
 
     /** Lamp width in pixel. */
-    static const uint8_t LAMP_WIDTH       = (CONFIG_LED_MATRIX_WIDTH - BITMAP_WIDTH - ((MAX_LAMPS + 1U) * LAMP_DISTANCE)) / MAX_LAMPS;
+    static const uint16_t LAMP_WIDTH      = (CONFIG_LED_MATRIX_WIDTH - BITMAP_WIDTH - ((MAX_LAMPS + 1U) * LAMP_DISTANCE)) / MAX_LAMPS;
 
     /** Lamp distance to the canvas border in pixel. */
-    static const uint8_t LAMP_BORDER      = (CONFIG_LED_MATRIX_WIDTH - BITMAP_WIDTH - (MAX_LAMPS * LAMP_WIDTH) - ((MAX_LAMPS - 1U) * LAMP_DISTANCE)) / 2U;
+    static const uint16_t LAMP_BORDER     = (CONFIG_LED_MATRIX_WIDTH - BITMAP_WIDTH - (MAX_LAMPS * LAMP_WIDTH) - ((MAX_LAMPS - 1U) * LAMP_DISTANCE)) / 2U;
 
     /** Lamp height in pixel. */
-    static const uint8_t LAMP_HEIGHT      = 1U;
+    static const uint16_t LAMP_HEIGHT     = 1U;
 
     /** Lamp 0 x-coordinate in pixel. */
-    static const uint8_t LAMP_0_X         = BITMAP_WIDTH + LAMP_BORDER + (0 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_0_X         = BITMAP_WIDTH + LAMP_BORDER + (0 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 1 x-coordinate in pixel. */
-    static const uint8_t LAMP_1_X         = BITMAP_WIDTH + LAMP_BORDER + (1 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_1_X         = BITMAP_WIDTH + LAMP_BORDER + (1 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 2 x-coordinate in pixel. */
-    static const uint8_t LAMP_2_X         = BITMAP_WIDTH + LAMP_BORDER + (2 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_2_X         = BITMAP_WIDTH + LAMP_BORDER + (2 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 3 x-coordinate in pixel. */
-    static const uint8_t LAMP_3_X         = BITMAP_WIDTH + LAMP_BORDER + (3 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_3_X         = BITMAP_WIDTH + LAMP_BORDER + (3 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp y-coordindate in pixel. */
-    static const uint8_t LAMP_Y           = CONFIG_LED_MATRIX_HEIGHT - 1;
+    static const int16_t LAMP_Y           = CONFIG_LED_MATRIX_HEIGHT - 1;
 
     /**
      * Text widget y-coordinate in pixels.

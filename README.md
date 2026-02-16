@@ -319,18 +319,7 @@ There are three font types defined:
 
 Note, the default font type is "normal".
 
-The font type can be selected per plugin instance in the settings web page.
-
-Example:
-
-```json
-{
-    "name": "IconTextPlugin",
-    "uid": 32690,
-    "alias": "",
-    "fontType": "large"
-}
-```
+The font type can be selected per plugin instance in the display web page.
 
 Not all plugin may support this in case they get conflicts with their layout.
 If a plugin don't support it, it will use the default font type.

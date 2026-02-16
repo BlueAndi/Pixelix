@@ -25,17 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Fonts.h
- * @brief  Fonts
+ * @file   WsCmdFontType.h
+ * @brief  Websocket command to get/set plugin font type
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup GFX
+ * @addtogroup WEB
  *
  * @{
  */
 
-#ifndef FONTS_HPP
-#define FONTS_HPP
+#ifndef WSCMDFONTSIZE_H
+#define WSCMDFONTSIZE_H
 
 /******************************************************************************
  * Compile Switches
@@ -44,11 +44,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <YAFont.h>
-
-/** Fonts */
-namespace Fonts
-{
+#include "WsCmd.h"
+#include <Fonts.h>
 
 /******************************************************************************
  * Macros
@@ -59,51 +56,61 @@ namespace Fonts
  *****************************************************************************/
 
 /**
- * Supported font types.
+ * Websocket command to get/set plugin font type.
  */
-typedef enum
+class WsCmdFontType : public WsCmd
 {
-    FONT_TYPE_DEFAULT = 0, /**< Default font */
-    FONT_TYPE_NORMAL,      /**< Normal font */
-    FONT_TYPE_LARGE,       /**< A font with larger height. */
-    FONT_TYPE_MAX          /**< Number of font types. */
+public:
 
-} FontType;
+    /**
+     * Constructs the websocket command.
+     */
+    WsCmdFontType() :
+        WsCmd("FONTTYPE"),
+        m_isError(false),
+        m_parCnt(0U),
+        m_pluginUid(0),
+        m_fontType(Fonts::FontType::FONT_TYPE_DEFAULT)
+    {
+    }
+
+    /**
+     * Destroys websocket command.
+     */
+    ~WsCmdFontType()
+    {
+    }
+
+    /**
+     * Execute command.
+     *
+     * @param[in] server    Websocket server
+     * @param[in] clientId  Websocket client ID
+     */
+    void execute(AsyncWebSocket* server, uint32_t clientId) final;
+
+    /**
+     * Set command parameter. Call this for each parameter, until executing it.
+     *
+     * @param[in] par   Parameter string
+     */
+    void setPar(const char* par) final;
+
+private:
+
+    bool            m_isError;   /**< Any error happened during parameter reception? */
+    uint8_t         m_parCnt;    /**< Received number of parameters */
+    uint16_t        m_pluginUid; /**< Plugin UID */
+    Fonts::FontType m_fontType;  /**< Plugin font type */
+
+    WsCmdFontType(const WsCmdFontType& cmd);
+    WsCmdFontType& operator=(const WsCmdFontType& cmd);
+};
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-/**
- * Get font type as string.
- *
- * @param[in] type  The font type.
- *
- * @return Font type as string.
- */
-extern const char* fontTypeToStr(FontType type);
-
-/**
- * Get font type from string.
- * If the string is empty or its content is invalid, it will return the default font type.
- *
- * @param[in] str   String which contains the font type user friendly.
- *
- * @return Font type
- */
-extern FontType strToFontType(const char* str);
-
-/**
- * Get the font by type.
- *
- * @param[in] type  Choosen font type.
- *
- * @return Reference to the font.
- */
-extern YAFont& getFontByType(FontType type);
-
-} // namespace Fonts
-
-#endif /* FONTS_HPP */
+#endif /* WSCMDFONTSIZE_H */
 
 /** @} */

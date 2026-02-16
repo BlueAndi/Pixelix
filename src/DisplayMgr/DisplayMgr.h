@@ -206,6 +206,24 @@ public:
     bool setPluginAliasName(uint16_t uid, const String& alias);
 
     /**
+     * Get the font type of a plugin.
+     * If the given plugin UID is invalid, it will return Fonts::FontType::FONT_TYPE_DEFAULT.
+     *
+     * @param[in] uid   Plugin UID
+     * @return The plugin font type.
+     */
+    Fonts::FontType getPluginFontType(uint16_t uid) const;
+
+    /**
+     * Set the font type of a plugin.
+     *
+     * @param[in] uid       Plugin UID
+     * @param[in] fontType  Plugin font type
+     * @return If successful, it will return true otherwise false.
+     */
+    bool setPluginFontType(uint16_t uid, Fonts::FontType fontType);
+
+    /**
      * Get slot id by plugin UID.
      *
      * @param[in] uid   Plugin UID

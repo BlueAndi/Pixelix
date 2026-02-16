@@ -25,18 +25,18 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   WsCmdSlots.cpp
- * @brief  Websocket command get slots information
+ * @file   WsCmdFontType.cpp
+ * @brief  Websocket command to get/set plugin font type
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdSlots.h"
+#include "WsCmdFontType.h"
 #include "DisplayMgr.h"
-#include "SlotList.h"
 
+#include <Logging.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -63,7 +63,7 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
+void WsCmdFontType::execute(AsyncWebSocket* server, uint32_t clientId)
 {
     if (nullptr == server)
     {
@@ -77,66 +77,48 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        String      msg;
-        DisplayMgr& displayMgr = DisplayMgr::getInstance();
-        uint8_t     maxSlots   = displayMgr.getMaxSlots();
-        uint8_t     slotId;
+        String msg;
+
+        if (2U == m_parCnt)
+        {
+            (void)DisplayMgr::getInstance().setPluginFontType(m_pluginUid, m_fontType);
+        }
 
         preparePositiveResponse(msg);
 
-        msg += displayMgr.getMaxSlots();
-
-        /* Provides for every slot:
-         * - Name of plugin.
-         * - Plugin UID.
-         * - Plugin alias name.
-         * - Plugin font type.
-         * - Information about whether the slot is locked or not.
-         * - Information about whether the slot is sticky or not.
-         * - Information about whether the slot is disabled or not.
-         * - Slot duration in ms.
-         */
-        for (slotId = 0U; slotId < maxSlots; ++slotId)
-        {
-            DisplayMgr::SlotConfig config;
-
-            (void)displayMgr.getSlotConfig(slotId, config);
-
-            msg += DELIMITER;
-            msg += "\"";
-            msg += config.name;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += config.uid;
-            msg += DELIMITER;
-            msg += "\"";
-            msg += config.alias;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += "\"";
-            msg += Fonts::fontTypeToStr(config.fontType);
-            msg += "\"";
-            msg += DELIMITER;
-            msg += (false == config.isLocked) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == config.isSticky) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == config.isDisabled) ? "0" : "1";
-            msg += DELIMITER;
-            msg += config.duration;
-        }
+        msg += "\"";
+        msg += DisplayMgr::getInstance().getPluginFontType(m_pluginUid);
+        msg += "\"";
 
         sendResponse(server, clientId, msg);
     }
 
     m_isError = false;
+    m_parCnt  = 0U;
 }
 
-void WsCmdSlots::setPar(const char* par)
+void WsCmdFontType::setPar(const char* par)
 {
-    UTIL_NOT_USED(par);
+    switch (m_parCnt)
+    {
+    case 0:
+        if (false == Util::strToUInt16(par, m_pluginUid))
+        {
+            LOG_ERROR("Conversion failed: %s", par);
+            m_isError = true;
+        }
+        break;
 
-    m_isError = true;
+    case 1:
+        m_fontType = Fonts::strToFontType(par);
+        break;
+
+    default:
+        m_isError = true;
+        break;
+    }
+
+    ++m_parCnt;
 }
 
 /******************************************************************************
