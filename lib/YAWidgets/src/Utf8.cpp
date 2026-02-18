@@ -112,7 +112,11 @@ void Utf8::toIntern(const String& utf8, String& intern)
         /* U+0000 - U+001F */
         if (0x0020U > ucs2Char)
         {
-            /* N/A */
+            /* Skip control characters, except line feed.*/
+            if (0x000AU == ucs2Char)
+            {
+                internChar = static_cast<char>(ucs2Char);
+            }
         }
         /* U+0020 - U+007E */
         else if (0x007FU > ucs2Char)
