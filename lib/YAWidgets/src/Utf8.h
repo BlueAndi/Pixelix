@@ -63,11 +63,11 @@ namespace Utf8
 
 /**
  * Convert UTF-8 string to internal string representation.
- * 
+ *
  * The internal string representation is a single byte character encoding, which
  * is used for text rendering. It contains only characters which can be rendered
  * by the used font. All other characters are skipped.
- * 
+ *
  * Note, the control characters (U+0000 - U+001F) are skipped, except line feed (U+000A).
  * The line feed is kept, because it is used for multi-line text rendering.
  *
