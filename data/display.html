@@ -477,7 +477,7 @@
                 var dstSlotId = parseInt($(dstCard).attr("data-slot-id"));
 
                 if (srcSlotId !== dstSlotId) {
-                    var uid = parseInt(srcId.replace("plugin", ""));
+                    var uid = parseInt(srcId.replace("slotCard", ""));
                     move(uid, dstSlotId);
                 }
             }
@@ -540,7 +540,7 @@
                         var slot = rsp.slots[index];
                         var $card = $("<div>")
                             .attr("class", "slot-card")
-                            .attr("id", "slotCard" + index)
+                            .attr("id", "slotCard" + slot.uid)
                             .attr("data-slot-id", index);
 
                         // Add status classes
