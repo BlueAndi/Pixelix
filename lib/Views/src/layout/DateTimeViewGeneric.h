@@ -419,6 +419,14 @@ protected:
     Color              m_dayOffColor;            /**< Color of the other days in the day of the week bar. */
     tm                 m_now;                    /**< Latest time update. */
 
+    /**
+     * Updates the layout depended on the current font type.
+     * This is required, because some font types may have a height which is
+     * larger than the text area in the layout, which will cause an
+     * overlapping of the text and other widgets.
+     */
+    virtual void updateLayout();
+
 private:
 
     DateTimeViewGeneric(const DateTimeViewGeneric& other);
@@ -428,14 +436,6 @@ private:
      * Updates all colors of the lamp widgets.
      */
     void updateLampWidgetsColors();
-
-    /**
-     * Updates the layout depended on the current font type.
-     * This is required, because some font types may have a height which is
-     * larger than the text area in the layout, which will cause an
-     * overlapping of the text and other widgets.
-     */
-    void updateLayout();
 };
 
 /******************************************************************************
