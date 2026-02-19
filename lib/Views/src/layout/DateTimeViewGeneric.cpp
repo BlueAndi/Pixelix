@@ -108,21 +108,6 @@ void DateTimeViewGeneric::setCurrentTime(const tm& now)
  * Protected Methods
  *****************************************************************************/
 
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-void DateTimeViewGeneric::updateLampWidgetsColors()
-{
-    uint8_t index;
-
-    for (index = 0U; index < MAX_LAMPS; ++index)
-    {
-        m_lampWidgets[index].setColorOn(m_dayOnColor);
-        m_lampWidgets[index].setColorOff(m_dayOffColor);
-    }
-}
-
 void DateTimeViewGeneric::updateLayout()
 {
     uint16_t fontHeight      = Fonts::getFontByType(m_fontType).getHeight();
@@ -156,6 +141,21 @@ void DateTimeViewGeneric::updateLayout()
         {
             m_lampWidgets[idx].enable();
         }
+    }
+}
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void DateTimeViewGeneric::updateLampWidgetsColors()
+{
+    uint8_t index;
+
+    for (index = 0U; index < MAX_LAMPS; ++index)
+    {
+        m_lampWidgets[index].setColorOn(m_dayOnColor);
+        m_lampWidgets[index].setColorOff(m_dayOffColor);
     }
 }
 
