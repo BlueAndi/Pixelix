@@ -608,8 +608,8 @@ void TextWidget::handleFadeIn()
 
 void TextWidget::paint(YAGfx& gfx)
 {
-    int16_t cursorX = 0;
-    int16_t cursorY = 0;
+    int16_t  cursorX = 0;
+    int16_t  cursorY = 0;
     uint16_t canvasSize;
 
     /* If there is a new text available, it shall be determined how to show it on the display. */
