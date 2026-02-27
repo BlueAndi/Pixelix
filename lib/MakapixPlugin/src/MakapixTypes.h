@@ -91,7 +91,7 @@ typedef std::function<void(void)> MakapixNextArtworkCallback;
 typedef std::function<void(void)> MakapixPrevArtworkCallback;
 
 /** Play channel callback prototype. */
-typedef std::function<void(const char* channelName)> MakapixPlayChannelCallback;
+typedef std::function<void(const char* channelName, const char* userSqid, const char* hashtag)> MakapixPlayChannelCallback;
 
 /** On response callback prototype. */
 typedef std::function<void(const JsonDocument& jsonDoc)> MakapixOnResponseCallback;
