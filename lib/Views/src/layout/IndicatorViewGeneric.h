@@ -46,6 +46,7 @@
 #include <YAGfx.h>
 #include <LampWidget.h>
 #include <Util.h>
+#include <SimpleTimer.hpp>
 
 #include "../interface/IIndicatorView.h"
 
@@ -74,7 +75,9 @@ public:
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_1_X, LAMP_1_Y }, /* Top right */
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_2_X, LAMP_2_Y }, /* Bottom right */
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_3_X, LAMP_3_Y }  /* Bottom left */
-        }
+        },
+        m_lampStates{ STATE_OFF, STATE_OFF, STATE_OFF, STATE_OFF },
+        m_blinkTimer()
     {
         size_t idx;
 
@@ -83,6 +86,8 @@ public:
         {
             m_lampWidgets[idx].setColorOn(ColorDef::YELLOW);
         }
+
+        m_blinkTimer.start(BLINK_INTERVAL_MS);
     }
 
     /**
@@ -118,19 +123,19 @@ public:
      * The indicator id 255 will be used to turn on/off all indicators at once.
      *
      * @param[in] indicatorId   Id of the indicator, which to set.
-     * @param[in] isOn          If true, the indicator will be set to on state, otherwise off.
+     * @param[in] state          State to set the indicator to.
      */
-    void setIndicator(uint8_t indicatorId, bool isOn) override;
+    void setIndicator(uint8_t indicatorId, State state) override;
 
     /**
      * Get the indicator state at given position.
-     * If the indicator id is invalid, it will return false.
+     * If the indicator id is invalid, it will return STATE_OFF.
      *
      * @param[in]  indicatorId   Id of the indicator, which to set.
      *
-     * @return If the indicator is on, it will return true otherwise false.
+     * @return State of the indicator.
      */
-    bool isIndicatorOn(uint8_t indicatorId) const override;
+    State getIndicatorState(uint8_t indicatorId) const override;
 
     /**
      *  Indicator id for all indicators.
@@ -147,54 +152,61 @@ protected:
     /**
      * Lamp width in pixel.
      */
-    static const uint8_t LAMP_WIDTH  = 1U;
+    static const uint8_t LAMP_WIDTH         = 1U;
 
     /**
      * Lamp height in pixel.
      */
-    static const uint8_t LAMP_HEIGHT = 1U;
+    static const uint8_t LAMP_HEIGHT        = 1U;
 
     /**
      * Lamp 0 x-coordinate in pixel.
      */
-    static const int16_t LAMP_0_X    = 0;
+    static const int16_t LAMP_0_X           = 0;
 
     /**
      * Lamp 0 y-coordinate in pixel.
      */
-    static const int16_t LAMP_0_Y    = 0;
+    static const int16_t LAMP_0_Y           = 0;
 
     /**
      * Lamp 1 x-coordinate in pixel.
      */
-    static const int16_t LAMP_1_X    = CONFIG_LED_MATRIX_WIDTH - 1;
+    static const int16_t LAMP_1_X           = CONFIG_LED_MATRIX_WIDTH - 1;
 
     /**
      * Lamp 1 y-coordinate in pixel.
      */
-    static const int16_t LAMP_1_Y    = 0;
+    static const int16_t LAMP_1_Y           = 0;
 
     /**
      * Lamp 2 x-coordinate in pixel.
      */
-    static const int16_t LAMP_2_X    = CONFIG_LED_MATRIX_WIDTH - 1;
+    static const int16_t LAMP_2_X           = CONFIG_LED_MATRIX_WIDTH - 1;
 
     /**
      * Lamp 2 y-coordinate in pixel.
      */
-    static const int16_t LAMP_2_Y    = CONFIG_LED_MATRIX_HEIGHT - 1;
+    static const int16_t LAMP_2_Y           = CONFIG_LED_MATRIX_HEIGHT - 1;
 
     /**
      * Lamp 3 x-coordinate in pixel.
      */
-    static const int16_t LAMP_3_X    = 0;
+    static const int16_t LAMP_3_X           = 0;
 
     /**
      * Lamp 3 y-coordinate in pixel.
      */
-    static const int16_t LAMP_3_Y    = CONFIG_LED_MATRIX_HEIGHT - 1;
+    static const int16_t LAMP_3_Y           = CONFIG_LED_MATRIX_HEIGHT - 1;
 
-    LampWidget           m_lampWidgets[MAX_LAMPS]; /**< Lamp widgets, used to signal different things. */
+    /**
+     * Blink interval in ms.
+     */
+    static const uint32_t BLINK_INTERVAL_MS = 500U;
+
+    LampWidget            m_lampWidgets[MAX_LAMPS]; /**< Lamp widgets, used to signal different things. */
+    State                 m_lampStates[MAX_LAMPS];  /**< State of the lamps. */
+    SimpleTimer           m_blinkTimer;             /**< Timer to handle blinking. */
 
 private:
 

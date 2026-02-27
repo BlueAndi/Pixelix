@@ -437,13 +437,13 @@ public:
 
     /**
      * Get indicator state.
-     * If the indicator id is invalid, it will return false.
+     * If the indicator id is invalid, it will return STATE_OFF.
      *
      * @param[in] indicatorId  Id of indicator.
      *
-     * @return If the indicator is on, it will return true otherwise false.
+     * @return State of the indicator.
      */
-    bool getIndicator(uint8_t indicatorId) const;
+    IIndicatorView::State getIndicatorState(uint8_t indicatorId) const;
 
     /**
      * Set indicator state.
@@ -452,9 +452,9 @@ public:
      * The indicator id 255 will be used to turn on/off all indicators at once.
      *
      * @param[in] indicatorId  Id of indicator
-     * @param[in] isOn         Set to true to turn on the indicator, otherwise false.
+     * @param[in] state        State of the indicator.
      */
-    void setIndicator(uint8_t indicatorId, bool isOn);
+    void setIndicatorState(uint8_t indicatorId, IIndicatorView::State state);
 
     /**
      * Indicator id for all indicators.
