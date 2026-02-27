@@ -813,20 +813,20 @@ bool DisplayMgr::isDisplayOn() const
     return isDisplayOn;
 }
 
-bool DisplayMgr::getIndicator(uint8_t indicatorId) const
+IIndicatorView::State DisplayMgr::getIndicatorState(uint8_t indicatorId) const
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
-    bool                       isOn = m_indicatorView.isIndicatorOn(indicatorId);
+    IIndicatorView::State      state = m_indicatorView.getIndicatorState(indicatorId);
 
-    return isOn;
+    return state;
 }
 
-void DisplayMgr::setIndicator(uint8_t indicatorId, bool isOn)
+void DisplayMgr::setIndicatorState(uint8_t indicatorId, IIndicatorView::State state)
 {
     MutexGuard<MutexRecursive> guard1(m_mutexInterf);
     MutexGuard<MutexRecursive> guard2(m_mutexUpdate);
 
-    m_indicatorView.setIndicator(indicatorId, isOn);
+    m_indicatorView.setIndicator(indicatorId, state);
 }
 
 /******************************************************************************

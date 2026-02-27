@@ -141,6 +141,21 @@ public:
     }
 
     /**
+     * Toggle the lamp state.
+     */
+    void toggle()
+    {
+        if (false == m_isOn)
+        {
+            m_isOn = true;
+        }
+        else
+        {
+            m_isOn = false;
+        }
+    }
+
+    /**
      * Set lamp color in off state.
      *
      * @param[in] color Lamp color in off state

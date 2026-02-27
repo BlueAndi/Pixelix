@@ -121,7 +121,7 @@ void ConnectingState::entry(StateMachine& sm)
     }
 
     /* Show the user via indicator light that there is no connection. */
-    DisplayMgr::getInstance().setIndicator(DisplayMgr::INDICATOR_ID_NETWORK, true);
+    DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_NETWORK, IIndicatorView::State::STATE_BLINK);
 }
 
 void ConnectingState::process(StateMachine& sm)
@@ -196,7 +196,7 @@ void ConnectingState::exit(StateMachine& sm)
     /* If connection established, the no connection indicator shall be removed. */
     if (true == WiFi.isConnected())
     {
-        DisplayMgr::getInstance().setIndicator(DisplayMgr::INDICATOR_ID_NETWORK, false);
+        DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_NETWORK, IIndicatorView::State::STATE_OFF);
     }
 }
 
