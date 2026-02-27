@@ -113,8 +113,8 @@ MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
             (void)this->cmdPrevArtwork();
         };
     MakapixPlayChannelCallback cmdPlayChannelCb =
-        [this](const char* channelName) {
-            (void)this->cmdPlayChannel(channelName);
+        [this](const char* channelName, const char* userSqid, const char* hashtag) {
+            (void)this->cmdPlayChannel(channelName, userSqid, hashtag);
         };
     MakapixShowArtworkCallback cmdShowArtworkCb =
         [this]() {

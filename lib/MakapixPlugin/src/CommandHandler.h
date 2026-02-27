@@ -234,13 +234,13 @@ private:
     void playChannel(const JsonObjectConst& jsonPayload);
 
     /**
-     * Get width and height from canvas string.
+     * Get storage shard and native format from artwork URL.
      *
-     * @param[in]  canvas   Canvas as string, e.g. "32x8"
-     * @param[out] width    Width in pixel.
-     * @param[out] height   Height in pixel.
+     * @param[in] artUrl        Artwork URL
+     * @param[out] storageShard Storage shard
+     * @param[out] nativeFormat Native format
      */
-    void getWidthHeight(const char* canvas, uint16_t& width, uint16_t& height) const;
+    void getShardNativeFormatFromArtUrl(const char* artUrl, String& storageShard, String& nativeFormat);
 };
 
 /******************************************************************************
