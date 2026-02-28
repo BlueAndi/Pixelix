@@ -75,7 +75,13 @@ void IndicatorViewGeneric::update(YAGfx& gfx)
             }
         }
 
-        lampWidget.update(gfx);
+        /* Update the lamp widget if it is turned on.
+         * If the lamp is turned off, it shall not overwrite the display.
+         */
+        if (true == lampWidget.getOnState())
+        {
+            lampWidget.update(gfx);
+        }
     }
 
     if (true == m_blinkTimer.isTimeout())
