@@ -311,7 +311,6 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
 {
     JsonVariantConst jsonPostId       = jsonPayload["post_id"];
     JsonVariantConst jsonStorageKey   = jsonPayload["storage_key"];
-    JsonVariantConst jsonStorageShard = jsonPayload["storage_shard"];
     JsonVariantConst jsonNativeFormat = jsonPayload["native_format"];
     JsonVariantConst jsonWidth        = jsonPayload["width"];
     JsonVariantConst jsonHeight       = jsonPayload["height"];
@@ -323,10 +322,6 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
     else if (false == jsonStorageKey.is<const char*>())
     {
         LOG_WARNING("MQTT payload storage_key not found or invalid type.");
-    }
-    else if (false == jsonStorageShard.is<const char*>())
-    {
-        LOG_WARNING("MQTT payload storage_shard not found or invalid type.");
     }
     else if (false == jsonNativeFormat.is<const char*>())
     {
@@ -344,7 +339,6 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
     {
         uint32_t    postId       = jsonPostId.as<uint32_t>();
         const char* storageKey   = jsonStorageKey.as<const char*>();
-        const char* storageShard = jsonStorageShard.as<const char*>();
         const char* nativeFormat = jsonNativeFormat.as<const char*>();
         uint32_t    width        = jsonWidth.as<uint32_t>();
         uint32_t    height       = jsonHeight.as<uint32_t>();
@@ -357,7 +351,7 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
         else
         {
             /* Add to internal playlist. */
-            int32_t playlistIdx = m_playlist.add(postId, storageKey, storageShard, nativeFormat, DEFAULT_DWELL_TIME_MS, true);
+            int32_t playlistIdx = m_playlist.add(postId, storageKey, nativeFormat, DEFAULT_DWELL_TIME_MS, true);
 
             if (0 > playlistIdx)
             {

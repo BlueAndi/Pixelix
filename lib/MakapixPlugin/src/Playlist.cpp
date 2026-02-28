@@ -34,6 +34,7 @@
  * Includes
  *****************************************************************************/
 #include "Playlist.h"
+#include <mbedtls/md.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -75,22 +76,26 @@ Playlist& Playlist::operator=(const Playlist& other)
     return *this;
 }
 
-int32_t Playlist::add(uint32_t postId, const char* storageKey, const char* storageShard, const char* nativeFormat, uint32_t dwellTime, bool overwrite)
+int32_t Playlist::add(uint32_t postId, const char* storageKey, const char* nativeFormat, uint32_t dwellTime, bool overwrite)
 {
     int32_t playlistIdx = -1;
 
     if ((nullptr != storageKey) &&
-        (nullptr != storageShard) &&
+        (nullptr != nativeFormat) &&
         (nullptr != nativeFormat) &&
         ('\0' != storageKey[0U]) &&
-        ('\0' != storageShard[0U]) &&
         ('\0' != nativeFormat[0U]))
     {
         if ((m_maxEntries > m_playlist.size()) ||                         /* Playlist not full? */
             ((m_maxEntries == m_playlist.size()) && (true == overwrite))) /* Playlist full, but allowed to overwrite? */
         {
             Entry   entry;
-            uint8_t insertIdx  = (m_beginIdx + m_playlist.size()) % m_maxEntries;
+            uint8_t insertIdx = (m_beginIdx + m_playlist.size()) % m_maxEntries;
+            Sha256  hash;
+            char    storageShard[9U] = { 0 };
+
+            generateSHA256(hash, storageKey);
+            snprintf(storageShard, sizeof(storageShard), "%02x/%02x/%02x", hash[0U], hash[1U], hash[2U]);
 
             entry.postId       = postId;
             entry.storageKey   = storageKey;
@@ -245,6 +250,19 @@ void Playlist::adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) cons
 
         artworkUrl.replace(imageFormat, "gif");
     }
+}
+
+void Playlist::generateSHA256(Sha256& hash, const String& text) const
+{
+    mbedtls_md_context_t ctx;
+    mbedtls_md_type_t    md_type = MBEDTLS_MD_SHA256;
+
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+    mbedtls_md_starts(&ctx);
+    mbedtls_md_update(&ctx, (const unsigned char*)text.c_str(), text.length());
+    mbedtls_md_finish(&ctx, hash);
+    mbedtls_md_free(&ctx);
 }
 
 /******************************************************************************

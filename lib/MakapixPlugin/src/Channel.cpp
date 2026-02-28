@@ -337,7 +337,6 @@ void Channel::onResponseArtwork(const JsonObjectConst& jsonObj)
 {
     JsonVariantConst jsonPostId       = jsonObj["post_id"];
     JsonVariantConst jsonStorageKey   = jsonObj["storage_key"];
-    JsonVariantConst jsonStorageShard = jsonObj["storage_shard"];
     JsonVariantConst jsonNativeFormat = jsonObj["native_format"];
     JsonVariantConst jsonWidth        = jsonObj["width"];
     JsonVariantConst jsonHeight       = jsonObj["height"];
@@ -350,10 +349,6 @@ void Channel::onResponseArtwork(const JsonObjectConst& jsonObj)
     else if (false == jsonStorageKey.is<const char*>())
     {
         LOG_WARNING("Response artwork storage_key not found or invalid type.");
-    }
-    else if (false == jsonStorageShard.is<const char*>())
-    {
-        LOG_WARNING("Response artwork storage_shard not found or invalid type.");
     }
     else if (false == jsonNativeFormat.is<const char*>())
     {
@@ -385,10 +380,9 @@ void Channel::onResponseArtwork(const JsonObjectConst& jsonObj)
         {
             uint32_t    postId       = jsonPostId.as<uint32_t>();
             const char* storageKey   = jsonStorageKey.as<const char*>();
-            const char* storageShard = jsonStorageShard.as<const char*>();
             const char* nativeFormat = jsonNativeFormat.as<const char*>();
             uint32_t    dwellTimeMs  = jsonDwellTimeMs.as<uint32_t>();
-            int32_t     playlistIdx  = m_playlist.add(postId, storageKey, storageShard, nativeFormat, dwellTimeMs, true);
+            int32_t     playlistIdx  = m_playlist.add(postId, storageKey, nativeFormat, dwellTimeMs, true);
 
             if (0 > playlistIdx)
             {

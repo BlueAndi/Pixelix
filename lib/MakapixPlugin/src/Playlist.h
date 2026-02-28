@@ -123,16 +123,15 @@ public:
      *
      * @param[in] postId       Artwork post ID.
      * @param[in] storageKey   Artwork storage key.
-     * @param[in] storageShard Artwork storage shard.
      * @param[in] nativeFormat Artwork native format.
      * @param[in] dwellTime    Dwell time in ms.
      * @param[in] overwrite    If true and playlist is full, it will overwrite the oldest entry.
      *
      * @return If successful, it will return the playlist index otherwise -1.
      */
-    int32_t add(uint32_t postId, const String& storageKey, const String& storageShard, const String& nativeFormat, uint32_t dwellTime, bool overwrite)
+    int32_t add(uint32_t postId, const String& storageKey, const String& nativeFormat, uint32_t dwellTime, bool overwrite)
     {
-        return add(postId, storageKey.c_str(), storageShard.c_str(), nativeFormat.c_str(), dwellTime, overwrite);
+        return add(postId, storageKey.c_str(), nativeFormat.c_str(), dwellTime, overwrite);
     }
 
     /**
@@ -142,14 +141,13 @@ public:
      *
      * @param[in] postId       Artwork post ID.
      * @param[in] storageKey   Artwork storage key.
-     * @param[in] storageShard Artwork storage shard.
      * @param[in] nativeFormat Artwork native format.
      * @param[in] dwellTime    Dwell time in ms.
      * @param[in] overwrite    If true and playlist is full, it will overwrite the oldest entry.
      *
      * @return If successful, it will return the playlist index otherwise -1.
      */
-    int32_t add(uint32_t postId, const char* storageKey, const char* storageShard, const char* nativeFormat, uint32_t dwellTime, bool overwrite);
+    int32_t add(uint32_t postId, const char* storageKey, const char* nativeFormat, uint32_t dwellTime, bool overwrite);
 
     /**
      * Get index of selected artwork.
@@ -214,6 +212,9 @@ public:
 
 private:
 
+    /** SHA256 hash type. */
+    typedef uint8_t Sha256[32U];
+
     /** Playlist entry. */
     struct Entry
     {
@@ -229,7 +230,8 @@ private:
         String storageKey;
 
         /**
-         * Storage shard used for vault path resolution.
+         * Artwork storage shard, based on the first three bytes of
+         * sha256 hash of the storage key. It is used to determine the storage server URL for artwork retrieval.
          */
         String storageShard;
 
@@ -273,6 +275,15 @@ private:
      * @param[in,out] artworkUrl   Artwork URL to adjust.
      */
     void adjustArtworkUrlForSupportedImageFormats(String& artworkUrl) const;
+
+    /**
+     * Generate SHA256 hash of given text.
+     *
+     * @param[out] hash Generated hash.
+     * @param[in] text  Text to hash.
+     * 
+     */
+    void generateSHA256(Sha256& hash, const String& text) const;
 };
 
 /******************************************************************************
