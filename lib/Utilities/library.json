@@ -20,7 +20,7 @@
     }, {
         "owner": "tobozo",
         "name": "ESP32-PSRamFS",
-        "version": "~1.0.7"
+        "version": "~1.0.9"
     }, {
         "name": "YAGfx"
     }, {
