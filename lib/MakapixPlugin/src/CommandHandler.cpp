@@ -309,9 +309,12 @@ void CommandHandler::swapBack()
 
 void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
 {
-    JsonVariantConst jsonPostId     = jsonPayload["post_id"];
-    JsonVariantConst jsonStorageKey = jsonPayload["storage_key"];
-    JsonVariantConst jsonArtUrl     = jsonPayload["art_url"];
+    JsonVariantConst jsonPostId       = jsonPayload["post_id"];
+    JsonVariantConst jsonStorageKey   = jsonPayload["storage_key"];
+    JsonVariantConst jsonStorageShard = jsonPayload["storage_shard"];
+    JsonVariantConst jsonNativeFormat = jsonPayload["native_format"];
+    JsonVariantConst jsonWidth        = jsonPayload["width"];
+    JsonVariantConst jsonHeight       = jsonPayload["height"];
 
     if (false == jsonPostId.is<uint32_t>())
     {
@@ -321,43 +324,61 @@ void CommandHandler::showArtwork(const JsonObjectConst& jsonPayload)
     {
         LOG_WARNING("MQTT payload storage_key not found or invalid type.");
     }
-    else if (false == jsonArtUrl.is<const char*>())
+    else if (false == jsonStorageShard.is<const char*>())
     {
-        LOG_WARNING("MQTT payload art_url not found or invalid type.");
+        LOG_WARNING("MQTT payload storage_shard not found or invalid type.");
+    }
+    else if (false == jsonNativeFormat.is<const char*>())
+    {
+        LOG_WARNING("MQTT payload native_format not found or invalid type.");
+    }
+    else if (false == jsonWidth.is<uint32_t>())
+    {
+        LOG_WARNING("MQTT payload width not found or invalid type.");
+    }
+    else if (false == jsonHeight.is<uint32_t>())
+    {
+        LOG_WARNING("MQTT payload height not found or invalid type.");
     }
     else
     {
-        uint32_t    postId     = jsonPostId.as<uint32_t>();
-        const char* storageKey = jsonStorageKey.as<const char*>();
-        const char* artUrl     = jsonArtUrl.as<const char*>();
-        String      storageShard;
-        String      nativeFormat;
-        int32_t     playlistIdx;
+        uint32_t    postId       = jsonPostId.as<uint32_t>();
+        const char* storageKey   = jsonStorageKey.as<const char*>();
+        const char* storageShard = jsonStorageShard.as<const char*>();
+        const char* nativeFormat = jsonNativeFormat.as<const char*>();
+        uint32_t    width        = jsonWidth.as<uint32_t>();
+        uint32_t    height       = jsonHeight.as<uint32_t>();
 
-        getShardNativeFormatFromArtUrl(artUrl, storageShard, nativeFormat);
-
-        /* Add to internal playlist. */
-        playlistIdx = m_playlist.add(postId, storageKey, storageShard.c_str(), nativeFormat.c_str(), DEFAULT_DWELL_TIME_MS, true);
-
-        if (0 > playlistIdx)
+        if ((CONFIG_LED_MATRIX_WIDTH < width) ||
+            (CONFIG_LED_MATRIX_HEIGHT < height))
         {
-            LOG_WARNING("Failed to add artwork to playlist.");
+            LOG_WARNING("Canvas size %ux%u not supported.", width, height);
         }
         else
         {
-            LOG_INFO("Artwork %s added to playlist.", storageKey);
-            LOG_INFO("Select artwork %s in playlist.", storageKey);
+            /* Add to internal playlist. */
+            int32_t playlistIdx = m_playlist.add(postId, storageKey, storageShard, nativeFormat, DEFAULT_DWELL_TIME_MS, true);
 
-            /* Select it in the playlist to show it immediately. */
-            m_playlist.select(static_cast<uint8_t>(playlistIdx));
-
-            if (nullptr == m_showArtworkCallback)
+            if (0 > playlistIdx)
             {
-                LOG_WARNING("Show artwork callback not set.");
+                LOG_WARNING("Failed to add artwork to playlist.");
             }
             else
             {
-                m_showArtworkCallback();
+                LOG_INFO("Artwork %s added to playlist.", storageKey);
+                LOG_INFO("Select artwork %s in playlist.", storageKey);
+
+                /* Select it in the playlist to show it immediately. */
+                m_playlist.select(static_cast<uint8_t>(playlistIdx));
+
+                if (nullptr == m_showArtworkCallback)
+                {
+                    LOG_WARNING("Show artwork callback not set.");
+                }
+                else
+                {
+                    m_showArtworkCallback();
+                }
             }
         }
     }
@@ -414,33 +435,6 @@ void CommandHandler::playChannel(const JsonObjectConst& jsonPayload)
         }
 
         m_playChannelCallback(channelName, userSqid, hashtag);
-    }
-}
-
-void CommandHandler::getShardNativeFormatFromArtUrl(const char* artUrl, String& storageShard, String& nativeFormat)
-{
-    /* Extract storage shard and native format from art URL.
-     * Example art URL: "/api/vault/27/0f/11/1bb5f5c3-ef85-4374-83fe-d8ea2175bc20.webp"
-     * In this example, storage shard is "27/0f/11" and native format is "webp".
-     */
-    const char* lastSlash = strrchr(artUrl, '/');
-
-    if (nullptr != lastSlash)
-    {
-        const char* dot               = strrchr(lastSlash, '.');
-        const char* storageShardStart = strstr(artUrl, "/api/vault/");
-
-        if (nullptr != dot)
-        {
-            nativeFormat = String(dot + 1U);
-        }
-
-        if (nullptr != storageShardStart)
-        {
-            size_t storageShardStartOffset = strlen("/api/vault/");
-
-            storageShard                   = String(storageShardStart + storageShardStartOffset, lastSlash - (storageShardStart + storageShardStartOffset));
-        }
     }
 }
 

@@ -232,15 +232,6 @@ private:
      * @param[in] jsonPayload   The channel information as JSON object.
      */
     void playChannel(const JsonObjectConst& jsonPayload);
-
-    /**
-     * Get storage shard and native format from artwork URL.
-     *
-     * @param[in] artUrl        Artwork URL
-     * @param[out] storageShard Storage shard
-     * @param[out] nativeFormat Native format
-     */
-    void getShardNativeFormatFromArtUrl(const char* artUrl, String& storageShard, String& nativeFormat);
 };
 
 /******************************************************************************
