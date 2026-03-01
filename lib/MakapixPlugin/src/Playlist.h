@@ -281,7 +281,7 @@ private:
      *
      * @param[out] hash Generated hash.
      * @param[in] text  Text to hash.
-     * 
+     *
      */
     void generateSHA256(Sha256& hash, const String& text) const;
 };
