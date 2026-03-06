@@ -181,11 +181,11 @@ public:
     String getStorageKey() const;
 
     /**
-     * Get URL of current selected artwork.
+     * Get native format of current selected artwork.
      *
-     * @return If successful, it will return the URL otherwise an empty string.
+     * @return If successful, it will return the native format otherwise an empty string.
      */
-    String getUrl() const;
+    String getNativeFormat() const;
 
     /**
      * Get dwell time of current selected artwork.
@@ -193,6 +193,14 @@ public:
      * @return If successful, it will return the dwell time in ms otherwise 0.
      */
     uint32_t getDwellTime() const;
+
+    /**
+     * Get URL of current selected artwork.
+     *
+     * @return If successful, it will return the URL otherwise an empty string.
+     */
+    String getUrl() const;
+
     /**
      * Select next artwork in playlist.
      *

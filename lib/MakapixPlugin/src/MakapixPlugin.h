@@ -316,6 +316,13 @@ private:
     _MakapixPlugin::View   m_view;                 /**< View with all widgets. */
     String                 m_playerKey;            /**< Makapix player key. */
     uint8_t                m_mqttInstance;         /**< MQTT instance index. */
+    String                 m_startChannelName;     /**< Channel name which to play at plugin start. */
+    String                 m_startChannelUserSqid; /**< User SQID which to play at plugin start (only for "by_user" channel). */
+    String                 m_startChannelHashtag;  /**< Hashtag which to play at plugin start (only for "hashtag" channel). */
+    uint32_t               m_startPostId;          /**< Post ID which to play at plugin start if no channel is specified. */
+    String                 m_startStorageKey;      /**< Storage key which to play at plugin start if no channel is specified. */
+    String                 m_startNativeFormat;    /**< Native format of the artwork which to play at plugin start if no channel is specified. */
+    uint32_t               m_startDwellTime;       /**< Dwell time in ms for the artwork which to play at plugin start if no channel is specified. */
     mutable MutexRecursive m_mutex;                /**< Mutex to protect against concurrent access. */
     bool                   m_hasTopicChanged;      /**< Has the topic content changed? */
     DisplayMode            m_displayMode;          /**< Current display mode. */

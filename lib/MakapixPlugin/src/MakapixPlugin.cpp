@@ -82,6 +82,13 @@ MakapixPlugin::MakapixPlugin(const char* name, uint16_t uid) :
     m_view(),
     m_playerKey(),
     m_mqttInstance(0U),
+    m_startChannelName(),
+    m_startChannelUserSqid(),
+    m_startChannelHashtag(),
+    m_startPostId(0U),
+    m_startStorageKey(),
+    m_startNativeFormat(),
+    m_startDwellTime(0U),
     m_mutex(),
     m_hasTopicChanged(false),
     m_displayMode(DISPLAY_MODE_PLAY_CHANNEL),
@@ -329,10 +336,31 @@ void MakapixPlugin::start(uint16_t width, uint16_t height)
         LOG_ERROR("Failed to initialize artwork file cache handler.");
     }
 
-    /* Configure with initial loaded configuration. */
-    m_commandHandler.configure(m_playerKey, m_mqttInstance);
-    m_channel.configure(m_playerKey, m_mqttInstance);
-    m_viewUpdate.configure(m_playerKey, m_mqttInstance);
+    /* Play last channel? */
+    if (false == m_startChannelName.isEmpty())
+    {
+        m_channel.play(m_startChannelName.c_str(), m_startChannelUserSqid.c_str(), m_startChannelHashtag.c_str());
+    }
+    /* Show last artwork? */
+    else if (false == m_startStorageKey.isEmpty())
+    {
+        int32_t index = m_playlist.add(m_startPostId, m_startStorageKey.c_str(), m_startNativeFormat.c_str(), m_startDwellTime, true);
+
+        if (0 <= index)
+        {
+            m_playlist.select(index);
+
+            if (false == showArtwork())
+            {
+                LOG_WARNING("Showing artwork failed.");
+            }
+        }
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
+    }
 }
 
 void MakapixPlugin::stop()
@@ -408,6 +436,17 @@ void MakapixPlugin::getConfiguration(JsonObject& jsonCfg) const
 
     jsonCfg["playerKey"]    = m_playerKey;
     jsonCfg["mqttInstance"] = m_mqttInstance;
+
+    /* Last channel configuration. */
+    jsonCfg["channelName"]  = m_channel.getChannelName();
+    jsonCfg["userSqid"]     = m_channel.getUserSqid();
+    jsonCfg["hashtag"]      = m_channel.getHashtag();
+
+    /* Last artwork shown by command. */
+    jsonCfg["postId"]       = m_playlist.getPostId();
+    jsonCfg["storageKey"]   = m_playlist.getStorageKey();
+    jsonCfg["nativeFormat"] = m_playlist.getNativeFormat();
+    jsonCfg["dwellTime"]    = m_playlist.getDwellTime();
 }
 
 bool MakapixPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -415,6 +454,13 @@ bool MakapixPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     bool             status           = false;
     JsonVariantConst jsonPlayerKey    = jsonCfg["playerKey"];
     JsonVariantConst jsonMqttInstance = jsonCfg["mqttInstance"];
+    JsonVariantConst jsonChannelName  = jsonCfg["channelName"];
+    JsonVariantConst jsonUserSqid     = jsonCfg["userSqid"];
+    JsonVariantConst jsonHashtag      = jsonCfg["hashtag"];
+    JsonVariantConst jsonPostId       = jsonCfg["postId"];
+    JsonVariantConst jsonStorageKey   = jsonCfg["storageKey"];
+    JsonVariantConst jsonNativeFormat = jsonCfg["nativeFormat"];
+    JsonVariantConst jsonDwellTime    = jsonCfg["dwellTime"];
 
     if (false == jsonPlayerKey.is<String>())
     {
@@ -428,11 +474,46 @@ bool MakapixPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON mqttInstance value out of range.");
     }
+    else if (false == jsonChannelName.is<String>())
+    {
+        LOG_WARNING("JSON channelName not found or invalid type.");
+    }
+    else if (false == jsonUserSqid.is<String>())
+    {
+        LOG_WARNING("JSON userSqid not found or invalid type.");
+    }
+    else if (false == jsonHashtag.is<String>())
+    {
+        LOG_WARNING("JSON hashtag not found or invalid type.");
+    }
+    else if (false == jsonPostId.is<uint32_t>())
+    {
+        LOG_WARNING("JSON postId not found or invalid type.");
+    }
+    else if (false == jsonStorageKey.is<String>())
+    {
+        LOG_WARNING("JSON storageKey not found or invalid type.");
+    }
+    else if (false == jsonNativeFormat.is<String>())
+    {
+        LOG_WARNING("JSON nativeFormat not found or invalid type.");
+    }
+    else if (false == jsonDwellTime.is<uint32_t>())
+    {
+        LOG_WARNING("JSON dwellTime not found or invalid type.");
+    }
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
         const char*                playerKey    = jsonPlayerKey.as<const char*>();
         uint8_t                    mqttInstance = jsonMqttInstance.as<uint8_t>();
+        const char*                channelName  = jsonChannelName.as<const char*>();
+        const char*                userSqid     = jsonUserSqid.as<const char*>();
+        const char*                hashtag      = jsonHashtag.as<const char*>();
+        uint32_t                   postId       = jsonPostId.as<uint32_t>();
+        const char*                storageKey   = jsonStorageKey.as<const char*>();
+        const char*                nativeFormat = jsonNativeFormat.as<const char*>();
+        uint32_t                   dwellTime    = jsonDwellTime.as<uint32_t>();
 
         if ((m_playerKey != playerKey) ||
             (m_mqttInstance != mqttInstance))
@@ -451,7 +532,15 @@ bool MakapixPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
             m_commandHandler.subscribe();
         }
 
-        status = true;
+        m_startChannelName     = channelName;
+        m_startChannelUserSqid = userSqid;
+        m_startChannelHashtag  = hashtag;
+        m_startPostId          = postId;
+        m_startStorageKey      = storageKey;
+        m_startNativeFormat    = nativeFormat;
+        m_startDwellTime       = dwellTime;
+
+        status                 = true;
     }
 
     return status;
@@ -864,8 +953,21 @@ bool MakapixPlugin::cmdPlayChannel(const char* channelName, const char* userSqid
     else
     {
         m_view.showActionIconPlay();
-        m_displayMode = DISPLAY_MODE_PLAY_CHANNEL;
-        isSuccessful  = true;
+        m_displayMode          = DISPLAY_MODE_PLAY_CHANNEL;
+
+        /* Store persistent and clear previous artwork information. */
+        m_startChannelName     = channelName;
+        m_startChannelUserSqid = userSqid;
+        m_startChannelHashtag  = hashtag;
+
+        m_startPostId          = 0U;
+        m_startDwellTime       = 0U;
+        m_startStorageKey.clear();
+        m_startNativeFormat.clear();
+
+        requestStoreToPersistentMemory();
+
+        isSuccessful = true;
     }
 
     return isSuccessful;
@@ -883,6 +985,18 @@ void MakapixPlugin::cmdShowArtwork()
         {
             m_currentPlaylistIdx = m_playlist.selected();
             m_view.showActionIconPlay();
+
+            /* Store persistent and clear channel information. */
+            m_startPostId       = m_playlist.getPostId();
+            m_startStorageKey   = m_playlist.getStorageKey();
+            m_startNativeFormat = m_playlist.getNativeFormat();
+            m_startDwellTime    = m_playlist.getDwellTime();
+
+            m_startChannelName.clear();
+            m_startChannelUserSqid.clear();
+            m_startChannelHashtag.clear();
+
+            requestStoreToPersistentMemory();
         }
     }
 

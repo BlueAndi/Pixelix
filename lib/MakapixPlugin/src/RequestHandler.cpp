@@ -79,6 +79,15 @@ void RequestHandler::configure(const String& playerKey, uint8_t mqttInstance)
 
 void RequestHandler::process()
 {
+    /* New request? */
+    if (true == m_hasLastRequestData)
+    {
+        if (true == request(m_lastRequestData))
+        {
+            m_hasLastRequestData = false;
+        }
+    }
+
     /* Check for request timeout. */
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -99,16 +108,75 @@ void RequestHandler::process()
 
 bool RequestHandler::request(const char* channelName, const char* sortOrder, const char* userSqid, const char* hashtag, uint32_t page, uint32_t limit)
 {
+    bool isSuccessful = false;
+
+    if ((nullptr != channelName) &&
+        (nullptr != sortOrder))
+    {
+        m_lastRequestData.channelName = channelName;
+        m_lastRequestData.sortOrder   = sortOrder;
+
+        if (nullptr == userSqid)
+        {
+            m_lastRequestData.userSqid.clear();
+        }
+        else
+        {
+            m_lastRequestData.userSqid = userSqid;
+        }
+
+        if (nullptr == hashtag)
+        {
+            m_lastRequestData.hashtag.clear();
+        }
+        else
+        {
+            m_lastRequestData.hashtag = hashtag;
+        }
+
+        m_lastRequestData.page  = page;
+        m_lastRequestData.limit = limit;
+
+        m_hasLastRequestData    = true;
+
+        isSuccessful            = true;
+    }
+
+    return isSuccessful;
+}
+
+void RequestHandler::abort()
+{
+    /* Any pending request? */
+    if (true == m_requestTimer.isTimerRunning())
+    {
+        MqttService& mqttService = MqttService::getInstance();
+        String       pendingResponseTopic;
+
+        MqttTopic::getResponseTopic(m_playerKey, pendingResponseTopic, m_lastRequestId);
+
+        /* Abort it by removing subscription. */
+        (void)mqttService.unsubscribe(m_mqttInstance, pendingResponseTopic.c_str());
+        m_requestTimer.stop();
+    }
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+bool RequestHandler::request(const RequestData& requestData)
+{
     bool         isSuccessful = false;
     MqttService& mqttService  = MqttService::getInstance();
 
-    if ((nullptr != channelName) &&
-        (nullptr != sortOrder) &&
-        (MqttTypes::STATE_CONNECTED == mqttService.getState(m_mqttInstance)))
+    if (MqttTypes::STATE_CONNECTED == mqttService.getState(m_mqttInstance))
     {
         String responseTopic;
-
-        LOG_INFO("Request page %u with limit %u for channel %s", page, limit, channelName);
 
         /* Abort any pending request. */
         abort();
@@ -149,27 +217,27 @@ bool RequestHandler::request(const char* channelName, const char* sortOrder, con
             jsonDoc["request_id"]   = String(m_lastRequestId);
             jsonDoc["request_type"] = "query_posts";
             jsonDoc["player_key"]   = m_playerKey;
-            jsonDoc["channel"]      = channelName;
+            jsonDoc["channel"]      = requestData.channelName;
 
-            if (nullptr != userSqid)
+            if (false == requestData.userSqid.isEmpty())
             {
-                jsonDoc["user_handle"] = userSqid;
+                jsonDoc["user_handle"] = requestData.userSqid;
             }
 
-            if (nullptr != hashtag)
+            if (false == requestData.hashtag.isEmpty())
             {
-                jsonDoc["hashtag"] = hashtag;
+                jsonDoc["hashtag"] = requestData.hashtag;
             }
 
-            jsonDoc["sort"] = sortOrder;
+            jsonDoc["sort"] = requestData.sortOrder;
 
-            if (0 == strcmp(sortOrder, "random"))
+            if (0 == strcmp(requestData.sortOrder.c_str(), "random"))
             {
                 jsonDoc["random_seed"] = millis();
             }
 
-            jsonDoc["cursor"] = String(page);
-            jsonDoc["limit"]  = limit;
+            jsonDoc["cursor"] = String(requestData.page);
+            jsonDoc["limit"]  = requestData.limit;
 
             jsonIncludeFields.add("width");
             jsonIncludeFields.add("height");
@@ -203,30 +271,6 @@ bool RequestHandler::request(const char* channelName, const char* sortOrder, con
 
     return isSuccessful;
 }
-
-void RequestHandler::abort()
-{
-    /* Any pending request? */
-    if (true == m_requestTimer.isTimerRunning())
-    {
-        MqttService& mqttService = MqttService::getInstance();
-        String       pendingResponseTopic;
-
-        MqttTopic::getResponseTopic(m_playerKey, pendingResponseTopic, m_lastRequestId);
-
-        /* Abort it by removing subscription. */
-        (void)mqttService.unsubscribe(m_mqttInstance, pendingResponseTopic.c_str());
-        m_requestTimer.stop();
-    }
-}
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
 
 void RequestHandler::mqttTopicCallback(const String& topic, const uint8_t* payload, size_t size)
 {

@@ -72,7 +72,9 @@ public:
         m_playerKey(),
         m_mqttInstance(0U),
         m_requestTimer(),
-        m_lastRequestId(0U)
+        m_lastRequestId(0U),
+        m_lastRequestData(),
+        m_hasLastRequestData(false)
     {
     }
 
@@ -136,6 +138,28 @@ public:
 
 private:
 
+    /** Request data structure. */
+    struct RequestData
+    {
+        String   channelName; /**< The channel name. */
+        String   sortOrder;   /**< Sort order. */
+        String   userSqid;    /**< The user sqid is only required for channel "by_user". */
+        String   hashtag;     /**< The hashtag is only required for channel "hashtag". */
+        uint32_t page;        /**< Page for pagination. */
+        uint32_t limit;       /**< Number of items per page. */
+
+        /** Default constructor. */
+        RequestData() :
+            channelName(),
+            sortOrder(),
+            userSqid(),
+            hashtag(),
+            page(0U),
+            limit(0U)
+        {
+        }
+    };
+
     /**
      * Request timeout in milliseconds.
      */
@@ -146,6 +170,18 @@ private:
     uint8_t                   m_mqttInstance;       /**< MQTT instance index. */
     SimpleTimer               m_requestTimer;       /**< Timer used to observe a request. */
     uint32_t                  m_lastRequestId;      /**< The last request id used to generate the next id. */
+    RequestData               m_lastRequestData;    /**< The last request data used for retry on timeout. */
+    bool                      m_hasLastRequestData; /**< Has last request data valid. */
+
+    /**
+     * Send request to the server.
+     * It will abort any pending request.
+     *
+     * @param[in] requestData   The request data.
+     *
+     * @return If request is successful sent, it will return true otherwise false.
+     */
+    bool request(const RequestData& requestData);
 
     /**
      * The MQTT callback is registered by subscription and will be called on change by

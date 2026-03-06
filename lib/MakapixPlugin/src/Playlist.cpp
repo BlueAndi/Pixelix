@@ -157,6 +157,34 @@ String Playlist::getStorageKey() const
     return storageKey;
 }
 
+String Playlist::getNativeFormat() const
+{
+    String nativeFormat;
+
+    if (0U < m_playlist.size())
+    {
+        const Entry& entry = m_playlist[m_selectedIdx];
+
+        nativeFormat       = entry.nativeFormat;
+    }
+
+    return nativeFormat;
+}
+
+uint32_t Playlist::getDwellTime() const
+{
+    uint32_t dwellTime = 0U;
+
+    if (0U < m_playlist.size())
+    {
+        const Entry& entry = m_playlist[m_selectedIdx];
+
+        dwellTime          = entry.dwellTime;
+    }
+
+    return dwellTime;
+}
+
 String Playlist::getUrl() const
 {
     String url;
@@ -176,20 +204,6 @@ String Playlist::getUrl() const
     }
 
     return url;
-}
-
-uint32_t Playlist::getDwellTime() const
-{
-    uint32_t dwellTime = 0U;
-
-    if (0U < m_playlist.size())
-    {
-        const Entry& entry = m_playlist[m_selectedIdx];
-
-        dwellTime          = entry.dwellTime;
-    }
-
-    return dwellTime;
 }
 
 bool Playlist::next()
