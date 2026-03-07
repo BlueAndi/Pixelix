@@ -240,6 +240,15 @@ static const char* getDisposalMethodAsString(uint8_t disposalMethod);
 static uint32_t gFrameCnt = 0U;
 #endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
 
+/* Interlace pattern according to GIF89a specification:
+ * Pass 0: Every 8th row, starting with row 0
+ * Pass 1: Every 8th row, starting with row 4
+ * Pass 2: Every 4th row, starting with row 2
+ * Pass 3: Every 2nd row, starting with row 1
+ */
+const uint8_t GifImgPlayer::INTERLACE_START[4U] = { 0U, 4U, 2U, 1U };
+const uint8_t GifImgPlayer::INTERLACE_STEP[4U]  = { 8U, 8U, 4U, 2U };
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -264,6 +273,8 @@ GifImgPlayer::GifImgPlayer() :
     m_isTransparencyEnabled(false),
     m_transparentColorIndex(0U),
     m_isTrailerFound(false),
+    m_isInterlaced(false),
+    m_interlacePass(0U),
     m_restartFilePos(0U),
     m_loopCount(0U),
     m_delay(0U),
@@ -293,6 +304,8 @@ GifImgPlayer::GifImgPlayer(const GifImgPlayer& player) :
     m_isTransparencyEnabled(player.m_isTransparencyEnabled),
     m_transparentColorIndex(player.m_transparentColorIndex),
     m_isTrailerFound(player.m_isTrailerFound),
+    m_isInterlaced(player.m_isInterlaced),
+    m_interlacePass(player.m_interlacePass),
     m_restartFilePos(player.m_restartFilePos),
     m_loopCount(player.m_loopCount),
     m_delay(player.m_delay),
@@ -342,6 +355,8 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
         m_isTransparencyEnabled = player.m_isTransparencyEnabled;
         m_transparentColorIndex = player.m_transparentColorIndex;
         m_isTrailerFound        = player.m_isTrailerFound;
+        m_isInterlaced          = player.m_isInterlaced;
+        m_interlacePass         = player.m_interlacePass;
         m_restartFilePos        = player.m_restartFilePos;
         m_loopCount             = player.m_loopCount;
         m_delay                 = player.m_delay;
@@ -975,6 +990,10 @@ bool GifImgPlayer::parseImageDescriptor()
                 m_posX                  = 0U;
                 m_posY                  = 0U;
 
+                /* Store interlace flag and reset interlace pass. */
+                m_isInterlaced          = (0U != imageDescriptor.packedField.interlaceFlag);
+                m_interlacePass         = 0U;
+
                 if (false == lzwDecoder.init(lzwMinCodeSize))
                 {
                     isSuccessful = false;
@@ -1178,7 +1197,7 @@ bool GifImgPlayer::parseApplicationExtension()
         const void* vAppAuthCode   = appExt.authenticationCode;
         const char* appAuthCode    = static_cast<const char*>(vAppAuthCode);
 
-        /* Only the NETSCAPE 2.0 application is supported for animatins. */
+        /* Only the NETSCAPE 2.0 application is supported for animations. */
         if ((0 == strncmp(appIdentifier, "NETSCAPE", sizeof(appExt.identifier))) &&
             (0 == strncmp(appAuthCode, "2.0", sizeof(appExt.authenticationCode))))
         {
@@ -1421,11 +1440,30 @@ bool GifImgPlayer::writeToIndexStream(uint8_t data)
             m_canvas.drawPixel(m_posX, m_posY, color);
         }
 
+        /* Move to the next pixel position. */
         ++m_posX;
         if (m_canvas.getWidth() <= m_posX)
         {
             m_posX = 0;
-            ++m_posY;
+
+            /* If the image is interlaced, use the interlace pattern. */
+            if (true == m_isInterlaced)
+            {
+                /* Move to the next row within the current pass. */
+                m_posY += INTERLACE_STEP[m_interlacePass];
+
+                /* If we've gone past the bottom of the image, move to the next pass. */
+                while ((m_canvas.getHeight() <= m_posY) && (3U > m_interlacePass))
+                {
+                    ++m_interlacePass;
+                    m_posY = INTERLACE_START[m_interlacePass];
+                }
+            }
+            /* Non-interlaced images are stored sequentially. */
+            else
+            {
+                ++m_posY;
+            }
         }
 
         isSuccessful = true;

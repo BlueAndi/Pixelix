@@ -234,6 +234,16 @@ private:
     static const size_t IMAGE_DATA_BLOCK_SIZE = 256U;
 
     /**
+     * Interlace start lines and step for each interlace pass.
+     */
+    static const uint8_t INTERLACE_START[4U];
+
+    /**
+     * Interlace step for each interlace pass.
+     */
+    static const uint8_t INTERLACE_STEP[4U];
+
+    /**
      * A palette color used for the global color table.
      */
     typedef struct _PaletteColor
@@ -285,6 +295,8 @@ private:
     bool                                         m_isTransparencyEnabled;  /**< Is transparency enabled or not? */
     uint8_t                                      m_transparentColorIndex;  /**< Index of the transparent color. */
     bool                                         m_isTrailerFound;         /**< Is the trailer found? */
+    bool                                         m_isInterlaced;           /**< Is the current image interlaced? */
+    uint8_t                                      m_interlacePass;          /**< Current interlace pass (0-3). */
 
     /* Only animation relevant variables. */
     size_t      m_restartFilePos; /**< File position used to restart the animation. */
