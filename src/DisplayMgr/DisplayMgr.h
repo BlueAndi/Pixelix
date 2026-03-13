@@ -313,7 +313,7 @@ public:
      *
      * @return The currently selected fade effect.
      */
-    FadeEffectController::FadeEffect getFadeEffect();
+    FadeEffectController::FadeEffect getFadeEffect() const;
 
     /**
      * Move plugin to a different slot.
@@ -382,7 +382,7 @@ public:
      *
      * @return Duration in ms
      */
-    uint32_t getSlotDuration(uint8_t slotId);
+    uint32_t getSlotDuration(uint8_t slotId) const;
 
     /**
      * Set slot duration in ms, how long the given plugin will be shown.
@@ -523,7 +523,6 @@ private:
     FadeEffectController m_fadeEffectController; /**< Fade effect controller. */
     bool                 m_isNetworkConnected;   /**< Is a network connection established? */
     IndicatorViewBase    m_indicatorView;        /**< Indicator view shown as overlay to indicate user defined states. */
-
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 

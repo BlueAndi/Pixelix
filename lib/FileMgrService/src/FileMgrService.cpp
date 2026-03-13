@@ -456,11 +456,17 @@ bool FileMgrService::isUploadAccepted(const String& topic, const String& srcFile
     if (true == topic.equals(TOPIC_UPLOAD))
     {
         /* Accept only files with the right file extension. */
-        if (true == BitmapWidget::isImageTypeSupported(srcFilename))
+        if (false == BitmapWidget::isImageTypeSupported(srcFilename))
+        {
+            LOG_WARNING("File \"%s\" not supported.", srcFilename.c_str());
+        }
+        else
         {
             dstFilename  = WORKING_DIRECTORY;
             dstFilename += "/";
             dstFilename += srcFilename;
+
+            isAccepted   = true;
         }
     }
 

@@ -652,10 +652,10 @@ void DisplayMgr::activateNextFadeEffect(FadeEffectController::FadeEffect fadeEff
     m_fadeEffectController.selectFadeEffect(fadeEffect);
 }
 
-FadeEffectController::FadeEffect DisplayMgr::getFadeEffect()
+FadeEffectController::FadeEffect DisplayMgr::getFadeEffect() const
 {
-    FadeEffectController ::FadeEffect currentFadeEffect;
-    MutexGuard<MutexRecursive>        guard(m_mutexInterf);
+    FadeEffectController::FadeEffect currentFadeEffect;
+    MutexGuard<MutexRecursive>       guard(m_mutexInterf);
 
     currentFadeEffect = m_fadeEffectController.getFadeEffect();
 
@@ -748,7 +748,7 @@ bool DisplayMgr::isSlotDisabled(uint8_t slotId)
     return isDisabled;
 }
 
-uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
+uint32_t DisplayMgr::getSlotDuration(uint8_t slotId) const
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
     uint32_t                   duration = m_slotList.getDuration(slotId);
@@ -783,7 +783,7 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
         IDisplay&                  display = Display::getInstance();
         int16_t                    x;
         int16_t                    y;
-        size_t                     index = 0;
+        size_t                     index = 0U;
         MutexGuard<MutexRecursive> guard(m_mutexInterf);
 
         /* Copy framebuffer after it is completely updated. */
@@ -1190,14 +1190,17 @@ void DisplayMgr::process()
     }
 
     /* Process all installed plugins. */
-    for (index = 0U; index < m_slotList.getMaxSlots(); ++index)
     {
         MutexGuard<MutexRecursive> guard(m_mutexUpdate);
-        IPluginMaintenance*        plugin = m_slotList.getPlugin(index);
 
-        if (nullptr != plugin)
+        for (index = 0U; index < m_slotList.getMaxSlots(); ++index)
         {
-            plugin->process(m_isNetworkConnected);
+            IPluginMaintenance* plugin = m_slotList.getPlugin(index);
+
+            if (nullptr != plugin)
+            {
+                plugin->process(m_isNetworkConnected);
+            }
         }
     }
 }
