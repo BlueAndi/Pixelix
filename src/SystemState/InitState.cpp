@@ -303,13 +303,13 @@ void InitState::process(StateMachine& sm)
     if (BUTTON_STATE_RELEASED == buttonState)
     {
         m_isApModeRequested = false;
-        DisplayMgr::getInstance().setIndicator(DisplayMgr::INDICATOR_ID_ALL, false);
+        DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_ALL, IIndicatorView::State::STATE_OFF);
     }
     /* Does the user request for setting up an wifi access point? */
     else if (BUTTON_STATE_PRESSED == buttonState)
     {
         m_isApModeRequested = true;
-        DisplayMgr::getInstance().setIndicator(DisplayMgr::INDICATOR_ID_ALL, true);
+        DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_ALL, IIndicatorView::State::STATE_ON);
     }
     else
     {

@@ -51,9 +51,9 @@
 #include <YAFont.h>
 #include <YAGfxText.h>
 #include <YAGfxBrush.h>
-#include <SimpleTimer.hpp>
 #include "Alignment.h"
 #include "TWAbstractSyntaxTree.h"
+#include "ScrollController.h"
 
 /******************************************************************************
  * Macros
@@ -276,16 +276,7 @@ public:
      */
     static bool setScrollPause(uint32_t pause)
     {
-        bool status = false;
-
-        if ((MIN_SCROLL_PAUSE <= pause) &&
-            (MAX_SCROLL_PAUSE >= pause))
-        {
-            m_scrollPause = pause;
-            status        = true;
-        }
-
-        return status;
+        return ScrollController::setScrollPause(pause);
     }
 
     /**
@@ -360,15 +351,6 @@ public:
     /** Default font */
     static const YAFont& DEFAULT_FONT;
 
-    /** Default pause between character scrolling in ms */
-    static const uint32_t DEFAULT_SCROLL_PAUSE = 80U;
-
-    /** Minimal scroll pause in ms */
-    static const uint32_t MIN_SCROLL_PAUSE     = 20U;
-
-    /** Maximal scroll pause in ms */
-    static const uint32_t MAX_SCROLL_PAUSE     = 500U;
-
 private:
 
     /** Fading brightness delta value per cycle. */
@@ -413,49 +395,15 @@ private:
         FADE_STATE_IN        /**< Fading in. */
     };
 
-    /**
-     * Scroll information, used per text.
-     */
-    struct ScrollInfo
-    {
-        bool     isEnabled;         /**< Is scrolling enabled? */
-        bool     isScrollingToLeft; /**< Is text scrolling to left? Otherwise scrolling to top. */
-        int16_t  offsetDest;        /**< Offset destination in pixel */
-        int16_t  offset;            /**< Current offset in pixel */
-        uint16_t textHeight;        /**< Text height in pixel */
-
-        /**
-         * Initializes scroll information.
-         */
-        ScrollInfo() :
-            isEnabled(false),
-            isScrollingToLeft(true),
-            offsetDest(0),
-            offset(0),
-            textHeight(0U)
-        {
-        }
-
-        /**
-         * Clear scroll information.
-         */
-        void clear()
-        {
-            isEnabled         = false;
-            isScrollingToLeft = true;
-            offsetDest        = 0;
-            offset            = 0;
-            textHeight        = 0U;
-        }
-    };
-
     String                   m_formatStrUtf8;       /**< Current shown string, which contains format tags. Encoding: UTF-8 */
     String                   m_formatStrNewUtf8;    /**< New text string, which contains format tags. Encoding: UTF-8 */
     FadeState                m_fadeState;           /**< The current fade state. Used to switch from old to new text. */
     uint8_t                  m_fadeBrightness;      /**< Brightness value used for fading. */
     bool                     m_isFadeEffectEnabled; /**< Is fade effect enabled? */
-    ScrollInfo               m_scrollInfo;          /**< Scroll information */
-    ScrollInfo               m_scrollInfoNew;       /**< Scroll information for the new text. */
+    ScrollController         m_scrollCtrl;          /**< Scroll controller for current text */
+    ScrollController         m_scrollCtrlNew;       /**< Scroll controller for new text */
+    uint16_t                 m_textHeight;          /**< Text height in pixel */
+    uint16_t                 m_textHeightNew;       /**< Text height in pixel for new text */
     bool                     m_prepareNewText;      /**< User set new text, which shall be prepared. */
     bool                     m_updateText;          /**< New text is prepared shall be updated. */
     TWAbstractSyntaxTree     m_ast;                 /**< AST for the current format string. Encoding: Internal */
@@ -463,9 +411,6 @@ private:
     YAGfxSolidBrush          m_solidBrush;          /**< Solid text color brush. */
     YAGfxLinearGradientBrush m_linearGradientBrush; /**< Linear gradient text color brush. */
     YAGfxText                m_gfxText;             /**< GFX for current text. */
-    uint32_t                 m_scrollingCnt;        /**< Counts how often a text was complete scrolled. */
-    int16_t                  m_scrollOffset;        /**< Pixel offset of cursor x position, used for scrolling. */
-    SimpleTimer              m_scrollTimer;         /**< Timer, used for scrolling */
 
     /**
      * Horizontal alignment which is the default one.
@@ -489,12 +434,6 @@ private:
      * y-coordinate calculated from vertical alignment.
      */
     int16_t m_vAlignPosY;
-
-    /**
-     * Pause in ms, between each scroll movement.
-     * Its used by all text widget instances.
-     */
-    static uint32_t m_scrollPause;
 
     /**
      * Align the current text horizontal by calculating the x-coordinate of the
@@ -573,14 +512,6 @@ private:
      * Handle fading text in.
      */
     void handleFadeIn();
-
-    /**
-     * Scroll the text depended on the scrolling direction.
-     * It will only update the scrolling offset.
-     *
-     * @param[in] gfx Graphic functionality
-     */
-    void scrollText(YAGfx& gfx);
 
     /**
      * Paint the widget with the given graphics interface.

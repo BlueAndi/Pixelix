@@ -213,6 +213,9 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("EFFECT" === this._pendingCmd.name) {
                 rsp.fadeEffect = parseInt(data[0]);
                 this._pendingCmd.resolve(rsp);
+            } else if ("FONTTYPE" === this._pendingCmd.name) {
+                rsp.fontSize = data[0];
+                this._pendingCmd.resolve(rsp);
             } else if ("INSTALL" === this._pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
                 rsp.uid = this._removeQuotes(data[1]);
@@ -249,16 +252,17 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("SLOTS" === this._pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
-                elements = 7;
+                elements = 8;
                 for(index = 0; index < (data.length / elements); ++index) {
                     rsp.slots.push({
                         name: this._removeQuotes(data[elements * index + 0]),
                         uid: parseInt(data[elements * index + 1]),
                         alias: this._removeQuotes(data[elements * index + 2]),
-                        isLocked: this._toBoolean(data[elements * index + 3]),
-                        isSticky: this._toBoolean(data[elements * index + 4]),
-                        isDisabled: this._toBoolean(data[elements * index + 5]),
-                        duration: parseInt(data[elements * index + 6])
+                        fontType: this._removeQuotes(data[elements * index + 3]),
+                        isLocked: this._toBoolean(data[elements * index + 4]),
+                        isSticky: this._toBoolean(data[elements * index + 5]),
+                        isDisabled: this._toBoolean(data[elements * index + 6]),
+                        duration: parseInt(data[elements * index + 7])
                     });
                 }
                 this._pendingCmd.resolve(rsp);
@@ -730,6 +734,48 @@ pixelix.ws.Client.prototype.setPluginAlias = function(options) {
 
             this._sendCmd({
                 name: "ALIAS",
+                par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getPluginFontType = function(options) {
+    return new Promise(function(resolve, reject) {
+        if (null === this._socket) {
+            reject();
+        } else if ("number" !== typeof options.uuid) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "FONTTYPE",
+                par: options.uuid,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.setPluginFontType = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+        if (null === this._socket) {
+            reject();
+        } else if ("number" !== typeof options.uid) {
+            reject();
+        } else if ("string" !== typeof options.fontType) {
+            reject();
+        } else {
+
+            par += options.uid;
+            par += ";";
+            par += options.fontType;
+
+            this._sendCmd({
+                name: "FONTTYPE",
                 par: par,
                 resolve: resolve,
                 reject: reject

@@ -73,7 +73,7 @@ public:
      */
     DateTimeViewGeneric() :
         IDateTimeView(),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
+        m_fontType(Fonts::FONT_TYPE_MAX), /* Invalid font type to ensure the first setFontType() call will set the font. */
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
         m_lampWidgets{ { LAMP_WIDTH, LAMP_HEIGHT, LAMP_0_X, LAMP_Y },
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_1_X, LAMP_Y },
@@ -91,6 +91,8 @@ public:
          * which will continuously trigger the fading effect.
          */
         m_textWidget.disableFadeEffect();
+
+        setFontType(m_fontType);
     }
 
     /**
@@ -133,16 +135,12 @@ public:
      */
     void setFontType(Fonts::FontType fontType) override
     {
-        m_fontType = fontType;
-        m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-        if (Fonts::FONT_TYPE_LARGE == m_fontType)
+        if (m_fontType != fontType)
         {
-            /* Disable all lamp widgets to avoid overlapping. */
-            for (auto& lamp : m_lampWidgets)
-            {
-                lamp.disable();
-            }
+            m_fontType = fontType;
+            m_textWidget.setFont(Fonts::getFontByType(m_fontType));
+
+            updateLayout();
         }
     }
 
@@ -344,63 +342,68 @@ public:
 protected:
 
     /** Distance between two lamps in pixel. */
-    static const uint8_t LAMP_DISTANCE = 1U;
+    static const uint16_t LAMP_DISTANCE      = 1U;
 
     /** Lamp width in pixel. */
-    static const uint8_t LAMP_WIDTH    = (CONFIG_LED_MATRIX_WIDTH - ((MAX_LAMPS + 1U) * LAMP_DISTANCE)) / MAX_LAMPS;
+    static const uint16_t LAMP_WIDTH         = (CONFIG_LED_MATRIX_WIDTH - ((MAX_LAMPS + 1U) * LAMP_DISTANCE)) / MAX_LAMPS;
 
     /** Lamp distance to the canvas border in pixel. */
-    static const uint8_t LAMP_BORDER   = (CONFIG_LED_MATRIX_WIDTH - (MAX_LAMPS * LAMP_WIDTH) - ((MAX_LAMPS - 1U) * LAMP_DISTANCE)) / 2U;
+    static const uint16_t LAMP_BORDER        = (CONFIG_LED_MATRIX_WIDTH - (MAX_LAMPS * LAMP_WIDTH) - ((MAX_LAMPS - 1U) * LAMP_DISTANCE)) / 2U;
 
     /** Lamp height in pixel. */
-    static const uint8_t LAMP_HEIGHT   = 1U;
+    static const uint16_t LAMP_HEIGHT        = 1U;
 
     /** Lamp 0 x-coordinate in pixel. */
-    static const uint8_t LAMP_0_X      = LAMP_BORDER + (0 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_0_X            = LAMP_BORDER + (0 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 1 x-coordinate in pixel. */
-    static const uint8_t LAMP_1_X      = LAMP_BORDER + (1 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_1_X            = LAMP_BORDER + (1 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 2 x-coordinate in pixel. */
-    static const uint8_t LAMP_2_X      = LAMP_BORDER + (2 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_2_X            = LAMP_BORDER + (2 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 3 x-coordinate in pixel. */
-    static const uint8_t LAMP_3_X      = LAMP_BORDER + (3 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_3_X            = LAMP_BORDER + (3 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 4 x-coordinate in pixel. */
-    static const uint8_t LAMP_4_X      = LAMP_BORDER + (4 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_4_X            = LAMP_BORDER + (4 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 5 x-coordinate in pixel. */
-    static const uint8_t LAMP_5_X      = LAMP_BORDER + (5 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_5_X            = LAMP_BORDER + (5 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp 6 x-coordinate in pixel. */
-    static const uint8_t LAMP_6_X      = LAMP_BORDER + (6 * (LAMP_WIDTH + LAMP_DISTANCE));
+    static const int16_t LAMP_6_X            = LAMP_BORDER + (6 * (LAMP_WIDTH + LAMP_DISTANCE));
 
     /** Lamp y-coordindate in pixel. */
-    static const uint8_t LAMP_Y        = CONFIG_LED_MATRIX_HEIGHT - 1U;
+    static const int16_t LAMP_Y              = CONFIG_LED_MATRIX_HEIGHT - 1U;
+
+    /**
+     * Distance between text and lamp widgets in pixel.
+     */
+    static const uint16_t TEXT_LAMP_DISTANCE = 1U;
 
     /**
      * Text width in pixels.
      */
-    static const uint16_t TEXT_WIDTH   = CONFIG_LED_MATRIX_WIDTH;
+    static const uint16_t TEXT_WIDTH         = CONFIG_LED_MATRIX_WIDTH;
 
     /**
      * Text height in pixels.
      */
-    static const uint16_t TEXT_HEIGHT  = CONFIG_LED_MATRIX_HEIGHT - LAMP_HEIGHT;
+    static const uint16_t TEXT_HEIGHT        = CONFIG_LED_MATRIX_HEIGHT;
 
     /**
      * Text widget x-coordinate in pixels.
      */
-    static const int16_t TEXT_X        = 0;
+    static const int16_t TEXT_X              = 0;
 
     /**
      * Text widget y-coordinate in pixels.
      */
-    static const int16_t TEXT_Y        = 0;
+    static const int16_t TEXT_Y              = 0;
 
     /** Start of week offset for the week bar (Sunday = 0). */
-    static const uint8_t START_OF_WEEK = 1U;
+    static const uint8_t START_OF_WEEK       = 1U;
 
     /** Color of the current day shown in the day of the week bar. */
     static const Color DAY_ON_COLOR;
@@ -415,6 +418,14 @@ protected:
     Color              m_dayOnColor;             /**< Color of current day in the day of the week bar. */
     Color              m_dayOffColor;            /**< Color of the other days in the day of the week bar. */
     tm                 m_now;                    /**< Latest time update. */
+
+    /**
+     * Updates the layout depended on the current font type.
+     * This is required, because some font types may have a height which is
+     * larger than the text area in the layout, which will cause an
+     * overlapping of the text and other widgets.
+     */
+    virtual void updateLayout();
 
 private:
 

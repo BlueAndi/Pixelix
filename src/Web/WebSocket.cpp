@@ -39,6 +39,7 @@
 #include "WsCmdBrightness.h"
 #include "WsCmdButton.h"
 #include "WsCmdEffect.h"
+#include "WsCmdFontType.h"
 #include "WsCmdGetDisp.h"
 #include "WsCmdInstall.h"
 #include "WsCmdIperf.h"
@@ -124,6 +125,9 @@ static WsCmdEffect gWsCmdEffect;
 /** Websocket get/set plugin alias name command */
 static WsCmdAlias gWsCmdAlias;
 
+/** Websocket get/set plugin font type command */
+static WsCmdFontType gWsCmdFontType;
+
 /** Websocket command list */
 static WsCmd* gWsCommands[] = {
     &gWsCmdGetDisp,
@@ -142,7 +146,8 @@ static WsCmd* gWsCommands[] = {
 #endif /* CONFIG_FEATURE_IPERF == 1 */
     &gWsCmdButton,
     &gWsCmdEffect,
-    &gWsCmdAlias
+    &gWsCmdAlias,
+    &gWsCmdFontType
 };
 
 /******************************************************************************

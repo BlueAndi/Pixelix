@@ -67,20 +67,44 @@ void IndicatorViewGeneric::update(YAGfx& gfx)
     {
         LampWidget& lampWidget = m_lampWidgets[idx];
 
-        /* If the lamp is on, it will be drawn otherwise not. */
+        if (STATE_BLINK == m_lampStates[idx])
+        {
+            if (true == m_blinkTimer.isTimeout())
+            {
+                lampWidget.toggle();
+            }
+        }
+
+        /* Update the lamp widget if it is turned on.
+         * If the lamp is turned off, it shall not overwrite the display.
+         */
         if (true == lampWidget.getOnState())
         {
             lampWidget.update(gfx);
         }
     }
+
+    if (true == m_blinkTimer.isTimeout())
+    {
+        m_blinkTimer.restart();
+    }
 }
 
-void IndicatorViewGeneric::setIndicator(uint8_t indicatorId, bool isOn)
+void IndicatorViewGeneric::setIndicator(uint8_t indicatorId, State state)
 {
     /* Check if the indicator id is valid. */
-    if (indicatorId < MAX_LAMPS)
+    if (MAX_LAMPS > indicatorId)
     {
-        m_lampWidgets[indicatorId].setOnState(isOn);
+        if (STATE_OFF == state)
+        {
+            m_lampWidgets[indicatorId].setOnState(false);
+        }
+        else
+        {
+            m_lampWidgets[indicatorId].setOnState(true);
+        }
+
+        m_lampStates[indicatorId] = state;
     }
     /* Special case to turn on/off all lamps? */
     else if (INDICATOR_ID_ALL == indicatorId)
@@ -89,7 +113,8 @@ void IndicatorViewGeneric::setIndicator(uint8_t indicatorId, bool isOn)
 
         for (idx = 0U; idx < MAX_LAMPS; ++idx)
         {
-            m_lampWidgets[idx].setOnState(isOn);
+            m_lampWidgets[idx].setOnState(STATE_OFF == state ? false : true);
+            m_lampStates[idx] = state;
         }
     }
     /* Invalid indicator id, do nothing. */
@@ -100,16 +125,23 @@ void IndicatorViewGeneric::setIndicator(uint8_t indicatorId, bool isOn)
     }
 }
 
-bool IndicatorViewGeneric::isIndicatorOn(uint8_t indicatorId) const
+IIndicatorView::State IndicatorViewGeneric::getIndicatorState(uint8_t indicatorId) const
 {
-    bool isOn = false;
+    State state = STATE_OFF;
 
-    if (indicatorId < MAX_LAMPS)
+    /* Check if the indicator id is valid. */
+    if (MAX_LAMPS > indicatorId)
     {
-        isOn = m_lampWidgets[indicatorId].getOnState();
+        state = m_lampStates[indicatorId];
+    }
+    /* Invalid indicator id, return off state. */
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 
-    return isOn;
+    return state;
 }
 
 /******************************************************************************

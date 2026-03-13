@@ -300,11 +300,20 @@ void OpenWeatherView32x16::updateWeatherInfoCurrentOnView()
     /* Change icon only if its really necessary to avoid restarting animated icon. */
     if (true == m_isWeatherIconCurrentUpdated)
     {
-        (void)m_weatherIconCurrent.load(FILESYSTEM, iconFullPath);
-        m_isWeatherIconCurrentUpdated = false;
+        /* Ensure that changing the text only if the icon was successfully loaded.
+         * Otherwise, the text will be shown with the wrong icon until the icon is
+         * updated successfully.
+         */
+        if (true == m_weatherIconCurrent.load(FILESYSTEM, iconFullPath))
+        {
+            m_isWeatherIconCurrentUpdated = false;
+            m_weatherInfoCurrentText.setFormatStr(text);
+        }
     }
-
-    m_weatherInfoCurrentText.setFormatStr(text);
+    else
+    {
+        m_weatherInfoCurrentText.setFormatStr(text);
+    }
 }
 
 void OpenWeatherView32x16::handleWeatherInfo()

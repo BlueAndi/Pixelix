@@ -90,9 +90,6 @@ const TextWidget::FormatKeywordRow TextWidget::FORMAT_KEYWORD_TABLE_2[] = {
     { "{vm *}", &TextWidget::verticalMove }
 };
 
-/* Set default scroll pause in ms. */
-uint32_t TextWidget::m_scrollPause = TextWidget::DEFAULT_SCROLL_PAUSE;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -104,8 +101,10 @@ TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
     m_isFadeEffectEnabled(true),
-    m_scrollInfo(),
-    m_scrollInfoNew(),
+    m_scrollCtrl(),
+    m_scrollCtrlNew(),
+    m_textHeight(0U),
+    m_textHeightNew(0U),
     m_prepareNewText(false),
     m_updateText(false),
     m_ast(),
@@ -118,9 +117,6 @@ TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
         DEFAULT_TEXT_COLOR_GRADIENT_LENGTH,
         DEFAULT_TEXT_COLOR_GRADIENT_VERTICAL),
     m_gfxText(DEFAULT_FONT, m_solidBrush),
-    m_scrollingCnt(0U),
-    m_scrollOffset(0),
-    m_scrollTimer(),
     m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
     m_vAlign(Alignment::Vertical::VERTICAL_TOP),
     m_vAlignPosY(0)
@@ -139,8 +135,10 @@ TextWidget::TextWidget(const String& str, const Color& color) :
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
     m_isFadeEffectEnabled(true),
-    m_scrollInfo(),
-    m_scrollInfoNew(),
+    m_scrollCtrl(),
+    m_scrollCtrlNew(),
+    m_textHeight(0U),
+    m_textHeightNew(0U),
     m_prepareNewText(true),
     m_updateText(false),
     m_ast(),
@@ -153,9 +151,6 @@ TextWidget::TextWidget(const String& str, const Color& color) :
         DEFAULT_TEXT_COLOR_GRADIENT_LENGTH,
         DEFAULT_TEXT_COLOR_GRADIENT_VERTICAL),
     m_gfxText(DEFAULT_FONT, m_solidBrush),
-    m_scrollingCnt(0U),
-    m_scrollOffset(0),
-    m_scrollTimer(),
     m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
     m_vAlign(Alignment::Vertical::VERTICAL_TOP),
     m_vAlignPosY(0)
@@ -186,8 +181,10 @@ TextWidget::TextWidget(const TextWidget& widget) :
     m_fadeState(widget.m_fadeState),
     m_fadeBrightness(widget.m_fadeBrightness),
     m_isFadeEffectEnabled(widget.m_isFadeEffectEnabled),
-    m_scrollInfo(widget.m_scrollInfo),
-    m_scrollInfoNew(widget.m_scrollInfoNew),
+    m_scrollCtrl(widget.m_scrollCtrl),
+    m_scrollCtrlNew(widget.m_scrollCtrlNew),
+    m_textHeight(widget.m_textHeight),
+    m_textHeightNew(widget.m_textHeightNew),
     m_prepareNewText(widget.m_prepareNewText),
     m_updateText(widget.m_updateText),
     m_ast(widget.m_ast),
@@ -195,9 +192,6 @@ TextWidget::TextWidget(const TextWidget& widget) :
     m_solidBrush(widget.m_solidBrush),
     m_linearGradientBrush(widget.m_linearGradientBrush),
     m_gfxText(widget.m_gfxText),
-    m_scrollingCnt(widget.m_scrollingCnt),
-    m_scrollOffset(widget.m_scrollOffset),
-    m_scrollTimer(widget.m_scrollTimer),
     m_hAlign(widget.m_hAlign),
     m_vAlign(widget.m_vAlign),
     m_vAlignPosY(widget.m_vAlignPosY)
@@ -215,8 +209,10 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
         m_fadeState           = widget.m_fadeState;
         m_fadeBrightness      = widget.m_fadeBrightness;
         m_isFadeEffectEnabled = widget.m_isFadeEffectEnabled;
-        m_scrollInfo          = widget.m_scrollInfo;
-        m_scrollInfoNew       = widget.m_scrollInfoNew;
+        m_scrollCtrl          = widget.m_scrollCtrl;
+        m_scrollCtrlNew       = widget.m_scrollCtrlNew;
+        m_textHeight          = widget.m_textHeight;
+        m_textHeightNew       = widget.m_textHeightNew;
         m_prepareNewText      = widget.m_prepareNewText;
         m_updateText          = widget.m_updateText;
         m_ast                 = widget.m_ast;
@@ -224,9 +220,6 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
         m_solidBrush          = widget.m_solidBrush;
         m_linearGradientBrush = widget.m_linearGradientBrush;
         m_gfxText             = widget.m_gfxText;
-        m_scrollingCnt        = widget.m_scrollingCnt;
-        m_scrollOffset        = widget.m_scrollOffset;
-        m_scrollTimer         = widget.m_scrollTimer;
         m_hAlign              = widget.m_hAlign;
         m_vAlign              = widget.m_vAlign;
         m_vAlignPosY          = widget.m_vAlignPosY;
@@ -268,10 +261,12 @@ void TextWidget::setFormatStr(const String& formatStrUtf8)
 void TextWidget::clear()
 {
     m_formatStrUtf8.clear();
-    m_scrollInfo.clear();
+    m_scrollCtrl.disable();
+    m_textHeight = 0U;
 
     m_formatStrNewUtf8.clear();
-    m_scrollInfoNew.clear();
+    m_scrollCtrlNew.disable();
+    m_textHeightNew  = 0U;
 
     m_prepareNewText = false;
 
@@ -303,8 +298,8 @@ bool TextWidget::getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
 
     if (false == m_prepareNewText)
     {
-        isScrollingEnabled = m_scrollInfoNew.isEnabled;
-        scrollingCnt       = m_scrollingCnt;
+        isScrollingEnabled = m_scrollCtrlNew.isEnabled();
+        scrollingCnt       = m_scrollCtrlNew.getScrollingCount();
         status             = true;
     }
 
@@ -327,8 +322,8 @@ int16_t TextWidget::alignTextHorizontal(YAGfx& gfx, const String& text, Alignmen
      * - Static text
      * - Text scrolling from bottom to top
      */
-    if ((false == m_scrollInfo.isEnabled) ||
-        ((true == m_scrollInfo.isEnabled) && (false == m_scrollInfo.isScrollingToLeft)))
+    if ((false == m_scrollCtrl.isEnabled()) ||
+        ((true == m_scrollCtrl.isEnabled()) && (ScrollController::DIRECTION_VERTICAL == m_scrollCtrl.getDirection())))
     {
         uint16_t textBoxWidth  = 0U;
         uint16_t textBoxHeight = 0U;
@@ -366,8 +361,8 @@ void TextWidget::alignTextVertical()
      * - Static text
      * - Text scrolling from left to right
      */
-    if ((false == m_scrollInfo.isEnabled) ||
-        ((true == m_scrollInfo.isEnabled) && (true == m_scrollInfo.isScrollingToLeft)))
+    if ((false == m_scrollCtrl.isEnabled()) ||
+        ((true == m_scrollCtrl.isEnabled()) && (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection())))
     {
         switch (m_vAlign)
         {
@@ -376,11 +371,11 @@ void TextWidget::alignTextVertical()
             break;
 
         case Alignment::Vertical::VERTICAL_CENTER:
-            m_vAlignPosY = (m_canvas.getHeight() - m_scrollInfo.textHeight) / 2;
+            m_vAlignPosY = (m_canvas.getHeight() - m_textHeight) / 2;
             break;
 
         case Alignment::Vertical::VERTICAL_BOTTOM:
-            m_vAlignPosY = m_canvas.getHeight() - m_scrollInfo.textHeight;
+            m_vAlignPosY = m_canvas.getHeight() - m_textHeight;
             break;
 
         default:
@@ -443,11 +438,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
     /* Get bounding box of the new text, without any format tags. */
     if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), newStr.c_str(), textBoxWidth, textBoxHeight))
     {
-        m_scrollInfoNew.textHeight = textBoxHeight;
-
-        /* Stop current scrolling. */
-        m_scrollTimer.stop();
-        m_scrollingCnt = 0U;
+        m_textHeightNew = textBoxHeight;
 
         /* Scenarios:
          *
@@ -503,9 +494,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         if (true == isStaticText(gfx, textBoxWidth, textBoxHeight))
         {
             /* New text is kept static. */
-            m_scrollInfoNew.isEnabled  = false;
-            m_scrollInfoNew.offsetDest = 0;
-            m_scrollInfoNew.offset     = 0;
+            m_scrollCtrlNew.disable();
         }
         /* If single line text widget, the current text will be scrolled
          * to the left and the new text scrolled in from right.
@@ -513,10 +502,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         else if (1U == getLineCount())
         {
             /* The new text shall scroll in. */
-            m_scrollInfoNew.isEnabled         = true;
-            m_scrollInfoNew.isScrollingToLeft = true;
-            m_scrollInfoNew.offsetDest        = -textBoxWidth;
-            m_scrollInfoNew.offset            = gfx.getWidth();
+            m_scrollCtrlNew.enable(ScrollController::DIRECTION_HORIZONTAL, gfx.getWidth(), textBoxWidth);
         }
         /* In multi-line text widget the current text will be scrolled
          * to the top and the new text scrolled in from bottom.
@@ -524,10 +510,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         else
         {
             /* The new text shall scroll in. */
-            m_scrollInfoNew.isEnabled         = true;
-            m_scrollInfoNew.isScrollingToLeft = false;
-            m_scrollInfoNew.offsetDest        = -textBoxHeight;
-            m_scrollInfoNew.offset            = gfx.getHeight() + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
+            m_scrollCtrlNew.enable(ScrollController::DIRECTION_VERTICAL, gfx.getHeight(), textBoxHeight);
         }
     }
 }
@@ -535,22 +518,22 @@ void TextWidget::prepareNewText(YAGfx& gfx)
 void TextWidget::calculateCursorPos(int16_t& curX, int16_t& curY) const
 {
     /* No scrolling? */
-    if (false == m_scrollInfo.isEnabled)
+    if (false == m_scrollCtrl.isEnabled())
     {
         curX = 0;
         curY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     }
     /* Scrolling from left to right? */
-    else if (true == m_scrollInfo.isScrollingToLeft)
+    else if (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection())
     {
-        curX = m_scrollInfo.offset;
+        curX = m_scrollCtrl.getOffset();
         curY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     }
     /* Scrolling from bottom to top. */
     else
     {
         curX = 0;
-        curY = m_scrollInfo.offset;
+        curY = m_scrollCtrl.getOffset();
     }
 
     /* Consider vertical alignment only.
@@ -623,42 +606,11 @@ void TextWidget::handleFadeIn()
     }
 }
 
-void TextWidget::scrollText(YAGfx& gfx)
-{
-    /* Handle scrolling text. */
-    if (m_scrollInfo.offsetDest < m_scrollInfo.offset)
-    {
-        --m_scrollInfo.offset;
-    }
-    else if (m_scrollInfo.offsetDest > m_scrollInfo.offset)
-    {
-        ++m_scrollInfo.offset;
-    }
-    else
-    {
-        /* Left to right scrolling. */
-        if (true == m_scrollInfo.isScrollingToLeft)
-        {
-            m_scrollInfo.offset = gfx.getWidth();
-        }
-        /* Bottom to top scrolling? */
-        else
-        {
-            m_scrollInfo.offset = gfx.getHeight();
-        }
-
-        /* Count number of times the text was scrolled complete. */
-        if (UINT32_MAX > m_scrollingCnt)
-        {
-            ++m_scrollingCnt;
-        }
-    }
-}
-
 void TextWidget::paint(YAGfx& gfx)
 {
-    int16_t cursorX = 0;
-    int16_t cursorY = 0;
+    int16_t  cursorX = 0;
+    int16_t  cursorY = 0;
+    uint16_t canvasSize;
 
     /* If there is a new text available, it shall be determined how to show it on the display. */
     if (true == m_prepareNewText)
@@ -672,36 +624,29 @@ void TextWidget::paint(YAGfx& gfx)
     {
         m_updateText    = false;
         m_formatStrUtf8 = m_formatStrNewUtf8;
-        m_scrollInfo    = m_scrollInfoNew;
+        m_scrollCtrl    = m_scrollCtrlNew;
+        m_textHeight    = m_textHeightNew;
         m_ast           = std::move(m_astNew);
 
         alignTextVertical();
-
-        if (true == m_scrollInfo.isEnabled)
-        {
-            m_scrollTimer.start(m_scrollPause);
-        }
     }
 
     /* Update text brightness, even if fade effect is disabled. */
     m_gfxText.getBrush().setIntensity(m_fadeBrightness);
+
+    /* Update scroll position if needed. */
+    canvasSize = (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection()) ? gfx.getWidth() : gfx.getHeight();
+    (void)m_scrollCtrl.update(canvasSize);
 
     /* Update the cursor position, it may have changed by scrolling. */
     calculateCursorPos(cursorX, cursorY);
     m_gfxText.setTextCursorPos(cursorX, cursorY);
 
     /* Show the text. */
-    show(gfx, m_ast, m_scrollInfo.isEnabled);
+    show(gfx, m_ast, m_scrollCtrl.isEnabled());
 
     /* Handle fade effect. */
     handleFadeEffect();
-
-    /* Is it time to scroll the text(s) again? */
-    if (true == m_scrollTimer.isTimeout())
-    {
-        scrollText(gfx);
-        m_scrollTimer.restart();
-    }
 }
 
 void TextWidget::specialCharacterCodeKeywordToText(TWAbstractSyntaxTree& ast)

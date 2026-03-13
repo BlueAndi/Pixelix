@@ -78,7 +78,7 @@ public:
                 ColorDef::GRAY,
                 ColorDef::YELLOW,
                 ColorDef::BLUE,
-                ColorDef::YELLOW }),
+                ColorDef::RED }),
         m_lastUpdateSecondVal(-1)
     {
         /* Disable fade effect in case the user required to show seconds,
@@ -211,6 +211,14 @@ protected:
      * Seconds value of last display update. Used to avoid unecessary redrawing.
      */
     int m_lastUpdateSecondVal;
+
+    /**
+     * Updates the layout depended on the current font type.
+     * This is required, because some font types may have a height which is
+     * larger than the text area in the layout, which will cause an
+     * overlapping of the text and other widgets.
+     */
+    void updateLayout() override;
 
 private:
 

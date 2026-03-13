@@ -424,13 +424,55 @@ bool DisplayMgr::setPluginAliasName(uint16_t uid, const String& alias)
 
     if (nullptr != plugin)
     {
-        if (true == PluginMgr::getInstance().setPluginAliasName(plugin, alias))
+        PluginMgr& pluginMgr = PluginMgr::getInstance();
+
+        if (true == pluginMgr.setPluginAliasName(plugin, alias))
         {
             /* Save current installed plugins to persistent memory. */
-            PluginMgr::getInstance().save();
+            pluginMgr.save();
 
             isSuccessful = true;
         }
+    }
+
+    return isSuccessful;
+}
+
+Fonts::FontType DisplayMgr::getPluginFontType(uint16_t uid) const
+{
+    Fonts::FontType            fontType = Fonts::FontType::FONT_TYPE_DEFAULT;
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+    uint8_t                    slotId = m_slotList.getSlotIdByPluginUID(uid);
+    const IPluginMaintenance*  plugin = m_slotList.getPlugin(slotId);
+
+    if (nullptr != plugin)
+    {
+        fontType = plugin->getFontType();
+    }
+
+    return fontType;
+}
+
+bool DisplayMgr::setPluginFontType(uint16_t uid, Fonts::FontType fontType)
+{
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+    uint8_t                    slotId = m_slotList.getSlotIdByPluginUID(uid);
+    IPluginMaintenance*        plugin = m_slotList.getPlugin(slotId);
+
+    if (nullptr != plugin)
+    {
+        if (plugin->getFontType() != fontType)
+        {
+            PluginMgr& pluginMgr = PluginMgr::getInstance();
+
+            plugin->setFontType(fontType);
+
+            /* Save current installed plugins to persistent memory. */
+            pluginMgr.save();
+        }
+
+        isSuccessful = true;
     }
 
     return isSuccessful;
@@ -771,20 +813,20 @@ bool DisplayMgr::isDisplayOn() const
     return isDisplayOn;
 }
 
-bool DisplayMgr::getIndicator(uint8_t indicatorId) const
+IIndicatorView::State DisplayMgr::getIndicatorState(uint8_t indicatorId) const
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
-    bool                       isOn = m_indicatorView.isIndicatorOn(indicatorId);
+    IIndicatorView::State      state = m_indicatorView.getIndicatorState(indicatorId);
 
-    return isOn;
+    return state;
 }
 
-void DisplayMgr::setIndicator(uint8_t indicatorId, bool isOn)
+void DisplayMgr::setIndicatorState(uint8_t indicatorId, IIndicatorView::State state)
 {
     MutexGuard<MutexRecursive> guard1(m_mutexInterf);
     MutexGuard<MutexRecursive> guard2(m_mutexUpdate);
 
-    m_indicatorView.setIndicator(indicatorId, isOn);
+    m_indicatorView.setIndicator(indicatorId, state);
 }
 
 /******************************************************************************

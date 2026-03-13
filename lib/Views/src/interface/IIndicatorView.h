@@ -66,6 +66,16 @@ class IIndicatorView
 public:
 
     /**
+     * Indicator state.
+     */
+    enum State
+    {
+        STATE_OFF = 0, /**< Indicator is off. */
+        STATE_ON,      /**< Indicator is on. */
+        STATE_BLINK    /**< Indicator is blinking. */
+    };
+
+    /**
      * Destroy the interface.
      */
     virtual ~IIndicatorView()
@@ -78,14 +88,14 @@ public:
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
-    virtual void init(uint16_t width, uint16_t height)        = 0;
+    virtual void init(uint16_t width, uint16_t height)          = 0;
 
     /**
      * Update the underlying canvas.
      *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    virtual void update(YAGfx& gfx)                           = 0;
+    virtual void update(YAGfx& gfx)                             = 0;
 
     /**
      * Set the indicator at given position to on/off state.
@@ -94,19 +104,19 @@ public:
      * The indicator id 255 will be used to turn on/off all indicators at once.
      *
      * @param[in] indicatorId   Id of the indicator, which to set.
-     * @param[in] isOn          If true, the indicator will be set to on state, otherwise off.
+     * @param[in] state          State to set the indicator to.
      */
-    virtual void setIndicator(uint8_t indicatorId, bool isOn) = 0;
+    virtual void setIndicator(uint8_t indicatorId, State state) = 0;
 
     /**
      * Get the indicator state at given position.
-     * If the indicator id is invalid, it will return false.
+     * If the indicator id is invalid, it will return STATE_OFF.
      *
      * @param[in]  indicatorId   Id of the indicator, which to set.
      *
-     * @return If the indicator is on, it will return true otherwise false.
+     * @return State of the indicator.
      */
-    virtual bool isIndicatorOn(uint8_t indicatorId) const     = 0;
+    virtual State getIndicatorState(uint8_t indicatorId) const  = 0;
 
 protected:
 

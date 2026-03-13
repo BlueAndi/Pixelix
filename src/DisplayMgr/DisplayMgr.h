@@ -191,6 +191,24 @@ public:
     bool setPluginAliasName(uint16_t uid, const String& alias);
 
     /**
+     * Get the font type of a plugin.
+     * If the given plugin UID is invalid, it will return Fonts::FontType::FONT_TYPE_DEFAULT.
+     *
+     * @param[in] uid   Plugin UID
+     * @return The plugin font type.
+     */
+    Fonts::FontType getPluginFontType(uint16_t uid) const;
+
+    /**
+     * Set the font type of a plugin.
+     *
+     * @param[in] uid       Plugin UID
+     * @param[in] fontType  Plugin font type
+     * @return If successful, it will return true otherwise false.
+     */
+    bool setPluginFontType(uint16_t uid, Fonts::FontType fontType);
+
+    /**
      * Get slot id by plugin UID.
      *
      * @param[in] uid   Plugin UID
@@ -394,13 +412,13 @@ public:
 
     /**
      * Get indicator state.
-     * If the indicator id is invalid, it will return false.
+     * If the indicator id is invalid, it will return STATE_OFF.
      *
      * @param[in] indicatorId  Id of indicator.
      *
-     * @return If the indicator is on, it will return true otherwise false.
+     * @return State of the indicator.
      */
-    bool getIndicator(uint8_t indicatorId) const;
+    IIndicatorView::State getIndicatorState(uint8_t indicatorId) const;
 
     /**
      * Set indicator state.
@@ -409,9 +427,9 @@ public:
      * The indicator id 255 will be used to turn on/off all indicators at once.
      *
      * @param[in] indicatorId  Id of indicator
-     * @param[in] isOn         Set to true to turn on the indicator, otherwise false.
+     * @param[in] state        State of the indicator.
      */
-    void setIndicator(uint8_t indicatorId, bool isOn);
+    void setIndicatorState(uint8_t indicatorId, IIndicatorView::State state);
 
     /**
      * Indicator id for all indicators.

@@ -121,6 +121,42 @@ void DateTimeView32x8::updateLampWidgetsColors()
     }
 }
 
+void DateTimeView32x8::updateLayout()
+{
+    uint16_t fontHeight      = Fonts::getFontByType(m_fontType).getHeight();
+    uint16_t textHeightSmall = TEXT_HEIGHT - LAMP_HEIGHT - TEXT_LAMP_DISTANCE;
+
+    /* If the font height is greater than the available space for text, disable lamp widgets. */
+    if (fontHeight > textHeightSmall)
+    {
+        m_textWidget.move(0, 0);
+        m_textWidget.setHeight(TEXT_HEIGHT);
+
+        /* Disable all lamp widgets to avoid overlapping. */
+        for (uint8_t idx = 0U; idx < MAX_LAMPS; ++idx)
+        {
+            m_lampWidgets[idx].disable();
+        }
+    }
+    /* If the font height is less than or equal to the available space for text, enable lamp widgets. */
+    else
+    {
+        /* Keep text in the middle, which means one empty
+         * pixel row at the top and one between the text and the day lamps.
+         * Don't use text widget alignment feature, because it will calculate
+         * a 0 as optimum.
+         */
+        m_textWidget.move(0, 1);
+        m_textWidget.setHeight(textHeightSmall);
+
+        /* Enable all lamp widgets to avoid overlapping. */
+        for (uint8_t idx = 0U; idx < MAX_LAMPS; ++idx)
+        {
+            m_lampWidgets[idx].enable();
+        }
+    }
+}
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/
