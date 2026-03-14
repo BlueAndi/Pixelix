@@ -141,6 +141,8 @@ void ConnectedState::process(StateMachine& sm)
 
     Services::processAll();
     SensorDataProvider::getInstance().process();
+
+    handlePushUrlResponse();
 }
 
 void ConnectedState::exit(StateMachine& sm)
@@ -156,32 +158,17 @@ void ConnectedState::exit(StateMachine& sm)
  * Private Methods
  *****************************************************************************/
 
-void ConnectedState::initHttpClient()
-{
-    m_client.regOnResponse([](const HttpResponse& rsp) {
-        uint16_t statusCode = rsp.getStatusCode();
-
-        if (HttpStatus::STATUS_CODE_OK == statusCode)
-        {
-            LOG_INFO("Online state reported.");
-        }
-    });
-
-    m_client.regOnError([]() {
-        LOG_WARNING("Connection error happened.");
-    });
-}
-
 void ConnectedState::pushUrl(const String& pushUrl)
 {
     /* If a push URL is set, notify about the online status. */
-    if (false == pushUrl.isEmpty())
+    if ((false == pushUrl.isEmpty()) &&
+        (INVALID_HTTP_JOB_ID == m_pushJobId))
     {
-        String      url          = pushUrl;
-        const char* GET_CMD      = "get ";
-        const char* POST_CMD     = "post ";
-        bool        isGet        = true;
-        bool        isSuccessful = false;
+        HttpService& httpService  = HttpService::getInstance();
+        String       url          = pushUrl;
+        const char*  GET_CMD      = "get ";
+        const char*  POST_CMD     = "post ";
+        bool         isGet        = true;
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
@@ -200,35 +187,46 @@ void ConnectedState::pushUrl(const String& pushUrl)
             ;
         }
 
-        if (true == m_client.begin(url))
+        if (false == isGet)
         {
-            if (false == isGet)
+            m_pushJobId = httpService.post(url.c_str(), nullptr, 0U);
+
+            if (INVALID_HTTP_JOB_ID == m_pushJobId)
             {
-                if (false == m_client.POST())
-                {
-                    LOG_WARNING("POST %s failed.", url.c_str());
-                }
-                else
-                {
-                    isSuccessful = true;
-                }
+                LOG_WARNING("POST %s failed.", url.c_str());
+            }
+        }
+        else
+        {
+            m_pushJobId = httpService.get(url.c_str());
+
+            if (INVALID_HTTP_JOB_ID == m_pushJobId)
+            {
+                LOG_WARNING("GET %s failed.", url.c_str());
+            }
+        }
+    }
+}
+
+void ConnectedState::handlePushUrlResponse()
+{
+    if (INVALID_HTTP_JOB_ID != m_pushJobId)
+    {
+        HttpService& httpService = HttpService::getInstance();
+        HttpRsp      response;
+
+        if (true == httpService.getResponse(m_pushJobId, response))
+        {
+            if (HTTP_CODE_OK == response.statusCode)
+            {
+                LOG_INFO("Push URL successful.");
             }
             else
             {
-                if (false == m_client.GET())
-                {
-                    LOG_WARNING("GET %s failed.", url.c_str());
-                }
-                else
-                {
-                    isSuccessful = true;
-                }
+                LOG_WARNING("Push URL failed, HTTP status code: %u", response.statusCode);
             }
 
-            if (false == isSuccessful)
-            {
-                LOG_INFO("Notification triggered.");
-            }
+            m_pushJobId = INVALID_HTTP_JOB_ID;
         }
     }
 }

@@ -101,6 +101,7 @@ bool HttpService::start()
         m_isRunning = true;
         LOG_INFO("HTTP service started.");
     }
+
     return m_isRunning;
 }
 
@@ -214,7 +215,8 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
     bool              isAvailable = false;
     MutexGuard<Mutex> guard(m_mutex);
 
-    if (true == m_isRunning)
+    if ((true == m_isRunning) &&
+        (INVALID_HTTP_JOB_ID != jobId))
     {
         WorkerResponse workerRsp;
 
@@ -251,7 +253,8 @@ void HttpService::abortJob(HttpJobId jobId)
 {
     MutexGuard<Mutex> guard(m_mutex);
 
-    if (true == m_isRunning)
+    if ((true == m_isRunning) &&
+        (INVALID_HTTP_JOB_ID != jobId))
     {
         bool isAborted = false;
 
