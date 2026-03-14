@@ -164,11 +164,11 @@ void ConnectedState::pushUrl(const String& pushUrl)
     if ((false == pushUrl.isEmpty()) &&
         (INVALID_HTTP_JOB_ID == m_pushJobId))
     {
-        HttpService& httpService  = HttpService::getInstance();
-        String       url          = pushUrl;
-        const char*  GET_CMD      = "get ";
-        const char*  POST_CMD     = "post ";
-        bool         isGet        = true;
+        HttpService& httpService = HttpService::getInstance();
+        String       url         = pushUrl;
+        const char*  GET_CMD     = "get ";
+        const char*  POST_CMD    = "post ";
+        bool         isGet       = true;
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
