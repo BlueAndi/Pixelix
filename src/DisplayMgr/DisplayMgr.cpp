@@ -382,6 +382,13 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
                 }
                 else
                 {
+                    /* If a plugin is uninstalled in a disabled slot, the slot will be
+                     * enabled again. This behaviour is more convenient for the user,
+                     * because otherwise the user would have to enable the slot again
+                     * after uninstalling the plugin.
+                     */
+                    m_slotList.enable(slotId);
+
                     status = true;
                 }
             }
