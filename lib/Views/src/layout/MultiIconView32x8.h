@@ -130,10 +130,11 @@ public:
      *
      * @param[in] slotId    The id of the slot.
      * @param[in] filename  Image filename
+     * @param[in] fs        Filesystem instance (optional, default is standard filesystem)
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadIcon(uint8_t slotId, const String& filename) override
+    bool loadIcon(uint8_t slotId, const String& filename, FS& fs = FILESYSTEM) override
     {
         bool isSuccessful = false;
 
@@ -142,7 +143,7 @@ public:
             slotId = 0U;
         }
 
-        isSuccessful = m_bitmapWidgets[slotId].load(FILESYSTEM, filename);
+        isSuccessful = m_bitmapWidgets[slotId].load(filename, fs);
 
         if (true == isSuccessful)
         {

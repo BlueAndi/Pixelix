@@ -41,11 +41,10 @@
  * Includes
  *****************************************************************************/
 #include <IService.hpp>
-#include <AsyncHttpClient.h>
+#include <HttpService.h>
 #include <Mutex.hpp>
 #include <ArduinoJson.h>
 #include <map>
-#include <HttpStatus.h>
 #include <Logging.h>
 #include <vector>
 #include <utility>
@@ -296,14 +295,13 @@ private:
     /** Response Queue */
     typedef std::vector<Response> ResponseQueue;
 
-    AsyncHttpClient               m_client;                   /**< Asynchronous HTTP client. */
     RequestQueue                  m_requestQueue;             /**< Stores requests for sequential execution. */
     ResponseQueue                 m_responseQueue;            /**< Saves responses to outgoing requests. */
     bool                          m_isRunning;                /**< Signals the status of the service. True means it is running, false means it is stopped. */
     uint32_t                      m_restIdCounter;            /**< Used to generate restIds. */
-    bool                          m_isWaitingForResponse;     /**< Is RestService still waiiting for a response to a request? */
-    uint32_t                      m_activeRestId;             /**< Saves the  restId of a request until the callback triggered by the corresponding response is finished. */
-    PreProcessCallback            m_activePreProcessCallback; /**< Saves the callback sent by a request until it is called when the response arrives. */
+    uint32_t                      m_activeRestId;             /**< Saves the restId of the in-flight request. */
+    HttpJobId                     m_activeHttpJobId;          /**< Saves the HTTP service job id of the in-flight request. */
+    PreProcessCallback            m_activePreProcessCallback; /**< Saves the callback sent by a request until the response arrives. */
     Mutex                         m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
@@ -311,13 +309,12 @@ private:
      */
     RestService() :
         IService(),
-        m_client(),
         m_requestQueue(),
         m_responseQueue(),
         m_isRunning(false),
         m_restIdCounter(INVALID_REST_ID),
-        m_isWaitingForResponse(false),
         m_activeRestId(INVALID_REST_ID),
+        m_activeHttpJobId(INVALID_HTTP_JOB_ID),
         m_activePreProcessCallback(),
         m_mutex()
     {
@@ -336,18 +333,11 @@ private:
     RestService& operator=(const RestService& service);
 
     /**
-     * Handles asynchronous web responses from the server. Filtering is delegated to plugin-callbacks.
-     * This will be called in LwIP context! Don't modify any member here directly!
+     * Handles HTTP responses from the HTTP service.
      *
-     * @param[in] rsp     Web Response
+     * @param[in] httpRsp HTTP response.
      */
-    void handleAsyncWebResponse(const HttpResponse& rsp);
-
-    /**
-     * Handles failed web requests.
-     * This will be called in LwIP context! Don't modify any member here directly!
-     */
-    void handleFailedWebRequest();
+    void handleHttpResponse(const HttpRsp& httpRsp);
 
     /**
      * Generates a valid restId.
@@ -355,6 +345,16 @@ private:
      * @return A valid restId.
      */
     uint32_t getRestId();
+
+    /**
+     * Checks if the service is waiting for a response.
+     *
+     * @return True if waiting for a response, false otherwise.
+     */
+    inline bool isWaitingForResponse() const
+    {
+        return (INVALID_REST_ID != m_activeRestId) && (INVALID_HTTP_JOB_ID != m_activeHttpJobId);
+    }
 };
 
 /******************************************************************************

@@ -448,7 +448,7 @@ void OpenWeatherView64x64::updateWeatherInfoCurrentOnView()
          * Otherwise, the text will be shown with the wrong icon until the icon is
          * updated successfully.
          */
-        if (true == m_weatherIconCurrent.load(FILESYSTEM, iconFullPath))
+        if (true == m_weatherIconCurrent.load(iconFullPath, FILESYSTEM))
         {
             m_isWeatherIconCurrentUpdated = false;
             m_weatherInfoCurrentText.setFormatStr(text);
@@ -511,7 +511,7 @@ void OpenWeatherView64x64::updateWeatherInfoForecastOnView()
              * Otherwise, the text will be shown with the wrong icon until the icon is
              * updated successfully.
              */
-            if (true == m_forecastIcons[day].load(FILESYSTEM, iconFullPath))
+            if (true == m_forecastIcons[day].load(iconFullPath, FILESYSTEM))
             {
                 m_isWeatherIconForecastUpdated[day] = false;
                 m_forecastTemperatures[day].setFormatStr(temperatures);

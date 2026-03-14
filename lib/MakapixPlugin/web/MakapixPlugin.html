@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">MakapixPlugin</h1>
+                <p><img src="MakapixPlugin.jpg" alt="Screenshot" /></p>
+                <p>This plugin is a Makapix player (<a href="https://makapix.club" target="_blank">https://makapix.club</a>) that plays pixel artwork.</p>
+
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs" id="makapixTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="playbackControl-tab" data-bs-toggle="tab" data-bs-target="#playbackControl" type="button" role="tab" aria-controls="playbackControl" aria-selected="true">Playback Control</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="configuration-tab" data-bs-toggle="tab" data-bs-target="#configuration" type="button" role="tab" aria-controls="configuration" aria-selected="false">Configuration</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="setup-tab" data-bs-toggle="tab" data-bs-target="#setup" type="button" role="tab" aria-controls="setup" aria-selected="false">Setup</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration" type="button" role="tab" aria-controls="registration" aria-selected="false">Registration</button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content mt-3" id="makapixTabContent">
+                    <!-- Playback Control Tab -->
+                    <div class="tab-pane fade show active" id="playbackControl" role="tabpanel" aria-labelledby="playbackControl-tab">
+                        <h3>Playback Control</h3>
+                        <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                            <form id="formPlayControl">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Playback Controls:</label>
+                                    <div class="d-grid gap-2">
+                                        <div class="btn-group gap-2" role="group" aria-label="Playback controls">
+                                            <button type="button" id="btnPrev" class="btn btn-primary" onClick="playPrev(pluginUid.options[pluginUid.selectedIndex].value)">Previous</button>
+                                            <button type="button" id="btnPause" class="btn btn-primary" onClick="pause(pluginUid.options[pluginUid.selectedIndex].value)">Pause</button>
+                                            <button type="button" id="btnNext" class="btn btn-primary" onClick="playNext(pluginUid.options[pluginUid.selectedIndex].value)">Next</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Quick Channel Selection:</label>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="btnAll" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'all')">Recent Artworks</button>
+                                        <button type="button" id="btnPromoted" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'promoted')">Promoted Artworks</button>
+                                        <button type="button" id="btnUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'user')">Own Artworks</button>
+                                        <div class="input-group mb-2">
+                                            <button type="button" id="btnByUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'by_user')">Artwork By User</button>
+                                            <input type="text" id="userSqid" class="form-control" placeholder="Enter username" maxlength="64" />
+                                        </div>
+                                        <div class="input-group">
+                                            <button type="button" id="btnByHashtag" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'hashtag')">Artwork By Hashtag</button>
+                                            <input type="text" id="hashtag" class="form-control" placeholder="Enter hashtag" maxlength="64" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Tab -->
+                    <div class="tab-pane fade" id="configuration" role="tabpanel" aria-labelledby="configuration-tab">
+                        <h3>Makapix</h3>
+                        <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                            <form id="formConfig" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="pluginUid">Plugin UID:</label>
+                                    <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                                    </select>    
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="playerKey">Player key:</label>
+                                    <input class="form-control" type="text" id="playerKey" name="playerKey" value="" size="36" />
+                                    <small class="form-text">The player key for the Makapix player.</small>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="mqttInstance">MQTT instance:</label>
+                                    <input class="form-control" type="number" id="mqttInstance" name="mqttInstance" value="0" />
+                                    <small class="form-text">The MQTT instance number to use. 0 is the primary instance, see MQTT service configuration.</small>
+                                </div>
+                                <input name="submit" type="submit" value="Update"/>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Setup Tab -->
+                    <div class="tab-pane fade" id="setup" role="tabpanel" aria-labelledby="setup-tab">
+                        <p>To use the Makapix plugin, you need to create a free account at <a href="https://makapix.club" target="_blank">Makapix Club</a> and get a player key from there. The player key is used to identify your display device.</p>
+                        <p>After you have created an account and obtained a player key, you can configure the plugin by entering the player key in the configuration form below.</p>
+                        <p>Additionally, you need to specify which MQTT instance the plugin should use to communicate with the Makapix service. Make sure that the MQTT service is properly configured and running.</p>
+                        <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Broker hostname:</strong></td>
+                                            <td>makapix.club</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Broker port:</strong></td>
+                                            <td>8883 (secure connection required)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>User:</strong></td>
+                                            <td>Your player key</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Password:</strong></td>
+                                            <td>(leave empty)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Root CA Certificate:</strong></td>
+                                            <td>Download it from your Makapix Club account.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Client Certificate:</strong></td>
+                                            <td>Download it from your Makapix Club account.</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Client Key:</strong></td>
+                                            <td>Download it from your Makapix Club account.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registration Tab -->
+                    <div class="tab-pane fade" id="registration" role="tabpanel" aria-labelledby="registration-tab">
+                        <p>The Makapix plugin requires registration with the Makapix service to function properly. This process involves provisioning the Pixelix device with a unique player key.</p>
+                        <h3>Player Provisioning</h3>
+                        <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                            <form id="formProvision">
+                                <div class="form-group mb-3">
+                                    <p>Click the button below to provision a new Makapix player. This will generate a unique player key and registration code.</p>
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="btnProvision" class="btn btn-primary" onClick="provisionPlayer(pluginUid.options[pluginUid.selectedIndex].value)">Provision Player</button>
+                                        <button type="button" id="btnGetProvisionStatus" class="btn btn-secondary" onClick="getProvisionStatus(pluginUid.options[pluginUid.selectedIndex].value)">Get Provision Status</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div id="provisionResult" style="display:none;" class="mt-3 p-3 bg-body border rounded">
+                                <h5>Provisioning Result</h5>
+                                <table class="table table-sm mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Player Key:</strong></td>
+                                            <td><code id="resultPlayerKey"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Registration Code:</strong></td>
+                                            <td><code id="resultRegistrationCode"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Expires At:</strong></td>
+                                            <td><code id="resultExpiresAt"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>MQTT Broker Host:</strong></td>
+                                            <td><code id="resultMqttHost"></code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>MQTT Broker Port:</strong></td>
+                                            <td><code id="resultMqttPort"></code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var pluginName  = "MakapixPlugin";
+            var restClient  = new pixelix.rest.Client();
+    
+            function enableUI() {
+                utils.enableForm("formConfig", true);
+                utils.enableForm("formPlayControl", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("formConfig", false);
+                utils.enableForm("formPlayControl", false);
+            }
+    
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            optionText = rsp.data.slots[slotIndex].uid;
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                            
+                            $("#pluginUid").append($option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+    
+            function getConfig(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    $("#playerKey").val(rsp.data.playerKey);
+                    $("#mqttInstance").val(rsp.data.mqttInstance);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setConfig(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                    isJsonResponse: true,
+                    parameter: {
+                        playerKey: $("#playerKey").val(),
+                        mqttInstance: $("#mqttInstance").val()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getStatus(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var channel = rsp.data.channel;
+                    var status = rsp.data.status;
+
+                    /* Clear all active states. */
+                    $('#btnAll').removeClass('active');
+                    $('#btnPromoted').removeClass('active');
+                    $('#btnUser').removeClass('active');
+                    $('#btnByUser').removeClass('active');
+                    $('#btnByHashtag').removeClass('active');
+
+                    /* Set active state for current channel. */
+                    $('#btn' + channel.charAt(0).toUpperCase() + channel.slice(1)).addClass('active');
+
+                    if (rsp.data.userSquid !== undefined) {
+                        $("#userSqid").val(rsp.data.userSquid);
+                    }
+
+                    if (rsp.data.hashtag !== undefined) {
+                        $("#hashtag").val(rsp.data.hashtag);
+                    }
+
+                    /* Set pause button state. */
+                    if (status === "paused") {
+                        $('#btnPause').addClass('active');
+                    }
+                    else {
+                        $('#btnPause').removeClass('active');
+                    }
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function playChannel(pluginUid, channelName) {
+                var parameter = {
+                    action: "playChannel",
+                    channelName: channelName
+                };
+
+                if (channelName === "by_user") {
+                    parameter.userSqid = $("#userSqid").val();
+                }
+                else if (channelName === "hashtag") {
+                    parameter.hashtag = $("#hashtag").val();
+
+                    /* Remove leading '#' if present. */
+                    if (parameter.hashtag.startsWith("#")) {
+                        parameter.hashtag = parameter.hashtag.substring(1);
+                    }
+                }
+
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: parameter
+                }).then(function(rsp) {
+                    return getStatus(pluginUid);
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function playNext(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        action: "next"
+                    }
+                }).then(function(rsp) {
+                    return getStatus(pluginUid);
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function pause(pluginUid) {
+                disableUI();
+
+                var isPaused = $('#btnPause').hasClass('active');
+                var action = isPaused ? "continue" : "pause";
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        action: action
+                    }
+                }).then(function(rsp) {
+                    return getStatus(pluginUid);
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function playPrev(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        action: "previous"
+                    }
+                }).then(function(rsp) {
+                    return getStatus(pluginUid);
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getProvisionStatus(pluginUid) {
+                var payload = {};
+                
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                    isJsonResponse: true,
+                    parameter: payload
+                }).then(function(rsp) {
+                    if (rsp.data.status === "pending") {
+                        alert("Provisioning is still pending. Please try again later.");
+                    }
+                    else if (rsp.data.status === "completed") {
+                        $("#resultPlayerKey").text(rsp.data.playerKey);
+                        $("#resultRegistrationCode").text(rsp.data.registrationCode);
+                        $("#resultExpiresAt").text(rsp.data.registrationCodeExpiresAt);
+                        $("#resultMqttHost").text(rsp.data.mqttBroker.host);
+                        $("#resultMqttPort").text(rsp.data.mqttBroker.port);
+                        $("#provisionResult").show();
+                    }
+                    else {
+                        alert("Provisioning not started.");
+                    }
+                }).catch(function(rsp) {
+                    alert("Failed to get provision status. Please try again.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function provisionPlayer(pluginUid) {
+                var payload = {};
+                disableUI();
+                
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                    isJsonResponse: true,
+                    parameter: payload
+                }).then(function(rsp) {
+                    alert("Makapix player provision is pending. Please wait...");
+                }).catch(function(rsp) {
+                    alert("Failed to provision player. Please try again.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+                menu.create("menu", menu.data);
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getConfig(
+                            select.options[select.selectedIndex].value
+                        ).then(function() {
+                            return getStatus(
+                                select.options[select.selectedIndex].value
+                            );
+                        });
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

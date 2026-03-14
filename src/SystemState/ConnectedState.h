@@ -44,10 +44,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <AsyncHttpClient.h>
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <WString.h>
+#include <HttpService.h>
 
 /******************************************************************************
  * Macros
@@ -99,15 +99,15 @@ public:
 
 private:
 
-    AsyncHttpClient m_client; /**< Asynchronous HTTP client. */
+    /** HTTP job ID for the push notification. */
+    HttpJobId m_pushJobId;
 
     /**
      * Constructs the state.
      */
     ConnectedState() :
-        m_client()
+        m_pushJobId(INVALID_HTTP_JOB_ID)
     {
-        initHttpClient();
     }
 
     /**
@@ -121,16 +121,18 @@ private:
     ConnectedState& operator=(const ConnectedState& state);
 
     /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-
-    /**
      * Notify via URL that the system is online.
      *
      * @param[in] pushUrl   Push URL
      */
     void pushUrl(const String& pushUrl);
+
+    /**
+     * Handle the response of the push URL.
+     * Called cyclic to check if the response is available.
+     * The response is just logged.
+     */
+    void handlePushUrlResponse();
 };
 
 /******************************************************************************

@@ -216,43 +216,24 @@ void PluginMgr::save()
     JsonFile            jsonFile(FILESYSTEM);
     String              fullConfigFileName  = Plugin::CONFIG_PATH;
     DisplayMgr&         displayMgr          = DisplayMgr::getInstance();
-    uint8_t             stickySlotId        = displayMgr.getStickySlot();
 
     fullConfigFileName                     += "/";
     fullConfigFileName                     += CONFIG_FILE_NAME;
 
     for (slotId = 0; slotId < displayMgr.getMaxSlots(); ++slotId)
     {
-        IPluginMaintenance* plugin   = displayMgr.getPluginInSlot(slotId);
-        JsonObject          jsonSlot = jsonSlots.createNestedObject();
+        DisplayMgr::SlotConfig config;
+        JsonObject             jsonSlot = jsonSlots.createNestedObject();
 
-        if (nullptr == plugin)
-        {
-            jsonSlot["name"]     = "";
-            jsonSlot["uid"]      = 0;
-            jsonSlot["alias"]    = "";
-            jsonSlot["fontType"] = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
-        }
-        else
-        {
-            jsonSlot["name"]     = plugin->getName();
-            jsonSlot["uid"]      = plugin->getUID();
-            jsonSlot["alias"]    = plugin->getAlias();
-            jsonSlot["fontType"] = Fonts::fontTypeToStr(plugin->getFontType());
-        }
+        (void)displayMgr.getSlotConfig(slotId, config);
 
-        jsonSlot["duration"] = displayMgr.getSlotDuration(slotId);
-
-        if (stickySlotId == slotId)
-        {
-            jsonSlot["isSticky"] = true;
-        }
-        else
-        {
-            jsonSlot["isSticky"] = false;
-        }
-
-        jsonSlot["isDisabled"] = displayMgr.isSlotDisabled(slotId);
+        jsonSlot["name"]       = config.name;
+        jsonSlot["uid"]        = config.uid;
+        jsonSlot["alias"]      = config.alias;
+        jsonSlot["fontType"]   = Fonts::fontTypeToStr(config.fontType);
+        jsonSlot["duration"]   = config.duration;
+        jsonSlot["isSticky"]   = config.isSticky;
+        jsonSlot["isDisabled"] = config.isDisabled;
     }
 
     if (true == jsonDoc.overflowed())

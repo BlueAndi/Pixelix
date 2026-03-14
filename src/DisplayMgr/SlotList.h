@@ -299,6 +299,15 @@ public:
     uint8_t getSlotIdByPluginUID(uint16_t pluginUid) const;
 
     /**
+     * Is slot sticky?
+     *
+     * @param[in] slotId    The id of the slot to check.
+     *
+     * @return If slot is sticky, it will return true otherwise false. If slot id is invalid, it will return false.
+     */
+    bool isSticky(uint8_t slotId) const;
+
+    /**
      * Get slot which is marked sticky.
      *
      * @return Id of sticky slot. If no slot is sticky, it will return SLOT_ID_INVALID.

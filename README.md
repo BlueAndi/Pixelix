@@ -66,7 +66,7 @@ It doesn't require any cloud connection, even its not required to have a smartho
 
 ## Features
 
-- Supports 32x8 LED matrix size out of the box. Its possible to cascade another matrix to have a longer display.
+- Supports 32x8, 32x16 and 64x64 LED matrix size out of the box.
 - Supports some small TFT displays to simulate a LED matrix in retro style.
 - Display static or scrolling text, as well as static (BMP and GIF) or animated icons (GIF).
 - Includes a web interface for configuration and control.
@@ -370,7 +370,7 @@ build_flags =
 | [PlatformIO](https://platformio.org)                                          | PlatformIO is a cross-platform, cross-architecture, multiple framework, professional tool for embedded systems engineers and for software developers who write applications for embedded products. | Apache-2.0                        |
 | [NeoPixelBus](https://github.com/Makuna/NeoPixelBus)                          | Controlling the LED matrix with hardware support (I2S)                                                                                                                                             | LGPL-3.0                          |
 | [ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer)          | Webserver                                                                                                                                                                                          | LGPL-3.0                          |
-| [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock)                | TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets                                                                                                        | MIT                               |
+| [AsyncTCP](https://github.com/ESP32Async/AsyncTCP)                            | This is a fully asynchronous TCP library, aimed at enabling trouble-free, multi-connection network environment for Espressif's ESP32 MCUs.                                                         | LGPL-3.0                          |
 | [ArduinoJson](https://arduinojson.org/)                                       | JSON handling                                                                                                                                                                                      | MIT                               |
 | [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils)                | Stream utilities                                                                                                                                                                                   | MIT                               |
 | [Bootstrap](https://getbootstrap.com/)                                        | CSS Framework                                                                                                                                                                                      | MIT                               |
@@ -386,6 +386,7 @@ build_flags =
 | [JSZipUtils](https://github.com/Stuk/jszip-utils)                             | A collection of cross-browser utilities to go along with JSZip.                                                                                                                                    | MIT                               |
 | [FileSaver.js](https://github.com/eligrey/FileSaver.js)                       | FileSaver.js is the solution to saving files on the client-side.                                                                                                                                   | MIT                               |
 | [Arduino client for MQTT](https://github.com/knolleary/pubsubclient)          | This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT.                                                                                      | MIT                               |
+| [ESP32-PSRamFS](https://github.com/tobozo/ESP32-PsRamFS)                      | ESP32-PsRamFS is a pseudo RamDisk library for Arduino-ESP32, with vfs compliance.                                                                                                                  | MIT                               |
 
 ## Issues, Ideas And Bugs
 

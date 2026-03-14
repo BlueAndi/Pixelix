@@ -47,6 +47,7 @@
 #include <BitmapWidget.h>
 #include <CanvasWidget.h>
 #include <Util.h>
+#include <FileSystem.h>
 
 #include "../interface/ICanvasView.h"
 
@@ -120,10 +121,11 @@ public:
      * Load icon image from filesystem.
      *
      * @param[in] filename  Image filename
+     * @param[in] fs        Filesystem instance (optional, default is standard filesystem)
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadIcon(const String& filename) override;
+    bool loadIcon(const String& filename, FS& fs = FILESYSTEM) override;
 
     /**
      * Clear icon.

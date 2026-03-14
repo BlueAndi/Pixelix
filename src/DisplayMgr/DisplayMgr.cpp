@@ -382,6 +382,13 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
                 }
                 else
                 {
+                    /* If a plugin is uninstalled in a disabled slot, the slot will be
+                     * enabled again. This behaviour is more convenient for the user,
+                     * because otherwise the user would have to enable the slot again
+                     * after uninstalling the plugin.
+                     */
+                    m_slotList.enable(slotId);
+
                     status = true;
                 }
             }
@@ -492,6 +499,43 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
     IPluginMaintenance*        plugin = m_slotList.getPlugin(slotId);
 
     return plugin;
+}
+
+bool DisplayMgr::getSlotConfig(uint8_t slotId, SlotConfig& config) const
+{
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+
+    if (true == m_slotList.isSlotIdValid(slotId))
+    {
+        const IPluginMaintenance* plugin = m_slotList.getPlugin(slotId);
+
+        /* No plugin in slot? */
+        if (nullptr == plugin)
+        {
+            config.name     = "";
+            config.uid      = 0U;
+            config.alias    = "";
+            config.fontType = Fonts::FontType::FONT_TYPE_DEFAULT;
+        }
+        /* Plugin in slot. */
+        else
+        {
+            config.name     = plugin->getName();
+            config.uid      = plugin->getUID();
+            config.alias    = plugin->getAlias();
+            config.fontType = plugin->getFontType();
+        }
+
+        config.duration   = m_slotList.getDuration(slotId);
+        config.isLocked   = m_slotList.isLocked(slotId);
+        config.isSticky   = m_slotList.isSticky(slotId);
+        config.isDisabled = m_slotList.isDisabled(slotId);
+
+        isSuccessful      = true;
+    }
+
+    return isSuccessful;
 }
 
 uint8_t DisplayMgr::getStickySlot() const
@@ -615,10 +659,10 @@ void DisplayMgr::activateNextFadeEffect(FadeEffectController::FadeEffect fadeEff
     m_fadeEffectController.selectFadeEffect(fadeEffect);
 }
 
-FadeEffectController::FadeEffect DisplayMgr::getFadeEffect()
+FadeEffectController::FadeEffect DisplayMgr::getFadeEffect() const
 {
-    FadeEffectController ::FadeEffect currentFadeEffect;
-    MutexGuard<MutexRecursive>        guard(m_mutexInterf);
+    FadeEffectController::FadeEffect currentFadeEffect;
+    MutexGuard<MutexRecursive>       guard(m_mutexInterf);
 
     currentFadeEffect = m_fadeEffectController.getFadeEffect();
 
@@ -711,7 +755,7 @@ bool DisplayMgr::isSlotDisabled(uint8_t slotId)
     return isDisabled;
 }
 
-uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
+uint32_t DisplayMgr::getSlotDuration(uint8_t slotId) const
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
     uint32_t                   duration = m_slotList.getDuration(slotId);
@@ -746,7 +790,7 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
         IDisplay&                  display = Display::getInstance();
         int16_t                    x;
         int16_t                    y;
-        size_t                     index = 0;
+        size_t                     index = 0U;
         MutexGuard<MutexRecursive> guard(m_mutexInterf);
 
         /* Copy framebuffer after it is completely updated. */
@@ -1153,14 +1197,17 @@ void DisplayMgr::process()
     }
 
     /* Process all installed plugins. */
-    for (index = 0U; index < m_slotList.getMaxSlots(); ++index)
     {
         MutexGuard<MutexRecursive> guard(m_mutexUpdate);
-        IPluginMaintenance*        plugin = m_slotList.getPlugin(index);
 
-        if (nullptr != plugin)
+        for (index = 0U; index < m_slotList.getMaxSlots(); ++index)
         {
-            plugin->process(m_isNetworkConnected);
+            IPluginMaintenance* plugin = m_slotList.getPlugin(index);
+
+            if (nullptr != plugin)
+            {
+                plugin->process(m_isNetworkConnected);
+            }
         }
     }
 }

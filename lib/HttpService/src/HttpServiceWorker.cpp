@@ -34,6 +34,7 @@
  * Includes
  *****************************************************************************/
 #include "HttpServiceWorker.h"
+#include "HttpResponseSink.h"
 #include <Logging.h>
 
 /******************************************************************************
@@ -203,12 +204,9 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
 
                 (void)mutex.take(portMAX_DELAY);
 
-                if (HTTP_CODE_OK == response.statusCode)
+                if (request.jobId != jobToAbort)
                 {
-                    if (request.jobId != jobToAbort)
-                    {
-                        handleHttpResponse(httpClient, request.handler, response);
-                    }
+                    handleHttpResponse(httpClient, request.handler, response);
                 }
 
                 (void)mutex.give();
@@ -224,54 +222,15 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
 
 void HttpServiceWorker::handleHttpResponse(HTTPClient& httpClient, IHttpResponseHandler* handler, WorkerResponse& response)
 {
-    int32_t     contentLength = httpClient.getSize(); /* Get size of the payload. If no Content-Length header present, size will be -1. */
-    uint8_t     buffer[1024U];
-    WiFiClient& stream = httpClient.getStream();
-    uint32_t    index  = 0U;
+    HttpResponseSink sink(handler, response);
+    int32_t          written = httpClient.writeToStream(&sink);
 
-    while ((true == httpClient.connected()) && ((0 < contentLength) || (-1 == contentLength)))
+    if (0 > written)
     {
-        int32_t toRead = stream.available();
-
-        if (0 < toRead)
-        {
-            char*   cBuffer = static_cast<char*>(static_cast<void*>(buffer));
-            int32_t read    = stream.readBytes(cBuffer, sizeof(buffer));
-
-            if (0 < read)
-            {
-                if (0 < contentLength)
-                {
-                    if (read > contentLength)
-                    {
-                        contentLength = 0;
-                    }
-                    else
-                    {
-                        contentLength -= read;
-                    }
-                }
-
-                /* If a response handler is provided, call it to process the received payload chunk. */
-                if (nullptr != handler)
-                {
-                    bool isFinal = (0 == contentLength);
-
-                    handler->onResponse(index, isFinal, buffer, static_cast<size_t>(read));
-                }
-                else
-                {
-                    /* Append data to the response payload. */
-                    response.append(buffer, static_cast<size_t>(read));
-                }
-
-                ++index;
-            }
-        }
-
-        /* Give other tasks a chance to run. */
-        delay(1U);
+        LOG_WARNING("Failed to read HTTP response stream: %d", static_cast<int>(written));
     }
+
+    sink.finalize();
 }
 
 /******************************************************************************

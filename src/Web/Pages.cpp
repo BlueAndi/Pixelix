@@ -240,6 +240,9 @@ void Pages::init(AsyncWebServer& srv)
     (void)srv.serveStatic("/configuration/", FILESYSTEM, "/configuration/")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
+    (void)srv.serveStatic("/tmp/", FILESYSTEM, "/tmp/")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesystem for 1 hour.
      */

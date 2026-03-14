@@ -65,8 +65,11 @@ public:
 
     /**
      * Constructs the file response handler.
+     *
+     * @param[in] fs    Filesystem to use for file operations. Default is the standard filesystem.
      */
-    HttpFileResponseHandler() :
+    HttpFileResponseHandler(fs::FS& fs = FILESYSTEM) :
+        m_fs(&fs),
         m_filePath(),
         m_file(),
         m_isError(false)
@@ -77,8 +80,10 @@ public:
      * Constructs the file response handler.
      *
      * @param[in] filePath  Path of the file where the payload will be written to.
+     * @param[in] fs        Filesystem to use for file operations. Default is the standard filesystem.
      */
-    HttpFileResponseHandler(const char* filePath) :
+    HttpFileResponseHandler(const char* filePath, fs::FS& fs = FILESYSTEM) :
+        m_fs(&fs),
         m_filePath(filePath),
         m_file(),
         m_isError(false)
@@ -89,8 +94,10 @@ public:
      * Constructs the file response handler.
      *
      * @param[in] filePath  Path of the file where the payload will be written to.
+     * @param[in] fs        Filesystem to use for file operations. Default is the standard filesystem.
      */
-    HttpFileResponseHandler(const String& filePath) :
+    HttpFileResponseHandler(const String& filePath, fs::FS& fs = FILESYSTEM) :
+        m_fs(&fs),
         m_filePath(filePath),
         m_file(),
         m_isError(false)
@@ -103,6 +110,7 @@ public:
      * @param[in] other Other instance
      */
     HttpFileResponseHandler(const HttpFileResponseHandler& other) :
+        m_fs(other.m_fs),
         m_filePath(other.m_filePath),
         m_file(),
         m_isError(other.m_isError)
@@ -177,9 +185,10 @@ public:
 
 private:
 
-    String m_filePath; /**< Path of the file where the payload will be written to. */
-    File   m_file;     /**< File handle. */
-    bool   m_isError;  /**< Indicates that an error occurred during file creation. */
+    fs::FS* m_fs;       /**< Filesystem to use for file operations. */
+    String  m_filePath; /**< Path of the file where the payload will be written to. */
+    File    m_file;     /**< File handle. */
+    bool    m_isError;  /**< Indicates that an error occurred during file creation. */
 };
 
 /******************************************************************************

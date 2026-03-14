@@ -51,6 +51,7 @@
 #include <Mutex.hpp>
 #include <Task.hpp>
 #include <IndicatorViewBase.hpp>
+#include <Fonts.h>
 
 #include "IPluginMaintenance.hpp"
 #include "SlotList.h"
@@ -77,6 +78,20 @@
 class DisplayMgr
 {
 public:
+
+    /** Slot configuration. */
+    typedef struct
+    {
+        String          name;       /**< Plugin name. */
+        uint16_t        uid;        /**< Plugin UID. */
+        String          alias;      /**< Plugin alias name. */
+        Fonts::FontType fontType;   /**< Font type. */
+        uint32_t        duration;   /**< Duration in ms, how long the plugin will be shown. */
+        bool            isLocked;   /**< Is the slot locked? */
+        bool            isSticky;   /**< Is the slot sticky? */
+        bool            isDisabled; /**< Is the slot disabled? */
+
+    } SlotConfig;
 
     /**
      * Get display manager instance.
@@ -227,6 +242,16 @@ public:
     IPluginMaintenance* getPluginInSlot(uint8_t slotId);
 
     /**
+     * Get slot configuration.
+     *
+     * @param[in] slotId    Slot id, where to get configuration.
+     * @param[out] config   Slot configuration
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool getSlotConfig(uint8_t slotId, SlotConfig& config) const;
+
+    /**
      * Get slot which is marked sticky.
      *
      * @return Id of sticky slot. If no slot is sticky, it will return SLOT_ID_INVALID.
@@ -288,7 +313,7 @@ public:
      *
      * @return The currently selected fade effect.
      */
-    FadeEffectController::FadeEffect getFadeEffect();
+    FadeEffectController::FadeEffect getFadeEffect() const;
 
     /**
      * Move plugin to a different slot.
@@ -357,7 +382,7 @@ public:
      *
      * @return Duration in ms
      */
-    uint32_t getSlotDuration(uint8_t slotId);
+    uint32_t getSlotDuration(uint8_t slotId) const;
 
     /**
      * Set slot duration in ms, how long the given plugin will be shown.
@@ -498,7 +523,6 @@ private:
     FadeEffectController m_fadeEffectController; /**< Fade effect controller. */
     bool                 m_isNetworkConnected;   /**< Is a network connection established? */
     IndicatorViewBase    m_indicatorView;        /**< Indicator view shown as overlay to indicate user defined states. */
-
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 

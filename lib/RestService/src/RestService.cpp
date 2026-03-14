@@ -68,28 +68,14 @@ bool RestService::start()
     {
         /* Nothing to do. */
     }
+    else if (false == m_mutex.create())
+    {
+        isSuccessful = false;
+    }
     else
     {
-        AsyncHttpClient::OnResponse rspCallback = [this](const HttpResponse& rsp) {
-            handleAsyncWebResponse(rsp);
-        };
-        AsyncHttpClient::OnError errCallback = [this]() {
-            handleFailedWebRequest();
-        };
-        AsyncHttpClient::OnClosed closedCallback = [this]() {
-            m_isWaitingForResponse = false;
-        };
-
-        if (false == m_mutex.create())
-        {
-            isSuccessful = false;
-        }
-        else
-        {
-            m_client.regOnResponse(rspCallback);
-            m_client.regOnError(errCallback);
-            m_client.regOnClosed(closedCallback);
-        }
+        /* Nothing to do. */
+        ;
     }
 
     if (false == isSuccessful)
@@ -111,13 +97,12 @@ bool RestService::start()
 
 void RestService::stop()
 {
-    m_client.regOnResponse(nullptr);
-    m_client.regOnError(nullptr);
-    m_client.regOnClosed(nullptr);
+    HttpService::getInstance().abortJob(m_activeHttpJobId);
+
     m_requestQueue.clear();
-    m_client.end();
     m_responseQueue.clear();
     m_activeRestId             = INVALID_REST_ID;
+    m_activeHttpJobId          = INVALID_HTTP_JOB_ID;
     m_activePreProcessCallback = nullptr;
 
     m_mutex.destroy();
@@ -133,49 +118,64 @@ void RestService::process()
 {
     if (true == m_isRunning)
     {
+        HttpService&      httpService = HttpService::getInstance();
         MutexGuard<Mutex> guard(m_mutex);
 
-        if (false == m_isWaitingForResponse)
+        /* Any pending HTTP response? */
+        if (true == isWaitingForResponse())
+        {
+            HttpRsp httpRsp;
+
+            /* Check for HTTP response. */
+            if (true == httpService.getResponse(m_activeHttpJobId, httpRsp))
+            {
+                LOG_DEBUG("Received HTTP response for REST request with restId %u.", m_activeRestId);
+
+                handleHttpResponse(httpRsp);
+
+                m_activeRestId             = INVALID_REST_ID;
+                m_activeHttpJobId          = INVALID_HTTP_JOB_ID;
+                m_activePreProcessCallback = nullptr;
+            }
+        }
+        /* Handle next HTTP request. */
+        else
         {
             bool    isError = false;
             Request req;
 
             if (false == m_requestQueue.empty())
             {
-                m_isWaitingForResponse = true;
-
                 /* Take first request from queue. */
-                req                    = std::move(m_requestQueue.front());
+                req = std::move(m_requestQueue.front());
                 m_requestQueue.erase(m_requestQueue.begin());
                 m_activeRestId             = req.restId;
                 m_activePreProcessCallback = req.preProcessCallback;
+                m_activeHttpJobId          = INVALID_HTTP_JOB_ID;
 
-                if (true == m_client.begin(String(req.url)))
+                switch (req.id)
                 {
-                    switch (req.id)
-                    {
-                    case REQUEST_ID_GET:
-                        if (false == m_client.GET())
-                        {
-                            isError = true;
-                        }
-                        break;
+                case REQUEST_ID_GET:
+                    m_activeHttpJobId = httpService.get(req.url.c_str());
+                    break;
 
-                    case REQUEST_ID_POST:
-                        if (false == m_client.POST(req.data.data, req.data.size))
-                        {
-                            isError = true;
-                        }
-                        break;
+                case REQUEST_ID_POST:
+                    m_activeHttpJobId = httpService.post(req.url.c_str(), req.data.data, req.data.size);
+                    break;
 
-                    default:
-                        break;
-                    };
+                default:
+                    isError = true;
+                    break;
+                };
+
+                if (INVALID_HTTP_JOB_ID == m_activeHttpJobId)
+                {
+                    LOG_ERROR("HTTP request could not be started.");
+                    isError = true;
                 }
                 else
                 {
-                    LOG_ERROR("URL could not be parsed");
-                    isError = true;
+                    LOG_DEBUG("Started HTTP request with jobId %u for REST request with restId %u.", m_activeHttpJobId, m_activeRestId);
                 }
             }
 
@@ -187,8 +187,8 @@ void RestService::process()
                 rsp.isRsp  = false;
                 m_responseQueue.push_back(std::move(rsp));
                 m_activeRestId             = INVALID_REST_ID;
+                m_activeHttpJobId          = INVALID_HTTP_JOB_ID;
                 m_activePreProcessCallback = nullptr;
-                m_isWaitingForResponse     = false;
             }
         }
     }
@@ -210,6 +210,8 @@ uint32_t RestService::get(const String& url, PreProcessCallback preProcessCallba
         req.url                = url;
 
         m_requestQueue.push_back(std::move(req));
+
+        LOG_DEBUG("Added GET request with restId %u to queue.", restId);
     }
 
     return restId;
@@ -233,6 +235,8 @@ uint32_t RestService::post(const String& url, PreProcessCallback preProcessCallb
         req.data.size          = size;
 
         m_requestQueue.push_back(std::move(req));
+
+        LOG_DEBUG("Added POST request with restId %u to queue.", restId);
     }
 
     return restId;
@@ -256,6 +260,8 @@ uint32_t RestService::post(const String& url, const String& payload, PreProcessC
         req.data.size          = payload.length();
 
         m_requestQueue.push_back(std::move(req));
+
+        LOG_DEBUG("Added POST request with restId %u to queue.", restId);
     }
 
     return restId;
@@ -323,11 +329,15 @@ void RestService::abortRequest(uint32_t restId)
 
         if (m_activeRestId == restId)
         {
-            m_client.end();
+            if (INVALID_HTTP_JOB_ID != m_activeHttpJobId)
+            {
+                HttpService::getInstance().abortJob(m_activeHttpJobId);
+            }
+
             m_activeRestId             = INVALID_REST_ID;
+            m_activeHttpJobId          = INVALID_HTTP_JOB_ID;
             m_activePreProcessCallback = nullptr;
             isRequestFound             = true;
-            m_isWaitingForResponse     = false;
         }
 
         while ((false == isRequestFound) && (rspIterator != m_responseQueue.end()))
@@ -353,19 +363,19 @@ void RestService::abortRequest(uint32_t restId)
  * Private Methods
  *****************************************************************************/
 
-void RestService::handleAsyncWebResponse(const HttpResponse& httpRsp)
+void RestService::handleHttpResponse(const HttpRsp& httpRsp)
 {
-    MutexGuard<Mutex> guard(m_mutex);
-    Response          rsp;
-    bool              isError = false;
+    Response rsp;
+    bool     isError = false;
 
-    rsp.restId                = m_activeRestId;
+    rsp.restId       = m_activeRestId;
 
-    if (HttpStatus::STATUS_CODE_OK == httpRsp.getStatusCode())
+    if (HTTP_CODE_OK == httpRsp.statusCode)
     {
-        size_t      payloadSize = 0U;
-        const void* vPayload    = httpRsp.getPayload(payloadSize);
-        const char* payload     = static_cast<const char*>(vPayload);
+        const char* payload     = reinterpret_cast<const char*>(httpRsp.payload);
+        size_t      payloadSize = httpRsp.size;
+
+        LOG_DEBUG("Received HTTP response for REST request with restId %u.", m_activeRestId);
 
         if ((nullptr == payload) ||
             (0U == payloadSize))
@@ -373,7 +383,6 @@ void RestService::handleAsyncWebResponse(const HttpResponse& httpRsp)
             LOG_ERROR("No payload.");
             isError = true;
         }
-
         /* If a callback is found, it shall be applied. */
         else if (nullptr != m_activePreProcessCallback)
         {
@@ -407,7 +416,7 @@ void RestService::handleAsyncWebResponse(const HttpResponse& httpRsp)
     else
     {
         isError = true;
-        LOG_ERROR("Http-Status not ok");
+        LOG_ERROR("Http-Status not ok: %d", static_cast<int>(httpRsp.statusCode));
     }
 
     if (true == isError)
@@ -416,22 +425,6 @@ void RestService::handleAsyncWebResponse(const HttpResponse& httpRsp)
         rsp.jsonDocData.clear();
         m_responseQueue.push_back(std::move(rsp));
     }
-
-    m_activeRestId             = INVALID_REST_ID;
-    m_activePreProcessCallback = nullptr;
-}
-
-void RestService::handleFailedWebRequest()
-{
-    MutexGuard<Mutex> guard(m_mutex);
-    Response          rsp(0U);
-
-    rsp.restId = m_activeRestId;
-    rsp.isRsp  = false;
-    m_responseQueue.push_back(std::move(rsp));
-
-    m_activeRestId             = INVALID_REST_ID;
-    m_activePreProcessCallback = nullptr;
 }
 
 uint32_t RestService::getRestId()

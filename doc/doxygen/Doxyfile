@@ -1065,7 +1065,6 @@ FILE_PATTERNS          = *.c \
                          *.md \
                          *.mm \
                          *.dox \
-                         *.py \
                          *.f90 \
                          *.f \
                          *.for \

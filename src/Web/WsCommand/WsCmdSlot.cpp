@@ -139,42 +139,42 @@ void WsCmdSlot::execute(AsyncWebSocket* server, uint32_t clientId)
         }
         else
         {
-            uint8_t             stickySlot = displayMgr.getStickySlot();
-            IPluginMaintenance* plugin     = displayMgr.getPluginInSlot(m_slotId);
-            const char*         name       = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid        = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias      = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked   = displayMgr.isSlotLocked(m_slotId);
-            bool                isSticky   = (stickySlot == m_slotId) ? true : false;
-            bool                isDisabled = displayMgr.isSlotDisabled(m_slotId);
-            uint32_t            duration   = displayMgr.getSlotDuration(m_slotId);
+            DisplayMgr::SlotConfig config;
+            bool                   isSuccessful = displayMgr.getSlotConfig(m_slotId, config);
 
-            preparePositiveResponse(msg);
-
-            msg += m_slotId;
-            msg += DELIMITER;
-            msg += "\"";
-            msg += name;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += uid;
-            msg += DELIMITER;
-            msg += "\"";
-            msg += alias;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += (false == isLocked) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == isSticky) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == isDisabled) ? "0" : "1";
-            msg += DELIMITER;
-            msg += duration;
-
-            if (true == isSlotConfigDirty)
+            if (false == isSuccessful)
             {
-                /* Ensure that the changes will be available after power-up. */
-                PluginMgr::getInstance().save();
+                sendNegativeResponse(server, clientId, "\"Slot id invalid.\"");
+            }
+            else
+            {
+                preparePositiveResponse(msg);
+
+                msg += m_slotId;
+                msg += DELIMITER;
+                msg += "\"";
+                msg += config.name;
+                msg += "\"";
+                msg += DELIMITER;
+                msg += config.uid;
+                msg += DELIMITER;
+                msg += "\"";
+                msg += config.alias;
+                msg += "\"";
+                msg += DELIMITER;
+                msg += (false == config.isLocked) ? "0" : "1";
+                msg += DELIMITER;
+                msg += (false == config.isSticky) ? "0" : "1";
+                msg += DELIMITER;
+                msg += (false == config.isDisabled) ? "0" : "1";
+                msg += DELIMITER;
+                msg += config.duration;
+
+                if (true == isSlotConfigDirty)
+                {
+                    /* Ensure that the changes will be available after power-up. */
+                    PluginMgr::getInstance().save();
+                }
             }
         }
 

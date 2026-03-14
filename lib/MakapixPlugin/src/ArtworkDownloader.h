@@ -25,17 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   HttpHeader.h
- * @brief  HTTP header
+ * @file   ArtworkDownloader.h
+ * @brief  Makapix artwork downloader
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup WEB
+ * @addtogroup PLUGIN
  *
  * @{
  */
 
-#ifndef HTTP_HEADER_H
-#define HTTP_HEADER_H
+#ifndef ARTWORK_DOWNLOADER_H
+#define ARTWORK_DOWNLOADER_H
 
 /******************************************************************************
  * Compile Switches
@@ -45,6 +45,9 @@
  * Includes
  *****************************************************************************/
 #include <WString.h>
+#include <HttpServiceTypes.h>
+#include <HttpFileResponseHandler.h>
+#include "MakapixTypes.h"
 
 /******************************************************************************
  * Macros
@@ -55,136 +58,112 @@
  *****************************************************************************/
 
 /**
- * Request/Response http header
+ * Makapix artwork downloader class.
  */
-class HttpHeader
+class ArtworkDownloader
 {
 public:
 
     /**
-     * Constructs a empty header.
+     * Constructs the artwork downloader.
      */
-    HttpHeader() :
-        m_name(),
-        m_value()
+    ArtworkDownloader() :
+        m_httpFileResponseHandler(FILE_CACHE_FS),
+        m_dstFilePath(),
+        m_httpJobId(INVALID_HTTP_JOB_ID),
+        m_isSuccessful(false)
     {
     }
 
     /**
-     * Constructs header, based on the given values.
-     *
-     * @param[in] name  Field name
-     * @param[in] value Field value
+     * Destroys the artwork downloader.
      */
-    HttpHeader(const String& name, const String& value) :
-        m_name(name),
-        m_value(value)
+    ~ArtworkDownloader()
     {
     }
 
     /**
-     * Constructs a header, based on a single header line.
+     * Start artwork download from URL to destination file path.
      *
-     * @param[in] line  Header line, which contains name and value.
+     * @param[in] url          Artwork URL
+     * @param[in] dstFilePath  Destination file path
+     *
+     * @return If download started successfully, it will return true otherwise false.
      */
-    HttpHeader(const String& line) :
-        m_name(),
-        m_value()
+    bool download(const char* url, const char* dstFilePath);
+
+    /**
+     * Start artwork download from URL to destination file path.
+     *
+     * @param[in] url          Artwork URL
+     * @param[in] dstFilePath  Destination file path
+     *
+     * @return If download started successfully, it will return true otherwise false.
+     */
+    bool download(const String& url, const String& dstFilePath);
+
+    /**
+     * Get destination file path of the currently downloading artwork.
+     *
+     * @return Destination file path
+     */
+    const String& getDestinationFilePath() const
     {
-        parse(line);
+        return m_dstFilePath;
     }
 
     /**
-     * Constructs a header by copying an existing one.
+     * Check if a download is pending.
      *
-     * @param[in] other The header which to copy.
+     * @return If download is pending, it will return true otherwise false.
      */
-    HttpHeader(const HttpHeader& other) :
-        m_name(other.m_name),
-        m_value(other.m_value)
+    bool isPending() const
     {
+        return (INVALID_HTTP_JOB_ID != m_httpJobId);
     }
 
     /**
-     * Destroys the header.
+     * Get download status.
+     *
+     * @param[out] isSuccessful If download was successful it will be true otherwise false.
+     *
+     * @return If download is finished, it will return true otherwise false.
      */
-    ~HttpHeader()
-    {
-    }
+    bool getStatus(bool& isSuccessful);
 
     /**
-     * Get field name.
-     *
-     * @return Field name
+     * Abort ongoing download.
      */
-    const String& getName() const
-    {
-        return m_name;
-    }
-
-    /**
-     * Get field value.
-     *
-     * @return Field value
-     */
-    const String& getValue() const
-    {
-        return m_value;
-    }
-
-    /**
-     * Set field name.
-     *
-     * @param[in] name  Field name
-     */
-    void setName(const String& name)
-    {
-        m_name = name;
-    }
-
-    /**
-     * Set field value.
-     *
-     * @param[in] value Field value
-     */
-    void setValue(const String& value)
-    {
-        m_value = value;
-    }
-
-    /**
-     * Assign a header.
-     *
-     * @param[in] hdr   Header, which to assign.
-     *
-     * @return Header
-     */
-    HttpHeader& operator=(const HttpHeader& hdr);
-
-    /**
-     * Parse "<name>: <value>" string.
-     *
-     * @param[in] line  String line
-     */
-    void parse(const String& line);
-
-    /**
-     * Get header as single line.
-     *
-     * @return Header
-     */
-    String toString() const;
+    void abort();
 
 private:
 
-    String m_name;  /**< Header field name */
-    String m_value; /**< Header field value */
+    /**
+     * HTTP file response handler to download artwork files.
+     */
+    HttpFileResponseHandler m_httpFileResponseHandler;
+
+    /**
+     * Destination file path of the currently downloading artwork.
+     */
+    String m_dstFilePath;
+
+    /**
+     * HTTP job id of the current downloading file. If now no download is pending,
+     * it will be INVALID_HTTP_JOB_ID.
+     */
+    HttpJobId m_httpJobId;
+
+    /**
+     * Download success flag.
+     */
+    bool m_isSuccessful;
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* HTTP_HEADER_H */
+#endif /* ARTWORK_DOWNLOADER_H */
 
 /** @} */

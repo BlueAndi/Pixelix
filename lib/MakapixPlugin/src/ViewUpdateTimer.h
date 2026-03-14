@@ -25,87 +25,111 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   HttpHeader.cpp
- * @brief  HTTP header
+ * @file   ViewUpdateTimer.h
+ * @brief  View update timer used to send view updates via MQTT periodically.
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup PLUGIN
+ *
+ * @{
  */
+
+#ifndef VIEW_UPDATE_TIMER_H
+#define VIEW_UPDATE_TIMER_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "HttpHeader.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <stdint.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-HttpHeader& HttpHeader::operator=(const HttpHeader& hdr)
+/**
+ * View update timer class.
+ * Used to send view updates via MQTT periodically.
+ */
+class ViewUpdateTimer
 {
-    if (this != &hdr)
+public:
+
+    /**
+     * Constructs the view update timer.
+     */
+    ViewUpdateTimer() :
+        m_timer(),
+        m_idx(0U),
+        m_isLongTerm(false)
     {
-        m_name  = hdr.m_name;
-        m_value = hdr.m_value;
     }
 
-    return *this;
-}
-
-void HttpHeader::parse(const String& line)
-{
-    int idx = line.indexOf(':');
-
-    if (0 <= idx)
+    /**
+     * Destroys the view update timer.
+     */
+    ~ViewUpdateTimer()
     {
-        m_name  = line.substring(0, idx);
-        m_value = line.substring(idx + 2);
-
-        /* There may be CRLF at the end, which must be removed. */
-        idx     = m_value.indexOf("\r\n");
-
-        if (0 <= idx)
-        {
-            m_value.remove(idx);
-        }
     }
-}
 
-String HttpHeader::toString() const
-{
-    return String(m_name + ": " + m_value);
-}
+    /**
+     * Start the view update timer.
+     * It will reset the timer and start it.
+     */
+    void start();
+
+    /**
+     * Start next view update period.
+     * It will adjust the timer period to the next one.
+     */
+    void startNext();
+
+    /**
+     * Is timeout?
+     * Note, if timer is not running, it will always return false.
+     *
+     * @return If timeout, it will return true otherwise false.
+     */
+    bool isTimeout();
+
+    /**
+     * Pause the playback.
+     * It will stop the view update timer.
+     */
+    void pause();
+
+    /**
+     * Resume the playback.
+     * It will resume the view update timer.
+     */
+    void play();
+
+public:
+
+    SimpleTimer m_timer;      /**< Timer to send view updates via MQTT. */
+    uint8_t     m_idx;        /**< Current index in view update sequence. */
+    bool        m_isLongTerm; /**< Indicates whether long term updates are active or not. */
+
+    /**
+     * Get current period in milliseconds.
+     *
+     * @return Period in milliseconds.
+     */
+    uint32_t getPeriodMs() const;
+};
 
 /******************************************************************************
- * Protected Methods
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
+#endif /* VIEW_UPDATE_TIMER_H */
 
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+/** @} */

@@ -2,6 +2,6 @@
 nvs,      data, nvs,     0x9000,  0x5000,
 otadata,  data, ota,     0xe000,  0x2000,
 factory,  app,  factory, 0x10000, 0xD0000,
-app,      app,  ota_0,   0xE0000, 0x510000,
-spiffs,   data, spiffs,  0x5F0000,0x200000,
+app,      app,  ota_0,   0xE0000, 0x410000,
+spiffs,   data, spiffs,  0x4F0000,0x300000,
 coredump, data, coredump,0x7F0000,0x10000,

@@ -280,7 +280,8 @@ GifImgPlayer::GifImgPlayer() :
     m_delay(0U),
     m_timer(),
     m_isAnimation(false),
-    m_isFinished(false)
+    m_isFinished(false),
+    m_isInfiniteLoop(false)
 {
 }
 
@@ -311,7 +312,8 @@ GifImgPlayer::GifImgPlayer(const GifImgPlayer& player) :
     m_delay(player.m_delay),
     m_timer(),
     m_isAnimation(player.m_isAnimation),
-    m_isFinished(player.m_isFinished)
+    m_isFinished(player.m_isFinished),
+    m_isInfiniteLoop(player.m_isInfiniteLoop)
 {
     /* Copy global color table. */
     if (false == copyGlobalColorTable(player.m_globalColorTable, player.m_globalColorTableLength))
@@ -362,6 +364,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
         m_delay                 = player.m_delay;
         m_isAnimation           = player.m_isAnimation;
         m_isFinished            = player.m_isFinished;
+        m_isInfiniteLoop        = player.m_isInfiniteLoop;
 
         /* Copy global color table. */
         if (false == copyGlobalColorTable(player.m_globalColorTable, player.m_globalColorTableLength))
@@ -595,7 +598,8 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
                 if (true == m_isAnimation)
                 {
                     /* Is animation limited to a specific number of repeats? */
-                    if (0U < m_loopCount)
+                    if ((false == m_isInfiniteLoop) &&
+                        (0U < m_loopCount))
                     {
                         --m_loopCount;
 
@@ -789,6 +793,9 @@ void GifImgPlayer::cleanup()
         m_localColorTable       = nullptr;
         m_localColorTableLength = 0U;
     }
+
+    m_isTrailerFound = false;
+    m_isAnimation    = false;
 }
 
 bool GifImgPlayer::isFileSupported(const GifFileHeader& header) const

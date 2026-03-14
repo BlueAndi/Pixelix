@@ -1,7 +1,7 @@
 {
-    "name": "AsyncHttpClient",
+    "name": "MakapixPlugin",
     "version": "0.1.0",
-    "description": "...",
+    "description": "....",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -10,13 +10,11 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "Allocator"
+        "name": "Logging"
     }, {
-        "name": "https://github.com/BlueAndi/AsyncTCPSock"
+        "name": "LittleFS"
     }, {
-        "name": "Os"
-    }, {
-        "name": "Utilities"
+        "name": "Plugin"
     }],
     "frameworks": "*",
     "platforms": "*"
