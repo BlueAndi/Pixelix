@@ -323,7 +323,7 @@ int16_t TextWidget::alignTextHorizontal(YAGfx& gfx, const String& text, Alignmen
      * - Text scrolling from bottom to top
      */
     if ((false == m_scrollCtrl.isEnabled()) ||
-        ((true == m_scrollCtrl.isEnabled()) && (ScrollController::DIRECTION_VERTICAL == m_scrollCtrl.getDirection())))
+        (ScrollController::DIRECTION_VERTICAL == m_scrollCtrl.getDirection()))
     {
         uint16_t textBoxWidth  = 0U;
         uint16_t textBoxHeight = 0U;
@@ -362,7 +362,7 @@ void TextWidget::alignTextVertical()
      * - Text scrolling from left to right
      */
     if ((false == m_scrollCtrl.isEnabled()) ||
-        ((true == m_scrollCtrl.isEnabled()) && (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection())))
+        (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection()))
     {
         switch (m_vAlign)
         {

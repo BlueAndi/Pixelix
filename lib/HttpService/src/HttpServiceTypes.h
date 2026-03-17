@@ -358,7 +358,7 @@ struct WorkerResponse
      * @param[in] data      Data to append.
      * @param[in] dataSize  Size of the data in byte.
      */
-    void append(uint8_t* data, size_t dataSize)
+    void append(const uint8_t* data, size_t dataSize)
     {
         if (nullptr == payload)
         {

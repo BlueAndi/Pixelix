@@ -857,13 +857,8 @@ String MakapixPlugin::getCacheFilePath(const char* artUrl) const
             const char* fileExtension = strrchr(artUrl, '.');
             String      cacheFileId;
 
-            /* No '/' found? */
-            if (nullptr == fileExtension)
-            {
-                LOG_ERROR("Invalid art URL.");
-            }
             /* No '.' found? */
-            else if (nullptr == fileExtension)
+            if (nullptr == fileExtension)
             {
                 LOG_ERROR("Invalid art URL.");
             }

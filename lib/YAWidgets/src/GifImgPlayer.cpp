@@ -1439,7 +1439,7 @@ bool GifImgPlayer::writeToIndexStream(uint8_t data)
          * the pixel will be drawn.
          */
         if ((false == m_isTransparencyEnabled) ||
-            ((true == m_isTransparencyEnabled) && (m_transparentColorIndex != data)))
+            (m_transparentColorIndex != data))
         {
             PaletteColor* paletteColor = &colorTable[data];
             Color         color(paletteColor->red, paletteColor->green, paletteColor->blue);

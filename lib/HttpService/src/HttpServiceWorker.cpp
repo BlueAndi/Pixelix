@@ -128,7 +128,7 @@ void HttpServiceWorker::process(WorkerData* data)
     }
 }
 
-void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerResponse& response, Mutex& mutex, HttpJobId& jobToAbort)
+void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerResponse& response, Mutex& mutex, const HttpJobId& jobToAbort)
 {
     const char* PREFIX_HTTPS = "https://";
     WiFiClient* wifiClient   = nullptr;

@@ -128,7 +128,7 @@ public:
      */
     bool setViewMode(ViewMode mode) override
     {
-        bool ret = false;
+        bool isSuccessful = false;
 
         if (ViewMode::VIEW_MODE_MAX <= mode)
         {
@@ -136,11 +136,11 @@ public:
         }
         else
         {
-            m_mode = mode;
-            ret    = true;
+            m_mode       = mode;
+            isSuccessful = true;
         }
 
-        return true;
+        return isSuccessful;
     }
 
     /**

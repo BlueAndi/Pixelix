@@ -1010,7 +1010,6 @@ uint8_t DisplayMgr::previousSlot(uint8_t slotId)
 
 void DisplayMgr::process()
 {
-    IDisplay&                  display    = Display::getInstance();
     uint8_t                    index      = 0U;
     uint8_t                    stickySlot = SlotList::SLOT_ID_INVALID;
     MutexGuard<MutexRecursive> guardInterf(m_mutexInterf);

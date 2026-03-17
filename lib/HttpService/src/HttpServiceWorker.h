@@ -118,7 +118,7 @@ private:
      * @param[in]  mutex        Mutex to protect the worker data.
      * @param[in]  jobToAbort   Job id to abort.
      */
-    void performHttpRequest(const WorkerRequest& request, WorkerResponse& response, Mutex& mutex, HttpJobId& jobToAbort);
+    void performHttpRequest(const WorkerRequest& request, WorkerResponse& response, Mutex& mutex, const HttpJobId& jobToAbort);
 
     /**
      * Handle the HTTP response.

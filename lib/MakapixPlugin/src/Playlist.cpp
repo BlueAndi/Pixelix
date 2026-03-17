@@ -82,7 +82,6 @@ int32_t Playlist::add(uint32_t postId, const char* storageKey, const char* nativ
 
     if ((nullptr != storageKey) &&
         (nullptr != nativeFormat) &&
-        (nullptr != nativeFormat) &&
         ('\0' != storageKey[0U]) &&
         ('\0' != nativeFormat[0U]))
     {

@@ -120,7 +120,7 @@ public:
     /**
      * Destroys the file response handler.
      */
-    virtual ~HttpFileResponseHandler()
+    ~HttpFileResponseHandler() override
     {
     }
 

@@ -446,7 +446,7 @@ void MqttService::connectAllBrokers()
 {
     for (size_t idx = 0U; idx < MAX_MQTT_COUNT; ++idx)
     {
-        MqttSetting& setting = m_settings[idx];
+        const MqttSetting& setting = m_settings[idx];
 
         if ((true == setting.isEnabled()) &&
             (false == setting.getBroker().isEmpty()))
