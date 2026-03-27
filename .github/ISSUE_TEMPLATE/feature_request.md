@@ -7,27 +7,27 @@ assignees: ''
 
 ---
 
-## Description
+## Summary
 
-A clear and concise description of the feature request.
+What feature would you like?
 
-## Problem Statement
+## Why It Helps
 
-Is this related to a problem? Please describe what you're trying to solve.
+What problem does this solve for you?
 
 ## Proposed Solution
 
-A clear and concise description of what you want to happen.
+Describe the behavior you want.
 
-## Alternative Solutions
+## Alternatives Considered (Optional)
 
-Describe any alternative solutions or features you've considered.
+List other options you considered.
 
-## Additional Context
+## Extra Context (Optional)
 
-- Screenshots or examples (if applicable)
+- Screenshots or mockups
 - Related issues or pull requests
-- Implementation suggestions (if any)
+- Implementation ideas
 
 ## Checklist
 
