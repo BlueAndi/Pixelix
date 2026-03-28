@@ -37,6 +37,8 @@
 
 #include <Logging.h>
 #include <Board.h>
+#include <PsAllocator.hpp>
+#include <TypedAllocator.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -141,9 +143,103 @@ struct WindowCorrection<FFTWindow::Flat_top>
  * Public Methods
  *****************************************************************************/
 
+SpectrumAnalyzer::SpectrumAnalyzer() :
+    m_mutex(),
+    m_real(nullptr),
+    m_imag(nullptr),
+    m_fft(nullptr),
+    m_freqBins(nullptr),
+    m_freqBinsAreReady(false)
+{
+    (void)m_mutex.create();
+}
+
+SpectrumAnalyzer::~SpectrumAnalyzer()
+{
+    deInit();
+    m_mutex.destroy();
+}
+
+bool SpectrumAnalyzer::init()
+{
+    bool                               isSuccessful = false;
+    TypedAllocator<float, PsAllocator> allocator;
+
+    if (nullptr == m_real)
+    {
+        m_real = allocator.allocateArray(AudioDrv::SAMPLES);
+    }
+
+    if (nullptr == m_imag)
+    {
+        m_imag = allocator.allocateArray(AudioDrv::SAMPLES);
+    }
+
+    if (nullptr == m_freqBins)
+    {
+        m_freqBins = allocator.allocateArray(FREQ_BINS);
+    }
+
+    /* The FFT instance is constructed before PSRAM buffers are available.
+     * After deferred allocation, bind the arrays to avoid null dereference
+     * inside ArduinoFFT::windowing().
+     */
+    if ((nullptr != m_real) && (nullptr != m_imag))
+    {
+        m_fft = new (std::nothrow) ArduinoFFT<float>(m_real, m_imag, AudioDrv::SAMPLES, AudioDrv::SAMPLE_RATE);
+    }
+
+    /* Any error? */
+    if ((nullptr != m_real) &&
+        (nullptr != m_imag) &&
+        (nullptr != m_freqBins) &&
+        (nullptr != m_fft))
+    {
+        isSuccessful = true;
+    }
+    else
+    {
+        deInit();
+    }
+
+    return isSuccessful;
+}
+
+void SpectrumAnalyzer::deInit()
+{
+    TypedAllocator<float, PsAllocator> allocator;
+
+    if (nullptr != m_fft)
+    {
+        delete m_fft;
+        m_fft = nullptr;
+    }
+
+    if (nullptr != m_real)
+    {
+        allocator.deallocateArray(m_real);
+        m_real = nullptr;
+    }
+
+    if (nullptr != m_imag)
+    {
+        allocator.deallocateArray(m_imag);
+        m_imag = nullptr;
+    }
+
+    if (nullptr != m_freqBins)
+    {
+        allocator.deallocateArray(m_freqBins);
+        m_freqBins = nullptr;
+    }
+}
+
 void SpectrumAnalyzer::notify(int32_t* data, size_t size)
 {
-    if (nullptr != data)
+    if ((nullptr != data) &&
+        (nullptr != m_real) &&
+        (nullptr != m_imag) &&
+        (nullptr != m_fft))
     {
         size_t index = 0U;
 
@@ -171,7 +267,7 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
 
 #else /* (SPECTRUM_ANALYZER_SIM_SIN_EN != 0) */
 
-        while (index < size)
+        while ((index < size) && (index < AudioDrv::SAMPLES))
         {
             m_real[index] = static_cast<float>(data[index]);
             m_imag[index] = 0.0F;
@@ -196,7 +292,8 @@ bool SpectrumAnalyzer::getFreqBins(float* freqBins, size_t len)
 
     if ((nullptr != freqBins) &&
         (0U < len) &&
-        ((FREQ_BINS >= len)))
+        ((FREQ_BINS >= len)) &&
+        (nullptr != m_freqBins))
     {
         size_t idx = 0U;
 
@@ -223,30 +320,35 @@ bool SpectrumAnalyzer::getFreqBins(float* freqBins, size_t len)
 
 void SpectrumAnalyzer::calculateFFT()
 {
-    static const constexpr float     HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR = 2.0F;
-    static const constexpr FFTWindow WINDOW_TYPE                            = FFTWindow::Hamming;
-    uint16_t                         idx                                    = 0U;
-
-    /* Note, current arduinoFFT version has a wrong Hann window calculation! */
-    m_fft.windowing(WINDOW_TYPE, FFTDirection::Forward);
-    m_fft.compute(FFTDirection::Forward);
-    m_fft.complexToMagnitude();
-
-    /* In a two-sided spectrum, half the energy is displayed at the positive
-     * frequency, and half the energy is displayed at the negative frequency.
-     * Therefore, to convert from a two-sided spectrum to a single-sided
-     * spectrum, discard the second half of the array and multiply every
-     * point except for DC by two.
-     *
-     * Depended on the kind of window, it is compensated by multiplication of
-     * the corresponding correction factor.
-     *
-     * Result is the amplitude spectrum.
-     */
-    for (idx = 1U; idx < FREQ_BINS; ++idx)
+    if ((nullptr != m_real) &&
+        (nullptr != m_imag) &&
+        (nullptr != m_fft))
     {
-        m_real[idx] *= HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR;
-        m_real[idx] /= AudioDrv::SAMPLES * WindowCorrection<WINDOW_TYPE>::factor;
+        static const constexpr float     HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR = 2.0F;
+        static const constexpr FFTWindow WINDOW_TYPE                            = FFTWindow::Hamming;
+        uint16_t                         idx                                    = 0U;
+
+        /* Note, current arduinoFFT version has a wrong Hann window calculation! */
+        m_fft->windowing(WINDOW_TYPE, FFTDirection::Forward);
+        m_fft->compute(FFTDirection::Forward);
+        m_fft->complexToMagnitude();
+
+        /* In a two-sided spectrum, half the energy is displayed at the positive
+         * frequency, and half the energy is displayed at the negative frequency.
+         * Therefore, to convert from a two-sided spectrum to a single-sided
+         * spectrum, discard the second half of the array and multiply every
+         * point except for DC by two.
+         *
+         * Depended on the kind of window, it is compensated by multiplication of
+         * the corresponding correction factor.
+         *
+         * Result is the amplitude spectrum.
+         */
+        for (idx = 1U; idx < FREQ_BINS; ++idx)
+        {
+            m_real[idx] *= HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR;
+            m_real[idx] /= AudioDrv::SAMPLES * WindowCorrection<WINDOW_TYPE>::factor;
+        }
     }
 }
 

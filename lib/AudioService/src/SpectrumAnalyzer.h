@@ -69,24 +69,24 @@ public:
     /**
      * Constructs the spectrum analyzer instance.
      */
-    SpectrumAnalyzer() :
-        m_mutex(),
-        m_real{ 0.0f },
-        m_imag{ 0.0f },
-        m_fft(m_real, m_imag, AudioDrv::SAMPLES, AudioDrv::SAMPLE_RATE),
-        m_freqBins{ 0.0f },
-        m_freqBinsAreReady(false)
-    {
-        (void)m_mutex.create();
-    }
+    SpectrumAnalyzer();
 
     /**
      * Destroys the spectrum analyzer instance.
      */
-    ~SpectrumAnalyzer() override
-    {
-        m_mutex.destroy();
-    }
+    ~SpectrumAnalyzer() override;
+
+    /**
+     * Initialize the spectrum analyzer. This is deferred for PSRAM availability.
+     *
+     * @return If successful initialized, it will return true otherwise false.
+     */
+    bool init();
+
+    /**
+     * Release all resources and de-initialize the spectrum analyzer.
+     */
+    void deInit();
 
     /**
      * The audio driver will call this method to notify about a complete available
@@ -137,12 +137,12 @@ private:
      */
     static const uint32_t FREQ_BINS = AudioDrv::SAMPLES / 2U;
 
-    mutable Mutex         m_mutex;                   /**< Mutex used for concurrent access protection. */
-    float                 m_real[AudioDrv::SAMPLES]; /**< The real values. */
-    float                 m_imag[AudioDrv::SAMPLES]; /**< The imaginary values. */
-    ArduinoFFT<float>     m_fft;                     /**< The FFT algorithm. */
-    float                 m_freqBins[FREQ_BINS];     /**< The frequency bins as result of the FFT, with linear magnitude. */
-    bool                  m_freqBinsAreReady;        /**< Are the frequency bins ready for the application? */
+    mutable Mutex         m_mutex;            /**< Mutex used for concurrent access protection. */
+    float*                m_real;             /**< The real values. */
+    float*                m_imag;             /**< The imaginary values. */
+    ArduinoFFT<float>*    m_fft;              /**< The FFT algorithm. */
+    float*                m_freqBins;         /**< The frequency bins as result of the FFT, with linear magnitude. */
+    bool                  m_freqBinsAreReady; /**< Are the frequency bins ready for the application? */
 
     SpectrumAnalyzer(const SpectrumAnalyzer& drv);
     SpectrumAnalyzer& operator=(const SpectrumAnalyzer& drv);
