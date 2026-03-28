@@ -79,7 +79,7 @@ TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(TWAbstractSyntaxTree&& oth
 {
     if (this != &other)
     {
-        m_tokenTrash = other.m_tokenTrash;
+        m_tokenTrash = std::move(other.m_tokenTrash);
 
         /* Release first the own tokens. */
         clear();

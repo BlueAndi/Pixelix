@@ -198,13 +198,13 @@ HttpJobId HttpService::post(const char* url, const uint8_t* payload, size_t size
         request.jobId   = generateJobId();
         request.url     = url;
         request.method  = HTTP_METHOD_POST;
-        request.payload = payload;
-        request.size    = size;
         request.handler = handler;
 
-        m_requestList.emplace_back(request);
-
-        jobId = request.jobId;
+        if (true == request.setPayload(payload, size))
+        {
+            m_requestList.emplace_back(std::move(request));
+            jobId = m_requestList.back().jobId;
+        }
     }
 
     return jobId;

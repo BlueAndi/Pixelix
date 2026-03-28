@@ -150,6 +150,7 @@ struct WorkerRequest
     {
         other.payload = nullptr;
         other.size    = 0U;
+        other.handler = nullptr;
     }
 
     /**
@@ -206,6 +207,45 @@ struct WorkerRequest
         }
 
         return *this;
+    }
+
+    /**
+     * Replace the payload with a private copy.
+     *
+     * @param[in] data      Payload to copy.
+     * @param[in] dataSize  Payload size in byte.
+     *
+     * @return If the payload could be copied, it will return true otherwise false.
+     */
+    bool setPayload(const uint8_t* data, size_t dataSize)
+    {
+        bool isSuccessful = true;
+
+        if (nullptr != payload)
+        {
+            delete[] payload;
+            payload = nullptr;
+        }
+
+        size = dataSize;
+
+        if ((nullptr != data) && (0U < dataSize))
+        {
+            uint8_t* buffer = new (std::nothrow) uint8_t[dataSize];
+
+            if (nullptr == buffer)
+            {
+                size         = 0U;
+                isSuccessful = false;
+            }
+            else
+            {
+                memcpy(buffer, data, dataSize);
+                payload = buffer;
+            }
+        }
+
+        return isSuccessful;
     }
 };
 
@@ -340,6 +380,12 @@ struct WorkerResponse
     {
         if (this != &other)
         {
+            if (nullptr != payload)
+            {
+                delete[] payload;
+                payload = nullptr;
+            }
+
             jobId         = other.jobId;
             statusCode    = other.statusCode;
             payload       = other.payload;

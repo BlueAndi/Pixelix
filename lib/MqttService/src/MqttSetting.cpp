@@ -181,14 +181,30 @@ MqttSetting& MqttSetting::operator=(MqttSetting&& other) noexcept
 {
     if (this != &other)
     {
-        m_isEnabled        = other.m_isEnabled;
-        m_useTls           = other.m_useTls;
-        m_port             = other.m_port;
+        m_isEnabled = other.m_isEnabled;
+        m_useTls    = other.m_useTls;
+        m_port      = other.m_port;
 
         /* Take over ownership of the pointers. */
-        m_broker           = std::move(other.m_broker);
-        m_user             = std::move(other.m_user);
-        m_password         = std::move(other.m_password);
+        m_broker    = std::move(other.m_broker);
+        m_user      = std::move(other.m_user);
+        m_password  = std::move(other.m_password);
+
+        /* Release own allocations before stealing from other. */
+        if (nullptr != m_rootCaCert)
+        {
+            delete[] m_rootCaCert;
+        }
+
+        if (nullptr != m_clientCert)
+        {
+            delete[] m_clientCert;
+        }
+
+        if (nullptr != m_clientKey)
+        {
+            delete[] m_clientKey;
+        }
 
         m_rootCaCert       = other.m_rootCaCert;
         m_clientCert       = other.m_clientCert;
