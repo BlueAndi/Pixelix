@@ -117,7 +117,7 @@ public:
      *
      * @param[in] url                 URL
      * @param[in] preProcessCallback  PreProcessCallback which will be called by the RestService to filter the received date.
-     * @param[in] payload             Payload, which must be kept alive until response is available!
+     * @param[in] payload             Payload, which is copied by the underlying HTTP service.
      * @param[in] size                Payload size in byte
      *
      * @return If request is successful sent, it will return a valid restId otherwise it will return INVALID_REST_ID.
@@ -128,7 +128,7 @@ public:
      * Send POST request to host.
      *
      * @param[in] url                 URL
-     * @param[in] payload             Payload, which must be kept alive until response is available!
+     * @param[in] payload             Payload, which is copied by the underlying HTTP service.
      * @param[in] preProcessCallback  PreProcessCallback which will be called by the RestService to filter the received date.
      *
      * @return If request is successful sent, it will return a valid restId otherwise it will return INVALID_REST_ID.
@@ -257,7 +257,7 @@ private:
             :
             id(other.id),
             restId(other.restId),
-            preProcessCallback(other.preProcessCallback),
+            preProcessCallback(std::move(other.preProcessCallback)),
             url(std::move(other.url)),
             data{ other.data.data, other.data.size }
         {

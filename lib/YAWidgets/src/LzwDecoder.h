@@ -104,15 +104,20 @@ public:
     LzwDecoder& operator=(const LzwDecoder& other);
 
     /**
-     * Initialize with the LZW min. code width (number of bits).
+     * Initialize the LZW decoder.
      * It will allocate internal memory for the decompression. Use the deInit()
      * after successful decompression to release it again.
      *
-     * @param[in] lzwMinCodeWidth   LZW min. code width
-     *
      * @return If successful initialized, it will return true otherwise false.
      */
-    bool init(uint8_t lzwMinCodeWidth);
+    bool init();
+
+    /**
+     * Initialize with the LZW min. code width (number of bits).
+     *
+     * @param[in] lzwMinCodeWidth   LZW min. code width
+     */
+    void setup(uint8_t lzwMinCodeWidth);
 
     /**
      * Decodes input stream (code stream) and write it the output stream.

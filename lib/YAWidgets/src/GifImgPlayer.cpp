@@ -34,7 +34,6 @@
  * Includes
  *****************************************************************************/
 #include "GifImgPlayer.h"
-#include "LzwDecoder.h"
 #include "GifFileLoader.h"
 #include "GifFileToMemLoader.h"
 #include <Logging.h>
@@ -259,6 +258,7 @@ GifImgPlayer::GifImgPlayer() :
     m_bitmap(),
     m_gifLoader(nullptr),
     m_canvas(&m_bitmap),
+    m_lzwDecoder(),
     m_bgColorIndex(0U),
     m_globalColorTable(nullptr),
     m_globalColorTableLength(0U),
@@ -291,6 +291,7 @@ GifImgPlayer::GifImgPlayer(const GifImgPlayer& player) :
     m_bitmap(player.m_bitmap),
     m_gifLoader(player.m_gifLoader),
     m_canvas(player.m_canvas),
+    m_lzwDecoder(player.m_lzwDecoder),
     m_bgColorIndex(player.m_bgColorIndex),
     m_globalColorTable(nullptr),
     m_globalColorTableLength(0U),
@@ -347,6 +348,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
         m_bitmap                = player.m_bitmap;
         m_gifLoader             = player.m_gifLoader;
         m_canvas                = player.m_canvas;
+        m_lzwDecoder            = player.m_lzwDecoder;
         m_bgColorIndex          = player.m_bgColorIndex;
 
         m_disposalMethod        = player.m_disposalMethod;
@@ -410,6 +412,9 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, IGifLoader&
         }
         else
         {
+            /* Initialize the LZW decoder.*/
+            m_lzwDecoder.init();
+
             /* Allocate image data block, used for parsing. */
             m_imageDataBlock = m_dataAllocator.allocateArray(IMAGE_DATA_BLOCK_SIZE);
 
@@ -634,6 +639,12 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
                 {
                     m_isFinished = true;
                 }
+
+                /* If the GIF image is finished, release LZW decoder resources. */
+                if (true == m_isFinished)
+                {
+                    m_lzwDecoder.deInit();
+                }
             }
             /* Unknown block id? */
             else
@@ -770,6 +781,7 @@ void GifImgPlayer::cleanup()
         m_gifLoader = nullptr;
     }
 
+    m_lzwDecoder.deInit();
     m_bitmap.release();
 
     if (nullptr != m_imageDataBlock)
@@ -1001,24 +1013,11 @@ bool GifImgPlayer::parseImageDescriptor()
                 m_isInterlaced          = (0U != imageDescriptor.packedField.interlaceFlag);
                 m_interlacePass         = 0U;
 
-                if (false == lzwDecoder.init(lzwMinCodeSize))
+                /* Decode image data. */
+                m_lzwDecoder.setup(lzwMinCodeSize);
+                if (false == m_lzwDecoder.decode(readFromCodeStreamFunc, writeToIndexStreamFunc))
                 {
                     isSuccessful = false;
-                }
-                else
-                {
-                    if (false == lzwDecoder.decode(readFromCodeStreamFunc, writeToIndexStreamFunc))
-                    {
-                        isSuccessful = false;
-                    }
-
-                    lzwDecoder.deInit();
-                }
-
-                /* Any error? */
-                if (false == isSuccessful)
-                {
-                    ;
                 }
                 /* After the image data, the block terminator marks the end. */
                 else if (false == m_gifLoader->read(&blockTerminator, sizeof(blockTerminator)))

@@ -150,9 +150,9 @@ LzwDecoder& LzwDecoder::operator=(const LzwDecoder& other)
     return *this;
 }
 
-bool LzwDecoder::init(uint8_t lzwMinCodeWidth)
+bool LzwDecoder::init()
 {
-    bool isSuccessful = true;
+    bool isSuccessful = false;
 
     if (nullptr == m_codes)
     {
@@ -161,8 +161,6 @@ bool LzwDecoder::init(uint8_t lzwMinCodeWidth)
         if (nullptr == m_codes)
         {
             LOG_ERROR("Failed to allocate memory for LZW codes, size: %u bytes", CODE_LIMIT * sizeof(uint32_t));
-
-            isSuccessful = false;
         }
     }
 
@@ -173,24 +171,31 @@ bool LzwDecoder::init(uint8_t lzwMinCodeWidth)
         if (nullptr == m_stack)
         {
             LOG_ERROR("Failed to allocate memory for LZW stack, size: %u bytes", STACK_SIZE);
-
-            isSuccessful = false;
         }
     }
 
+    /* Any error? */
+    if ((nullptr == m_codes) ||
+        (nullptr == m_stack))
+    {
+        deInit();
+    }
+    else
+    {
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+void LzwDecoder::setup(uint8_t lzwMinCodeWidth)
+{
     m_lzwMinCodeWidth = lzwMinCodeWidth;
     m_clearCode       = 1U << m_lzwMinCodeWidth;
     m_endCode         = m_clearCode + 1U;
     m_stackPtr        = m_stack;
     m_bitsInBuffer    = 0U;
     clear();
-
-    if (false == isSuccessful)
-    {
-        deInit();
-    }
-
-    return isSuccessful;
 }
 
 bool LzwDecoder::decode(const ReadFromInStream& readFromInStreamFunc, const WriteToOutStream& writeToOutStreamFunc)
