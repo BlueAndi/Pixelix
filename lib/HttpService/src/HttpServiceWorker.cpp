@@ -147,7 +147,7 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
     /* HTTP over plain TCP. */
     else
     {
-        wifiClient = new WiFiClient();
+        wifiClient = new (std::nothrow) WiFiClient();
     }
 
     if (nullptr == wifiClient)
