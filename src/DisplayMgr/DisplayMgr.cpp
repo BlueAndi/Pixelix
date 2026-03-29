@@ -873,6 +873,20 @@ void DisplayMgr::setIndicatorState(uint8_t indicatorId, IIndicatorView::State st
     m_indicatorView.setIndicator(indicatorId, state);
 }
 
+uint32_t DisplayMgr::getFps() const
+{
+    uint32_t                   fps = 0U;
+    MutexGuard<MutexRecursive> guard1(m_mutexInterf);
+    MutexGuard<MutexRecursive> guard2(m_mutexUpdate);
+
+    if (0U != m_updateTaskLastDuration)
+    {
+        fps = 1000U / m_updateTaskLastDuration;
+    }
+
+    return fps;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -886,6 +900,8 @@ DisplayMgr::DisplayMgr() :
     m_mutexUpdate(),
     m_processTask("processTask", processTask, PROCESS_TASK_STACK_SIZE, PROCESS_TASK_PRIORITY, PROCESS_TASK_RUN_CORE),
     m_updateTask("updateTask", updateTask, UPDATE_TASK_STACK_SIZE, UPDATE_TASK_PRIORITY, UPDATE_TASK_RUN_CORE),
+    m_updateTaskPeriod(UPDATE_TASK_PERIOD_MIN),
+    m_updateTaskLastDuration(UPDATE_TASK_PERIOD_MIN),
     m_slotList(),
     m_selectedSlotId(SlotList::SLOT_ID_INVALID),
     m_selectedPlugin(nullptr),
@@ -1253,14 +1269,15 @@ void DisplayMgr::processTask(DisplayMgr* self)
 
 void DisplayMgr::updateTask(DisplayMgr* self)
 {
-    uint32_t timestamp           = millis(); /* ms */
-    uint32_t duration            = 0U;       /* ms */
-    uint32_t timestampPhyUpdate  = 0U;       /* ms */
-    uint32_t durationPhyUpdate   = 0U;       /* ms */
-    bool     abort               = false;
+    uint32_t timestamp = millis(); /* ms */
+    uint32_t duration  = 0U;       /* ms */
 
-    /* Observe the physical display refresh and limit the duration to 70% of refresh period. */
-    const uint32_t MAX_LOOP_TIME = (UPDATE_TASK_PERIOD * 7U) / (10U);
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+
+    uint32_t timestampPhyUpdate = 0U; /* ms */
+    uint32_t durationPhyUpdate  = 0U; /* ms */
+
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
     /* Refresh display content periodically */
     self->update();
@@ -1268,24 +1285,22 @@ void DisplayMgr::updateTask(DisplayMgr* self)
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
     /* Update statistics for active plugin processing time. */
     self->m_statistics.pluginProcessing.update(millis() - timestamp);
+
+    timestampPhyUpdate = millis();
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
     /* Wait until the physical update is ready to avoid flickering
      * and artifacts on the display, because of e.g. webserver flash
      * access.
      */
-    timestampPhyUpdate = millis();
-    while ((false == Display::getInstance().isReady()) && (false == abort))
+    while (false == Display::getInstance().isReady())
     {
-        durationPhyUpdate = millis() - timestampPhyUpdate;
-
-        if (MAX_LOOP_TIME <= durationPhyUpdate)
-        {
-            abort = true;
-        }
+        delay(1U);
     }
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+    durationPhyUpdate = millis() - timestampPhyUpdate;
+
     /* Update statistics for physical display update time. */
     self->m_statistics.displayUpdate.update(durationPhyUpdate);
 
@@ -1325,10 +1340,46 @@ void DisplayMgr::updateTask(DisplayMgr* self)
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
     /* Calculate overall duration */
-    duration = millis() - timestamp;
+    duration                        = millis() - timestamp;
+
+    /* Low pass filter. */
+    self->m_updateTaskLastDuration  = (self->m_updateTaskLastDuration * 75U) / 100U;
+    self->m_updateTaskLastDuration += ((duration + UPDATE_TASK_MIN_DURATION_OTHER) * 25U) / 100U;
+
+    /* Adapt the update task period on demand.
+     * If the processing time is too high, the update task period will be increased to avoid high CPU load and to keep the system responsive.
+     * If the processing time is low, the update task period will be decreased to have a more responsive display.
+     */
+    if (self->m_updateTaskLastDuration > self->m_updateTaskPeriod)
+    {
+        if (self->m_updateTaskPeriod >= (UPDATE_TASK_PERIOD_MAX - UPDATE_TASK_PERIOD_STEP))
+        {
+            self->m_updateTaskPeriod = UPDATE_TASK_PERIOD_MAX;
+        }
+        else
+        {
+            self->m_updateTaskPeriod += UPDATE_TASK_PERIOD_STEP;
+        }
+    }
+    else if ((self->m_updateTaskLastDuration + UPDATE_TASK_PERIOD_STEP) < self->m_updateTaskPeriod)
+    {
+        if (self->m_updateTaskPeriod <= (UPDATE_TASK_PERIOD_MIN + UPDATE_TASK_PERIOD_STEP))
+        {
+            self->m_updateTaskPeriod = UPDATE_TASK_PERIOD_MIN;
+        }
+        else
+        {
+            self->m_updateTaskPeriod -= UPDATE_TASK_PERIOD_STEP;
+        }
+    }
+    /* No adaption required. */
+    else
+    {
+        ;
+    }
 
     /* Updating the display shall take place in aquidistant intervals. */
-    delay(UPDATE_TASK_PERIOD - (duration % UPDATE_TASK_PERIOD));
+    delay(self->m_updateTaskPeriod - (duration % self->m_updateTaskPeriod));
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
     self->m_statistics.refreshPeriod.update(millis() - self->m_timestampLastUpdate);

@@ -457,6 +457,13 @@ public:
     void setIndicatorState(uint8_t indicatorId, IIndicatorView::State state);
 
     /**
+     * Get current frames per second (fps).
+     *
+     * @return Current frames per second.
+     */
+    uint32_t getFps() const;
+
+    /**
      * Indicator id for all indicators.
      */
     static const uint8_t INDICATOR_ID_ALL     = IndicatorViewBase::INDICATOR_ID_ALL;
@@ -469,28 +476,42 @@ public:
 private:
 
     /** The process task stack size in bytes */
-    static const uint32_t PROCESS_TASK_STACK_SIZE  = 5120U;
+    static const uint32_t PROCESS_TASK_STACK_SIZE        = 5120U;
 
     /** The process task period in ms. */
-    static const uint32_t PROCESS_TASK_PERIOD      = 100U;
+    static const uint32_t PROCESS_TASK_PERIOD            = 100U;
 
     /** The process task shall run on the APP MCU core. */
-    static const BaseType_t PROCESS_TASK_RUN_CORE  = APP_CPU_NUM;
+    static const BaseType_t PROCESS_TASK_RUN_CORE        = APP_CPU_NUM;
 
     /** The process task priority shall be equal than the Arduino loop task priority. */
-    static const UBaseType_t PROCESS_TASK_PRIORITY = 1U;
+    static const UBaseType_t PROCESS_TASK_PRIORITY       = 1U;
 
     /** The update task stack size in bytes */
-    static const uint32_t UPDATE_TASK_STACK_SIZE   = 4096U;
+    static const uint32_t UPDATE_TASK_STACK_SIZE         = 4096U;
 
-    /** The update task period in ms. */
-    static const uint32_t UPDATE_TASK_PERIOD       = 20U;
+    /**
+     * The minimal update task period in ms, which corresponds to 50 fps.
+     * Its the default at start.
+     */
+    static const uint32_t UPDATE_TASK_PERIOD_MIN         = 20U;
+
+    /** The maximal update task period in ms, which corresponds to 5 fps. */
+    static const uint32_t UPDATE_TASK_PERIOD_MAX         = 200U;
+
+    /** The update task period step in ms. */
+    static const uint32_t UPDATE_TASK_PERIOD_STEP        = 5U;
+
+    /**
+     * The minimal duration in ms, which the other tasks shall have at least.
+     */
+    static const uint32_t UPDATE_TASK_MIN_DURATION_OTHER = 10U;
 
     /** The update task shall run on the MCU core with less load. */
-    static const BaseType_t UPDATE_TASK_RUN_CORE   = tskNO_AFFINITY;
+    static const BaseType_t UPDATE_TASK_RUN_CORE         = tskNO_AFFINITY;
 
     /** The update task priority shall be higher than the other application tasks. */
-    static const UBaseType_t UPDATE_TASK_PRIORITY  = 4U;
+    static const UBaseType_t UPDATE_TASK_PRIORITY        = 4U;
 
     /** Mutex to protect concurrent access through the public interface. */
     mutable MutexRecursive m_mutexInterf;
@@ -503,6 +524,18 @@ private:
 
     /** Update task */
     Task<DisplayMgr> m_updateTask;
+
+    /** Update task period in ms. This period is observed and adapted on demand. */
+    uint32_t m_updateTaskPeriod;
+
+    /**
+     * Duration of last update task run in ms.
+     * This is observed to adapt the update task period on demand.
+     * If the duration is too high, the update task period will be increased to reduce
+     * the load. If the duration is low, the update task period will be decreased
+     * to increase the responsiveness.
+     */
+    uint32_t m_updateTaskLastDuration;
 
     /** List of all slots with their connected plugins. */
     SlotList m_slotList;
