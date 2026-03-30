@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,6 +13,7 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -31,6 +33,39 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <div class="modal fade" id="iconPickerDialog" tabindex="-1" aria-labelledby="iconPickerTitle" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="iconPickerTitle">Select Icon</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Zoom Level:</label>
+                                <div class="btn-group" role="group" aria-label="Icon zoom controls">
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoomOriginal" value="1" checked autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoomOriginal">Original</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom2x" value="2" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom2x">2x</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom4x" value="4" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom4x">4x</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom8x" value="8" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
+                                </div>
+                            </div>
+                            <p class="text-secondary">Click an icon to use its file id.</p>
+                            <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="iconPickerOverview"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="container">
                 <h1 class="mt-5">IconTextLampPlugin</h1>
                 <p><img src="IconTextLampPlugin.jpg" alt="Screenshot" /></p>
@@ -72,7 +107,7 @@
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUidText">Plugin UID:</label>
                             <select class="form-select" id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText', 'iconFileId', 'storeFlag')">
-                            </select>    
+                            </select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="justText">Text:</label>
@@ -81,14 +116,18 @@
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="iconFileId">Icon file id:</label>
-                            <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
+                            <div class="input-group">
+                                <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
+                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog('iconFileId')">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearIconFileId('iconFileId')">Clear</button>
+                            </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="storeFlag" name="storeFlag" value="0" />
                             <label class="form-label" for="storeFlag">Store the icon file id and the text persistent (true) or not (false). It will be used after restart.</label>
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
                 <h3>Lamp</h3>
@@ -97,7 +136,7 @@
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUidLamp">Plugin UID:</label>
                             <select class="form-select" id="pluginUidLamp" name="pluginUid" size="1">
-                            </select>    
+                            </select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="lampId">Lamp:</label>
@@ -106,21 +145,21 @@
                                 <option value="1">1</option>
                                 <option value="2">2</option>
                                 <option value="3">3</option>
-                            </select>    
+                            </select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="lampState">State:</label>
                             <select class="form-select" id="lampState" size="1">
                                 <option value="off" selected>off</option>
                                 <option value="on">on</option>
-                            </select>    
+                            </select>
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -144,8 +183,104 @@
 
         <script>
 
-            var pluginName  = "IconTextLampPlugin";
-            var restClient  = new pixelix.rest.Client();
+            var pluginName = "IconTextLampPlugin";
+            var restClient = new pixelix.rest.Client();
+            var iconPickerModal = null;
+            var iconPickerZoom = 1;
+            var iconPickerTargetInputId = "";
+
+            function applyZoomToImage(image) {
+                if (1 === iconPickerZoom) {
+                    image.style.imageRendering = "auto";
+                    image.style.width = "auto";
+                    image.style.height = "auto";
+                } else {
+                    image.style.imageRendering = "pixelated";
+                    image.style.width = (image.naturalWidth * iconPickerZoom) + "px";
+                    image.style.height = (image.naturalHeight * iconPickerZoom) + "px";
+                }
+            }
+
+            function updateIconPickerZoom() {
+                var selectedZoom = parseInt(document.querySelector("input[name='iconZoomOptions']:checked").value, 10);
+                var images;
+
+                iconPickerZoom = selectedZoom;
+                images = document.querySelectorAll("#iconPickerOverview img");
+
+                images.forEach(function (image) {
+                    applyZoomToImage(image);
+                });
+            }
+
+            function selectIconFileId(fileId) {
+                if ("" !== iconPickerTargetInputId) {
+                    document.getElementById(iconPickerTargetInputId).value = fileId;
+                }
+
+                if (null !== iconPickerModal) {
+                    iconPickerModal.hide();
+                }
+            }
+
+            function clearIconFileId(targetInputId) {
+                document.getElementById(targetInputId).value = 255;
+            }
+
+            function fillIconPicker(fileTable) {
+                var $overview = $("#iconPickerOverview");
+                var idx;
+
+                $overview.empty();
+
+                for (idx = 0; idx < fileTable.length; ++idx) {
+                    if (0 < fileTable[idx].fullPath.length) {
+                        (function (fileId, fullPath) {
+                            var $fileId = $("<p>").text("[" + fileId + "]");
+                            var $img = $("<img>")
+                                .attr("src", fullPath)
+                                .attr("alt", "Icon " + fileId)
+                                .on("load", function () {
+                                    applyZoomToImage(this);
+                                });
+                            var $name = $("<p>").text(fullPath.replace(/^.*[\\\/]/, ""));
+                            var $button = $("<button>")
+                                .attr("type", "button")
+                                .attr("class", "btn btn-primary btn-sm")
+                                .text("Use")
+                                .on("click", function () {
+                                    selectIconFileId(fileId);
+                                });
+                            var $card = $("<div>")
+                                .attr("class", "bg-body text-center m-2 p-2 bd-highlight border rounded")
+                                .append($fileId)
+                                .append($img)
+                                .append($name)
+                                .append($button);
+
+                            $overview.append($card);
+                        })(idx, fileTable[idx].fullPath);
+                    }
+                }
+            }
+
+            function openIconPickerDialog(targetInputId) {
+                iconPickerTargetInputId = targetInputId;
+
+                return restClient.readFile("/configuration/fileMgr.json").then(function (rsp) {
+                    var jsonRsp = JSON.parse(rsp);
+
+                    fillIconPicker(jsonRsp.fileTable);
+
+                    if (null === iconPickerModal) {
+                        iconPickerModal = new bootstrap.Modal(document.getElementById("iconPickerDialog"));
+                    }
+
+                    iconPickerModal.show();
+                }).catch(function () {
+                    alert("Failed to load icon list. Open the icons page once to initialize it.");
+                });
+            }
 
             function enableUI() {
                 utils.enableForm("myFormText", true);
@@ -158,20 +293,20 @@
             }
 
             function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var elemIndex   = 0;
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var elements    = document.getElementsByName("pluginUid");
-                    var $option     = null;
-                    var optionText  = ""
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var elemIndex = 0;
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var elements = document.getElementsByName("pluginUid");
+                    var $option = null;
+                    var optionText = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -180,12 +315,12 @@
 
                             optionText += ")";
 
-                            for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+                            for (elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                                 $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                                
+                                    .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                    .text(optionText);
+
                                 $(elements[elemIndex]).append($option);
                             }
 
@@ -194,7 +329,7 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
@@ -206,7 +341,7 @@
                     method: "GET",
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/iconText",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     var justTextInput = document.getElementById(justTextId);
                     var iconFileIdInput = document.getElementById(iconFileId);
                     var storeFlagIdInput = document.getElementById(storeFlagId);
@@ -215,9 +350,9 @@
                     iconFileIdInput.value = rsp.data.iconFileId;
                     storeFlagIdInput.checked = false;
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -237,11 +372,11 @@
                         iconFileId: parseInt(iconFileId),
                         storeFlag: storeFlag
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -252,7 +387,7 @@
                     method: "GET",
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/lamps",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     var selectLampState = document.getElementById(lampStateId);
 
                     if ("off" == rsp.data.lamps[lampId].state) {
@@ -261,9 +396,9 @@
                         selectLampState.selectedIndex = 1;
                     }
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -278,11 +413,11 @@
                     parameter: {
                         state: lampState
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -301,23 +436,23 @@
                 }
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
-                    var selectText      = document.getElementById("pluginUidText");
-                    var selectLamp      = document.getElementById("pluginUidLamp");
-                    var selectLampId    = document.getElementById("lampId");
+                getPluginInstances().then(function (cnt) {
+                    var selectText = document.getElementById("pluginUidText");
+                    var selectLamp = document.getElementById("pluginUidLamp");
+                    var selectLampId = document.getElementById("lampId");
 
                     if (0 < cnt) {
 
-                        return updateForms().then(function() {
+                        return updateForms().then(function () {
                             return getLamp(
                                 selectLamp.options[selectLamp.selectedIndex].value,
                                 selectLampId.options[selectLampId.selectedIndex].value,
@@ -329,4 +464,5 @@
             });
         </script>
     </body>
+
 </html>

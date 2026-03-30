@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,6 +13,7 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -31,6 +33,39 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <div class="modal fade" id="iconPickerDialog" tabindex="-1" aria-labelledby="iconPickerTitle" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="iconPickerTitle">Select Icon</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Zoom Level:</label>
+                                <div class="btn-group" role="group" aria-label="Icon zoom controls">
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoomOriginal" value="1" checked autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoomOriginal">Original</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom2x" value="2" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom2x">2x</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom4x" value="4" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom4x">4x</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom8x" value="8" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
+                                </div>
+                            </div>
+                            <p class="text-secondary">Click an icon to use its file id.</p>
+                            <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="iconPickerOverview"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="container">
                 <h1 class="mt-5">GrabViaMqttPlugin</h1>
                 <p><img src="GrabViaMqttPlugin.jpg" alt="Screenshot" /></p>
@@ -38,14 +73,14 @@
                 <p>The filter identifies the value in the JSON payload that you want to display.</p>
                 <p><strong>Example:</strong></p>
                 <p>JSON payload:</p>
-<p><code>
+                <p><code>
 {
     "temperature": 22.5,
     "humidity": 60
 }
 </code></p>
                 <p>The following filter extracts the temperature value from the JSON payload.</p>
-<p><code>
+                <p><code>
 {
     "temperature": true
 }
@@ -76,7 +111,7 @@
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
                             <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                            </select>    
+                            </select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="path">Path:</label>
@@ -86,11 +121,16 @@
                         <div class="form-group mb-3">
                             <label class="form-label" for="filter">Filter:</label>
                             <input class="form-control" type="text" id="filter" name="filter" value="null" size="80" />
-                            <small class="form-text">Filter to identify the value in the JSON response. See details in <a href="https://arduinojson.org/news/2020/03/22/version-6-15-0/" target="_blank">ArduinoJson 6.15: Filtering done right</a> chapter.</small>
+                            <small class="form-text">Filter to identify the value in the JSON response. See details in <a href="https://arduinojson.org/news/2020/03/22/version-6-15-0/" target="_blank">ArduinoJson 6.15: Filtering done
+                                    right</a> chapter.</small>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="iconFileId">Icon file id:</label>
-                            <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
+                            <div class="input-group">
+                                <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
+                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog('iconFileId')">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearIconFileId('iconFileId')">Clear</button>
+                            </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
                         <div class="form-group mb-3">
@@ -108,12 +148,12 @@
                             <input class="form-control" type="number" id="offset" name="offset" value="0" />
                             <small class="form-text">Number which is added to a number value. Not used for string values.</small>
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -137,30 +177,126 @@
 
         <script>
 
-            var pluginName  = "GrabViaMqttPlugin";
-            var restClient  = new pixelix.rest.Client();
-    
+            var pluginName = "GrabViaMqttPlugin";
+            var restClient = new pixelix.rest.Client();
+            var iconPickerModal = null;
+            var iconPickerZoom = 1;
+            var iconPickerTargetInputId = "";
+
+            function applyZoomToImage(image) {
+                if (1 === iconPickerZoom) {
+                    image.style.imageRendering = "auto";
+                    image.style.width = "auto";
+                    image.style.height = "auto";
+                } else {
+                    image.style.imageRendering = "pixelated";
+                    image.style.width = (image.naturalWidth * iconPickerZoom) + "px";
+                    image.style.height = (image.naturalHeight * iconPickerZoom) + "px";
+                }
+            }
+
+            function updateIconPickerZoom() {
+                var selectedZoom = parseInt(document.querySelector("input[name='iconZoomOptions']:checked").value, 10);
+                var images;
+
+                iconPickerZoom = selectedZoom;
+                images = document.querySelectorAll("#iconPickerOverview img");
+
+                images.forEach(function (image) {
+                    applyZoomToImage(image);
+                });
+            }
+
+            function selectIconFileId(fileId) {
+                if ("" !== iconPickerTargetInputId) {
+                    document.getElementById(iconPickerTargetInputId).value = fileId;
+                }
+
+                if (null !== iconPickerModal) {
+                    iconPickerModal.hide();
+                }
+            }
+
+            function clearIconFileId(targetInputId) {
+                document.getElementById(targetInputId).value = 255;
+            }
+
+            function fillIconPicker(fileTable) {
+                var $overview = $("#iconPickerOverview");
+                var idx;
+
+                $overview.empty();
+
+                for (idx = 0; idx < fileTable.length; ++idx) {
+                    if (0 < fileTable[idx].fullPath.length) {
+                        (function (fileId, fullPath) {
+                            var $fileId = $("<p>").text("[" + fileId + "]");
+                            var $img = $("<img>")
+                                .attr("src", fullPath)
+                                .attr("alt", "Icon " + fileId)
+                                .on("load", function () {
+                                    applyZoomToImage(this);
+                                });
+                            var $name = $("<p>").text(fullPath.replace(/^.*[\\\/]/, ""));
+                            var $button = $("<button>")
+                                .attr("type", "button")
+                                .attr("class", "btn btn-primary btn-sm")
+                                .text("Use")
+                                .on("click", function () {
+                                    selectIconFileId(fileId);
+                                });
+                            var $card = $("<div>")
+                                .attr("class", "bg-body text-center m-2 p-2 bd-highlight border rounded")
+                                .append($fileId)
+                                .append($img)
+                                .append($name)
+                                .append($button);
+
+                            $overview.append($card);
+                        })(idx, fileTable[idx].fullPath);
+                    }
+                }
+            }
+
+            function openIconPickerDialog(targetInputId) {
+                iconPickerTargetInputId = targetInputId;
+
+                return restClient.readFile("/configuration/fileMgr.json").then(function (rsp) {
+                    var jsonRsp = JSON.parse(rsp);
+
+                    fillIconPicker(jsonRsp.fileTable);
+
+                    if (null === iconPickerModal) {
+                        iconPickerModal = new bootstrap.Modal(document.getElementById("iconPickerDialog"));
+                    }
+
+                    iconPickerModal.show();
+                }).catch(function () {
+                    alert("Failed to load icon list. Open the icons page once to initialize it.");
+                });
+            }
+
             function enableUI() {
                 utils.enableForm("myForm", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("myForm", false);
             }
-    
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
+
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -170,9 +306,9 @@
                             optionText += ")";
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                            
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
+
                             $("#pluginUid").append($option);
 
                             ++cnt;
@@ -180,28 +316,28 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
             };
-    
+
             function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#path").val(rsp.data.path);
                     $("#filter").val(JSON.stringify(rsp.data.filter));
                     $("#iconFileId").val(rsp.data.iconFileId);
                     $("#format").val(rsp.data.format);
                     $("#multiplier").val(rsp.data.multiplier);
                     $("#offset").val(rsp.data.offset);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -214,32 +350,32 @@
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true,
                     parameter: {
-                        path:  $("#path").val(),
+                        path: $("#path").val(),
                         filter: $("#filter").val(),
                         iconFileId: $("#iconFileId").val(),
                         format: $("#format").val(),
                         multiplier: $("#multiplier").val(),
                         offset: $("#offset").val()
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                getPluginInstances().then(function (cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
@@ -252,4 +388,5 @@
             });
         </script>
     </body>
+
 </html>
