@@ -118,7 +118,8 @@
                             <label class="form-label" for="iconFileId">Icon file id:</label>
                             <div class="input-group">
                                 <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
-                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog()">Select...</button>
+                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog('iconFileId')">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearIconFileId('iconFileId')">Clear</button>
                             </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
@@ -190,6 +191,10 @@
                 if (null !== iconPickerModal) {
                     iconPickerModal.hide();
                 }
+            }
+
+            function clearIconFileId(targetInputId) {
+                document.getElementById(targetInputId).value = 255;
             }
 
             function fillIconPicker(fileTable) {
