@@ -15,6 +15,9 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/1.jpg)](https://youtu.be/UCjJCI5JShY "Pixelix - Remote Button")
 
 Click on the preview to see the video.
+
+[![wwha-blue](./doc/images/wwha-blue.svg)](./doc/HOMEASSISTANT.md)
+
 ___
 
 ## Table of Content <!-- omit in toc -->
