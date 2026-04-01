@@ -16,7 +16,7 @@ blueprint:
   input:
     section_general:
       name: General Section
-      description: General configuration independed of using REST or MQTT API.
+      description: General configuration independent of using REST or MQTT API.
       input:
         plugin_type:
           name: Plugin Type
@@ -47,7 +47,7 @@ blueprint:
           description: |
             The plugin alias of the plugin instance. See display page in the Pixelix web interface.
             If both UID and alias are set, the alias is used.
-          default: ''
+          default: ""
           selector:
             text:
         sensors:
@@ -61,7 +61,7 @@ blueprint:
           description: Additional triggers defined by the user.
           default:
           selector:
-              trigger:
+            trigger:
         user_conditions:
           name: User Conditions
           description: User defined conditions for the automation.
@@ -70,7 +70,7 @@ blueprint:
             condition:
         icon_selector:
           name: Icon Selector
-          description: 'Optional: Keep current icon or change it. Only used by IconText and IconTextLamp plugins.'
+          description: "Optional: Keep current icon or change it. Only used by IconText and IconTextLamp plugins."
           default: keep
           selector:
             select:
@@ -79,6 +79,8 @@ blueprint:
                   value: keep
                 - label: Change icon
                   value: change
+                - label: Clear icon
+                  value: clear
         icon_file_id:
           name: Icon File ID
           description: |
@@ -121,14 +123,14 @@ blueprint:
                   value: vb
         prefix_text:
           name: Prefix Text
-          description: 'Optional: The text to display before the sensor value(s).'
-          default: ''
+          description: "Optional: The text to display before the sensor value(s)."
+          default: ""
           selector:
             text:
         suffix_text:
           name: Suffix Text
-          description: 'Optional: The text to display after the sensor value(s).'
-          default: ''
+          description: "Optional: The text to display after the sensor value(s)."
+          default: ""
           selector:
             text:
         sensor_labels:
@@ -160,7 +162,7 @@ blueprint:
           default: "#FFFFFF"
           selector:
             text:
-                type: color
+              type: color
         linear_gradient_color1:
           name: Color 1 of the linear gradient brush
           description: The first color of the linear gradient of the text.
@@ -177,7 +179,7 @@ blueprint:
               type: color
         linear_gradient_direction:
           name: Gradient Direction
-          description: 'Optional: The gradient direction of the text color.'
+          description: "Optional: The gradient direction of the text color."
           default: vertical
           selector:
             select:
@@ -188,7 +190,7 @@ blueprint:
                   value: horizontal
         linear_gradient_offset:
           name: Gradient Offset
-          description: 'Optional: The offset of the gradient in pixels.'
+          description: "Optional: The offset of the gradient in pixels."
           default: 0
           selector:
             number:
@@ -197,7 +199,7 @@ blueprint:
               mode: box
         linear_gradient_length:
           name: Gradient Length
-          description: 'Optional: The length of the gradient in pixels.'
+          description: "Optional: The length of the gradient in pixels."
           default: 32
           selector:
             number:
@@ -369,6 +371,8 @@ variables:
     {% set text = var_text %}
     {% if (icon_selector == 'change') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
       {"iconFileId": {{ icon_file_id }}, "text": "{{ text }}"}
+    {% elif (icon_selector == 'clear') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
+      {"iconFileId": 255, "text": "{{ text }}"}
     {% else %}
       {"text": "{{ text }}"}
     {% endif %}
@@ -378,6 +382,8 @@ variables:
     {% set text = var_text %}
     {% if (icon_selector == 'change') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
       {{ ("iconFileId=" + icon_file_id + "&text=" + text) | urlencode() }}
+    {% elif (icon_selector == 'clear') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
+      {{ ("iconFileId=255&text=" + text) | urlencode() }}
     {% else %}
       {{ ("text=" + text) | urlencode() }}
     {% endif %}
@@ -404,63 +410,63 @@ conditions: !input user_conditions
 # https://www.home-assistant.io/docs/automation/action/
 actions:
   - choose:
-    # Use MQTT API with plugin UID
-    - conditions:
-      - condition: template
-        value_template: "{{ var_protocol == 'mqtt' }}"
-      - condition: template
-        value_template: "{{ var_device and var_hostname == '' }}"
-      - condition: template
-        value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
-      sequence:
-        - action: mqtt.publish
-          data:
-            topic: "{{ device_attr(var_device, 'name') }}/display/uid/{{ var_uid }}/{{ var_plugin_topic }}/set"
-            payload: "{{ var_mqtt_payload }}"
+      # Use MQTT API with plugin UID
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'mqtt' }}"
+          - condition: template
+            value_template: "{{ var_device and var_hostname == '' }}"
+          - condition: template
+            value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: "{{ device_attr(var_device, 'name') }}/display/uid/{{ var_uid }}/{{ var_plugin_topic }}/set"
+              payload: "{{ var_mqtt_payload }}"
 
-    # Use MQTT API with plugin alias
-    - conditions:
-      - condition: template
-        value_template: "{{ var_protocol == 'mqtt' }}"
-      - condition: template
-        value_template: "{{ var_device and var_hostname == '' }}"
-      - condition: template
-        value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
-      sequence:
-        - action: mqtt.publish
-          data:
-            topic: "{{ device_attr(var_device, 'name') }}/display/alias/{{ var_alias }}/{{ var_plugin_topic }}/set"
-            payload: "{{ var_mqtt_payload }}"
+      # Use MQTT API with plugin alias
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'mqtt' }}"
+          - condition: template
+            value_template: "{{ var_device and var_hostname == '' }}"
+          - condition: template
+            value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: "{{ device_attr(var_device, 'name') }}/display/alias/{{ var_alias }}/{{ var_plugin_topic }}/set"
+              payload: "{{ var_mqtt_payload }}"
 
-    # Use REST API with plugin UID
-    - conditions:
-      - condition: template
-        value_template: "{{ var_protocol == 'rest' }}"
-      - condition: template
-        value_template: "{{ var_device is none and var_hostname != '' }}"
-      - condition: template
-        value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
-      sequence:
-        - action: rest_command.pixelix_plugin_command
-          data:
-            hostname: "{{ var_hostname }}"
-            endpoint: "/rest/api/v1/display/uid/{{ var_uid }}/{{ var_plugin_topic }}"
-            url_parameter: "{{ var_rest_url_parameter }}"
+      # Use REST API with plugin UID
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'rest' }}"
+          - condition: template
+            value_template: "{{ var_device is none and var_hostname != '' }}"
+          - condition: template
+            value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
+        sequence:
+          - action: rest_command.pixelix_plugin_command
+            data:
+              hostname: "{{ var_hostname }}"
+              endpoint: "/rest/api/v1/display/uid/{{ var_uid }}/{{ var_plugin_topic }}"
+              url_parameter: "{{ var_rest_url_parameter }}"
 
-    # Use REST API with plugin alias
-    - conditions:
-      - condition: template
-        value_template: "{{ var_protocol == 'rest' }}"
-      - condition: template
-        value_template: "{{ var_device is none and var_hostname != '' }}"
-      - condition: template
-        value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
-      sequence:
-        - action: rest_command.pixelix_plugin_command
-          data:
-            hostname: "{{ var_hostname }}"
-            endpoint: "/rest/api/v1/display/alias/{{ var_alias }}/{{ var_plugin_topic }}"
-            url_parameter: "{{ var_rest_url_parameter }}"
+      # Use REST API with plugin alias
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'rest' }}"
+          - condition: template
+            value_template: "{{ var_device is none and var_hostname != '' }}"
+          - condition: template
+            value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
+        sequence:
+          - action: rest_command.pixelix_plugin_command
+            data:
+              hostname: "{{ var_hostname }}"
+              endpoint: "/rest/api/v1/display/alias/{{ var_alias }}/{{ var_plugin_topic }}"
+              url_parameter: "{{ var_rest_url_parameter }}"
 
     # Default
     default:
