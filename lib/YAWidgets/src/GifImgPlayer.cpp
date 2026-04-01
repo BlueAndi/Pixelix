@@ -264,6 +264,7 @@ GifImgPlayer::GifImgPlayer() :
     m_globalColorTableLength(0U),
     m_localColorTable(nullptr),
     m_localColorTableLength(0U),
+    m_isLocalColorTableUsed(false),
     m_disposalMethod(DISPOSAL_METHOD_NO_ACTION),
     m_imageDataBlock(nullptr),
     m_imageDataBlockLength(0U),
@@ -297,6 +298,7 @@ GifImgPlayer::GifImgPlayer(const GifImgPlayer& player) :
     m_globalColorTableLength(0U),
     m_localColorTable(nullptr),
     m_localColorTableLength(0U),
+    m_isLocalColorTableUsed(player.m_isLocalColorTableUsed),
     m_disposalMethod(player.m_disposalMethod),
     m_imageDataBlock(nullptr),
     m_imageDataBlockLength(0U),
@@ -350,7 +352,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
         m_canvas                = player.m_canvas;
         m_lzwDecoder            = player.m_lzwDecoder;
         m_bgColorIndex          = player.m_bgColorIndex;
-
+        m_isLocalColorTableUsed = player.m_isLocalColorTableUsed;
         m_disposalMethod        = player.m_disposalMethod;
 
         m_imageDataBlockIdx     = player.m_imageDataBlockIdx;
@@ -533,8 +535,7 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
     m_isTrailerFound  = false;
 
     /* No GIF image opened? */
-    if ((nullptr == m_gifLoader) ||
-        (false == (*m_gifLoader)))
+    if (nullptr == m_gifLoader)
     {
         isSuccessful = false;
     }
@@ -639,12 +640,6 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
                 {
                     m_isFinished = true;
                 }
-
-                /* If the GIF image is finished, release LZW decoder resources. */
-                if (true == m_isFinished)
-                {
-                    m_lzwDecoder.deInit();
-                }
             }
             /* Unknown block id? */
             else
@@ -656,14 +651,17 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
         /* Clean-up required because of any error? */
         if (false == isSuccessful)
         {
-            if (nullptr != m_localColorTable)
-            {
-                m_paletteColorAllocator.deallocateArray(m_localColorTable);
-                m_localColorTable       = nullptr;
-                m_localColorTableLength = 0U;
-            }
-
             close();
+        }
+        /* If the GIF image is finished, release resources. */
+        else if (true == m_isFinished)
+        {
+            releaseResources();
+        }
+        else
+        {
+            /* Nothing to do. */
+            ;
         }
     }
 
@@ -775,14 +773,23 @@ bool GifImgPlayer::copyImageDataBlock(const uint8_t* imageDataBlock, size_t imag
 
 void GifImgPlayer::cleanup()
 {
+    releaseResources();
+
+    m_bitmap.release();
+
+    m_gifLoader      = nullptr;
+    m_isTrailerFound = false;
+    m_isAnimation    = false;
+}
+
+void GifImgPlayer::releaseResources()
+{
     if (nullptr != m_gifLoader)
     {
         m_gifLoader->close();
-        m_gifLoader = nullptr;
     }
 
     m_lzwDecoder.deInit();
-    m_bitmap.release();
 
     if (nullptr != m_imageDataBlock)
     {
@@ -804,10 +811,8 @@ void GifImgPlayer::cleanup()
 
         m_localColorTable       = nullptr;
         m_localColorTableLength = 0U;
+        m_isLocalColorTableUsed = false;
     }
-
-    m_isTrailerFound = false;
-    m_isAnimation    = false;
 }
 
 bool GifImgPlayer::isFileSupported(const GifFileHeader& header) const
@@ -942,22 +947,27 @@ bool GifImgPlayer::parseImageDescriptor()
         m_canvas.setWidth(imageDescriptor.imageWidth);
         m_canvas.setHeight(imageDescriptor.imageHeight);
 
-        /* Destroy any old local color table. */
-        if (nullptr != m_localColorTable)
-        {
-            m_paletteColorAllocator.deallocateArray(m_localColorTable);
-            m_localColorTable       = nullptr;
-            m_localColorTableLength = 0U;
-        }
+        /* Reset local color table usage flag. */
+        m_isLocalColorTableUsed = false;
 
         /* Local color table available? */
         if (0U != imageDescriptor.packedField.localColorTableFlag)
         {
             size_t localColorTableSize = calcColorTableSize(imageDescriptor.packedField.localColorTableSizeExp);
 
+            /* Allocate local color table with maximum length, because it shall be allocated once
+             * and reused for all images in the GIF. This avoids the overhead of allocating and deallocating the
+             * local color table for each image descriptor, which can be a performance issue if many images are
+             * in the GIF. The actual length of the local color table is stored in m_localColorTableLength,
+             * which is used for reading and accessing the local color table.
+             */
             m_localColorTableLength    = localColorTableSize / sizeof(PaletteColor);
-            m_localColorTable          = m_paletteColorAllocator.allocateArray(m_localColorTableLength);
+            if (nullptr == m_localColorTable)
+            {
+                m_localColorTable = m_paletteColorAllocator.allocateArray(LOCAL_COLOR_TABLE_MAX_LENGTH);
+            }
 
+            /* Allocation failed? */
             if (nullptr == m_localColorTable)
             {
                 LOG_ERROR("Failed to allocate local color table, size: %u bytes", localColorTableSize);
@@ -966,13 +976,15 @@ bool GifImgPlayer::parseImageDescriptor()
 
                 isSuccessful            = false;
             }
+            /* Read local color table. */
             else if (false == m_gifLoader->read(m_localColorTable, localColorTableSize))
             {
                 isSuccessful = false;
             }
+            /* Local color table successfully read. */
             else
             {
-                ;
+                m_isLocalColorTableUsed = true;
             }
         }
 
@@ -1377,8 +1389,8 @@ bool GifImgPlayer::readFromCodeStream(uint8_t& data)
 bool GifImgPlayer::writeToIndexStream(uint8_t data)
 {
     bool          isSuccessful      = false;
-    PaletteColor* colorTable        = (nullptr != m_localColorTable) ? m_localColorTable : m_globalColorTable;
-    size_t        colorTableLength  = (nullptr != m_localColorTable) ? m_localColorTableLength : m_globalColorTableLength;
+    PaletteColor* colorTable        = ((true == m_isLocalColorTableUsed) && (nullptr != m_localColorTable)) ? m_localColorTable : m_globalColorTable;
+    size_t        colorTableLength  = ((true == m_isLocalColorTableUsed) && (nullptr != m_localColorTable)) ? m_localColorTableLength : m_globalColorTableLength;
     bool          isColorIndexValid = false;
 
     /* No transparency enabled? */

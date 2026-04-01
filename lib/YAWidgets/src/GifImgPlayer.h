@@ -245,6 +245,11 @@ private:
     static const uint8_t INTERLACE_STEP[4U];
 
     /**
+     * Max. number of palette colors in the local color table.
+     */
+    static const size_t LOCAL_COLOR_TABLE_MAX_LENGTH = 256U;
+
+    /**
      * A palette color used for the global color table.
      */
     typedef struct _PaletteColor
@@ -288,6 +293,7 @@ private:
     size_t                                       m_globalColorTableLength; /**< Number of palette colors in the global color table. */
     PaletteColor*                                m_localColorTable;        /**< Local color table. */
     size_t                                       m_localColorTableLength;  /**< Number of palette colors in the local color table. */
+    bool                                         m_isLocalColorTableUsed;  /**< Is local color table used or not? */
     DisposalMethod                               m_disposalMethod;         /**< Disposal method of the last graphic control extension block.  */
     uint8_t*                                     m_imageDataBlock;         /**< Image data block buffer. See IMAGE_DATA_BLOCK_SIZE for fixed size in byte. */
     size_t                                       m_imageDataBlockLength;   /**< Image data block length in bytes (fill level). */
@@ -341,8 +347,16 @@ private:
 
     /**
      * Clean-up and release all allocated memory.
+     * This will destroy the content of the player.
      */
     void cleanup();
+
+    /**
+     * Release all allocated resources, but keep the content of the player.
+     * This will not destroy the content of the player, but only release
+     * resources which are needed for loading and playing a GIF file.
+     */
+    void releaseResources();
 
     /**
      * Verifies whether the file format is supported or not.
