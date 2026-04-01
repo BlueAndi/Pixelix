@@ -120,11 +120,11 @@ Therefore if you need periodically stuff, but you can't do it in the ```update()
 
 ## Static View
 
-![plugin-service-dynamic](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/plugin-service.wsd)
+![plugin-service-dynamic](../doc/architecture/svg/plugin-service.svg)
 
 ### Dynamic View
 
-![plugin-service-dynamic](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/plugin-service-dynamic.wsd)
+![plugin-service-dynamic](../doc/architecture/svg/plugin-service-dynamic.svg)
 
 ## Issues, Ideas And Bugs
 

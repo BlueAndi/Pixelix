@@ -52,11 +52,11 @@ Examples:
 
 ## Overview Mindmap
 
-![topic-handling-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/topic_handling_mindmap.wsd)
+![topic-handling-mindmap](../doc/architecture/svg/topic_handling_mindmap.svg)
 
 ## MQTT Topics
 
-![mqtt-topic-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/mqtt_mindmap.wsd)
+![mqtt-topic-mindmap](../doc/architecture/svg/mqtt_mindmap.svg)
 
 ### Birth and last will
 
