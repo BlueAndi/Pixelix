@@ -131,10 +131,12 @@ For a simpler approach without writing YAML manually, see the [Automation Bluepr
 
 [Automation Blueprints](https://www.home-assistant.io/docs/automation/using_blueprints/) let you set up automations through a guided interface without writing YAML from scratch. Pixelix provides blueprints for both REST API and MQTT API communication. Click a button below to import the blueprint directly into your Home Assistant instance.
 
-| Supported Plugin                      | Blueprint                                                                                                                                                                                                                                                                               |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IconTextPlugin and IconTextLampPlugin | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FBlueAndi%2FPixelix%2Fblob%2Fmaster%2Fdoc%2Fhomeassistant%2Fblueprint%2Fpixelix_send_sensor_data.yaml)  |
-| MultiIconPlugin                       | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FBlueAndi%2FPixelix%2Fblob%2Fmaster%2Fdoc%2Fhomeassistant%2Fblueprint%2Fpixelix_multi_icon_plugin.yaml) |
+| Supported Plugin                      | Blueprint                                                                                                                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| IconTextPlugin and IconTextLampPlugin | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fwww.blue-andi.de%2Fpixelix%2Fpixelix_send_sensor_data.yaml |
+
+)  |
+| MultiIconPlugin                       | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fwww.blue-andi.de%2Fpixelix%2Fpixelix_multi_icon_plugin.yaml) |
 
 Alternatively, copy [pixelix_send_sensor_data.yaml](./homeassistant/blueprint/pixelix_send_sensor_data.yaml) and [pixelix_multi_icon_plugin.yaml](./homeassistant/blueprint/pixelix_multi_icon_plugin.yaml) to `/config/blueprints/automation/homeassistant/`.
 

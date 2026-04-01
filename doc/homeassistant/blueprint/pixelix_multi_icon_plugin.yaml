@@ -8,7 +8,7 @@ blueprint:
     This blueprint allows you show different icons on Pixelix with its MultiIconPlugin.
   domain: automation
   author: Pixelix & Friends <https://github.com/BlueAndi/Pixelix>
-  source_url: https://www.blue-andi.de/vscp/pixelix_multi_icon_plugin.yaml
+  source_url: https://www.blue-andi.de/pixelix/pixelix_multi_icon_plugin.yaml
   homeassistant:
     min_version: 2024.10.0
   # https://www.home-assistant.io/docs/blueprint/selectors/

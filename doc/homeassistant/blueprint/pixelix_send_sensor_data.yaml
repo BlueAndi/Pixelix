@@ -9,7 +9,7 @@ blueprint:
     You can choose between the JustText, IconText or IconTextLamp plugin to display the sensor data.
   domain: automation
   author: Pixelix & Friends <https://github.com/BlueAndi/Pixelix>
-  source_url: https://www.blue-andi.de/vscp/pixelix_send_sensor_data.yaml
+  source_url: https://www.blue-andi.de/pixelix/pixelix_send_sensor_data.yaml
   homeassistant:
     min_version: 2024.10.0
   # https://www.home-assistant.io/docs/blueprint/selectors/
