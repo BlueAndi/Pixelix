@@ -33,12 +33,12 @@ A "X" in the development board column means valid all development boards. Except
 
 ### Photoresistor GLxx
 
-| Development Board | Photoresistor pin 1 | Photoresistor pin 2 |
-| ----------------- | ------------------- | ------------------- |
-| X | Vcc | Pin 34 |
-| Lilygo&reg; ESP32 T-Display S3 | Vcc | Pin 10 |
-| Lilygo&reg; TTGO ESP32 T-Display | Vcc | Pin 32 |
-| WEMOS Lolin S2 Mini | Vcc | Pin 1 |
+| Development Board                | Photoresistor pin 1 | Photoresistor pin 2 |
+| -------------------------------- | ------------------- | ------------------- |
+| X                                | Vcc                 | Pin 34              |
+| Lilygo&reg; ESP32 T-Display S3   | Vcc                 | Pin 10              |
+| Lilygo&reg; TTGO ESP32 T-Display | Vcc                 | Pin 32              |
+| WEMOS Lolin S2 Mini              | Vcc                 | Pin 1               |
 
 The photoresistor pin 2 needs additional a pull-down.
 
@@ -53,19 +53,19 @@ Different DHT sensors are supported. Out of the box the DHT11 is configured. It 
 * DHT21 (Proprietary one-wire)
 * DHT22 (Proprietary one-wire)
 
-| Development Board | DHTx pin 1 | DHTx pin 2 |
-| ----------------- | ---------- | ---------- |
-| X | Vcc | Pin 5 |
-| Lilygo&reg; ESP32 T-Display S3 | Vcc | Pin 21 |
-| Lilygo&reg; TTGO ESP32 T-Display | Vcc | Pin 27 |
+| Development Board                | DHTx pin 1 | DHTx pin 2 |
+| -------------------------------- | ---------- | ---------- |
+| X                                | Vcc        | Pin 5      |
+| Lilygo&reg; ESP32 T-Display S3   | Vcc        | Pin 21     |
+| Lilygo&reg; TTGO ESP32 T-Display | Vcc        | Pin 27     |
 
 ### SHT3x (I2C)
 
-| Development Board | I2C SCL | I2C SDA |
-| ----------------- | ------- | ------- |
-| X | Pin 22 | Pin 21 |
-| Lilygo&reg; ESP32 T-Display S3 | Pin 17 | Pin 18 |
-| WEMOS Lolin S2 Mini | Pin 35 | Pin 33 |
+| Development Board              | I2C SCL | I2C SDA |
+| ------------------------------ | ------- | ------- |
+| X                              | Pin 22  | Pin 21  |
+| Lilygo&reg; ESP32 T-Display S3 | Pin 17  | Pin 18  |
+| WEMOS Lolin S2 Mini            | Pin 35  | Pin 33  |
 
 ## Audio (digital micropohone with I2S)
 
@@ -73,11 +73,11 @@ Different DHT sensors are supported. Out of the box the DHT11 is configured. It 
 
 Only the left channel is supported, therefore the L/R channel select signal shall be connected to GND.
 
-| Development Board | Left/Right Clock (LRCL) | Data Output (DOUT) | Bit Clock (BCLK) | Left/Right Channel Select (L/R) | Chip Enable (CHIPEN) |
-| ----------------- | ----------------------- | ------------------ | ---------------- | ------------------------------- | -------------------- |
-| X | Pin 25 | Pin 33 | Pin 26 | GND | Vcc |
-| Lilygo&reg; ESP32 T-Display S3 | Pin 12 | Pin 18 | Pin 11 | GND | Vcc |
-| WEMOS Lolin S2 Mini | - | - | - | - | - |
+| Development Board              | Left/Right Clock (LRCL) | Data Output (DOUT) | Bit Clock (BCLK) | Left/Right Channel Select (L/R) | Chip Enable (CHIPEN) |
+| ------------------------------ | ----------------------- | ------------------ | ---------------- | ------------------------------- | -------------------- |
+| X                              | Pin 25                  | Pin 33             | Pin 26           | GND                             | Vcc                  |
+| Lilygo&reg; ESP32 T-Display S3 | Pin 12                  | Pin 18             | Pin 11           | GND                             | Vcc                  |
+| WEMOS Lolin S2 Mini            | -                       | -                  | -                | -                               | -                    |
 
 ## Calibration
 
@@ -98,18 +98,18 @@ Example in case no sensor is available:
 The channel id order of the sensor is the order in the array:
 
 | Sensor | Channel id | Channel description |
-| - | - | - |
-| GL5528 | 0 | Illuminance in lux |
-| SHT3x | 0 | Temperature in °C |
-| SHT3x | 1 | Humidity in % |
-| DHT11 | 0 | Temperature in ° C |
-| DHT11 | 1 | Humidity in % |
-| DHT12 | 0 | Temperature in ° C |
-| DHT12 | 1 | Humidity in % |
-| DHT21 | 0 | Temperature in ° C |
-| DHT21 | 1 | Humidity in % |
-| DHT22 | 0 | Temperature in ° C |
-| DHT22 | 1 | Humidity in % |
+| ------ | ---------- | ------------------- |
+| GL5528 | 0          | Illuminance in lux  |
+| SHT3x  | 0          | Temperature in °C   |
+| SHT3x  | 1          | Humidity in %       |
+| DHT11  | 0          | Temperature in ° C  |
+| DHT11  | 1          | Humidity in %       |
+| DHT12  | 0          | Temperature in ° C  |
+| DHT12  | 1          | Humidity in %       |
+| DHT21  | 0          | Temperature in ° C  |
+| DHT21  | 1          | Humidity in %       |
+| DHT22  | 0          | Temperature in ° C  |
+| DHT22  | 1          | Humidity in %       |
 
 Example in case all sensors are available:
 
@@ -129,7 +129,7 @@ Example in case all sensors are available:
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

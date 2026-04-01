@@ -393,7 +393,7 @@ build_flags =
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request. For questions to the community or showing the own Pixelix, the [Discord server](https://discord.gg/D3uYhBQBhf) can be used.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request. For questions to the community or showing the own Pixelix, the [Discord server](https://discord.gg/D3uYhBQBhf) can be used.
 
 ## License
 

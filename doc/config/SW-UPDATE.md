@@ -37,20 +37,20 @@ The recommeded way how to program the software to the board depends on the skill
 
 ### Non-Developer
 
-| Use Case | Recommended To Use |
-| -------- | ------------------ |
-| Brand new development board, with only the preinstalled software on it. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
-| A development board already used by you. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
-| Pixelix is already running on the development board. Its webinterface is accessible. | Browser |
+| Use Case                                                                             | Recommended To Use                                               |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Brand new development board, with only the preinstalled software on it.              | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
+| A development board already used by you.                                             | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
+| Pixelix is already running on the development board. Its webinterface is accessible. | Browser                                                          |
 
 ### Developer
 
-| Use Case | Recommended To Use |
-| -------- | ------------------ |
+| Use Case                                                                                    | Recommended To Use                                               |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Development board, not running Pixelix and you don't like to install VSCode and PlatformIO. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
-| Development board, not running Pixelix and you like to go the developers way. | VSCode and PlatformIO |
-| You like to develop a plugin or change code for a pull request. | VSCode and PlatformIO |
-| Pixelix is already running on the development board. | Browser |
+| Development board, not running Pixelix and you like to go the developers way.               | VSCode and PlatformIO                                            |
+| You like to develop a plugin or change code for a pull request.                             | VSCode and PlatformIO                                            |
+| Pixelix is already running on the development board.                                        | Browser                                                          |
 
 ## Update possibilities
 
@@ -153,43 +153,43 @@ Steps:
 
 ### esp32 / esp32-s2
 
-| Binary | Address (hex) |
-| ------ | ------------- |
-| bootloader.bin | 0x1000 |
-| partitions.bin | 0x8000 |
-| ```<BOARD-ENV-NAME>```-factory.bin | 0x10000 (factory) |
-| firmware.bin | 0xE0000 (ota_0) |
-| littlefs.bin | see filesystem table |
+| Binary                             | Address (hex)        |
+| ---------------------------------- | -------------------- |
+| bootloader.bin                     | 0x1000               |
+| partitions.bin                     | 0x8000               |
+| ```<BOARD-ENV-NAME>```-factory.bin | 0x10000 (factory)    |
+| firmware.bin                       | 0xE0000 (ota_0)      |
+| littlefs.bin                       | see filesystem table |
 
 ### esp32-s3
 
-| Binary | Address (hex) |
-| ------ | ------------- |
-| bootloader.bin | 0x0000 |
-| partitions.bin | 0x8000 |
-| ```<BOARD-ENV-NAME>```-factory.bin | 0x10000 (factory) |
-| firmware.bin | 0xE0000 (ota_0) |
-| littlefs.bin | see filesystem table |
+| Binary                             | Address (hex)        |
+| ---------------------------------- | -------------------- |
+| bootloader.bin                     | 0x0000               |
+| partitions.bin                     | 0x8000               |
+| ```<BOARD-ENV-NAME>```-factory.bin | 0x10000 (factory)    |
+| firmware.bin                       | 0xE0000 (ota_0)      |
+| littlefs.bin                       | see filesystem table |
 
 ### Filesystem
 
-| Development Board | Flash size in MByte | Address (hex) of littlefs.bin | Partition table |
-| ----------------- | ------------------- | ----------------------------- | --------------- |
-| adafruit_feather_esp32_v2 | 8 | 0x5F0000 | 8MB.csv |
-| adafruit_matrixportal_s3 | 8 | 0x5F0000 | 8MB.csv |
-| az-delivery-devkit-v4 | 4 | 0x290000 | 4MB.csv |
-| esp32doit-devkit-v1 | 4 | 0x290000 | 4MB.csv |
-| esp32-s3-devkitc-1-n16r8v | 16 | 0xc90000 | 16MB.csv |
-| esp32-nodemcu | 4 | 0x290000 | 4MB.csv |
-| lilygo-ttgo-t-display | 8 | 0x5F0000 | 8MB.csv |
-| lilygo-t-display-s3 | 16 | 0xc90000 | 16MB.csv |
-| m5stack_core | 16 | 0xc90000 | 16MB.csv |
-| ulanzi-tc001 | 4 | 0x290000 | 4MB.csv |
-| wemos_lolin_s2_mini | 4 | 0x290000 | 4MB.csv |
+| Development Board         | Flash size in MByte | Address (hex) of littlefs.bin | Partition table |
+| ------------------------- | ------------------- | ----------------------------- | --------------- |
+| adafruit_feather_esp32_v2 | 8                   | 0x5F0000                      | 8MB.csv         |
+| adafruit_matrixportal_s3  | 8                   | 0x5F0000                      | 8MB.csv         |
+| az-delivery-devkit-v4     | 4                   | 0x290000                      | 4MB.csv         |
+| esp32doit-devkit-v1       | 4                   | 0x290000                      | 4MB.csv         |
+| esp32-s3-devkitc-1-n16r8v | 16                  | 0xc90000                      | 16MB.csv        |
+| esp32-nodemcu             | 4                   | 0x290000                      | 4MB.csv         |
+| lilygo-ttgo-t-display     | 8                   | 0x5F0000                      | 8MB.csv         |
+| lilygo-t-display-s3       | 16                  | 0xc90000                      | 16MB.csv        |
+| m5stack_core              | 16                  | 0xc90000                      | 16MB.csv        |
+| ulanzi-tc001              | 4                   | 0x290000                      | 4MB.csv         |
+| wemos_lolin_s2_mini       | 4                   | 0x290000                      | 4MB.csv         |
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 
