@@ -128,7 +128,7 @@ enum StatusCode
  * Functions
  *****************************************************************************/
 
-} // namespace HttpStatus
+} /* namespace HttpStatus */
 
 #endif /* HTTP_STATUS */
 
