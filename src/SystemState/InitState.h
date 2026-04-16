@@ -165,6 +165,13 @@ private:
      * Configure the views with general settings.
      */
     void configureViews();
+
+    /**
+     * Get flash chip mode.
+     *
+     * @return Flash chip mode.
+     */
+    const char* getFlashChipMode();
 };
 
 /******************************************************************************

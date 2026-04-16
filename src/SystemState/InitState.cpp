@@ -69,6 +69,7 @@
 #include <WiFiUtil.h>
 
 #include <lwip/init.h>
+#include <esp_littlefs.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -455,21 +456,30 @@ void InitState::exit(StateMachine& sm)
 
 void InitState::showStartupInfoOnSerial()
 {
-    String macAddr;
+    const char* littleFsRepo = "https://github.com/joltwallet/esp_littlefs/releases/tag/v" ESP_LITTLEFS_VERSION_NUMBER;
+    String      macAddr;
+    String      chipId;
 
     WiFiUtil::getEFuseMAC(macAddr);
+    WiFiUtil::getChipId(chipId);
 
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO("Target: %s", Version::getTargetName());
-    LOG_INFO("SW version: %s", Version::getSoftwareVersion());
-    delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("SW revision: %s", Version::getSoftwareRevision());
-    LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
-    LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
-    delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("Wifi efuse MAC: %s", macAddr.c_str());
-    LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
-    delay(20U); /* To avoid missing log messages on the console */
+    LOG_INFO("Target           : %s", Version::getTargetName());
+    LOG_INFO("SW version       : %s", Version::getSoftwareVersion());
+    LOG_INFO("SW revision      : %s", Version::getSoftwareRevision());
+    LOG_INFO("ESP chip id      : %s", chipId.c_str());
+    LOG_INFO("ESP type         : %s", CONFIG_IDF_TARGET);
+    LOG_INFO("ESP chip rev.    : %u", ESP.getChipRevision());
+    LOG_INFO("ESP cpu freq.    : %u MHz", ESP.getCpuFreqMHz());
+    LOG_INFO("Flash chip mode  : %s", getFlashChipMode());
+    LOG_INFO("Flash chip speed : %u", ESP.getFlashChipSpeed());
+    LOG_INFO("Flash chip size  : 0x%08X byte", ESP.getFlashChipSize());
+    LOG_INFO("Flash freq.      : %u MHz", ESP.getFlashChipSpeed() / (1000U * 1000U));
+    LOG_INFO("ESP SDK version  : %s", ESP.getSdkVersion());
+    LOG_INFO("Wifi efuse MAC   : %s", macAddr.c_str());
+    LOG_INFO("LwIP version     : %s", LWIP_VERSION_STRING);
+    LOG_INFO("LittleFS version : %s", ESP_LITTLEFS_VERSION_NUMBER);
+    LOG_INFO("LittleFS link    : %s", littleFsRepo);
 }
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
@@ -619,6 +629,46 @@ void InitState::configureViews()
         /* Default brush is already set in the constructor. */
         ;
     }
+}
+
+const char* InitState::getFlashChipMode()
+{
+    const char* result = "UNKNOWN";
+
+    switch (ESP.getFlashChipMode())
+    {
+    case FM_QIO:
+        result = "QUIO";
+        break;
+
+    case FM_QOUT:
+        result = "QOUT";
+        break;
+
+    case FM_DIO:
+        result = "DIO";
+        break;
+
+    case FM_DOUT:
+        result = "DOUT";
+        break;
+
+    case FM_FAST_READ:
+        result = "FAST_READ";
+        break;
+
+    case FM_SLOW_READ:
+        result = "SLOW_READ";
+        break;
+
+    case FM_UNKNOWN:
+        /* fallthrough */
+
+    default:
+        break;
+    }
+
+    return result;
 }
 
 /******************************************************************************

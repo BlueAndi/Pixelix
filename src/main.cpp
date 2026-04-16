@@ -184,6 +184,13 @@ void setup()
 #endif /* ARDUINO_USB_CDC_ON_BOOT */
 #endif /* ARDUINO_USB_MODE */
 
+#if ARDUINO_USB_CDC_ON_BOOT
+    /* Wait to ensure the serial interface is ready on PC side.
+     * Otherwise the first log messages may be lost.
+     */
+    delay(500U);
+#endif /* ARDUINO_USB_CDC_ON_BOOT */
+
     /* Ensure a distance between the boot mode message and the first log message.
      * Otherwise the first log message appears in the same line than the last
      * boot mode message.
