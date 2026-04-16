@@ -105,6 +105,13 @@ public:
     }
 
     /**
+     * Is plugin enabled or not?
+     *
+     * @return If plugin is enabled, it will return true otherwise false.
+     */
+    bool isEnabled() const final;
+
+    /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
      *

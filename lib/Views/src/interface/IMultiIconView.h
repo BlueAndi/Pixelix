@@ -101,6 +101,15 @@ public:
      */
     virtual void clearIcon(uint8_t slotId)                                = 0;
 
+    /**
+     * Check if the icon slot with the given id is empty or not.
+     *
+     * @param[in] slotId    The id of the slot.
+     *
+     * @return If the icon slot is empty, it will return true otherwise false.
+     */
+    virtual bool isIconSlotEmpty(uint8_t slotId) const                    = 0;
+
 protected:
 
     /**
