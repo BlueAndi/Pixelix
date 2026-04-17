@@ -513,11 +513,11 @@ paths:
           required: true
           description: Filter to identify the value in the JSON response.
         - in: query
-          name: iconPath
+          name: iconFileId
           schema:
-            type: string
+            type: number
           required: true
-          description: Filename of the icon including the path.
+          description: The file id of the icon from FileMgrService.
         - in: query
           name: format
           schema:
@@ -1157,7 +1157,7 @@ paths:
         - IconTextPlugin
       summary: Get text
       description: |
-        Get the shown text, icon path and sprite sheet path information.
+        Get the shown text and icon file id.
 
         Example:
         ```bash
@@ -1179,7 +1179,7 @@ paths:
         - IconTextPlugin
       summary: Set text
       description: |
-        Set text which to show or icon path or sprite sheet path.
+        Set text which to show and/or icon file id.
 
         Example:
         ```bash
@@ -1194,17 +1194,17 @@ paths:
           required: false
           description: The text, which to show.
         - in: query
-          name: iconFullPath
+          name: iconFileId
           schema:
-            type: string
+            type: number
           required: false
-          description: The path to the bitmap icon.
+          description: The file id of the icon from FileMgrService.
         - in: query
-          name: spriteSheetFullPath
+          name: storeFlag
           schema:
-            type: string
+            type: boolean
           required: false
-          description: The path to the sprite sheet.
+          description: Force persistent storage of the configuration (default is false to avoid flash wear).
       responses:
         "200":
           description: Ok
@@ -1353,7 +1353,37 @@ paths:
                 $ref: "#/components/schemas/Slot"
       security:
         - pixelixAuth: []
-  /files/upload:
+  /fileMgrService/files:
+    get:
+      tags:
+        - FileMgrService
+      summary: Get list of managed files
+      description: |
+        Get list of files managed by FileMgrService with their file IDs.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "files": [
+              {"id": 1, "name": "image.bmp", "size": 1024},
+              {"id": 2, "name": "animation.gif", "size": 2048}
+            ]
+          }
+        }
+        ```
+      operationId: getFiles
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /fileMgrService/upload:
     post:
       tags:
         - FileMgrService
@@ -1362,7 +1392,7 @@ paths:
         Upload a file to configuration folder.
         Example:
         ```bash
-        $ curl -u luke:skywalker -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://pixelix-FFFFFFFF/rest/api/v1/files/upload
+        $ curl -u luke:skywalker -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/upload
         ```
       operationId: uploadFile
       requestBody:
@@ -1384,7 +1414,7 @@ paths:
                 $ref: "#/components/schemas/Ok"
       security:
         - pixelixAuth: []
-  /files/remove:
+  /fileMgrService/remove:
     post:
       tags:
         - FileMgrService
@@ -1393,7 +1423,7 @@ paths:
         Remove file by file id from configuration folder.
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileId=1" http://pixelix-FFFFFFFF/rest/api/v1/files/remove
+        $ curl -u luke:skywalker -d "fileId=1" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/remove
         ```
       operationId: removeFile
       parameters:
@@ -1798,9 +1828,9 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get temperature in °C.
+      summary: Get temperature sensor value
       description: |
-        Get temperature in °C.
+        Get current temperature value in °C.
 
         Example:
         ```bash
@@ -1820,9 +1850,9 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get humidity in %.
+      summary: Get humidity sensor value
       description: |
-        Get humidity in %.
+        Get current humidity value in %.
 
         Example:
         ```bash
@@ -1842,9 +1872,9 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get illuminance in lx.
+      summary: Get illuminance sensor value
       description: |
-        Get illuminance in lx.
+        Get current illuminance value in lux.
 
         Example:
         ```bash
@@ -1864,15 +1894,15 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get battery SOC in %.
+      summary: Get battery state of charge
       description: |
-        Get battery state of charge (SOC) in %.
+        Get current battery state of charge in %.
 
         Example:
         ```bash
         $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/3/soc
         ```
-      operationId: getSOC
+      operationId: getStateOfCharge
       responses:
         "200":
           description: Ok
@@ -1886,9 +1916,9 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get available heap memory in byte.
+      summary: Get free heap memory
       description: |
-        Get available heap memory in byte.
+        Get current available heap memory in bytes.
 
         Example:
         ```bash
@@ -1908,13 +1938,13 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get heap memory in byte, which was minimum available since system start.
+      summary: Get minimum free heap memory
       description: |
-        Get heap memory in byte, which was minimum available since system start.
+        Get lowest level of free heap memory since boot in bytes.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/4/minFreeHeap
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/5/minFreeHeap
         ```
       operationId: getMinFreeHeap
       responses:
@@ -1930,9 +1960,9 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get largetst block of heap memory in byte that can be allocated.
+      summary: Get maximum allocatable heap block
       description: |
-        Get largetst block of heap memory in byte that can be allocated.
+        Get largest block of heap memory that can be allocated in bytes.
 
         Example:
         ```bash
@@ -1952,9 +1982,9 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get wifi signal strength in dBm.
+      summary: Get WiFi signal strength
       description: |
-        Get wifi signal strength in dBm.
+        Get current WiFi signal strength in dBm.
 
         Example:
         ```bash
@@ -1974,9 +2004,9 @@ paths:
     get:
       tags:
         - Sensor
-      summary: Get device uptime in s since system start.
+      summary: Get system uptime
       description: |
-        Get device uptime in s since system start.
+        Get current system uptime in seconds.
 
         Example:
         ```bash
@@ -2719,10 +2749,10 @@ components:
               type: string
               description: Filter to identify the value in the JSON response.
               example: { "stargazers_count": true }
-            iconPath:
-              type: string
-              description: Filename of the icon including the path.
-              example: /configuration/github.bmp
+            iconFileId:
+              type: number
+              description: The file id of the icon from FileMgrService.
+              example: 1234
             format:
               type: string
               description: Format specifier, e.g. "%s" for strings or "%f" for numbers.
@@ -3078,7 +3108,6 @@ components:
               items:
                 type: string
                 example:
-                  - BTCQuotePlugin
                   - CountdownPlugin
                   - DateTimePlugin
                   - FirePlugin
@@ -3422,12 +3451,9 @@ components:
             text:
               type: string
               example: Test
-            iconFullPath:
-              type: string
-              example: /config/1234.bmp
-            spriteSheetFullPath:
-              type: string
-              example: /config/1234.sprite
+            iconFileId:
+              type: number
+              example: 1234
         status:
           type: string
           description: The request result.
