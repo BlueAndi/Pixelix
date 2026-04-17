@@ -53,6 +53,8 @@ tags:
     description: Plugin specific API
   - name: IconTextPlugin
     description: Plugin specific API
+  - name: MakapixPlugin
+    description: Plugin specific API
   - name: MultiIconPlugin
     description: Plugin specific API
   - name: OpenMeteoPlugin
@@ -853,6 +855,199 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/makapixCfg:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MakapixPlugin
+      summary: Get Makapix configuration
+      description: |
+        Get the Makapix player configuration including player key, MQTT instance, channel settings, and last shown artwork.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        ```
+      operationId: getMakapixConfig
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MakapixConfig"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - MakapixPlugin
+      summary: Set Makapix configuration
+      description: |
+        Set the Makapix player configuration. Only playerKey and mqttInstance can be modified via POST.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "playerKey=abc123" -d "mqttInstance=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        ```
+      operationId: setMakapixConfig
+      parameters:
+        - in: query
+          name: playerKey
+          schema:
+            type: string
+          required: false
+          description: The Makapix player key.
+        - in: query
+          name: mqttInstance
+          schema:
+            type: number
+          required: false
+          description: The MQTT instance number.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/makapixPlayCtrl:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MakapixPlugin
+      summary: Get Makapix playback status
+      description: |
+        Get the current Makapix playback status including channel information and play/pause state.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        ```
+      operationId: getMakapixPlaybackStatus
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MakapixPlaybackStatus"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - MakapixPlugin
+      summary: Control Makapix playback
+      description: |
+        Control Makapix playback with actions: next, previous, playChannel, pause, continue.
+
+        Examples:
+        ```bash
+        # Next artwork
+        $ curl -u luke:skywalker -d "action=next" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Previous artwork
+        $ curl -u luke:skywalker -d "action=previous" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Play a channel
+        $ curl -u luke:skywalker -d "action=playChannel" -d "channelName=promoted" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Pause playback
+        $ curl -u luke:skywalker -d "action=pause" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Continue playback
+        $ curl -u luke:skywalker -d "action=continue" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        ```
+      operationId: controlMakapixPlayback
+      parameters:
+        - in: query
+          name: action
+          schema:
+            type: string
+            enum: [next, previous, playChannel, pause, continue]
+          required: true
+          description: The playback control action.
+        - in: query
+          name: channelName
+          schema:
+            type: string
+          required: false
+          description: The channel name (required for playChannel action).
+        - in: query
+          name: userSqid
+          schema:
+            type: string
+          required: false
+          description: The user SQID (optional for playChannel action).
+        - in: query
+          name: hashtag
+          schema:
+            type: string
+          required: false
+          description: The hashtag (optional for playChannel action).
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/makapixProvision:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MakapixPlugin
+      summary: Get Makapix provisioning status
+      description: |
+        Get the current Makapix player provisioning status. Returns idle, pending, or completed with registration details.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        ```
+      operationId: getMakapixProvisionStatus
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MakapixProvisionStatus"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - MakapixPlugin
+      summary: Provision Makapix player
+      description: |
+        Start the Makapix player provisioning process. Only allowed if no player key is set.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        ```
+      operationId: provisionMakapixPlayer
+      responses:
+        "200":
+          description: Provisioning started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "400":
+          description: Player already provisioned or provisioning already pending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/omweather:
@@ -3014,6 +3209,111 @@ components:
             latitude:
               type: string
               example: 48.858
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    MakapixConfig:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            playerKey:
+              type: string
+              example: abc123def456
+            mqttInstance:
+              type: number
+              example: 0
+            channelName:
+              type: string
+              example: promoted
+            userSqid:
+              type: string
+              example: ""
+            hashtag:
+              type: string
+              example: ""
+            postId:
+              type: number
+              example: 0
+            storageKey:
+              type: string
+              example: ""
+            nativeFormat:
+              type: string
+              example: ""
+            dwellTime:
+              type: number
+              example: 0
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    MakapixPlaybackStatus:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            channel:
+              type: string
+              example: promoted
+            userSqid:
+              type: string
+              example: ""
+            hashtag:
+              type: string
+              example: ""
+            status:
+              type: string
+              enum: [playing, paused]
+              example: playing
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    MakapixProvisionStatus:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [idle, pending, completed]
+              example: idle
+            playerKey:
+              type: string
+              description: Present only when status is completed.
+              example: abc123def456
+            registrationCode:
+              type: string
+              description: Present only when status is completed.
+              example: ABCD1234
+            registrationCodeExpiresAt:
+              type: string
+              description: Present only when status is completed. ISO 8601 timestamp.
+              example: "2026-04-17T12:00:00Z"
+            mqttBroker:
+              type: object
+              description: Present only when status is completed.
+              properties:
+                host:
+                  type: string
+                  example: mqtt.makapix.club
+                port:
+                  type: number
+                  example: 1883
         status:
           type: string
           description: The request result.
