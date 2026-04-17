@@ -2238,6 +2238,230 @@ paths:
                 $ref: "#/components/schemas/TimerServiceTimer"
       security:
         - pixelixAuth: []
+  /coredump:
+    get:
+      tags:
+        - Common
+      summary: Get coredump information
+      description: |
+        Retrieve coredump partition information or decoded crash summary.
+
+        **Without decode parameter** - Returns basic partition info:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "hasCoredump": true,
+            "partitionSize": 65536,
+            "partitionOffset": 8323072,
+            "coredumpSize": 12345,
+            "coredumpOffset": 8323072
+          }
+        }
+        ```
+
+        **With decode=true** - Returns decoded crash analysis:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "crashedTask": "IDLE0",
+            "exceptionCause": "LoadProhibited",
+            "exceptionCode": 28,
+            "exceptionAddr": "0x00000000",
+            "registers": {
+              "A0": "0x80090c10",
+              "A1": "0x3ffbf1bc",
+              ...
+            },
+            "backtrace": ["0x40084659"],
+            "backtraceDepth": 1
+          }
+        }
+        ```
+      operationId: getCoredump
+      parameters:
+        - in: query
+          name: decode
+          schema:
+            type: boolean
+          required: false
+          description: If true, decode coredump into human-readable crash summary with registers and backtrace.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "400":
+          description: Bad request - invalid decode parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Coredump partition not found or no coredump data present
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Error reading or decoding coredump
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+    delete:
+      tags:
+        - Common
+      summary: Clear coredump partition
+      description: |
+        Erase the coredump partition to remove stored crash data.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {}
+        }
+        ```
+      operationId: clearCoredump
+      responses:
+        "200":
+          description: Coredump partition cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "404":
+          description: Coredump partition not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Failed to erase coredump partition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /partitionChange:
+    post:
+      tags:
+        - Common
+      summary: Switch to factory partition and restart
+      description: |
+        Set the factory partition as the next boot partition and restart the device.
+        Used for firmware recovery or switching to factory firmware.
+
+        Response on success:
+        ```json
+        {
+          "status": "ok",
+          "data": {}
+        }
+        ```
+
+        Note: Device will restart after successful execution.
+      operationId: changePartition
+      responses:
+        "200":
+          description: Factory partition set as boot partition, device restarting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "500":
+          description: Failed to set factory partition (not found or set failed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /homeAssistant/automaticDiscovery/disable:
+    post:
+      tags:
+        - Service
+      summary: Disable Home Assistant MQTT automatic discovery
+      description: |
+        Disable the Home Assistant MQTT automatic discovery feature.
+        This prevents the welcome plugin from being discovered during filesystem updates.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {}
+        }
+        ```
+      operationId: disableHomeAssistantDiscovery
+      responses:
+        "200":
+          description: Discovery disabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "500":
+          description: Failed to disable discovery or MqttService not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /homeAssistant/automaticDiscovery/status:
+    get:
+      tags:
+        - Service
+      summary: Get Home Assistant MQTT automatic discovery status
+      description: |
+        Check whether the Home Assistant MQTT automatic discovery is enabled or disabled.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "enabled": true
+          }
+        }
+        ```
+      operationId: getHomeAssistantDiscoveryStatus
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - data
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  data:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+                        description: True if discovery is enabled, false if disabled or MqttService not configured
+        "500":
+          description: Unknown error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
 externalDocs:
   description: Find out more about Pixelix
   url: "https://github.com/BlueAndi/Pixelix"
