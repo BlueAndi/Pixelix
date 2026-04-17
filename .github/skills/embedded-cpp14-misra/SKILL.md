@@ -32,6 +32,7 @@ Use [coding-rules.md](./references/coding-rules.md) for details. Mandatory point
   - Prefer fixed width integer types (`uint32_t`, `int16_t`, ...)
   - Avoid dynamic allocation unless strictly required and justified
   - Keep scopes narrow and initialization explicit
+  - A function should have a single point of exit.
 - Defensive programming:
   - Validate all external inputs and pointers
   - Handle failure paths explicitly
