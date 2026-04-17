@@ -111,7 +111,8 @@ bool RequestHandler::request(const char* channelName, const char* sortOrder, con
     bool isSuccessful = false;
 
     if ((nullptr != channelName) &&
-        (nullptr != sortOrder))
+        (nullptr != sortOrder) &&
+        (false == m_playerKey.isEmpty()))
     {
         m_lastRequestData.channelName = channelName;
         m_lastRequestData.sortOrder   = sortOrder;
