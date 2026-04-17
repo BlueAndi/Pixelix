@@ -231,7 +231,7 @@ If the display's location is hard to reach, the remote user button feature can b
 ## Details
 
 - [Home Assistant](./doc/HOMEASSISTANT.md)
-- [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.8.0)
+- [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0)
 - [MQTT API](./doc/MQTT.md)
 - More information is in the [documentation](./doc/README.md) folder.
 
@@ -265,7 +265,7 @@ The following keywords are available:
 
 **Notes**:
 
-- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.8.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.
 - Don't add additional spaces, e.g. after a comma. Write them exactly as the format is specified.
 
