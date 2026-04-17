@@ -44,6 +44,7 @@
 #include "RestUtil.h"
 #include "SlotList.h"
 #include "RestartMgr.h"
+#include "CoredumpDecoder.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -128,6 +129,7 @@ static HomeAssistantDiscoveryStatus disableHomeAssistantAutomaticDiscovery();
 static void                         handleHomeAssistantAutomaticDiscoveryDisable(AsyncWebServerRequest* request);
 static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus();
 static void                         handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* request);
+static void                         handleCoredump(AsyncWebServerRequest* request);
 static bool                         isPathSafe(const String& path);
 
 /******************************************************************************
@@ -165,7 +167,8 @@ static const RestApiRoute gRestApiRoutes[] = {
     { "/fs", HTTP_GET, handleFilesystem, nullptr, nullptr },
     { "/partitionChange", HTTP_POST, handlePartitionChange, nullptr, nullptr },
     { "/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable, nullptr, nullptr },
-    { "/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr }
+    { "/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr },
+    { "/coredump", HTTP_GET | HTTP_DELETE, handleCoredump, nullptr, nullptr }
 };
 
 /******************************************************************************
@@ -2113,6 +2116,114 @@ static void handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* r
         default:
             break;
         }
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Get coredump information or clear coredump.
+ * GET \c "/api/v1/coredump" - Retrieve coredump info and data
+ * GET \c "/api/v1/coredump?decode=true" - Retrieve decoded crash summary
+ * DELETE \c "/api/v1/coredump" - Clear the coredump partition
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleCoredump(AsyncWebServerRequest* request)
+{
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 2048U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET == request->method())
+    {
+        JsonObject                      dataObj = RestUtil::prepareRspSuccess(jsonDoc).as<JsonObject>();
+        CoredumpDecoder::CoredumpStatus status  = CoredumpDecoder::COREDUMP_STATUS_OK;
+
+        /* Check if decode/summary is requested */
+        if (true == request->hasParam("decode"))
+        {
+            String decodeParam  = request->getParam("decode")->value();
+            bool   shouldDecode = false;
+
+            if (true == parseStringBool(decodeParam, shouldDecode))
+            {
+                if (true == shouldDecode)
+                {
+                    status = CoredumpDecoder::getCoredumpSummary(dataObj);
+                }
+                else
+                {
+                    status = CoredumpDecoder::getCoredumpInfo(dataObj);
+                }
+            }
+            else
+            {
+                RestUtil::prepareRspError(jsonDoc, "Invalid decode parameter value");
+                httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
+                status         = CoredumpDecoder::COREDUMP_STATUS_OK; /* Skip further processing */
+            }
+        }
+        else
+        {
+            /* Default: return basic info */
+            status = CoredumpDecoder::getCoredumpInfo(dataObj);
+        }
+
+        if (CoredumpDecoder::COREDUMP_STATUS_OK != status)
+        {
+            switch (status)
+            {
+            case CoredumpDecoder::COREDUMP_STATUS_NO_PARTITION:
+                RestUtil::prepareRspError(jsonDoc, "Coredump partition not found");
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                break;
+
+            case CoredumpDecoder::COREDUMP_STATUS_READ_ERROR:
+                RestUtil::prepareRspError(jsonDoc, "Error reading coredump partition");
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                break;
+
+            case CoredumpDecoder::COREDUMP_STATUS_NO_COREDUMP:
+                RestUtil::prepareRspError(jsonDoc, "No coredump data found");
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                break;
+
+            case CoredumpDecoder::COREDUMP_STATUS_INVALID_FORMAT:
+                RestUtil::prepareRspError(jsonDoc, "Invalid coredump format or unable to decode");
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                break;
+
+            default:
+                RestUtil::prepareRspError(jsonDoc, "Unknown error");
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                break;
+            }
+        }
+    }
+    else if (HTTP_DELETE == request->method())
+    {
+        CoredumpDecoder::CoredumpStatus status = CoredumpDecoder::clearCoredump();
+
+        if (CoredumpDecoder::COREDUMP_STATUS_OK == status)
+        {
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+        }
+        else
+        {
+            RestUtil::prepareRspError(jsonDoc, "Failed to clear coredump");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+        }
+    }
+    else
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
