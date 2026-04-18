@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,12 +13,13 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -75,7 +77,7 @@
                     <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(icon.files)">
                         <div class="form-group mb-3">
                             <label class="form-label" for="icon">Icon:</label>
-                            <input class="form-control" id="icon" type="file" accept="~IMAGE_FILE_EXTENSIONS~" />    
+                            <input class="form-control" id="icon" type="file" accept="~IMAGE_FILE_EXTENSIONS~" />
                         </div>
                         <input name="submit" type="submit" value="Update" />
                     </form>
@@ -123,6 +125,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
@@ -142,9 +145,9 @@
             function updateZoom() {
                 var selectedZoom = parseInt(document.querySelector('input[name="zoomOptions"]:checked').value);
                 currentZoom = selectedZoom;
-                
+
                 var images = document.querySelectorAll('#overview img');
-                images.forEach(function(img) {
+                images.forEach(function (img) {
                     if (currentZoom === 1) {
                         img.style.imageRendering = 'auto';
                         img.style.width = 'auto';
@@ -172,7 +175,7 @@
 
                 if (0 === files.length) {
                     promise = Promise.reject("No file selected.");
-                
+
                 } else if (true === files[0].name.toLowerCase().endsWith(".bmp")) {
                     promise = utils.checkBMPFile(files[0]);
 
@@ -180,14 +183,14 @@
                     promise = Promise.resolve();
                 }
 
-                return promise.then(function() {
+                return promise.then(function () {
                     return restClient.fileMgrUploadFile(files[0], files[0].size);
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     return dialog.showInfo("<p>Ok.</p>");
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#overview").text("");
                     return downloadFileList("overview");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     var alertMsg = "";
 
                     if (typeof rsp === "string") {
@@ -196,16 +199,16 @@
                         alertMsg = rsp.error.msg;
                     }
 
-                    return dialog.showError("<p>" + alertMsg + "</p>").then(function() {
+                    return dialog.showError("<p>" + alertMsg + "</p>").then(function () {
                         return Promise.reject();
                     });
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
             function downloadFileList(id) {
-                restClient.readFile("/configuration/fileMgr.json").then(function(rsp) {
+                restClient.readFile("/configuration/fileMgr.json").then(function (rsp) {
                     var $overview = $("#" + id);
                     var $div;
                     var $fileId;
@@ -215,14 +218,14 @@
                     var idx;
                     var jsonRsp = JSON.parse(rsp);
 
-                    for(idx = 0; idx < jsonRsp.fileTable.length; ++idx) {
+                    for (idx = 0; idx < jsonRsp.fileTable.length; ++idx) {
                         if (0 < jsonRsp.fileTable[idx].fullPath.length) {
                             $fileId = $("<p>")
                                 .text("[" + idx + "]");
                             $img = $("<img>")
                                 .attr("src", jsonRsp.fileTable[idx].fullPath)
                                 .attr("alt", "Preview")
-                                .on('load', function() {
+                                .on('load', function () {
                                     if (currentZoom === 1) {
                                         this.style.imageRendering = 'auto';
                                         this.style.width = 'auto';
@@ -254,7 +257,7 @@
 
                     return Promise.resolve();
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     var alertMsg = "";
 
                     if (typeof rsp === "string") {
@@ -263,21 +266,21 @@
                         alertMsg = rsp.error.msg;
                     }
 
-                    return dialog.showError("<p>" + alertMsg + "</p>").then(function() {
+                    return dialog.showError("<p>" + alertMsg + "</p>").then(function () {
                         return Promise.reject();
                     });
                 });
             }
 
             function removeFile(fileId, fullPath) {
-                return restClient.fileMgrRemoveFile(fileId).then(function(rsp) {
+                return restClient.fileMgrRemoveFile(fileId).then(function (rsp) {
                     return dialog.showInfo("<p>File " + fullPath + " removed.</p>");
 
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#overview").text("");
                     return downloadFileList("overview");
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     return dialog.showError("<p>" + rsp.error.msg + "</p>");
                 });
             }
@@ -294,30 +297,30 @@
                     $("#lametricPreviewArea").html('<div class="text-danger">Please enter a valid icon ID.</div>');
                 } else {
                     fetch("https://developer.lametric.com/api/v1/dev/preloadicons?search=" + iconId + "&count=1")
-                    .then(function(response) {
-                        if (!response.ok) throw new Error("Failed to fetch icon info.");
-                        return response.json();
-                    })
-                    .then(function(data) {
-                        if ((data) && (data.icons) && (0 < data.icons.length) && (data.icons[0].thumbnail)) {
-                            var thumbnail = "https://developer.lametric.com" + data.icons[0].thumbnail;
-                            var ext = thumbnail.split('.').pop().toLowerCase();
-                            var isValid = ext === "gif";
-                            var imgHtml = '<img src="' + thumbnail + '" alt="LaMetric Icon" class="img-thumbnail" />';
-                            var warnHtml = isValid ? "" : '<div class="text-warning mt-2">Warning: The file type is not supported. Only .bmp or .gif images are allowed.</div>';
+                        .then(function (response) {
+                            if (!response.ok) throw new Error("Failed to fetch icon info.");
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            if ((data) && (data.icons) && (0 < data.icons.length) && (data.icons[0].thumbnail)) {
+                                var thumbnail = "https://developer.lametric.com" + data.icons[0].thumbnail;
+                                var ext = thumbnail.split('.').pop().toLowerCase();
+                                var isValid = ext === "gif";
+                                var imgHtml = '<img src="' + thumbnail + '" alt="LaMetric Icon" class="img-thumbnail" />';
+                                var warnHtml = isValid ? "" : '<div class="text-warning mt-2">Warning: The file type is not supported. Only .bmp or .gif images are allowed.</div>';
 
-                            lametricIconUrl = thumbnail;
-                            lametricIconFileName = "lametric_" + iconId + thumbnail.substring(thumbnail.lastIndexOf('.'));
+                                lametricIconUrl = thumbnail;
+                                lametricIconFileName = "lametric_" + iconId + thumbnail.substring(thumbnail.lastIndexOf('.'));
 
-                            $("#lametricPreviewArea").html(imgHtml + warnHtml);
-                            $("#lametricDownloadBtn").prop("disabled", !isValid);
-                        } else {
-                            $("#lametricPreviewArea").html('<div class="text-danger">Icon not found or invalid response.</div>');
-                        }
-                    })
-                    .catch(function() {
-                        $("#lametricPreviewArea").html('<div class="text-danger">Failed to fetch icon info.</div>');
-                    });
+                                $("#lametricPreviewArea").html(imgHtml + warnHtml);
+                                $("#lametricDownloadBtn").prop("disabled", !isValid);
+                            } else {
+                                $("#lametricPreviewArea").html('<div class="text-danger">Icon not found or invalid response.</div>');
+                            }
+                        })
+                        .catch(function () {
+                            $("#lametricPreviewArea").html('<div class="text-danger">Failed to fetch icon info.</div>');
+                        });
                 }
             }
 
@@ -332,20 +335,20 @@
                     $("#lametricDownloadBtn").prop("disabled", true);
 
                     fetch(url)
-                    .then(function(response) {
-                        if (!response.ok) throw new Error("Failed to download icon.");
-                        return response.blob();
-                    })
-                    .then(function(blob) {
-                        var file = new File([blob], fileName, { type: blob.type });
-                        return uploadIcon([file]);
-                    })
-                    .catch(function(err) {
-                        $("#lametricPreviewArea").append('<div class="text-danger mt-2">Error: ' + err.message + '</div>');
-                    })
-                    .finally(function() {
-                        $("#lametricDownloadBtn").prop("disabled", false);
-                    });
+                        .then(function (response) {
+                            if (!response.ok) throw new Error("Failed to download icon.");
+                            return response.blob();
+                        })
+                        .then(function (blob) {
+                            var file = new File([blob], fileName, { type: blob.type });
+                            return uploadIcon([file]);
+                        })
+                        .catch(function (err) {
+                            $("#lametricPreviewArea").append('<div class="text-danger mt-2">Error: ' + err.message + '</div>');
+                        })
+                        .finally(function () {
+                            $("#lametricDownloadBtn").prop("disabled", false);
+                        });
                 }
             }
 
@@ -354,7 +357,7 @@
                 $("#lametricDownloadBtn").prop("disabled", true);
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
@@ -363,4 +366,5 @@
             });
         </script>
     </body>
+
 </html>

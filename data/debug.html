@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -13,12 +14,13 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -50,7 +52,7 @@
             <div class="container">
                 <h1 class="mt-5">Debug</h1>
                 <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item" role="presentation"><a class="nav-link active" id="logging-tab" data-bs-toggle="tab" role="tab" href="#logging"  aria-controls="logging" aria-selected="true">Logging</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link active" id="logging-tab" data-bs-toggle="tab" role="tab" href="#logging" aria-controls="logging" aria-selected="true">Logging</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="measurement-tab" data-bs-toggle="tab" role="tab" href="#measurement" aria-controls="measurement" aria-selected="false">Measurement</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="restart-tab" data-bs-toggle="tab" role="tab" href="#restart" aria-controls="restart" aria-selected="false">Restart</a></li>
                 </ul>
@@ -122,6 +124,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.js"></script>
@@ -134,13 +137,13 @@
 
         <!-- Custom javascript -->
         <script>
-            var wsClient                = new pixelix.ws.Client();
-            var maxLogs                 = 40;   /* Max. number of stored log messages. */
-            var isPageUnload            = false;
-            var isLoggingEnabled        = false;
-            var isMeasurementEnabled    = false;
-            var filter                  = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
-            var isIperfAvailable        = false;
+            var wsClient = new pixelix.ws.Client();
+            var maxLogs = 40;   /* Max. number of stored log messages. */
+            var isPageUnload = false;
+            var isLoggingEnabled = false;
+            var isMeasurementEnabled = false;
+            var filter = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
+            var isIperfAvailable = false;
 
             function toggleLogLevel(logLevel) {
                 var index = filter.indexOf(logLevel);
@@ -168,35 +171,34 @@
             function logLevel2Color(logLevel) {
                 var color = "";
 
-                switch(logLevel)
-                {
-                case 0:
-                    color = "#FF0000";
-                    break;
+                switch (logLevel) {
+                    case 0:
+                        color = "#FF0000";
+                        break;
 
-                case 1:
-                    color = "#FF8000";
-                    break;
+                    case 1:
+                        color = "#FF8000";
+                        break;
 
-                case 2:
-                    color = "#FFFF00";
-                    break;
+                    case 2:
+                        color = "#FFFF00";
+                        break;
 
-                case 3:
-                    color = "#0EFF00";
-                    break;
+                    case 3:
+                        color = "#0EFF00";
+                        break;
 
-                case 4:
-                    color = "#00FFEB";
-                    break;
+                    case 4:
+                        color = "#00FFEB";
+                        break;
 
-                case 5:
-                    color = "#0004FF";
-                    break;
+                    case 5:
+                        color = "#0004FF";
+                        break;
 
-                default:
-                    color = "#0EFF00";
-                    break;
+                    default:
+                        color = "#0EFF00";
+                        break;
                 }
 
                 return color;
@@ -204,16 +206,16 @@
 
             /* Handle every websocket event. */
             function wsOnEvent(evt) {
-                var logLevel        = pixelix.ws.getLogLevelStr(evt.level);
-                var index           = filter.indexOf(logLevel);
-                var $row            = $("<tr>");
-                var $colTimestamp   = $("<td>").text(evt.timestamp);
-                var $logLevelText   = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level));
-                var $colLogLevel    = $("<td>").append($logLevelText);
-                var $colFilename    = $("<td>").text(evt.filename);
-                var $colLine        = $("<td>").text(evt.line);
-                var $colText        = $("<td>").text(evt.text);
-                var rowCount        = $("#loggingOutput > tbody tr").length;
+                var logLevel = pixelix.ws.getLogLevelStr(evt.level);
+                var index = filter.indexOf(logLevel);
+                var $row = $("<tr>");
+                var $colTimestamp = $("<td>").text(evt.timestamp);
+                var $logLevelText = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level));
+                var $colLogLevel = $("<td>").append($logLevelText);
+                var $colFilename = $("<td>").text(evt.filename);
+                var $colLine = $("<td>").text(evt.line);
+                var $colText = $("<td>").text(evt.text);
+                var rowCount = $("#loggingOutput > tbody tr").length;
 
                 if (0 <= index) {
 
@@ -251,7 +253,7 @@
 
                 wsClient.setLog({
                     enable: (false === isLoggingEnabled) ? true : false
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     isLoggingEnabled = rsp.isEnabled;
 
                     if (false == rsp.isEnabled) {
@@ -259,11 +261,11 @@
                     } else {
                         $("#buttonLog").text("Stop");
                     }
-                }).catch(function(err) {
+                }).catch(function (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -272,9 +274,9 @@
             function restart() {
                 disableUI();
 
-                wsClient.restart().then(function(rsp) {
+                wsClient.restart().then(function (rsp) {
                     return dialog.showInfo("<p>Ok.</p>");
-                }).catch(function(err) {
+                }).catch(function (err) {
                     return dialog.showError("<p>Error: " + err + "</p>");
                 });
             }
@@ -285,7 +287,7 @@
 
                 wsClient.setIperf({
                     enable: (false === isMeasurementEnabled) ? true : false
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     isMeasurementEnabled = rsp.isEnabled;
 
                     if (false == rsp.isEnabled) {
@@ -295,53 +297,53 @@
                     }
 
                     return dialog.showInfo("<p>Ok.</p>");
-                }).catch(function(err) {
+                }).catch(function (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
                     return dialog.showError("<p>Error.</p>");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
             /* Execute after page is ready. */
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                $("#buttonInfo").click(function(e) {
+                $("#buttonInfo").click(function (e) {
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
                 });
 
-                $("#buttonWarning").click(function(e) {
+                $("#buttonWarning").click(function (e) {
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
                 });
 
-                $("#buttonError").click(function(e) {
+                $("#buttonError").click(function (e) {
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
                 });
 
-                $("#buttonFatal").click(function(e) {
+                $("#buttonFatal").click(function (e) {
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
                 });
 
-                $("#buttonDebug").click(function(e) {
+                $("#buttonDebug").click(function (e) {
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
                 });
 
-                $("#buttonTrace").click(function(e) {
+                $("#buttonTrace").click(function (e) {
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
@@ -355,10 +357,10 @@
                     endpoint: "~WS_ENDPOINT~",
                     onClosed: wsOnClosed,
                     onEvent: wsOnEvent
-                }).then(function() {
+                }).then(function () {
                     /* Get current log status */
                     return wsClient.getLog();
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     isLoggingEnabled = rsp.isEnabled;
 
                     /* Update logging button text, depended on status. */
@@ -373,7 +375,7 @@
 
                     /* Get current iperf status */
                     return wsClient.getIperf();
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     isMeasurementEnabled = rsp.isEnabled;
 
                     /* Update iperf button text, depended on status. */
@@ -387,7 +389,7 @@
                     isIperfAvailable = true;
                     enableUI();
 
-                }).catch(function(err) {
+                }).catch(function (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
@@ -398,7 +400,7 @@
             /* If the page is left, there shall be no message shown regarding
              * unexpected websocket lost.
              */
-            $(window).bind("beforeunload", function() {
+            $(window).bind("beforeunload", function () {
                 isPageUnload = true;
 
                 if (null !== wsClient) {
@@ -407,4 +409,5 @@
             });
         </script>
     </body>
+
 </html>

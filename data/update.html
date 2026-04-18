@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,12 +13,13 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -62,9 +64,9 @@
                         <br />
                         <p>To update the firmware or filesystem, activate the Pixelix Updater.</p>
                         <p>
-                            <div class="alert alert-warning" role="alert">
-                                <strong>Important:</strong> Updating the filesystem will erase all your configuration data. Before proceeding, make sure to create a backup of your configuration to avoid losing any settings.
-                            </div>
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Important:</strong> Updating the filesystem will erase all your configuration data. Before proceeding, make sure to create a backup of your configuration to avoid losing any settings.
+                        </div>
                         </p>
                         <button class="btn btn-light" type="button" onclick="goToPixelixUpdaterPressed()" disabled>Go to PixelixUpdater</button>
                     </div>
@@ -110,6 +112,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
@@ -127,9 +130,9 @@
         <!-- Custom javascript -->
         <script>
 
-            var restClient  = new pixelix.rest.Client();
-            var zip         = new JSZip();
-            var hostname    = "~HOSTNAME~";
+            var restClient = new pixelix.rest.Client();
+            var zip = new JSZip();
+            var hostname = "~HOSTNAME~";
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -148,10 +151,10 @@
             }
 
             function getConfigurationFiles() {
-                return restClient.listAllFiles("/configuration").then(function(items) {
+                return restClient.listAllFiles("/configuration").then(function (items) {
                     fileUrlList = [];
 
-                    for(index = 0; index < items.length; ++index) {
+                    for (index = 0; index < items.length; ++index) {
                         fileUrlList.push({
                             name: items[index].name,
                             url: restClient.getBaseUri() + "/fs/file?path=" + encodeURIComponent(items[index].name)
@@ -163,10 +166,10 @@
             }
 
             function urlToPromise(url) {
-                return new Promise(function(resolve, reject) {
+                return new Promise(function (resolve, reject) {
 
                     JSZipUtils.getBinaryContent(url, function (err, data) {
-                        if(err) {
+                        if (err) {
                             reject(err);
                         } else {
                             resolve(data);
@@ -176,12 +179,12 @@
             }
 
             function downloadWithBlob(fileUrlList) {
-                return new Promise(function(resolve, reject) {
-                    fileUrlList.forEach(function(fileUrl, index){
+                return new Promise(function (resolve, reject) {
+                    fileUrlList.forEach(function (fileUrl, index) {
                         var filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf('/') + 1);
-                        zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary:true });
+                        zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary: true });
                     });
-                    zip.generateAsync({ type:'blob' }).then(function(content) {
+                    zip.generateAsync({ type: 'blob' }).then(function (content) {
                         var date = new Date();
                         var day = date.getDate();
                         day = ((day < 10) ? '0' : '') + day;
@@ -202,13 +205,13 @@
             }
 
             function backup() {
-                dialog.show("Backup", "<p>Please wait, backup is in progress.</p>").then(function() {
+                dialog.show("Backup", "<p>Please wait, backup is in progress.</p>").then(function () {
                     return getConfigurationFiles();
-                }).then(function(fileUrlList) {
+                }).then(function (fileUrlList) {
                     return downloadWithBlob(fileUrlList);
-                }).then(function() {
+                }).then(function () {
                     dialog.showInfo("<p>Backup successful.</p>");
-                }).catch(function() {
+                }).catch(function () {
                     dialog.showError("<p>Backup failed.</p>");
                 });
             }
@@ -224,8 +227,8 @@
                     dialog.showWarning("<p>No file selected.</p>");
 
                 } else {
-                    var file        = elem.files[0];
-                    var fileSize    = file.size;
+                    var file = elem.files[0];
+                    var fileSize = file.size;
 
                     if (false === file.name.endsWith(".zip")) {
 
@@ -233,32 +236,32 @@
 
                     } else {
 
-                        dialog.show("Restore", "<p>Please wait, restore is in progress.</p>").then(function() {
+                        dialog.show("Restore", "<p>Please wait, restore is in progress.</p>").then(function () {
                             progress = 2;
                             updateProgressBar("progressBarRestore", progress);
 
                             return restClient.removeFile("/configuration/*.json")
-                        }).then(function() {
+                        }).then(function () {
                             progress = 10;
                             updateProgressBar("progressBarRestore", progress);
 
                             return zip.loadAsync(file);
-                        }).then(function(zipObj) {
-                            return new Promise(function(resolve, reject) {
+                        }).then(function (zipObj) {
+                            return new Promise(function (resolve, reject) {
                                 var files = Object.keys(zipObj.files);
                                 var progressPerFile = (90 - progress) / files.length;
                                 var promiseChain = Promise.resolve();
-    
-                                files.forEach(function(filename) {
+
+                                files.forEach(function (filename) {
                                     var fileType = "text";
                                     var mimeType = "text/plain";
-    
+
                                     if (true === filename.endsWith(".json")) {
                                         fileType = "text";
                                         mimeType = "text/plain";
                                     } else if ((true === filename.endsWith(".bmp")) ||
-                                               (true === filename.endsWith(".gif"))) {
-    
+                                        (true === filename.endsWith(".gif"))) {
+
                                         if (JSZip.support.blob) {
                                             fileType = "blob";
                                             mimeType = "application/octet-stream";
@@ -267,32 +270,32 @@
                                             mimeType = "application/octet-stream";
                                         }
                                     }
-    
-                                    promiseChain = promiseChain.then(function() {
-                                        return zipObj.file(filename).async(fileType).then(function(data) {
+
+                                    promiseChain = promiseChain.then(function () {
+                                        return zipObj.file(filename).async(fileType).then(function (data) {
                                             progress += progressPerFile;
                                             updateProgressBar("progressBarRestore", progress);
-        
+
                                             return restClient.writeFile("/configuration/" + filename, data, mimeType);
                                         }.bind(zipObj))
                                     }.bind(zipObj));
                                 });
-                                
-                                return promiseChain.then(function() {
+
+                                return promiseChain.then(function () {
                                     resolve();
                                 });
                             });
-                        }).then(function() {
+                        }).then(function () {
                             progress = 90;
                             updateProgressBar("progressBarRestore", progress);
-                        }).then(function() {
+                        }).then(function () {
                             return restClient.restart();
-                        }).then(function() {
+                        }).then(function () {
                             progress = 100;
                             updateProgressBar("progressBarRestore", progress);
 
                             return dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
-                        }).catch(function() {
+                        }).catch(function () {
                             dialog.showError("<p>Restore failed.</p>");
                         });
                     }
@@ -303,9 +306,9 @@
             function restart() {
                 disableUI();
 
-                restClient.restart().then(function(rsp) {
+                restClient.restart().then(function (rsp) {
                     return dialog.showInfo("<p>Ok.</p>");
-                }).catch(function(err) {
+                }).catch(function (err) {
                     return dialog.showError("<p>Error: " + err + "</p>");
                 });
             }
@@ -313,7 +316,7 @@
             /* Handle popup button yes pressed. Disables the HomeAssistant automatic discovery before requesting a change of acitve partitions. */
             function homeAssistantPopUpYesPressed() {
                 disableUI();
-                
+
                 disableHomeAssistantAutomaticDiscovery()
                     .finally(() => {
                         setTimeout(sendPartitionChangeRequest, 5000);
@@ -324,35 +327,35 @@
             function homeAssistantPopUpNoPressed() {
                 sendPartitionChangeRequest();
             }
-                
+
             /* Request HomeAssistant automatic discovery to be disabled. */
             function disableHomeAssistantAutomaticDiscovery() {
                 return utils.makeRequest({
                     method: "POST",
                     url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/disable",
                     isJsonResponse: true
-                }).then(function(rsp) {
-                    dialog.showInfo("<p>HomeAssistant automatic discovery is now disabled. </p>");   
-                }).catch(function(rsp) {
+                }).then(function (rsp) {
+                    dialog.showInfo("<p>HomeAssistant automatic discovery is now disabled. </p>");
+                }).catch(function (rsp) {
                     dialog.showError("<p>HomeAssistant automatic discovery could not be disabled. </p>")
                 });
             }
 
-             /* Request change of active partition. */
+            /* Request change of active partition. */
             function sendPartitionChangeRequest() {
                 var intervalId = 0;
                 var seconds = 10;
 
                 disableUI();
-                                
+
                 utils.makeRequest({
                     method: "POST",
                     url: restClient.getBaseUri() + "/partitionChange",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     return dialog.showInfo(`<p>Reload in ${seconds}s</p>`);
-                }).then(function() {
-                    return new Promise(function(resolve) {
+                }).then(function () {
+                    return new Promise(function (resolve) {
                         intervalId = setInterval(() => {
                             if (0 < seconds) {
                                 seconds--;
@@ -364,14 +367,14 @@
                             }
                         }, 1000);
 
-                        $("#modalDialog .btn-secondary").click(function() {
+                        $("#modalDialog .btn-secondary").click(function () {
                             resolve();
                         });
                     });
-                }).then(function() {
+                }).then(function () {
                     clearInterval(intervalId);
                     location.reload();
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     dialog.showError("<p>Error: " + rsp + "</p>")
                     enableUI();
                 });
@@ -386,34 +389,34 @@
                     method: "GET",
                     url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/status",
                     isJsonResponse: true
-                }).then(function(rsp) {
-                    if(rsp.data && rsp.data.status === "enabled") {
+                }).then(function (rsp) {
+                    if (rsp.data && rsp.data.status === "enabled") {
                         dialog.showYesNo('HomeAssistant', '<p>In case of a filesystem update the HomeAssistant MQTT discovery feature needs to be disabled. Current status is enabled. Do you want to disable it? </p>', homeAssistantPopUpYesPressed, homeAssistantPopUpNoPressed, true);
-                    } else if(rsp.data && rsp.data.status === "disabled") {
+                    } else if (rsp.data && rsp.data.status === "disabled") {
                         sendPartitionChangeRequest();
                     } else {
                         console.error("Unexpected response!");
                         enableUI();
                     }
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     dialog.showYesNo('HomeAssistant', '<p>In case of a filesystem update the HomeAssistant MQTT discovery feature needs to be disabled. Current status is unknown. Do you want to disable it? </p>', homeAssistantPopUpYesPressed, homeAssistantPopUpNoPressed, true);
                 });
             }
 
             /* Execute after page is ready. */
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                $("#inputFile").on("change", function() {
+                $("#inputFile").on("change", function () {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);
 
                     updateProgressBar("progressBar", 0);
                 });
 
-                $("#backupFile").on("change", function() {
+                $("#backupFile").on("change", function () {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);
 
@@ -424,4 +427,5 @@
             });
         </script>
     </body>
+
 </html>
