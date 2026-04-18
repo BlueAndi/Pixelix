@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,6 +13,7 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -51,7 +53,7 @@
                         <button class="nav-link" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration" type="button" role="tab" aria-controls="registration" aria-selected="false">Registration</button>
                     </li>
                 </ul>
-                
+
                 <!-- Tab Content -->
                 <div class="tab-content mt-3" id="makapixTabContent">
                     <!-- Playback Control Tab -->
@@ -97,7 +99,7 @@
                                 <div class="form-group mb-3">
                                     <label class="form-label" for="pluginUid">Plugin UID:</label>
                                     <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                                    </select>    
+                                    </select>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="form-label" for="playerKey">Player key:</label>
@@ -109,14 +111,15 @@
                                     <input class="form-control" type="number" id="mqttInstance" name="mqttInstance" value="0" />
                                     <small class="form-text">The MQTT instance number to use. 0 is the primary instance, see MQTT service configuration.</small>
                                 </div>
-                                <input name="submit" type="submit" value="Update"/>
+                                <input name="submit" type="submit" value="Update" />
                             </form>
                         </div>
                     </div>
-                    
+
                     <!-- Setup Tab -->
                     <div class="tab-pane fade" id="setup" role="tabpanel" aria-labelledby="setup-tab">
-                        <p>To use the Makapix plugin, you need to create a free account at <a href="https://makapix.club" target="_blank">Makapix Club</a> and get a player key from there. The player key is used to identify your display device.</p>
+                        <p>To use the Makapix plugin, you need to create a free account at <a href="https://makapix.club" target="_blank">Makapix Club</a> and get a player key from there. The player key is used to identify your display
+                            device.</p>
                         <p>After you have created an account and obtained a player key, you can configure the plugin by entering the player key in the configuration form below.</p>
                         <p>Additionally, you need to specify which MQTT instance the plugin should use to communicate with the Makapix service. Make sure that the MQTT service is properly configured and running.</p>
                         <div class="h-100 p-2 bg-body-tertiary border rounded-3">
@@ -204,7 +207,7 @@
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -228,35 +231,35 @@
 
         <script>
 
-            var pluginName  = "MakapixPlugin";
-            var restClient  = new pixelix.rest.Client();
-    
+            var pluginName = "MakapixPlugin";
+            var restClient = new pixelix.rest.Client();
+
             function enableUI() {
                 utils.enableForm("formConfig", true);
                 utils.enableForm("formPlayControl", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("formConfig", false);
                 utils.enableForm("formPlayControl", false);
             }
-    
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
+
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                            
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
+
                             $("#pluginUid").append($option);
 
                             ++cnt;
@@ -264,24 +267,24 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
             };
-    
+
             function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#playerKey").val(rsp.data.playerKey);
                     $("#mqttInstance").val(rsp.data.mqttInstance);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -297,11 +300,11 @@
                         playerKey: $("#playerKey").val(),
                         mqttInstance: $("#mqttInstance").val()
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -312,7 +315,7 @@
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     var channel = rsp.data.channel;
                     var status = rsp.data.status;
 
@@ -342,9 +345,9 @@
                         $('#btnPause').removeClass('active');
                     }
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -374,11 +377,11 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
                     isJsonResponse: true,
                     parameter: parameter
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     return getStatus(pluginUid);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -393,11 +396,11 @@
                     parameter: {
                         action: "next"
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     return getStatus(pluginUid);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -415,11 +418,11 @@
                     parameter: {
                         action: action
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     return getStatus(pluginUid);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -434,25 +437,25 @@
                     parameter: {
                         action: "previous"
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     return getStatus(pluginUid);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
             function getProvisionStatus(pluginUid) {
                 var payload = {};
-                
+
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
                     isJsonResponse: true,
                     parameter: payload
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     if (rsp.data.status === "pending") {
                         alert("Provisioning is still pending. Please try again later.");
                     }
@@ -467,9 +470,9 @@
                     else {
                         alert("Provisioning not started.");
                     }
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed to get provision status. Please try again.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -477,38 +480,48 @@
             function provisionPlayer(pluginUid) {
                 var payload = {};
                 disableUI();
-                
+
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
                     isJsonResponse: true,
                     parameter: payload
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Makapix player provision is pending. Please wait...");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed to provision player. Please try again.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                getPluginInstances().then(function (cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        var uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            for (var i = 0; i < select.options.length; i++) {
+                                if (select.options[i].value === uidFromUrl) {
+                                    select.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
 
                         return getConfig(
                             select.options[select.selectedIndex].value
-                        ).then(function() {
+                        ).then(function () {
                             return getStatus(
                                 select.options[select.selectedIndex].value
                             );
@@ -518,4 +531,5 @@
             });
         </script>
     </body>
+
 </html>

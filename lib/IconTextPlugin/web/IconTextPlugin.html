@@ -371,6 +371,17 @@
 
                 /* Load all plugin instances. */
                 getPluginInstances().then(function (cnt) {
+                    /* Check if UID was passed in URL and auto-select it */
+                    var uidFromUrl = utils.getURLParameter('uid');
+                    if (uidFromUrl) {
+                        var selectText = document.getElementById("pluginUidText");
+                        for (var i = 0; i < selectText.options.length; i++) {
+                            if (selectText.options[i].value === uidFromUrl) {
+                                selectText.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
                     return updateForms();
                 });
             });

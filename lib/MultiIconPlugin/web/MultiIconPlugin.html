@@ -405,6 +405,17 @@
                 /* Load all plugin instances. */
                 getPluginInstances().then(function (cnt) {
                     if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        var uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            var selectSlot = document.getElementById("pluginUidSlot");
+                            for (var i = 0; i < selectSlot.options.length; i++) {
+                                if (selectSlot.options[i].value === uidFromUrl) {
+                                    selectSlot.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
                         updateForms();
                     }
                 });

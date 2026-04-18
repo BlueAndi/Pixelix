@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,6 +13,7 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -67,7 +69,7 @@
                                 <option value="0">Show date and time.</option>
                                 <option value="1">Show only the date.</option>
                                 <option value="2">Show only the time.</option>
-                            </select>    
+                            </select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="timeFormat">Time format:</label>
@@ -162,7 +164,7 @@
 
                                         <input type="radio" class="btn-check" id="secondsMode2" name="secondsMode" value="2" />
                                         <label class="btn btn-outline-secondary" for="secondsMode2">Dial Dots</label>
-                                        
+
                                         <input type="radio" class="btn-check" id="secondsMode3" name="secondsMode" value="3" />
                                         <label class="btn btn-outline-secondary" for="secondsMode3">Dial and Hand</label>
                                     </div>
@@ -207,7 +209,7 @@
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -230,30 +232,30 @@
         <script type="text/javascript" src="/js/rest.js"></script>
 
         <script>
-            var pluginName  = "DateTimePlugin";
-            var restClient  = new pixelix.rest.Client();
+            var pluginName = "DateTimePlugin";
+            var restClient = new pixelix.rest.Client();
 
             function enableUI() {
                 utils.enableForm("myForm", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("myForm", false);
             }
-    
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
+
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -263,9 +265,9 @@
                             optionText += ")";
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                            
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
+
                             $("#pluginUid").append($option);
 
                             ++cnt;
@@ -273,7 +275,7 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
@@ -281,12 +283,12 @@
 
             function getConfig(pluginUid) {
                 disableUI();
-                
+
                 return utils.makeRequest({
                     method: "GET",
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#mode").val(rsp.data.mode);
                     $("#timeFormat").val(rsp.data.timeFormat);
                     $("#dateFormat").val(rsp.data.dateFormat);
@@ -306,9 +308,9 @@
                         $("#ringMinDotCol").val(jsonAnalogClock.ringMinDotCol);
                     }
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -320,27 +322,27 @@
                 let displayHeight = ~DISPLAY_HEIGHT~;
 
                 configJson = {
-                        mode: $("#mode").val(),
-                        timeFormat: $("#timeFormat").val(),
-                        dateFormat: $("#dateFormat").val(),
-                        timeZone: $("#timeZone").val(),
-                        startOfWeek: $("#startOfWeek").val(),
-                        dayOnColor: $("#dayOnColor").val(),
-                        dayOffColor: $("#dayOffColor").val(),
-                        viewMode: $('input[name=viewMode]:checked').val()
-                    };
+                    mode: $("#mode").val(),
+                    timeFormat: $("#timeFormat").val(),
+                    dateFormat: $("#dateFormat").val(),
+                    timeZone: $("#timeZone").val(),
+                    startOfWeek: $("#startOfWeek").val(),
+                    dayOnColor: $("#dayOnColor").val(),
+                    dayOffColor: $("#dayOffColor").val(),
+                    viewMode: $('input[name=viewMode]:checked').val()
+                };
 
                 if ((64 <= ~DISPLAY_HEIGHT~) && (64 <= ~DISPLAY_WIDTH~))
                 {
-                    configJson["analogClock"] = 
-                        {
-                            secondsMode: $('input[name=secondsMode]:checked').val(),
-                            handHourCol: $("#handHourCol").val(),
-                            handMinCol: $("#handMinCol").val(),
-                            handSecCol: $("#handSecCol").val(),
-                            ringFiveMinCol: $("#ringFiveMinCol").val(),
-                            ringMinDotCol: $("#ringMinDotCol").val()
-                        };
+                    configJson["analogClock"] =
+                    {
+                        secondsMode: $('input[name=secondsMode]:checked').val(),
+                        handHourCol: $("#handHourCol").val(),
+                        handMinCol: $("#handMinCol").val(),
+                        handSecCol: $("#handSecCol").val(),
+                        ringFiveMinCol: $("#ringFiveMinCol").val(),
+                        ringMinDotCol: $("#ringMinDotCol").val()
+                    };
                 }
 
                 return utils.makeRequest({
@@ -348,16 +350,16 @@
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true,
                     parameter: configJson
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
@@ -371,7 +373,7 @@
                 /* Enable extended options for screens >= 64x64. */
                 if ((displayWidth >= 64) && (displayHeight >= 64)) {
                     let opt64x64 = document.getElementById("options64x64");
-                    opt64x64.style.display  = "block";
+                    opt64x64.style.display = "block";
                 }
 
                 /* Load time zones dynamically. */
@@ -391,10 +393,20 @@
                     });
 
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                getPluginInstances().then(function (cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        var uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            for (var i = 0; i < select.options.length; i++) {
+                                if (select.options[i].value === uidFromUrl) {
+                                    select.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
 
                         return getConfig(
                             select.options[select.selectedIndex].value
@@ -405,4 +417,5 @@
             });
         </script>
     </body>
+
 </html>

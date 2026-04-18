@@ -2,37 +2,42 @@
 
 var utils = window.utils || {};
 
-utils.enableForm = function(formId, enableIt) {
-    var form        = document.getElementById(formId);
-    var elements    = form.elements;
-    var index       = 0;
+utils.getURLParameter = function (name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+};
+
+utils.enableForm = function (formId, enableIt) {
+    var form = document.getElementById(formId);
+    var elements = form.elements;
+    var index = 0;
 
     for (index = 0; index < elements.length; ++index) {
         elements[index].disabled = (false === enableIt) ? true : false;
     }
 };
 
-utils.obj2FormData = function(obj, formData = new FormData()) {
+utils.obj2FormData = function (obj, formData = new FormData()) {
 
     this.formData = formData;
 
-    this.createFormData = function(obj, subKeyStr = "") {
-        
-        for(let i in obj) {
-            let value          = obj[i];
+    this.createFormData = function (obj, subKeyStr = "") {
+
+        for (let i in obj) {
+            let value = obj[i];
             let subKeyStrTrans;
-            
+
             if (obj instanceof Array) {
                 subKeyStrTrans = subKeyStr ? subKeyStr + "._" + i + "_" : i;
             } else {
                 subKeyStrTrans = subKeyStr ? subKeyStr + "." + i : i;
-            }                
+            }
 
-            if ((typeof(value) === "string") || (typeof(value) === "number")|| (typeof(value) === "boolean") || (value instanceof File)) {
+            if ((typeof (value) === "string") || (typeof (value) === "number") || (typeof (value) === "boolean") || (value instanceof File)) {
 
                 this.formData.append(subKeyStrTrans, value);
 
-            } else if (typeof(value) === "object") {
+            } else if (typeof (value) === "object") {
 
                 this.createFormData(value, subKeyStrTrans);
             }
@@ -44,8 +49,8 @@ utils.obj2FormData = function(obj, formData = new FormData()) {
     return this.formData;
 };
 
-utils.makeRequest = function(options) {
-    return new Promise(function(resolve, reject) {
+utils.makeRequest = function (options) {
+    return new Promise(function (resolve, reject) {
         if ("object" !== typeof options) {
             reject({ msg: "Arguments are missing." });
         } else if ("string" !== typeof options.method) {
@@ -53,11 +58,11 @@ utils.makeRequest = function(options) {
         } else if ("string" !== typeof options.url) {
             reject({ msg: "URL is missing." });
         } else {
-            var xhr             = new XMLHttpRequest();
-            var formData        = null;
-            var urlEncodedPar   = "";
-            var isJsonResponse  = false;
-            var isFirst         = true;
+            var xhr = new XMLHttpRequest();
+            var formData = null;
+            var urlEncodedPar = "";
+            var isJsonResponse = false;
+            var isFirst = true;
             var key;
 
             if ("object" === typeof options.formData) {
@@ -67,7 +72,7 @@ utils.makeRequest = function(options) {
                 if ("get" === options.method.toLowerCase()) {
                     urlEncodedPar += "?";
 
-                    for(key in options.parameter) {
+                    for (key in options.parameter) {
                         if (true === isFirst) {
                             isFirst = false;
                         } else {
@@ -89,7 +94,7 @@ utils.makeRequest = function(options) {
             xhr.open(options.method, options.url + urlEncodedPar);
 
             if ("undefined" !== typeof options.headers) {
-                Object.keys(options.headers).forEach(function(key) {
+                Object.keys(options.headers).forEach(function (key) {
                     xhr.setRequestHeader(key, options.headers[key]);
                 });
             }
@@ -98,7 +103,7 @@ utils.makeRequest = function(options) {
                 xhr.upload.onprogress = options.onProgress;
             }
 
-            xhr.onload = function() {
+            xhr.onload = function () {
                 var jsonRsp = null;
 
                 if (200 !== xhr.status) {
@@ -123,12 +128,12 @@ utils.makeRequest = function(options) {
                 }
             };
 
-            xhr.ontimeout = function() {
+            xhr.ontimeout = function () {
                 console.error(xhr.statusText);
                 reject("Timeout");
             };
 
-            xhr.onerror = function() {
+            xhr.onerror = function () {
                 console.error(xhr.statusText);
                 reject("Error");
             };
@@ -142,13 +147,13 @@ utils.makeRequest = function(options) {
     });
 };
 
-utils.readJsonFile = function(file) {
-    return new Promise(function(resolve, reject) {
+utils.readJsonFile = function (file) {
+    return new Promise(function (resolve, reject) {
         var rawFile = new XMLHttpRequest();
 
         rawFile.overrideMimeType("application/json");
         rawFile.open("GET", file, true);
-        rawFile.onreadystatechange = function() {
+        rawFile.onreadystatechange = function () {
             if ((4 === rawFile.readyState) && ("200" === rawFile.status)) {
                 resolve(rawFile.responseText);
             }
@@ -157,16 +162,16 @@ utils.readJsonFile = function(file) {
     });
 };
 
-utils.checkBMPFile = function(file) {
-    return new Promise(function(resolve, reject) {
+utils.checkBMPFile = function (file) {
+    return new Promise(function (resolve, reject) {
         var reader = new FileReader();
 
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             resolve(e.target.result);
         };
 
         reader.readAsArrayBuffer(file);
-    }).then(function(buffer) {
+    }).then(function (buffer) {
         var bitmapHeaderSize = 54;
         var header = new Uint8Array(buffer, 0, bitmapHeaderSize);
         var planes = (header[27] << 8) | (header[26] << 0);

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,6 +13,7 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -95,7 +97,7 @@
                             <option value="imperial">imperial</option>
                         </select>
                     </div>
-                    <input name="submit" type="submit" value="Update"/>
+                    <input name="submit" type="submit" value="Update" />
                 </form>
             </div>
         </main>
@@ -123,8 +125,8 @@
 
         <script>
 
-            var pluginName  = "OpenWeatherPlugin";
-            var restClient  = new pixelix.rest.Client();
+            var pluginName = "OpenWeatherPlugin";
+            var restClient = new pixelix.rest.Client();
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -135,13 +137,13 @@
             }
 
             function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
@@ -156,8 +158,8 @@
                             optionText += ")";
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
 
                             $("#pluginUid").append($option);
 
@@ -166,7 +168,7 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
@@ -206,7 +208,7 @@
                     method: "GET",
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/weather",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#sourceId").val(rsp.data.sourceId);
                     $("#updatePeriod").val(rsp.data.updatePeriod);
                     $("#apiKey").val(rsp.data.apiKey);
@@ -214,9 +216,9 @@
                     $("#longitude").val(rsp.data.longitude);
                     $("#units").val(rsp.data.units);
                     setWeatherInfo(rsp.data.weatherInfo);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -225,7 +227,7 @@
                 var weatherInfo = 0;
                 var $boxes = $('input[name=weatherInfo]:checked');
 
-                $boxes.each(function() {
+                $boxes.each(function () {
                     weatherInfo += parseInt(this.value);
                 });
 
@@ -248,16 +250,16 @@
                         weatherInfo: getWeatherInfo(),
                         units: $("#units").val()
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
@@ -266,10 +268,20 @@
                 disableUI();
 
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                getPluginInstances().then(function (cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        var uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            for (var i = 0; i < select.options.length; i++) {
+                                if (select.options[i].value === uidFromUrl) {
+                                    select.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
 
                         return getConfig(
                             select.options[select.selectedIndex].value
@@ -279,4 +291,5 @@
             });
         </script>
     </body>
+
 </html>

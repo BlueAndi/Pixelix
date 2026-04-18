@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,6 +13,7 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -61,16 +63,16 @@
                             <legend>Tone 1</legend>
                             <div class="form-group mb-3">
                                 <label class="form-label" for="freq_0">Signal frequency [Hz]:</label>
-                                <input class="form-control" id="freq_0" type="number" min="0" max="20000"/>
+                                <input class="form-control" id="freq_0" type="number" min="0" max="20000" />
                             </div>
                             <div class="form-group mb-3">
                                 <label class="form-label" for="minDuration_0">Min. duration [ms]:</label>
-                                <input class="form-control" id="minDuration_0" type="number" min="0" max="10000"/>
+                                <input class="form-control" id="minDuration_0" type="number" min="0" max="10000" />
                                 <small class="form-text">The minimum duration the signal must be present to be detected.</small>
                             </div>
                             <div class="form-group mb-3">
                                 <label class="form-label" for="threshold_0">Threshold:</label>
-                                <input class="form-control" id="threshold_0" type="number" min="0" max="40000"/>
+                                <input class="form-control" id="threshold_0" type="number" min="0" max="40000" />
                                 <small class="form-text">The frequency must be over this threshold to be able to detect it. Usually good values are above 2000.</small>
                             </div>
                         </fieldset>
@@ -78,25 +80,25 @@
                             <legend>Tone 2</legend>
                             <div class="form-group mb-3">
                                 <label class="form-label" for="freq_1">Signal frequency [Hz]:</label>
-                                <input class="form-control" id="freq_1" type="number" min="0" max="20000"/>    
+                                <input class="form-control" id="freq_1" type="number" min="0" max="20000" />
                             </div>
                             <div class="form-group mb-3">
                                 <label class="form-label" for="minDuration_1">Min. duration [ms]:</label>
-                                <input class="form-control" id="minDuration_1" type="number" min="0" max="10000"/>
+                                <input class="form-control" id="minDuration_1" type="number" min="0" max="10000" />
                                 <small class="form-text">The minimum duration the signal must be present to be detected.</small>
                             </div>
                             <div class="form-group mb-3">
                                 <label class="form-label" for="threshold_1">Threshold:</label>
-                                <input class="form-control" id="threshold_1" type="number" min="0" max="40000"/>
+                                <input class="form-control" id="threshold_1" type="number" min="0" max="40000" />
                                 <small class="form-text">The frequency must be over this threshold to be able to detect it. Usually good values are above 2000.</small>
                             </div>
                         </fieldset>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -120,8 +122,8 @@
 
         <script>
 
-            var pluginName  = "SignalDetectorPlugin";
-            var restClient  = new pixelix.rest.Client();
+            var pluginName = "SignalDetectorPlugin";
+            var restClient = new pixelix.rest.Client();
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -132,20 +134,20 @@
             }
 
             function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var elemIndex   = 0;
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var elements    = document.getElementsByName("pluginUid");
-                    var $option     = null;
-                    var optionText  = ""
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var elemIndex = 0;
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var elements = document.getElementsByName("pluginUid");
+                    var $option = null;
+                    var optionText = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -154,12 +156,12 @@
 
                             optionText += ")";
 
-                            for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+                            for (elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                                 $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                                
+                                    .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                    .text(optionText);
+
                                 $(elements[elemIndex]).append($option);
                             }
 
@@ -168,7 +170,7 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
@@ -180,21 +182,21 @@
                     method: "GET",
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/signalDetector",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     var index = 0;
 
                     $("#text").val(rsp.data.text);
                     $("#pushUrl").val(rsp.data.pushUrl);
 
-                    for(index = 0; index < rsp.data.tones.length; ++index) {
+                    for (index = 0; index < rsp.data.tones.length; ++index) {
                         $("#freq_" + index).val(rsp.data.tones[index].frequency);
                         $("#minDuration_" + index).val(rsp.data.tones[index].minDuration);
                         $("#threshold_" + index).val(rsp.data.tones[index].threshold);
                     }
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -206,7 +208,7 @@
                     url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/signalDetector",
                     isJsonResponse: true,
                     parameter: {
-                        text:  $("#text").val(),
+                        text: $("#text").val(),
                         pushUrl: $("#pushUrl").val(),
                         "tones._0_.frequency": $("#freq_0").val(),
                         "tones._0_.minDuration": $("#minDuration_0").val(),
@@ -215,28 +217,38 @@
                         "tones._1_.minDuration": $("#minDuration_1").val(),
                         "tones._1_.threshold": $("#threshold_1").val()
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                getPluginInstances().then(function (cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        var uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            for (var i = 0; i < select.options.length; i++) {
+                                if (select.options[i].value === uidFromUrl) {
+                                    select.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
 
                         return getConfig(
                             select.options[select.selectedIndex].value
@@ -246,4 +258,5 @@
             });
         </script>
     </body>
+
 </html>
