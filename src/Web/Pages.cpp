@@ -55,6 +55,7 @@
 
 #include <mbedtls/version.h>
 #include <freertos/task.h>
+#include <esp_littlefs.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -133,14 +134,15 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
     { "HEAP_SIZE", []() -> String { return String(MemUtil::getTotalHeapSize()); } },
     { "HEAP_SIZE_AVAILABLE", []() -> String { return String(MemUtil::getFreeHeapSize()); } },
+    { "HOSTNAME", tmpl::getHostname },
     { "IMAGE_FILE_EXTENSIONS", []() -> String { return tmpl::getImageFileExtensions(); } },
+    { "IPV4", tmpl::getIPAddress },
+    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
+    { "LITTLEFS_VERSION", []() -> String { return String(ESP_LITTLEFS_VERSION_NUMBER); } },
+    { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
     { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
     { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
     { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
-    { "HOSTNAME", tmpl::getHostname },
-    { "IPV4", tmpl::getIPAddress },
-    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
-    { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
     { "RSSI", []() -> String { return String(WiFi.RSSI()); } },
     { "SSID", []() -> String { return WiFi.SSID(); } },
     { "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); } },
