@@ -16,7 +16,8 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 Click on the preview to see the video.
 
-[![wwha-blue](./doc/images/wwha-blue.svg)](./doc/HOMEASSISTANT.md)
+[![wwha-blue](./doc/images/wwha-blue.svg)](./doc/HOMEASSISTANT.md)\
+[![makapix-bluc](./doc/images/MakapixClub/MakapixClubBadge.png)](https://makapix.club/)
 
 ___
 
