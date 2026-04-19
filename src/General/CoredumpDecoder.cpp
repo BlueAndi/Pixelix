@@ -57,6 +57,7 @@
 
 static const esp_partition_t* findCoredumpPartition();
 static const char*            getExceptionCauseName(uint32_t causeCode);
+static String                 sanitizeHashString(const uint8_t* hash, size_t hashLen);
 
 /******************************************************************************
  * Local Variables
@@ -181,8 +182,8 @@ CoredumpStatus getCoredumpSummary(JsonObject& jsonData)
             else
             {
                 /* Get coredump summary using ESP-IDF API */
-                esp_core_dump_summary_t summary;
-                esp_err_t               err = esp_core_dump_get_summary(&summary);
+                esp_core_dump_summary_t summary = {};
+                esp_err_t               err     = esp_core_dump_get_summary(&summary);
 
                 if (ESP_OK != err)
                 {
@@ -192,13 +193,23 @@ CoredumpStatus getCoredumpSummary(JsonObject& jsonData)
                 else
                 {
                     /* Populate JSON with human-readable crash information */
-                    jsonData["crashedTask"]    = summary.exc_task;
-                    jsonData["exceptionCause"] = getExceptionCauseName(summary.ex_info.exc_cause);
-                    jsonData["exceptionCode"]  = summary.ex_info.exc_cause;
-                    jsonData["exceptionAddr"]  = String("0x") + String(summary.ex_info.exc_vaddr, HEX);
+                    jsonData["crashedTask"]     = summary.exc_task;
+                    jsonData["crashedTaskTcb"]  = String("0x") + String(summary.exc_tcb, HEX);
+                    jsonData["exceptionCause"]  = getExceptionCauseName(summary.ex_info.exc_cause);
+                    jsonData["exceptionCode"]   = summary.ex_info.exc_cause;
+                    jsonData["exceptionAddr"]   = String("0x") + String(summary.ex_info.exc_vaddr, HEX);
+                    jsonData["exceptionPc"]     = String("0x") + String(summary.exc_pc, HEX);
+                    jsonData["coredumpVersion"] = summary.core_dump_version;
+
+                    String appElfSha256         = sanitizeHashString(summary.app_elf_sha256, sizeof(summary.app_elf_sha256));
+
+                    if (0U < appElfSha256.length())
+                    {
+                        jsonData["appElfSha256"] = appElfSha256;
+                    }
 
                     /* Add register content - Address registers (A0-A15) from exception frame */
-                    JsonObject registers       = jsonData.createNestedObject("registers");
+                    JsonObject registers = jsonData.createNestedObject("registers");
 
                     for (uint32_t idx = 0U; idx < 16U; ++idx)
                     {
@@ -207,8 +218,21 @@ CoredumpStatus getCoredumpSummary(JsonObject& jsonData)
                     }
 
                     /* Exception cause and address (also shown at top level for convenience) */
-                    registers["EXCCAUSE"]      = summary.ex_info.exc_cause;
-                    registers["EXCVADDR"]      = String("0x") + String(summary.ex_info.exc_vaddr, HEX);
+                    registers["EXCCAUSE"]  = summary.ex_info.exc_cause;
+                    registers["EXCVADDR"]  = String("0x") + String(summary.ex_info.exc_vaddr, HEX);
+
+                    /* Add EPCx registers (interrupt level PCs) if they are available. */
+                    JsonObject epcx        = jsonData.createNestedObject("epcx");
+                    uint32_t   maxEpcxSize = sizeof(summary.ex_info.epcx) / sizeof(summary.ex_info.epcx[0]);
+
+                    for (uint32_t idx = 0U; idx < maxEpcxSize; ++idx)
+                    {
+                        if (0U != (summary.ex_info.epcx_reg_bits & (1U << idx)))
+                        {
+                            String regName = "EPC" + String(idx + 1U);
+                            epcx[regName]  = String("0x") + String(summary.ex_info.epcx[idx], HEX);
+                        }
+                    }
 
                     /* Add backtrace array - use actual depth from structure */
                     JsonArray backtrace        = jsonData.createNestedArray("backtrace");
@@ -220,7 +244,8 @@ CoredumpStatus getCoredumpSummary(JsonObject& jsonData)
                         backtrace.add(addr);
                     }
 
-                    jsonData["backtraceDepth"] = summary.exc_bt_info.depth;
+                    jsonData["backtraceDepth"]     = summary.exc_bt_info.depth;
+                    jsonData["backtraceCorrupted"] = summary.exc_bt_info.corrupted;
                 }
             }
         }
@@ -389,4 +414,52 @@ static const char* getExceptionCauseName(uint32_t causeCode)
     }
 
     return causeName;
+}
+
+/**
+ * Convert the raw ELF hash field into a printable lowercase hexadecimal string.
+ *
+ * @param[in] hash      Raw hash field buffer.
+ * @param[in] hashLen   Buffer length in bytes.
+ *
+ * @return Sanitized hash string or empty string if input is invalid.
+ */
+static String sanitizeHashString(const uint8_t* hash, size_t hashLen)
+{
+    String hashString;
+
+    if ((nullptr != hash) && (0U < hashLen))
+    {
+        size_t idx = 0U;
+
+        while (hashLen > idx)
+        {
+            char chr = static_cast<char>(hash[idx]);
+
+            if ('\0' == chr)
+            {
+                break;
+            }
+
+            if ((('0' <= chr) && ('9' >= chr)) ||
+                (('a' <= chr) && ('f' >= chr)) ||
+                (('A' <= chr) && ('F' >= chr)))
+            {
+                if (('A' <= chr) && ('F' >= chr))
+                {
+                    chr = static_cast<char>(chr + ('a' - 'A'));
+                }
+
+                hashString += chr;
+            }
+            else
+            {
+                break;
+            }
+
+            ++idx;
+        }
+    }
+
+    return hashString;
 }

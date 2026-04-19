@@ -2491,16 +2491,24 @@ paths:
           "status": "ok",
           "data": {
             "crashedTask": "IDLE0",
+            "crashedTaskTcb": "0x3fca4f20",
             "exceptionCause": "LoadProhibited",
             "exceptionCode": 28,
             "exceptionAddr": "0x00000000",
+            "exceptionPc": "0x40084659",
+            "coredumpVersion": 2,
+            "appElfSha256": "9f2f6f7f1c74f58f00112233445566778899aabbccddeeff0011223344556677",
             "registers": {
               "A0": "0x80090c10",
               "A1": "0x3ffbf1bc",
               ...
             },
+            "epcx": {
+              "EPC1": "0x40081234"
+            },
             "backtrace": ["0x40084659"],
-            "backtraceDepth": 1
+            "backtraceDepth": 1,
+            "backtraceCorrupted": false
           }
         }
         ```
@@ -2573,6 +2581,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /coredump/download:
+    get:
+      tags:
+        - Common
+      summary: Download raw coredump image
+      description: |
+        Download the raw ELF coredump image from flash.
+
+        This endpoint is intended for host-side analysis with ESP-IDF tools,
+        for example `idf.py coredump-info` to inspect all captured tasks and stacks.
+      operationId: downloadCoredump
+      responses:
+        "200":
+          description: Raw coredump image stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Coredump partition not found or no coredump data present
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Failed to validate, read, or stream coredump data
+          content:
+            text/plain:
+              schema:
+                type: string
       security:
         - pixelixAuth: []
   /partitionChange:

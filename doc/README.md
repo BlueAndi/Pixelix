@@ -27,6 +27,7 @@
 - [Plugins](PLUGINS.md)
 - [Plugin Development](PLUGIN-DEV.md)
 - [Websocket API description](WEBSOCKET.md)
+- [Coredump Analysis & Debugging](COREDUMP-ANALYSIS.md)
 - [Alternative icons](ICONS.md)
 - [Configuration examples for GrabViaMqttPlugin and GrabViaRestPlugin.](./grabConfigs/README.md)
 

@@ -54,6 +54,7 @@
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item" role="presentation"><a class="nav-link active" id="logging-tab" data-bs-toggle="tab" role="tab" href="#logging" aria-controls="logging" aria-selected="true">Logging</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="measurement-tab" data-bs-toggle="tab" role="tab" href="#measurement" aria-controls="measurement" aria-selected="false">Measurement</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="coredump-tab" data-bs-toggle="tab" role="tab" href="#coredump" aria-controls="coredump" aria-selected="false">Coredump</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="restart-tab" data-bs-toggle="tab" role="tab" href="#restart" aria-controls="restart" aria-selected="false">Restart</a></li>
                 </ul>
                 <div class="tab-content" id="myTabContent">
@@ -102,6 +103,57 @@
                         </p>
                     </div>
 
+                    <div class="tab-pane fade" id="coredump" role="tabpanel" aria-labelledby="coredump-tab">
+                        <br />
+                        <div class="btn-toolbar" role="toolbar" aria-label="Coredump Toolbar">
+                            <div class="btn-group me-2" role="group" aria-label="Coredump Actions">
+                                <button class="btn btn-light" id="buttonCoredumpRefresh" type="button" onclick="refreshCoredumpInfo();" disabled>Refresh</button>
+                                <button class="btn btn-light" id="buttonCoredumpDecode" type="button" onclick="showCoredumpDecodedDetails();" disabled>Additional Decode</button>
+                                <button class="btn btn-light" id="buttonCoredumpDownload" type="button" onclick="downloadCoredump();" disabled>Download ELF</button>
+                                <button class="btn btn-light" id="buttonCoredumpClear" type="button" onclick="clearCoredump();" disabled>Clear</button>
+                            </div>
+                        </div>
+                        <p>View coredump summary and download raw ELF for host-side analysis.</p>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="coredumpOutput">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Available</th>
+                                        <td id="coredumpHasDump">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Task</th>
+                                        <td id="coredumpTask">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Exception</th>
+                                        <td id="coredumpException">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Exception PC</th>
+                                        <td id="coredumpPc">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Exception Address</th>
+                                        <td id="coredumpAddr">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Backtrace</th>
+                                        <td id="coredumpBacktrace">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Corrupted</th>
+                                        <td id="coredumpCorrupted">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">App ELF SHA256</th>
+                                        <td id="coredumpSha">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="tab-pane fade" id="restart" role="tabpanel" aria-labelledby="restart-tab">
                         <br />
                         <p>Restart the system now: </p>
@@ -144,6 +196,199 @@
             var isMeasurementEnabled = false;
             var filter = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
             var isIperfAvailable = false;
+            var isCoredumpTabInitialized = false;
+
+            function setCoredumpCell(id, value) {
+                var text = "-";
+
+                if (("undefined" !== typeof value) && (null !== value) && ("" !== value)) {
+                    text = value;
+                }
+
+                $(id).text(text);
+            }
+
+            function resetCoredumpView() {
+                setCoredumpCell("#coredumpHasDump", "-");
+                setCoredumpCell("#coredumpTask", "-");
+                setCoredumpCell("#coredumpException", "-");
+                setCoredumpCell("#coredumpPc", "-");
+                setCoredumpCell("#coredumpAddr", "-");
+                setCoredumpCell("#coredumpBacktrace", "-");
+                setCoredumpCell("#coredumpCorrupted", "-");
+                setCoredumpCell("#coredumpSha", "-");
+            }
+
+            function renderCoredumpData(data) {
+                var hasCoredump = false;
+                var hasBacktrace = false;
+                var backtraceText = "-";
+
+                if (("undefined" !== typeof data.hasCoredump) && (null !== data.hasCoredump)) {
+                    hasCoredump = (true === data.hasCoredump);
+                } else if ("undefined" !== typeof data.crashedTask) {
+                    hasCoredump = true;
+                }
+
+                if (("undefined" !== typeof data.backtrace) && (null !== data.backtrace) && (0 < data.backtrace.length)) {
+                    hasBacktrace = true;
+                }
+
+                if (true === hasBacktrace) {
+                    backtraceText = data.backtrace.join(", ");
+                }
+
+                setCoredumpCell("#coredumpHasDump", hasCoredump ? "Yes" : "No");
+                setCoredumpCell("#coredumpTask", data.crashedTask);
+
+                if (("undefined" !== typeof data.exceptionCause) && ("undefined" !== typeof data.exceptionCode)) {
+                    setCoredumpCell("#coredumpException", data.exceptionCause + " (" + data.exceptionCode + ")");
+                } else {
+                    setCoredumpCell("#coredumpException", data.exceptionCause);
+                }
+
+                setCoredumpCell("#coredumpPc", data.exceptionPc);
+                setCoredumpCell("#coredumpAddr", data.exceptionAddr);
+                setCoredumpCell("#coredumpBacktrace", backtraceText);
+                setCoredumpCell("#coredumpCorrupted", data.backtraceCorrupted);
+                setCoredumpCell("#coredumpSha", data.appElfSha256);
+            }
+
+            function setCoredumpButtonsState(isDisabled) {
+                $("#buttonCoredumpRefresh").prop("disabled", isDisabled);
+                $("#buttonCoredumpDecode").prop("disabled", isDisabled);
+                $("#buttonCoredumpDownload").prop("disabled", isDisabled);
+                $("#buttonCoredumpClear").prop("disabled", isDisabled);
+            }
+
+            function escapeHtml(text) {
+                var escaped = String(text);
+
+                escaped = escaped.replaceAll("&", "&amp;");
+                escaped = escaped.replaceAll("<", "&lt;");
+                escaped = escaped.replaceAll(">", "&gt;");
+                escaped = escaped.replaceAll("\"", "&quot;");
+                escaped = escaped.replaceAll("'", "&#039;");
+
+                return escaped;
+            }
+
+            function showCoredumpDecodedDetails() {
+                setCoredumpButtonsState(true);
+
+                fetch("/rest/api/v1/coredump?decode=true", {
+                    method: "GET"
+                }).then(function (rsp) {
+                    return rsp.json().then(function (body) {
+                        return {
+                            ok: rsp.ok,
+                            status: rsp.status,
+                            body: body
+                        };
+                    });
+                }).then(function (result) {
+                    if ((true === result.ok) && ("ok" === result.body.status)) {
+                        var data = result.body.data || {};
+                        var hasDump = false;
+                        var title = "Coredump Decode";
+                        var details = "";
+
+                        if (("undefined" !== typeof data.hasCoredump) && (null !== data.hasCoredump)) {
+                            hasDump = (true === data.hasCoredump);
+                        } else if ("undefined" !== typeof data.crashedTask) {
+                            hasDump = true;
+                        }
+
+                        if (false === hasDump) {
+                            return dialog.showInfo("<p>No coredump data available.</p>");
+                        }
+
+                        details = escapeHtml(JSON.stringify(data, null, 2));
+                        return dialog.showInfo("<p>Extended decoded data:</p><pre class='text-start' style='max-height:420px; overflow:auto; white-space:pre-wrap;'>" + details + "</pre>", title);
+                    } else if (("undefined" !== typeof result.body.error) && ("undefined" !== typeof result.body.error.msg)) {
+                        return dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
+                    } else {
+                        return dialog.showError("<p>Error: Could not decode coredump details.</p>");
+                    }
+                }).catch(function (err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    return dialog.showError("<p>Error: Could not decode coredump details.</p>");
+                }).finally(function () {
+                    setCoredumpButtonsState(false);
+                });
+            }
+
+            function refreshCoredumpInfo() {
+                setCoredumpButtonsState(true);
+
+                fetch("/rest/api/v1/coredump?decode=true", {
+                    method: "GET"
+                }).then(function (rsp) {
+                    return rsp.json().then(function (body) {
+                        return {
+                            ok: rsp.ok,
+                            status: rsp.status,
+                            body: body
+                        };
+                    });
+                }).then(function (result) {
+                    if ((true === result.ok) && ("ok" === result.body.status)) {
+                        renderCoredumpData(result.body.data || {});
+                    } else if (("undefined" !== typeof result.body.error) && ("undefined" !== typeof result.body.error.msg)) {
+                        resetCoredumpView();
+                        setCoredumpCell("#coredumpHasDump", "No");
+                        return dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
+                    } else {
+                        return dialog.showError("<p>Error: Could not read coredump information.</p>");
+                    }
+                }).catch(function (err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    return dialog.showError("<p>Error: Could not read coredump information.</p>");
+                }).finally(function () {
+                    setCoredumpButtonsState(false);
+                });
+            }
+
+            function clearCoredump() {
+                setCoredumpButtonsState(true);
+
+                fetch("/rest/api/v1/coredump", {
+                    method: "DELETE"
+                }).then(function (rsp) {
+                    return rsp.json().then(function (body) {
+                        return {
+                            ok: rsp.ok,
+                            status: rsp.status,
+                            body: body
+                        };
+                    });
+                }).then(function (result) {
+                    if ((true === result.ok) && ("ok" === result.body.status)) {
+                        resetCoredumpView();
+                        setCoredumpCell("#coredumpHasDump", "No");
+                        return dialog.showInfo("<p>Coredump cleared.</p>");
+                    } else if (("undefined" !== typeof result.body.error) && ("undefined" !== typeof result.body.error.msg)) {
+                        return dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
+                    } else {
+                        return dialog.showError("<p>Error: Failed to clear coredump.</p>");
+                    }
+                }).catch(function (err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    return dialog.showError("<p>Error: Failed to clear coredump.</p>");
+                }).finally(function () {
+                    setCoredumpButtonsState(false);
+                });
+            }
+
+            function downloadCoredump() {
+                window.location.href = "/rest/api/v1/coredump/download";
+            }
 
             function toggleLogLevel(logLevel) {
                 var index = filter.indexOf(logLevel);
@@ -347,6 +592,13 @@
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
+                });
+
+                $("#coredump-tab").on("shown.bs.tab", function () {
+                    if (false === isCoredumpTabInitialized) {
+                        isCoredumpTabInitialized = true;
+                        refreshCoredumpInfo();
+                    }
                 });
 
                 /* Connect to pixelix */

@@ -55,6 +55,8 @@
 #include <SettingsService.h>
 #include <FileUtil.h>
 #include <MemUtil.h>
+#include <esp_core_dump.h>
+#include <esp_partition.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -130,6 +132,7 @@ static void                         handleHomeAssistantAutomaticDiscoveryDisable
 static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus();
 static void                         handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* request);
 static void                         handleCoredump(AsyncWebServerRequest* request);
+static void                         handleCoredumpDownload(AsyncWebServerRequest* request);
 static bool                         isPathSafe(const String& path);
 
 /******************************************************************************
@@ -168,6 +171,7 @@ static const RestApiRoute gRestApiRoutes[] = {
     { "/partitionChange", HTTP_POST, handlePartitionChange, nullptr, nullptr },
     { "/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable, nullptr, nullptr },
     { "/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr },
+    { "/coredump/download", HTTP_GET, handleCoredumpDownload, nullptr, nullptr },
     { "/coredump", HTTP_GET | HTTP_DELETE, handleCoredump, nullptr, nullptr }
 };
 
@@ -2227,6 +2231,146 @@ static void handleCoredump(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Download raw coredump image from flash for host-side analysis.
+ * GET \c "/api/v1/coredump/download"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleCoredumpDownload(AsyncWebServerRequest* request)
+{
+    const esp_partition_t*  partition       = nullptr;
+    esp_err_t               err             = ESP_OK;
+    size_t                  imageAddr       = 0U;
+    size_t                  imageSize       = 0U;
+    size_t                  partitionOffset = 0U;
+    AsyncWebServerResponse* response        = nullptr;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const char*             contentType     = "text/plain";
+    const char*             message         = nullptr;
+    bool                    isReadyToStream = false;
+
+    if (nullptr != request)
+    {
+        if (HTTP_GET != request->method())
+        {
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            message        = "HTTP method not supported.";
+        }
+        else
+        {
+            partition = esp_partition_find_first(
+                ESP_PARTITION_TYPE_DATA,
+                ESP_PARTITION_SUBTYPE_DATA_COREDUMP,
+                nullptr);
+
+            if (nullptr == partition)
+            {
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                message        = "Coredump partition not found.";
+            }
+            else
+            {
+                err = esp_core_dump_image_check();
+
+                if (ESP_ERR_NOT_FOUND == err)
+                {
+                    httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    message        = "No coredump data found.";
+                }
+                else if (ESP_OK != err)
+                {
+                    LOG_WARNING("Coredump image check failed: %d", err);
+                    httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                    message        = "Failed to validate coredump data.";
+                }
+                else
+                {
+                    err = esp_core_dump_image_get(&imageAddr, &imageSize);
+
+                    if (ESP_OK != err)
+                    {
+                        LOG_WARNING("Failed to get coredump image info: %d", err);
+                        httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                        message        = "Failed to get coredump image info.";
+                    }
+                    else
+                    {
+                        const uint64_t partitionStart = partition->address;
+                        const uint64_t partitionEnd   = partitionStart + partition->size;
+                        const uint64_t imageStart     = imageAddr;
+                        const uint64_t imageEnd       = imageStart + imageSize;
+
+                        if ((0U == imageSize) ||
+                            (partitionStart > imageStart) ||
+                            (partitionEnd < imageEnd))
+                        {
+                            LOG_WARNING("Invalid coredump image boundaries: addr=%u size=%u", static_cast<uint32_t>(imageAddr), static_cast<uint32_t>(imageSize));
+                            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                            message        = "Invalid coredump image boundaries.";
+                        }
+                        else
+                        {
+                            partitionOffset = imageAddr - partition->address;
+                            contentType     = "application/octet-stream";
+                            isReadyToStream = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (true == isReadyToStream)
+        {
+            response = request->beginChunkedResponse(
+                contentType,
+                [partition, partitionOffset, imageSize](uint8_t* buffer, size_t maxLen, size_t index) -> size_t {
+                    size_t bytesWritten = 0U;
+
+                    if (imageSize > index)
+                    {
+                        size_t bytesToRead = imageSize - index;
+
+                        if (bytesToRead > maxLen)
+                        {
+                            bytesToRead = maxLen;
+                        }
+
+                        esp_err_t readErr = esp_partition_read(partition, partitionOffset + index, buffer, bytesToRead);
+
+                        if (ESP_OK == readErr)
+                        {
+                            bytesWritten = bytesToRead;
+                        }
+                        else
+                        {
+                            LOG_ERROR("Failed to read coredump chunk at offset %u: %d", static_cast<uint32_t>(partitionOffset + index), readErr);
+                        }
+                    }
+
+                    return bytesWritten;
+                });
+
+            if (nullptr == response)
+            {
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                contentType    = "text/plain";
+                message        = "Failed to prepare coredump download response.";
+            }
+            else
+            {
+                response->addHeader("Content-Disposition", "attachment; filename=\"coredump.elf\"");
+                response->addHeader("X-Content-Type-Options", "nosniff");
+                request->send(response);
+            }
+        }
+        else
+        {
+            request->send(httpStatusCode, contentType, message);
+        }
+    }
 }
 
 /**
