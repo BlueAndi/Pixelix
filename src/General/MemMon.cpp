@@ -37,6 +37,8 @@
 
 #include <Logging.h>
 #include <MemUtil.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,10 +68,16 @@ bool MemMon::start()
 {
     bool                    isSuccessful        = true;
     esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t caps, const char* functionName) -> void {
+        TaskHandle_t hCurrentTask       = xTaskGetCurrentTaskHandle();
+        const char*  taskName           = pcTaskGetName(hCurrentTask);
+        UBaseType_t  stackHighWatermark = uxTaskGetStackHighWaterMark(hCurrentTask);
+
         LOG_ERROR("Memory allocation failed.");
         LOG_ERROR("Size          : %u bytes", size);
         LOG_ERROR("Capability    : 0x%04X", caps);
         LOG_ERROR("Function      : %s", functionName);
+        LOG_ERROR("Task          : %s", (nullptr != taskName) ? taskName : "?");
+        LOG_ERROR("Stack reserve : %u words", static_cast<unsigned>(stackHighWatermark));
         LOG_ERROR("Largest avail.: %u bytes", MemUtil::getLargestFreeBlockSize());
     };
 
