@@ -52,7 +52,6 @@
 #include <IGifLoader.h>
 #include <TypedAllocator.hpp>
 #include <PsAllocator.hpp>
-#include "LzwDecoder.h"
 
 /******************************************************************************
  * Macros
@@ -287,7 +286,6 @@ private:
     YAGfxDynamicBitmap                           m_bitmap;                 /**< The bitmap contains the last drawn scene. */
     IGifLoader*                                  m_gifLoader;              /**< GIF file loader used to read the file. */
     YAGfxCanvas                                  m_canvas;                 /**< Canvas used for drawing each scene. Its position and size follows the image descriptor. */
-    LzwDecoder                                   m_lzwDecoder;             /**< LZW decoder used to decode the image data. */
     uint8_t                                      m_bgColorIndex;           /**< Background color index. Used by disposal method. */
     PaletteColor*                                m_globalColorTable;       /**< Global color table. */
     size_t                                       m_globalColorTableLength; /**< Number of palette colors in the global color table. */
