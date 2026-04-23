@@ -16,9 +16,9 @@
 /* Enhanced Slot Cards */
 .slot-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 1.5rem;
-    margin: 2rem 0;
+    margin: 0;
 }
 
 .slot-card {
@@ -351,13 +351,13 @@
 
 /* Legend */
 .legend {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
-    padding: 1.5rem;
+    padding: 0.875rem 1.25rem;
     background: rgba(30, 41, 59, 0.6);
     border-radius: 12px;
-    margin: 2rem 0;
+    margin-bottom: 1.5rem;
 }
 
 .legend-item {
@@ -401,6 +401,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -411,20 +412,96 @@
     animation: slideIn 0.3s ease-out;
 }
 
+/* Two-column layout */
+.display-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: start;
+    padding-top: 4.5rem;
+}
+
+.display-sidebar {
+    position: sticky;
+    top: 4.5rem;
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--slot-border) transparent;
+    padding-bottom: 1rem;
+}
+
+.display-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.display-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.display-sidebar::-webkit-scrollbar-thumb {
+    background: var(--slot-border);
+    border-radius: 2px;
+}
+
+.display-main {
+    min-width: 0;
+}
+
+.display-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Canvas preview */
+.display-canvas-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+    background: #000;
+    border: 1px solid var(--slot-border);
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+
+.display-canvas-wrapper canvas {
+    display: block;
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 992px) {
+    .display-layout {
+        grid-template-columns: 1fr;
+        padding-top: 4rem;
+    }
+
+    .display-sidebar {
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+
+}
+
 /* Enhanced control panel */
 .control-panel {
     background: var(--slot-bg);
     border: 1px solid var(--slot-border);
     border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
 }
 
 .control-panel-title {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    margin-bottom: 1rem;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 0.875rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--slot-border);
 }

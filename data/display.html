@@ -49,82 +49,103 @@
                 </div>
             </div>
             <!-- Main view -->
-            <div class="container">
-                <h1 class="mt-5">Display</h1>
-                <p>Slot: <span id="slotId" class="monospace">-</span></p>
-                <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3 mt-2">
-                    <form>
-                        <div class="form-group mb-3">
-                            <button id="displayPowerButton" class="btn btn-light" type="button" onclick="triggerDisplayState()" value="off" disabled>Power Off</button>
-                            <button id="updateDisplayButton" class="btn btn-light" type="button" onclick="updateDisplay()" value="false" disabled>Enable auto. display update</button>
-                            <button class="btn btn-light" type="button" onclick="prevSlot()" disabled>Previous slot</button>
-                            <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
+            <div class="container-fluid px-3 px-md-4">
+                <div class="display-layout">
+
+                    <!-- Left sidebar: controls -->
+                    <aside class="display-sidebar">
+                        <h1 class="display-title">Display</h1>
+
+                        <!-- Fade Effect -->
+                        <div class="control-panel">
+                            <div class="control-panel-title">Fade Effect</div>
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <span class="text-primary" id="lableFadeEffect">Linear</span>
+                                <button class="btn btn-sm btn-outline-light" id="bNextEffect" type="button" onclick="nextEffect()" disabled>Next</button>
+                            </div>
                         </div>
-                    </form>
-                </div>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3 mt-2">
-                    <form>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="bNextEffect">Currently active fade effect: <span id="lableFadeEffect" class="text-primary"> Linear</span></label>
-                            <button class="btn btn-light" id="bNextEffect" type="button" onclick="nextEffect()" disabled>Next fade effect</button>
-                        </div>
-                    </form>
-                </div>
-                <p>Note, you can move the plugins with drag'n drop to other slots.</p>
 
-                <!-- Legend -->
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color locked"></div>
-                        <span>Locked - cannot be removed</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color sticky"></div>
-                        <span>Sticky - scheduling stopped</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color both"></div>
-                        <span>Both locked and sticky</span>
-                    </div>
-                </div>
-
-                <!-- Slots Grid -->
-                <div id="divSlots" class="slot-grid">
-                </div>
-
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3 mt-2">
-                    <form>
-                        <div class="form-group mb-3">
-                            <select class="form-select" id="pluginToInstall" size="1">
+                        <!-- Install Plugin -->
+                        <div class="control-panel">
+                            <div class="control-panel-title">Install Plugin</div>
+                            <select class="form-select form-select-sm mb-2" id="pluginToInstall" size="1">
                             </select>
-                            <br />
-                            <button class="btn btn-light" type="button" onclick="install()" disabled>Install</button>
+                            <button class="btn btn-sm btn-outline-light w-100" type="button" onclick="install()" disabled>Install</button>
                         </div>
-                    </form>
-                </div>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3 mt-2">
-                    <form>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="bAutoBrightnessCtrl">Automatic brightness control: <span id="autoBrightnessStatus" class="text-primary">?</span></label>
-                            <button class="btn btn-light" id="bAutoBrightnessCtrl" type="button" value="false" onclick="triggerAutoBrightnessCtrl();changeBrightness();" disabled>Enable</button>
+
+                        <!-- Brightness -->
+                        <div class="control-panel">
+                            <div class="control-panel-title">Brightness</div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label mb-0" for="bAutoBrightnessCtrl">
+                                    Auto: <span id="autoBrightnessStatus" class="text-primary">?</span>
+                                </label>
+                                <button class="btn btn-sm btn-outline-light" id="bAutoBrightnessCtrl" type="button" value="false" onclick="triggerAutoBrightnessCtrl();changeBrightness();" disabled>Enable</button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label d-flex justify-content-between mb-1" for="currentBrightness">
+                                    <span>Current</span><span class="text-primary" id="currentBrightnessValue">?</span>
+                                </label>
+                                <input type="range" class="form-range" id="currentBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#currentBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label d-flex justify-content-between mb-1" for="minBrightness">
+                                    <span>Min limit</span><span class="text-primary" id="minBrightnessValue">?</span>
+                                </label>
+                                <input type="range" class="form-range" id="minBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#minBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label d-flex justify-content-between mb-1" for="maxBrightness">
+                                    <span>Max limit</span><span class="text-primary" id="maxBrightnessValue">?</span>
+                                </label>
+                                <input type="range" class="form-range" id="maxBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#maxBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+                            </div>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="currentBrightness">Current Brightness:</label>
-                            <div class="text-primary" id="currentBrightnessValue">?</div>
-                            <input type="range" class="form-range" id="currentBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#currentBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+                    </aside>
+
+                    <!-- Right content: slots -->
+                    <section class="display-main">
+                        <p class="mb-2 text-secondary">Active slot: <span id="slotId" class="monospace text-primary">-</span></p>
+
+                        <!-- Canvas preview -->
+                        <div class="display-canvas-wrapper">
+                            <canvas id="canvas" width="353" height="89"></canvas>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="minBrightness">Min. brightness soft limit:</label>
-                            <div class="text-primary" id="minBrightnessValue">?</div>
-                            <input type="range" class="form-range" id="minBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#minBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+
+                        <!-- Display Controls -->
+                        <div class="control-panel">
+                            <div class="control-panel-title">Display Controls</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button id="displayPowerButton" class="btn btn-sm btn-outline-light" type="button" onclick="triggerDisplayState()" value="off" disabled>Power Off</button>
+                                <button id="updateDisplayButton" class="btn btn-sm btn-outline-light" type="button" onclick="updateDisplay()" value="false" disabled>Enable auto. update</button>
+                                <button class="btn btn-sm btn-outline-light" type="button" onclick="prevSlot()" disabled>&#9664; Prev</button>
+                                <button class="btn btn-sm btn-outline-light" type="button" onclick="nextSlot()" disabled>Next &#9654;</button>
+                            </div>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="maxBrightness">Max. brightness soft limit:</label>
-                            <div class="text-primary" id="maxBrightnessValue">?</div>
-                            <input type="range" class="form-range" id="maxBrightness" min="0" max="255" onchange="changeBrightness();" oninput="$('#maxBrightnessValue').text(calcPercentage(this.value) + ' %')" disabled />
+
+                        <p class="text-secondary mt-3 mb-2"><small>Drag plugins to rearrange slots.</small></p>
+
+                        <!-- Legend -->
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-color locked"></div>
+                                <span>Locked</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color sticky"></div>
+                                <span>Sticky</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color both"></div>
+                                <span>Locked &amp; Sticky</span>
+                            </div>
                         </div>
-                    </form>
+
+                        <!-- Slots Grid -->
+                        <div id="divSlots" class="slot-grid">
+                        </div>
+                    </section>
+
                 </div>
             </div>
         </main>
@@ -661,13 +682,13 @@
                             .attr("class", slot.isSticky ? "icon-btn active" : "icon-btn warning")
                             .attr("onclick", "handleStickySlot(" + index + ")")
                             .attr("title", "Toggle sticky flag")
-                            .html(slot.isSticky ? "📌 Sticky" : "📌 Make Sticky");
+                            .html(slot.isSticky ? "\uD83D\uDCCC Sticky" : "\uD83D\uDCCC Make Sticky");
 
                         var $statusBtn = $("<button>")
                             .attr("class", slot.isDisabled ? "icon-btn" : "icon-btn active")
                             .attr("onclick", "handleSlotStatus(" + index + ")")
                             .attr("title", "Toggle slot enable/disable")
-                            .html(slot.isDisabled ? "✓ Enable" : "✓ Enabled");
+                            .html(slot.isDisabled ? "\u2713 Enable" : "\u2713 Enabled");
 
                         $actions.append($statusBtn).append($stickyBtn);
 
@@ -676,7 +697,7 @@
                                 .attr("class", "icon-btn")
                                 .attr("onclick", "window.location.href='/plugins/" + slot.name + "/" + slot.name + ".html?uid=" + slot.uid + "'")
                                 .attr("title", "Configure plugin")
-                                .html("⚙ Config");
+                                .html("\u2699 Config");
                             $actions.append($configBtn);
                         }
 
@@ -685,7 +706,7 @@
                                 .attr("class", "icon-btn danger")
                                 .attr("onclick", "uninstall(" + index + ")")
                                 .attr("title", "Uninstall plugin")
-                                .html("🗑 Remove");
+                                .html("\uD83D\uDDD1 Remove");
                             $actions.append($uninstallBtn);
                         }
 
