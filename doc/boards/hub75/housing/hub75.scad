@@ -56,6 +56,10 @@ frame_faceplate_glue_lip = 1.5; // Glue lip behind the faceplate opening in mm
 frame_panel_stop_depth = 2; // Depth of the panel stop behind the faceplate in mm
 frame_panel_stop_overlap = 2.5; // Support overlap around the panel in mm
 frame_rear_clearance = 1; // Clearance behind the board in mm
+frame_foot_width = 26; // Width of one stand foot in X direction in mm
+frame_foot_depth = 18; // Stand foot extension behind the frame in Y direction in mm
+frame_foot_height = 8; // Stand foot height from the base in Z direction in mm
+frame_foot_inset = 16; // Distance from outer frame side to stand foot in mm
 frame_width = max(panel_width + 2 * frame_panel_space + 2 * frame_wall_thickness, panel_width + 4 + 2 * frame_corner_clearance + 2 * frame_faceplate_outer_margin); // Total width of the frame in mm
 frame_height = max(panel_height + 2 * frame_panel_space + 2 * frame_wall_thickness, panel_height + 4 + 2 * frame_corner_clearance + 2 * frame_faceplate_outer_margin); // Total height of the frame in mm
 
@@ -138,6 +142,18 @@ module rounded_cube_xz(size_xyz, radius)
 		rotate([90, 0, 0])
 			linear_extrude(height=size_xyz[1])
 				rounded_profile_xz(size_xyz[0], size_xyz[2], radius);
+}
+
+module frame_stand_feet()
+{
+	left_foot_x = frame_foot_inset;
+	right_foot_x = frame_width - frame_foot_inset - frame_foot_width;
+
+	translate([left_foot_x, frame_depth, 0])
+		cube([frame_foot_width, frame_foot_depth, frame_foot_height]);
+
+	translate([right_foot_x, frame_depth, 0])
+		cube([frame_foot_width, frame_foot_depth, frame_foot_height]);
 }
 
 module y_hole_from_back(x_pos, z_pos, diameter, depth)
@@ -278,7 +294,11 @@ module frame()
 {
 	difference()
 	{
-		rounded_cube_xz([frame_width, frame_depth, frame_height], frame_corner_radius);
+		union()
+		{
+			rounded_cube_xz([frame_width, frame_depth, frame_height], frame_corner_radius);
+			frame_stand_feet();
+		}
 
 		// Front opening behind the glued faceplate.
 		cutout_cube(
