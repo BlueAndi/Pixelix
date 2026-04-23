@@ -13,7 +13,7 @@ To find out which part shall be connected to which pin of your development board
 - [Development Boards](#development-boards)
   - [Overview](#overview)
   - [Adafruit ESP32 Feather V2](#adafruit-esp32-feather-v2)
-  - [Adafruit MatrixPortal ESP32-S3](#adafruit-matrixportal-esp32-s3)
+  - [Adafruit MatrixPortal ESP32-S3 - HUB75 panel](#adafruit-matrixportal-esp32-s3---hub75-panel)
   - [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
   - [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
   - [DOIT ESP32 DEVKIT V1 - HUB75 panel](#doit-esp32-devkit-v1---hub75-panel)
@@ -57,13 +57,14 @@ To find out which part shall be connected to which pin of your development board
   - Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
 - Compatible with Pixelix boards.
 
-### Adafruit MatrixPortal ESP32-S3
+### Adafruit MatrixPortal ESP32-S3 - HUB75 panel
 
 - Manufacturer: [Adafruit](https://learn.adafruit.com/adafruit-matrixportal-s3)
 - Pinning:
   - Board: [board:adafruit_matrixportal_s3-HUB75-64x64](../../config/board.ini)
   - Display: [display:hub75-adafruit-matrixportal-esp32s3](../../config/display.ini)
 - Not compatible with Pixelix boards.
+- [Housing](./hub75/housing/hub75.scad) for HUB74 64x64 pixel 3 mm pitch (192x192x15 mm)
 
 ### AZ-Delivery ESP-32 Dev Kit C V4
 
