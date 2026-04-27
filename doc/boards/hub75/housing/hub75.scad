@@ -92,6 +92,9 @@ backplate_slot_depth = 1.5; // Depth of the rail groove into each side wall in m
 backplate_slot_wall = 2.0; // Thickness of the rear wall behind the backplate slot in mm
 backplate_bottom_stop_height = frame_wall_thickness; // Bottom stop for the sliding backplate in mm
 backplate_top_clearance = frame_corner_side_relief + fit_tolerance; // Required clearance below the rounded top corners so the side slots stay closed in mm
+backplate_top_opening_extra = fit_tolerance + 0.6; // Additional insertion relief above geometric minimum in mm
+backplate_top_opening_side_relief = 0; // Keep side walls intact so guide grooves are not widened away in mm
+backplate_top_opening_x = max(0, frame_wall_thickness - backplate_slot_depth - backplate_top_opening_side_relief); // Distance of top slot opening start from outer side wall in mm
 
 // Derived housing dimensions
 panel_cavity_width = panel_width + 2 * frame_panel_space;
@@ -104,6 +107,9 @@ frame_front_opening_width = faceplate_cutout_width - 2 * frame_faceplate_glue_li
 frame_front_opening_height = faceplate_cutout_height - 2 * frame_faceplate_glue_lip;
 backplate_width = frame_width - 2 * (frame_wall_thickness - backplate_slot_depth) - 2 * fit_tolerance;
 backplate_height = frame_height - backplate_bottom_stop_height - backplate_top_clearance;
+backplate_top_opening_corner_depth = backplate_top_opening_x < frame_corner_radius ? frame_corner_radius - sqrt(pow(frame_corner_radius, 2) - pow(frame_corner_radius - backplate_top_opening_x, 2)) : 0; // Corner intrusion depth at the actual top slot opening X position in mm
+backplate_top_opening_depth_raw = backplate_height + fit_tolerance; // Minimum opening depth required to insert the full backplate height from the top in mm
+backplate_top_opening_depth = max(backplate_top_opening_depth_raw, backplate_top_opening_corner_depth + backplate_top_opening_extra); // Effective top opening depth: full insertion requirement plus corner clearance in mm
 backplate_bottom_z = backplate_bottom_stop_height;
 
 function centered_offset(outer, inner) = (outer - inner) / 2;
@@ -370,16 +376,18 @@ module frame()
 		);
 
 		// Top wall center opening - allows the backplate to be inserted from above.
+		// Z start is lowered by backplate_top_opening_depth to clear the rounded corner
+		// material that intrudes at the rail slot X positions.
 		cutout_cube(
 			[
-				frame_wall_thickness - backplate_slot_depth,
+				frame_wall_thickness - backplate_slot_depth - backplate_top_opening_side_relief,
 				frame_depth - backplate_slot_wall - backplate_thickness - fit_tolerance - eps,
-				frame_height - frame_wall_thickness - eps
+				frame_height - backplate_top_opening_depth - eps
 			],
 			[
-				frame_width - 2 * (frame_wall_thickness - backplate_slot_depth),
+				frame_width - 2 * (frame_wall_thickness - backplate_slot_depth) + 2 * backplate_top_opening_side_relief,
 				backplate_thickness + fit_tolerance + 2 * eps,
-				frame_wall_thickness + 2 * eps
+				backplate_top_opening_depth + 2 * eps
 			]
 		);
 	}
