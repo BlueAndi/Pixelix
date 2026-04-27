@@ -137,7 +137,7 @@ public:
         }
         else
         {
-            m_mode = mode;
+            m_mode       = mode;
             isSuccessful = true;
         }
 

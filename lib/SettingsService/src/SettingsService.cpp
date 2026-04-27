@@ -530,9 +530,9 @@ void SettingsService::cleanUp()
     /* Clean up is only necessary, if settings version is different. */
     if (VERSION != storedVersion)
     {
-        nvs_iterator_t  it;
-        esp_err_t       err = nvs_entry_find(NVS_DEFAULT_PART_NAME, PREF_NAMESPACE, NVS_TYPE_ANY, &it);
-        
+        nvs_iterator_t it;
+        esp_err_t      err = nvs_entry_find(NVS_DEFAULT_PART_NAME, PREF_NAMESPACE, NVS_TYPE_ANY, &it);
+
         if (ESP_ERR_NVS_NOT_FOUND == err)
         {
             /* It seems to be the initial setup and there are no settings yet. */
@@ -581,10 +581,10 @@ void SettingsService::cleanUp()
 
 KeyValue* SettingsService::getSettingByKey(const char* key)
 {
-    std::vector<KeyValue*>::const_iterator  it;
-    KeyValue*                               keyValuePair    = nullptr;
+    std::vector<KeyValue*>::const_iterator it;
+    KeyValue*                              keyValuePair = nullptr;
 
-    for(it = m_keyValueList.begin(); it != m_keyValueList.end(); ++it)
+    for (it = m_keyValueList.begin(); it != m_keyValueList.end(); ++it)
     {
         if (nullptr != *it)
         {
@@ -622,7 +622,7 @@ void SettingsService::unregisterSetting(KeyValue* setting)
 {
     std::vector<KeyValue*>::iterator it = m_keyValueList.begin();
 
-    while(m_keyValueList.end() != it)
+    while (m_keyValueList.end() != it)
     {
         if (setting == *it)
         {

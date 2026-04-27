@@ -86,7 +86,7 @@ void BuzzerDrv::play(uint32_t freq)
         }
 
         (void)ledcWriteTone(Board::buzzerOut.getPinNo(), freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(Board::buzzerOut.getPinNo(), m_dutyCycle); /* Change duty cycle immediately. */
+        ledcWrite(Board::buzzerOut.getPinNo(), m_dutyCycle);    /* Change duty cycle immediately. */
     }
 }
 
@@ -104,7 +104,7 @@ void BuzzerDrv::play(uint32_t freq, uint16_t dc)
         }
 
         (void)ledcWriteTone(Board::buzzerOut.getPinNo(), freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(Board::buzzerOut.getPinNo(), m_dutyCycle); /* Change duty cycle immediately. */
+        ledcWrite(Board::buzzerOut.getPinNo(), m_dutyCycle);    /* Change duty cycle immediately. */
     }
 }
 
