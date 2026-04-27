@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   InitState.cpp
  * @brief  System state: Init
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -41,6 +42,7 @@
 #include <SensorDataProvider.h>
 #include <Wire.h>
 #include <IconTextPlugin.h>
+#include <ViewConfig.h>
 
 #include "ButtonDrv.h"
 #include "ClockDrv.h"
@@ -48,7 +50,6 @@
 #include "SysMsg.h"
 #include "Version.h"
 #include "MyWebServer.h"
-#include "UpdateMgr.h"
 #include "PluginMgr.h"
 #include "WebConfig.h"
 #include "FileSystem.h"
@@ -68,6 +69,7 @@
 #include <WiFiUtil.h>
 
 #include <lwip/init.h>
+#include <esp_littlefs.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -145,7 +147,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Mounting the filesystem. */
-    else if (false == mountFilesystem())
+    else if (false == FileSystem::init())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         errorId = ErrorState::ERROR_ID_BAD_FS;
@@ -170,7 +172,7 @@ void InitState::entry(StateMachine& sm)
     else
     {
         /* Initialize clock driver */
-        ClockDrv::getInstance().init(&m_rtcDrv);
+        ClockDrv::getInstance().init();
 
         /* Initialize sensors */
         SensorDataProvider::getInstance().begin();
@@ -206,13 +208,6 @@ void InitState::entry(StateMachine& sm)
         errorId = ErrorState::ERROR_ID_SYS_MSG;
         isError = true;
     }
-    /* Initialize over-the-air update server */
-    else if (false == UpdateMgr::getInstance().init())
-    {
-        LOG_FATAL("Failed to initialize Arduino OTA.");
-        errorId = ErrorState::ERROR_ID_UPDATE_MGR;
-        isError = true;
-    }
     else
     {
         /* Clean up settings first! Important step after a firmware update to
@@ -229,17 +224,6 @@ void InitState::entry(StateMachine& sm)
         /* Load some general configuration parameters from persistent memory. */
         if (true == settings.open(true))
         {
-            /* Enable or disable the automatic display brightness adjustment,
-             * depended on settings. Enable it may fail in case there is no
-             * LDR sensor available.
-             */
-            bool isEnabled = settings.getAutoBrightnessAdjustment().getValue();
-
-            if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
-            {
-                LOG_WARNING("Failed to enable autom. brightness adjustment.");
-            }
-
             /* Set text scroll pause for all text widgets. */
             uint32_t scrollPause = settings.getScrollPause().getValue();
             if (false == TextWidget::setScrollPause(scrollPause))
@@ -255,6 +239,8 @@ void InitState::entry(StateMachine& sm)
         {
             m_isQuiet = settings.getQuietMode().getDefault();
         }
+
+        configureViews();
 
         /* Don't store the wifi configuration in the NVS.
          * This seems to cause a reset after a client connected to the access point.
@@ -318,13 +304,13 @@ void InitState::process(StateMachine& sm)
     if (BUTTON_STATE_RELEASED == buttonState)
     {
         m_isApModeRequested = false;
-        SysMsg::getInstance().disableSignal();
+        DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_ALL, IIndicatorView::State::STATE_OFF);
     }
     /* Does the user request for setting up an wifi access point? */
     else if (BUTTON_STATE_PRESSED == buttonState)
     {
         m_isApModeRequested = true;
-        SysMsg::getInstance().enableSignal();
+        DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_ALL, IIndicatorView::State::STATE_ON);
     }
     else
     {
@@ -377,6 +363,9 @@ void InitState::exit(StateMachine& sm)
         if (false == m_isApModeRequested)
         {
             wifiMode = WIFI_MODE_STA;
+
+            /* Set hostname before wifi station mode is set. */
+            (void)WiFi.setHostname(hostname.c_str());
         }
         else
         {
@@ -413,6 +402,7 @@ void InitState::exit(StateMachine& sm)
              * See http://www.dns-sd.org/serviceTypes.html
              */
             MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
+            MDNS.addService("pixelix", "tcp", WebConfig::WEBSERVER_PORT);
 
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
@@ -441,10 +431,6 @@ void InitState::exit(StateMachine& sm)
                     /* Save the plugin installation, so the user can configure it by its own in the web page settings. */
                     PluginMgr::getInstance().save();
                 }
-
-                /* Start over-the-air update server. */
-                UpdateMgr::getInstance().begin();
-                MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
             }
 
             /* Start webserver after the wifi access point is running.
@@ -470,21 +456,30 @@ void InitState::exit(StateMachine& sm)
 
 void InitState::showStartupInfoOnSerial()
 {
-    String macAddr;
+    const char* littleFsRepo = "https://github.com/joltwallet/esp_littlefs/releases/tag/v" ESP_LITTLEFS_VERSION_NUMBER;
+    String      macAddr;
+    String      chipId;
 
     WiFiUtil::getEFuseMAC(macAddr);
+    WiFiUtil::getChipId(chipId);
 
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO("Target: %s", Version::getTargetName());
-    LOG_INFO("SW version: %s", Version::getSoftwareVersion());
-    delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("SW revision: %s", Version::getSoftwareRevision());
-    LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
-    LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
-    delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("Wifi efuse MAC: %s", macAddr.c_str());
-    LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
-    delay(20U); /* To avoid missing log messages on the console */
+    LOG_INFO("Target           : %s", Version::getTargetName());
+    LOG_INFO("SW version       : %s", Version::getSoftwareVersion());
+    LOG_INFO("SW revision      : %s", Version::getSoftwareRevision());
+    LOG_INFO("ESP chip id      : %s", chipId.c_str());
+    LOG_INFO("ESP type         : %s", CONFIG_IDF_TARGET);
+    LOG_INFO("ESP chip rev.    : %u", ESP.getChipRevision());
+    LOG_INFO("ESP cpu freq.    : %u MHz", ESP.getCpuFreqMHz());
+    LOG_INFO("Flash chip mode  : %s", getFlashChipMode());
+    LOG_INFO("Flash chip speed : %u", ESP.getFlashChipSpeed());
+    LOG_INFO("Flash chip size  : 0x%08X byte", ESP.getFlashChipSize());
+    LOG_INFO("Flash freq.      : %u MHz", ESP.getFlashChipSpeed() / (1000U * 1000U));
+    LOG_INFO("ESP SDK version  : %s", ESP.getSdkVersion());
+    LOG_INFO("Wifi efuse MAC   : %s", macAddr.c_str());
+    LOG_INFO("LwIP version     : %s", LWIP_VERSION_STRING);
+    LOG_INFO("LittleFS version : %s", ESP_LITTLEFS_VERSION_NUMBER);
+    LOG_INFO("LittleFS link    : %s", littleFsRepo);
 }
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
@@ -543,7 +538,7 @@ bool InitState::isFsCompatible()
 
         if (false == jsonVersion.isNull())
         {
-            String fileSystemVersion = jsonVersion.as<String>();
+            String fileSystemVersion = jsonVersion.as<const char*>();
             String firmwareVersion   = Version::getSoftwareVersion();
 
             /* Note that the firmware version may have a additional postfix.
@@ -560,33 +555,6 @@ bool InitState::isFsCompatible()
     return isCompatible;
 }
 
-bool InitState::mountFilesystem()
-{
-    bool        isSuccessful                = false;
-    bool        formatOnFail                = false;
-    const char* BASE_PATH                   = "/littlefs";
-    const char* PARTITION_LABEL_DEFAULT     = "spiffs"; /* Default for most of the partitions, defined by Platformio. */
-    const char* PARTITION_LABEL_ALTERNATIVE = "ffat";   /* Sometimes its different, than the default in Platformio. */
-
-    /* Mount filesytem with default partition label. If it fails, use alternative. */
-    if (false == FILESYSTEM.begin(formatOnFail, BASE_PATH, FILESYSTEM_MAX_OPEN_FILES, PARTITION_LABEL_DEFAULT))
-    {
-        /* Try to mount with alternative partition label. */
-        if (true == FILESYSTEM.begin(formatOnFail, BASE_PATH, FILESYSTEM_MAX_OPEN_FILES, PARTITION_LABEL_ALTERNATIVE))
-        {
-            /* Successful mounted with alternative partition label. */
-            isSuccessful = true;
-        }
-    }
-    /* Successful mounted with default partition label. */
-    else
-    {
-        isSuccessful = true;
-    }
-
-    return isSuccessful;
-}
-
 void InitState::getDeviceUniqueId(String& deviceUniqueId)
 {
     /* Use the last 4 bytes of the factory programmed wifi MAC address to generate a unique id. */
@@ -596,6 +564,111 @@ void InitState::getDeviceUniqueId(String& deviceUniqueId)
 
     deviceUniqueId += "-";
     deviceUniqueId += chipId.substring(4U);
+}
+
+void InitState::configureViews()
+{
+    SettingsService& settings                   = SettingsService::getInstance();
+    ViewConfig&      viewConfig                 = ViewConfig::getInstance();
+    uint8_t          brushType                  = settings.getBrushType().getDefault();
+    const uint8_t    BRUSH_TYPE_LINEAR_GRADIENT = 1U;
+    String           solidBrushColorStr         = "0x" + settings.getSolidBrushColor().getDefault();
+    String           linearGradientColor1Str    = "0x" + settings.getLinearGradientColor1().getDefault();
+    String           linearGradientColor2Str    = "0x" + settings.getLinearGradientColor2().getDefault();
+    int16_t          linearGradientOffset       = settings.getLinearGradientOffset().getDefault();
+    uint16_t         linearGradientLength       = settings.getLinearGradientLength().getDefault();
+    bool             linearGradientVertical     = settings.getLinearGradientVertical().getDefault();
+    uint32_t         solidBrushColor;
+    uint32_t         linearGradientColor1;
+    uint32_t         linearGradientColor2;
+    bool             solidBrushColorStatus      = false;
+    bool             linearGradientColor1Status = false;
+    bool             linearGradientColor2Status = false;
+
+    if (true == settings.open(true))
+    {
+        brushType               = settings.getBrushType().getValue();
+        solidBrushColorStr      = "0x" + settings.getSolidBrushColor().getValue();
+        linearGradientColor1Str = "0x" + settings.getLinearGradientColor1().getValue();
+        linearGradientColor2Str = "0x" + settings.getLinearGradientColor2().getValue();
+        linearGradientOffset    = settings.getLinearGradientOffset().getValue();
+        linearGradientLength    = settings.getLinearGradientLength().getValue();
+        linearGradientVertical  = settings.getLinearGradientVertical().getValue();
+
+        settings.close();
+    }
+
+    solidBrushColorStatus      = Util::strToUInt32(solidBrushColorStr, solidBrushColor);
+    linearGradientColor1Status = Util::strToUInt32(linearGradientColor1Str, linearGradientColor1);
+    linearGradientColor2Status = Util::strToUInt32(linearGradientColor2Str, linearGradientColor2);
+
+    if (true == solidBrushColorStatus)
+    {
+        viewConfig.setSolidBrush(solidBrushColor);
+    }
+
+    if ((true == linearGradientColor1Status) &&
+        (true == linearGradientColor2Status))
+    {
+        viewConfig.setLinearGradientBrush(linearGradientColor1, linearGradientColor2, linearGradientOffset, linearGradientLength, linearGradientVertical);
+    }
+
+    /* Set general view configuration. */
+    if ((true == linearGradientColor1Status) &&
+        (true == linearGradientColor2Status) &&
+        (BRUSH_TYPE_LINEAR_GRADIENT == brushType))
+    {
+        viewConfig.setLinearGradientBrush();
+    }
+    else if (true == solidBrushColorStatus)
+    {
+        viewConfig.setSolidBrush();
+    }
+    else
+    {
+        /* Default brush is already set in the constructor. */
+        ;
+    }
+}
+
+const char* InitState::getFlashChipMode()
+{
+    const char* result = "UNKNOWN";
+
+    switch (ESP.getFlashChipMode())
+    {
+    case FM_QIO:
+        result = "QUIO";
+        break;
+
+    case FM_QOUT:
+        result = "QOUT";
+        break;
+
+    case FM_DIO:
+        result = "DIO";
+        break;
+
+    case FM_DOUT:
+        result = "DOUT";
+        break;
+
+    case FM_FAST_READ:
+        result = "FAST_READ";
+        break;
+
+    case FM_SLOW_READ:
+        result = "SLOW_READ";
+        break;
+
+    case FM_UNKNOWN:
+        /* fallthrough */
+
+    default:
+        break;
+    }
+
+    return result;
 }
 
 /******************************************************************************

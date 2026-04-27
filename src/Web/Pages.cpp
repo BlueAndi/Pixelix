@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   Pages.cpp
  * @brief  Web pages
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -35,7 +36,6 @@
 #include "Pages.h"
 #include "WebConfig.h"
 #include "Version.h"
-#include "UpdateMgr.h"
 #include "DisplayMgr.h"
 #include "RestApi.h"
 #include "PluginList.h"
@@ -44,17 +44,18 @@
 
 #include <WiFi.h>
 #include <Esp.h>
-#include <Update.h>
 #include <Logging.h>
+#include <MemUtil.h>
 #include <Util.h>
 #include <ArduinoJson.h>
 #include <lwip/init.h>
 #include <SettingsService.h>
 #include <FileSystem.h>
-#include <HttpStatus.h>
+#include <BitmapWidget.h>
 
 #include <mbedtls/version.h>
 #include <freertos/task.h>
+#include <esp_littlefs.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -92,29 +93,19 @@ struct HtmlPageRoute
 
 static String tmplPageProcessor(const String& var);
 static void   htmlPage(AsyncWebServerRequest* request);
-static void   uploadPage(AsyncWebServerRequest* request);
-static void   uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final);
 
 namespace tmpl
 {
 static String getEspChipId();
-static String getEspType();
 static String getFlashChipMode();
 static String getHostname();
 static String getIPAddress();
-static String getRSSI();
-static String getSSID();
+static String getImageFileExtensions();
 }; /* namespace tmpl */
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/** Firmware binary filename, used for update. */
-static const char* FIRMWARE_FILENAME              = "firmware.bin";
-
-/** Bootloader binary filename, used for update. */
-static const char* BOOTLOADER_FILENAME            = "bootloader.bin";
 
 /** Path to the plugin webpages. */
 static const String PLUGIN_PAGE_PATH              = "/plugins/";
@@ -122,49 +113,45 @@ static const String PLUGIN_PAGE_PATH              = "/plugins/";
 /** Path to the service webpages. */
 static const String SERVICE_PAGE_PATH             = "/services/";
 
-/** Flag used to signal any kind of file upload error. */
-static bool gIsUploadError                        = false;
-
 /**
  * List of all used template keywords and the function how to retrieve the information.
  * The list is alphabetic sorted in ascending order.
  */
 static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
+    { "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); } },
+    { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } },
     { "ARDUINO_IDF_BRANCH", []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; } },
-    { "BOOTLOADER_FILENAME", []() -> String { return BOOTLOADER_FILENAME; } },
     { "ESP_CHIP_ID", tmpl::getEspChipId },
     { "ESP_CHIP_REV", []() -> String { return String(ESP.getChipRevision()); } },
     { "ESP_CPU_FREQ", []() -> String { return String(ESP.getCpuFreqMHz()); } },
     { "ESP_SDK_VERSION", []() -> String { return ESP.getSdkVersion(); } },
-    { "ESP_TYPE", tmpl::getEspType },
-    { "FILESYSTEM_FILENAME", []() -> String { return FILESYSTEM_FILENAME; } },
-    { "FIRMWARE_FILENAME", []() -> String { return FIRMWARE_FILENAME; } },
+    { "ESP_TYPE", []() -> String { return String(CONFIG_IDF_TARGET); } },
     { "FLASH_CHIP_MODE", tmpl::getFlashChipMode },
     { "FLASH_CHIP_SIZE", []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); } },
     { "FLASH_CHIP_SPEED", []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); } },
     { "FREERTOS_VERSION", []() -> String { return tskKERNEL_VERSION_NUMBER; } },
     { "FS_SIZE", []() -> String { return String(FILESYSTEM.totalBytes()); } },
     { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
-    { "HEAP_SIZE", []() -> String { return String(ESP.getHeapSize()); } },
-    { "HEAP_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreeHeap()); } },
+    { "HEAP_SIZE", []() -> String { return String(MemUtil::getTotalHeapSize()); } },
+    { "HEAP_SIZE_AVAILABLE", []() -> String { return String(MemUtil::getFreeHeapSize()); } },
+    { "HOSTNAME", tmpl::getHostname },
+    { "IMAGE_FILE_EXTENSIONS", []() -> String { return tmpl::getImageFileExtensions(); } },
+    { "IPV4", tmpl::getIPAddress },
+    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
+    { "LITTLEFS_VERSION", []() -> String { return String(ESP_LITTLEFS_VERSION_NUMBER); } },
+    { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
     { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
     { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
     { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
-    { "HOSTNAME", tmpl::getHostname },
-    { "IPV4", tmpl::getIPAddress },
-    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
-    { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
-    { "RSSI", tmpl::getRSSI },
-    { "SSID", tmpl::getSSID },
+    { "RSSI", []() -> String { return String(WiFi.RSSI()); } },
+    { "SSID", []() -> String { return WiFi.SSID(); } },
     { "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); } },
     { "SW_REVISION", []() -> String { return Version::getSoftwareRevision(); } },
     { "SW_VERSION", []() -> String { return Version::getSoftwareVersion(); } },
     { "TARGET", []() -> String { return Version::getTargetName(); } },
     { "WS_ENDPOINT", []() -> String { return WebConfig::WEBSOCKET_PATH; } },
     { "WS_PORT", []() -> String { return String(WebConfig::WEBSOCKET_PORT); } },
-    { "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; } },
-    { "DISPLAY_HEIGHT", []() -> String { return String(CONFIG_LED_MATRIX_HEIGHT); } },
-    { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } }
+    { "WS_PROTOCOL", []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; } }
 };
 
 /**
@@ -243,10 +230,6 @@ void Pages::init(AsyncWebServer& srv)
         ++idx;
     }
 
-    /* Serve HTML pages with upload functionality. */
-    (void)srv.on("/upload.html", HTTP_POST, uploadPage, uploadHandler)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-
     /* Redirect root folder access to index.html page. */
     (void)srv.on("/", [](AsyncWebServerRequest* request) {
         if (nullptr != request)
@@ -257,6 +240,9 @@ void Pages::init(AsyncWebServer& srv)
 
     /* Serve files with volatile content with disabled cache control. */
     (void)srv.serveStatic("/configuration/", FILESYSTEM, "/configuration/")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+    (void)srv.serveStatic("/tmp/", FILESYSTEM, "/tmp/")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Serve files with static content with enabled cache control.
@@ -353,6 +339,8 @@ void Pages::error(AsyncWebServerRequest* request)
  * in every page. It is responsible for the data binding.
  *
  * @param[in] var   Name of variable in the template
+ *
+ * @return The variable content.
  */
 static String tmplPageProcessor(const String& var)
 {
@@ -395,193 +383,6 @@ static void htmlPage(AsyncWebServerRequest* request)
 }
 
 /**
- * Page for upload result.
- *
- * @param[in] request   HTTP request
- */
-static void uploadPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (true == gIsUploadError)
-    {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "text/plain", "Error");
-    }
-    else
-    {
-        request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
-    }
-
-    /* Trigger restart after the client has disconnected.
-     * Do this in every case to ensure that if there was any error, the
-     * device will be restarted as well.
-     *
-     * Requesting a restart after the client has disconnected, is necessary to be
-     * able to update more than just on file.
-     */
-    request->onDisconnect(
-        []() {
-            UpdateMgr::getInstance().reqRestart(0U);
-        });
-}
-
-/**
- * File upload handler.
- *
- * @param[in] request   HTTP request.
- * @param[in] filename  Name of the uploaded file.
- * @param[in] index     Current file offset.
- * @param[in] data      Next data part of file, starting at offset.
- * @param[in] len       Data part size in byte.
- * @param[in] final     Is final packet or not.
- */
-static void uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final)
-{
-    UpdateMgr& updateMgr = UpdateMgr::getInstance();
-
-    /* Begin of upload? */
-    if (0 == index)
-    {
-        uint32_t              fileSize           = UPDATE_SIZE_UNKNOWN;
-        int                   cmd                = U_FLASH;
-        const AsyncWebHeader* headerXFileSize    = nullptr;
-        bool                  isFilesystemUpdate = false;
-
-        /* If there is a pending upload, abort it. */
-        if (true == Update.isRunning())
-        {
-            Update.abort();
-            LOG_WARNING("Pending upload aborted.");
-        }
-
-        /* Upload firmware, bootloader or filesystem? */
-        if (filename == FIRMWARE_FILENAME)
-        {
-            cmd             = U_FLASH;
-            headerXFileSize = request->getHeader("X-File-Size-Firmware");
-        }
-        else if (filename == BOOTLOADER_FILENAME)
-        {
-            cmd             = U_FLASH;
-            headerXFileSize = request->getHeader("X-File-Size-Bootloader");
-        }
-        else if (filename == FILESYSTEM_FILENAME)
-        {
-            cmd                = U_SPIFFS;
-            headerXFileSize    = request->getHeader("X-File-Size-Filesystem");
-            isFilesystemUpdate = true;
-        }
-        else
-        {
-            /* Unknown. */
-            ;
-        }
-
-        /* File size available? */
-        if (nullptr != headerXFileSize)
-        {
-            /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
-            (void)Util::strToUInt32(headerXFileSize->value(), fileSize);
-        }
-
-        if (UPDATE_SIZE_UNKNOWN == fileSize)
-        {
-            LOG_INFO("Upload of %s (unknown size) starts.", filename.c_str());
-        }
-        else
-        {
-            LOG_INFO("Upload of %s (%u byte) starts.", filename.c_str(), fileSize);
-        }
-
-        gIsUploadError = false;
-
-        /* Start update, after the update procedure is prepared! */
-        if (false == Update.begin(fileSize, cmd))
-        {
-            LOG_ERROR("Upload failed: %s", Update.errorString());
-            gIsUploadError = true;
-
-            /* Inform client about abort.*/
-            request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");
-        }
-        /* Update is now running. */
-        else
-        {
-            /* Prepare the update procedure. */
-            updateMgr.prepareUpdate(isFilesystemUpdate);
-
-            /* Use UpdateMgr to show the user the update status.
-             * Note, the display manager will be completely stopped during this,
-             * to avoid artifacts on the display, because of long writes to flash.
-             */
-            updateMgr.beginProgress();
-        }
-    }
-
-    /* Is update in progress? */
-    if (true == Update.isRunning())
-    {
-        /* Continue update procedure. */
-        if (false == gIsUploadError)
-        {
-            if (len != Update.write(data, len))
-            {
-                gIsUploadError = true;
-            }
-            else
-            {
-                uint32_t progress = (Update.progress() * 100) / Update.size();
-
-                updateMgr.updateProgress(progress);
-
-                /* Upload finished? */
-                if (true == final)
-                {
-                    /* Finish update now. */
-                    if (false == Update.end(true))
-                    {
-                        gIsUploadError = true;
-                    }
-                    /* Update was successful! */
-                    else
-                    {
-                        const uint8_t PROGRESS_FINISHED = 100U; /* % */
-
-                        LOG_INFO("Upload of %s finished.", filename.c_str());
-
-                        /* Filesystem is not mounted here, because we will restart in the next seconds. */
-
-                        /* Ensure that the user see 100% update status on the display. */
-                        updateMgr.updateProgress(PROGRESS_FINISHED);
-                        updateMgr.endProgress();
-                        updateMgr.prepareForRestart();
-
-                        /* Restart is requested in upload page handler, see uploadPage(). */
-                    }
-                }
-            }
-        }
-
-        /* Any upload error? */
-        if (true == gIsUploadError)
-        {
-            LOG_ERROR("Upload failed: %s", Update.errorString());
-
-            /* Abort update */
-            Update.abort();
-            updateMgr.endProgress();
-            updateMgr.prepareForRestart();
-
-            /* Inform client about abort.*/
-            request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");
-        }
-    }
-}
-
-/**
  * Functions which are called for the corresponding template keyword.
  */
 namespace tmpl
@@ -599,18 +400,6 @@ static String getEspChipId()
     WiFiUtil::getChipId(chipId);
 
     return chipId;
-}
-
-/**
- * Get ESP type.
- *
- * @return ESP type
- */
-static String getEspType()
-{
-    String result = CONFIG_IDF_TARGET;
-
-    return result;
 }
 
 /**
@@ -708,45 +497,28 @@ static String getIPAddress()
 }
 
 /**
- * Get wifi RSSI.
+ * Get supported image file extensions for BitmapWidget.
+ * The result is a comma separated list of extensions, each starting with a dot.
  *
- * @return WiFi station SSID
+ * @return Comma separated list of supported image file extensions.
  */
-static String getRSSI()
+static String getImageFileExtensions()
 {
-    String result;
+    String  result;
+    uint8_t idx;
 
-    /* Only in station mode it makes sense to retrieve the RSSI.
-     * Otherwise keep it -100 dbm.
-     */
-    if (WIFI_MODE_STA == WiFi.getMode())
+    for (idx = 0; idx < BitmapWidget::IMAGE_FILE_EXTENSIONS_COUNT; ++idx)
     {
-        result = WiFi.RSSI();
-    }
-    else
-    {
-        result = "-100";
+        if (0U < idx)
+        {
+            result += ",";
+        }
+
+        result += ".";
+        result += BitmapWidget::IMAGE_FILE_EXTENSIONS[idx];
     }
 
     return result;
 }
 
-/**
- * Get wifi station SSID.
- *
- * @return WiFi station SSID
- */
-static String getSSID()
-{
-    String           result;
-    SettingsService& settings = SettingsService::getInstance();
-
-    if (true == settings.open(true))
-    {
-        result = settings.getWifiSSID().getValue();
-        settings.close();
-    }
-
-    return result;
-}
 }; /* namespace tmpl */

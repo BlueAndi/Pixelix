@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   Topics.cpp
  * @brief  Topics
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -37,7 +38,8 @@
 #include <TopicHandlerService.h>
 #include <Util.h>
 #include "DisplayMgr.h"
-#include "UpdateMgr.h"
+#include "RestartMgr.h"
+#include "ButtonActions.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -63,10 +65,50 @@ typedef struct
 
 } TopicElem;
 
+/**
+ * Virtual button which can be triggered.
+ */
+class VirtualButton : public ButtonActions
+{
+public:
+
+    /**
+     * Construct virtual button instance.
+     */
+    VirtualButton() :
+        ButtonActions()
+    {
+    }
+
+    /**
+     * Destroy virtual button instance.
+     */
+    virtual ~VirtualButton()
+    {
+    }
+
+    /**
+     * Execute action by button action id.
+     *
+     * @param[in] id    Button action id
+     */
+    void executeAction(ButtonActionId id)
+    {
+        ButtonActions::executeAction(id, true);
+    }
+
+private:
+
+    /* Make copy constructor and assignment operator unavailable */
+    VirtualButton(const VirtualButton& button);
+    VirtualButton& operator=(const VirtualButton& button);
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
+static bool execButtonAction(const String& topic, const JsonObjectConst& value);
 static bool getDisplayState(const String& topic, JsonObject& value);
 static bool hasDisplayStateChanged(const String& topic);
 static bool setDisplayState(const String& topic, const JsonObjectConst& value);
@@ -81,8 +123,10 @@ static bool restart(const String& topic, const JsonObjectConst& value);
  */
 static String gDeviceId;
 
+/* clang-format off */
+
 /**
- * List of topics.
+ * List of topics, sorted by topics in ascending order.
  *
  * ENTITY-ID     : display/uid/PLUGIN-UID | display/alias/PLUGIN-ALIAS | empty
  *
@@ -97,9 +141,13 @@ static String gDeviceId;
  *                 DISCOVERY-TOPIC = DISCOVERY-PREFIX/COMPONENT/NODE-ID/OBJECT-ID/config
  */
 static TopicElem gTopicList[] = {
-    { "display", "power", getDisplayState, hasDisplayStateChanged, setDisplayState, "/extra/display.json" },
-    { "", "restart", nullptr, nullptr, restart, "/extra/restart.json" }
+    /* ENTITY-ID    TOPIC       GET                 HAS-CHANGED             SET                 EXTRA-HA-FILE */
+    { "",           "button",   nullptr,            nullptr,                execButtonAction,   "/extra/button.json"  },
+    { "display",    "power",    getDisplayState,    hasDisplayStateChanged, setDisplayState,    "/extra/display.json" },
+    { "",           "restart",  nullptr,            nullptr,                restart,            "/extra/restart.json" }
 };
+
+/* clang-format on */
 
 /**
  * Last display on state.
@@ -182,6 +230,55 @@ void Topics::end()
  *****************************************************************************/
 
 /**
+ * Execute a button action.
+ *
+ * @param[in]   topic   Topic
+ * @param[in]   value   Value
+ *
+ * @return If successful, it will return true otherwise false.
+ */
+static bool execButtonAction(const String& topic, const JsonObjectConst& value)
+{
+    bool             isSuccessful = true;
+    int32_t          i32ActionId  = BUTTON_ACTION_ID_MAX;
+    ButtonActionId   actionId     = BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT; /* Default */
+    JsonVariantConst jsonActionId = value["actionId"];
+
+    UTIL_NOT_USED(topic);
+
+    /* Action id validation? */
+    if (false == jsonActionId.isNull())
+    {
+        if (true == jsonActionId.is<String>())
+        {
+            i32ActionId = jsonActionId.as<String>().toInt();
+        }
+        else if (true == jsonActionId.is<int>())
+        {
+            i32ActionId = jsonActionId.as<int>();
+        }
+        else
+        {
+            isSuccessful = false;
+        }
+
+        if (BUTTON_ACTION_ID_MAX > i32ActionId)
+        {
+            actionId = static_cast<ButtonActionId>(i32ActionId);
+        }
+    }
+
+    if (true == isSuccessful)
+    {
+        VirtualButton button;
+
+        button.executeAction(actionId);
+    }
+
+    return isSuccessful;
+}
+
+/**
  * Get display state.
  *
  * @param[in]   topic   Topic
@@ -250,7 +347,7 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
     if (false == jsonState.isNull())
     {
         bool   displayOn = false;
-        String state     = jsonState.as<String>();
+        String state     = jsonState.as<const char*>();
 
         if (true == state.equalsIgnoreCase("off"))
         {
@@ -303,7 +400,7 @@ static bool restart(const String& topic, const JsonObjectConst& value)
     /* To ensure that a positive response will be sent before the device restarts,
      * a short delay is necessary.
      */
-    UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
+    (void)RestartMgr::getInstance().reqRestart(RESTART_DELAY, false);
 
     return true;
 }

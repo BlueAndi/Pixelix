@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SettingsService.h
  * @brief  Settings service
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -256,6 +257,26 @@ public:
     }
 
     /**
+     * Get minimum brightness soft limit in %.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt8& getMinBrightnessSoftLimit()
+    {
+        return m_minBrightnessSoftLimit;
+    }
+
+    /**
+     * Get maximum brightness soft limit in %.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt8& getMaxBrightnessSoftLimit()
+    {
+        return m_maxBrightnessSoftLimit;
+    }
+
+    /**
      * Get state of automatic brightness adjustment.
      *
      * @return Key value pair
@@ -266,11 +287,11 @@ public:
     }
 
     /**
-     * Get POSIX timezone string.
+     * Get POSIX time zone string.
      *
-     * @return POSIC timezone string
+     * @return POSIX time zone string
      */
-    KeyValueString& getTimezone()
+    KeyValueString& getTimeZone()
     {
         return m_timezone;
     }
@@ -336,36 +357,115 @@ public:
     }
 
     /**
+     * Get brush type.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt8& getBrushType()
+    {
+        return m_brushType;
+    }
+
+    /**
+     * Get solid brush color.
+     *
+     * @return Key value pair
+     */
+    KeyValueString& getSolidBrushColor()
+    {
+        return m_solidBrushColor;
+    }
+
+    /**
+     * Get linear gradient color 1.
+     *
+     * @return Key value pair
+     */
+    KeyValueString& getLinearGradientColor1()
+    {
+        return m_linearGradientColor1;
+    }
+
+    /**
+     * Get linear gradient color 2.
+     *
+     * @return Key value pair
+     */
+    KeyValueString& getLinearGradientColor2()
+    {
+        return m_linearGradientColor2;
+    }
+
+    /**
+     * Get linear gradient offset.
+     *
+     * @return Key value pair
+     */
+    KeyValueInt32& getLinearGradientOffset()
+    {
+        return m_linearGradientOffset;
+    }
+
+    /**
+     * Get linear gradient length.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt32& getLinearGradientLength()
+    {
+        return m_linearGradientLength;
+    }
+
+    /**
+     * Get linear gradient vertical state.
+     *
+     * @return Key value pair
+     */
+    KeyValueBool& getLinearGradientVertical()
+    {
+        return m_linearGradientVertical;
+    }
+
+    /**
      * Settings version
      * The version number shall be increased by 1 after:
      * - a new setting was added or
      * - a existing setting changed
      * - a existing setting was removed
      */
-    static const uint32_t VERSION = 3U;
+    static const uint32_t VERSION = 4U;
 
 private:
 
     Preferences            m_preferences;  /**< Persistent storage */
     std::vector<KeyValue*> m_keyValueList; /**< List of key/value pairs, stored in persistent storage. */
 
-    KeyValueUInt32         m_version;            /**< Settings version (just an consequtive incremented number) */
-    KeyValueString         m_wifiSSID;           /**< Remote wifi network SSID */
-    KeyValueString         m_wifiPassphrase;     /**< Remote wifi network passphrase */
-    KeyValueString         m_apSSID;             /**< Access point SSID */
-    KeyValueString         m_apPassphrase;       /**< Access point passphrase */
-    KeyValueString         m_webLoginUser;       /**< Website login user account */
-    KeyValueString         m_webLoginPassword;   /**< Website login user password */
-    KeyValueString         m_hostname;           /**< Hostname */
-    KeyValueUInt8          m_brightness;         /**< The brightness level in % set at startup. */
-    KeyValueBool           m_autoBrightnessCtrl; /**< Automatic brightness control switch */
-    KeyValueString         m_timezone;           /**< POSIX timezone string */
-    KeyValueString         m_ntpServer;          /**< NTP server address */
-    KeyValueUInt8          m_maxSlots;           /**< Max. number of display slots. */
-    KeyValueUInt32         m_scrollPause;        /**< Text scroll pause */
-    KeyValueString         m_notifyURL;          /**< URL to be triggered when PIXELIX has connected to a remote network. */
-    KeyValueBool           m_quietMode;          /**< Quiet mode (skip unnecessary system messages) */
-    KeyValueUInt8          m_fadeEffect;         /**< Fade effect */
+    KeyValueUInt32         m_version;                /**< Settings version (just an consequtive incremented number) */
+    KeyValueString         m_wifiSSID;               /**< Remote wifi network SSID */
+    KeyValueString         m_wifiPassphrase;         /**< Remote wifi network passphrase */
+    KeyValueString         m_apSSID;                 /**< Access point SSID */
+    KeyValueString         m_apPassphrase;           /**< Access point passphrase */
+    KeyValueString         m_webLoginUser;           /**< Website login user account */
+    KeyValueString         m_webLoginPassword;       /**< Website login user password */
+    KeyValueString         m_hostname;               /**< Hostname */
+    KeyValueUInt8          m_brightness;             /**< The brightness level in % set at startup. */
+    KeyValueUInt8          m_minBrightnessSoftLimit; /**< The minimum brightness level in % for automatic brightness adjustment. */
+    KeyValueUInt8          m_maxBrightnessSoftLimit; /**< The maximum brightness level in % for automatic brightness adjustment. */
+    KeyValueBool           m_autoBrightnessCtrl;     /**< Automatic brightness control switch */
+    KeyValueString         m_timezone;               /**< POSIX time zone string */
+    KeyValueString         m_ntpServer;              /**< NTP server address */
+    KeyValueUInt8          m_maxSlots;               /**< Max. number of display slots. */
+    KeyValueUInt32         m_scrollPause;            /**< Text scroll pause */
+    KeyValueString         m_notifyURL;              /**< URL to be triggered when PIXELIX has connected to a remote network. */
+    KeyValueBool           m_quietMode;              /**< Quiet mode (skip unnecessary system messages) */
+    KeyValueUInt8          m_fadeEffect;             /**< Fade effect */
+    KeyValueUInt8          m_brushType;              /**< Brush type */
+    KeyValueString         m_solidBrushColor;        /**< Solid brush color */
+    KeyValueString         m_linearGradientColor1;   /**< Linear gradient color 1 */
+    KeyValueString         m_linearGradientColor2;   /**< Linear gradient color 2 */
+    KeyValueInt32          m_linearGradientOffset;   /**< Linear gradient offset */
+    KeyValueUInt32         m_linearGradientLength;   /**< Linear gradient length */
+    KeyValueBool           m_linearGradientVertical; /**< Linear gradient vertical */
 
     /**
      * Constructs the settings service instance.

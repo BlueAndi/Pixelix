@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TestGfxText.cpp
  * @brief  Test the text graphic functions.
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -34,6 +35,7 @@
  *****************************************************************************/
 #include <unity.h>
 #include <YAGfxText.h>
+#include <YAGfxBrush.h>
 #include <TomThumb.h>
 #include <Util.h>
 
@@ -83,7 +85,7 @@ static void testGfxText();
  * @param[in] argc  Number of command line arguments
  * @param[in] argv  Command line arguments
  */
-extern int main(int argc, char **argv)
+extern int main(int argc, char** argv)
 {
     UTIL_NOT_USED(argc);
     UTIL_NOT_USED(argv);
@@ -122,13 +124,14 @@ static void testGfxText()
 {
     YAGfxTest       testGfx;
     YAGfxText       testGfxText;
-    const Color     COLOR               = 0x1234;
-    uint16_t        boundingBoxWidth    = 0U;
-    uint16_t        boundingBoxHeight   = 0U;
-    int16_t         cursorPosX          = 0;
-    int16_t         cursorPosY          = 0;
-    const GFXglyph* glyph               = nullptr;
-    uint8_t         index               = 0U;
+    const Color     COLOR = 0x1234;
+    YAGfxSolidBrush brush(COLOR);
+    uint16_t        boundingBoxWidth  = 0U;
+    uint16_t        boundingBoxHeight = 0U;
+    int16_t         cursorPosX        = 0;
+    int16_t         cursorPosY        = 0;
+    const GFXglyph* glyph             = nullptr;
+    uint8_t         index             = 0U;
 
     /* Verify cursor position */
     testGfxText.getTextCursorPos(cursorPosX, cursorPosY);
@@ -147,7 +150,7 @@ static void testGfxText()
     /* Draw character, but without font. Nothing shall be shown. */
     testGfxText.setTextCursorPos(0, 6);
     testGfxText.setTextWrap(false);
-    testGfxText.setTextColor(COLOR);
+    testGfxText.setBrush(brush);
     testGfxText.drawChar(testGfx, 'T');
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT, 0U));
 

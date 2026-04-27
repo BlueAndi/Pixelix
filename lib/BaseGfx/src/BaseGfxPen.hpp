@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   BaseGfxPen.hpp
  * @brief  Base graphics pen
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -66,6 +67,19 @@ template < typename TColor >
 class BaseGfxPen
 {
 public:
+
+    /**
+     * Constructs a base graphics pen.
+     *
+     * @param[in] gfx Base graphics
+     */
+    BaseGfxPen(BaseGfx<TColor>& gfx) :
+        m_gfx(gfx),
+        m_color(),
+        m_x(0),
+        m_y(0)
+    {
+    }
 
     /**
      * Destroys a graphics pen.
@@ -141,7 +155,7 @@ public:
      */
     void lineTo(int16_t x, int16_t y)
     {
-        m_gfx.line(m_x, m_y, x, y, m_color);
+        m_gfx.drawLine(m_x, m_y, x, y, m_color);
 
         m_x = x;
         m_y = y;
@@ -149,29 +163,16 @@ public:
 
 protected:
 
-    BaseGfx<TColor>&    m_gfx;      /**< Base gfx */
-    TColor              m_color;    /**< Pen color */
-    int16_t             m_x;        /**< Pen x-coordinate */
-    int16_t             m_y;        /**< Pen y-coordinate */
-
-    /**
-     * Constructs a base graphics pen.
-     * 
-     * @param[in] gfx Base graphics
-     */
-    BaseGfxPen(BaseGfx<TColor>& gfx) :
-        m_gfx(gfx),
-        m_color(),
-        m_x(0),
-        m_y(0)
-    {
-    }
+    BaseGfx<TColor>& m_gfx;   /**< Base gfx */
+    TColor           m_color; /**< Pen color */
+    int16_t          m_x;     /**< Pen x-coordinate */
+    int16_t          m_y;     /**< Pen y-coordinate */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_GFX_PEN_HPP */
+#endif /* BASE_GFX_PEN_HPP */
 
 /** @} */

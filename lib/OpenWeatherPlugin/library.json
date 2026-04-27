@@ -19,6 +19,8 @@
         "name": "Views"
     }, {
         "name": "Utilities"
+    }, {
+        "name": "RestService"
     }],
     "frameworks": "*",
     "platforms": "*"

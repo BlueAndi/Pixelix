@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   ConnectedState.cpp
  * @brief  System state: Connected
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -34,7 +35,7 @@
  *****************************************************************************/
 #include "ConnectedState.h"
 #include "SysMsg.h"
-#include "UpdateMgr.h"
+#include "RestartMgr.h"
 #include "MyWebServer.h"
 #include "DisplayMgr.h"
 #include "Services.h"
@@ -78,66 +79,48 @@
 
 void ConnectedState::entry(StateMachine& sm)
 {
-    SettingsService&    settings        = SettingsService::getInstance();
-    String              infoStr         = "Hostname: ";
-    String              hostname;
-    String              infoStringIp    = "IP: ";
-    String              notifyURL       = "-";
-    bool                isQuiet         = false;
+    SettingsService& settings     = SettingsService::getInstance();
+    String           infoStr      = "Hostname: ";
+    String           infoStringIp = " IP: ";
+    String           notifyURL;
+    bool             isQuiet                = false;
+    const uint32_t   DURATION_NON_SCROLLING = 4000U; /* ms */
+    const uint32_t   SCROLLING_REPEAT_NUM   = 2U;
 
     LOG_INFO("Connected.");
 
     /* Get some settings. */
     if (false == settings.open(true))
     {
-        LOG_WARNING("Use default hostname.");
+        LOG_WARNING("Using default hostname.");
 
-        hostname    = settings.getHostname().getDefault();
-        notifyURL   = settings.getNotifyURL().getDefault();
-        isQuiet     = settings.getQuietMode().getDefault();
+        notifyURL = settings.getNotifyURL().getDefault();
+        isQuiet   = settings.getQuietMode().getDefault();
     }
     else
     {
-        hostname    = settings.getHostname().getValue();
-        notifyURL   = settings.getNotifyURL().getValue();
-        isQuiet     = settings.getQuietMode().getValue();
+        notifyURL = settings.getNotifyURL().getValue();
+        isQuiet   = settings.getQuietMode().getValue();
 
         settings.close();
     }
 
-    /* Set hostname. Note, wifi must be connected somehow. */
-    if (false == WiFi.setHostname(hostname.c_str()))
+    /* Notify about successful network connection. */
+    DisplayMgr::getInstance().setNetworkStatus(true);
+
+    /* Show hostname and IP. */
+    infoStr += WiFi.getHostname();
+    infoStr += infoStringIp;
+    infoStr += WiFi.localIP().toString();
+
+    LOG_INFO(infoStr);
+
+    if (false == isQuiet)
     {
-        String errorStr = "Can't set AP hostname.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
+        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
     }
-    else
-    {
-        const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
-        const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
 
-        /* Notify about successful network connection. */
-        DisplayMgr::getInstance().setNetworkStatus(true);
-
-        /* Show hostname and IP. */
-        infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
-        infoStr += " IP: ";
-        infoStr += WiFi.localIP().toString();
-
-        LOG_INFO(infoStr);
-
-        if (false == isQuiet)
-        {
-            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
-        }
-
-        pushUrl(notifyURL);
-    }
+    pushUrl(notifyURL);
 }
 
 void ConnectedState::process(StateMachine& sm)
@@ -145,18 +128,8 @@ void ConnectedState::process(StateMachine& sm)
     /* Handle webserver. */
     MyWebServer::process();
 
-    /* Handle update, there may be one in the background. */
-    UpdateMgr::getInstance().process();
-
-    /* Restart requested by update manager? This may happen after a successful received
-     * new firmware or filesystem binary.
-     */
-    if (true == UpdateMgr::getInstance().isRestartRequested())
-    {
-        sm.setState(RestartState::getInstance());
-    }
     /* Connection lost? */
-    else if (false == WiFi.isConnected())
+    if (false == WiFi.isConnected())
     {
         LOG_INFO("Connection lost.");
 
@@ -168,6 +141,8 @@ void ConnectedState::process(StateMachine& sm)
 
     Services::processAll();
     SensorDataProvider::getInstance().process();
+
+    handlePushUrlResponse();
 }
 
 void ConnectedState::exit(StateMachine& sm)
@@ -183,44 +158,28 @@ void ConnectedState::exit(StateMachine& sm)
  * Private Methods
  *****************************************************************************/
 
-void ConnectedState::initHttpClient()
-{
-    m_client.regOnResponse([](const HttpResponse& rsp){
-        uint16_t statusCode = rsp.getStatusCode();
-
-        if (HttpStatus::STATUS_CODE_OK == statusCode)
-        {
-            LOG_INFO("Online state reported.");
-        }
-
-    });
-
-    m_client.regOnError([]() {
-        LOG_WARNING("Connection error happened.");
-   });
-}
-
 void ConnectedState::pushUrl(const String& pushUrl)
 {
     /* If a push URL is set, notify about the online status. */
-    if (false == pushUrl.isEmpty())
+    if ((false == pushUrl.isEmpty()) &&
+        (INVALID_HTTP_JOB_ID == m_pushJobId))
     {
-        String      url             = pushUrl;
-        const char* GET_CMD         = "get ";
-        const char* POST_CMD        = "post ";
-        bool        isGet           = true;
-        bool        isSuccessful    = false;
+        HttpService& httpService = HttpService::getInstance();
+        String       url         = pushUrl;
+        const char*  GET_CMD     = "get ";
+        const char*  POST_CMD    = "post ";
+        bool         isGet       = true;
 
         /* URL prefix might indicate the kind of request. */
         url.toLowerCase();
         if (true == url.startsWith(GET_CMD))
         {
-            url = url.substring(strlen(GET_CMD));
+            url   = url.substring(strlen(GET_CMD));
             isGet = true;
         }
         else if (true == url.startsWith(POST_CMD))
         {
-            url = url.substring(strlen(POST_CMD));
+            url   = url.substring(strlen(POST_CMD));
             isGet = false;
         }
         else
@@ -228,35 +187,46 @@ void ConnectedState::pushUrl(const String& pushUrl)
             ;
         }
 
-        if (true == m_client.begin(url))
+        if (false == isGet)
         {
-            if (false == isGet)
+            m_pushJobId = httpService.post(url.c_str(), nullptr, 0U);
+
+            if (INVALID_HTTP_JOB_ID == m_pushJobId)
             {
-                if (false == m_client.POST())
-                {
-                    LOG_WARNING("POST %s failed.", url.c_str());
-                }
-                else
-                {
-                    isSuccessful = true;
-                }
+                LOG_WARNING("POST %s failed.", url.c_str());
+            }
+        }
+        else
+        {
+            m_pushJobId = httpService.get(url.c_str());
+
+            if (INVALID_HTTP_JOB_ID == m_pushJobId)
+            {
+                LOG_WARNING("GET %s failed.", url.c_str());
+            }
+        }
+    }
+}
+
+void ConnectedState::handlePushUrlResponse()
+{
+    if (INVALID_HTTP_JOB_ID != m_pushJobId)
+    {
+        HttpService& httpService = HttpService::getInstance();
+        HttpRsp      response;
+
+        if (true == httpService.getResponse(m_pushJobId, response))
+        {
+            if (HTTP_CODE_OK == response.statusCode)
+            {
+                LOG_INFO("Push URL successful.");
             }
             else
             {
-                if (false == m_client.GET())
-                {
-                    LOG_WARNING("GET %s failed.", url.c_str());
-                }
-                else
-                {
-                    isSuccessful = true;
-                }
+                LOG_WARNING("Push URL failed, HTTP status code: %u", response.statusCode);
             }
 
-            if (false == isSuccessful)
-            {
-                LOG_INFO("Notification triggered.");
-            }
+            m_pushJobId = INVALID_HTTP_JOB_ID;
         }
     }
 }

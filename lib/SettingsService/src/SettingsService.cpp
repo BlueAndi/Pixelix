@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SettingsService.cpp
  * @brief  Settings service
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -57,6 +58,8 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/* clang-format off */
 
 /** SettingsService namespace used for preferences */
 static const char*  PREF_NAMESPACE                  = "settings";
@@ -96,6 +99,12 @@ static const char*  KEY_HOSTNAME                    = "hostname";
 /** Brightness key */
 static const char*  KEY_BRIGHTNESS                  = "brightness";
 
+/** Min. brightness soft limit key */
+static const char*  KEY_MIN_BRIGHTNESS_SL           = "min_bright_sl";
+
+/** Max. brightness soft limit key */
+static const char*  KEY_MAX_BRIGHTNESS_SL           = "max_bright_sl";
+
 /** Automatic brightness control key */
 static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "a_brightn_ctrl";
 
@@ -119,6 +128,27 @@ static const char*  KEY_QUIET_MODE                  = "quiet_mode";
 
 /** Fade effect key */
 static const char*  KEY_FADE_EFFECT                 = "fade_effect";
+
+/** Brush type key */
+static const char*  KEY_BRUSH_TYPE                   = "brush_type";
+
+/** Solid brush color key */
+static const char*  KEY_SOLID_BRUSH_COLOR           = "sb_color";
+
+/** Linear gradient color 1 key */
+static const char*  KEY_LINEAR_GRADIENT_COLOR1      = "lg_color1";
+
+/** Linear gradient color 2 key */
+static const char*  KEY_LINEAR_GRADIENT_COLOR2      = "lg_color2";
+
+/** Linear gradient offset key */
+static const char*  KEY_LINEAR_GRADIENT_OFFSET      = "lg_offset";
+
+/** Linear gradient length key */
+static const char*  KEY_LINEAR_GRADIENT_LENGTH      = "lg_length";
+
+/** Linear gradient vertical key */
+static const char*  KEY_LINEAR_GRADIENT_VERTICAL     = "lg_vertical";
 
 /* ---------- Key value pair names ---------- */
 
@@ -149,6 +179,12 @@ static const char*  NAME_HOSTNAME                   = "Hostname";
 /** Brightness name of key value pair */
 static const char*  NAME_BRIGHTNESS                 = "Brightness set at startup in %";
 
+/** Min. brightness soft limit name of key value pair */
+static const char*  NAME_MIN_BRIGHTNESS_SL          = "Min. brightness soft limit in %";
+
+/** Max. brightness soft limit name of key value pair */
+static const char*  NAME_MAX_BRIGHTNESS_SL          = "Max. brightness soft limit in %";
+
 /** Automatic brightness control name of key value pair */
 static const char*  NAME_AUTO_BRIGHTNESS_CTRL       = "Autom. brightness control";
 
@@ -172,6 +208,27 @@ static const char*  NAME_QUIET_MODE                 = "Quiet mode (skip unnecess
 
 /** Fade effect name */
 static const char*  NAME_FADE_EFFECT                = "Fade effect (0: no, 1: linear, 2: move x, 3: move y)";
+
+/** Brush type name */
+static const char*  NAME_BRUSH_TYPE                 = "Text brush type (0: solid color, 1: linear gradient color)";
+
+/** Solid brush color name */
+static const char*  NAME_SOLID_BRUSH_COLOR          = "Solid brush color (RRGGBB in hex)";
+
+/** Linear gradient color 1 name */
+static const char*  NAME_LINEAR_GRADIENT_COLOR1     = "Linear gradient color 1 (RRGGBB in hex)";
+
+/** Linear gradient color 2 name */
+static const char*  NAME_LINEAR_GRADIENT_COLOR2     = "Linear gradient color 2 (RRGGBB in hex)";
+
+/** Linear gradient offset name */
+static const char*  NAME_LINEAR_GRADIENT_OFFSET      = "Linear gradient offset in pixels";
+
+/** Linear gradient length name */
+static const char*  NAME_LINEAR_GRADIENT_LENGTH      = "Linear gradient length in pixels";
+
+/** Linear gradient vertical name */
+static const char*  NAME_LINEAR_GRADIENT_VERTICAL    = "Linear gradient vertical (checked) or horizontal (unchecked)";
 
 /* ---------- Default values ---------- */
 
@@ -202,6 +259,12 @@ static const char*      DEFAULT_HOSTNAME                = "pixelix";
 /** Brightness default value in % */
 static const uint8_t    DEFAULT_BRIGHTNESS              = 25U; /* If powered via USB, keep this at 25% to avoid damage. */
 
+/** Min. brightness soft limit default value in % */
+static const uint8_t    DEFAULT_MIN_BRIGHTNESS_SL           = 10U;
+
+/** Max. brightness soft limit default value in % */
+static const uint8_t    DEFAULT_MAX_BRIGHTNESS_SL           = 100U;
+
 /** Automatic brightness control default value */
 static const bool       DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 
@@ -225,6 +288,27 @@ static const bool       DEFAULT_QUIET_MODE              = false;
 
 /** Fade effect default value */
 static const uint8_t    DEFAULT_FADE_EFFECT             = 1U;
+
+/** Brush type default value */
+static const uint8_t    DEFAULT_BRUSH_TYPE                  = 0U; /* Solid brush */
+
+/** Solid brush color default value */
+static const char*      DEFAULT_SOLID_BRUSH_COLOR           = "FFFFFF"; /* RGB888 - White */
+
+/** Linear gradient color 1 default value */
+static const char*      DEFAULT_LINEAR_GRADIENT_COLOR1      = "FF0000"; /* RGB888 - Red */
+
+/** Linear gradient color 2 default value */
+static const char*      DEFAULT_LINEAR_GRADIENT_COLOR2      = "0000FF"; /* RGB888 - Blue */
+
+/** Linear gradient offset default value */
+static const int32_t    DEFAULT_LINEAR_GRADIENT_OFFSET      = 0;
+
+/** Linear gradient length default value */
+static const uint16_t   DEFAULT_LINEAR_GRADIENT_LENGTH      = 32U;
+
+/** Linear gradient vertical default value */
+static const bool       DEFAULT_LINEAR_GRADIENT_VERTICAL    = false;
 
 /* ---------- Minimum values ---------- */
 
@@ -255,6 +339,12 @@ static const size_t     MIN_VALUE_HOSTNAME              = 1U;
 /** Brightness min. value in %. Its a hard limit. The soft limit can be adjusted by the user. */
 static const uint8_t    MIN_VALUE_BRIGHTNESS            = 10U;
 
+/** Min. brightness soft limit min. value in %. */
+static const uint8_t    MIN_VALUE_MIN_BRIGHTNESS_SL         = MIN_VALUE_BRIGHTNESS;
+
+/** Max. brightness soft limit min. value in %. */
+static const uint8_t    MIN_VALUE_MAX_BRIGHTNESS_SL         = MIN_VALUE_BRIGHTNESS;
+
 /*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** POSIX timezone min. length */
@@ -276,6 +366,26 @@ static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
 
 /** Fade effect min. value */
 static const uint8_t    MIN_VALUE_FADE_EFFECT           = 0U;
+
+/** Brush type minimum value */
+static const uint8_t    MIN_VALUE_BRUSH_TYPE                = 0U;
+
+/** Solid brush color minimum length */
+static const size_t     MIN_VALUE_SOLID_BRUSH_COLOR         = 6U;
+
+/** Linear gradient color 1 minimum length */
+static const size_t     MIN_VALUE_LINEAR_GRADIENT_COLOR1    = 6U;
+
+/** Linear gradient color 2 minimum length */
+static const size_t     MIN_VALUE_LINEAR_GRADIENT_COLOR2    = 6U;
+
+/** Linear gradient offset minimum value */
+static const int32_t    MIN_VALUE_LINEAR_GRADIENT_OFFSET    = 0;
+
+/** Linear gradient length minimum value */
+static const uint32_t   MIN_VALUE_LINEAR_GRADIENT_LENGTH    = 0U;
+
+/*                      MIN_VALUE_LINEAR_GRADIENT_VERTICAL */
 
 /* ---------- Maximum values ---------- */
 
@@ -306,6 +416,12 @@ static const size_t     MAX_VALUE_HOSTNAME              = 63U;
 /** Brightness max. value in %. Its a hard limit. The soft limit can be adjusted by the user. */
 static const uint8_t    MAX_VALUE_BRIGHTNESS            = 100U;
 
+/** Min. brightness soft limit max. value in %. */
+static const uint8_t    MAX_VALUE_MIN_BRIGHTNESS_SL         = MAX_VALUE_BRIGHTNESS;
+
+/** Max. brightness soft limit max. value in %. */
+static const uint8_t    MAX_VALUE_MAX_BRIGHTNESS_SL         = MAX_VALUE_BRIGHTNESS;
+
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** POSIX timezone max. length */
@@ -333,6 +449,28 @@ static const size_t     MAX_VALUE_NOTIFY_URL            = 64U;
 
 /** Fade effect max. value */
 static const uint8_t    MAX_VALUE_FADE_EFFECT           = 3U;
+
+/** Brush type maximum value */
+static const uint8_t    MAX_VALUE_BRUSH_TYPE                = 1U;
+
+/** Solid brush color maximum length */
+static const size_t     MAX_VALUE_SOLID_BRUSH_COLOR         = 6U;
+
+/** Linear gradient color 1 maximum length */
+static const size_t     MAX_VALUE_LINEAR_GRADIENT_COLOR1    = 6U;
+
+/** Linear gradient color 2 maximum length */
+static const size_t     MAX_VALUE_LINEAR_GRADIENT_COLOR2    = 6U;
+
+/** Linear gradient offset maximum value */
+static const int32_t    MAX_VALUE_LINEAR_GRADIENT_OFFSET    = INT16_MAX;
+
+/** Linear gradient length maximum value */
+static const uint32_t   MAX_VALUE_LINEAR_GRADIENT_LENGTH    = UINT16_MAX;
+
+/*                      MIN_VALUE_LINEAR_GRADIENT_VERTICAL */
+
+/* clang-format on */
 
 /******************************************************************************
  * Public Methods
@@ -488,7 +626,7 @@ void SettingsService::unregisterSetting(KeyValue* setting)
     {
         if (setting == *it)
         {
-            it = m_keyValueList.erase(it);
+            (void)m_keyValueList.erase(it);
             break;
         }
         else
@@ -506,6 +644,7 @@ void SettingsService::unregisterSetting(KeyValue* setting)
  * Private Methods
  *****************************************************************************/
 
+/* clang-format off */
 SettingsService::SettingsService() :
     m_preferences(),
     m_keyValueList(),
@@ -518,6 +657,8 @@ SettingsService::SettingsService() :
     m_webLoginPassword      (m_preferences, KEY_WEB_LOGIN_PASSWORD,     NAME_WEB_LOGIN_PASSWORD,    DEFAULT_WEB_LOGIN_PASSWORD,     MIN_VALUE_WEB_LOGIN_PASSWORD,   MAX_VALUE_WEB_LOGIN_PASSWORD,   true),
     m_hostname              (m_preferences, KEY_HOSTNAME,               NAME_HOSTNAME,              DEFAULT_HOSTNAME,               MIN_VALUE_HOSTNAME,             MAX_VALUE_HOSTNAME),
     m_brightness            (m_preferences, KEY_BRIGHTNESS,             NAME_BRIGHTNESS,            DEFAULT_BRIGHTNESS,             MIN_VALUE_BRIGHTNESS,           MAX_VALUE_BRIGHTNESS),
+    m_minBrightnessSoftLimit    (m_preferences, KEY_MIN_BRIGHTNESS_SL,          NAME_MIN_BRIGHTNESS_SL,         DEFAULT_MIN_BRIGHTNESS_SL,      MIN_VALUE_MIN_BRIGHTNESS_SL,        MAX_VALUE_MIN_BRIGHTNESS_SL),
+    m_maxBrightnessSoftLimit    (m_preferences, KEY_MAX_BRIGHTNESS_SL,          NAME_MAX_BRIGHTNESS_SL,         DEFAULT_MAX_BRIGHTNESS_SL,      MIN_VALUE_MAX_BRIGHTNESS_SL,        MAX_VALUE_MAX_BRIGHTNESS_SL),
     m_autoBrightnessCtrl    (m_preferences, KEY_AUTO_BRIGHTNESS_CTRL,   NAME_AUTO_BRIGHTNESS_CTRL,  DEFAULT_AUTO_BRIGHTNESS_CTRL),
     m_timezone              (m_preferences, KEY_TIMEZONE,               NAME_TIMEZONE,              DEFAULT_TIMEZONE,               MIN_VALUE_TIMEZONE,             MAX_VALUE_TIMEZONE),
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
@@ -525,9 +666,15 @@ SettingsService::SettingsService() :
     m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE),
     m_notifyURL             (m_preferences, KEY_NOTIFY_URL,             NAME_NOTIFY_URL,            DEFAULT_NOTIFY_URL,             MIN_VALUE_NOTIFY_URL,           MAX_VALUE_NOTIFY_URL),
     m_quietMode             (m_preferences, KEY_QUIET_MODE,             NAME_QUIET_MODE,            DEFAULT_QUIET_MODE),
-    m_fadeEffect            (m_preferences, KEY_FADE_EFFECT,            NAME_FADE_EFFECT,           DEFAULT_FADE_EFFECT,            MIN_VALUE_FADE_EFFECT,          MAX_VALUE_FADE_EFFECT)
+    m_fadeEffect                (m_preferences, KEY_FADE_EFFECT,                NAME_FADE_EFFECT,               DEFAULT_FADE_EFFECT,            MIN_VALUE_FADE_EFFECT,              MAX_VALUE_FADE_EFFECT),
+    m_brushType                 (m_preferences, KEY_BRUSH_TYPE,                 NAME_BRUSH_TYPE,                DEFAULT_BRUSH_TYPE,             MIN_VALUE_BRUSH_TYPE,               MAX_VALUE_BRUSH_TYPE),
+    m_solidBrushColor           (m_preferences, KEY_SOLID_BRUSH_COLOR,          NAME_SOLID_BRUSH_COLOR,         DEFAULT_SOLID_BRUSH_COLOR,      MIN_VALUE_SOLID_BRUSH_COLOR,        MAX_VALUE_SOLID_BRUSH_COLOR),
+    m_linearGradientColor1      (m_preferences, KEY_LINEAR_GRADIENT_COLOR1,     NAME_LINEAR_GRADIENT_COLOR1,    DEFAULT_LINEAR_GRADIENT_COLOR1, MIN_VALUE_LINEAR_GRADIENT_COLOR1,   MAX_VALUE_LINEAR_GRADIENT_COLOR1),
+    m_linearGradientColor2      (m_preferences, KEY_LINEAR_GRADIENT_COLOR2,     NAME_LINEAR_GRADIENT_COLOR2,    DEFAULT_LINEAR_GRADIENT_COLOR2, MIN_VALUE_LINEAR_GRADIENT_COLOR2,   MAX_VALUE_LINEAR_GRADIENT_COLOR2),
+    m_linearGradientOffset      (m_preferences, KEY_LINEAR_GRADIENT_OFFSET,     NAME_LINEAR_GRADIENT_OFFSET,    DEFAULT_LINEAR_GRADIENT_OFFSET, MIN_VALUE_LINEAR_GRADIENT_OFFSET,   MAX_VALUE_LINEAR_GRADIENT_OFFSET),
+    m_linearGradientLength      (m_preferences, KEY_LINEAR_GRADIENT_LENGTH,     NAME_LINEAR_GRADIENT_LENGTH,    DEFAULT_LINEAR_GRADIENT_LENGTH, MIN_VALUE_LINEAR_GRADIENT_LENGTH,   MAX_VALUE_LINEAR_GRADIENT_LENGTH),
+    m_linearGradientVertical    (m_preferences, KEY_LINEAR_GRADIENT_VERTICAL,   NAME_LINEAR_GRADIENT_VERTICAL,  DEFAULT_LINEAR_GRADIENT_VERTICAL)
 {
-
     /* Skip m_version, because it shall not be modified by the user. */
     m_keyValueList.push_back(&m_wifiSSID);
     m_keyValueList.push_back(&m_wifiPassphrase);
@@ -537,6 +684,8 @@ SettingsService::SettingsService() :
     m_keyValueList.push_back(&m_webLoginPassword);
     m_keyValueList.push_back(&m_hostname);
     m_keyValueList.push_back(&m_brightness);
+    m_keyValueList.push_back(&m_minBrightnessSoftLimit);
+    m_keyValueList.push_back(&m_maxBrightnessSoftLimit);
     m_keyValueList.push_back(&m_autoBrightnessCtrl);
     m_keyValueList.push_back(&m_timezone);
     m_keyValueList.push_back(&m_ntpServer);
@@ -545,7 +694,15 @@ SettingsService::SettingsService() :
     m_keyValueList.push_back(&m_notifyURL);
     m_keyValueList.push_back(&m_quietMode);
     m_keyValueList.push_back(&m_fadeEffect);
+    m_keyValueList.push_back(&m_brushType);
+    m_keyValueList.push_back(&m_solidBrushColor);
+    m_keyValueList.push_back(&m_linearGradientColor1);
+    m_keyValueList.push_back(&m_linearGradientColor2);
+    m_keyValueList.push_back(&m_linearGradientOffset);
+    m_keyValueList.push_back(&m_linearGradientLength);
+    m_keyValueList.push_back(&m_linearGradientVertical);
 }
+/* clang-format on */
 
 SettingsService::~SettingsService()
 {

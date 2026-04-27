@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   View.h
  * @brief  GruenbeckPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup PLUGIN
@@ -80,7 +81,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -97,18 +98,18 @@ private:
     /**
      * Image path within the filesystem to icon.
      */
-    static const char*  ICON_PATH;
+    static const char* ICON_PATH;
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _GruenbeckPlugin */
+} // namespace _GruenbeckPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* GRUENBECK_PLUGIN_VIEW_H */
+#endif /* GRUENBECK_PLUGIN_VIEW_H */
 
 /** @} */

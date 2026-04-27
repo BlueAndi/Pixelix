@@ -21,26 +21,42 @@
 
 ## MQTT
 
-Pixelix is a MQTT client which can be connected to a MQTT broker. The MQTT broker URL is configued in the settings via webinterface.
-
-Format: \[mqtt://\]\[&lt;USER&gt;:&lt;PASSWORD&gt;@\]&lt;URI&gt;
+Pixelix is a MQTT client which can be connected to a MQTT broker. The MQTT broker is configued in the service settings via webinterface.
 
 Examples:
 
-* without authentication:
-    * mosquitto.at.home
-    * mqtt://mosquitto.at.home
-* with authentication:
-    * myuser:mypassword@mosquitto.at.home
-    * mqtt://myuser:mypassword@mosquitto.at.home
+- no TLS and without authentication:
+  - enable: checked
+  - use TLS: unchecked
+  - broker: mosquitto.at.home
+  - port: 1883
+  - username: empty
+  - password: empty
+- no TLS and with authentication:
+  - enable: checked
+  - use TLS: unchecked
+  - broker: mosquitto.at.home
+  - port: 1883
+  - username: myuser
+  - password: mypassword
+- TLS with authentication:
+  - enable: checked
+  - use TLS: checked
+  - broker: mosquitto.at.home
+  - port: 1883
+  - username: myuser
+  - password: mypassword
+  - root CA certificate: ...
+  - client certificate: ...
+  - client key: ...
 
 ## Overview Mindmap
 
-![topic-handling-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/topic_handling_mindmap.wsd)
+![topic-handling-mindmap](../doc/architecture/svg/topic_handling_mindmap.svg)
 
 ## MQTT Topics
 
-![mqtt-topic-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/mqtt_mindmap.wsd)
+![mqtt-topic-mindmap](../doc/architecture/svg/mqtt_mindmap.svg)
 
 ### Birth and last will
 
@@ -52,16 +68,16 @@ After the successful connection establishment to the MQTT broker, Pixelix will s
 
 The MQTT base topic path to access plugin related topics can be setup with the plugin UID or the plugin alias:
 
-* &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;
-* &lt;HOSTNAME&gt;/display/alias/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;
+- &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;
+- &lt;HOSTNAME&gt;/display/alias/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;
 
 ### Readable/Writeable Topic
 
 If a topic is readable or writeable, use the following suffixes for the MQTT base path:
 
-* For readable topics, add ```/state``` to the base path.
-* For writeable topics, add ```/set``` to the base path.
-* For topics that are both readable and writeable, use both paths.
+- For readable topics, add ```/state``` to the base path.
+- For writeable topics, add ```/set``` to the base path.
+- For topics that are both readable and writeable, use both paths.
 
 This ensures clear communication and control over the topics.
 
@@ -69,32 +85,35 @@ This ensures clear communication and control over the topics.
 
 The complete topic name can be derived from the REST API documentation.
 
-Example: JustTextPlugin
+Example: IconTextPlugin
 
 The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;?text=&lt;TEXT&gt;
 
 1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/ part with &lt;HOSTNAME&gt; and remove the parameters which will look like &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;
 2. To read from the topic, add ```/state```: &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;/state
-    *  Every URL parameter, which is in this case text=&lt;TEXT&gt; will be received in JSON format.
-    ```json
-    {
-        "text": "<TEXT>"
-    }
-    ```
+    - Every URL parameter, which is in this case text=&lt;TEXT&gt; will be received in JSON format.
+
+        ```json
+        {
+            "text": "<TEXT>"
+        }
+        ```
+
 3. To write to the topic, add  ```/set```: &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;/set
-    * Every URL parameter, which is in this case text=&lt;TEXT&gt; must be sent in JSON format.
-    ```json
-    {
-        "text": "<TEXT>"
-    }
-    ```
+    - Every URL parameter, which is in this case text=&lt;TEXT&gt; must be sent in JSON format.
+
+        ```json
+        {
+            "text": "<TEXT>"
+        }
+        ```
 
 ### Sending a bitmap
 
 The JSON data must have two keys:
 
-* fileName: The name of the file which to upload.
-* file: The file itself in BASE64 encoded.
+- fileName: The name of the file which to upload.
+- file: The file itself in BASE64 encoded.
 
 Example: IconTextPlugin
 
@@ -109,14 +128,14 @@ Example: IconTextPlugin
 
 The sensor topic path is valid if the sensor is available!
 
-* Temperature in °C: &lt;HOSTNAME&gt;/sensors/0/temperature/state
-* Humidity in %: &lt;HOSTNAME&gt;/sensors/1/humidity/state
-* Illuminance in lx: &lt;HOSTNAME&gt;/sensors/2/illuminance/state
-* Battery SOC in %: &lt;HOSTNAME&gt;/sensors/3/soc/state
+- Temperature in °C: &lt;HOSTNAME&gt;/sensors/0/temperature/state
+- Humidity in %: &lt;HOSTNAME&gt;/sensors/1/humidity/state
+- Illuminance in lx: &lt;HOSTNAME&gt;/sensors/2/illuminance/state
+- Battery SOC in %: &lt;HOSTNAME&gt;/sensors/3/soc/state
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

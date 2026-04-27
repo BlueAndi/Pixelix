@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   YAGfxBitmap.h
  * @brief  Yet anoterh GFX bitmap class
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -45,6 +46,8 @@
  *****************************************************************************/
 #include <BaseGfxBitmap.hpp>
 #include <YAColor.h>
+#include <TypedAllocator.hpp>
+#include <PsAllocator.hpp>
 
 /******************************************************************************
  * Macros
@@ -58,20 +61,20 @@
 using YAGfxBitmap = BaseGfxBitmap<Color>;
 
 /** GFX static bitmap with concrete color.
- * 
+ *
  * @tparam width    Bitmap width in pixels.
  * @tparam height   Bitmap height in pixels.
  */
 template < uint16_t width, uint16_t height >
-using YAGfxStaticBitmap = BaseGfxStaticBitmap<Color, width, height>;
+using YAGfxStaticBitmap  = BaseGfxStaticBitmap<Color, width, height>;
 
 /** GFX dynamic bitmap with concrete color. */
-using YAGfxDynamicBitmap = BaseGfxDynamicBitmap<Color>;
+using YAGfxDynamicBitmap = BaseGfxDynamicBitmap<Color, TypedAllocator<Color, PsAllocator>>;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* YAGFX_BITMAP_H */
+#endif /* YAGFX_BITMAP_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   BitmapWidget.cpp
  * @brief  Bitmap Widget
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -37,6 +38,7 @@
 
 #include <YAColor.h>
 #include <Logging.h>
+#include <FileUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,13 +61,22 @@
  *****************************************************************************/
 
 /* Initialize bitmap widget type. */
-const char* BitmapWidget::WIDGET_TYPE       = "bitmap";
+const char* BitmapWidget::WIDGET_TYPE             = "bitmap";
 
 /* Initialize bitmap image filename extension. */
-const char* BitmapWidget::FILE_EXT_BITMAP   = ".bmp";
+const char* BitmapWidget::FILE_EXT_BITMAP         = "bmp";
 
 /* Initialize GIF image filename extension. */
-const char* BitmapWidget::FILE_EXT_GIF      = ".gif";
+const char* BitmapWidget::FILE_EXT_GIF            = "gif";
+
+/* Initialize supported image file extensions. */
+const char* BitmapWidget::IMAGE_FILE_EXTENSIONS[] = {
+    FILE_EXT_BITMAP,
+    FILE_EXT_GIF
+};
+
+/* Initialize number of supported image file extensions. */
+const size_t BitmapWidget::IMAGE_FILE_EXTENSIONS_COUNT = sizeof(BitmapWidget::IMAGE_FILE_EXTENSIONS) / sizeof(BitmapWidget::IMAGE_FILE_EXTENSIONS[0U]);
 
 /******************************************************************************
  * Public Methods
@@ -76,9 +87,10 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     if (&widget != this)
     {
         Widget::operator=(widget);
-        
+
         m_imgType       = widget.m_imgType;
         m_bitmap        = widget.m_bitmap;
+        m_gifFileLoader = widget.m_gifFileLoader;
         m_gifPlayer     = widget.m_gifPlayer;
         m_hAlign        = widget.m_hAlign;
         m_vAlign        = widget.m_vAlign;
@@ -124,7 +136,7 @@ void BitmapWidget::clear(const Color& color)
     m_imgType = IMG_TYPE_NO_IMAGE;
 }
 
-bool BitmapWidget::load(FS& fs, const String& filename)
+bool BitmapWidget::load(const String& filename, FS& fs)
 {
     bool isSuccessful = false;
 
@@ -134,20 +146,18 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        int32_t index = filename.lastIndexOf(".");
+        String fileExtension = FileUtil::getFileExtension(filename);
 
         /* File extension found? */
-        if (0 <= index)
+        if (false == fileExtension.isEmpty())
         {
-            String fileExt = filename.substring(index);
-
             /* BMP image? */
-            if (true == fileExt.equalsIgnoreCase(FILE_EXT_BITMAP))
+            if (true == fileExtension.equalsIgnoreCase(FILE_EXT_BITMAP))
             {
                 isSuccessful = loadBMP(fs, filename);
             }
             /* GIF image? */
-            else if (true == fileExt.equalsIgnoreCase(FILE_EXT_GIF))
+            else if (true == fileExtension.equalsIgnoreCase(FILE_EXT_GIF))
             {
                 isSuccessful = loadGIF(fs, filename);
             }
@@ -167,6 +177,24 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     return isSuccessful;
 }
 
+bool BitmapWidget::isImageTypeSupported(const String& path)
+{
+    bool isSupported = false;
+
+    for (size_t idx = 0U; idx < sizeof(IMAGE_FILE_EXTENSIONS) / sizeof(IMAGE_FILE_EXTENSIONS[0U]); ++idx)
+    {
+        const char* ext = IMAGE_FILE_EXTENSIONS[idx];
+
+        if (true == path.endsWith(ext))
+        {
+            isSupported = true;
+            break;
+        }
+    }
+
+    return isSupported;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -177,10 +205,10 @@ bool BitmapWidget::load(FS& fs, const String& filename)
 
 void BitmapWidget::alignWidget()
 {
-    uint16_t imageWidth     = 0U;
-    uint16_t imageHeight    = 0U;
+    uint16_t imageWidth  = 0U;
+    uint16_t imageHeight = 0U;
 
-    switch(m_imgType)
+    switch (m_imgType)
     {
     case IMG_TYPE_NO_IMAGE:
         break;
@@ -199,7 +227,7 @@ void BitmapWidget::alignWidget()
         break;
     }
 
-    switch(m_hAlign)
+    switch (m_hAlign)
     {
     case Alignment::Horizontal::HORIZONTAL_LEFT:
         m_hAlignPosX = 0;
@@ -217,7 +245,7 @@ void BitmapWidget::alignWidget()
         break;
     }
 
-    switch(m_vAlign)
+    switch (m_vAlign)
     {
     case Alignment::Vertical::VERTICAL_TOP:
         m_vAlignPosY = 0;
@@ -230,7 +258,7 @@ void BitmapWidget::alignWidget()
     case Alignment::Vertical::VERTICAL_BOTTOM:
         m_vAlignPosY = m_canvas.getHeight() - imageHeight;
         break;
-    
+
     default:
         break;
     }
@@ -238,9 +266,9 @@ void BitmapWidget::alignWidget()
 
 bool BitmapWidget::loadBMP(FS& fs, const String& filename)
 {
-    bool                isSuccessful    = false;
-    BmpImgLoader        loader;
-    BmpImgLoader::Ret   ret             = loader.load(fs, filename, m_bitmap);
+    bool              isSuccessful = false;
+    BmpImgLoader      loader;
+    BmpImgLoader::Ret ret = loader.load(fs, filename, m_bitmap);
 
     if (BmpImgLoader::RET_OK != ret)
     {
@@ -271,7 +299,7 @@ bool BitmapWidget::loadBMP(FS& fs, const String& filename)
         m_gifPlayer.close();
 
         /* Select image type. */
-        m_imgType = IMG_TYPE_BMP;
+        m_imgType    = IMG_TYPE_BMP;
 
         isSuccessful = true;
     }
@@ -281,8 +309,8 @@ bool BitmapWidget::loadBMP(FS& fs, const String& filename)
 
 bool BitmapWidget::loadGIF(FS& fs, const String& filename)
 {
-    bool                isSuccessful    = false;
-    GifImgPlayer::Ret   ret;
+    bool              isSuccessful = false;
+    GifImgPlayer::Ret ret;
 
     /* A already opened GIF image shall be closed first. */
     m_gifPlayer.close();
@@ -292,7 +320,7 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
      * Note: The file is kept in memory, because the application will be able
      *       to remove or replace the file in the filesystem.
      */
-    ret = m_gifPlayer.open(fs, filename, true);
+    ret = m_gifPlayer.open(fs, filename, m_gifFileLoader);
 
     if (GifImgPlayer::RET_OK != ret)
     {
@@ -327,12 +355,12 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
         m_bitmap.release();
 
         /* Select image type. */
-        m_imgType = IMG_TYPE_GIF;
+        m_imgType    = IMG_TYPE_GIF;
 
         isSuccessful = true;
     }
 
-    return isSuccessful;   
+    return isSuccessful;
 }
 
 /******************************************************************************

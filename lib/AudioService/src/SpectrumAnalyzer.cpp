@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SpectrumAnalyzer.cpp
  * @brief  Spectrum analyzer
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -36,12 +37,18 @@
 
 #include <Logging.h>
 #include <Board.h>
+#include <PsAllocator.hpp>
+#include <TypedAllocator.hpp>
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
 
-#define SPECTRUM_ANALYZER_SIM_SIN_EN    0
+/**
+ * Simulation of a sinusoidal signal can be enabled by setting this to 1.
+ * This is for test purposes only, when no microphone is available.
+ */
+#define SPECTRUM_ANALYZER_SIM_SIN_EN 0
 
 /******************************************************************************
  * Macros
@@ -55,7 +62,7 @@
  * Provides the FFT window correction factor.
  * See the National Instruments application note 041:
  * The Fundamentals of FFT-Based Signal Analysis and Measurement
- * 
+ *
  * @tparam windowType The window type, see arduinoFFT.
  */
 template < FFTWindow windowType >
@@ -65,7 +72,7 @@ struct WindowCorrection
 };
 
 /**
- * The FFT rectangle window correction factor. 
+ * The FFT rectangle window correction factor.
  */
 template <>
 struct WindowCorrection<FFTWindow::Rectangle>
@@ -77,7 +84,7 @@ struct WindowCorrection<FFTWindow::Rectangle>
 };
 
 /**
- * The FFT hamming window correction factor. 
+ * The FFT hamming window correction factor.
  */
 template <>
 struct WindowCorrection<FFTWindow::Hamming>
@@ -89,7 +96,7 @@ struct WindowCorrection<FFTWindow::Hamming>
 };
 
 /**
- * The FFT hann window correction factor. 
+ * The FFT hann window correction factor.
  */
 template <>
 struct WindowCorrection<FFTWindow::Hann>
@@ -101,7 +108,7 @@ struct WindowCorrection<FFTWindow::Hann>
 };
 
 /**
- * The FFT blackman-harris window correction factor. 
+ * The FFT blackman-harris window correction factor.
  */
 template <>
 struct WindowCorrection<FFTWindow::Blackman_Harris>
@@ -113,7 +120,7 @@ struct WindowCorrection<FFTWindow::Blackman_Harris>
 };
 
 /**
- * The FFT flat top window correction factor. 
+ * The FFT flat top window correction factor.
  */
 template <>
 struct WindowCorrection<FFTWindow::Flat_top>
@@ -136,9 +143,103 @@ struct WindowCorrection<FFTWindow::Flat_top>
  * Public Methods
  *****************************************************************************/
 
+SpectrumAnalyzer::SpectrumAnalyzer() :
+    m_mutex(),
+    m_real(nullptr),
+    m_imag(nullptr),
+    m_fft(nullptr),
+    m_freqBins(nullptr),
+    m_freqBinsAreReady(false)
+{
+    (void)m_mutex.create();
+}
+
+SpectrumAnalyzer::~SpectrumAnalyzer()
+{
+    deInit();
+    m_mutex.destroy();
+}
+
+bool SpectrumAnalyzer::init()
+{
+    bool                               isSuccessful = false;
+    TypedAllocator<float, PsAllocator> allocator;
+
+    if (nullptr == m_real)
+    {
+        m_real = allocator.allocateArray(AudioDrv::SAMPLES);
+    }
+
+    if (nullptr == m_imag)
+    {
+        m_imag = allocator.allocateArray(AudioDrv::SAMPLES);
+    }
+
+    if (nullptr == m_freqBins)
+    {
+        m_freqBins = allocator.allocateArray(FREQ_BINS);
+    }
+
+    /* The FFT instance is constructed before PSRAM buffers are available.
+     * After deferred allocation, bind the arrays to avoid null dereference
+     * inside ArduinoFFT::windowing().
+     */
+    if ((nullptr != m_real) && (nullptr != m_imag))
+    {
+        m_fft = new (std::nothrow) ArduinoFFT<float>(m_real, m_imag, AudioDrv::SAMPLES, AudioDrv::SAMPLE_RATE);
+    }
+
+    /* Any error? */
+    if ((nullptr != m_real) &&
+        (nullptr != m_imag) &&
+        (nullptr != m_freqBins) &&
+        (nullptr != m_fft))
+    {
+        isSuccessful = true;
+    }
+    else
+    {
+        deInit();
+    }
+
+    return isSuccessful;
+}
+
+void SpectrumAnalyzer::deInit()
+{
+    TypedAllocator<float, PsAllocator> allocator;
+
+    if (nullptr != m_fft)
+    {
+        delete m_fft;
+        m_fft = nullptr;
+    }
+
+    if (nullptr != m_real)
+    {
+        allocator.deallocateArray(m_real);
+        m_real = nullptr;
+    }
+
+    if (nullptr != m_imag)
+    {
+        allocator.deallocateArray(m_imag);
+        m_imag = nullptr;
+    }
+
+    if (nullptr != m_freqBins)
+    {
+        allocator.deallocateArray(m_freqBins);
+        m_freqBins = nullptr;
+    }
+}
+
 void SpectrumAnalyzer::notify(int32_t* data, size_t size)
 {
-    if (nullptr != data)
+    if ((nullptr != data) &&
+        (nullptr != m_real) &&
+        (nullptr != m_imag) &&
+        (nullptr != m_fft))
     {
         size_t index = 0U;
 
@@ -148,15 +249,15 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
          * with an amplitude of 94 db SPL, sampled at 40000 Hz.
          */
         {
-            float signalFrequency   = 1000.0F;
-            float cycles            = (((AudioDrv::SAMPLES - 1U) * signalFrequency) / AudioDrv::SAMPLE_RATE);   /* Number of signal cycles that the sampling will read. */
-            float amplitude         = 420426.0F; /* 94 db SPL */
+            float signalFrequency = 1000.0F;
+            float cycles          = (((AudioDrv::SAMPLES - 1U) * signalFrequency) / AudioDrv::SAMPLE_RATE); /* Number of signal cycles that the sampling will read. */
+            float amplitude       = 420426.0F;                                                              /* 94 db SPL */
 
             for (uint16_t sampleIdx = 0U; sampleIdx < AudioDrv::SAMPLES; ++sampleIdx)
             {
                 /* Build data with positive and negative values. */
                 m_real[sampleIdx] = (amplitude * (sin((sampleIdx * (twoPi * cycles)) / AudioDrv::SAMPLES))) / 2.0F;
-                
+
                 /* Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows. */
                 m_imag[sampleIdx] = 0.0F;
             }
@@ -166,7 +267,7 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
 
 #else /* (SPECTRUM_ANALYZER_SIM_SIN_EN != 0) */
 
-        while(index < size)
+        while ((index < size) && (index < AudioDrv::SAMPLES))
         {
             m_real[index] = static_cast<float>(data[index]);
             m_imag[index] = 0.0F;
@@ -174,7 +275,7 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
             ++index;
         }
 
-#endif  /* (SPECTRUM_ANALYZER_SIM_SIN_EN == 0) */
+#endif /* (SPECTRUM_ANALYZER_SIM_SIN_EN == 0) */
 
         /* Transform the time discrete values to the frequency spectrum. */
         calculateFFT();
@@ -186,23 +287,24 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
 
 bool SpectrumAnalyzer::getFreqBins(float* freqBins, size_t len)
 {
-    bool                isSuccessful    = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    bool              isSuccessful = false;
+    MutexGuard<Mutex> guard(m_mutex);
 
     if ((nullptr != freqBins) &&
         (0U < len) &&
-        ((FREQ_BINS >= len)))
+        ((FREQ_BINS >= len)) &&
+        (nullptr != m_freqBins))
     {
         size_t idx = 0U;
 
-        for(idx = 0U; idx < len; ++idx)
+        for (idx = 0U; idx < len; ++idx)
         {
             freqBins[idx] = m_freqBins[idx];
         }
 
         m_freqBinsAreReady = false;
 
-        isSuccessful = true;
+        isSuccessful       = true;
     }
 
     return isSuccessful;
@@ -218,39 +320,44 @@ bool SpectrumAnalyzer::getFreqBins(float* freqBins, size_t len)
 
 void SpectrumAnalyzer::calculateFFT()
 {
-    static const constexpr  float       HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR  = 2.0F;
-    static const constexpr  FFTWindow   WINDOW_TYPE                             = FFTWindow::Hamming;
-    uint16_t                            idx                                     = 0U;
-
-    /* Note, current arduinoFFT version has a wrong Hann window calculation! */
-    m_fft.windowing(WINDOW_TYPE, FFTDirection::Forward);
-    m_fft.compute(FFTDirection::Forward);
-    m_fft.complexToMagnitude();
-
-    /* In a two-sided spectrum, half the energy is displayed at the positive
-     * frequency, and half the energy is displayed at the negative frequency.
-     * Therefore, to convert from a two-sided spectrum to a single-sided
-     * spectrum, discard the second half of the array and multiply every
-     * point except for DC by two.
-     * 
-     * Depended on the kind of window, it is compensated by multiplication of
-     * the corresponding correction factor.
-     * 
-     * Result is the amplitude spectrum.
-     */
-    for(idx = 1U; idx < FREQ_BINS; ++idx)
+    if ((nullptr != m_real) &&
+        (nullptr != m_imag) &&
+        (nullptr != m_fft))
     {
-        m_real[idx] *= HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR;
-        m_real[idx] /= AudioDrv::SAMPLES * WindowCorrection<WINDOW_TYPE>::factor;
+        static const constexpr float     HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR = 2.0F;
+        static const constexpr FFTWindow WINDOW_TYPE                            = FFTWindow::Hamming;
+        uint16_t                         idx                                    = 0U;
+
+        /* Note, current arduinoFFT version has a wrong Hann window calculation! */
+        m_fft->windowing(WINDOW_TYPE, FFTDirection::Forward);
+        m_fft->compute(FFTDirection::Forward);
+        m_fft->complexToMagnitude();
+
+        /* In a two-sided spectrum, half the energy is displayed at the positive
+         * frequency, and half the energy is displayed at the negative frequency.
+         * Therefore, to convert from a two-sided spectrum to a single-sided
+         * spectrum, discard the second half of the array and multiply every
+         * point except for DC by two.
+         *
+         * Depended on the kind of window, it is compensated by multiplication of
+         * the corresponding correction factor.
+         *
+         * Result is the amplitude spectrum.
+         */
+        for (idx = 1U; idx < FREQ_BINS; ++idx)
+        {
+            m_real[idx] *= HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR;
+            m_real[idx] /= AudioDrv::SAMPLES * WindowCorrection<WINDOW_TYPE>::factor;
+        }
     }
 }
 
 void SpectrumAnalyzer::copyFreqBins()
 {
-    uint16_t            idx             = 0U;
-    MutexGuard<Mutex>   guard(m_mutex);
+    uint16_t          idx = 0U;
+    MutexGuard<Mutex> guard(m_mutex);
 
-    for(idx = 0U; idx < FREQ_BINS; ++idx)
+    for (idx = 0U; idx < FREQ_BINS; ++idx)
     {
         m_freqBins[idx] = m_real[idx];
     }

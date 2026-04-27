@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   FadeMoveY.cpp
  * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Yann Le Glaz <yann_le@web.de>
  */
@@ -74,27 +75,27 @@ bool FadeMoveY::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 
 bool FadeMoveY::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
-    bool    isFinished  = false;
+    bool    isFinished = false;
     int16_t x;
     int16_t y;
 
     if (FADE_STATE_OUT != m_state)
     {
-        m_state     = FADE_STATE_OUT;
-        m_yOffset   = 0;
+        m_state   = FADE_STATE_OUT;
+        m_yOffset = 0;
     }
 
-    for(y = 0; y < (gfx.getHeight() - m_yOffset); ++y)
+    for (y = 0; y < (gfx.getHeight() - m_yOffset); ++y)
     {
-        for(x = 0; x < gfx.getWidth(); ++x)
+        for (x = 0; x < gfx.getWidth(); ++x)
         {
-            gfx.drawPixel(x, y, prev.getColor(x , (y + m_yOffset)));
+            gfx.drawPixel(x, y, prev.getColor(x, (y + m_yOffset)));
         }
     }
 
-    for(y = gfx.getHeight() - m_yOffset; y < gfx.getHeight(); ++y)
+    for (y = gfx.getHeight() - m_yOffset; y < gfx.getHeight(); ++y)
     {
-        for(x = 0; x < gfx.getWidth(); ++x)
+        for (x = 0; x < gfx.getWidth(); ++x)
         {
             gfx.drawPixel(x, y, next.getColor(x, ((y + m_yOffset) - gfx.getHeight())));
         }
@@ -104,8 +105,8 @@ bool FadeMoveY::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 
     if (gfx.getHeight() <= m_yOffset)
     {
-        m_state     = FADE_STATE_INIT;
-        isFinished  = true;
+        m_state    = FADE_STATE_INIT;
+        isFinished = true;
     }
 
     return isFinished;

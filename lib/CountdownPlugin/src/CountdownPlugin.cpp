@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   CountdownPlugin.cpp
  * @brief  Countdown plugin.
  * @author Yann Le Glaz <yann_le@web.de>
  */
@@ -59,7 +60,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* CountdownPlugin::TOPIC_CONFIG   = "countdown";
+const char* CountdownPlugin::TOPIC_CONFIG = "countdown";
 
 /******************************************************************************
  * Public Methods
@@ -89,14 +90,14 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonDay                 = value["day"];
-        JsonVariantConst    jsonMonth               = value["month"];
-        JsonVariantConst    jsonYear                = value["year"];
-        JsonVariantConst    jsonDescPlural          = value["descPlural"];
-        JsonVariantConst    jsonDescSingular        = value["descSingular"];
+        JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonDay          = value["day"];
+        JsonVariantConst    jsonMonth        = value["month"];
+        JsonVariantConst    jsonYear         = value["year"];
+        JsonVariantConst    jsonDescPlural   = value["descPlural"];
+        JsonVariantConst    jsonDescSingular = value["descSingular"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -112,38 +113,38 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value
         if (false == jsonDay.isNull())
         {
             jsonCfg["day"] = jsonDay.as<uint8_t>();
-            isSuccessful = true;
+            isSuccessful   = true;
         }
 
         if (false == jsonMonth.isNull())
         {
             jsonCfg["month"] = jsonMonth.as<uint8_t>();
-            isSuccessful = true;
+            isSuccessful     = true;
         }
 
         if (false == jsonYear.isNull())
         {
             jsonCfg["year"] = jsonYear.as<uint16_t>();
-            isSuccessful = true;
+            isSuccessful    = true;
         }
 
         if (false == jsonDescPlural.isNull())
         {
-            jsonCfg["descPlural"] = jsonDescPlural.as<String>();
-            isSuccessful = true;
+            jsonCfg["descPlural"] = jsonDescPlural.as<const char*>();
+            isSuccessful          = true;
         }
 
         if (false == jsonDescSingular.isNull())
         {
-            jsonCfg["descSingular"] = jsonDescSingular.as<String>();
-            isSuccessful = true;
+            jsonCfg["descSingular"] = jsonDescSingular.as<const char*>();
+            isSuccessful            = true;
         }
 
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -157,8 +158,8 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
 bool CountdownPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -181,14 +182,14 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
 
 void CountdownPlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     PluginWithConfig::stop();
 }
 
 void CountdownPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     PluginWithConfig::process(isConnected);
 
@@ -223,12 +224,12 @@ void CountdownPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool CountdownPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status              = false;
-    JsonVariantConst    jsonDay             = jsonCfg["day"];
-    JsonVariantConst    jsonMonth           = jsonCfg["month"];
-    JsonVariantConst    jsonYear            = jsonCfg["year"];
-    JsonVariantConst    jsonDescPlural      = jsonCfg["descPlural"];
-    JsonVariantConst    jsonDescSingular    = jsonCfg["descSingular"];
+    bool             status           = false;
+    JsonVariantConst jsonDay          = jsonCfg["day"];
+    JsonVariantConst jsonMonth        = jsonCfg["month"];
+    JsonVariantConst jsonYear         = jsonCfg["year"];
+    JsonVariantConst jsonDescPlural   = jsonCfg["descPlural"];
+    JsonVariantConst jsonDescSingular = jsonCfg["descSingular"];
 
     if (false == jsonDay.is<uint8_t>())
     {
@@ -252,17 +253,50 @@ bool CountdownPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        MutexGuard<MutexRecursive> guard(m_mutex);
+        const uint8_t  DAY_LOWER_LIMIT   = 1U;
+        const uint8_t  DAY_UPPER_LIMIT   = 31U;
+        const uint8_t  MONTH_LOWER_LIMIT = 1U;
+        const uint8_t  MONTH_UPPER_LIMIT = 12U;
+        const uint16_t YEAR_LOWER_LIMIT  = 1970U;
+        const uint16_t YEAR_UPPER_LIMIT  = 2100U;
+        uint8_t        day               = jsonDay.as<uint8_t>();
+        uint8_t        month             = jsonMonth.as<uint8_t>();
+        uint16_t       year              = jsonYear.as<uint16_t>();
 
-        m_targetDate.day                    = jsonDay.as<uint8_t>();
-        m_targetDate.month                  = jsonMonth.as<uint8_t>();
-        m_targetDate.year                   = jsonYear.as<uint16_t>();
-        m_targetDateInformation.plural      = jsonDescPlural.as<String>();
-        m_targetDateInformation.singular    = jsonDescSingular.as<String>();
+        if ((DAY_LOWER_LIMIT > day) || (DAY_UPPER_LIMIT < day))
+        {
+            status = false;
+        }
+        else if ((MONTH_LOWER_LIMIT > month) || (MONTH_UPPER_LIMIT < month))
+        {
+            status = false;
+        }
+        else if ((YEAR_LOWER_LIMIT > year) || (YEAR_UPPER_LIMIT < year))
+        {
+            status = false;
+        }
+        else if (0U == strlen(jsonDescPlural.as<const char*>()))
+        {
+            status = false;
+        }
+        else if (0U == strlen(jsonDescSingular.as<const char*>()))
+        {
+            status = false;
+        }
+        else
+        {
+            MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_hasTopicChanged = true;
+            m_targetDate.day                 = day;
+            m_targetDate.month               = month;
+            m_targetDate.year                = year;
+            m_targetDateInformation.plural   = jsonDescPlural.as<const char*>();
+            m_targetDateInformation.singular = jsonDescSingular.as<const char*>();
 
-        status = true;
+            m_hasTopicChanged                = true;
+
+            status                           = true;
+        }
     }
 
     return status;
@@ -274,21 +308,20 @@ void CountdownPlugin::calculateRemainingDays()
 
     if (true == ClockDrv::getInstance().getTime(currentTime))
     {
-        uint32_t    currentDateInDays   = 0U;
-        uint32_t    targetDateInDays    = 0U;
-        int32_t     numberOfDays        = 0;
+        int32_t currentDateInDays  = 0;
+        int32_t targetDateInDays   = 0;
+        int32_t numberOfDays       = 0;
 
-        m_currentDate.day = currentTime.tm_mday;
-        m_currentDate.month = currentTime.tm_mon;
-        m_currentDate.year = currentTime.tm_year;
-        m_currentDate.year += TM_OFFSET_YEAR;
-        m_currentDate.month += TM_OFFSET_MONTH;
+        m_currentDate.day          = static_cast<uint8_t>(currentTime.tm_mday);
+        m_currentDate.month        = static_cast<uint8_t>(currentTime.tm_mon);
+        m_currentDate.year         = static_cast<uint16_t>(currentTime.tm_year);
+        m_currentDate.year        += TM_OFFSET_YEAR;
+        m_currentDate.month       += TM_OFFSET_MONTH;
 
-        currentDateInDays = dateToDays(m_currentDate);
+        currentDateInDays          = static_cast<int32_t>(dateToDays(m_currentDate));
+        targetDateInDays           = static_cast<int32_t>(dateToDays(m_targetDate));
 
-        targetDateInDays = dateToDays(m_targetDate);
-
-        numberOfDays = targetDateInDays - currentDateInDays;
+        numberOfDays               = targetDateInDays - currentDateInDays;
 
         if (0 < numberOfDays)
         {
@@ -298,7 +331,7 @@ void CountdownPlugin::calculateRemainingDays()
             m_remainingDays  = remaining;
             m_remainingDays += " ";
 
-            if(numberOfDays > 1)
+            if (numberOfDays > 1)
             {
                 m_remainingDays += m_targetDateInformation.plural;
             }
@@ -332,11 +365,11 @@ uint16_t CountdownPlugin::countLeapYears(const CountdownPlugin::DateDMY& date) c
 
 uint32_t CountdownPlugin::dateToDays(const CountdownPlugin::DateDMY& date) const
 {
-    const uint8_t   monthDays[12]   = { 31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U };
-    uint32_t        dateInDays      = 0U;
-    uint8_t         i               = 0U;
+    const uint8_t monthDays[12] = { 31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U };
+    uint32_t      dateInDays    = 0U;
+    uint8_t       i             = 0U;
 
-    dateInDays = date.year * 365U + date.day;
+    dateInDays                  = date.year * 365U + date.day;
 
     for (i = 0U; i < (date.month - 1U); i++)
     {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SensorChannelType.hpp
  * @brief  Sensor channel type classes
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup HAL
  *
  * @{
@@ -72,7 +73,7 @@ public:
 
     /**
      * Get the data type.
-     * 
+     *
      * @return Sensor data type
      */
     DataType getDataType() const final
@@ -82,37 +83,37 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
-    virtual Type getType() const = 0;
+    virtual Type getType() const     = 0;
 
     /**
      * Get data value.
-     * 
+     *
      * @return Sensor data value
      */
-    virtual T getValue() = 0;
+    virtual T getValue()             = 0;
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value
      */
-    virtual T getOffset() const = 0;
+    virtual T getOffset() const      = 0;
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value.
      */
     virtual void setOffset(T offset) = 0;
 
     /**
      * Get value as string.
-     * 
+     *
      * @param[in] precision The precision (ignored for integer values) of the value.
-     * 
+     *
      * @return Value as string
      */
     String getValueAsString(uint32_t precision) override
@@ -131,7 +132,6 @@ protected:
     }
 
 private:
-
 };
 
 /**
@@ -144,7 +144,7 @@ public:
 
     /**
      * Get the data type.
-     * 
+     *
      * @return Sensor data type
      */
     DataType getDataType() const final
@@ -154,29 +154,29 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
-    virtual Type getType() const = 0;
+    virtual Type getType() const         = 0;
 
     /**
      * Get data value.
      * If there is any error, it will return NaN.
-     * 
+     *
      * @return Sensor data value
      */
-    virtual float getValue() = 0;
+    virtual float getValue()             = 0;
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value
      */
-    virtual float getOffset() const = 0;
+    virtual float getOffset() const      = 0;
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value.
      */
     virtual void setOffset(float offset) = 0;
@@ -184,16 +184,16 @@ public:
     /**
      * Get value as string.
      * If there is any error, it will return "NAN".
-     * 
+     *
      * @param[in] precision The precision (ignored for integer values) of the value.
-     * 
+     *
      * @return Value as string
      */
     String getValueAsString(uint32_t precision) override
     {
-        float   value       = getValue();
-        String  valueStr;
-        char    buffer[20U];
+        float  value = getValue();
+        String valueStr;
+        char   buffer[20U];
 
         (void)snprintf(buffer, sizeof(buffer), "%.*F", precision, value);
         valueStr = buffer;
@@ -212,7 +212,7 @@ public:
 
     /**
      * Get the data type.
-     * 
+     *
      * @return Sensor data type
      */
     DataType getDataType() const final
@@ -222,37 +222,37 @@ public:
 
     /**
      * Get sensor channel type.
-     * 
+     *
      * @return Sensor channel type
      */
-    virtual Type getType() const = 0;
+    virtual Type getType() const        = 0;
 
     /**
      * Get data value.
-     * 
+     *
      * @return Sensor data value
      */
-    virtual bool getValue() = 0;
+    virtual bool getValue()             = 0;
 
     /**
      * Get the correction offset, used for sensor tolerance compensation.
-     * 
+     *
      * @return Offset value
      */
-    virtual bool getOffset() const = 0;
+    virtual bool getOffset() const      = 0;
 
     /**
      * Set correction offset to compensate sensor tolerance.
-     * 
+     *
      * @param[in] offset    The correction offset value.
      */
     virtual void setOffset(bool offset) = 0;
 
     /**
      * Get value as string.
-     * 
+     *
      * @param[in] precision The precision (ignored for integer values) of the value.
-     * 
+     *
      * @return Value as string
      */
     String getValueAsString(uint32_t precision) override
@@ -264,6 +264,9 @@ public:
         return (false == value) ? "false" : "true";
     }
 };
+
+/** Sensor, which provides data as 64 bit unsigned integer. */
+typedef SensorChannelType<uint64_t, ISensorChannel::DATA_TYPE_UINT64> SensorChannelUInt64;
 
 /** Sensor, which provides data as 32 bit unsigned integer. */
 typedef SensorChannelType<uint32_t, ISensorChannel::DATA_TYPE_UINT32> SensorChannelUInt32;
@@ -281,6 +284,6 @@ typedef SensorChannelType<bool, ISensorChannel::DATA_TYPE_BOOL> SensorChannelBoo
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_CHANNEL_TYPE_HPP */
+#endif /* SENSOR_CHANNEL_TYPE_HPP */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TestGifImgPlayer.cpp
  * @brief  Test GIF image player.
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -33,6 +34,8 @@
  * Includes
  *****************************************************************************/
 #include <unity.h>
+#include <GifFileLoader.h>
+#include <GifFileToMemLoader.h>
 #include <GifImgPlayer.h>
 #include <Util.h>
 #include <FS.h>
@@ -65,11 +68,10 @@ static void testGifImgPlayerMemAnimated();
  *****************************************************************************/
 
 /** Expected image width. */
-static const uint32_t   EXPECTED_DATA_WIDTH = 10U;
+static const uint32_t EXPECTED_DATA_WIDTH = 10U;
 
 /** Expected image data.  */
-static const uint32_t   EXPECTED_DATA[] =
-{
+static const uint32_t EXPECTED_DATA[]     = {
     /*          0          1          2          3          4          5          6          7          8          9 */
     /* 0 */ 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU,
     /* 1 */ 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0xFF0000U, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU, 0x0000FFU,
@@ -105,7 +107,7 @@ static const uint32_t   EXPECTED_DATA[] =
  * @param[in] argc  Number of command line arguments
  * @param[in] argv  Command line arguments
  */
-extern int main(int argc, char **argv)
+extern int main(int argc, char** argv)
 {
     UTIL_NOT_USED(argc);
     UTIL_NOT_USED(argv);
@@ -145,21 +147,22 @@ extern void tearDown(void)
  */
 static void testGifImgPlayerStatic()
 {
-    GifImgPlayer    gifImgPlayer;
-    YAGfxTest       testGfx;
-    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS              fileSystem;
-    int32_t         x;
-    int32_t         y;
-    int32_t         width   = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
-    int32_t         height  = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
-    
-    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif"));
+    GifFileLoader gifFileLoader;
+    GifImgPlayer  gifImgPlayer;
+    YAGfxTest     testGfx;
+    YAGfxCanvas   canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS            fileSystem;
+    int32_t       x;
+    int32_t       y;
+    int32_t       width  = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
+    int32_t       height = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
+
+    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif", gifFileLoader));
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
 
-    for(y = 0; y < height; ++y)
+    for (y = 0; y < height; ++y)
     {
-        for(x = 0; x < width; ++x)
+        for (x = 0; x < width; ++x)
         {
             Color& color = testGfx.getColor(x, y);
 
@@ -174,9 +177,9 @@ static void testGifImgPlayerStatic()
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     gifImgPlayer.close();
 
-    for(y = 0; y < height; ++y)
+    for (y = 0; y < height; ++y)
     {
-        for(x = 0; x < width; ++x)
+        for (x = 0; x < width; ++x)
         {
             Color& color = testGfx.getColor(x, y);
 
@@ -192,14 +195,15 @@ static void testGifImgPlayerStatic()
  */
 static void testGifImgPlayerAnimated()
 {
-    GifImgPlayer    gifImgPlayer;
-    YAGfxTest       testGfx;
-    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS              fileSystem;
-    
-    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif"));
+    GifFileLoader gifFileLoader;
+    GifImgPlayer  gifImgPlayer;
+    YAGfxTest     testGfx;
+    YAGfxCanvas   canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS            fileSystem;
 
-    while(false == gifImgPlayer.isTrailerFound())
+    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif", gifFileLoader));
+
+    while (false == gifImgPlayer.isTrailerFound())
     {
         TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     }
@@ -212,21 +216,22 @@ static void testGifImgPlayerAnimated()
  */
 static void testGifImgPlayerMemStatic()
 {
-    GifImgPlayer    gifImgPlayer;
-    YAGfxTest       testGfx;
-    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS              fileSystem;
-    int32_t         x;
-    int32_t         y;
-    int32_t         width   = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
-    int32_t         height  = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
-    
-    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif", true));
+    GifFileToMemLoader gifFileLoader;
+    GifImgPlayer       gifImgPlayer;
+    YAGfxTest          testGfx;
+    YAGfxCanvas        canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS                 fileSystem;
+    int32_t            x;
+    int32_t            y;
+    int32_t            width  = (YAGfxTest::WIDTH > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::WIDTH;
+    int32_t            height = (YAGfxTest::HEIGHT > EXPECTED_DATA_WIDTH) ? EXPECTED_DATA_WIDTH : YAGfxTest::HEIGHT;
+
+    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif", gifFileLoader));
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
 
-    for(y = 0; y < height; ++y)
+    for (y = 0; y < height; ++y)
     {
-        for(x = 0; x < width; ++x)
+        for (x = 0; x < width; ++x)
         {
             Color& color = testGfx.getColor(x, y);
 
@@ -241,9 +246,9 @@ static void testGifImgPlayerMemStatic()
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     gifImgPlayer.close();
 
-    for(y = 0; y < height; ++y)
+    for (y = 0; y < height; ++y)
     {
-        for(x = 0; x < width; ++x)
+        for (x = 0; x < width; ++x)
         {
             Color& color = testGfx.getColor(x, y);
 
@@ -259,14 +264,15 @@ static void testGifImgPlayerMemStatic()
  */
 static void testGifImgPlayerMemAnimated()
 {
-    GifImgPlayer    gifImgPlayer;
-    YAGfxTest       testGfx;
-    YAGfxCanvas     canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    FS              fileSystem;
-    
-    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif", true));
+    GifFileToMemLoader gifFileLoader;
+    GifImgPlayer       gifImgPlayer;
+    YAGfxTest          testGfx;
+    YAGfxCanvas        canvas(&testGfx, 0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    FS                 fileSystem;
 
-    while(false == gifImgPlayer.isTrailerFound())
+    TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif", gifFileLoader));
+
+    while (false == gifImgPlayer.isTrailerFound())
     {
         TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     }

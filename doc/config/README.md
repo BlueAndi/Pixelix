@@ -37,7 +37,7 @@ The SW build environment is based on [PlatformIO](https://platformio.org/). The 
 
 ### Logical Configuration Hierarchy And Dependencies
 
-![pio-env-dependencies](https://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/config/uml/pio-env-dependencies.wsd)
+![pio-env-dependencies](./svg/pio-env-dependencies.svg)
 
 ## Version Numbers
 
@@ -45,13 +45,13 @@ The concept behind the version number follows the [semantic versioning](https://
 
 1. MAJOR version for incompatible API changes,
 2. MINOR version if functionality added in a backwards compatible manner, and
-2. PATCH version for backwards compatible bug fixes.
+3. PATCH version for backwards compatible bug fixes.
 
 ## Development Strategy
 
-* The master branch shall contain always the latest released version.
-* The feature development shall take place in separate branches.
-* Bugfix releases shall be prepared in separate branches.
+- The master branch shall contain always the latest released version.
+- The feature development shall take place in separate branches.
+- Bugfix releases shall be prepared in separate branches.
 
 ## Work Instructions
 
@@ -71,11 +71,11 @@ The concept behind the version number follows the [semantic versioning](https://
 
 ### Declaring dependencies
 
-* Note that the order of declaring the dependencies is important!
-* Use always a version, except its a local library in the _libs_ folder.
-* Prefer the tilde to specify the version:
-    * ^ (Caret): This symbol allows updates that do not change the left-most non-zero digit. For example, ^1.2.3 will match any version from 1.2.3 to less than 2.0.0.
-    * ~ (Tilde): This symbol allows updates to the most recent minor version. For example, ~1.2.3 will match any version from 1.2.3 to less than 1.3.0.
+- Note that the order of declaring the dependencies is important!
+- Use always a version, except its a local library in the _libs_ folder.
+- Prefer the tilde to specify the version:
+  - ^ (Caret): This symbol allows updates that do not change the left-most non-zero digit. For example, ^1.2.3 will match any version from 1.2.3 to less than 2.0.0.
+  - ~ (Tilde): This symbol allows updates to the most recent minor version. For example, ~1.2.3 will match any version from 1.2.3 to less than 1.3.0.
 
 #### Common dependencies (target + native test)
 
@@ -95,7 +95,7 @@ Declare board dependencies in the ```board.ini``` _lib\_deps_ section.
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

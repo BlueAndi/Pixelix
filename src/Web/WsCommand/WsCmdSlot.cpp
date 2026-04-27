@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdSlot.cpp
  * @brief  Websocket command set slot properties
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -78,8 +79,8 @@ void WsCmdSlot::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String      msg;
-        DisplayMgr& displayMgr          = DisplayMgr::getInstance();
-        bool        isSlotConfigDirty   = false;
+        DisplayMgr& displayMgr        = DisplayMgr::getInstance();
+        bool        isSlotConfigDirty = false;
 
         if (FLAG_STATUS_NA != m_stickyFlag)
         {
@@ -138,57 +139,57 @@ void WsCmdSlot::execute(AsyncWebSocket* server, uint32_t clientId)
         }
         else
         {
-            uint8_t             stickySlot  = displayMgr.getStickySlot();
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(m_slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked    = displayMgr.isSlotLocked(m_slotId);
-            bool                isSticky    = (stickySlot == m_slotId) ? true : false;
-            bool                isDisabled  = displayMgr.isSlotDisabled(m_slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(m_slotId);
+            DisplayMgr::SlotConfig config;
+            bool                   isSuccessful = displayMgr.getSlotConfig(m_slotId, config);
 
-            preparePositiveResponse(msg);
-
-            msg += m_slotId;
-            msg += DELIMITER;
-            msg += "\"";
-            msg += name;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += uid;
-            msg += DELIMITER;
-            msg += "\"";
-            msg += alias;
-            msg += "\"";
-            msg += DELIMITER;
-            msg += (false == isLocked) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == isSticky) ? "0" : "1";
-            msg += DELIMITER;
-            msg += (false == isDisabled) ? "0" : "1";
-            msg += DELIMITER;
-            msg += duration;
-
-            if (true == isSlotConfigDirty)
+            if (false == isSuccessful)
             {
-                /* Ensure that the changes will be available after power-up. */
-                PluginMgr::getInstance().save();
+                sendNegativeResponse(server, clientId, "\"Slot id invalid.\"");
+            }
+            else
+            {
+                preparePositiveResponse(msg);
+
+                msg += m_slotId;
+                msg += DELIMITER;
+                msg += "\"";
+                msg += config.name;
+                msg += "\"";
+                msg += DELIMITER;
+                msg += config.uid;
+                msg += DELIMITER;
+                msg += "\"";
+                msg += config.alias;
+                msg += "\"";
+                msg += DELIMITER;
+                msg += (false == config.isLocked) ? "0" : "1";
+                msg += DELIMITER;
+                msg += (false == config.isSticky) ? "0" : "1";
+                msg += DELIMITER;
+                msg += (false == config.isDisabled) ? "0" : "1";
+                msg += DELIMITER;
+                msg += config.duration;
+
+                if (true == isSlotConfigDirty)
+                {
+                    /* Ensure that the changes will be available after power-up. */
+                    PluginMgr::getInstance().save();
+                }
             }
         }
 
         sendResponse(server, clientId, msg);
     }
 
-    m_isError   = false;
-    m_parCnt    = 0U;
+    m_isError = false;
+    m_parCnt  = 0U;
 }
 
 void WsCmdSlot::setPar(const char* par)
 {
     uint8_t tmp;
 
-    switch(m_parCnt)
+    switch (m_parCnt)
     {
     /* Slot id*/
     case 0U:

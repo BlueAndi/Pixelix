@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   LogSinkWebsocket.h
  * @brief  Websocket log sink
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -68,7 +69,6 @@ public:
         m_name(),
         m_output(nullptr)
     {
-
     }
 
     /**
@@ -139,8 +139,8 @@ public:
 
 private:
 
-    String          m_name;     /**< Name of the sink */
-    WebSocketSrv*   m_output;   /**< Log sink output */
+    String        m_name;   /**< Name of the sink */
+    WebSocketSrv* m_output; /**< Log sink output */
 
     LogSinkWebsocket(const LogSinkWebsocket& sink);
     LogSinkWebsocket& operator=(const LogSinkWebsocket& sink);
@@ -150,6 +150,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* LOG_SINK_WEBSOCKET_H */
+#endif /* LOG_SINK_WEBSOCKET_H */
 
 /** @} */

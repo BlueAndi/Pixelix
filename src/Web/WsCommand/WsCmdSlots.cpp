@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdSlots.cpp
  * @brief  Websocket command get slots information
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -77,10 +78,9 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String      msg;
-        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        uint8_t     stickySlot  = displayMgr.getStickySlot();
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        uint8_t     maxSlots   = displayMgr.getMaxSlots();
         uint8_t     slotId;
-        uint8_t     maxSlots    = displayMgr.getMaxSlots();
 
         preparePositiveResponse(msg);
 
@@ -90,40 +90,40 @@ void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
          * - Name of plugin.
          * - Plugin UID.
          * - Plugin alias name.
+         * - Plugin font type.
          * - Information about whether the slot is locked or not.
          * - Information about whether the slot is sticky or not.
          * - Information about whether the slot is disabled or not.
          * - Slot duration in ms.
          */
-        for(slotId = 0U; slotId < maxSlots; ++slotId)
+        for (slotId = 0U; slotId < maxSlots; ++slotId)
         {
-            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
-            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
-            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
-            bool                isLocked    = displayMgr.isSlotLocked(slotId);
-            bool                isSticky    = (stickySlot == slotId) ? true : false;
-            bool                isDisabled  = displayMgr.isSlotDisabled(slotId);
-            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
+            DisplayMgr::SlotConfig config;
+
+            (void)displayMgr.getSlotConfig(slotId, config);
 
             msg += DELIMITER;
             msg += "\"";
-            msg += name;
+            msg += config.name;
             msg += "\"";
             msg += DELIMITER;
-            msg += uid;
+            msg += config.uid;
             msg += DELIMITER;
             msg += "\"";
-            msg += alias;
+            msg += config.alias;
             msg += "\"";
             msg += DELIMITER;
-            msg += (false == isLocked) ? "0" : "1";
+            msg += "\"";
+            msg += Fonts::fontTypeToStr(config.fontType);
+            msg += "\"";
             msg += DELIMITER;
-            msg += (false == isSticky) ? "0" : "1";
+            msg += (false == config.isLocked) ? "0" : "1";
             msg += DELIMITER;
-            msg += (false == isDisabled) ? "0" : "1";
+            msg += (false == config.isSticky) ? "0" : "1";
             msg += DELIMITER;
-            msg += duration;
+            msg += (false == config.isDisabled) ? "0" : "1";
+            msg += DELIMITER;
+            msg += config.duration;
         }
 
         sendResponse(server, clientId, msg);

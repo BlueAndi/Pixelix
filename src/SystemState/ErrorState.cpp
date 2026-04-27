@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   ErrorState.cpp
  * @brief  System state: Error
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -35,6 +36,8 @@
 #include "ErrorState.h"
 #include "Services.h"
 #include "DisplayMgr.h"
+#include "ButtonDrv.h"
+#include "RestartMgr.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -70,7 +73,7 @@
 
 void ErrorState::entry(StateMachine& sm)
 {
-    Display&    display = Display::getInstance();
+    Display& display = Display::getInstance();
 
     UTIL_NOT_USED(sm);
 
@@ -105,22 +108,26 @@ void ErrorState::entry(StateMachine& sm)
         }
         else
         {
-            YAFont  font(&TomThumb);
-            int16_t cursorX     = 0;
-            int16_t cursorY     = display.getHeight() - 1;
-            Color   fontColor(ColorDef::RED);
-            String  errorIdStr;
-            uint8_t idx         = 0U;
-            
+            const uint8_t   BRIGHTNESS_HALF = 128U; /* 50%*/
+            YAFont          font(&TomThumb);
+            int16_t         cursorX = 0;
+            int16_t         cursorY = display.getHeight() - 1;
+            YAGfxSolidBrush brush(ColorDef::RED);
+            String          errorIdStr;
+            uint8_t         idx = 0U;
+
+            /* Set 50% brightness. */
+            display.setBrightness(BRIGHTNESS_HALF);
+
             errorIdStr = m_errorId;
 
             /* The 'E' in front is the error prefix. */
-            font.drawChar(display, cursorX, cursorY, 'E', fontColor);
+            font.drawChar(display, cursorX, cursorY, 'E', brush);
 
             /* Show the error id. */
-            for(idx = 0U; idx < errorIdStr.length(); ++idx)
+            for (idx = 0U; idx < errorIdStr.length(); ++idx)
             {
-                font.drawChar(display, cursorX, cursorY, errorIdStr.c_str()[idx], fontColor);
+                font.drawChar(display, cursorX, cursorY, errorIdStr.c_str()[idx], brush);
             }
 
             display.show();
@@ -136,7 +143,15 @@ void ErrorState::entry(StateMachine& sm)
 
 void ErrorState::process(StateMachine& sm)
 {
-    UTIL_NOT_USED(sm);
+    /* If any button is pressed, jump to the PixelixUpdater. */
+    for (uint8_t btnId = BUTTON_ID_OK; btnId < BUTTON_ID_CNT; ++btnId)
+    {
+        if (BUTTON_STATE_PRESSED == ButtonDrv::getInstance().getState(static_cast<ButtonId>(btnId)))
+        {
+            (void)RestartMgr::getInstance().reqRestart(0U, true);
+            break;
+        }
+    }
 
     /* The error state is signalled with the onboard LED.
      * If a dedicated error id is set, the number of the error is blinked, so
@@ -173,8 +188,6 @@ void ErrorState::process(StateMachine& sm)
             }
         }
     }
-
-    /* Wait for manual reset. */
 }
 
 void ErrorState::exit(StateMachine& sm)

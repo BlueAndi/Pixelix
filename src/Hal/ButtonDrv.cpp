@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   ButtonDrv.cpp
  * @brief  Button driver
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -60,8 +61,7 @@ static void isrButton(void* arg);
  * Local Variables
  *****************************************************************************/
 
-const IoPin* ButtonDrv::BUTTON_PIN[BUTTON_ID_CNT] =
-{
+const IoPin* ButtonDrv::BUTTON_PIN[BUTTON_ID_CNT] = {
     &Board::buttonOkIn,
     &Board::buttonLeftIn,
     &Board::buttonRightIn
@@ -72,8 +72,7 @@ const IoPin* ButtonDrv::BUTTON_PIN[BUTTON_ID_CNT] =
  * The task will set it to false and every time the task see true, it will
  * (re-)start the debounce timer.
  */
-static ButtonId         gButtonId[BUTTON_ID_CNT] =
-{
+static ButtonId gButtonId[BUTTON_ID_CNT] = {
     BUTTON_ID_OK,
     BUTTON_ID_LEFT,
     BUTTON_ID_RIGHT
@@ -96,7 +95,6 @@ static QueueHandle_t    gxQueue     = nullptr;
 bool ButtonDrv::init()
 {
     bool        isSuccessful    = true;
-    BaseType_t  osRet           = pdFAIL;
 
     /* Create semaphore to protect the button trigger array, which is accessed
      * by the task and the ISR.
@@ -130,24 +128,18 @@ bool ButtonDrv::init()
 
     if (true == isSuccessful)
     {
-        /* Create button task for debouncing */
-        osRet = xTaskCreateUniversal(   buttonTask,
-                                        "buttonTask",
-                                        BUTTON_TASK_STACKE_SIZE,
-                                        this,
-                                        1,
-                                        &m_buttonTaskHandle,
-                                        BUTTON_TASK_RUN_CORE);
+        isSuccessful = m_buttonTask.start(this);
 
-        /* Failed to create task? */
-        if (pdPASS != osRet)
+        if (true == isSuccessful)
         {
-            isSuccessful = false;
+            attachButtonsToInterrupt();
         }
     }
 
     if (false == isSuccessful)
     {
+        (void)m_buttonTask.stop();
+
         if (nullptr != gxQueue)
         {
             vQueueDelete(gxQueue);
@@ -270,22 +262,8 @@ bool ButtonDrv::enableWakeUpSources()
  * Private Methods
  *****************************************************************************/
 
-void ButtonDrv::setState(ButtonId buttonId, ButtonState state)
+void ButtonDrv::attachButtonsToInterrupt()
 {
-    if (BUTTON_ID_CNT > buttonId)
-    {
-        if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
-        {
-            m_state[buttonId] = state;
-
-            (void)xSemaphoreGive(m_xSemaphore);
-        }
-    }
-}
-
-void ButtonDrv::buttonTask(void *parameters)
-{
-    ButtonDrv*  buttonDrv   = static_cast<ButtonDrv*>(parameters);
     uint8_t     buttonIdx   = 0U;
 
     /* The ISR shall notify about on change to determine whether the
@@ -301,29 +279,40 @@ void ButtonDrv::buttonTask(void *parameters)
                                 CHANGE);
             
             /* Start the debouncing to get a stable initial button state. */
-            buttonDrv->m_timer[buttonIdx].start(DEBOUNCING_TIME);
+            m_timer[buttonIdx].start(DEBOUNCING_TIME);
         }
 
         ++buttonIdx;
     }
+}
 
-    LOG_DEBUG("ButtonDrv task is ready.");
+void ButtonDrv::setState(ButtonId buttonId, ButtonState state)
+{
+    if (BUTTON_ID_CNT > buttonId)
+    {
+        if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
+        {
+            m_state[buttonId] = state;
 
-    buttonDrv->buttonTaskMainLoop();
+            (void)xSemaphoreGive(m_xSemaphore);
+        }
+    }
+}
 
-    vTaskDelete(nullptr);
+void ButtonDrv::buttonTask(ButtonDrv* self)
+{
+    self->buttonTaskMainLoop();
 }
 
 void ButtonDrv::buttonTaskMainLoop()
 {
+    ButtonId buttonId  = BUTTON_ID_CNT;
+    uint8_t  buttonIdx = 0U;
+
     /* The main loop scans several times during one debounce period
      * for any pin change. If there is no change, the state is
      * considered as stable.
      */
-    for(;;)
-    {
-        ButtonId    buttonId    = BUTTON_ID_CNT;
-        uint8_t     buttonIdx   = 0U;
 
         /* Wait 25% of debouncing time whether any button level changed. */
         if (pdTRUE == xQueueReceive(gxQueue, &buttonId, (DEBOUNCING_TIME / 4U) * portTICK_PERIOD_MS))
@@ -392,7 +381,6 @@ void ButtonDrv::buttonTaskMainLoop()
             ++buttonIdx;
         }
     }
-}
 
 /******************************************************************************
  * External Functions

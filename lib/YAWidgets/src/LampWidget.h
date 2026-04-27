@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   LampWidget.h
  * @brief  Lamp Widget
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -64,7 +65,7 @@ public:
 
     /**
      * Constructs a lamp widget, being black in off state and white in on state.
-     * 
+     *
      * @param[in] width     Widget width in pixel.
      * @param[in] height    Widget height in pixel.
      * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
@@ -102,7 +103,7 @@ public:
      * Assigns the content of another lamp widget.
      *
      * @param[in] widget Lamp widget, which to assign
-     * 
+     *
      * @return Lamp widget
      */
     LampWidget& operator=(const LampWidget& widget)
@@ -110,10 +111,10 @@ public:
         if (&widget != this)
         {
             Widget::operator=(widget);
-            
-            m_isOn      = widget.m_isOn;
-            m_colorOff  = widget.m_colorOff;
-            m_colorOn   = widget.m_colorOn;
+
+            m_isOn     = widget.m_isOn;
+            m_colorOff = widget.m_colorOff;
+            m_colorOn  = widget.m_colorOn;
         }
 
         return *this;
@@ -137,6 +138,21 @@ public:
     bool getOnState() const
     {
         return m_isOn;
+    }
+
+    /**
+     * Toggle the lamp state.
+     */
+    void toggle()
+    {
+        if (false == m_isOn)
+        {
+            m_isOn = true;
+        }
+        else
+        {
+            m_isOn = false;
+        }
     }
 
     /**
@@ -180,17 +196,17 @@ public:
     }
 
     /** Widget type string */
-    static const char*  WIDGET_TYPE;
+    static const char* WIDGET_TYPE;
 
 private:
 
-    bool    m_isOn;     /**< Lamp on state */
-    Color   m_colorOff; /**< Lamp color in off state */
-    Color   m_colorOn;  /**< Lamp color in on state */
+    bool  m_isOn;     /**< Lamp on state */
+    Color m_colorOff; /**< Lamp color in off state */
+    Color m_colorOn;  /**< Lamp color in on state */
 
     /**
      * Paint the widget with the given graphics interface.
-     * 
+     *
      * @param[in] gfx   Graphics interface
      */
     void paint(YAGfx& gfx) override
@@ -204,13 +220,12 @@ private:
 
         gfx.fillScreen(color);
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* LAMPWIDGET_H */
+#endif /* LAMPWIDGET_H */
 
 /** @} */

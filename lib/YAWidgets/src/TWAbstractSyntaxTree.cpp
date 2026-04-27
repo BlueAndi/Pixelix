@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TWAbstractSyntaxTree.cpp
  * @brief  Text widget abstract syntax tree
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -68,7 +69,7 @@ TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(const TWAbstractSyntaxTree
         clear();
 
         /* Copy other tokens after the own ones were released! */
-        copy(other.m_tokens);
+        m_tokens = other.m_tokens;
     }
 
     return *this;
@@ -92,33 +93,13 @@ TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(TWAbstractSyntaxTree&& oth
 
 void TWAbstractSyntaxTree::clear()
 {
-    TokenList::iterator it = m_tokens.begin();
-
-    while (it != m_tokens.end())
-    {
-        TWToken* token = *it;
-
-        it             = m_tokens.erase(it);
-
-        if (nullptr != token)
-        {
-            delete token;
-        }
-    }
+    m_tokens.clear();
 }
 
 bool TWAbstractSyntaxTree::createToken(TWToken::Type tokenType, const String& str)
 {
-    bool     isSuccessful = false;
-    TWToken* token        = new (std::nothrow) TWToken(tokenType, str);
-
-    if (nullptr != token)
-    {
-        m_tokens.push_back(token);
-        isSuccessful = true;
-    }
-
-    return isSuccessful;
+    m_tokens.emplace_back(tokenType, str);
+    return true;
 }
 
 uint32_t TWAbstractSyntaxTree::length() const
@@ -132,7 +113,7 @@ const TWToken& TWAbstractSyntaxTree::operator[](uint32_t index) const
 
     if (m_tokens.size() > index)
     {
-        token = m_tokens[index];
+        token = &m_tokens[index];
     }
 
     return *token;
@@ -144,7 +125,7 @@ TWToken& TWAbstractSyntaxTree::operator[](uint32_t index)
 
     if (m_tokens.size() > index)
     {
-        token = m_tokens[index];
+        token = &m_tokens[index];
     }
 
     return *token;
@@ -157,21 +138,6 @@ TWToken& TWAbstractSyntaxTree::operator[](uint32_t index)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void TWAbstractSyntaxTree::copy(const TokenList& other)
-{
-    TokenList::const_iterator it = other.begin();
-
-    while (it != other.end())
-    {
-        TWToken* token = *it;
-
-        if (nullptr != token)
-        {
-            (void)createToken(token->getType(), token->getStr());
-        }
-    }
-}
 
 /******************************************************************************
  * External Functions

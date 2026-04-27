@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   AudioService.cpp
  * @brief  Audio service
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -64,8 +65,8 @@
 
 bool AudioService::start()
 {
-    bool        isSuccessful    = true;
-    AudioDrv&   audioDrv        = AudioDrv::getInstance();
+    bool      isSuccessful = true;
+    AudioDrv& audioDrv     = AudioDrv::getInstance();
 
     if ((IoPin::NC == CONFIG_PIN_I2S_WS) ||
         (IoPin::NC == CONFIG_PIN_I2S_SC) ||
@@ -81,6 +82,11 @@ bool AudioService::start()
         LOG_ERROR("Couldn't start the audio driver.");
         isSuccessful = false;
     }
+    else if (false == m_spectrumAnalyzer.init())
+    {
+        LOG_ERROR("Couldn't initialize the spectrum analyzer.");
+        isSuccessful = false;
+    }
     else
     {
         if (false == audioDrv.registerObserver(m_spectrumAnalyzer))
@@ -91,8 +97,8 @@ bool AudioService::start()
         else
         {
             uint8_t idx = 0U;
-            
-            while(MAX_TONE_DETECTORS > idx)
+
+            while (MAX_TONE_DETECTORS > idx)
             {
                 if (false == audioDrv.registerObserver(m_audioToneDetector[idx]))
                 {
@@ -119,12 +125,13 @@ bool AudioService::start()
 
 void AudioService::stop()
 {
-    AudioDrv&   audioDrv    = AudioDrv::getInstance();
-    uint8_t     idx         = 0U;
+    AudioDrv& audioDrv = AudioDrv::getInstance();
+    uint8_t   idx      = 0U;
 
     audioDrv.unregisterObserver(m_spectrumAnalyzer);
+    m_spectrumAnalyzer.deInit();
 
-    while(MAX_TONE_DETECTORS > idx)
+    while (MAX_TONE_DETECTORS > idx)
     {
         audioDrv.unregisterObserver(m_audioToneDetector[idx]);
 

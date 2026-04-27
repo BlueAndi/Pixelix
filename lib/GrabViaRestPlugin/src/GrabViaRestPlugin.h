@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   GrabViaRestPlugin.h
  * @brief  Grab information via REST plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -47,11 +48,10 @@
 
 #include <stdint.h>
 #include <PluginWithConfig.hpp>
-#include <AsyncHttpClient.h>
-#include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
 #include <FileMgrService.h>
+#include <RestService.h>
 
 /******************************************************************************
  * Macros
@@ -80,7 +80,6 @@ public:
         m_method("GET"),
         m_url(),
         m_filter(1024U),
-        m_client(),
         m_iconFileId(FileMgrService::FILE_ID_INVALID),
         m_format("%s"),
         m_delimiter("::"),
@@ -88,9 +87,9 @@ public:
         m_offset(0.0f),
         m_requestTimer(),
         m_mutex(),
-        m_isConnectionError(false),
         m_hasTopicChanged(false),
-        m_taskProxy()
+        m_dynamicRestId(RestService::INVALID_REST_ID),
+        m_isAllowedToSend(true)
     {
         (void)m_mutex.create();
     }
@@ -100,17 +99,6 @@ public:
      */
     ~GrabViaRestPlugin()
     {
-        m_client.regOnResponse(nullptr);
-        m_client.regOnClosed(nullptr);
-        m_client.regOnError(nullptr);
-
-        /* Abort any pending TCP request to avoid getting a callback after the
-         * object is destroyed.
-         */
-        m_client.end();
-
-        clearQueue();
-
         m_mutex.destroy();
     }
 
@@ -126,6 +114,13 @@ public:
     {
         return new (std::nothrow) GrabViaRestPlugin(name, uid);
     }
+
+    /**
+     * Is plugin enabled or not?
+     *
+     * @return If plugin is enabled, it will return true otherwise false.
+     */
+    bool isEnabled() const final;
 
     /**
      * Get font type.
@@ -302,66 +297,32 @@ private:
      */
     static const uint32_t    UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
-    _GrabViaRestPlugin::View m_view;              /**< View with all widgets. */
-    String                   m_method;            /**< HTTP method. */
-    String                   m_url;               /**< REST URL. */
-    DynamicJsonDocument      m_filter;            /**< Filter used for the response in JSON format. */
-    AsyncHttpClient          m_client;            /**< Asynchronous HTTP client. */
-    FileMgrService::FileId   m_iconFileId;        /**< Icon file id. */
-    String                   m_format;            /**< Format used to embed the retrieved filtered value. */
-    String                   m_delimiter;         /**< Delimiter is used in case several values shall be shown, because of an JSON array. */
-    float                    m_multiplier;        /**< If grabbed value is a number, it will be multiplied with the multiplier. */
-    float                    m_offset;            /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
-    SimpleTimer              m_requestTimer;      /**< Timer used for cyclic request of new data. */
-    mutable MutexRecursive   m_mutex;             /**< Mutex to protect against concurrent access. */
-    bool                     m_isConnectionError; /**< Is connection error happened? */
-    bool                     m_hasTopicChanged;   /**< Has the topic content changed? */
-
-    /**
-     * Defines the message types, which are necessary for HTTP client/server handling.
-     */
-    enum MsgType
-    {
-        MSG_TYPE_INVALID = 0, /**< Invalid message type. */
-        MSG_TYPE_RSP,         /**< A response, caused by a previous request. */
-        MSG_TYPE_CONN_CLOSED, /**< The connection is closed. */
-        MSG_TYPE_CONN_ERROR   /**< A connection error happened. */
-    };
-
-    /**
-     * A message for HTTP client/server handling.
-     */
-    struct Msg
-    {
-        MsgType              type; /**< Message type */
-        DynamicJsonDocument* rsp;  /**< Response, only valid if message type is a response. */
-
-        /**
-         * Constructs a message.
-         */
-        Msg() :
-            type(MSG_TYPE_INVALID),
-            rsp(nullptr)
-        {
-        }
-    };
-
-    /**
-     * Task proxy used to decouple server responses, which happen in a different task context.
-     */
-    TaskProxy<Msg, 2U, 0U> m_taskProxy;
+    _GrabViaRestPlugin::View m_view;            /**< View with all widgets. */
+    String                   m_method;          /**< HTTP method. */
+    String                   m_url;             /**< REST URL. */
+    DynamicJsonDocument      m_filter;          /**< Filter used for the response in JSON format. */
+    FileMgrService::FileId   m_iconFileId;      /**< Icon file id. */
+    String                   m_format;          /**< Format used to embed the retrieved filtered value. */
+    String                   m_delimiter;       /**< Delimiter is used in case several values shall be shown, because of an JSON array. */
+    float                    m_multiplier;      /**< If grabbed value is a number, it will be multiplied with the multiplier. */
+    float                    m_offset;          /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
+    SimpleTimer              m_requestTimer;    /**< Timer used for cyclic request of new data. */
+    mutable MutexRecursive   m_mutex;           /**< Mutex to protect against concurrent access. */
+    bool                     m_hasTopicChanged; /**< Has the topic content changed? */
+    uint32_t                 m_dynamicRestId;   /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
+    bool                     m_isAllowedToSend; /**< Is allowed to send REST-Api request? */
 
     /**
      * Get configuration in JSON.
      *
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg   Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
      *
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg   Configuration
      *
      * @return If successful set, it will return true otherwise false.
      */
@@ -375,17 +336,16 @@ private:
     bool startHttpRequest(void);
 
     /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-
-    /**
      * Handle asynchronous web response from the server.
      * This will be called in LwIP context! Don't modify any member here directly!
      *
-     * @param[in] jsonDoc   Web response as JSON document
+     * @param[in] payload     Payload of the web response
+     * @param[in] payloadSize Size of the payload
+     * @param[out] jsonDoc    DynamicJsonDocument used to store result in.
+     *
+     * @return If successful it will return true otherwise false.
      */
-    void handleAsyncWebResponse(const HttpResponse& rsp);
+    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc);
 
     /**
      * Get value from JSON source by the filter.
@@ -403,11 +363,6 @@ private:
      * @param[in] jsonDoc   Web response as JSON document
      */
     void handleWebResponse(const DynamicJsonDocument& jsonDoc);
-
-    /**
-     * Clear the task proxy queue.
-     */
-    void clearQueue();
 };
 
 /******************************************************************************

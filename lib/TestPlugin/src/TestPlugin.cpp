@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TestPlugin.cpp
  * @brief  Test plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -62,8 +63,8 @@
 
 void TestPlugin::update(YAGfx& gfx)
 {
-    const uint32_t  PERIOD      = 2000U;
-    bool            showPage    = false;
+    const uint32_t PERIOD   = 2000U;
+    bool           showPage = false;
 
     if (false == m_timer.isTimerRunning())
     {
@@ -73,9 +74,9 @@ void TestPlugin::update(YAGfx& gfx)
     else if (true == m_timer.isTimeout())
     {
         ++m_page;
-        m_page %= 2U;
+        m_page   %= 2U;
 
-        showPage = true;
+        showPage  = true;
         m_timer.restart();
     }
     else
@@ -90,7 +91,7 @@ void TestPlugin::update(YAGfx& gfx)
         /* Clear display */
         gfx.fillScreen(ColorDef::BLACK);
 
-        switch(m_page)
+        switch (m_page)
         {
         case 0U:
             gfx.drawPixel(0, 0, ColorDef::RED);

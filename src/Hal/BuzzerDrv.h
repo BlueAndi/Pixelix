@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   BuzzerDrv.h
  * @brief  Buzzer driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -88,16 +89,16 @@ public:
      * Play a tone by frequency and duty cycle.
      * 
      * @param[in] freq  Frequency in Hz
-     * @param[in] dc    Duty cycle in percent
+     * @param[in] dc    Duty cycle in digits [0; 1023]
      */
-    void play(uint32_t freq, uint8_t dc);
+    void play(uint32_t freq, uint16_t dc);
 
     /**
      * Change duty cycle.
      * 
-     * @param[in] dc    Duty cycle in percent
+     * @param[in] dc    Duty cycle in digits [0; 1023]
      */
-    void changeDutyCycle(uint8_t dc);
+    void changeDutyCycle(uint16_t dc);
 
 private:
 
@@ -113,9 +114,9 @@ private:
     static const uint8_t    DUTY_CYCLE_RESOLUTION_BITS  = 10U;
 
     /**
-     * Default duty cycle in digits [0; 1023] set to 50 %.
+     * Default duty cycle in digits [0; 1023] set to 25 %.
      */
-    static const uint32_t   DEFAULT_DUTY_CYCLE          = 0x01FF;
+    static const uint32_t DEFAULT_DUTY_CYCLE        = 0x00FF;
 
     uint8_t     m_isInit;       /**< Is initialized or not? */
     uint32_t    m_dutyCycle;    /**< Duty cycle in digits [0; 1023] */

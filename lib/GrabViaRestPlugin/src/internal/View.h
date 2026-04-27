@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   View.h
  * @brief  GrabViaRestPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup PLUGIN
@@ -81,7 +82,7 @@ public:
 
     /**
      * Initialize view, which will prepare the widgets and the default values.
-     * 
+     *
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
@@ -92,45 +93,20 @@ public:
         setFormatText("{hc}?");
     }
 
-    /**
-     * Setup layout for text only.
-     */
-    void setupTextOnly()
-    {
-        m_textWidget.move(0, 0);
-        m_textWidget.setWidth(CONFIG_LED_MATRIX_WIDTH);
-        m_textWidget.setHeight(CONFIG_LED_MATRIX_HEIGHT);
-        m_bitmapWidget.clear(ColorDef::BLACK);
-
-        m_isTextOnly = true;
-    }
-
-    /**
-     * Setup layout for bitmap and text.
-     */
-    void setupBitmapAndText()
-    {
-        m_textWidget.move(TEXT_X, TEXT_Y);
-        m_textWidget.setWidth(TEXT_WIDTH);
-        m_textWidget.setHeight(TEXT_HEIGHT);
-
-        m_isTextOnly = false;
-    }
-
 private:
 
-    bool    m_isTextOnly;   /**< Is text only layout selected? */
+    bool m_isTextOnly; /**< Is text only layout selected? */
 
     View(const View& other);
     View& operator=(const View& other);
 };
 
-} /* _GrabViaRestPlugin */
+} // namespace _GrabViaRestPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* GRAB_VIA_REST_PLUGIN_VIEW_H */
+#endif /* GRAB_VIA_REST_PLUGIN_VIEW_H */
 
 /** @} */

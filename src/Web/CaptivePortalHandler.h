@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   CaptivePortalHandler.h
  * @brief  Captive portal request handler
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -68,7 +69,7 @@ public:
 
     /**
      * Constructs the captive portal request handler.
-     * 
+     *
      * @param[in] resetReqHandler   Reset request handler
      */
     CaptivePortalHandler(ResetReqHandler resetReqHandler) :
@@ -91,7 +92,7 @@ public:
      *
      * @return If request can be handled, it will return true otherwise false.
      */
-    bool canHandle(AsyncWebServerRequest* request) final
+    bool canHandle(AsyncWebServerRequest* request) const final
     {
         /* The captive portal handles every request. */
         return true;
@@ -109,17 +110,17 @@ public:
      * This is important to control the HTTP body parsing. In case of a non-trivial
      * handler, the webserver will parse the body and provides encoded parameters to
      * the request handler.
-     * 
+     *
      * @return Always false.
      */
-    bool isRequestHandlerTrivial() final
+    bool isRequestHandlerTrivial() const final
     {
         return false;
     }
 
 private:
 
-    ResetReqHandler m_resetReqHandler;  /**< Reset request handler */
+    ResetReqHandler m_resetReqHandler; /**< Reset request handler */
 
     CaptivePortalHandler();
     CaptivePortalHandler(const CaptivePortalHandler& handler);
@@ -138,6 +139,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* CAPTIVE_PORTAL_HANDLER_H */
+#endif /* CAPTIVE_PORTAL_HANDLER_H */
 
 /** @} */

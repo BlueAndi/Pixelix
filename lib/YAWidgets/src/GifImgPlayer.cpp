@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   GifImgPlayer.cpp
  * @brief  GIF image player
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -33,22 +34,24 @@
  * Includes
  *****************************************************************************/
 #include "GifImgPlayer.h"
-#include "LzwDecoder.h"
 #include "GifFileLoader.h"
 #include "GifFileToMemLoader.h"
+#include "LzwDecoder.h"
+#include <Logging.h>
+#include <TypedAllocator.hpp>
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
 
 /** Value to disable internal debug mode. */
-#define GIF_IMG_PLAYER_DEBUG_DISABLE    0
+#define GIF_IMG_PLAYER_DEBUG_DISABLE 0
 
 /** Value to enable internal debug mode. */
-#define GIF_IMG_PLAYER_DEBUG_ENABLE     1
+#define GIF_IMG_PLAYER_DEBUG_ENABLE 1
 
 /** Debug mode status */
-#define GIF_IMG_PLAYER_DEBUG_MODE       GIF_IMG_PLAYER_DEBUG_DISABLE
+#define GIF_IMG_PLAYER_DEBUG_MODE GIF_IMG_PLAYER_DEBUG_DISABLE
 
 /******************************************************************************
  * Macros
@@ -57,18 +60,33 @@
 #if GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE
 
 /** Debug log macro. */
-#define GIF_IMG_PLAYER_LOG_DEBUG(...)       printf(__VA_ARGS__)
+#define GIF_IMG_PLAYER_LOG_DEBUG(...) printf(__VA_ARGS__)
 
 /** Reset the frame counter to zero. */
-#define GIF_IMG_PLAYER_RESET_FRAME_COUNT()  do{ gFrameCnt = 0u; }while(0)
+#define GIF_IMG_PLAYER_RESET_FRAME_COUNT() \
+    do                                     \
+    {                                      \
+        gFrameCnt = 0u;                    \
+    }                                      \
+    while (0)
 
 /** Increase the frame counter by one. */
-#define GIF_IMG_PLAYER_INC_FRAME_COUNT()    do{ ++gFrameCnt; }while(0)
+#define GIF_IMG_PLAYER_INC_FRAME_COUNT() \
+    do                                   \
+    {                                    \
+        ++gFrameCnt;                     \
+    }                                    \
+    while (0)
 
 #else /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
 
+/** Debug log macro. */
 #define GIF_IMG_PLAYER_LOG_DEBUG(...)
+
+/** Reset the frame counter to zero. */
 #define GIF_IMG_PLAYER_RESET_FRAME_COUNT()
+
+/** Increase the frame counter by one. */
 #define GIF_IMG_PLAYER_INC_FRAME_COUNT()
 
 #endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
@@ -78,22 +96,22 @@
  *****************************************************************************/
 
 /** GIF signature */
-static const char*  GIF_SIGNATURE   = "GIF"; /* 3 byte signature, incl. string termination. */
+static const char* GIF_SIGNATURE   = "GIF"; /* 3 byte signature, incl. string termination. */
 
 /** Supported GIF version 87a */
-static const char*  GIF_VERSION_87A = "87a"; /* 3 byte version, incl. string termination. */
+static const char* GIF_VERSION_87A = "87a"; /* 3 byte version, incl. string termination. */
 
 /** Supported GIF version 89a */
-static const char*  GIF_VERSION_89A = "89a"; /* 3 byte version, incl. string termination. */
+static const char* GIF_VERSION_89A = "89a"; /* 3 byte version, incl. string termination. */
 
 /**
  * The main block ids.
  */
 typedef enum : uint8_t
 {
-    BLOCK_ID_EXTENSION          = 0x21U,    /**< Extension */
-    BLOCK_ID_IMAGE_DESCRIPTOR   = 0x2CU,    /**< Image descriptor */
-    BLOCK_ID_TRAILER            = 0x3BU     /**< Trailer */
+    BLOCK_ID_EXTENSION        = 0x21U, /**< Extension */
+    BLOCK_ID_IMAGE_DESCRIPTOR = 0x2CU, /**< Image descriptor */
+    BLOCK_ID_TRAILER          = 0x3BU  /**< Trailer */
 
 } BlockId;
 
@@ -103,10 +121,10 @@ typedef enum : uint8_t
  */
 typedef enum : uint8_t
 {
-    LABEL_PLAIN_TEXT_EXTENSION      = 0x01U,    /**< Plain text extension */
-    LABEL_GRAPHIC_CONTROL_EXTENSION = 0xF9U,    /**< Graphic control extension */
-    LABEL_COMMENT_EXTENSION         = 0xFEU,    /**< Comment extension */
-    LABEL_APPLICATION_EXTENSION     = 0xFFU     /**< Application extension */
+    LABEL_PLAIN_TEXT_EXTENSION      = 0x01U, /**< Plain text extension */
+    LABEL_GRAPHIC_CONTROL_EXTENSION = 0xF9U, /**< Graphic control extension */
+    LABEL_COMMENT_EXTENSION         = 0xFEU, /**< Comment extension */
+    LABEL_APPLICATION_EXTENSION     = 0xFFU  /**< Application extension */
 
 } ExtensionLabel;
 
@@ -116,84 +134,84 @@ typedef enum : uint8_t
  */
 typedef struct _GifFileHeader
 {
-    uint8_t signature[3U];  /**< Signature */
-    uint8_t version[3U];    /**< Version */
+    uint8_t signature[3U]; /**< Signature */
+    uint8_t version[3U];   /**< Version */
 
-} __attribute__ ((packed)) GifFileHeader;
+} __attribute__((packed)) GifFileHeader;
 
 /**
  * Packed field out of the logical screen descriptor.
  */
 typedef struct _LsdPackedField
 {
-    uint8_t globalColorTableSizeExp : 3;    /**< Size exponent (2^(N+1)) of global color table */
-    uint8_t sortFlag : 1;                   /**< Sort flag */
-    uint8_t colorResolution : 3;            /**< Color resolution */
-    uint8_t globalColorTableFlag : 1;       /**< Global color table flag */
+    uint8_t globalColorTableSizeExp : 3; /**< Size exponent (2^(N+1)) of global color table */
+    uint8_t sortFlag : 1;                /**< Sort flag */
+    uint8_t colorResolution : 3;         /**< Color resolution */
+    uint8_t globalColorTableFlag : 1;    /**< Global color table flag */
 
-} __attribute__ ((packed)) LsdPackedField;
+} __attribute__((packed)) LsdPackedField;
 
 /**
  * The logical screen descriptor.
  */
 typedef struct _LogicalScreenDescriptor
 {
-    uint16_t        canvasWidth;        /**< Canvas width in pixel */
-    uint16_t        canvasHeight;       /**< Canvas height in pixel */
-    LsdPackedField  packedField;        /**< Packed field */
-    uint8_t         bgColorIndex;       /**< Background color index */
-    uint8_t         pixelAspectRatio;   /**< Pixel aspect ratio */
+    uint16_t       canvasWidth;      /**< Canvas width in pixel */
+    uint16_t       canvasHeight;     /**< Canvas height in pixel */
+    LsdPackedField packedField;      /**< Packed field */
+    uint8_t        bgColorIndex;     /**< Background color index */
+    uint8_t        pixelAspectRatio; /**< Pixel aspect ratio */
 
-} __attribute__ ((packed)) LogicalScreenDescriptor;
+} __attribute__((packed)) LogicalScreenDescriptor;
 
 /**
  * Packed field out of the graphic control extension.
  */
 typedef struct _GcePackedField
 {
-    uint8_t transparentColorFlag : 1;   /**< Transparent color flag */
-    uint8_t userInputFlag : 1;          /**< User input flag */
-    uint8_t disposalMethod : 3;         /**< Disposal method */
-    uint8_t reserved : 3;               /**< Reserved for future use */
+    uint8_t transparentColorFlag : 1; /**< Transparent color flag */
+    uint8_t userInputFlag : 1;        /**< User input flag */
+    uint8_t disposalMethod : 3;       /**< Disposal method */
+    uint8_t reserved : 3;             /**< Reserved for future use */
 
-} __attribute__ ((packed)) GcePackedField;
+} __attribute__((packed)) GcePackedField;
 
 /**
  * The graphic control extension.
  */
 typedef struct _GraphicControlExtension
 {
-    GcePackedField  packedField;            /**< Packed field */
-    uint16_t        delayTime;              /**< Delay time in 1/100 s */
-    uint8_t         transparentColorIndex;  /**< Transparent color index */
+    GcePackedField packedField;           /**< Packed field */
+    uint16_t       delayTime;             /**< Delay time in 1/100 s */
+    uint8_t        transparentColorIndex; /**< Transparent color index */
 
-} __attribute__ ((packed)) GraphicControlExtension;
+} __attribute__((packed)) GraphicControlExtension;
 
 /**
  * Packed field out of the image descriptor.
  */
 typedef struct _IdPackedField
 {
-    uint8_t localColorTableSizeExp : 3;     /**< Size exponent (2^(N+1)) of local color table */
-    uint8_t reserved : 2;                   /**< Reserved for future use */
-    uint8_t sortFlag : 1;                   /**< Sort flag */
-    uint8_t interlaceFlag : 1;              /**< Interlace flag */
-    uint8_t localColorTableFlag : 1;        /**< Local color table flag */
+    uint8_t localColorTableSizeExp : 3; /**< Size exponent (2^(N+1)) of local color table */
+    uint8_t reserved : 2;               /**< Reserved for future use */
+    uint8_t sortFlag : 1;               /**< Sort flag */
+    uint8_t interlaceFlag : 1;          /**< Interlace flag */
+    uint8_t localColorTableFlag : 1;    /**< Local color table flag */
 
-} __attribute__ ((packed)) IdPackedField;
+} __attribute__((packed)) IdPackedField;
 
 /**
  * The image descriptor.
  */
 typedef struct _ImageDescriptor
 {
-    uint16_t        imageLeft;      /**< x-coordinate inside the canvas. */
-    uint16_t        imageTop;       /**< y-coordinate inside the canvas. */
-    uint16_t        imageWidth;     /**< Image width in pixel. */
-    uint16_t        imageHeight;    /**< Image height in pixel. */
-    IdPackedField   packedField;    /**< Packed field */
+    uint16_t      imageLeft;   /**< x-coordinate inside the canvas. */
+    uint16_t      imageTop;    /**< y-coordinate inside the canvas. */
+    uint16_t      imageWidth;  /**< Image width in pixel. */
+    uint16_t      imageHeight; /**< Image height in pixel. */
+    IdPackedField packedField; /**< Packed field */
 
-} __attribute__ ((packed)) ImageDescriptor;
+} __attribute__((packed)) ImageDescriptor;
 
 /**
  * The application extension.
@@ -203,7 +221,7 @@ typedef struct _ApplicationExtension
     uint8_t identifier[8U];         /**< Application identifier */
     uint8_t authenticationCode[3U]; /**< Application authentication code */
 
-}  __attribute__ ((packed)) ApplicationExtension;
+} __attribute__((packed)) ApplicationExtension;
 
 /******************************************************************************
  * Prototypes
@@ -222,14 +240,162 @@ static const char* getDisposalMethodAsString(uint8_t disposalMethod);
 static uint32_t gFrameCnt = 0U;
 #endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
 
+/* Interlace pattern according to GIF89a specification:
+ * Pass 0: Every 8th row, starting with row 0
+ * Pass 1: Every 8th row, starting with row 4
+ * Pass 2: Every 4th row, starting with row 2
+ * Pass 3: Every 2nd row, starting with row 1
+ */
+const uint8_t GifImgPlayer::INTERLACE_START[4U] = { 0U, 4U, 2U, 1U };
+const uint8_t GifImgPlayer::INTERLACE_STEP[4U]  = { 8U, 8U, 4U, 2U };
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, bool toMem)
+GifImgPlayer::GifImgPlayer() :
+    m_paletteColorAllocator(),
+    m_dataAllocator(),
+    m_bitmap(),
+    m_gifLoader(nullptr),
+    m_canvas(&m_bitmap),
+    m_bgColorIndex(0U),
+    m_globalColorTable(nullptr),
+    m_globalColorTableLength(0U),
+    m_localColorTable(nullptr),
+    m_localColorTableLength(0U),
+    m_isLocalColorTableUsed(false),
+    m_disposalMethod(DISPOSAL_METHOD_NO_ACTION),
+    m_imageDataBlock(nullptr),
+    m_imageDataBlockLength(0U),
+    m_imageDataBlockIdx(0U),
+    m_posX(0),
+    m_posY(0),
+    m_isTransparencyEnabled(false),
+    m_transparentColorIndex(0U),
+    m_isTrailerFound(false),
+    m_isInterlaced(false),
+    m_interlacePass(0U),
+    m_restartFilePos(0U),
+    m_loopCount(0U),
+    m_delay(0U),
+    m_timer(),
+    m_isAnimation(false),
+    m_isFinished(false),
+    m_isInfiniteLoop(false)
+{
+}
+
+GifImgPlayer::GifImgPlayer(const GifImgPlayer& player) :
+    m_paletteColorAllocator(player.m_paletteColorAllocator),
+    m_dataAllocator(player.m_dataAllocator),
+    m_bitmap(player.m_bitmap),
+    m_gifLoader(player.m_gifLoader),
+    m_canvas(player.m_canvas),
+    m_bgColorIndex(player.m_bgColorIndex),
+    m_globalColorTable(nullptr),
+    m_globalColorTableLength(0U),
+    m_localColorTable(nullptr),
+    m_localColorTableLength(0U),
+    m_isLocalColorTableUsed(player.m_isLocalColorTableUsed),
+    m_disposalMethod(player.m_disposalMethod),
+    m_imageDataBlock(nullptr),
+    m_imageDataBlockLength(0U),
+    m_imageDataBlockIdx(0U),
+    m_posX(player.m_posX),
+    m_posY(player.m_posY),
+    m_isTransparencyEnabled(player.m_isTransparencyEnabled),
+    m_transparentColorIndex(player.m_transparentColorIndex),
+    m_isTrailerFound(player.m_isTrailerFound),
+    m_isInterlaced(player.m_isInterlaced),
+    m_interlacePass(player.m_interlacePass),
+    m_restartFilePos(player.m_restartFilePos),
+    m_loopCount(player.m_loopCount),
+    m_delay(player.m_delay),
+    m_timer(),
+    m_isAnimation(player.m_isAnimation),
+    m_isFinished(player.m_isFinished),
+    m_isInfiniteLoop(player.m_isInfiniteLoop)
+{
+    /* Copy global color table. */
+    if (false == copyGlobalColorTable(player.m_globalColorTable, player.m_globalColorTableLength))
+    {
+        cleanup();
+    }
+    /* Copy local color table. */
+    else if (false == copyLocalColorTable(player.m_localColorTable, player.m_localColorTableLength))
+    {
+        cleanup();
+    }
+    /* Copy image data block */
+    else if (false == copyImageDataBlock(player.m_imageDataBlock, player.m_imageDataBlockLength))
+    {
+        cleanup();
+    }
+    else
+    {
+        /* Nothing to do. */
+    }
+}
+
+GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
+{
+    if (this != &player)
+    {
+        cleanup();
+
+        m_paletteColorAllocator = player.m_paletteColorAllocator;
+        m_dataAllocator         = player.m_dataAllocator;
+        m_bitmap                = player.m_bitmap;
+        m_gifLoader             = player.m_gifLoader;
+        m_canvas                = player.m_canvas;
+        m_bgColorIndex          = player.m_bgColorIndex;
+        m_isLocalColorTableUsed = player.m_isLocalColorTableUsed;
+        m_disposalMethod        = player.m_disposalMethod;
+
+        m_imageDataBlockIdx     = player.m_imageDataBlockIdx;
+        m_posX                  = player.m_posX;
+        m_posY                  = player.m_posY;
+        m_isTransparencyEnabled = player.m_isTransparencyEnabled;
+        m_transparentColorIndex = player.m_transparentColorIndex;
+        m_isTrailerFound        = player.m_isTrailerFound;
+        m_isInterlaced          = player.m_isInterlaced;
+        m_interlacePass         = player.m_interlacePass;
+        m_restartFilePos        = player.m_restartFilePos;
+        m_loopCount             = player.m_loopCount;
+        m_delay                 = player.m_delay;
+        m_isAnimation           = player.m_isAnimation;
+        m_isFinished            = player.m_isFinished;
+        m_isInfiniteLoop        = player.m_isInfiniteLoop;
+
+        /* Copy global color table. */
+        if (false == copyGlobalColorTable(player.m_globalColorTable, player.m_globalColorTableLength))
+        {
+            cleanup();
+        }
+        /* Copy local color table. */
+        else if (false == copyLocalColorTable(player.m_localColorTable, player.m_localColorTableLength))
+        {
+            cleanup();
+        }
+        /* Copy image data block */
+        else if (false == copyImageDataBlock(player.m_imageDataBlock, player.m_imageDataBlockLength))
+        {
+            cleanup();
+        }
+        else
+        {
+            /* Nothing to do. */
+        }
+    }
+
+    return *this;
+}
+
+GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, IGifLoader& loader)
 {
     Ret ret = RET_OK;
-    
+
     /* File already opened? */
     if (nullptr != m_gifLoader)
     {
@@ -238,30 +404,21 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, bool toMem)
     /* Open file */
     else
     {
-        if (false == toMem)
-        {
-            m_gifLoader = new(std::nothrow) GifFileLoader;
-        }
-        else
-        {
-            m_gifLoader = new(std::nothrow) GifFileToMemLoader;
-        }
+        m_gifLoader = &loader;
 
-        if (nullptr == m_gifLoader)
-        {
-            ret = RET_IMG_TOO_BIG;
-        }
-        else if (false == m_gifLoader->open(fs, fileName))
+        if (false == m_gifLoader->open(fs, fileName))
         {
             ret = RET_FILE_NOT_FOUND;
         }
         else
         {
             /* Allocate image data block, used for parsing. */
-            m_imageDataBlock = new(std::nothrow) uint8_t[IMAGE_DATA_BLOCK_SIZE];
+            m_imageDataBlock = m_dataAllocator.allocateArray(IMAGE_DATA_BLOCK_SIZE);
 
             if (nullptr == m_imageDataBlock)
             {
+                LOG_ERROR("Failed to allocate image data block, size: %u bytes", IMAGE_DATA_BLOCK_SIZE);
+
                 ret = RET_FILE_FORMAT_UNSUPPORTED;
             }
         }
@@ -303,7 +460,7 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, bool toMem)
             GIF_IMG_PLAYER_LOG_DEBUG("\tGlobal color table size: %u colors\n", calcColorTableSize(logicalScreenDescriptor.packedField.globalColorTableSizeExp) / 3U);
 
             m_bgColorIndex = logicalScreenDescriptor.bgColorIndex;
-            
+
             /* Create the bitmap as small as possible to not waste memory. */
             if (false == m_bitmap.create(logicalScreenDescriptor.canvasWidth, logicalScreenDescriptor.canvasHeight))
             {
@@ -325,15 +482,17 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName, bool toMem)
                 if (0U != logicalScreenDescriptor.packedField.globalColorTableFlag)
                 {
                     size_t globalColorTableSize = calcColorTableSize(logicalScreenDescriptor.packedField.globalColorTableSizeExp);
-                    
-                    m_globalColorTableLength    =  globalColorTableSize / sizeof(PaletteColor);
-                    m_globalColorTable          = new(std::nothrow) PaletteColor[m_globalColorTableLength];
+
+                    m_globalColorTableLength    = globalColorTableSize / sizeof(PaletteColor);
+                    m_globalColorTable          = m_paletteColorAllocator.allocateArray(m_globalColorTableLength);
 
                     /* Out of memory? */
                     if (nullptr == m_globalColorTable)
                     {
+                        LOG_ERROR("Failed to allocate global color table, size: %u bytes", globalColorTableSize);
+
                         m_globalColorTableLength = 0U;
-                        ret = RET_IMG_TOO_BIG;
+                        ret                      = RET_IMG_TOO_BIG;
                     }
                     /* Read global color table. */
                     else if (false == m_gifLoader->read(m_globalColorTable, globalColorTableSize))
@@ -368,11 +527,10 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
     bool isSuccessful = true;
 
     /* Reset trailer status. */
-    m_isTrailerFound = false;
+    m_isTrailerFound  = false;
 
     /* No GIF image opened? */
-    if ((nullptr == m_gifLoader) ||
-        (false == (*m_gifLoader)))
+    if (nullptr == m_gifLoader)
     {
         isSuccessful = false;
     }
@@ -391,11 +549,11 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
     }
     else
     {
-        bool    isImageShown    = false;
-        BlockId blockId         = BLOCK_ID_EXTENSION;
+        bool    isImageShown = false;
+        BlockId blockId      = BLOCK_ID_EXTENSION;
 
         /* Walk through all blocks in the GIF image. */
-        while((BLOCK_ID_TRAILER != blockId) && (false == isImageShown) && (true == isSuccessful) && (false == m_isTrailerFound))
+        while ((BLOCK_ID_TRAILER != blockId) && (false == isImageShown) && (true == isSuccessful) && (false == m_isTrailerFound))
         {
             /* Read block id. */
             if (false == m_gifLoader->read(&blockId, sizeof(blockId)))
@@ -441,7 +599,8 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
                 if (true == m_isAnimation)
                 {
                     /* Is animation limited to a specific number of repeats? */
-                    if (0U < m_loopCount)
+                    if ((false == m_isInfiniteLoop) &&
+                        (0U < m_loopCount))
                     {
                         --m_loopCount;
 
@@ -487,14 +646,17 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
         /* Clean-up required because of any error? */
         if (false == isSuccessful)
         {
-            if (nullptr != m_localColorTable)
-            {
-                delete[] m_localColorTable;
-                m_localColorTable       = nullptr;
-                m_localColorTableLength = 0U;
-            }
-
             close();
+        }
+        /* If the GIF image is finished, release resources. */
+        else if (true == m_isFinished)
+        {
+            releaseResources();
+        }
+        else
+        {
+            /* Nothing to do. */
+            ;
         }
     }
 
@@ -509,47 +671,149 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
  * Private Methods
  *****************************************************************************/
 
+bool GifImgPlayer::copyGlobalColorTable(const PaletteColor* colorTable, size_t colorTableLength)
+{
+    bool                                      isSuccessful = true;
+    TypedAllocator<PaletteColor, PsAllocator> allocator;
+
+    /* Destroy any old global color table. */
+    if (nullptr != m_globalColorTable)
+    {
+        m_paletteColorAllocator.deallocateArray(m_globalColorTable);
+        m_globalColorTable       = nullptr;
+        m_globalColorTableLength = 0U;
+    }
+
+    m_globalColorTableLength = colorTableLength;
+    m_globalColorTable       = m_paletteColorAllocator.allocateArray(m_globalColorTableLength);
+
+    if (nullptr == m_globalColorTable)
+    {
+        m_globalColorTableLength = 0U;
+        isSuccessful             = false;
+    }
+    else
+    {
+        for (size_t idx = 0U; idx < m_globalColorTableLength; ++idx)
+        {
+            m_globalColorTable[idx] = colorTable[idx];
+        }
+    }
+
+    return isSuccessful;
+}
+
+bool GifImgPlayer::copyLocalColorTable(const PaletteColor* colorTable, size_t colorTableLength)
+{
+    bool isSuccessful = true;
+
+    /* Destroy any old local color table. */
+    if (nullptr != m_localColorTable)
+    {
+        m_paletteColorAllocator.deallocateArray(m_localColorTable);
+        m_localColorTable       = nullptr;
+        m_localColorTableLength = 0U;
+    }
+
+    m_localColorTableLength = colorTableLength;
+    m_localColorTable       = m_paletteColorAllocator.allocateArray(m_localColorTableLength);
+
+    if (nullptr == m_localColorTable)
+    {
+        m_localColorTableLength = 0U;
+        isSuccessful            = false;
+    }
+    else
+    {
+        for (size_t idx = 0U; idx < m_localColorTableLength; ++idx)
+        {
+            m_localColorTable[idx] = colorTable[idx];
+        }
+    }
+
+    return isSuccessful;
+}
+
+
+bool GifImgPlayer::copyImageDataBlock(const uint8_t* imageDataBlock, size_t imageDataBlockLength)
+{
+    bool isSuccessful = true;
+
+    /* Destroy any old image data block. */
+    if (nullptr != m_imageDataBlock)
+    {
+        m_dataAllocator.deallocateArray(m_imageDataBlock);
+        m_imageDataBlock       = nullptr;
+        m_imageDataBlockLength = 0U;
+    }
+
+    m_imageDataBlockLength = imageDataBlockLength;
+    m_imageDataBlock       = m_dataAllocator.allocateArray(m_imageDataBlockLength);
+
+    if (nullptr == m_imageDataBlock)
+    {
+        m_imageDataBlockLength = 0U;
+        isSuccessful           = false;
+    }
+    else
+    {
+        for (size_t idx = 0U; idx < m_imageDataBlockLength; ++idx)
+        {
+            m_imageDataBlock[idx] = imageDataBlock[idx];
+        }
+    }
+
+    return isSuccessful;
+}
+
 void GifImgPlayer::cleanup()
+{
+    releaseResources();
+
+    m_bitmap.release();
+
+    m_gifLoader      = nullptr;
+    m_isTrailerFound = false;
+    m_isAnimation    = false;
+}
+
+void GifImgPlayer::releaseResources()
 {
     if (nullptr != m_gifLoader)
     {
         m_gifLoader->close();
-
-        delete m_gifLoader;
-        m_gifLoader = nullptr;
     }
-
-    m_bitmap.release();
 
     if (nullptr != m_imageDataBlock)
     {
-        delete[] m_imageDataBlock;
+        m_dataAllocator.deallocateArray(m_imageDataBlock);
         m_imageDataBlock = nullptr;
     }
 
     if (nullptr != m_globalColorTable)
     {
-        delete[] m_globalColorTable;
-        
-        m_globalColorTable          = nullptr;
-        m_globalColorTableLength    = 0U;
+        m_paletteColorAllocator.deallocateArray(m_globalColorTable);
+
+        m_globalColorTable       = nullptr;
+        m_globalColorTableLength = 0U;
     }
 
     if (nullptr != m_localColorTable)
     {
-        delete[] m_localColorTable;
-        
+        m_paletteColorAllocator.deallocateArray(m_localColorTable);
+
         m_localColorTable       = nullptr;
         m_localColorTableLength = 0U;
+        m_isLocalColorTableUsed = false;
     }
 }
 
 bool GifImgPlayer::isFileSupported(const GifFileHeader& header) const
 {
-    bool        isSupported     = true;
-    uint8_t     index;
+    bool    isSupported = true;
+    uint8_t index;
 
-    for(index = 0U; index < sizeof(header.signature); ++index)
+    for (index = 0U; index < sizeof(header.signature); ++index)
     {
         if (GIF_SIGNATURE[index] != header.signature[index])
         {
@@ -563,7 +827,7 @@ bool GifImgPlayer::isFileSupported(const GifFileHeader& header) const
         bool isVersion89ASupported = true;
         bool isVersion87ASupported = true;
 
-        for(index = 0U; index < sizeof(header.version); ++index)
+        for (index = 0U; index < sizeof(header.version); ++index)
         {
             if (GIF_VERSION_89A[index] != header.version[index])
             {
@@ -587,15 +851,15 @@ bool GifImgPlayer::isFileSupported(const GifFileHeader& header) const
 
 size_t GifImgPlayer::calcColorTableSize(uint8_t sizeExp) const
 {
-    uint8_t index   = 0U;
-    size_t  size    = 1U;
+    uint8_t index = 0U;
+    size_t  size  = 1U;
 
     /* Calculation:
-     * Size in byte = 3 * 2^(N + 1) 
+     * Size in byte = 3 * 2^(N + 1)
      */
 
     /* Determine 2^(N + 1) */
-    while(sizeExp >= index)
+    while (sizeExp >= index)
     {
         size *= 2U;
 
@@ -610,8 +874,8 @@ size_t GifImgPlayer::calcColorTableSize(uint8_t sizeExp) const
 
 bool GifImgPlayer::parseExtension()
 {
-    bool            isSuccessful = true;
-    ExtensionLabel  label;
+    bool           isSuccessful = true;
+    ExtensionLabel label;
 
     /* Load extension label. */
     if (false == m_gifLoader->read(&label, sizeof(label)))
@@ -676,35 +940,44 @@ bool GifImgPlayer::parseImageDescriptor()
         m_canvas.setWidth(imageDescriptor.imageWidth);
         m_canvas.setHeight(imageDescriptor.imageHeight);
 
-        /* Destroy any old local color table. */
-        if (nullptr != m_localColorTable)
-        {
-            delete[] m_localColorTable;
-            m_localColorTable       = nullptr;
-            m_localColorTableLength = 0U;
-        }
-        
+        /* Reset local color table usage flag. */
+        m_isLocalColorTableUsed = false;
+
         /* Local color table available? */
         if (0U != imageDescriptor.packedField.localColorTableFlag)
         {
             size_t localColorTableSize = calcColorTableSize(imageDescriptor.packedField.localColorTableSizeExp);
 
-            m_localColorTableLength = localColorTableSize / sizeof(PaletteColor);
-            m_localColorTable       = new(std::nothrow) PaletteColor[m_localColorTableLength];
-
+            /* Allocate local color table with maximum length, because it shall be allocated once
+             * and reused for all images in the GIF. This avoids the overhead of allocating and deallocating the
+             * local color table for each image descriptor, which can be a performance issue if many images are
+             * in the GIF. The actual length of the local color table is stored in m_localColorTableLength,
+             * which is used for reading and accessing the local color table.
+             */
+            m_localColorTableLength    = localColorTableSize / sizeof(PaletteColor);
             if (nullptr == m_localColorTable)
             {
+                m_localColorTable = m_paletteColorAllocator.allocateArray(LOCAL_COLOR_TABLE_MAX_LENGTH);
+            }
+
+            /* Allocation failed? */
+            if (nullptr == m_localColorTable)
+            {
+                LOG_ERROR("Failed to allocate local color table, size: %u bytes", localColorTableSize);
+
                 m_localColorTableLength = 0U;
 
-                isSuccessful = false;
+                isSuccessful            = false;
             }
+            /* Read local color table. */
             else if (false == m_gifLoader->read(m_localColorTable, localColorTableSize))
             {
                 isSuccessful = false;
             }
+            /* Local color table successfully read. */
             else
             {
-                ;
+                m_isLocalColorTableUsed = true;
             }
         }
 
@@ -722,38 +995,64 @@ bool GifImgPlayer::parseImageDescriptor()
             }
             else
             {
-                LzwDecoder                      lzwDecoder;
-                LzwDecoder::ReadFromInStream    readFromCodeStreamFunc  =
-                    [this](uint8_t& data) -> bool
-                    {
-                        return this->readFromCodeStream(data);
-                    };
-                LzwDecoder::WriteToOutStream    writeToIndexStreamFunc  =
-                    [this](uint8_t data) -> bool
-                    {
-                        return this->writeToIndexStream(data);
-                    };
-                uint8_t                         blockTerminator         = 0U;
+                LzwDecoder                   lzwDecoder;
+                LzwDecoder::ReadFromInStream readFromCodeStreamFunc =
+                    [this](uint8_t& data) -> bool {
+                    return this->readFromCodeStream(data);
+                };
+                LzwDecoder::WriteToOutStream writeToIndexStreamFunc =
+                    [this](uint8_t data) -> bool {
+                    return this->writeToIndexStream(data);
+                };
+                uint8_t blockTerminator = 0U;
 
                 /* Reset data block before start decoding the next block. */
-                m_imageDataBlockIdx = 0U;
-                m_imageDataBlockLength = 0U;
+                m_imageDataBlockIdx     = 0U;
+                m_imageDataBlockLength  = 0U;
 
                 /* Reset coordinates used for drawing. */
-                m_posX = 0U;
-                m_posY = 0U;
+                m_posX                  = 0U;
+                m_posY                  = 0U;
 
-                lzwDecoder.init(lzwMinCodeSize);
+                /* Store interlace flag and reset interlace pass. */
+                m_isInterlaced          = (0U != imageDescriptor.packedField.interlaceFlag);
+                m_interlacePass         = 0U;
 
-                if (false == lzwDecoder.decode(readFromCodeStreamFunc, writeToIndexStreamFunc))
+                /* Decode image data.
+                 *
+                 * Note: The LZW decoder will will allocate about 16 KB of memory. To avoid
+                 * continuously allocating and deallocating this memory for each image in the GIF,
+                 * the LZW decoder should be allocated once as a member variable of the GifImgPlayer
+                 * class and reused for all images in the GIF.
+                 *
+                 * Unfortunately this would result in a significant decrease of the total memory,
+                 * with bad influence on the stability.
+                 *
+                 * Therefore the LZW decoder is allocated locally in this function, which allows to
+                 * release the memory immediately after decoding the image data.
+                 */
+                if (false == lzwDecoder.init())
                 {
                     isSuccessful = false;
                 }
+                else
+                {
+                    lzwDecoder.setup(lzwMinCodeSize);
 
-                lzwDecoder.deInit();
+                    if (false == lzwDecoder.decode(readFromCodeStreamFunc, writeToIndexStreamFunc))
+                    {
+                        isSuccessful = false;
+                    }
 
+                    lzwDecoder.deInit();
+                }
+
+                if (false == isSuccessful)
+                {
+                    /* Nothing to do. */
+                }
                 /* After the image data, the block terminator marks the end. */
-                if (false == m_gifLoader->read(&blockTerminator, sizeof(blockTerminator)))
+                else if (false == m_gifLoader->read(&blockTerminator, sizeof(blockTerminator)))
                 {
                     isSuccessful = false;
                 }
@@ -763,6 +1062,7 @@ bool GifImgPlayer::parseImageDescriptor()
                 }
                 else
                 {
+                    /* Nothing to do. */
                     ;
                 }
             }
@@ -774,16 +1074,16 @@ bool GifImgPlayer::parseImageDescriptor()
 
 void GifImgPlayer::applyDisposalMethod()
 {
-    switch(m_disposalMethod)
+    switch (m_disposalMethod)
     {
     /* GIF 89a specification: No disposal specified. The decoder is not required to take any action. */
     case DISPOSAL_METHOD_NO_ACTION:
         break;
-    
+
     /* GIF 89a specification: Do not dispose. The graphic is to be left in place. */
     case DISPOSAL_METHOD_NO_DISPOSE:
         break;
-    
+
     /* GIF 89a specification: Restore to background color. The area used by the graphic must be restored to the background color. */
     case DISPOSAL_METHOD_RESTORE_TO_BACKGROUND:
         /* If no global color table is available, the background color index is invalid and the background will be treated as transparent. */
@@ -799,30 +1099,29 @@ void GifImgPlayer::applyDisposalMethod()
         /* Restore to background color. Only valid because global color table is available. */
         else
         {
-            PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
-            Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
+            PaletteColor* paletteColor = &m_globalColorTable[m_bgColorIndex];
+            Color         bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
 
             m_canvas.fillScreen(bgColor);
         }
         break;
-    
+
     /* GIF 89a specification: Restore to previous. The decoder is required to restore the area overwritten by the graphic with what was there prior to rendering the graphic. */
-    case DISPOSAL_METHOD_RESTORE_TO_PREVIOUS:
-        {
-            PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
-            Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
+    case DISPOSAL_METHOD_RESTORE_TO_PREVIOUS: {
+        PaletteColor* paletteColor = &m_globalColorTable[m_bgColorIndex];
+        Color         bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
 
-            /* GIF 89a specification:
-             * The mode Restore To Previous is intended to be used in small sections of the graphic; the use of this mode imposes
-             * severe demands on the decoder to store the section of the graphic that needs to be saved. For this reason, this mode should be used
-             * sparingly.  This mode is not intended to save an entire graphic or large areas of a graphic; when this is the case, the encoder should
-             * make every attempt to make the sections of the graphic to be restored be separate graphics in the data stream. In the case where
-             * a decoder is not capable of saving an area of a graphic marked as Restore To Previous, it is recommended that a decoder restore to
-             * the background color.
-             */
-            m_canvas.fillScreen(bgColor);
-        }
-        break;
+        /* GIF 89a specification:
+         * The mode Restore To Previous is intended to be used in small sections of the graphic; the use of this mode imposes
+         * severe demands on the decoder to store the section of the graphic that needs to be saved. For this reason, this mode should be used
+         * sparingly.  This mode is not intended to save an entire graphic or large areas of a graphic; when this is the case, the encoder should
+         * make every attempt to make the sections of the graphic to be restored be separate graphics in the data stream. In the case where
+         * a decoder is not capable of saving an area of a graphic marked as Restore To Previous, it is recommended that a decoder restore to
+         * the background color.
+         */
+        m_canvas.fillScreen(bgColor);
+    }
+    break;
 
     default:
         /* Not defined by GIF 89a specification. */
@@ -877,6 +1176,10 @@ bool GifImgPlayer::parseGraphicControlExentsion()
             {
                 GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : error - no global color table available\n");
             }
+            else if (gce.transparentColorIndex >= m_globalColorTableLength)
+            {
+                GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : warning - transparent color index out of range\n");
+            }
             else
             {
                 GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : 0x%02X%02X%02X\n",
@@ -907,9 +1210,9 @@ bool GifImgPlayer::parseGraphicControlExentsion()
 
 bool GifImgPlayer::parseApplicationExtension()
 {
-    bool                    isSuccessful    = true;
-    uint8_t                 blockSize       = 0x0U;
-    ApplicationExtension    appExt;
+    bool                 isSuccessful = true;
+    uint8_t              blockSize    = 0x0U;
+    ApplicationExtension appExt;
 
     /* Read application extension block size. */
     if (false == m_gifLoader->read(&blockSize, sizeof(blockSize)))
@@ -928,12 +1231,12 @@ bool GifImgPlayer::parseApplicationExtension()
     }
     else
     {
-        const void* vAppIdentifier  = appExt.identifier;
-        const char* appIdentifier   = static_cast<const char*>(vAppIdentifier);
-        const void* vAppAuthCode    = appExt.authenticationCode;
-        const char* appAuthCode     = static_cast<const char*>(vAppAuthCode);
+        const void* vAppIdentifier = appExt.identifier;
+        const char* appIdentifier  = static_cast<const char*>(vAppIdentifier);
+        const void* vAppAuthCode   = appExt.authenticationCode;
+        const char* appAuthCode    = static_cast<const char*>(vAppAuthCode);
 
-        /* Only the NETSCAPE 2.0 application is supported for animatins. */
+        /* Only the NETSCAPE 2.0 application is supported for animations. */
         if ((0 == strncmp(appIdentifier, "NETSCAPE", sizeof(appExt.identifier))) &&
             (0 == strncmp(appAuthCode, "2.0", sizeof(appExt.authenticationCode))))
         {
@@ -1000,7 +1303,7 @@ bool GifImgPlayer::parseNetscape20subBlocks()
         GIF_IMG_PLAYER_LOG_DEBUG("\tNETSCAPE 2.0\n");
         GIF_IMG_PLAYER_LOG_DEBUG("\tLoop counter: %u\n", m_loopCount);
 
-        m_isAnimation = true;
+        m_isAnimation    = true;
 
         /* Store position after application extension to know where to restart
          * the animation.
@@ -1013,10 +1316,10 @@ bool GifImgPlayer::parseNetscape20subBlocks()
 
 bool GifImgPlayer::skipBlock()
 {
-    bool    isSuccessful    = true;
-    uint8_t blockSize       = 0xFFU;
+    bool    isSuccessful = true;
+    uint8_t blockSize    = 0xFFU;
 
-    while((0U < blockSize) && (true == isSuccessful))
+    while ((0U < blockSize) && (true == isSuccessful))
     {
         if (false == m_gifLoader->read(&blockSize, sizeof(blockSize)))
         {
@@ -1040,8 +1343,8 @@ bool GifImgPlayer::skipBlock()
 
 size_t GifImgPlayer::loadImageDataBlock(uint8_t* block, size_t size)
 {
-    bool        isSuccessful    = true;
-    uint8_t     blockSize       = 0U;
+    bool    isSuccessful = true;
+    uint8_t blockSize    = 0U;
 
     if ((nullptr == block) ||
         (0U == size))
@@ -1106,34 +1409,100 @@ bool GifImgPlayer::readFromCodeStream(uint8_t& data)
 
 bool GifImgPlayer::writeToIndexStream(uint8_t data)
 {
-    bool            isSuccessful        = false;
-    PaletteColor*   colorTable          = (nullptr != m_localColorTable) ? m_localColorTable : m_globalColorTable;
-    size_t          colorTableLength    = (nullptr != m_localColorTable) ? m_localColorTableLength : m_globalColorTableLength;
+    bool          isSuccessful      = false;
+    PaletteColor* colorTable        = ((true == m_isLocalColorTableUsed) && (nullptr != m_localColorTable)) ? m_localColorTable : m_globalColorTable;
+    size_t        colorTableLength  = ((true == m_isLocalColorTableUsed) && (nullptr != m_localColorTable)) ? m_localColorTableLength : m_globalColorTableLength;
+    bool          isColorIndexValid = false;
+
+    /* No transparency enabled? */
+    if (false == m_isTransparencyEnabled)
+    {
+        if (colorTableLength <= data)
+        {
+            GIF_IMG_PLAYER_LOG_DEBUG("Error(%d): Invalid color index %u for color table length %u\n", __LINE__, data, static_cast<uint32_t>(colorTableLength));
+        }
+        else
+        {
+            isColorIndexValid = true;
+        }
+    }
+    /* Transparency enabled? */
+    else
+    {
+        /* Check if the color index is not the transparent one. */
+        if (m_transparentColorIndex != data)
+        {
+            if (colorTableLength <= data)
+            {
+                GIF_IMG_PLAYER_LOG_DEBUG("Error(%d): Invalid color index %u for color table length %u\n", __LINE__, data, static_cast<uint32_t>(colorTableLength));
+            }
+            else
+            {
+                isColorIndexValid = true;
+            }
+        }
+        /* The color index is the transparent one.
+         * Therefore its allowed even if it is out of range.
+         */
+        else
+        {
+            isColorIndexValid = true;
+        }
+    }
 
     /* Color table must be available and
      * the color index must be part of it.
      */
-    if ((nullptr != colorTable) &&
-        (colorTableLength > data))
+    if (nullptr == colorTable)
+    {
+        GIF_IMG_PLAYER_LOG_DEBUG("Error(%d): No color table\n", __LINE__);
+    }
+    /* Abort if the transparent color index is out of range,
+     * except transparent color index
+     */
+    else if (false == isColorIndexValid)
+    {
+        ;
+    }
+    else
     {
         /* If transparency is not enabled or
          * it is enabled and the color index is not transparent,
          * the pixel will be drawn.
          */
         if ((false == m_isTransparencyEnabled) ||
-            ((true == m_isTransparencyEnabled) && (m_transparentColorIndex != data)))
+            (m_transparentColorIndex != data))
         {
-            PaletteColor*   paletteColor = &colorTable[data];
-            Color           color(paletteColor->red, paletteColor->green, paletteColor->blue);
+            PaletteColor* paletteColor = &colorTable[data];
+            Color         color(paletteColor->red, paletteColor->green, paletteColor->blue);
 
             m_canvas.drawPixel(m_posX, m_posY, color);
         }
 
+        /* Move to the next pixel position. */
         ++m_posX;
         if (m_canvas.getWidth() <= m_posX)
         {
             m_posX = 0;
-            ++m_posY;
+
+            /* If the image is interlaced, use the interlace pattern. */
+            if (true == m_isInterlaced)
+            {
+                /* Move to the next row within the current pass. */
+                m_posY += INTERLACE_STEP[m_interlacePass];
+
+                /* If we've gone past the bottom of the image, move to the next pass. */
+                while ((m_canvas.getHeight() <= m_posY) && (3U > m_interlacePass))
+                {
+                    ++m_interlacePass;
+                    m_posY = INTERLACE_START[m_interlacePass];
+                }
+            }
+            /* Non-interlaced images are stored sequentially. */
+            else
+            {
+                ++m_posY;
+            }
         }
 
         isSuccessful = true;
@@ -1154,21 +1523,21 @@ bool GifImgPlayer::writeToIndexStream(uint8_t data)
 
 /**
  * Get user friendly description of the disposal method.
- * 
+ *
  * @param[in] disposalMethod    The disposal method.
- * 
+ *
  * @return Description as string
  */
 static const char* getDisposalMethodAsString(uint8_t disposalMethod)
 {
     const char* disposalMethodStr = "To be defined.";
 
-    switch(disposalMethod)
+    switch (disposalMethod)
     {
     case 0U:
         disposalMethodStr = "No disposal specified.";
         break;
-    
+
     case 1U:
         disposalMethodStr = "Do not dispose. Leave graphic in place.";
         break;
@@ -1188,4 +1557,4 @@ static const char* getDisposalMethodAsString(uint8_t disposalMethod)
     return disposalMethodStr;
 }
 
-#endif  /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
+#endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */

@@ -138,4 +138,10 @@ The test functionality.
 @{
 @}
 
+@defgroup REST_SERVICE RESTful service
+@ingroup SERVICE_LAYER
+The RESTful API service used for serialized REST requests.
+@{
+@}
+
 */

@@ -33,13 +33,15 @@
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto">
+                    <ul class="navbar-nav me-auto">
                         <li class="nav-item active">
                             <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                         </li>
@@ -57,7 +59,7 @@
                 <h1 class="mt-5">Captive Portal</h1>
                 <h2>Wifi network configuration</h2>
                 <p>
-                    <div class="form-group">
+                    <div class="form-group mb-3">
                         <label class="form-label" for="ssid">SSID:</label><br />
                         <input class="form-control" type="text" id="ssid" name="ssid" value="~SSID~" /><br />
                         <label class="form-label" for="passphrase">Passphrase:</label><br />
@@ -77,7 +79,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span>
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span>
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>

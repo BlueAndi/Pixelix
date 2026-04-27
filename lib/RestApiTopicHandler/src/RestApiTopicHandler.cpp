@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   RestApiTopicHandler.cpp
  * @brief  REST API topic handler
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -41,6 +42,7 @@
 
 #include <Logging.h>
 #include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,6 +68,24 @@
  * Public Methods
  *****************************************************************************/
 
+void RestApiTopicHandler::start()
+{
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        m_webLoginUser     = settings.getWebLoginUser().getDefault();
+        m_webLoginPassword = settings.getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        m_webLoginUser     = settings.getWebLoginUser().getValue();
+        m_webLoginPassword = settings.getWebLoginPassword().getValue();
+
+        settings.close();
+    }
+}
+
 void RestApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
     /* A REST API URI is unique by its entity id and topic. */
@@ -88,6 +108,10 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
                 [this, topicMetaData](AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final) {
                     this->uploadHandler(request, filename, index, data, len, final, topicMetaData);
                 };
+            ArBodyHandlerFunction onBody =
+                [this, topicMetaData](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+                    this->bodyHandler(request, data, len, index, total, topicMetaData);
+                };
 
             topicMetaData->entityId      = entityId;
             topicMetaData->topic         = topic;
@@ -95,7 +119,10 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
             topicMetaData->setTopicFunc  = setTopicFunc;
             topicMetaData->uploadReqFunc = uploadReqFunc;
             topicMetaData->uri           = getUri(entityId, topic);
-            topicMetaData->webHandler    = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload);
+            topicMetaData->webHandler    = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload, onBody);
+
+            /* Enable basic authentication. */
+            topicMetaData->webHandler->setAuthentication(m_webLoginUser, m_webLoginPassword);
 
             LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 
@@ -170,7 +197,7 @@ String RestApiTopicHandler::getUri(const String& entityId, const String& topic) 
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE = 4096U;
+    const size_t        JSON_DOC_SIZE = 8192U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj        = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
@@ -200,14 +227,61 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
             jsonDoc["status"] = "ok";
         }
     }
+    /* Check for content length. */
+    else if (MAX_CONTENT_LENGTH < request->contentLength())
+    {
+        LOG_WARNING("Content length exceeds maximum allowed.");
+
+        RestUtil::prepareRspError(jsonDoc, "Content length exceeds maximum allowed.");
+
+        jsonDoc.remove("data");
+
+        httpStatusCode = HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE;
+    }
+    /* Check for body length indirectly if the content type is JSON.
+     * In this case the bodyHandler() method was called before and if the body length
+     * exceeds the maximum allowed, the temporary object will be nullptr.
+     */
+    else if ((true == request->contentType().startsWith("application/json")) &&
+             (nullptr == request->_tempObject))
+    {
+        LOG_WARNING("Body length exceeds maximum allowed.");
+
+        RestUtil::prepareRspError(jsonDoc, "Body length exceeds maximum allowed.");
+
+        jsonDoc.remove("data");
+
+        httpStatusCode = HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE;
+    }
     else if ((HTTP_POST == request->method()) &&
              (nullptr != topicMetaData->setTopicFunc))
     {
         DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
         JsonObjectConst     jsonValue;
 
-        /* Topic data is in the HTTP parameters and needs to be converted to JSON. */
-        par2Json(jsonDocPar, request);
+        /* JSON in the body has higher priority than the HTTP parameters! */
+        if (nullptr == request->_tempObject)
+        {
+            /* Topic data is in the HTTP parameters and needs to be converted to JSON. */
+            par2Json(jsonDocPar, request);
+        }
+        else
+        {
+            DeserializationError error = deserializeJson(jsonDocPar, static_cast<const char*>(request->_tempObject));
+
+            if (DeserializationError::Ok != error)
+            {
+                LOG_WARNING("Received invalid payload.");
+            }
+
+            delete[] static_cast<uint8_t*>(request->_tempObject);
+            request->_tempObject = nullptr;
+
+            if (0U < request->args())
+            {
+                LOG_WARNING("Ignore HTTP parameters, because JSON is in the body.");
+            }
+        }
 
         /* Add uploaded file */
         if ((false == topicMetaData->isUploadError) &&
@@ -216,27 +290,41 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
             jsonDocPar["fullPath"] = topicMetaData->fullPath;
         }
 
-        jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
-        if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
+        /* Check for JSON document overflow. */
+        if (true == jsonDoc.overflowed())
         {
-            LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
-
-            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
+            LOG_ERROR("JSON document size exceeded.");
 
             jsonDoc.remove("data");
 
-            /* If a file is available, it will be removed now. */
-            if (false == topicMetaData->fullPath.isEmpty())
-            {
-                (void)FILESYSTEM.remove(topicMetaData->fullPath);
-            }
+            RestUtil::prepareRspError(jsonDoc, "JSON document size exceeded.");
 
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
         }
         else
         {
-            jsonDoc["status"] = "ok";
-            httpStatusCode    = HttpStatus::STATUS_CODE_OK;
+            jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
+            if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
+            {
+                LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
+
+                RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
+
+                jsonDoc.remove("data");
+
+                /* If a file is available, it will be removed now. */
+                if (false == topicMetaData->fullPath.isEmpty())
+                {
+                    (void)FILESYSTEM.remove(topicMetaData->fullPath);
+                }
+
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            }
+            else
+            {
+                jsonDoc["status"] = "ok";
+                httpStatusCode    = HttpStatus::STATUS_CODE_OK;
+            }
         }
     }
     else
@@ -330,9 +418,45 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest* request, const St
     }
 }
 
+void RestApiTopicHandler::bodyHandler(AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total, TopicMetaData* topicMetaData)
+{
+    if ((nullptr == request) ||
+        (nullptr == topicMetaData) ||
+        (MAX_BODY_LENGTH < total)) /* Ignore incoming data if it exceeds the maximum body length. */
+    {
+        return;
+    }
+
+    if (0U == index)
+    {
+        if (nullptr != request->_tempObject)
+        {
+            LOG_ERROR("Temporary object already allocated.");
+            request->abort();
+        }
+        else
+        {
+            request->_tempObject = new (std::nothrow) uint8_t[total + 1U]; /* null-terminated string */
+
+            if (request->_tempObject == NULL)
+            {
+                LOG_ERROR("Failed to allocate temporary object of %d bytes.", total + 1U);
+                request->abort();
+            }
+        }
+    }
+
+    if (nullptr != request->_tempObject)
+    {
+        uint8_t* buffer = static_cast<uint8_t*>(request->_tempObject);
+        memcpy(&buffer[index], data, len);
+    }
+}
+
 void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest* request)
 {
-    size_t idx = 0U;
+    const int32_t ARRAY_IDX_MAX = 10;
+    size_t        idx           = 0U;
 
     /* Add arguments:
      * - key=value              --> { "key": "value" }
@@ -371,25 +495,47 @@ void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerReque
             /* No additional "." means: key._0_=value */
             if (dotIdx == dot2Idx)
             {
-                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                int32_t arrayIdx    = -1;
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
                 strArrayIdx.remove(strArrayIdx.length() - 1U);
 
-                jsonDocPar[key][strArrayIdx.toInt()] = value;
+                arrayIdx = strArrayIdx.toInt();
+
+                if ((0 > arrayIdx) ||
+                    (ARRAY_IDX_MAX <= arrayIdx))
+                {
+                    LOG_WARNING("Array index %d out of range.", arrayIdx);
+                }
+                else
+                {
+                    jsonDocPar[key][arrayIdx] = value;
+                }
             }
             /* Additional "." means: key._0_.subKey=value */
             else
             {
-                String strArrayIdx = keyPattern.substring(dotIdx + 1U);
-                String subKey      = keyPattern.substring(dot2Idx + 1U);
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  subKey      = keyPattern.substring(dot2Idx + 1U);
+                int32_t arrayIdx    = -1;
 
                 /* Remove "_" at the front and the end. */
                 strArrayIdx.remove(0U, 1U);
                 strArrayIdx.remove(strArrayIdx.length() - 1U);
 
-                jsonDocPar[key][strArrayIdx.toInt()][subKey] = value;
+                arrayIdx = strArrayIdx.toInt();
+
+                if ((0 > arrayIdx) ||
+                    (ARRAY_IDX_MAX <= arrayIdx))
+                {
+                    LOG_WARNING("Array index %d out of range.", arrayIdx);
+                }
+                else
+                {
+                    jsonDocPar[key][arrayIdx][subKey] = value;
+                }
             }
         }
     }

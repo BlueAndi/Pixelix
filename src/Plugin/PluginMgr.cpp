@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   PluginMgr.cpp
  * @brief  Plugin manager
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -181,7 +182,7 @@ bool PluginMgr::load()
     }
     else if (true == jsonDoc.overflowed())
     {
-        LOG_ERROR("JSON document has less memory available.");
+        LOG_ERROR("JSON document size exceeded.");
         isSuccessful = false;
     }
     else
@@ -215,52 +216,38 @@ void PluginMgr::save()
     JsonFile            jsonFile(FILESYSTEM);
     String              fullConfigFileName  = Plugin::CONFIG_PATH;
     DisplayMgr&         displayMgr          = DisplayMgr::getInstance();
-    uint8_t             stickySlotId        = displayMgr.getStickySlot();
 
     fullConfigFileName                     += "/";
     fullConfigFileName                     += CONFIG_FILE_NAME;
 
     for (slotId = 0; slotId < displayMgr.getMaxSlots(); ++slotId)
     {
-        IPluginMaintenance* plugin   = displayMgr.getPluginInSlot(slotId);
-        JsonObject          jsonSlot = jsonSlots.createNestedObject();
+        DisplayMgr::SlotConfig config;
+        JsonObject             jsonSlot = jsonSlots.createNestedObject();
 
-        if (nullptr == plugin)
-        {
-            jsonSlot["name"]     = "";
-            jsonSlot["uid"]      = 0;
-            jsonSlot["alias"]    = "";
-            jsonSlot["fontType"] = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
-        }
-        else
-        {
-            jsonSlot["name"]     = plugin->getName();
-            jsonSlot["uid"]      = plugin->getUID();
-            jsonSlot["alias"]    = plugin->getAlias();
-            jsonSlot["fontType"] = Fonts::fontTypeToStr(plugin->getFontType());
-        }
+        (void)displayMgr.getSlotConfig(slotId, config);
 
-        jsonSlot["duration"] = displayMgr.getSlotDuration(slotId);
-
-        if (stickySlotId == slotId)
-        {
-            jsonSlot["isSticky"] = true;
-        }
-        else
-        {
-            jsonSlot["isSticky"] = false;
-        }
-
-        jsonSlot["isDisabled"] = displayMgr.isSlotDisabled(slotId);
+        jsonSlot["name"]       = config.name;
+        jsonSlot["uid"]        = config.uid;
+        jsonSlot["alias"]      = config.alias;
+        jsonSlot["fontType"]   = Fonts::fontTypeToStr(config.fontType);
+        jsonSlot["duration"]   = config.duration;
+        jsonSlot["isSticky"]   = config.isSticky;
+        jsonSlot["isDisabled"] = config.isDisabled;
     }
 
     if (true == jsonDoc.overflowed())
     {
-        LOG_ERROR("JSON document has less memory available.");
+        LOG_ERROR("JSON document size exceeded.");
     }
     else if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
         LOG_ERROR("Couldn't save slot configuration.");
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 }
 
@@ -360,9 +347,9 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
                 else
                 {
-                    String          alias         = jsonAlias.as<String>();
+                    String          alias         = jsonAlias.as<const char*>();
                     String          filteredAlias = filterPluginAlias(alias);
-                    String          fontTypeStr   = jsonFontType.as<String>();
+                    String          fontTypeStr   = jsonFontType.as<const char*>();
                     Fonts::FontType fontType      = Fonts::strToFontType(fontTypeStr.c_str());
 
                     plugin->setAlias(filteredAlias);

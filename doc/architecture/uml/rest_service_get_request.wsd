@@ -1,0 +1,105 @@
+@startuml Get-Request
+participant Plugin
+participant RestService
+participant AsyncHttpClient 
+participant "RestService::m_responseQueue" as responseQ
+participant TcpClient
+entity Server
+
+autoactivate on
+
+-> RestService: start()
+    RestService -> AsyncHttpClient: register callbacks for onResponse/Error/Closed
+    RestService <-- AsyncHttpClient
+<-- RestService
+
+note over Plugin,Server
+    Get-Request:
+end note
+
+Plugin <- : processTask runs
+    Plugin -> RestService: get(URL, PreProcessCallback)
+        RestService -> RestService: put request in m_requestQueue
+        return
+    Plugin <-- RestService: restId
+Plugin -->
+
+RestService <- : loopTask runs
+    alt (RestCmd available) && (false == m_isWaitingForResponse)
+        RestService -> RestService: m_isWaitingForResponse = true
+        return
+
+        RestService -> RestService: set m_activePreProcessCallback/m_activeRestId
+        return 
+
+        RestService -> AsyncHttpClient: begin(URL)
+        RestService <-- AsyncHttpClient 
+
+        RestService -> AsyncHttpClient: GET(restID)
+            AsyncHttpClient -> AsyncHttpClient: put Cmd with restID in m_cmdQueue
+            return
+        RestService <-- AsyncHttpClient
+    end
+RestService -->
+
+AsyncHttpClient <- : AsyncHttpClientTask runs
+    alt cmd in m_cmdQueue available
+        AsyncHttpClient -> AsyncHttpClient: takeGlobalMutex()
+        return
+
+        AsyncHttpClient -> AsyncHttpClient: getRequest()
+            AsyncHttpClient -> AsyncHttpClient: connect()
+                AsyncHttpClient -> TcpClient: connect()
+                return
+            return
+        AsyncHttpClient <-- AsyncHttpClient
+    end   
+AsyncHttpClient -->
+
+note over TcpClient, Server
+    Request will be sent and response will be received in async_tcp(task) (Asynchronous)
+end note
+
+AsyncHttpClient <- : AsyncHttpClientTask runs
+    loop evt in m_evtQueue available
+        alt EVENT_ID_DATA == evt.id
+        AsyncHttpClient -> AsyncHttpClient: onData()
+        alt event contains last part of response
+                AsyncHttpClient -> AsyncHttpClient: notifyResponse()
+                    AsyncHttpClient -> RestService: handleAsyncWebResponse(HttpResonse)
+                        RestService -> Plugin: preProcessAsyncWebResponse()
+                        RestService <-- Plugin
+
+                        RestService -> responseQ: put response in m_responseQueue, response contains RestId
+                        RestService <-- responseQ
+                    AsyncHttpClient <-- RestService
+                return
+        end
+        return
+        else EVENT_ID_DISCONNECTED == evt.id
+            AsyncHttpClient -> AsyncHttpClient: onDisconnect()
+                AsyncHttpClient -> AsyncHttpClient: notifyClosed()
+                    AsyncHttpClient -> RestService: onClosed-callback
+                        RestService -> RestService: m_isWaitingForResponse = false
+                        return
+                    AsyncHttpClient <-- RestService
+                return
+
+                AsyncHttpClient -> AsyncHttpClient: giveGlobalMutex()
+                return
+            return
+        end
+    end
+AsyncHttpClient -->
+
+Plugin <- : processTask runs
+    Plugin -> RestService: getResponse(restID)
+        RestService -> responseQ: take response from m_responseQueue
+        RestService <-- responseQ: response
+    Plugin <-- RestService: isValidResponse, payload
+
+    Plugin -> Plugin: react
+    return
+Plugin -->
+
+@enduml

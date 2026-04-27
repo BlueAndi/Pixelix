@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdUninstall.h
  * @brief  Websocket command to uninstall a plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -57,7 +58,7 @@
 /**
  * Websocket command to uninstall a plugin.
  */
-class WsCmdUninstall: public WsCmd
+class WsCmdUninstall : public WsCmd
 {
 public:
 
@@ -95,8 +96,8 @@ public:
 
 private:
 
-    bool    m_isError;  /**< Any error happened during parameter reception? */
-    uint8_t m_slotId;   /**< Slot id, where the plugin is installed. */
+    bool    m_isError; /**< Any error happened during parameter reception? */
+    uint8_t m_slotId;  /**< Slot id, where the plugin is installed. */
 
     WsCmdUninstall(const WsCmdUninstall& cmd);
     WsCmdUninstall& operator=(const WsCmdUninstall& cmd);
@@ -106,6 +107,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDUNINSTALL_H */
+#endif /* WSCMDUNINSTALL_H */
 
 /** @} */

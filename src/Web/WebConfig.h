@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WebConfig.h
  * @brief  Webserver configuration
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup WEB
  *
  * @{
@@ -53,22 +54,19 @@ namespace WebConfig
  *****************************************************************************/
 
 /** Web server port */
-static const uint32_t   WEBSERVER_PORT          = 80U;
+static const uint32_t WEBSERVER_PORT   = 80U;
 
 /** Project title, used by the web pages. */
-static const char       PROJECT_TITLE[]         = "PIXELIX";
+static const char PROJECT_TITLE[]      = "PIXELIX";
 
 /** Websocket protocol */
-static const char       WEBSOCKET_PROTOCOL[]    = "ws";
+static const char WEBSOCKET_PROTOCOL[] = "ws";
 
 /** Websocket port */
-static const uint32_t   WEBSOCKET_PORT          = 80U;
+static const uint32_t WEBSOCKET_PORT   = 80U;
 
 /** Websocket path */
-static const char       WEBSOCKET_PATH[]        = "/ws";
-
-/** Arduino OTA port */
-static const uint32_t   ARDUINO_OTA_PORT        = 3232U;
+static const char WEBSOCKET_PATH[]     = "/ws";
 
 /******************************************************************************
  * Macros
@@ -82,8 +80,8 @@ static const uint32_t   ARDUINO_OTA_PORT        = 3232U;
  * Functions
  *****************************************************************************/
 
-}
+} // namespace WebConfig
 
-#endif  /* WEBCONFIG_H */
+#endif /* WEBCONFIG_H */
 
 /** @} */

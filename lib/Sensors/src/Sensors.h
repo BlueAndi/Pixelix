@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   Sensors.h
  * @brief  Sensors
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SENSORS
  *
  * @{
@@ -59,10 +60,10 @@
  */
 typedef struct
 {
-    uint8_t     sensorId;       /**< Sensor id */
-    uint8_t     channelId;      /**< Channel id */
-    const char* jsonStrValue;   /**< Default value as JSON string. */
-    
+    uint8_t     sensorId;     /**< Sensor id */
+    uint8_t     channelId;    /**< Channel id */
+    const char* jsonStrValue; /**< Default value as JSON string. */
+
 } SensorChannelDefaultValue;
 
 /******************************************************************************
@@ -77,22 +78,22 @@ namespace Sensors
 
 /**
  * Get the concrete sensor data provider, which contains all available sensors.
- * 
+ *
  * @return Sensor data provider implementation instance
  */
 extern SensorDataProviderImpl* getSensorDataProviderImpl();
 
 /**
  * Get the sensor channel default values.
- * 
+ *
  * @param[in] values    Number of values in the list.
- * 
+ *
  * @return List of default values
  */
 extern const SensorChannelDefaultValue* getSensorChannelDefaultValues(uint8_t& values);
 
-}
+} // namespace Sensors
 
-#endif  /* SENSORS_H */
+#endif /* SENSORS_H */
 
 /** @} */

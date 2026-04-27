@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SensorPlugin.h
  * @brief  Sensor plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -103,12 +104,12 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)SensorPlugin(name, uid);
+        return new (std::nothrow) SensorPlugin(name, uid);
     }
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the plugin uses.
      */
     Fonts::FontType getFontType() const final
@@ -119,10 +120,10 @@ public:
     /**
      * Set font type.
      * The plugin may skip the font type in case it gets conflicts with the layout.
-     * 
+     *
      * A font type change will only be considered if it is set before the start()
      * method is called!
-     * 
+     *
      * @param[in] fontType  The font type which the plugin shall use.
      */
     void setFontType(Fonts::FontType fontType) final
@@ -133,7 +134,7 @@ public:
     /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -142,14 +143,14 @@ public:
      *     ]
      * }
      * </code>
-     * 
+     *
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
      * values:
      * - Only readable: "r"
      * - Only writeable: "w"
      * - Readable and writeable: "rw"
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -159,7 +160,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
      * the "extra" JSON object.
      * <code>{.json}
@@ -174,7 +175,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Extra information can be loaded from a file too. This is useful for complex
      * configurations and to keep program memory usage low.
      * <code>{.json}
@@ -185,7 +186,7 @@ public:
      *    }]
      * }
      * </code>
-     * 
+     *
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -193,10 +194,10 @@ public:
     /**
      * Get a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[out]  value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool getTopic(const String& topic, JsonObject& value) const final;
@@ -204,10 +205,10 @@ public:
     /**
      * Set a topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[in]   value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObjectConst& value) final;
@@ -216,28 +217,28 @@ public:
      * Is the topic content changed since last time?
      * Every readable volatile topic shall support this. Otherwise the topic
      * handlers might not be able to provide updated information.
-     * 
+     *
      * @param[in] topic The topic which to check.
-     * 
+     *
      * @return If the topic content changed since last time, it will return true otherwise false.
      */
     bool hasTopicChanged(const String& topic) final;
-    
+
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
-    
+
     /**
      * Stop the plugin. This is called only once during plugin lifetime.
      */
@@ -247,7 +248,7 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
-     * 
+     *
      * @param[in] isConnected   The network connection status. If network
      *                          connection is established, it will be true otherwise false.
      */
@@ -266,31 +267,31 @@ private:
     /**
      * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC_CONFIG;
+    static const char* TOPIC_CONFIG;
 
     /** Sensor value update period in ms. */
-    static const uint32_t   UPDATE_PERIOD   = SIMPLE_TIMER_SECONDS(2U);
+    static const uint32_t  UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(2U);
 
-    _SensorPlugin::View     m_view;             /**< View with all widgets. */
-    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
-    uint8_t                 m_sensorIdx;        /**< Index of selected sensor. */
-    uint8_t                 m_channelIdx;       /**< Index of selected channel. */
-    ISensorChannel*         m_sensorChannel;    /**< Values of this channel will be shown. */
-    SimpleTimer             m_updateTimer;      /**< Sensor value update timer. */
-    bool                    m_hasTopicChanged;  /**< Has the topic content changed? */
+    _SensorPlugin::View    m_view;            /**< View with all widgets. */
+    mutable MutexRecursive m_mutex;           /**< Mutex to protect against concurrent access. */
+    uint8_t                m_sensorIdx;       /**< Index of selected sensor. */
+    uint8_t                m_channelIdx;      /**< Index of selected channel. */
+    ISensorChannel*        m_sensorChannel;   /**< Values of this channel will be shown. */
+    SimpleTimer            m_updateTimer;     /**< Sensor value update timer. */
+    bool                   m_hasTopicChanged; /**< Has the topic content changed? */
 
     /**
      * Get configuration in JSON.
-     * 
-     * @param[out] cfg  Configuration
+     *
+     * @param[out] jsonCfg   Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
-     * 
-     * @param[in] cfg   Configuration
-     * 
+     *
+     * @param[in] jsonCfg   Configuration
+     *
      * @return If successful set, it will return true otherwise false.
      */
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
@@ -302,10 +303,10 @@ private:
 
     /**
      * Get channel by indizes.
-     * 
+     *
      * @param[in] sensorIdx     Sensor index
      * @param[in] channelIdx    Sensor channel index
-     * 
+     *
      * @return Sensor channel
      */
     ISensorChannel* getChannel(uint8_t sensorIdx, uint8_t channelIdx);
@@ -315,6 +316,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* SENSOR_PLUGIN_H */
+#endif /* SENSOR_PLUGIN_H */
 
 /** @} */

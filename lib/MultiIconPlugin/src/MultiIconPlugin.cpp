@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   MultiIconPlugin.cpp
  * @brief  Multiple icon plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
@@ -71,6 +72,32 @@ const char* MultiIconPlugin::TOPIC_SLOTS                   = "slots";
  * Public Methods
  *****************************************************************************/
 
+bool MultiIconPlugin::isEnabled() const
+{
+    bool isEnabled = m_isEnabled;
+
+    /* The plugin shall only be scheduled if its enabled and at least one icon is set. */
+    if (true == isEnabled)
+    {
+        uint8_t slotId;
+
+        for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+        {
+            if (false == m_view.isIconSlotEmpty(slotId))
+            {
+                break;
+            }
+        }
+
+        if (_MultiIconPlugin::View::MAX_ICON_SLOTS <= slotId)
+        {
+            isEnabled = false;
+        }
+    }
+
+    return isEnabled;
+}
+
 void MultiIconPlugin::getTopics(JsonArray& topics) const
 {
     uint8_t slotId;
@@ -99,7 +126,6 @@ bool MultiIconPlugin::getTopic(const String& topic, JsonObject& value) const
         if ((true == status) &&
             (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
-            value["slotId"] = slotId;
             value["fileId"] = getIconFileId(slotId);
 
             isSuccessful    = true;

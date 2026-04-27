@@ -10,7 +10,6 @@ InitState: /exit: Start web- and update server.
 
 APState: /entry: Setup access point.
 APState: /do: Handle client requests.
-APState: /do: Handle update.
 APState: /exit: Disconnect all wifi connections.
 
 IdleState: /do: Wait for manual reset.
@@ -21,10 +20,10 @@ ConnectingState: /do: Connect every 30 s to remote wifi network.
 ConnectedState: /entry: Show hostname.
 ConnectedState: /entry: Enable slot routing on the display.
 ConnectedState: /do: Handle client requests.
-ConnectedState: /do: Handle update.
 ConnectedState: /exit: Disconnect all wifi connections.
 
-ErrorState: /do: Wait for manual reset.
+ErrorState: /entry: Show error message on display.
+ErrorState: /do: Wait for button press to restart.
 
 RestartState: /entry: Unmount filesystem
 RestartState: /do: Restart
@@ -34,15 +33,15 @@ InitState --> APState: [Button pressed]\nSet wifi access point mode
 InitState -> ConnectingState: [Button released]\nSet wifi station mode
 
 APState --> ErrorState: [Failed to start\nwifi access point]
-APState --> RestartState: [Update received]
+APState --> RestartState: [Restart requested via Captive Portal]
 
 ConnectingState --> IdleState: [Remote wifi SSID or\npassword missing]
 ConnectingState --> ConnectedState: [Connection successful established]
 
 ConnectedState --> ConnectingState: [Connection lost]
-ConnectedState --> RestartState: [Update finished]
+ConnectedState --> RestartState: [Restart requested]
 
-ErrorState --> [*]: [Restart]
+ErrorState --> RestartState: [Any button pressed]
 
 IdleState --> [*]: [Restart]
 

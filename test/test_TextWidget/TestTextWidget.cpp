@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TestTextWidget.cpp
  * @brief  Test text widget.
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -35,6 +36,7 @@
 #include <unity.h>
 #include <TWTokenizer.h>
 #include <TextWidget.h>
+#include <YAGfxBrush.h>
 #include <Util.h>
 
 #include "../common/YAGfxTest.hpp"
@@ -84,7 +86,7 @@ static void testTextWidget();
  * @param[in] argc  Number of command line arguments
  * @param[in] argv  Command line arguments
  */
-extern int main(int argc, char **argv)
+extern int main(int argc, char** argv)
 {
     UTIL_NOT_USED(argc);
     UTIL_NOT_USED(argv);
@@ -122,9 +124,9 @@ extern void tearDown(void)
  */
 static void testTokenizer()
 {
-    TWTokenizer             tokenizer;
-    TWAbstractSyntaxTree    ast;
-    TWAbstractSyntaxTree    ast2;
+    TWTokenizer          tokenizer;
+    TWAbstractSyntaxTree ast;
+    TWAbstractSyntaxTree ast2;
 
     /* Empty string */
     TEST_ASSERT_EQUAL(true, tokenizer.parse(ast, ""));
@@ -220,11 +222,11 @@ static void testTokenizer()
  */
 static void testTextWidget()
 {
-    YAGfxTest   testGfx;
-    TextWidget  textWidget(YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    String      testStr     = "test";
-    const Color TEXT_COLOR  = 0x123456;
-    const char* WIDGET_NAME = "textWidgetName";
+    YAGfxTest       testGfx;
+    TextWidget      textWidget(YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    String          testStr     = "test";
+    const Color     TEXT_COLOR  = 0x123456;
+    const char*     WIDGET_NAME = "textWidgetName";
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(TextWidget::WIDGET_TYPE, textWidget.getType());
@@ -255,11 +257,11 @@ static void testTextWidget()
     TEST_ASSERT_EQUAL_STRING(testStr.c_str(), textWidget.getStr().c_str());
 
     /* Default string color */
-    TEST_ASSERT_EQUAL_UINT32(TextWidget::DEFAULT_TEXT_COLOR, textWidget.getTextColor());
+    TEST_ASSERT_EQUAL_UINT32(TextWidget::DEFAULT_TEXT_COLOR, dynamic_cast<YAGfxSolidBrush&>(textWidget.getBrush()).getColor());
 
     /* Set/Get text color */
-    textWidget.setTextColor(TEXT_COLOR);
-    TEST_ASSERT_EQUAL_UINT32(TEXT_COLOR, textWidget.getTextColor());
+    dynamic_cast<YAGfxSolidBrush&>(textWidget.getBrush()).setColor(TEXT_COLOR);
+    TEST_ASSERT_EQUAL_UINT32(TEXT_COLOR, dynamic_cast<YAGfxSolidBrush&>(textWidget.getBrush()).getColor(0, 0));
 
     /* Check for default font */
     TEST_ASSERT_NOT_NULL(textWidget.getFont().getGfxFont());

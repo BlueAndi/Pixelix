@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   InitState.h
  * @brief  System state: Init
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -47,7 +48,6 @@
 #include <StateMachine.hpp>
 #include <IPluginMaintenance.hpp>
 #include <SimpleTimer.hpp>
-#include <RtcDrv.hpp>
 
 /******************************************************************************
  * Macros
@@ -105,17 +105,11 @@ private:
      * How long shall the logo be shown in ms.
      * As long as it is shown, stay in this state!
      */
-    static const uint32_t SHOW_LOGO_DURATION       = 2000U;
+    static const uint32_t SHOW_LOGO_DURATION = 2000U;
 
-    /**
-     * The max. number of open files in the filesystem.
-     */
-    static const uint8_t FILESYSTEM_MAX_OPEN_FILES = 10U;
-
-    bool                 m_isQuiet;           /**< Is quite mode active? */
-    bool                 m_isApModeRequested; /**< Is wifi AP mode requested? */
-    SimpleTimer          m_timer;             /**< Timer used to stay for a min. time in this state. */
-    RtcDrv               m_rtcDrv;            /**< RTC driver */
+    bool                  m_isQuiet;           /**< Is quite mode active? */
+    bool                  m_isApModeRequested; /**< Is wifi AP mode requested? */
+    SimpleTimer           m_timer;             /**< Timer used to stay for a min. time in this state. */
 
     /**
      * Constructs the state.
@@ -123,8 +117,7 @@ private:
     InitState() :
         m_isQuiet(false),
         m_isApModeRequested(false),
-        m_timer(),
-        m_rtcDrv()
+        m_timer()
     {
     }
 
@@ -161,19 +154,24 @@ private:
     bool isFsCompatible();
 
     /**
-     * Mount the filesystem.
-     *
-     * @return If successful mounted, it will return true otherwise false.
-     */
-    bool mountFilesystem();
-
-    /**
      * Get device unique ID as string.
      * The device unique ID is derived from factory programmed wifi MAC address.
      *
      * @param[out] deviceUniqueId   The device unique id.
      */
     void getDeviceUniqueId(String& deviceUniqueId);
+
+    /**
+     * Configure the views with general settings.
+     */
+    void configureViews();
+
+    /**
+     * Get flash chip mode.
+     *
+     * @return Flash chip mode.
+     */
+    const char* getFlashChipMode();
 };
 
 /******************************************************************************

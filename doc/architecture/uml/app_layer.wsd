@@ -35,8 +35,8 @@ package "Application" as app {
         component "RestartState" as restartState
     }
 
-    package "Update" as updatePckg {
-        component "UpdateMgr" as updateMgr
+    package "Restart" as restartPckg {
+        component "RestartMgr" as restartMgr
     }
 
     main --> stateMachine
@@ -45,9 +45,8 @@ package "Application" as app {
     main --> memoryMonitor
     stateMachine o---> systemStatePckg
 
-    initState ...> updateMgr: <<use>>
-    connectedState ...> updateMgr: <<use>>
-    restartState ...> updateMgr: <<use>>
+    connectedState ...> restartMgr: <<use>>
+    restartState ...> restartMgr: <<use>>
 }
 
 @enduml

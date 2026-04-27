@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,12 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   ConnectedState.h
  * @brief  System state: Connected
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup SYS_STATES
- * 
+ *
  * @{
  */
 
@@ -43,10 +44,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <AsyncHttpClient.h>
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <WString.h>
+#include <HttpService.h>
 
 /******************************************************************************
  * Macros
@@ -65,7 +66,7 @@ public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
     static ConnectedState& getInstance()
@@ -77,36 +78,36 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm) final;
 
 private:
 
-    AsyncHttpClient m_client; /**< Asynchronous HTTP client. */
+    /** HTTP job ID for the push notification. */
+    HttpJobId m_pushJobId;
 
     /**
      * Constructs the state.
      */
-    ConnectedState():
-        m_client()
+    ConnectedState() :
+        m_pushJobId(INVALID_HTTP_JOB_ID)
     {
-        initHttpClient();
     }
 
     /**
@@ -120,22 +121,24 @@ private:
     ConnectedState& operator=(const ConnectedState& state);
 
     /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-    
-    /**
      * Notify via URL that the system is online.
-     * 
+     *
      * @param[in] pushUrl   Push URL
      */
     void pushUrl(const String& pushUrl);
+
+    /**
+     * Handle the response of the push URL.
+     * Called cyclic to check if the response is available.
+     * The response is just logged.
+     */
+    void handlePushUrlResponse();
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* CONNECTEDSTATE_H */
+#endif /* CONNECTEDSTATE_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   IconTextPlugin.cpp
  * @brief  Icon and text plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -140,7 +141,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
         if (false == jsonText.isNull())
         {
-            jsonCfg["text"] = jsonText.as<String>();
+            jsonCfg["text"] = jsonText.as<const char*>();
             isSuccessful    = true;
         }
 
@@ -200,7 +201,6 @@ bool IconTextPlugin::hasTopicChanged(const String& topic)
 
 void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
-    String                     iconFullPath;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
@@ -211,6 +211,8 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
 
     if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
     {
+        String iconFullPath;
+
         if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
         {
             LOG_WARNING("Unknown file id %u.", m_iconFileId);
@@ -358,7 +360,7 @@ bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
         FileMgrService::FileId     newIconFileId = jsonIconFileId.as<FileMgrService::FileId>();
-        String                     newFormatText = jsonText.as<String>();
+        String                     newFormatText = jsonText.as<const char*>();
 
         if (m_iconFileId != newIconFileId)
         {

@@ -1,0 +1,116 @@
+@startuml RestService
+
+interface IService{
+    # IService()
+    + ~IService()
+    + start() : bool
+    + stop() : void
+    + process() : void
+}
+
+class RestService <<singleton>> {
+    + {static} INVALID_REST_ID : constexpr uint32_t
+    - m_client : AsyncHttpClient
+    - m_requestQueue : RequestQueue
+    - m_responseQueue : ResponseQueue
+    - m_isRunning : bool
+    - m_restIdCounter : uint32_t
+    - m_isWaitingForResponse : bool
+    - m_activeRestId : uint32_t
+    - m_activePreProcessCallback : PreProcessCallback
+    - m_mutex : Mutex
+    - m_wasOnResponseCalled : bool
+    + {static} getInstance() : RESTService&
+    + start() : bool
+    + stop() : void
+    + process() : void
+    + get(url : const String&, preProcessCallback : PreProcessCallback) : uint32_t
+    + post(url : const String&, preProcessCallback : PreProcessCallback, payload : const uint8_t* = nullptr, size : size_t = 0U) : uint32_t
+    + post(url : const String&, payload : const String&, preProcessCallback : PreProcessCallback) : uint32_t
+    + getResponse(restId : uint32_t, isValidRsp : bool&, payload : DynamicJsonDocument&) : bool
+    + abortRequest(restId : uint32_t) : void
+    - RESTService()
+    - ~RESTService()
+    - handleAsyncWebResponse(rsp : const HttpResponse&) : void
+    - handleFailedWebRequest() : void
+    - getRestId() : uint32_t
+}
+
+class Plugin{
+    - m_dynamicRestID : uint32_t
+    - m_isAllowedToSend : bool
+    - preProcessAsyncWebResponse(payload : const char*, payloadSize : size_t, jsonDoc : DynamicJsonDocument&) : void
+}
+
+struct Request{
+    + id : RequestId
+    + restId : uint32_t
+    + preProcessCallback : PreProcessCallback
+    + url : String
+    + data : unnamed_struct
+    + Request()
+    + Request(other : const Request&)
+    + operator=(other : const Request&) : Request&
+    + Request(other : const Request&&)
+    + operator=(other : const Request&&) : Request&
+}
+
+struct Response{
+    + restId : uint32_t
+    + isRsp : bool
+    + data : DynamicJsonDocument
+    + Response()
+    + Response(dataSize : size_t)
+}
+
+enum RequestId{
+    REQUEST_ID_GET = 0
+    REQUEST_ID_POST
+}
+
+class AsyncHttpClient{
+    + begin(url: const String&) : bool
+    + GET() : bool
+    + POST(payload: const uint8_t* = nullptr, size: size_t = 0U) : bool
+    + POST(payload: const String&) : bool
+}
+
+note right of RestService::m_requestQueue
+    std::vector<Request>
+end note
+
+note right of RestService::m_responseQueue
+    std::vector<Response>
+end note
+
+note right of RestService::m_activePreProcessCallback
+    std::function<bool(const char*, size_t, DynamicJsonDocument&)>
+end note 
+
+note right of Request::data
+    unnamed struct:
+        {
+            const uint8_t* data; 
+            size_t         size; 
+        }
+end note 
+
+Plugin ..> RestService : <<use>>
+
+RestService --> AsyncHttpClient
+
+RestService +-- Response
+
+RestService +-- Request
+
+RestService +-- RequestId
+
+RestService ..> Response: <<use>>
+
+RestService ..> Request: <<use>>
+
+RestService ..> RequestId: <<use>>
+
+IService <|.. RestService
+
+@enduml

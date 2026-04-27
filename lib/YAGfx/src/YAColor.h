@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   YAColor.h
  * @brief  Yet anoterh color class
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -40,10 +41,21 @@
  * Compile Switches
  *****************************************************************************/
 
+#ifndef CONFIG_COLOR_DEPTH
+/** Color depth default configuration. */
+#define CONFIG_COLOR_DEPTH 32
+#endif
+
 /******************************************************************************
  * Includes
  *****************************************************************************/
+
+#if (CONFIG_COLOR_DEPTH == 32)
 #include <Rgb888.h>
+#elif (CONFIG_COLOR_DEPTH == 16)
+#include <Rgb565.h>
+#endif /* CONFIG_COLOR_DEPTH */
+
 #include <ColorDef.hpp>
 
 /******************************************************************************
@@ -54,15 +66,26 @@
  * Types and Classes
  *****************************************************************************/
 
+#if (CONFIG_COLOR_DEPTH == 32)
+
 /**
  * Defines the general color to RGB888 format.
  */
-typedef Rgb888  Color;
+typedef Rgb888 Color;
+
+#elif (CONFIG_COLOR_DEPTH == 16)
+
+/**
+ * Defines the general color to RGB888 format.
+ */
+typedef Rgb565 Color;
+
+#endif /* CONFIG_COLOR_DEPTH */
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* YACOLOR_H */
+#endif /* YACOLOR_H */
 
 /** @} */

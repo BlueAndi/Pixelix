@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   Rgb888.h
  * @brief  Color in RGB888 format
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -44,6 +45,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <ColorUtil.hpp>
 
 /******************************************************************************
  * Macros
@@ -127,9 +129,9 @@ public:
      * @param[in] value Color value in 24 bit format
      */
     Rgb888(uint32_t value) :
-        m_red(extractRed(value)),
-        m_green(extractGreen(value)),
-        m_blue(extractBlue(value)),
+        m_red(ColorUtil::rgb888Red(value)),
+        m_green(ColorUtil::rgb888Green(value)),
+        m_blue(ColorUtil::rgb888Blue(value)),
         m_intensity(MAX_BRIGHT)
     {
     }
@@ -151,7 +153,7 @@ public:
      * Assign RGB color.
      *
      * @param[in] color Color, which to assign
-     * 
+     *
      * @return RGB Color
      */
     Rgb888& operator=(const Rgb888& color)
@@ -169,24 +171,24 @@ public:
 
     /**
      * Compare color for equality.
-     * 
+     *
      * @param[in] other Other color to compare with.
-     * 
+     *
      * @return If both colors are equal, it will return true otherwise false.
      */
-    bool operator==(const Rgb888& other)
+    bool operator==(const Rgb888& other) const
     {
         return (m_red == other.m_red) && (m_green == other.m_green) && (m_blue == other.m_blue) && (m_intensity == other.m_intensity);
     }
 
     /**
      * Compare color for non-equality.
-     * 
+     *
      * @param[in] other Other color to compare with.
-     * 
+     *
      * @return If both colors are not equal, it will return true otherwise false.
      */
-    bool operator!=(const Rgb888& other)
+    bool operator!=(const Rgb888& other) const
     {
         return (m_red != other.m_red) || (m_green != other.m_green) || (m_blue != other.m_blue) || (m_intensity != other.m_intensity);
     }
@@ -196,14 +198,7 @@ public:
      */
     operator uint32_t() const
     {
-        uint32_t color24 = applyIntensity(m_red);
-
-        color24 <<= 8;
-        color24 |= applyIntensity(m_green);
-        color24 <<= 8;
-        color24 |= applyIntensity(m_blue);
-
-        return color24;
+        return ColorUtil::to888(getRed(), getGreen(), getBlue());
     }
 
     /**
@@ -215,9 +210,9 @@ public:
      */
     void get(uint8_t& red, uint8_t& green, uint8_t& blue) const
     {
-        red     = applyIntensity(m_red);
-        green   = applyIntensity(m_green);
-        blue    = applyIntensity(m_blue);
+        red   = applyIntensity(m_red);
+        green = applyIntensity(m_green);
+        blue  = applyIntensity(m_blue);
     }
 
     /**
@@ -252,16 +247,16 @@ public:
     }
 
     /**
-     * Set new color information.
+     * Set new color information by RGB24 value.
      * The intensity won't change.
      *
      * @param[in] value Color value (RGB) in 24 bit format
      */
     void set(const uint32_t& value)
     {
-        m_red   = extractRed(value);
-        m_green = extractGreen(value);
-        m_blue  = extractBlue(value);
+        m_red   = ColorUtil::rgb888Red(value);
+        m_green = ColorUtil::rgb888Green(value);
+        m_blue  = ColorUtil::rgb888Blue(value);
     }
 
     /**
@@ -296,7 +291,7 @@ public:
 
     /**
      * Get color intensity.
-     * 
+     *
      * @return Color intensity [0; 255] - 0: min. bright / 255: max. bright
      */
     uint8_t getIntensity() const
@@ -336,29 +331,12 @@ public:
 
     /**
      * Set color intensity.
-     * 
+     *
      * @param[in] intensity Color intensity [0; 255] - 0: min. bright / 255: max. bright
      */
     void setIntensity(uint8_t intensity)
     {
         m_intensity = intensity;
-    }
-
-    /**
-     * Get color in 5-6-5 RGB format.
-     *
-     * @return Color in 5-6-5 RGB format
-     */
-    uint16_t to565() const
-    {
-        const uint16_t  RED     = applyIntensity(m_red);
-        const uint16_t  GREEN   = applyIntensity(m_green);
-        const uint16_t  BLUE    = applyIntensity(m_blue);
-        const uint16_t  RED5    = RED >> 3U;
-        const uint16_t  GREEN6  = GREEN >> 2U;
-        const uint16_t  BLUE5   = BLUE >> 3U;
-
-        return ((RED5 & 0x1fU) << 11U) | ((GREEN6 & 0x3fU) << 5U) | ((BLUE5 & 0x1fU) << 0U);
     }
 
     /**
@@ -371,66 +349,55 @@ public:
     void turnColorWheel(uint8_t wheelPos);
 
     /**
-     * Extract the red base color from a RGB24 value.
-     * 
-     * @param[in] value Color value in RGB24 format.
-     * 
-     * @return Red base color
+     * Convert color information to RGB565 format.
+     * The intensity will be considered in the conversion.
+     *
+     * @return Color value (RGB) in 16 bit format
      */
-    static uint8_t extractRed(uint32_t value)
+    uint16_t toRgb565() const
     {
-        return (value >> 16U) & 0xffU;
+        uint8_t red   = getRed();
+        uint8_t green = getGreen();
+        uint8_t blue  = getBlue();
+
+        return ColorUtil::to565(red, green, blue);
     }
 
     /**
-     * Extract the green base color from a RGB24 value.
-     * 
-     * @param[in] value Color value in RGB24 format.
-     * 
-     * @return Green base color
+     * Set new color information by RGB565 value.
+     * The intensity won't change.
+     *
+     * @param[in] value Color value (RGB) in 16 bit format
      */
-    static uint8_t extractGreen(uint32_t value)
+    void fromRgb565(const uint16_t& value)
     {
-        return (value >> 8U) & 0xffU;
+        m_red   = ColorUtil::rgb565Red(value);
+        m_green = ColorUtil::rgb565Green(value);
+        m_blue  = ColorUtil::rgb565Blue(value);
     }
-
-    /**
-     * Extract the blue base color from a RGB24 value.
-     * 
-     * @param[in] value Color value in RGB24 format.
-     * 
-     * @return Blue base color
-     */
-    static uint8_t extractBlue(uint32_t value)
-    {
-        return (value >> 0U) & 0xffU;
-    }
-
-protected:
 
 private:
 
-    uint8_t m_red;          /**< Red intensity value */
-    uint8_t m_green;        /**< Green intensity value */
-    uint8_t m_blue;         /**< Blue intensity value */
-    uint8_t m_intensity;    /**< Color intensity [0; 255] - 0: min. bright / 255: max. bright */
+    uint8_t m_red;       /**< Red intensity value */
+    uint8_t m_green;     /**< Green intensity value */
+    uint8_t m_blue;      /**< Blue intensity value */
+    uint8_t m_intensity; /**< Color intensity [0; 255] - 0: min. bright / 255: max. bright */
 
     /**
      * Calculate the base color with respect to the current intensity.
-     * 
+     *
      * @return Base color with considered intensity.
      */
     inline uint8_t applyIntensity(uint8_t baseColor) const
     {
         return (static_cast<uint16_t>(baseColor) * static_cast<uint16_t>(m_intensity)) / MAX_BRIGHT;
     }
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* RGB888_H */
+#endif /* RGB888_H */
 
 /** @} */

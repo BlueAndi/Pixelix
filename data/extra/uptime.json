@@ -1,0 +1,12 @@
+[
+    {
+        "component": "sensor",
+        "discovery": {
+            "name": "Uptime",
+            "unit_of_meas": "s",
+            "ic": "mdi:timelapse",
+            "dev_cla": "duration",
+            "val_tpl": "{{ value_json.value }}"
+        }
+    }
+]

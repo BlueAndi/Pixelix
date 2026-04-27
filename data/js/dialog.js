@@ -99,3 +99,35 @@ dialog.show = function(title, message, isBlocking) {
 
     return dialog._show(title, message, isBlocking);
 }
+
+dialog.showYesNo = function(title, message, onYes, onNo, isBlocking) {
+    var $btnYes = $("<button>")
+        .attr("type", "button")
+        .attr("class", "btn btn-secondary")
+        .attr("data-bs-dismiss", "modal")
+        .text("Yes")
+        .on("click", function () {
+            if (typeof onYes === "function") onYes();
+        });
+
+    var $btnNo = $("<button>")
+        .attr("type", "button")
+        .attr("class", "btn btn-secondary")
+        .attr("data-bs-dismiss", "modal")
+        .text("No")
+        .on("click", function () {
+            if (typeof onNo === "function") onNo();
+        });
+
+    $("#dialogHeader").removeClass();
+    $("#dialogFooter").empty();
+
+    $("#dialogHeader").addClass("modal-header bg-warning");
+    $("#dialogFooter").append($btnYes).append($btnNo);
+
+    return dialog._show(title, message, isBlocking);
+};
+
+dialog.updateMessage = function(message) {
+    $("#dialogBody").html(message);
+};

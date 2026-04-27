@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TimerService.cpp
  * @brief  Timer service
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -34,7 +35,6 @@
  *****************************************************************************/
 #include "TimerService.h"
 
-#include <Logging.h>
 #include <JsonFile.h>
 #include <ClockDrv.h>
 #include <DisplayMgr.h>
@@ -42,6 +42,7 @@
 #include <TopicHandlerService.h>
 #include <SettingsService.h>
 #include <Util.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,7 +67,7 @@
 /* Initialize constant values. */
 const char* TimerService::FILE_NAME = "/configuration/timerService.json";
 const char* TimerService::TOPIC     = "timer";
-const char* TimerService::ENTITY    = "timerService";
+const char* TimerService::ENTITY_ID = "timerService";
 
 /******************************************************************************
  * Public Methods
@@ -74,48 +75,71 @@ const char* TimerService::ENTITY    = "timerService";
 
 bool TimerService::start()
 {
-    bool                        isSuccessful = true;
-    SettingsService&            settings     = SettingsService::getInstance();
-    JsonObjectConst             jsonExtra;
-    ITopicHandler::GetTopicFunc getTopicFunc =
-        [this](const String& topic, JsonObject& jsonValue) -> bool {
-        return this->getTopic(topic, jsonValue);
-    };
-    TopicHandlerService::HasChangedFunc hasChangedFunc =
-        [this](const String& topic) -> bool {
-        return this->hasTopicChanged(topic);
-    };
-    ITopicHandler::SetTopicFunc setTopicFunc =
-        [this](const String& topic, const JsonObjectConst& jsonValue) -> bool {
-        return this->setTopic(topic, jsonValue);
-    };
+    bool isSuccessful = true;
 
-    if (false == settings.open(true))
+    /* Is service already running? */
+    if (true == m_isRunning)
     {
-        m_deviceId = settings.getHostname().getDefault();
+        /* Nothing to do. */
+        ;
     }
     else
     {
-        m_deviceId = settings.getHostname().getValue();
+        SettingsService&            settings            = SettingsService::getInstance();
+        TopicHandlerService&        topicHandlerService = TopicHandlerService::getInstance();
+        JsonObjectConst             jsonExtra; /* Empty */
+        ITopicHandler::GetTopicFunc getTopicFunc =
+            [this](const String& topic, JsonObject& jsonValue) -> bool {
+            return this->getTopic(topic, jsonValue);
+        };
+        TopicHandlerService::HasChangedFunc hasChangedFunc =
+            [this](const String& topic) -> bool {
+            return this->hasTopicChanged(topic);
+        };
+        ITopicHandler::SetTopicFunc setTopicFunc =
+            [this](const String& topic, const JsonObjectConst& jsonValue) -> bool {
+            return this->setTopic(topic, jsonValue);
+        };
 
-        settings.close();
+        if (false == m_mutex.create())
+        {
+            isSuccessful = false;
+        }
+        else
+        {
+            if (false == settings.open(true))
+            {
+                m_deviceId = settings.getHostname().getDefault();
+            }
+            else
+            {
+                m_deviceId = settings.getHostname().getValue();
+
+                settings.close();
+            }
+
+            if (false == loadSettings())
+            {
+                saveSettings();
+            }
+
+            topicHandlerService.registerTopic(m_deviceId, ENTITY_ID, TOPIC, jsonExtra, getTopicFunc, hasChangedFunc, setTopicFunc, nullptr);
+
+            m_processTimer.start(PROCESS_PERIOD);
+        }
     }
-
-    if (false == loadSettings())
-    {
-        saveSettings();
-    }
-
-    TopicHandlerService::getInstance().registerTopic(m_deviceId, ENTITY, TOPIC, jsonExtra, getTopicFunc, hasChangedFunc, setTopicFunc, nullptr);
 
     if (false == isSuccessful)
     {
         stop();
     }
+    else if (true == m_isRunning)
+    {
+        LOG_WARNING("Timer service is already started.");
+    }
     else
     {
-        m_processTimer.start(PROCESS_PERIOD);
-
+        m_isRunning = true;
         LOG_INFO("Timer service started.");
     }
 
@@ -124,15 +148,24 @@ bool TimerService::start()
 
 void TimerService::stop()
 {
-    m_processTimer.stop();
-    TopicHandlerService::getInstance().unregisterTopic(m_deviceId, ENTITY, TOPIC);
+    TopicHandlerService& topicHandlerService = TopicHandlerService::getInstance();
 
-    LOG_INFO("Timer service stopped.");
+    topicHandlerService.unregisterTopic(m_deviceId, ENTITY_ID, TOPIC);
+    m_processTimer.stop();
+
+    m_mutex.destroy();
+
+    if (true == m_isRunning)
+    {
+        m_isRunning = false;
+        LOG_INFO("Timer service stopped.");
+    }
 }
 
 void TimerService::process()
 {
-    if ((true == m_processTimer.isTimerRunning()) &&
+    if (true == m_isRunning &&
+        (true == m_processTimer.isTimerRunning()) &&
         (true == m_processTimer.isTimeout()))
     {
         ClockDrv& clockDrv = ClockDrv::getInstance();
@@ -305,9 +338,10 @@ bool TimerService::getTopic(const String& topic, JsonObject& jsonValue)
 
 bool TimerService::hasTopicChanged(const String& topic)
 {
-    bool hasChanged      = m_hasSettingsChanged;
+    MutexGuard<Mutex> guard(m_mutex);
+    bool              hasChanged = m_hasSettingsChanged;
 
-    m_hasSettingsChanged = false;
+    m_hasSettingsChanged         = false;
 
     return hasChanged;
 }

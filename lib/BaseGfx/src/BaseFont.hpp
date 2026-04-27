@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   BaseFont.hpp
  * @brief  Base font
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -45,6 +46,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include "BaseGfx.hpp"
+#include "BaseGfxBrush.hpp"
 #include "gfxfont.h"
 
 /******************************************************************************
@@ -57,6 +59,8 @@
 
 /**
  * A graphical font, providing simple single character drawing functionality.
+ *
+ * @tparam TColor Color type, which is used to draw the characters.
  */
 template < typename TColor >
 class BaseFont
@@ -74,7 +78,7 @@ public:
 
     /**
      * Constructs a font by copy.
-     * 
+     *
      * @param[in] font  Font, which to copy.
      */
     BaseFont(const BaseFont& font) :
@@ -84,7 +88,7 @@ public:
 
     /**
      * Constructs a font with the given GFXfont.
-     * 
+     *
      * @param[in] gfxFont   GFXfont
      */
     BaseFont(const GFXfont* gfxFont) :
@@ -101,9 +105,9 @@ public:
 
     /**
      * Assign a font.
-     * 
+     *
      * @param[in] font  Font which to assign
-     * 
+     *
      * @return The font itself.
      */
     BaseFont& operator=(const BaseFont& font)
@@ -139,7 +143,7 @@ public:
     /**
      * Get font character height.
      * If no GFXfont is set, it will return 0.
-     * 
+     *
      * @return Height in pixels
      */
     uint16_t getHeight() const
@@ -156,15 +160,15 @@ public:
 
     /**
      * Get a glyph object from the font for the choosen character.
-     * 
+     *
      * @param[in] singleChar    Character for what the glyph is requested.
-     * 
+     *
      * @return If glyph is found, it will be returned otherwise nullptr.
      */
     const GFXglyph* getGlyph(char singleChar) const
     {
-        const GFXglyph* glyph   = nullptr;
-        uint8_t uChar           = static_cast<uint8_t>(singleChar);
+        const GFXglyph* glyph = nullptr;
+        uint8_t         uChar = static_cast<uint8_t>(singleChar);
 
         if ((nullptr != m_gfxFont) &&
             (m_gfxFont->first <= uChar) &&
@@ -172,9 +176,9 @@ public:
             ('\n' != singleChar) &&
             ('\r' != singleChar))
         {
-            uint8_t glyphIndex  = uChar - m_gfxFont->first;
+            uint8_t glyphIndex = uChar - m_gfxFont->first;
 
-            glyph = &(m_gfxFont->glyph[glyphIndex]);
+            glyph              = &(m_gfxFont->glyph[glyphIndex]);
         }
 
         return glyph;
@@ -191,14 +195,14 @@ public:
      */
     bool getCharBoundingBox(char singleChar, uint16_t& width, uint16_t& height) const
     {
-        bool            status  = false;
-        const GFXglyph* glyph   = getGlyph(singleChar);
+        bool            status = false;
+        const GFXglyph* glyph  = getGlyph(singleChar);
 
         if (nullptr != glyph)
         {
-            width   = glyph->xAdvance;
-            height  = m_gfxFont->yAdvance;
-            status  = true;
+            width  = glyph->xAdvance;
+            height = m_gfxFont->yAdvance;
+            status = true;
         }
 
         return status;
@@ -207,19 +211,19 @@ public:
     /**
      * Draw single character at current cursor position. The cursor is
      * automatically moved to the new position.
-     * 
+     *
      * A newline will place the cursor on the begin of the next line.
-     * 
+     *
      * If text wrap around handling is necessary, this must be done in a
      * higher layer.
      *
      * @param[in]       gfx         Graphics interface
      * @param[in,out]   cursorX     The cursor position x-coordinate.
      * @param[in,out]   cursorY     The cursor position y-coordinate.
-     * @param[in]       singleChar  Single character which to draw
-     * @param[in]       color       Text color
+     * @param[in]       singleChar  Single character which to draw.
+     * @param[in]       brush       Brush to draw the character.
      */
-    void drawChar(BaseGfx<TColor>& gfx, int16_t& cursorX, int16_t& cursorY, char singleChar, const TColor& color)
+    void drawChar(BaseGfx<TColor>& gfx, int16_t& cursorX, int16_t& cursorY, char singleChar, const BaseGfxBrush<TColor>& brush)
     {
         uint8_t uChar = static_cast<uint8_t>(singleChar);
 
@@ -232,7 +236,7 @@ public:
         if ('\n' == singleChar)
         {
             /* Move cursor to begin and one row down. */
-            cursorX = 0;
+            cursorX  = 0;
             cursorY += m_gfxFont->yAdvance;
         }
         else
@@ -245,15 +249,15 @@ public:
                 /* Handle character only, if it is really drawn on the screen. */
                 if (0 <= (cursorX + glyph->xAdvance))
                 {
-                    int16_t     x               = 0;
-                    int16_t     y               = 0;
-                    uint16_t    bitmapOffset    = glyph->bitmapOffset;
-                    uint8_t     bitmapRowBits   = 0U;
-                    uint8_t     bitCnt          = 0U;
+                    int16_t  x             = 0;
+                    int16_t  y             = 0;
+                    uint16_t bitmapOffset  = glyph->bitmapOffset;
+                    uint8_t  bitmapRowBits = 0U;
+                    uint8_t  bitCnt        = 0U;
 
-                    for(y = 0U; y < glyph->height; ++y)
+                    for (y = 0U; y < glyph->height; ++y)
                     {
-                        for(x = 0U; x < glyph->width; ++x)
+                        for (x = 0U; x < glyph->width; ++x)
                         {
                             /* Every 8 bit, the bitmap offset must be increased. */
                             if (0U == (bitCnt & 0x07))
@@ -266,7 +270,10 @@ public:
                             /* A 1b in the bitmap row bits must be drawn as single pixel. */
                             if (0U != (bitmapRowBits & 0x80U))
                             {
-                                gfx.drawPixel(cursorX + x + glyph->xOffset, cursorY + y + glyph->yOffset, color);
+                                int16_t xPos = cursorX + x + glyph->xOffset;
+                                int16_t yPos = cursorY + y + glyph->yOffset;
+
+                                gfx.drawPixel(xPos, yPos, brush.getColor(xPos, yPos));
                             }
 
                             bitmapRowBits <<= 1U;
@@ -286,14 +293,13 @@ public:
 
 private:
 
-    const GFXfont*  m_gfxFont;  /**< Current selected graphics font, based on Adafruit GFXfont format. */
-
+    const GFXfont* m_gfxFont; /**< Current selected graphics font, based on Adafruit GFXfont format. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_FONT_HPP */
+#endif /* BASE_FONT_HPP */
 
 /** @} */

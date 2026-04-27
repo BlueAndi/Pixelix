@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   View.h
  * @brief  OpenWeatherPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup PLUGIN
@@ -84,12 +85,12 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _OpenWeatherPlugin */
+} // namespace _OpenWeatherPlugin
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* OPENWEATHER_PLUGIN_VIEW_H */
+#endif /* OPENWEATHER_PLUGIN_VIEW_H */
 
 /** @} */

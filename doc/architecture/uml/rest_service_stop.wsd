@@ -1,0 +1,48 @@
+@startuml RestServiceStopped
+
+participant Plugin
+participant RestService
+participant AsyncHttpClient
+participant "RestService::m_responseQueue" as ResponseQ
+participant "RestService::m_requestQueue" as RequestQ
+
+autoactivate on
+
+-> RestService: stop()
+    RestService -> RestService: set m_isRunning = false
+    return 
+
+    RestService -> AsyncHttpClient: unregister Callbacks
+    RestService <-- AsyncHttpClient
+
+    RestService -> RequestQ: clear queue
+    RestService <-- RequestQ
+
+    RestService -> AsyncHttpClient: end()
+    RestService <-- AsyncHttpClient
+
+    RestService -> ResponseQ: clear queue
+    RestService <-- ResponseQ
+
+    RestService -> RestService: reset m_activeRestId, m_activePreProcessCallback
+    return
+<-- RestService
+
+Plugin <- : processTask
+    Plugin -> RestService: get()
+        alt false == m_isRunning
+            Plugin <-- RestService: false 
+        end
+    
+    Plugin -> RestService: getResponse()
+        alt false == m_isRunning
+            Plugin <-- RestService: empty, invalid response
+        end
+
+    note over Plugin, RequestQ
+        Once the plugin calls getResponse(), its m_isAllowedToSend-flag will be reset leaving it in a safe state until the rest-service is started again. 
+        During that time rest-service does not accept any new requests.
+    end note 
+Plugin -->
+
+@enduml

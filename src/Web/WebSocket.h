@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WebSocket.h
  * @brief  Websocket
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -94,25 +95,25 @@ public:
 private:
 
     /** Websocket message delimiter to divide between command name and its parameters. */
-    static const char        DELIMITER          = ';';
+    static const char DELIMITER            = ';';
 
     /**
      * Max. number of websocket messages, which can be queued.
      */
-    static const size_t     MAX_WEBSOCKET_MSGS  = 8U;
+    static const size_t MAX_WEBSOCKET_MSGS = 8U;
 
     /**
      * Wait time in ms how long to wait that the websocket input queue has a
      * empty slot available.
      */
-    static const uint32_t   QUEUE_WAIT_TIME     = 100U;
+    static const uint32_t QUEUE_WAIT_TIME  = 100U;
 
     /** A websocket message, received from a client. */
     struct WebSocketMsg
     {
-        WsCmd*      cmd;        /**< Command which shall handle the message. */
-        uint32_t    clientId;   /**< Id of the websocket client, who sent the command. */
-        String      parameters; /**< Command parameters in string form. */
+        WsCmd*   cmd;        /**< Command which shall handle the message. */
+        uint32_t clientId;   /**< Id of the websocket client, who sent the command. */
+        String   parameters; /**< Command parameters in string form. */
 
         /** Create the websocket message. */
         WebSocketMsg() :
@@ -128,14 +129,18 @@ private:
         }
     };
 
-    AsyncWebSocket          m_webSocket;    /**< Websocket */
-    Queue<WebSocketMsg*>    m_msgQueue;     /**< Queue with received websocket messages. */
+    bool                 m_isInitialized; /**< Is initialized */
+    AsyncWebSocket       m_webSocket;     /**< Websocket */
+    Queue<WebSocketMsg*> m_msgQueue;      /**< Queue with received websocket messages. */
 
     /**
      * Constructs the websocket server.
      */
     WebSocketSrv() :
-        m_webSocket(WebConfig::WEBSOCKET_PATH)
+        Print(),
+        m_isInitialized(false),
+        m_webSocket(WebConfig::WEBSOCKET_PATH),
+        m_msgQueue()
     {
     }
 
@@ -249,6 +254,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WEBSOCKET_H */
+#endif /* WEBSOCKET_H */
 
 /** @} */

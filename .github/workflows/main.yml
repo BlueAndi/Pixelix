@@ -1,11 +1,10 @@
-name: master
+name: Main CI/CD Pipeline
 
 # Controls when the action will run.
+# This workflow is triggered only on pull requests to the master or main branch.
 on:
-  push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, main ]
   release:
     # A release, pre-release, or draft of a release is published.
     types: [ published ]
@@ -30,15 +29,29 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-s3-devkitc-1-n16r8v-LED-32x16", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8",
+                      "adafruit_matrixportal_s3-HUB75-64x64",
+                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+                      "az-delivery-devkit-v4-LED-32x8",
+                      "esp32doit-devkit-v1-LED-32x8",
+                      "esp32doit-devkit-v1-HUB75-64x64",
+                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+                      "esp32-nodemcu-LED-32x8",
+                      "lilygo-ttgo-t-display-TFT-32x8",
+                      "lilygo-t-display-s3-TFT-32x8",
+                      "lilygo-t-display-s3-TFT-64x16",
+                      "m5stack_core-TFT-32x8",
+                      "ulanzi-tc001-LED-32x8",
+                      "wemos_lolin_s2_mini-LED-32x8"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Cache pip
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -46,13 +59,13 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.9'
     
@@ -74,7 +87,7 @@ jobs:
 
     - name: Deploy ${{ matrix.environment }}
       if: startsWith(github.ref_type, 'refs/tags/v')
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.environment }}
         path: |
@@ -90,14 +103,28 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "az-delivery-devkit-v4-LED-32x8", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "esp32-s3-devkitc-1-n16r8v-LED-32x16", "esp32-nodemcu-LED-32x8", "lilygo-ttgo-t-display-TFT-32x8", "lilygo-t-display-s3-TFT-32x8", "m5stack_core-TFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8",
+                      "adafruit_matrixportal_s3-HUB75-64x64",
+                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+                      "az-delivery-devkit-v4-LED-32x8",
+                      "esp32doit-devkit-v1-LED-32x8",
+                      "esp32doit-devkit-v1-HUB75-64x64",
+                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+                      "esp32-nodemcu-LED-32x8",
+                      "lilygo-ttgo-t-display-TFT-32x8",
+                      "lilygo-t-display-s3-TFT-32x8",
+                      "lilygo-t-display-s3-TFT-64x16",
+                      "m5stack_core-TFT-32x8",
+                      "ulanzi-tc001-LED-32x8",
+                      "wemos_lolin_s2_mini-LED-32x8"]
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Cache pip
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -105,13 +132,13 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.9'
     
@@ -131,10 +158,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Cache pip
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -142,13 +169,13 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.9'
     
@@ -167,10 +194,10 @@ jobs:
     needs: intro
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Cache pip
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -178,13 +205,13 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.9'
   
@@ -197,7 +224,7 @@ jobs:
       uses: ts-graphviz/setup-graphviz@v2
 
     - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1.9.8
+      uses: mattnotmitt/doxygen-action@v1
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'
@@ -214,7 +241,7 @@ jobs:
     needs: [build, check, doc]
     steps:
     - name: Deploy release artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         path: ${{ github.workspace }}/artifacts
 
@@ -227,7 +254,7 @@ jobs:
       working-directory: ${{ github.workspace }}/artifacts
 
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
       env:

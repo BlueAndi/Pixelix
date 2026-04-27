@@ -1,0 +1,18 @@
+[
+    {
+        "component": "button",
+        "discovery": {
+            "name": "Next Slot",
+            "ic": "mdi:arrow-right-bold",
+            "cmd_tpl": "{\"actionId\": 1 }"
+        }
+    },
+    {
+        "component": "button",
+        "discovery": {
+            "name": "Previous Slot",
+            "ic": "mdi:arrow-left-bold",
+            "cmd_tpl": "{\"actionId\": 2 }"
+        }
+    }
+]

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   FileMgrService.h
  * @brief  File manager service
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup FILE_MGR_SERVICE
  *
  * @{
@@ -71,7 +72,7 @@ public:
 
     /**
      * Get the file manager service instance.
-     * 
+     *
      * @return File manager service instance
      */
     static FileMgrService& getInstance()
@@ -83,7 +84,7 @@ public:
 
     /**
      * Start the service.
-     * 
+     *
      * @return If successful started, it will return true otherwise false.
      */
     bool start() final;
@@ -100,19 +101,19 @@ public:
 
     /**
      * Get file id by file/path name or part of it.
-     * 
+     *
      * @param[in] name  File/Path name or part of it.
-     * 
+     *
      * @return If found, it will return its file id otherwise FILE_ID_INVALID.
      */
     FileId getFileIdByName(const String& name);
 
     /**
      * Get the full path by the file id.
-     * 
+     *
      * @param[out]  fullPath    The full path to the file.
      * @param[in]   fileId      The file id of the file.
-     * 
+     *
      * @return If successful found, it will return true otherwise false.
      */
     bool getFileFullPathById(String& fullPath, FileId fileId);
@@ -127,9 +128,9 @@ private:
     /** File table entry. */
     struct FileTableEntry
     {
-        String  fullPath;   /**< Full path to file. */
-        bool    removeReq;  /**< Is file removal requested? */
-    
+        String fullPath;  /**< Full path to file. */
+        bool   removeReq; /**< Is file removal requested? */
+
         /**
          * Construct a file table enty.
          */
@@ -141,7 +142,7 @@ private:
 
         /**
          * Destroy the file table entry.
-         * 
+         *
          */
         ~FileTableEntry()
         {
@@ -160,54 +161,55 @@ private:
     /**
      * Max. number of manageable files.
      */
-    static const size_t MAX_FILES           = 20U;
+    static const size_t MAX_FILES = 20U;
 
     /**
      * The working directory for the file manager.
      */
-    static const char*  WORKING_DIRECTORY;
+    static const char* WORKING_DIRECTORY;
 
     /**
      * File name of the configuration file.
      */
-    static const char*  CONFIG_FILE_NAME;
+    static const char* CONFIG_FILE_NAME;
 
     /**
      * The entity id.
      */
-    static const char*  ENTITY_ID;
+    static const char* ENTITY_ID;
+
+    /**
+     * The topic to list all files in the file table.
+     */
+    static const char* TOPIC_FILES;
 
     /**
      * The topic to upload files.
      */
-    static const char*  TOPIC_UPLOAD;
+    static const char* TOPIC_UPLOAD;
 
     /**
      * The topic to remove files.
      */
-    static const char*  TOPIC_REMOVE;
-
-    /**
-     * Supported file extensions.
-     */
-    static const char*  FILE_EXTENSIONS[];
+    static const char* TOPIC_REMOVE;
 
     /**
      * Timer period in ms to check whether the file table is dirty and needs
      * to be saved to the configuration file.
-     * 
+     *
      * Note: If the period is too high, the icons web page might reload an old one
      * right after a new icon was uploaded.
-     * 
+     *
      */
-    static const uint32_t   TIMER_PERIOD    = 100U;
+    static const uint32_t  TIMER_PERIOD = 100U;
 
-    String                  m_deviceId;                 /**< Device id used for topic handling. */
-    FileTableEntry          m_fileTable[MAX_FILES];     /**< File table used for application requests. */
-    FileTableEntry          m_tmpFileTable[MAX_FILES];  /**< File table with the uploaded files, only internal used. */
-    bool                    m_isDirty;                  /**< The dirty flag signals that the file table is different than the configuration file. */
-    SimpleTimer             m_timer;                    /**< Timer is used to check the dirty flag periodically. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex used for concurrent access protection. */
+    String                 m_deviceId;                /**< Device id used for topic handling. */
+    FileTableEntry         m_fileTable[MAX_FILES];    /**< File table used for application requests. */
+    FileTableEntry         m_tmpFileTable[MAX_FILES]; /**< File table with the uploaded files, only internal used. */
+    bool                   m_hasFileTableChanged;     /**< The file table has changed since last request? */
+    bool                   m_isDirty;                 /**< The dirty flag signals that the file table is different than the configuration file. */
+    SimpleTimer            m_timer;                   /**< Timer is used to check the dirty flag periodically. */
+    mutable MutexRecursive m_mutex;                   /**< Mutex used for concurrent access protection. */
 
     /**
      * Constructs the service instance.
@@ -217,6 +219,7 @@ private:
         m_deviceId(),
         m_fileTable(),
         m_tmpFileTable(),
+        m_hasFileTableChanged(false),
         m_isDirty(false),
         m_timer(),
         m_mutex()
@@ -238,17 +241,17 @@ private:
 
     /**
      * Add file table entry to file table.
-     * 
+     *
      * @param[in] fileTable File table where to add the entry.
      * @param[in] fullPath  Full path to file.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool addFileEntry(FileTableEntry* fileTable, const String& fullPath);
 
     /**
      * Remove file table entry by file id.
-     * 
+     *
      * @param[in] fileTable File table where to add the entry.
      * @param[in] fileId File id
      */
@@ -256,42 +259,67 @@ private:
 
     /**
      * Clear while file table.
-     * 
+     *
      * @param[in] fileTable File table where to add the entry.
      */
     void clearFileTable(FileTableEntry* fileTable);
 
     /**
      * Scan for files and setup file table.
-     * 
+     * The file extensions supported by BitmapWidget are used to filter the files.
+     *
      * @param[in] fileTable File table where to add the entry.
-     * @param[in] fileExtension File extensions
-     * @param[in] count         Number of file extensions
-     * 
+     *
      * @return If any new file found and added, it will return true otherwise false.
      */
-    bool scanForFiles(FileTableEntry* fileTable, const char* fileExtension[], size_t count);
+    bool scanForFiles(FileTableEntry* fileTable);
 
+    /**
+     * Remove file table entries if their file doesn't exist anymore.
+     *
+     * @param[in] fileTable File table where to check the entries.
+     *
+     * @return If any file removed, it will return true otherwise false.
+     */
     bool checkForFiles(FileTableEntry* fileTable);
+
+    /**
+     * Get file table.
+     *
+     * @param[in]       topic       The topic name.
+     * @param[in,out]   jsonValue   The JSON value.
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool getTopic(const String& topic, JsonObject& jsonValue);
+
+    /**
+     * Has the file table changed since last request?
+     *
+     * @param[in] topic The topic name.
+     *
+     * @return If changed, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic);
 
     /**
      * Upload topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[in]   value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool uploadTopic(const String& topic, const JsonObjectConst& value);
 
     /**
      * Is a upload request accepted or rejected?
-     * 
+     *
      * @param[in] topic         The topic which the upload belongs to.
      * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
      * @param[in] dstFilename   The destination filename, after storing the uploaded file.
-     * 
+     *
      * @return If accepted it will return true otherwise false.
      */
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename);
@@ -299,37 +327,37 @@ private:
     /**
      * Remove topic data.
      * Note, currently only JSON format is supported.
-     * 
+     *
      * @param[in]   topic   The topic which data shall be retrieved.
      * @param[in]   value   The topic value in JSON format.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool removeTopic(const String& topic, const JsonObjectConst& value);
 
     /**
      * Get file entry by file id.
-     * 
+     *
      * @param[in] fileTable File table where to add the entry.
      * @param[in] fileId    The id of the file which to get.
-     * 
+     *
      * @return If found, it will return the file entry otherwise nullptr.
      */
     FileTableEntry* getFileEntry(FileTableEntry* fileTable, FileId fileId);
 
     /**
      * Get file id by full path or a part of it.
-     * 
+     *
      * @param[in] fileTable File table where to add the entry.
      * @param[in] fullPath  Full path or part of it.
-     * 
+     *
      * @return If found, it will return the file id or FILE_ID_INVALID.
      */
     FileId getFileId(FileTableEntry* fileTable, const String& fullPath);
 
     /**
      * Load file table from persistent memory.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool load();
@@ -353,6 +381,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* FILE_MGR_SERVICE_H */
+#endif /* FILE_MGR_SERVICE_H */
 
 /** @} */

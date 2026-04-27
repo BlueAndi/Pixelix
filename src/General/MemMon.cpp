@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   MemMon.cpp
  * @brief  Memory monitor
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -35,6 +36,9 @@
 #include "MemMon.h"
 
 #include <Logging.h>
+#include <MemUtil.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,26 +64,41 @@
  * Public Methods
  *****************************************************************************/
 
+bool MemMon::start()
+{
+    bool                    isSuccessful        = true;
+    esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t caps, const char* functionName) -> void {
+        TaskHandle_t hCurrentTask       = xTaskGetCurrentTaskHandle();
+        const char*  taskName           = pcTaskGetName(hCurrentTask);
+        UBaseType_t  stackHighWatermark = uxTaskGetStackHighWaterMark(hCurrentTask);
+
+        LOG_ERROR("Memory allocation failed.");
+        LOG_ERROR("Size          : %u bytes", size);
+        LOG_ERROR("Capability    : 0x%04X", caps);
+        LOG_ERROR("Function      : %s", functionName);
+        LOG_ERROR("Task          : %s", (nullptr != taskName) ? taskName : "?");
+        LOG_ERROR("Stack reserve : %u words", static_cast<unsigned>(stackHighWatermark));
+        LOG_ERROR("Largest avail.: %u bytes", MemUtil::getLargestFreeBlockSize());
+    };
+
+    m_timer.start(PROCESSING_CYCLE);
+
+    if (ESP_OK != heap_caps_register_failed_alloc_callback(failedAllocCallback))
+    {
+        stop();
+        isSuccessful = false;
+    }
+
+    return isSuccessful;
+}
+
 void MemMon::process()
 {
-    bool isProcessingTime = false;
-
-    if (false == m_timer.isTimerRunning())
+    if (true == m_timer.isTimeout())
     {
-        m_timer.start(PROCESSING_CYCLE);
-        isProcessingTime = true;
-    }
-    else if (true == m_timer.isTimeout())
-    {
-        isProcessingTime = true;
-        m_timer.restart();
-    }
-
-    if (true == isProcessingTime)
-    {
-        uint32_t availableHeap          = ESP.getFreeHeap();        /* Current available heap memory. */
-        uint32_t lowestAvailableHeap    = ESP.getMinFreeHeap();     /* Lowest level of available heap since boot. */
-        uint32_t largestHeapBlock       = ESP.getMaxAllocHeap();    /* Largest block of heap that can be allocated at once. */
+        uint32_t availableHeap       = MemUtil::getFreeHeapSize();         /* Current available heap memory. */
+        uint32_t lowestAvailableHeap = MemUtil::getMinFreeHeapSize();      /* Lowest level of available heap since boot. */
+        uint32_t largestHeapBlock    = MemUtil::getLargestFreeBlockSize(); /* Largest block of heap that can be allocated at once. */
 
         if (MIN_HEAP_MEMORY >= availableHeap)
         {
@@ -101,7 +120,14 @@ void MemMon::process()
         {
             LOG_FATAL("----- Heap corrupt! ------");
         }
+
+        m_timer.restart();
     }
+}
+
+void MemMon::stop()
+{
+    m_timer.stop();
 }
 
 /******************************************************************************

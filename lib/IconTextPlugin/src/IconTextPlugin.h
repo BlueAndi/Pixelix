@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   IconTextPlugin.h
  * @brief  Icon and text plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -140,7 +141,7 @@ public:
     /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -149,14 +150,14 @@ public:
      *     ]
      * }
      * </code>
-     * 
+     *
      * By default a topic is readable and writeable.
      * This can be set explicit with the "access" key with the following possible
      * values:
      * - Only readable: "r"
      * - Only writeable: "w"
      * - Readable and writeable: "rw"
-     * 
+     *
      * Example:
      * <code>{.json}
      * {
@@ -166,7 +167,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Home Assistant MQTT discovery support can be added with the "ha" JSON object inside
      * the "extra" JSON object. The Home Assistant extension supports only loading by file.
      * <code>{.json}
@@ -179,7 +180,7 @@ public:
      *     }]
      * }
      * </code>
-     * 
+     *
      * Extra information can be loaded from a file too. This is useful for complex
      * configurations and to keep program memory usage low.
      * <code>{.json}
@@ -190,7 +191,7 @@ public:
      *    }]
      * }
      * </code>
-     * 
+     *
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -318,7 +319,7 @@ private:
      * Set actual configuration in JSON.
      * It will not be stored to configuration file.
      *
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg   Configuration
      *
      * @return If successful set, it will return true otherwise false.
      */
@@ -327,14 +328,14 @@ private:
     /**
      * Get persistent configuration in JSON.
      *
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg   Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set persistent configuration in JSON.
      *
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg   Configuration
      *
      * @return If successful set, it will return true otherwise false.
      */

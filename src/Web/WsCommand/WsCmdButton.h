@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdButton.h
  * @brief  Websocket command to control the virtual user button
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -57,7 +58,7 @@
 /**
  * Websocket command to control the virtual user button.
  */
-class WsCmdButton: public WsCmd, public ButtonActions
+class WsCmdButton : public WsCmd, public ButtonActions
 {
 public:
 
@@ -96,8 +97,8 @@ public:
 
 private:
 
-    bool            m_isError;  /**< Any error happened during parameter reception? */
-    ButtonActionId  m_actionId; /**< Id of the action, which to execute. */
+    bool           m_isError;  /**< Any error happened during parameter reception? */
+    ButtonActionId m_actionId; /**< Id of the action, which to execute. */
 
     WsCmdButton(const WsCmdButton& cmd);
     WsCmdButton& operator=(const WsCmdButton& cmd);
@@ -107,6 +108,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDBUTTON_H */
+#endif /* WSCMDBUTTON_H */
 
 /** @} */

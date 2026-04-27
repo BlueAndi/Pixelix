@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,18 +13,21 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -35,12 +39,13 @@
                 <h1 class="mt-5">DateTimePlugin</h1>
                 <p><img src="DateTimePlugin1.jpg" alt="Screenshot" /></p>
                 <p><img src="DateTimePlugin2.jpg" alt="Screenshot" /></p>
-                <p>The plugin shows the current time and/or date.</p>
-                <p>If date and time are configured, first the time will be shown for half of the slot duration and after it the date.</p>
-                <p>It can be configured to show only the date or only the time as well.</p>
-                <p>Below the day of the week is shown, starting from the left with Monday.</p>
-                <h2>Date/Time Format</h2>
-                <p>Configure the date and time format in the plugin configuration JSON file. The format itself is according to <a href="https://cplusplus.com/reference/ctime/strftime/" target="_blank">strftime()</a>. For colorization text properties can be added.</p>
+                <p>This plugin lets you see the current date and time for any time zone you choose.</p>
+                <p>With the display mode, it can be configured to show only the date or only the time as well.</p>
+                <p>It can also be set to show the time in 12-hour or 24-hour format.</p>
+                <p>Additionally, the time zone can be specified to display the time in a particular region. If no time zone is set, the configured time zone in the <a href="/settings.html" target="_blank">settings</a> will be used.</p>
+                <p>Depending on the country, the first day of the week can be configured.</p>
+                <p>With the time and date format specifier, the output format can be customized.</p>
+                <p>The format is according to <a href="https://cplusplus.com/reference/ctime/strftime/" target="_blank">strftime()</a>. For colorization text properties can be added.</p>
                 <ul>
                     <li>%b - Abbreviated month name (3 characters)</li>
                     <li>%d - Day of the month, zero-padded (01-31)</li>
@@ -51,56 +56,64 @@
                     <li>%p - AM or PM designation</li>
                     <li>%Y - Year</li>
                 </ul>
-                <p>By default the local time (see timezone in the settings) is used. It can be overwritten by the plugin configuration.</p>
-                <h2>REST API</h2>
-                <h3>Get configuration about what the plugin shows.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime</code></pre>
-                <h3>Set configuration about what the plugin shall show.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
-                <ul>
-                    <li>PLUGIN-UID: The plugin unique id.</li>
-                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>MODE: Display mode
-                        <ul>
-                            <li>0: Show date and time.</li>
-                            <li>1: Show only the date.</li>
-                            <li>2: Show only the time.</li>
-                        </ul>
-                    </li>
-                </ul>
                 <h2>Configuration</h2>
                 <h3>Display</h3>
                 <div class="h-100 p-1 p-md-5 bg-body-tertiary border rounded-3">
                     <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
                             <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="mode">Display mode:</label>
                             <select class="form-select" id="mode">
                                 <option value="0">Show date and time.</option>
                                 <option value="1">Show only the date.</option>
                                 <option value="2">Show only the time.</option>
-                            </select>    
+                            </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="timeFormat">Time format:</label>
-                            <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />    
+                            <div class="input-group">
+                                <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />
+                                <select class="form-select" id="predefinedTimeFormat" onchange="document.getElementById('timeFormat').value = this.value;">
+                                    <option value="">Choose preset...</option>
+                                    <option value="%H:%M">24h (HH:MM)</option>
+                                    <option value="%I:%M %p">12h (HH:MM AM/PM)</option>
+                                    <option value="%H:%M:%S">24h with seconds (HH:MM:SS)</option>
+                                    <option value="%I:%M:%S %p">12h with seconds (HH:MM:SS AM/PM)</option>
+                                </select>
+                            </div>
+                            <small class="form-text">The time format string defines how the time is shown.</small>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label" for="timeFormat">Date format:</label>
-                            <input class="form-control" type="text" id="dateFormat" name="dateFormat" value="" />    
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="dateFormat">Date format:</label>
+                            <div class="input-group">
+                                <input class="form-control" type="text" id="dateFormat" name="dateFormat" value="" />
+                                <select class="form-select" id="predefinedDateFormat" onchange="document.getElementById('dateFormat').value = this.value;">
+                                    <option value="">Choose preset...</option>
+                                    <option value="%m-%d">MM-DD.</option>
+                                    <option value="%d.%m.">DD.MM.</option>
+                                    <option value="%Y-%m-%d">YYYY-MM-DD</option>
+                                    <option value="%d.%m.%Y">DD.MM.YYYY</option>
+                                    <option value="%b %d, %Y">Mon DD, YYYY</option>
+                                    <option value="%A, %d %B %Y">Weekday, DD Month YYYY</option>
+                                </select>
+                            </div>
+                            <small class="form-text">The date format string defines how the date is shown.</small>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="timeZone">POSIX time zone:</label>
-                            <input class="form-control" type="text" id="timeZone" name="timeZone" value="" />
-                            <small id="timeZoneHelp" class="form-text text-muted">If empty, the timezone from <a href="/settings.html" target="_self">settings</a> will be applied.</small>
+                            <div class="input-group">
+                                <input class="form-control" type="text" id="timeZone" name="timeZone" value="" />
+                                <select class="form-select" id="predefinedTimeZone" onchange="document.getElementById('timeZone').value = this.value;">
+                                    <option value="">Choose preset...</option>
+                                </select>
+                            </div>
+                            <small class="form-text text-muted">If empty, the time zone from <a href="/settings.html" target="_self">settings</a> will be applied.</small>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="startOfWeek">Start of week:</label>
                             <select class="form-select" id="startOfWeek">
                                 <option value="0">Sunday</option>
@@ -112,11 +125,11 @@
                                 <option value="6">Saturday</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="timeFormat">Color of actual day:</label>
                             <input class="form-control form-control-color" type="color" id="dayOnColor" name="dayOnColor" value="#000000" title="Choose color of actual day" />
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="timeFormat">Color of other days:</label>
                             <input class="form-control form-control-color" type="color" id="dayOffColor" name="dayOffColor" value="#000000" title="Choose color of other days than the actual." />
                         </div>
@@ -130,7 +143,6 @@
                                     <div class="btn-group" role="group">
                                         <input type="radio" class="btn-check" id="viewMode0" name="viewMode" value="0" checked />
                                         <label class="btn btn-outline-secondary" for="viewMode0">Digital</label>
-
 
                                         <input type="radio" class="btn-check" id="viewMode1" name="viewMode" value="1" />
                                         <label class="btn btn-outline-secondary" for="viewMode1">Analog</label>
@@ -149,13 +161,12 @@
                                         <input type="radio" class="btn-check" id="secondsMode0" name="secondsMode" value="0" checked />
                                         <label class="btn btn-outline-secondary" for="secondsMode0">Off</label>
 
-
                                         <input type="radio" class="btn-check" id="secondsMode1" name="secondsMode" value="1" />
                                         <label class="btn btn-outline-secondary" for="secondsMode1">Clock Hand</label>
 
                                         <input type="radio" class="btn-check" id="secondsMode2" name="secondsMode" value="2" />
                                         <label class="btn btn-outline-secondary" for="secondsMode2">Dial Dots</label>
-                                        
+
                                         <input type="radio" class="btn-check" id="secondsMode3" name="secondsMode" value="3" />
                                         <label class="btn btn-outline-secondary" for="secondsMode3">Dial and Hand</label>
                                     </div>
@@ -167,13 +178,13 @@
                                 </div>
                                 <div class="col-12 col-sm-9">
                                     <div class="btn-group" role="group">
-                                        <div class="form-group">
+                                        <div class="form-group mb-3">
                                             <input type="color" class="form-control form-control-color" id="handHourCol" value="#FFFFFF" title="Hour Hand Color" />
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group mb-3">
                                             <input type="color" class="form-control form-control-color" id="handMinCol" value="#808080" title="Minute Hand Color" />
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group mb-3">
                                             <input type="color" class="form-control form-control-color" id="handSecCol" value="#FFFF00" title="Second Hand Color" />
                                         </div>
                                     </div>
@@ -185,10 +196,10 @@
                                 </div>
                                 <div class="col-12 col-sm-9">
                                     <div class="btn-group" role="group">
-                                        <div class="form-group">
+                                        <div class="form-group mb-3">
                                             <input type="color" class="form-control form-control-color" id="ringFiveMinCol" value="#0000FF" title="Five Minute Mark Color" />
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group mb-3">
                                             <input type="color" class="form-control form-control-color" id="ringMinDotCol" value="#A9A9A9" title="Minute Ring Dot Color" />
                                         </div>
                                     </div>
@@ -200,12 +211,12 @@
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -213,6 +224,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
@@ -223,30 +235,30 @@
         <script type="text/javascript" src="/js/rest.js"></script>
 
         <script>
-            var pluginName  = "DateTimePlugin";
-            var restClient  = new pixelix.rest.Client();
+            var pluginName = "DateTimePlugin";
+            var restClient = new pixelix.rest.Client();
 
             function enableUI() {
                 utils.enableForm("myForm", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("myForm", false);
             }
-    
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
+
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -256,9 +268,9 @@
                             optionText += ")";
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                            
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
+
                             $("#pluginUid").append($option);
 
                             ++cnt;
@@ -266,7 +278,7 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
@@ -274,12 +286,12 @@
 
             function getConfig(pluginUid) {
                 disableUI();
-                
+
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#mode").val(rsp.data.mode);
                     $("#timeFormat").val(rsp.data.timeFormat);
                     $("#dateFormat").val(rsp.data.dateFormat);
@@ -287,10 +299,11 @@
                     $("#startOfWeek").val(rsp.data.startOfWeek);
                     $("#dayOnColor").val(rsp.data.dayOnColor);
                     $("#dayOffColor").val(rsp.data.dayOffColor);
-                    $("#viewMode").val(rsp.data.viewMode);
+                    $('input[name=viewMode][value="' + rsp.data.viewMode + '"]').prop('checked', true);
 
                     if (rsp.data.hasOwnProperty("analogClock")) {
                         jsonAnalogClock = rsp.data.analogClock;
+                        $('input[name=secondsMode][value="' + jsonAnalogClock.secondsMode + '"]').prop('checked', true);
                         $("#handHourCol").val(jsonAnalogClock.handHourCol);
                         $("#handMinCol").val(jsonAnalogClock.handMinCol);
                         $("#handSecCol").val(jsonAnalogClock.handSecCol);
@@ -298,9 +311,9 @@
                         $("#ringMinDotCol").val(jsonAnalogClock.ringMinDotCol);
                     }
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -312,49 +325,47 @@
                 let displayHeight = ~DISPLAY_HEIGHT~;
 
                 configJson = {
-                        mode: $("#mode").val(),
-                        timeFormat: $("#timeFormat").val(),
-                        dateFormat: $("#dateFormat").val(),
-                        timeZone: $("#timeZone").val(),
-                        startOfWeek: $("#startOfWeek").val(),
-                        dayOnColor: $("#dayOnColor").val(),
-                        dayOffColor: $("#dayOffColor").val(),
-                        viewMode: $('input[name=viewMode]:checked').val()
-                    };
+                    mode: $("#mode").val(),
+                    timeFormat: $("#timeFormat").val(),
+                    dateFormat: $("#dateFormat").val(),
+                    timeZone: $("#timeZone").val(),
+                    startOfWeek: $("#startOfWeek").val(),
+                    dayOnColor: $("#dayOnColor").val(),
+                    dayOffColor: $("#dayOffColor").val(),
+                    viewMode: $('input[name=viewMode]:checked').val()
+                };
 
                 if ((64 <= ~DISPLAY_HEIGHT~) && (64 <= ~DISPLAY_WIDTH~))
                 {
-                    configJson["analogClock"] = 
-                        {
-                            secondsMode: $('input[name=secondsMode]:checked').val(),
-                            handHourCol: $("#handHourCol").val(),
-                            handMinCol: $("#handMinCol").val(),
-                            handSecCol: $("#handSecCol").val(),
-                            ringFiveMinCol: $("#ringFiveMinCol").val(),
-                            ringMinDotCol: $("#ringMinDotCol").val()
-                        };
+                    configJson["analogClock"] =
+                    {
+                        secondsMode: $('input[name=secondsMode]:checked').val(),
+                        handHourCol: $("#handHourCol").val(),
+                        handMinCol: $("#handMinCol").val(),
+                        handSecCol: $("#handSecCol").val(),
+                        ringFiveMinCol: $("#ringFiveMinCol").val(),
+                        ringMinDotCol: $("#ringMinDotCol").val()
+                    };
                 }
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true,
                     parameter: configJson
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
-
-                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
@@ -365,14 +376,40 @@
                 /* Enable extended options for screens >= 64x64. */
                 if ((displayWidth >= 64) && (displayHeight >= 64)) {
                     let opt64x64 = document.getElementById("options64x64");
-                    opt64x64.style.display  = "block";
+                    opt64x64.style.display = "block";
                 }
 
+                /* Load time zones dynamically. */
+                fetch('https://raw.githubusercontent.com/nayarsystems/posix_tz_db/refs/heads/master/zones.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        const tzSelect = document.getElementById('predefinedTimeZone');
+                        Object.keys(data).forEach(zone => {
+                            const option = document.createElement('option');
+                            option.value = data[zone];
+                            option.text = zone;
+                            tzSelect.appendChild(option);
+                        });
+                    })
+                    .catch(() => {
+                        /* Fallback or error handling. */
+                    });
+
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                getPluginInstances().then(function (cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        var uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            for (var i = 0; i < select.options.length; i++) {
+                                if (select.options[i].value === uidFromUrl) {
+                                    select.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
 
                         return getConfig(
                             select.options[select.selectedIndex].value
@@ -383,4 +420,5 @@
             });
         </script>
     </body>
+
 </html>

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TimerService.h
  * @brief  Timer service
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -80,7 +81,7 @@ public:
 
     /**
      * Start the timer service.
-     * 
+     *
      * @return If successful started, it will return true otherwise false.
      */
     bool start() final;
@@ -101,13 +102,14 @@ private:
     static const uint8_t  MAX_TIMER_COUNT = 8U;   /**< Maximum number of timer. */
     static const char*    FILE_NAME;              /**< File name of the timer settings. */
     static const char*    TOPIC;                  /**< Topic for timer settings. */
-    static const char*    ENTITY;                 /**< Entity for timer settings. */
+    static const char*    ENTITY_ID;              /**< Entity id for timer settings. */
 
     String                m_deviceId;                  /**< Device id. */
     TimerSetting          m_settings[MAX_TIMER_COUNT]; /**< Timer settings. */
     bool                  m_hasSettingsChanged;        /**< Has any timer setting changed since last request? */
     Mutex                 m_mutex;                     /**< Mutex to protect the settings. */
     SimpleTimer           m_processTimer;              /**< Process timer */
+    bool                  m_isRunning;                 /**< Is service running? */
 
     TimerService(const TimerService& drv);
     TimerService& operator=(const TimerService& drv);
@@ -121,7 +123,8 @@ private:
         m_settings(),
         m_hasSettingsChanged(true),
         m_mutex(),
-        m_processTimer()
+        m_processTimer(),
+        m_isRunning(false)
     {
     }
 

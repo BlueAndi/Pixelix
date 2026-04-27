@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WebSocket.cpp
  * @brief  Websocket server
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -38,6 +39,7 @@
 #include "WsCmdBrightness.h"
 #include "WsCmdButton.h"
 #include "WsCmdEffect.h"
+#include "WsCmdFontType.h"
 #include "WsCmdGetDisp.h"
 #include "WsCmdInstall.h"
 #include "WsCmdIperf.h"
@@ -75,57 +77,59 @@
  *****************************************************************************/
 
 /** Websocket get display command */
-static WsCmdGetDisp         gWsCmdGetDisp;
+static WsCmdGetDisp gWsCmdGetDisp;
 
 /** Websocket slot command */
-static WsCmdSlot            gWsCmdSlot;
+static WsCmdSlot gWsCmdSlot;
 
 /** Websocket slots command */
-static WsCmdSlots           gWsCmdSlots;
+static WsCmdSlots gWsCmdSlots;
 
 /** Websocket plugins command */
-static WsCmdPlugins         gWsCmdPlugins;
+static WsCmdPlugins gWsCmdPlugins;
 
 /** Websocket install command */
-static WsCmdInstall         gWsCmdInstall;
+static WsCmdInstall gWsCmdInstall;
 
 /** Websocket uninstall command */
-static WsCmdUninstall       gWsCmdUninstall;
+static WsCmdUninstall gWsCmdUninstall;
 
 /** Websocket reset command */
-static WsCmdRestart         gWsCmdRestart;
+static WsCmdRestart gWsCmdRestart;
 
 /** Websocket get/set brightness command */
-static WsCmdBrightness      gWsCmdBrightness;
+static WsCmdBrightness gWsCmdBrightness;
 
 /** Websocket log command */
-static WsCmdLog             gWsCmdLog;
+static WsCmdLog gWsCmdLog;
 
 /** Websocket move command */
-static WsCmdMove            gWsCmdMove;
+static WsCmdMove gWsCmdMove;
 
 /** Websocket slot duration command */
-static WsCmdSlotDuration    gWsCmdSlotDuration;
+static WsCmdSlotDuration gWsCmdSlotDuration;
 
 #if CONFIG_FEATURE_IPERF == 1
 
 /** Websocket iperf command */
-static WsCmdIperf           gWsCmdIperf;
+static WsCmdIperf gWsCmdIperf;
 
 #endif /* CONFIG_FEATURE_IPERF == 1 */
 
 /** Websocket control virtual button command */
-static WsCmdButton          gWsCmdButton;
+static WsCmdButton gWsCmdButton;
 
 /** Websocket control fade effects */
-static WsCmdEffect          gWsCmdEffect;
+static WsCmdEffect gWsCmdEffect;
 
 /** Websocket get/set plugin alias name command */
-static WsCmdAlias           gWsCmdAlias;
+static WsCmdAlias gWsCmdAlias;
+
+/** Websocket get/set plugin font type command */
+static WsCmdFontType gWsCmdFontType;
 
 /** Websocket command list */
-static WsCmd*       gWsCommands[] =
-{
+static WsCmd* gWsCommands[] = {
     &gWsCmdGetDisp,
     &gWsCmdSlot,
     &gWsCmdSlots,
@@ -142,7 +146,8 @@ static WsCmd*       gWsCommands[] =
 #endif /* CONFIG_FEATURE_IPERF == 1 */
     &gWsCmdButton,
     &gWsCmdEffect,
-    &gWsCmdAlias
+    &gWsCmdAlias,
+    &gWsCmdFontType
 };
 
 /******************************************************************************
@@ -151,82 +156,88 @@ static WsCmd*       gWsCommands[] =
 
 void WebSocketSrv::init(AsyncWebServer& srv)
 {
-    String              webLoginUser;
-    String              webLoginPassword;
-    SettingsService&    settings        = SettingsService::getInstance();
-
-    if (false == settings.open(true))
+    if (false == m_isInitialized)
     {
-        webLoginUser        = settings.getWebLoginUser().getDefault();
-        webLoginPassword    = settings.getWebLoginPassword().getDefault();
-    }
-    else
-    {
-        webLoginUser        = settings.getWebLoginUser().getValue();
-        webLoginPassword    = settings.getWebLoginPassword().getValue();
+        String           webLoginUser;
+        String           webLoginPassword;
+        SettingsService& settings = SettingsService::getInstance();
 
-        settings.close();
-    }
-
-    /* Setup the websocket message input queue. */
-    (void)m_msgQueue.create(MAX_WEBSOCKET_MSGS);
-
-    /* Register websocket event handler */
-    m_webSocket.onEvent(
-        [this](AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
+        if (false == settings.open(true))
         {
-            this->onEvent(server, client, type, arg, data, len);
+            webLoginUser     = settings.getWebLoginUser().getDefault();
+            webLoginPassword = settings.getWebLoginPassword().getDefault();
         }
-    );
+        else
+        {
+            webLoginUser     = settings.getWebLoginUser().getValue();
+            webLoginPassword = settings.getWebLoginPassword().getValue();
 
-    /* HTTP Authenticate before switch to Websocket protocol */
-    m_webSocket.setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+            settings.close();
+        }
 
-    /* Register websocket on webserver */
-    srv.addHandler(&m_webSocket);
+        /* Setup the websocket message input queue. */
+        (void)m_msgQueue.create(MAX_WEBSOCKET_MSGS);
+
+        /* Register websocket event handler */
+        m_webSocket.onEvent(
+            [this](AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
+                this->onEvent(server, client, type, arg, data, len);
+            });
+
+        /* HTTP Authenticate before switch to Websocket protocol */
+        m_webSocket.setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+        /* Register websocket on webserver */
+        srv.addHandler(&m_webSocket);
+
+        m_isInitialized = true;
+    }
 }
 
 void WebSocketSrv::process()
 {
-    WebSocketMsg* msg = nullptr;
-
-    /* Handle all messages in the input queue. */
-    while(true == m_msgQueue.receive(&msg, 0U))
+    if (true == m_isInitialized)
     {
-        if (nullptr != msg)
+        WebSocketMsg* msg = nullptr;
+
+        /* Handle all messages in the input queue. */
+        while (true == m_msgQueue.receive(&msg, 0U))
         {
-            if (nullptr != msg->cmd)
+            if (nullptr != msg)
             {
-                LOG_DEBUG("Websocket command: %s", msg->cmd->getCmd());
-
-                /* Parameter available? */
-                if (false == msg->parameters.isEmpty())
+                if (nullptr != msg->cmd)
                 {
-                    int     beginIdx    = 0;
-                    int     endIdx      = msg->parameters.indexOf(DELIMITER);
-                    String  parStr;
+                    LOG_DEBUG("Websocket command: %s", msg->cmd->getCmd());
 
-                    while(0 <= endIdx)
+                    /* Parameter available? */
+                    if (false == msg->parameters.isEmpty())
                     {
-                        parStr = msg->parameters.substring(beginIdx, endIdx);
+                        int    beginIdx = 0;
+                        int    endIdx   = msg->parameters.indexOf(DELIMITER);
+                        String parStr;
 
+                        while (0 <= endIdx)
+                        {
+                            parStr = msg->parameters.substring(beginIdx, endIdx);
+
+                            LOG_DEBUG("Websocket parameter: %s", parStr.c_str());
+                            msg->cmd->setPar(parStr.c_str());
+
+                            beginIdx = endIdx + 1U; /* Overstep delimiter */
+                            endIdx   = msg->parameters.indexOf(DELIMITER, beginIdx);
+                        }
+
+                        parStr = msg->parameters.substring(beginIdx);
                         LOG_DEBUG("Websocket parameter: %s", parStr.c_str());
                         msg->cmd->setPar(parStr.c_str());
-
-                        beginIdx    = endIdx + 1U; /* Overstep delimiter */
-                        endIdx      = msg->parameters.indexOf(DELIMITER, beginIdx);
                     }
 
-                    parStr = msg->parameters.substring(beginIdx);
-                    LOG_DEBUG("Websocket parameter: %s", parStr.c_str());
-                    msg->cmd->setPar(parStr.c_str());
+                    msg->cmd->execute(&m_webSocket, msg->clientId);
                 }
 
-                msg->cmd->execute(&m_webSocket, msg->clientId);
+                delete msg;
+                msg = nullptr;
             }
-
-            delete msg;
-            msg = nullptr;
         }
     }
 }
@@ -247,7 +258,7 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
         return;
     }
 
-    switch(type)
+    switch (type)
     {
     /* Client connected */
     case WS_EVT_CONNECT:
@@ -334,7 +345,7 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
     /* Is the whole message in a single frame and we got all of it's data? */
     else if ((0U < info->final) &&
              (0U == info->index) &&
-             (len == info->len ))
+             (len == info->len))
     {
         /* Empty text message? */
         if ((nullptr == data) ||
@@ -345,8 +356,8 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
         /* Handle text message */
         else
         {
-            const void* vData   = data;
-            const char* cData   = static_cast<const char*>(vData);
+            const void* vData = data;
+            const char* cData = static_cast<const char*>(vData);
 
             handleMsg(server, client, cData, len);
         }
@@ -361,10 +372,10 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
 
 void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
 {
-    size_t      msgIndex    = 0U;
-    const char* cmd         = nullptr;
-    size_t      cmdLength   = 0U;
-    WsCmd*      wsCmd       = nullptr;
+    size_t      msgIndex  = 0U;
+    const char* cmd       = nullptr;
+    size_t      cmdLength = 0U;
+    WsCmd*      wsCmd     = nullptr;
 
     if ((nullptr == server) ||
         (nullptr == client) ||
@@ -375,14 +386,14 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     }
 
     /* Skip spaces and tabs in front. */
-    while((msgLen > msgIndex) && ( (' ' == msg[msgIndex]) || ('\t' == msg[msgIndex]) ))
+    while ((msgLen > msgIndex) && ((' ' == msg[msgIndex]) || ('\t' == msg[msgIndex])))
     {
         ++msgIndex;
     }
 
     /* Get command string */
     cmd = &msg[msgIndex];
-    while((msgLen > msgIndex) && (DELIMITER != msg[msgIndex]))
+    while ((msgLen > msgIndex) && (DELIMITER != msg[msgIndex]))
     {
         ++cmdLength;
         ++msgIndex;
@@ -394,7 +405,7 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
         uint8_t index = 0U;
 
         /* Find command object */
-        while((nullptr == wsCmd) && (UTIL_ARRAY_NUM(gWsCommands) > index))
+        while ((nullptr == wsCmd) && (UTIL_ARRAY_NUM(gWsCommands) > index))
         {
             /* Note, cmd is NOT terminated! */
             if (0 == strncmp(gWsCommands[index]->getCmd(), cmd, cmdLength))
@@ -412,19 +423,19 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
         }
         else
         {
-            WebSocketMsg* wsMsg = new(std::nothrow) WebSocketMsg;
+            WebSocketMsg* wsMsg = new (std::nothrow) WebSocketMsg;
 
             /* Overstep delimiter in case there are parameters. */
-            if ((DELIMITER == msg[msgIndex]) &&
-                (msgLen > msgIndex))
+            if ((msgLen > msgIndex) &&
+                (DELIMITER == msg[msgIndex]))
             {
                 ++msgIndex;
             }
 
             if (nullptr != wsMsg)
             {
-                wsMsg->cmd          = wsCmd;
-                wsMsg->clientId     = client->id();
+                wsMsg->cmd      = wsCmd;
+                wsMsg->clientId = client->id();
 
                 if (0U < (msgLen - msgIndex))
                 {

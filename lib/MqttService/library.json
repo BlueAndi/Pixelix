@@ -16,9 +16,13 @@
     }, {
         "name": "SettingsService"
     }, {
+        "name": "TopicHandlerService"
+    }, {
         "owner": "hmueller01",
         "name": "PubSubClient3",
-        "version": "~3.1.0"
+        "version": "~3.3.0"
+    }, {
+        "name": "Os"
     }, {
         "name": "Utilities"
     }],

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,18 +13,21 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -31,31 +35,67 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <div class="modal fade" id="iconPickerDialog" tabindex="-1" aria-labelledby="iconPickerTitle" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="iconPickerTitle">Select Icon</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Zoom Level:</label>
+                                <div class="btn-group" role="group" aria-label="Icon zoom controls">
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoomOriginal" value="1" checked autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoomOriginal">Original</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom2x" value="2" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom2x">2x</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom4x" value="4" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom4x">4x</label>
+
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom8x" value="8" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
+                                </div>
+                            </div>
+                            <p class="text-secondary">Click an icon to use its file id.</p>
+                            <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="iconPickerOverview"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="container">
                 <h1 class="mt-5">GrabViaMqttPlugin</h1>
                 <p><img src="GrabViaMqttPlugin.jpg" alt="Screenshot" /></p>
-                <p>The plugin can grab information in JSON format via MQTT and shows it on the display.</p>
-                <h2>REST API</h2>
-                <h3>Get configuration</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig</code></pre>
-                <h3>Set configuration</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig?path=&lt;PATH&gt;&filter=&lt;FILTER&gt;&iconFileId=&lt;ICON-FILE-ID&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/grabConfig?path=&lt;PATH&gt;&filter=&lt;FILTER&gt;&iconFileId=&lt;ICON-FILE-ID&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
-                <ul>
-                    <li>PLUGIN-UID: The plugin unique id.</li>
-                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>PATH: MQTT topic path.</li>
-                    <li>FILTER: Filter to identify the value in the JSON response. See the details here: <a href="https://arduinojson.org/news/2020/03/22/version-6-15-0/" target="_blank">ArduinoJson 6.15: Filtering done right</a></li>
-                    <li>ICON-FILE-ID: File id of the icon.</li>
-                    <li>FORMAT: Format specifier, e.g. "%s" for strings or "%f" for numbers.</li>
-                    <li>MULTIPLIER: Number which is multiplied with a number value. Not used for string values.</li>
-                    <li>OFFSET: Number which is added to a number value. Not used for string values.</li>
-                </ul>
+                <p>This plugin connects to an MQTT server to receive data in JSON format and displays that information on the display. It helps you easily view live updates from devices or services that send data using MQTT.</p>
+                <p>The filter identifies the value in the JSON payload that you want to display.</p>
+                <p><strong>Example:</strong></p>
+                <p>JSON payload:</p>
+                <p><code>
+{
+    "temperature": 22.5,
+    "humidity": 60
+}
+</code></p>
+                <p>The following filter extracts the temperature value from the JSON payload.</p>
+                <p><code>
+{
+    "temperature": true
+}
+</code></p>
                 <p><a href="https://github.com/BlueAndi/Pixelix/tree/Development/doc/grabConfigs/mqtt" target="_blank">Configuration examples</a> may help to configure.</p>
                 <h2>Format text tags</h2>
                 <p>The following tags are supported in the format text:</p>
                 <ul>
-                    <li>{#RRGGBB} - Change text color (RRGGBB in hex)</li>
+                    <li>{#RRGGBB} - Set solid text color (RRGGBB in hex)</li>
+                    <li>{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear vertical gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
+                    <li>{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear horizontal gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
+                    <li>{stc} - Activate solid text color</li>
+                    <li>{lgtc} - Activate linear gradient text color</li>
                     <li>{hl} - Horizontal alignment left</li>
                     <li>{hc} - Horizontal alignment right</li>
                     <li>{hr} - Horizontal alignment center</li>
@@ -70,47 +110,57 @@
                 <h3>User</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
                             <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                            </select>    
+                            </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="path">Path:</label>
-                            <input class="form-control" type="text" id="path" name="path" value="" size="80" />    
+                            <input class="form-control" type="text" id="path" name="path" value="" size="80" />
+                            <small class="form-text">The MQTT topic path.</small>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="filter">Filter:</label>
                             <input class="form-control" type="text" id="filter" name="filter" value="null" size="80" />
+                            <small class="form-text">Filter to identify the value in the JSON response. See details in <a href="https://arduinojson.org/news/2020/03/22/version-6-15-0/" target="_blank">ArduinoJson 6.15: Filtering done
+                                    right</a> chapter.</small>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="iconFileId">Icon file id:</label>
-                            <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
-                            <small class="form-text text-muted">Find the file id in the icons page. Use 255 to clear the icon.</small>
+                            <div class="input-group">
+                                <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
+                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog('iconFileId')">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="clearIconFileId('iconFileId')">Clear</button>
+                            </div>
+                            <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="format">Format:</label>
                             <input class="form-control" type="text" id="format" name="format" value="%s" maxlength="40" />
+                            <small class="form-text">The format specifier. Supported are only "%s" for strings and "%f" for numbers.</small>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="multiplier">Multiplier:</label>
-                            <input class="form-control" type="number" id="multiplier" name="multiplier" value="1" />    
+                            <input class="form-control" type="number" id="multiplier" name="multiplier" value="1" />
+                            <small class="form-text">Number which is multiplied with a number value. Not used for string values.</small>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="offset">Offset:</label>
-                            <input class="form-control" type="number" id="offset" name="offset" value="0" />    
+                            <input class="form-control" type="number" id="offset" name="offset" value="0" />
+                            <small class="form-text">Number which is added to a number value. Not used for string values.</small>
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -118,6 +168,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
@@ -129,30 +180,126 @@
 
         <script>
 
-            var pluginName  = "GrabViaMqttPlugin";
-            var restClient  = new pixelix.rest.Client();
-    
+            var pluginName = "GrabViaMqttPlugin";
+            var restClient = new pixelix.rest.Client();
+            var iconPickerModal = null;
+            var iconPickerZoom = 1;
+            var iconPickerTargetInputId = "";
+
+            function applyZoomToImage(image) {
+                if (1 === iconPickerZoom) {
+                    image.style.imageRendering = "auto";
+                    image.style.width = "auto";
+                    image.style.height = "auto";
+                } else {
+                    image.style.imageRendering = "pixelated";
+                    image.style.width = (image.naturalWidth * iconPickerZoom) + "px";
+                    image.style.height = (image.naturalHeight * iconPickerZoom) + "px";
+                }
+            }
+
+            function updateIconPickerZoom() {
+                var selectedZoom = parseInt(document.querySelector("input[name='iconZoomOptions']:checked").value, 10);
+                var images;
+
+                iconPickerZoom = selectedZoom;
+                images = document.querySelectorAll("#iconPickerOverview img");
+
+                images.forEach(function (image) {
+                    applyZoomToImage(image);
+                });
+            }
+
+            function selectIconFileId(fileId) {
+                if ("" !== iconPickerTargetInputId) {
+                    document.getElementById(iconPickerTargetInputId).value = fileId;
+                }
+
+                if (null !== iconPickerModal) {
+                    iconPickerModal.hide();
+                }
+            }
+
+            function clearIconFileId(targetInputId) {
+                document.getElementById(targetInputId).value = 255;
+            }
+
+            function fillIconPicker(fileTable) {
+                var $overview = $("#iconPickerOverview");
+                var idx;
+
+                $overview.empty();
+
+                for (idx = 0; idx < fileTable.length; ++idx) {
+                    if (0 < fileTable[idx].fullPath.length) {
+                        (function (fileId, fullPath) {
+                            var $fileId = $("<p>").text("[" + fileId + "]");
+                            var $img = $("<img>")
+                                .attr("src", fullPath)
+                                .attr("alt", "Icon " + fileId)
+                                .on("load", function () {
+                                    applyZoomToImage(this);
+                                });
+                            var $name = $("<p>").text(fullPath.replace(/^.*[\\\/]/, ""));
+                            var $button = $("<button>")
+                                .attr("type", "button")
+                                .attr("class", "btn btn-primary btn-sm")
+                                .text("Use")
+                                .on("click", function () {
+                                    selectIconFileId(fileId);
+                                });
+                            var $card = $("<div>")
+                                .attr("class", "bg-body text-center m-2 p-2 bd-highlight border rounded")
+                                .append($fileId)
+                                .append($img)
+                                .append($name)
+                                .append($button);
+
+                            $overview.append($card);
+                        })(idx, fileTable[idx].fullPath);
+                    }
+                }
+            }
+
+            function openIconPickerDialog(targetInputId) {
+                iconPickerTargetInputId = targetInputId;
+
+                return restClient.readFile("/configuration/fileMgr.json").then(function (rsp) {
+                    var jsonRsp = JSON.parse(rsp);
+
+                    fillIconPicker(jsonRsp.fileTable);
+
+                    if (null === iconPickerModal) {
+                        iconPickerModal = new bootstrap.Modal(document.getElementById("iconPickerDialog"));
+                    }
+
+                    iconPickerModal.show();
+                }).catch(function () {
+                    alert("Failed to load icon list. Open the icons page once to initialize it.");
+                });
+            }
+
             function enableUI() {
                 utils.enableForm("myForm", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("myForm", false);
             }
-    
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
+
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -162,9 +309,9 @@
                             optionText += ")";
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                            
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
+
                             $("#pluginUid").append($option);
 
                             ++cnt;
@@ -172,28 +319,28 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
             };
-    
+
             function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     $("#path").val(rsp.data.path);
                     $("#filter").val(JSON.stringify(rsp.data.filter));
                     $("#iconFileId").val(rsp.data.iconFileId);
                     $("#format").val(rsp.data.format);
                     $("#multiplier").val(rsp.data.multiplier);
                     $("#offset").val(rsp.data.offset);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -203,40 +350,48 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true,
                     parameter: {
-                        path:  $("#path").val(),
+                        path: $("#path").val(),
                         filter: $("#filter").val(),
                         iconFileId: $("#iconFileId").val(),
                         format: $("#format").val(),
                         multiplier: $("#multiplier").val(),
                         offset: $("#offset").val()
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
-                
-                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                getPluginInstances().then(function (cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        var uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            for (var i = 0; i < select.options.length; i++) {
+                                if (select.options[i].value === uidFromUrl) {
+                                    select.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
 
                         return getConfig(
                             select.options[select.selectedIndex].value
@@ -246,4 +401,5 @@
             });
         </script>
     </body>
+
 </html>

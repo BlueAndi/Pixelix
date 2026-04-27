@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   Util.h
  * @brief  Utilitiy
  * @author Yann Le Glaz <yann_le@web.de>
  *
@@ -116,6 +117,28 @@ extern bool strToUInt16(const char* str, uint16_t& value);
 extern bool strToUInt16(const String& str, uint16_t& value);
 
 /**
+ * Convert a string to int16_t. String can contain integer number in decimal
+ * or hexadecimal format.
+ *
+ * @param[in]   str     String
+ * @param[out]  value   Converted value
+ *
+ * @return If conversion fails, it will return false otherwise true.
+ */
+extern bool strToInt16(const char* str, int16_t& value);
+
+/**
+ * Convert a string to int16_t. String can contain integer number in decimal
+ * or hexadecimal format.
+ *
+ * @param[in]   str     String
+ * @param[out]  value   Converted value
+ *
+ * @return If conversion fails, it will return false otherwise true.
+ */
+extern bool strToInt16(const String& str, int16_t& value);
+
+/**
  * Convert a string to uint32_t. String can contain integer number in decimal
  * or hexadecimal format.
  *
@@ -184,6 +207,16 @@ extern String uint32ToHex(uint32_t value);
  *
  * @return 32 bit unsigned integer value
  */
+extern uint32_t hexToUInt32(const char* str);
+
+/**
+ * Convert hex string to uint32_t. String may has the prefix "0x" or not.
+ * If conversion fails, it will return 0.
+ *
+ * @param[in] str   String which contains a hex number
+ *
+ * @return 32 bit unsigned integer value
+ */
 extern uint32_t hexToUInt32(const String& str);
 
 /**
@@ -224,6 +257,15 @@ constexpr T max(T valA, T valB)
  * @return Color in HTML format
  */
 extern String colorToHtml(const Color& color);
+
+/**
+ * Convert color from HTML format.
+ *
+ * @param[in] htmlColor Color in HTML format
+ *
+ * @return Color
+ */
+extern Color colorFromHtml(const char* htmlColor);
 
 /**
  * Convert color from HTML format.

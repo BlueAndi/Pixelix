@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   CaptivePortalHandler.cpp
  * @brief  Captive portal request handler
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -36,6 +37,7 @@
 #include "HttpStatus.h"
 #include "FileSystem.h"
 
+#include <WiFi.h>
 #include <SettingsService.h>
 #include <Logging.h>
 
@@ -76,9 +78,9 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
      * our captive portal.
      */
     {
-        const String&   host            = request->host();
-        const String&   requestedUrl    = request->url();
-        const char*     method          = request->methodToString();
+        const String& host         = request->host();
+        const String& requestedUrl = request->url();
+        const char*   method       = request->methodToString();
 
         LOG_DEBUG("Request from: %s", host.c_str());
         LOG_DEBUG("Request for : %s %s", method, requestedUrl.c_str());
@@ -89,14 +91,14 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
         if ((true == request->hasArg("ssid")) &&
             (true == request->hasArg("passphrase")))
         {
-            SettingsService&    settings    = SettingsService::getInstance();
+            SettingsService& settings = SettingsService::getInstance();
 
             if (true == settings.open(false))
             {
-                const String&   ssid            = request->arg("ssid");
-                const String&   passphrase      = request->arg("passphrase");
-                KeyValueString& kvSSID          = settings.getWifiSSID();
-                KeyValueString& kvPassphrase    = settings.getWifiPassphrase();
+                const String&   ssid         = request->arg("ssid");
+                const String&   passphrase   = request->arg("passphrase");
+                KeyValueString& kvSSID       = settings.getWifiSSID();
+                KeyValueString& kvPassphrase = settings.getWifiPassphrase();
 
                 kvSSID.setValue(ssid);
                 kvPassphrase.setValue(passphrase);
@@ -111,7 +113,7 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
             }
         }
         else if ((true == request->hasArg("restart")) &&
-                (true == request->arg("restart").equals("now")))
+                 (true == request->arg("restart").equals("now")))
         {
             if (nullptr == m_resetReqHandler)
             {
@@ -149,11 +151,11 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
 
 String CaptivePortalHandler::captivePortalPageProcessor(const String& var)
 {
-    String  result = var;
+    String result = var;
 
     if (var == "SSID")
     {
-        SettingsService&    settings    = SettingsService::getInstance();
+        SettingsService& settings = SettingsService::getInstance();
 
         if (true == settings.open(true))
         {
@@ -163,7 +165,7 @@ String CaptivePortalHandler::captivePortalPageProcessor(const String& var)
     }
     else if (var == "PASSPHRASE")
     {
-        SettingsService&    settings    = SettingsService::getInstance();
+        SettingsService& settings = SettingsService::getInstance();
 
         if (true == settings.open(true))
         {

@@ -17,13 +17,15 @@
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -42,7 +44,7 @@
                     <li>The brightness adjustment will be applied only if the automatic brightness adjustment is disabled.</li>
                     <li>If the brightness level is lower than the min. brightness soft limit, the min. soft limit will be set.</li>
                     <li>If the brightness level is greater than the max. brightness soft limit, the max. soft limit will be set.</li>
-                    <li>The timer uses the local time. See its timezone in the settings.</li>
+                    <li>The timer uses the local time. See its time zone in the settings.</li>
                 </ul>
                 <form id="myForm" action="javascript:save()">
                 </form>
@@ -53,7 +55,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -61,6 +63,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
@@ -283,7 +286,7 @@
 
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/timerService/timer",
+                    url: restClient.getBaseUri() + "/timerService/timer",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var idx;
@@ -334,7 +337,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/timerService/timer",
+                    url: restClient.getBaseUri() + "/timerService/timer",
                     isJsonResponse: true,
                     parameter: {
                         timerSettings: getTimerSettings()
@@ -352,8 +355,6 @@
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
-
-                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
 
                 load();
             });

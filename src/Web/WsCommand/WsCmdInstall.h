@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdInstall.h
  * @brief  Websocket command to install a plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -56,7 +57,7 @@
 /**
  * Websocket command to install a plugin.
  */
-class WsCmdInstall: public WsCmd
+class WsCmdInstall : public WsCmd
 {
 public:
 
@@ -94,8 +95,8 @@ public:
 
 private:
 
-    bool    m_isError;      /**< Any error happened during parameter reception? */
-    String  m_pluginName;   /**< Plugin name, which shall be installed. */
+    bool   m_isError;    /**< Any error happened during parameter reception? */
+    String m_pluginName; /**< Plugin name, which shall be installed. */
 
     WsCmdInstall(const WsCmdInstall& cmd);
     WsCmdInstall& operator=(const WsCmdInstall& cmd);
@@ -105,6 +106,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDINSTALL_H */
+#endif /* WSCMDINSTALL_H */
 
 /** @} */

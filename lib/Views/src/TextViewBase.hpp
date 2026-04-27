@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TextViewBase.hpp
  * @brief  Base class for view with text.
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup PLUGIN
@@ -43,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include "Layouts.h"
-#include "./layouts/TextViewGeneric.h"
+#include "./layout/TextViewGeneric.h"
 
 /******************************************************************************
  * Macros
@@ -55,13 +56,14 @@
 
 /**
  * View for icon and text.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class TextView : public TextViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -75,6 +77,6 @@ using TextViewBase = TextView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* TEXT_VIEW_BASE_HPP */
+#endif /* TEXT_VIEW_BASE_HPP */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SensorDataProvider.cpp
  * @brief  Sensor data provider
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -55,7 +56,7 @@
  * available heap memory, lowest level of available heap memory since boot and
  * largest block of heap memory that can be allocated.
  */
-#define SENSOR_TOPICS_COUNT (7U)
+#define SENSOR_TOPICS_COUNT (9U)
 
 /******************************************************************************
  * Types and classes
@@ -89,6 +90,12 @@ typedef struct
 /* Initialize file name where to find the sensor calibration values. */
 const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME      = "/configuration/sensors.json";
 
+/** Sensor update period for slow changing sensor values. */
+static constexpr uint32_t SENSOR_UPDATE_PERIOD_SLOW         = SIMPLE_TIMER_SECONDS(30U);
+
+/** Sensor update period for fast changing sensor values. */
+static constexpr uint32_t SENSOR_UPDATE_PERIOD_FAST         = SIMPLE_TIMER_SECONDS(10U);
+
 /**
  * The provided sensor topics.
  * Note: Each channel type must be unique, otherwise the first one will be used.
@@ -96,25 +103,31 @@ const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME      = "/configuration/se
 static const SensorTopic gSensorTopics[SENSOR_TOPICS_COUNT] = {
     { ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS,
         "/extra/temperature.json",
-        30000U },
+        SENSOR_UPDATE_PERIOD_SLOW },
     { ISensorChannel::TYPE_HUMIDITY_PERCENT,
         "/extra/humidity.json",
-        30000U },
+        SENSOR_UPDATE_PERIOD_SLOW },
     { ISensorChannel::TYPE_ILLUMINANCE_LUX,
         "/extra/illuminance.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT,
         "/extra/battery.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_FREE_HEAP_BYTES,
         "/extra/heapAvailable.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_MIN_FREE_HEAP_BYTES,
         "/extra/heapLowest.json",
-        10000U },
+        SENSOR_UPDATE_PERIOD_FAST },
     { ISensorChannel::TYPE_MAX_ALLOC_HEAP_BYTES,
         "/extra/heapLargest.json",
-        10000U }
+        SENSOR_UPDATE_PERIOD_FAST },
+    { ISensorChannel::TYPE_SIGNAL_STRENGTH_DBM,
+        "/extra/wifiSignalStrength.json",
+        SENSOR_UPDATE_PERIOD_FAST },
+    { ISensorChannel::TYPE_UPTIME_S,
+        "/extra/uptime.json",
+        SENSOR_UPDATE_PERIOD_FAST }
 };
 
 /** The runtime sensor topic data. */
@@ -125,7 +138,9 @@ static SensorTopicRunData gSensorLastValue[SENSOR_TOPICS_COUNT] = {
     { String(), 0U },
     { String(), 0U },
     { String(), 0U },
-    { String(), 0U }
+    { String(), 0U },
+    { String(), 0U },
+    { String(), 0U },
 };
 
 /******************************************************************************
@@ -400,6 +415,13 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         (void)jsonOffset.add("NaN");
         break;
 
+    case ISensorChannel::DataType::DATA_TYPE_UINT64: {
+        const SensorChannelUInt64* uint64Channel = reinterpret_cast<const SensorChannelUInt64*>(&channel);
+
+        (void)jsonOffset.add(uint64Channel->getOffset());
+    }
+    break;
+
     case ISensorChannel::DataType::DATA_TYPE_UINT32: {
         const SensorChannelUInt32* uint32Channel = reinterpret_cast<const SensorChannelUInt32*>(&channel);
 
@@ -437,6 +459,16 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
     {
     case ISensorChannel::DataType::DATA_TYPE_INVALID:
         break;
+
+    case ISensorChannel::DataType::DATA_TYPE_UINT64: {
+        SensorChannelUInt64* uint64Channel = reinterpret_cast<SensorChannelUInt64*>(&channel);
+
+        if (true == jsonOffset.is<uint64_t>())
+        {
+            uint64Channel->setOffset(jsonOffset.as<uint64_t>());
+        }
+    }
+    break;
 
     case ISensorChannel::DataType::DATA_TYPE_UINT32: {
         SensorChannelUInt32* uint32Channel = reinterpret_cast<SensorChannelUInt32*>(&channel);
@@ -538,7 +570,11 @@ void SensorDataProvider::registerSensorTopics()
         JsonObjectConst     jsonExtra;
 
         /* Try to find a sensor channel which provides the required information. */
-        if (true == find(sensorIndex, channelIndex, sensorTopic->sensorChannelType))
+        if (false == find(sensorIndex, channelIndex, sensorTopic->sensorChannelType))
+        {
+            LOG_WARNING("Sensor %u, channel %u - %s not found.", sensorIndex, channelIndex, ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType).c_str());
+        }
+        else
         {
             const uint32_t              VALUE_PRECISION = 2U; /* 2 digits after the . */
             ISensor*                    sensor          = this->getSensor(sensorIndex);
@@ -590,10 +626,10 @@ void SensorDataProvider::registerSensorTopics()
                 return hasChanged;
             };
 
-            entityId += index;
+            entityId           += index;
 
-            jsonDocExtra["ha"] = sensorTopic->extraHAFileName;
-            jsonExtra = jsonDocExtra.as<JsonObjectConst>();
+            jsonDocExtra["ha"]  = sensorTopic->extraHAFileName;
+            jsonExtra           = jsonDocExtra.as<JsonObjectConst>();
 
             topicHandlerService.registerTopic(m_deviceId, entityId, channelName, jsonExtra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
         }

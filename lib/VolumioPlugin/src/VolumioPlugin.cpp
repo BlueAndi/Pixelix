@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   VolumioPlugin.cpp
  * @brief  VOLUMIO plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -89,10 +90,10 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonHost                = value["host"];
+        JsonObject          jsonCfg  = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonHost = value["host"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -107,15 +108,15 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
         if (false == jsonHost.isNull())
         {
-            jsonCfg["host"] = jsonHost.as<String>();
-            isSuccessful = true;
+            jsonCfg["host"] = jsonHost.as<const char*>();
+            isSuccessful    = true;
         }
 
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -129,8 +130,8 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
 bool VolumioPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -148,127 +149,137 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 
     PluginWithConfig::start(width, height);
 
-    initHttpClient();
-
     m_offlineTimer.start(OFFLINE_PERIOD);
 }
 
 void VolumioPlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_offlineTimer.stop();
     m_requestTimer.stop();
 
     PluginWithConfig::stop();
+
+    m_isAllowedToSend = false;
+
+    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+    {
+        RestService::getInstance().abortRequest(m_dynamicRestId);
+        m_dynamicRestId = RestService::INVALID_REST_ID;
+    }
 }
 
 void VolumioPlugin::process(bool isConnected)
 {
-    Msg                         msg;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
-    
-    /* Only if a network connection is established the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
+    /* Acquire mutex for initial state check and update. */
     {
-        if (true == isConnected)
-        {
-            if (false == startHttpRequest())
-            {
-                /* If a request fails, show standard icon and a '?' */
-                changeState(STATE_UNKNOWN);
-                m_view.setFormatText("{hc}?");
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                       isRestRequestRequired = false;
 
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established the required information
+         * shall be periodically requested via REST API.
+         */
+        if (false == m_requestTimer.isTimerRunning())
+        {
+            if (true == isConnected)
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
+                {
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, show standard icon and a '?' */
+                        changeState(STATE_UNKNOWN);
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
+            {
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
+                {
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, show standard icon and a '?' */
+                        changeState(STATE_UNKNOWN);
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
+                }
+            }
+        }
+
+        /* If VOLUMIO is offline, disable the plugin. */
+        if ((true == m_offlineTimer.isTimerRunning()) &&
+            (true == m_offlineTimer.isTimeout()) &&
+            (true == isEnabled()))
+        {
+            LOG_INFO("VOLUMIO not present, going offline.");
+            disable();
+        }
+
+        dynamicRestId = m_dynamicRestId;
+    } /* Mutex released here to avoid lock inversion deadlock with RestService. */
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
+    {
+        /* Get the response from the REST service. */
+        DynamicJsonDocument jsonDoc(0U);
+        bool                isValidResponse;
+
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
+        {
+            if (true == isValidResponse)
+            {
+                handleWebResponse(jsonDoc);
             }
             else
             {
-                m_requestTimer.start(UPDATE_PERIOD);
-            }
-        }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
-         */
-        if (false == isConnected)
-        {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            if (false == startHttpRequest())
-            {
+                LOG_WARNING("Connection error.");
+
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
                 m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
-            else
-            {
-                m_requestTimer.start(UPDATE_PERIOD);
-            }
+
+            MutexGuard<MutexRecursive> guard(m_mutex);
+            m_dynamicRestId   = RestService::INVALID_REST_ID;
+            m_isAllowedToSend = true;
         }
-    }
-
-    if (true == m_taskProxy.receive(msg))
-    {
-        switch(msg.type)
-        {
-        case MSG_TYPE_INVALID:
-            /* Should never happen. */
-            break;
-
-        case MSG_TYPE_RSP:
-            if (nullptr != msg.rsp)
-            {
-                handleWebResponse(*msg.rsp);
-                delete msg.rsp;
-                msg.rsp = nullptr;
-            }
-            break;
-
-        case MSG_TYPE_CONN_CLOSED:
-            LOG_INFO("Connection closed.");
-
-            if (true == m_isConnectionError)
-            {
-                /* If a request fails, show standard icon and a '?' */
-                changeState(STATE_UNKNOWN);
-                m_view.setFormatText("{hc}?");
-
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
-            }
-            m_isConnectionError = false;
-            break;
-
-        case MSG_TYPE_CONN_ERROR:
-            LOG_WARNING("Connection error.");
-            m_isConnectionError = true;
-            break;
-
-        default:
-            /* Should never happen. */
-            break;
-        }
-    }
-
-    /* If VOLUMIO is offline, disable the plugin. */
-    if ((true == m_offlineTimer.isTimerRunning()) &&
-        (true == m_offlineTimer.isTimeout()) &&
-        (true == isEnabled()))
-    {
-        LOG_INFO("VOLUMIO not present, going offline.");
-        disable();
     }
 }
 
@@ -297,8 +308,8 @@ void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status      = false;
-    JsonVariantConst    jsonHost    = jsonCfg["host"];
+    bool             status   = false;
+    JsonVariantConst jsonHost = jsonCfg["host"];
 
     if (false == jsonHost.is<String>())
     {
@@ -308,14 +319,14 @@ bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_volumioHost = jsonHost.as<String>();
+        m_volumioHost = jsonHost.as<const char*>();
 
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
 
         m_hasTopicChanged = true;
 
-        status = true;
+        status            = true;
     }
 
     return status;
@@ -323,7 +334,7 @@ bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
 void VolumioPlugin::changeState(VolumioState state)
 {
-    switch(state)
+    switch (state)
     {
     case STATE_UNKNOWN:
         m_view.loadIconByType(_VolumioPlugin::View::ICON_STD);
@@ -340,7 +351,7 @@ void VolumioPlugin::changeState(VolumioState state)
     case STATE_PAUSE:
         m_view.loadIconByType(_VolumioPlugin::View::ICON_PAUSE);
         break;
-        
+
     default:
         m_view.loadIconByType(_VolumioPlugin::View::ICON_STD);
         state = STATE_UNKNOWN;
@@ -352,130 +363,71 @@ void VolumioPlugin::changeState(VolumioState state)
 
 bool VolumioPlugin::startHttpRequest()
 {
-    bool status = false;
+    bool                            status = false;
+    RestService::PreProcessCallback preProcessCallback =
+        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+            return this->preProcessAsyncWebResponse(payload, size, doc);
+        };
 
     if (false == m_volumioHost.isEmpty())
     {
-        String url = String("http://") + m_volumioHost + "/api/v1/getState";
+        String url      = String("http://") + m_volumioHost + "/api/v1/getState";
 
-        if (true == m_client.begin(url))
+        m_dynamicRestId = RestService::getInstance().get(url, preProcessCallback);
+
+        if (RestService::INVALID_REST_ID == m_dynamicRestId)
         {
-            if (false == m_client.GET())
-            {
-                LOG_WARNING("GET %s failed.", url.c_str());
-            }
-            else
-            {
-                status = true;
-            }
+            LOG_WARNING("GET %s failed.", url.c_str());
+        }
+        else
+        {
+            status = true;
         }
     }
 
     return status;
 }
 
-void VolumioPlugin::initHttpClient()
+bool VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
 {
-    /* Note: All registered callbacks are running in a different task context!
-     *       Therefore it is not allowed to access a member here directly.
-     *       The processing must be deferred via task proxy.
-     */
-    m_client.regOnResponse(
-        [this](const HttpResponse& rsp)
-        {
-            handleAsyncWebResponse(rsp);
-        }
-    );
+    bool                            isSuccessful = false;
+    const size_t                    FILTER_SIZE  = 128U;
+    StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
-    m_client.regOnClosed(
-        [this]()
-        {
-            Msg msg;
+    jsonFilterDoc["artist"]   = true;
+    jsonFilterDoc["duration"] = true;
+    jsonFilterDoc["seek"]     = true;
+    jsonFilterDoc["service"]  = true;
+    jsonFilterDoc["status"]   = true;
+    jsonFilterDoc["title"]    = true;
 
-            msg.type = MSG_TYPE_CONN_CLOSED;
-
-            (void)this->m_taskProxy.send(msg);
-        }
-    );
-
-    m_client.regOnError(
-        [this]()
-        {
-            Msg msg;
-
-            msg.type = MSG_TYPE_CONN_ERROR;
-
-            (void)this->m_taskProxy.send(msg);
-        }
-    );
-}
-
-void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
-{
-    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    if (true == jsonFilterDoc.overflowed())
     {
-        const size_t            JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+        LOG_ERROR("JSON document size exceeded.");
+    }
+    else
+    {
+        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
 
-        if (nullptr != jsonDoc)
+        if (DeserializationError::Ok != error.code())
         {
-            bool                            isSuccessful    = false;
-            size_t                          payloadSize     = 0U;
-            const void*                     vPayload        = rsp.getPayload(payloadSize);
-            const char*                     payload         = static_cast<const char*>(vPayload);
-            const size_t                    FILTER_SIZE     = 128U;
-            StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
-
-            jsonFilterDoc["artist"]     = true;
-            jsonFilterDoc["duration"]   = true;
-            jsonFilterDoc["seek"]       = true;
-            jsonFilterDoc["service"]    = true;
-            jsonFilterDoc["status"]     = true;
-            jsonFilterDoc["title"]      = true;
-            
-            if (true == jsonFilterDoc.overflowed())
-            {
-                LOG_ERROR("Less memory for filter available.");
-            }
-            else if ((nullptr == payload) ||
-                     (0U == payloadSize))
-            {
-                LOG_ERROR("No payload.");
-            }
-            else
-            {
-                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-                if (DeserializationError::Ok != error.code())
-                {
-                    LOG_WARNING("JSON parse error: %s", error.c_str());
-                }
-                else
-                {
-                    Msg msg;
-
-                    msg.type    = MSG_TYPE_RSP;
-                    msg.rsp     = jsonDoc;
-
-                    isSuccessful = this->m_taskProxy.send(msg);
-                }
-            }
-
-            if (false == isSuccessful)
-            {
-                delete jsonDoc;
-                jsonDoc = nullptr;
-            }
+            LOG_WARNING("JSON parse error: %s", error.c_str());
+        }
+        else
+        {
+            isSuccessful = true;
         }
     }
+
+    return isSuccessful;
 }
 
 void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
-    JsonVariantConst    jsonStatus  = jsonDoc["status"];
-    JsonVariantConst    jsonTitle   = jsonDoc["title"];
-    JsonVariantConst    jsonSeek    = jsonDoc["seek"];
-    JsonVariantConst    jsonService = jsonDoc["service"];
+    JsonVariantConst jsonStatus  = jsonDoc["status"];
+    JsonVariantConst jsonTitle   = jsonDoc["title"];
+    JsonVariantConst jsonSeek    = jsonDoc["seek"];
+    JsonVariantConst jsonService = jsonDoc["service"];
 
     if (false == jsonStatus.is<String>())
     {
@@ -495,21 +447,21 @@ void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        JsonVariantConst    jsonArtist      = jsonDoc["artist"];
-        JsonVariantConst    jsonDuration    = jsonDoc["duration"];
-        String              status          = jsonStatus.as<String>();
-        String              artist;
-        String              title           = jsonTitle.as<String>();
-        uint32_t            seekValue       = jsonSeek.as<uint32_t>();
-        String              service         = jsonService.as<String>();
-        String              infoOnDisplay;
-        uint32_t            pos             = 0U;
-        VolumioState        state           = STATE_UNKNOWN;
+        JsonVariantConst jsonArtist   = jsonDoc["artist"];
+        JsonVariantConst jsonDuration = jsonDoc["duration"];
+        String           status       = jsonStatus.as<const char*>();
+        String           artist;
+        String           title     = jsonTitle.as<const char*>();
+        uint32_t         seekValue = jsonSeek.as<uint32_t>();
+        String           service   = jsonService.as<const char*>();
+        String           infoOnDisplay;
+        uint32_t         pos   = 0U;
+        VolumioState     state = STATE_UNKNOWN;
 
         /* Artist may exist */
         if (true == jsonArtist.is<String>())
         {
-            artist = jsonArtist.as<String>();
+            artist = jsonArtist.as<const char*>();
         }
 
         if (true == title.isEmpty())
@@ -533,7 +485,7 @@ void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
             /* If stopped, the title contains the radio station name,
              * otherwise the title contains the music and the artist
              * the radio station name.
-             * 
+             *
              * Therefore show only the title in any case.
              */
             infoOnDisplay = title;
@@ -554,7 +506,7 @@ void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
             }
             else
             {
-                pos = seekValue / duration;
+                pos  = seekValue / duration;
                 pos /= 10U;
 
                 if (100U < pos)
@@ -608,20 +560,6 @@ void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         {
             LOG_INFO("VOLUMIO back again, going online.");
             enable();
-        }
-    }
-}
-
-void VolumioPlugin::clearQueue()
-{
-    Msg msg;
-
-    while(true == m_taskProxy.receive(msg))
-    {
-        if (MSG_TYPE_RSP == msg.type)
-        {
-            delete msg.rsp;
-            msg.rsp = nullptr;
         }
     }
 }

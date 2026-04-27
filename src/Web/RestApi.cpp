@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   RestApi.cpp
  * @brief  REST pages
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -42,7 +43,8 @@
 #include "FileSystem.h"
 #include "RestUtil.h"
 #include "SlotList.h"
-#include "ButtonActions.h"
+#include "RestartMgr.h"
+#include "CoredumpDecoder.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -51,6 +53,10 @@
 #include <Logging.h>
 #include <SensorDataProvider.h>
 #include <SettingsService.h>
+#include <FileUtil.h>
+#include <MemUtil.h>
+#include <esp_core_dump.h>
+#include <esp_partition.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -73,66 +79,61 @@ typedef struct
 } ContentTypeElem;
 
 /**
- * Virtual button which can be triggered via REST API.
+ * Status of the Home Assistant MQTT automatic discovery feature.
  */
-class RestApiButton : public ButtonActions
+typedef enum
 {
-public:
+    HA_ENABLED = 0,   /**< Discovery is enabled. */
+    HA_DISABLED,      /**< Discovery is disabled. This is also the case if the MqttService is not configured. */
+    HA_STATUS_UNKNOWN /**< Status is unknown. */
 
-    /**
-     * Construct virtual button instance.
-     */
-    RestApiButton() :
-        ButtonActions()
-    {
-    }
+} HomeAssistantDiscoveryStatus;
 
-    /**
-     * Destroy virtual button instance.
-     */
-    virtual ~RestApiButton()
-    {
-    }
-
-    /**
-     * Execute action by button action id.
-     *
-     * @param[in] id    Button action id
-     */
-    void executeAction(ButtonActionId id)
-    {
-        ButtonActions::executeAction(id, true);
-    }
-
-private:
+/**
+ * Single REST API route.
+ */
+struct RestApiRoute
+{
+    const char*               page;               /**< Page in the filesystem. */
+    WebRequestMethodComposite reqMethodComposite; /**< Request method composite */
+    ArRequestHandlerFunction  onRequest;          /**< Request handler function. */
+    ArUploadHandlerFunction   onUpload;           /**< Upload handler function. */
+    ArBodyHandlerFunction     onBody;             /**< Body handler function. */
 };
 
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
-static void        handleButton(AsyncWebServerRequest* request);
-static void        handleFadeEffect(AsyncWebServerRequest* request);
-static void        getSlotInfo(JsonObject& slot, uint16_t slotId);
-static void        handleSlots(AsyncWebServerRequest* request);
-static void        handleSlot(AsyncWebServerRequest* request);
-static void        handlePluginInstall(AsyncWebServerRequest* request);
-static void        handlePluginUninstall(AsyncWebServerRequest* request);
-static void        handlePlugins(AsyncWebServerRequest* request);
-static void        handleSensors(AsyncWebServerRequest* request);
-static void        handleSettings(AsyncWebServerRequest* request);
-static void        handleSetting(AsyncWebServerRequest* request);
-static bool        storeSetting(KeyValue* parameter, const String& value, String& error);
-static void        handleStatus(AsyncWebServerRequest* request);
-static void        getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
-static void        handleFilesystem(AsyncWebServerRequest* request);
-static void        handleFileGet(AsyncWebServerRequest* request);
-static const char* getContentType(const String& filename);
-static void        handleFilePost(AsyncWebServerRequest* request);
-static bool        createDirectories(const String& path);
-static void        uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final);
-static void        handleFileDelete(AsyncWebServerRequest* request);
-static bool        isValidHostname(const String& hostname);
+static bool                         parseStringBool(const String& str, bool& outValue);
+static void                         handleFadeEffect(AsyncWebServerRequest* request);
+static void                         getSlotInfo(JsonObject& slot, uint16_t slotId);
+static void                         handleSlots(AsyncWebServerRequest* request);
+static void                         handleSlot(AsyncWebServerRequest* request);
+static void                         handlePluginInstall(AsyncWebServerRequest* request);
+static void                         handlePluginUninstall(AsyncWebServerRequest* request);
+static void                         handlePlugins(AsyncWebServerRequest* request);
+static void                         handleSensors(AsyncWebServerRequest* request);
+static void                         handleSettings(AsyncWebServerRequest* request);
+static void                         handleSetting(AsyncWebServerRequest* request);
+static bool                         storeSetting(KeyValue* parameter, const String& value, String& error);
+static void                         handleStatus(AsyncWebServerRequest* request);
+static void                         getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
+static void                         handleFilesystem(AsyncWebServerRequest* request);
+static void                         handleFileGet(AsyncWebServerRequest* request);
+static const char*                  getContentType(const String& filename);
+static void                         handleFilePost(AsyncWebServerRequest* request);
+static void                         uploadHandler(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final);
+static void                         handleFileDelete(AsyncWebServerRequest* request);
+static bool                         isValidHostname(const String& hostname);
+static void                         handlePartitionChange(AsyncWebServerRequest* request);
+static HomeAssistantDiscoveryStatus disableHomeAssistantAutomaticDiscovery();
+static void                         handleHomeAssistantAutomaticDiscoveryDisable(AsyncWebServerRequest* request);
+static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus();
+static void                         handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* request);
+static void                         handleCoredump(AsyncWebServerRequest* request);
+static void                         handleCoredumpDownload(AsyncWebServerRequest* request);
+static bool                         isPathSafe(const String& path);
 
 /******************************************************************************
  * Local Variables
@@ -149,6 +150,29 @@ static const ContentTypeElem contentTypeTable[] = {
     { ".jpg", "image/jpg" },
     { ".ico", "image/x-icon" },
     { ".gz", "application/x-gzip" }
+};
+
+/** REST API routes */
+static const RestApiRoute gRestApiRoutes[] = {
+    { "/display/fadeEffect", HTTP_GET | HTTP_POST, handleFadeEffect, nullptr, nullptr },
+    { "/display/slots", HTTP_GET, handleSlots, nullptr, nullptr },
+    { "/display/slot/*", HTTP_GET, handleSlot, nullptr, nullptr },
+    { "/plugin/install", HTTP_POST, handlePluginInstall, nullptr, nullptr },
+    { "/plugin/uninstall", HTTP_POST, handlePluginUninstall, nullptr, nullptr },
+    { "/plugins", HTTP_GET, handlePlugins, nullptr, nullptr },
+    { "/sensors", HTTP_GET, handleSensors, nullptr, nullptr },
+    { "/settings", HTTP_GET, handleSettings, nullptr, nullptr },
+    { "/setting", HTTP_GET | HTTP_POST, handleSetting, nullptr, nullptr },
+    { "/status", HTTP_GET, handleStatus, nullptr, nullptr },
+    { "/fs/file", HTTP_GET, handleFileGet, nullptr, nullptr },
+    { "/fs/file", HTTP_POST, handleFilePost, uploadHandler, nullptr },
+    { "/fs/file", HTTP_DELETE, handleFileDelete, nullptr, nullptr },
+    { "/fs", HTTP_GET, handleFilesystem, nullptr, nullptr },
+    { "/partitionChange", HTTP_POST, handlePartitionChange, nullptr, nullptr },
+    { "/homeAssistant/automaticDiscovery/disable", HTTP_POST, handleHomeAssistantAutomaticDiscoveryDisable, nullptr, nullptr },
+    { "/homeAssistant/automaticDiscovery/status", HTTP_GET, handleHomeAssistantAutomaticDiscoveryStatus, nullptr, nullptr },
+    { "/coredump/download", HTTP_GET, handleCoredumpDownload, nullptr, nullptr },
+    { "/coredump", HTTP_GET | HTTP_DELETE, handleCoredump, nullptr, nullptr }
 };
 
 /******************************************************************************
@@ -169,21 +193,38 @@ static const ContentTypeElem contentTypeTable[] = {
 
 void RestApi::init(AsyncWebServer& srv)
 {
-    (void)srv.on("/rest/api/v1/button", handleButton);
-    (void)srv.on("/rest/api/v1/display/fadeEffect", handleFadeEffect);
-    (void)srv.on("/rest/api/v1/display/slots", handleSlots);
-    (void)srv.on("/rest/api/v1/display/slot/*", handleSlot);
-    (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
-    (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
-    (void)srv.on("/rest/api/v1/plugins", handlePlugins);
-    (void)srv.on("/rest/api/v1/sensors", handleSensors);
-    (void)srv.on("/rest/api/v1/settings", handleSettings);
-    (void)srv.on("/rest/api/v1/setting", handleSetting);
-    (void)srv.on("/rest/api/v1/status", handleStatus);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_GET, handleFileGet);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
-    (void)srv.on("/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete);
-    (void)srv.on("/rest/api/v1/fs", handleFilesystem);
+    String           webLoginUser;
+    String           webLoginPassword;
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        webLoginUser     = settings.getWebLoginUser().getDefault();
+        webLoginPassword = settings.getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        webLoginUser     = settings.getWebLoginUser().getValue();
+        webLoginPassword = settings.getWebLoginPassword().getValue();
+
+        settings.close();
+    }
+
+    /* Register all REST API routes. */
+    for (size_t idx = 0; idx < UTIL_ARRAY_NUM(gRestApiRoutes); ++idx)
+    {
+        const RestApiRoute& route      = gRestApiRoutes[idx];
+        String              routePage  = BASE_URI;
+
+        routePage                     += route.page;
+
+        (void)srv.on(routePage.c_str(),
+                     route.reqMethodComposite,
+                     route.onRequest,
+                     route.onUpload,
+                     route.onBody)
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    }
 }
 
 /**
@@ -212,63 +253,34 @@ void RestApi::error(AsyncWebServerRequest* request)
  *****************************************************************************/
 
 /**
- * Trigger virtual user button.
- * POST \c "/api/v1/button"
+ * Parse a string to a boolean value.
  *
- * @param[in] request   HTTP request
+ * @param[in]  str       The string to parse ("true" or "false").
+ * @param[out] outValue  The parsed boolean value.
+ *
+ * @return true if parsing was successful, false otherwise.
  */
-static void handleButton(AsyncWebServerRequest* request)
+static bool parseStringBool(const String& str, bool& outValue)
 {
-    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE  = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    bool isSuccessful = false;
 
-    if (nullptr == request)
+    if (str == "true")
     {
-        return;
+        outValue     = true;
+        isSuccessful = true;
     }
-
-    if (HTTP_POST != request->method())
+    else if (str == "false")
     {
-        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+        outValue     = false;
+        isSuccessful = true;
     }
     else
     {
-        ButtonActionId actionId     = BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT; /* Default */
-        bool           isSuccessful = true;
-
-        if (true == request->hasArg("actionId"))
-        {
-            int32_t i32ActionId = request->arg("actionId").toInt();
-
-            if ((0 > i32ActionId) ||
-                (BUTTON_ACTION_ID_MAX <= i32ActionId))
-            {
-                isSuccessful = false;
-            }
-            else
-            {
-                actionId = static_cast<ButtonActionId>(i32ActionId);
-            }
-        }
-
-        if (false == isSuccessful)
-        {
-            RestUtil::prepareRspError(jsonDoc, "Invalid action id.");
-            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
-        }
-        else
-        {
-            RestApiButton buttonActions;
-
-            buttonActions.executeAction(actionId);
-
-            (void)RestUtil::prepareRspSuccess(jsonDoc);
-        }
+        /* Parsing failed. */
+        ;
     }
 
-    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+    return isSuccessful;
 }
 
 /**
@@ -296,12 +308,9 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
     }
     else if (HTTP_POST == request->method())
     {
-        JsonVariant            dataObj           = RestUtil::prepareRspSuccess(jsonDoc);
-        DisplayMgr::FadeEffect currentFadeEffect = DisplayMgr::getInstance().getFadeEffect();
-        uint8_t                fadeEffectId      = static_cast<uint8_t>(currentFadeEffect);
-        DisplayMgr::FadeEffect nextFadeEffect    = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
+        JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
-        DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
+        DisplayMgr::getInstance().activateNextFadeEffect(FadeEffectController::FADE_EFFECT_COUNT);
 
         dataObj["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
     }
@@ -322,32 +331,18 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
  */
 static void getSlotInfo(JsonObject& slot, uint16_t slotId)
 {
-    DisplayMgr&         displayMgr = DisplayMgr::getInstance();
-    uint8_t             stickySlot = displayMgr.getStickySlot();
-    IPluginMaintenance* plugin     = displayMgr.getPluginInSlot(slotId);
-    const char*         name       = (nullptr != plugin) ? plugin->getName() : "";
-    uint16_t            uid        = (nullptr != plugin) ? plugin->getUID() : 0U;
-    String              alias      = (nullptr != plugin) ? plugin->getAlias() : "";
-    bool                isLocked   = displayMgr.isSlotLocked(slotId);
-    uint32_t            duration   = displayMgr.getSlotDuration(slotId);
-    bool                isDisabled = displayMgr.isSlotDisabled(slotId);
+    DisplayMgr&            displayMgr = DisplayMgr::getInstance();
+    DisplayMgr::SlotConfig config;
 
-    slot["name"]                   = name;
-    slot["uid"]                    = uid;
-    slot["alias"]                  = alias;
+    (void)displayMgr.getSlotConfig(slotId, config);
 
-    if (stickySlot != slotId)
-    {
-        slot["isSticky"] = false;
-    }
-    else
-    {
-        slot["isSticky"] = true;
-    }
-
-    slot["isLocked"]   = isLocked;
-    slot["duration"]   = duration;
-    slot["isDisabled"] = isDisabled;
+    slot["name"]       = config.name;
+    slot["uid"]        = config.uid;
+    slot["alias"]      = config.alias;
+    slot["isSticky"]   = config.isSticky;
+    slot["isLocked"]   = config.isLocked;
+    slot["duration"]   = config.duration;
+    slot["isDisabled"] = config.isDisabled;
 }
 
 /**
@@ -378,7 +373,6 @@ static void handleSlots(AsyncWebServerRequest* request)
         JsonArray   slotArray  = dataObj.createNestedArray("slots");
         uint8_t     slotId     = 0U;
         DisplayMgr& displayMgr = DisplayMgr::getInstance();
-        uint8_t     stickySlot = displayMgr.getStickySlot();
 
         /* Add max. number of slots */
         dataObj["maxSlots"]    = displayMgr.getMaxSlots();
@@ -420,7 +414,9 @@ static void handleSlot(AsyncWebServerRequest* request)
     }
     else
     {
-        const char* uriWithSlotId = "/rest/api/v1/display/slot/";
+        String uriWithSlotId  = RestApi::BASE_URI;
+
+        uriWithSlotId        += "/display/slot/";
 
         if (false == request->url().startsWith(uriWithSlotId))
         {
@@ -430,7 +426,7 @@ static void handleSlot(AsyncWebServerRequest* request)
         else
         {
             uint8_t slotId       = SlotList::SLOT_ID_INVALID;
-            size_t  baseUriLen   = strlen(uriWithSlotId);
+            size_t  baseUriLen   = uriWithSlotId.length();
             bool    slotIdStatus = Util::strToUInt8(request->url().substring(baseUriLen), slotId);
 
             if (false == slotIdStatus)
@@ -477,15 +473,7 @@ static void handleSlot(AsyncWebServerRequest* request)
                         const String& stickyFlagStr = request->arg("sticky");
                         bool          stickyFlag    = false;
 
-                        if (stickyFlagStr == "true")
-                        {
-                            stickyFlag = true;
-                        }
-                        else if (stickyFlagStr == "false")
-                        {
-                            stickyFlag = false;
-                        }
-                        else
+                        if (false == parseStringBool(stickyFlagStr, stickyFlag))
                         {
                             RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
                             httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
@@ -527,15 +515,7 @@ static void handleSlot(AsyncWebServerRequest* request)
                         const String& disableFlagStr = request->arg("disable");
                         bool          disableFlag    = false;
 
-                        if (disableFlagStr == "true")
-                        {
-                            disableFlag = true;
-                        }
-                        else if (disableFlagStr == "false")
-                        {
-                            disableFlag = false;
-                        }
-                        else
+                        if (false == parseStringBool(disableFlagStr, disableFlag))
                         {
                             RestUtil::prepareRspError(jsonDoc, "Invalid disable flag.");
                             httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
@@ -788,7 +768,7 @@ static void handlePlugins(AsyncWebServerRequest* request)
  */
 static void handleSensors(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE = 1024U;
+    const size_t        JSON_DOC_SIZE = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -1300,7 +1280,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
 static void handleStatus(AsyncWebServerRequest* request)
 {
     uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE  = 512U;
+    const size_t        JSON_DOC_SIZE  = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1339,19 +1319,22 @@ static void handleStatus(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        hwObj["chipRev"]                = ESP.getChipRevision();
-        hwObj["cpuFreqMhz"]             = ESP.getCpuFreqMHz();
+        hwObj["chipRev"]                       = ESP.getChipRevision();
+        hwObj["cpuFreqMhz"]                    = ESP.getCpuFreqMHz();
 
-        swObj["version"]                = Version::getSoftwareVersion();
-        swObj["revision"]               = Version::getSoftwareRevision();
-        swObj["espSdkVersion"]          = ESP.getSdkVersion();
+        swObj["version"]                       = Version::getSoftwareVersion();
+        swObj["revision"]                      = Version::getSoftwareRevision();
+        swObj["espSdkVersion"]                 = ESP.getSdkVersion();
 
-        internalRamObj["heapSize"]      = ESP.getHeapSize();
-        internalRamObj["availableHeap"] = ESP.getFreeHeap();
+        internalRamObj["heapSize"]             = MemUtil::getTotalHeapSize();        /* [byte] */
+        internalRamObj["availableHeapSize"]    = MemUtil::getFreeHeapSize();         /* [byte] */
+        internalRamObj["minFreeHeapSize"]      = MemUtil::getMinFreeHeapSize();      /* [byte] */
+        internalRamObj["largestFreeBlockSize"] = MemUtil::getLargestFreeBlockSize(); /* [byte] */
+        internalRamObj["isPsramAvailable"]     = MemUtil::isPsramAvailable();        /* [byte] */
 
-        wifiObj["ssid"]                 = ssid;
-        wifiObj["rssi"]                 = rssi;                             /* [dbm] */
-        wifiObj["quality"]              = WiFiUtil::getSignalQuality(rssi); /* [%] */
+        wifiObj["ssid"]                        = ssid;
+        wifiObj["rssi"]                        = rssi;                             /* [dbm] */
+        wifiObj["quality"]                     = WiFiUtil::getSignalQuality(rssi); /* [%] */
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1430,7 +1413,7 @@ static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& 
 }
 
 /**
- * List files of given directory (?dir=<path>).
+ * List files of given directory "?dir=<path>".
  *
  * GET \c "/api/v1/fs"
  *
@@ -1499,7 +1482,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
 }
 
 /**
- * Read file from filesystem (?path=<path>).
+ * Read file from filesystem "?path=<path>".
  *
  * GET \c "/api/v1/fs/file"
  *
@@ -1570,7 +1553,7 @@ static const char* getContentType(const String& filename)
 }
 
 /**
- * Write file to filesystem (?path=<path>).
+ * Write file to filesystem "?path=<path>".
  *
  * POST \c "/api/v1/fs/file"
  *
@@ -1601,40 +1584,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
 }
 
 /**
- * Create directories recursively by parsing the given path.
- *
- * @param[in] path  Path to create.
- *
- * @return If successful created, it will return true otherwise false.
- */
-static bool createDirectories(const String& path)
-{
-    bool    status = true;
-    uint8_t idx    = 0U;
-    String  currentPath;
-
-    while ((true == status) && (path.length() > idx))
-    {
-        if ('/' == path[idx])
-        {
-            if (0U < currentPath.length())
-            {
-                if (false == FILESYSTEM.exists(currentPath))
-                {
-                    status = FILESYSTEM.mkdir(currentPath);
-                }
-            }
-        }
-
-        currentPath += path[idx];
-
-        ++idx;
-    }
-
-    return status;
-}
-
-/**
  * File upload handler.
  *
  * @param[in] request   HTTP request.
@@ -1652,7 +1601,7 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
     if (0 == index)
     {
         /* Create directories if not exist. */
-        if (false == createDirectories(filename))
+        if (false == FileUtil::createDirectories(filename))
         {
             isError = true;
         }
@@ -1698,7 +1647,9 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
 }
 
 /**
- * Delete file from filesystem (?path=<path>).
+ * Delete file from filesystem "?path=<path>".
+ * Delete directories is not supported.
+ * A single wildcard '*' is supported at the start, middle or end of the filename, but not in the directory part.
  *
  * DELETE \c "/api/v1/fs/file"
  *
@@ -1722,18 +1673,141 @@ static void handleFileDelete(AsyncWebServerRequest* request)
     }
     else
     {
-        const String& path = request->arg("path");
+        const String& path      = request->arg("path");
+        int32_t       lastSlash = path.lastIndexOf('/');
+        String        dir       = (0 <= lastSlash) ? path.substring(0U, static_cast<size_t>(lastSlash)) : "/";
+        String        filename  = (0 <= lastSlash) ? path.substring(static_cast<size_t>(lastSlash + 1)) : path;
 
-        LOG_INFO("File \"%s\" removal requested.", path.c_str());
-
-        if (false == FILESYSTEM.remove(path))
+        /* Validate path to prevent directory traversal attacks.
+         * Note: We allow wildcards in filename, but check directory part for traversal.
+         */
+        if (false == isPathSafe(dir))
         {
-            RestUtil::prepareRspError(jsonDoc, "Failed to remove file.");
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Invalid path: directory traversal not allowed.");
+            httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
+
+            RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
         }
         else
         {
-            (void)RestUtil::prepareRspSuccess(jsonDoc);
+            const char* WILDCARD    = "*";
+            int32_t     wildcardPos = filename.indexOf('*');
+            bool        anyRemoved  = false;
+
+            LOG_INFO("File \"%s\" removal requested.", path.c_str());
+
+            /* Wildcard used, but not allowed in directory part. */
+            if (0 <= dir.indexOf(WILDCARD))
+            {
+                RestUtil::prepareRspError(jsonDoc, "Wildcard not allowed in directory part.");
+                httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
+            }
+            else if (0 <= wildcardPos)
+            {
+                File dirFile = FILESYSTEM.open(dir, "r");
+
+                if ((false == dirFile) || (false == dirFile.isDirectory()))
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Invalid directory.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                }
+                else
+                {
+                    File file = dirFile.openNextFile();
+
+                    while (true == file)
+                    {
+                        String fname = String(file.name());
+
+                        if (false == file.isDirectory())
+                        {
+                            bool   match    = false;
+                            String fullPath = String(file.path());
+
+                            /* Check if filename matches wildcard pattern. */
+                            if (filename == WILDCARD)
+                            {
+                                match = true;
+                            }
+                            else
+                            {
+                                int32_t startPos   = filename.indexOf(WILDCARD);
+                                String  prefix     = filename.substring(0U, static_cast<size_t>(startPos));
+                                String  suffix     = filename.substring(static_cast<size_t>(startPos + 1));
+                                int32_t fnameSlash = fname.lastIndexOf('/');
+                                String  fnameOnly;
+
+                                if (0 <= fnameSlash)
+                                {
+                                    fnameOnly = fname.substring(static_cast<size_t>(fnameSlash + 1));
+                                }
+                                else
+                                {
+                                    fnameOnly = fname;
+                                }
+
+                                if ((0U == prefix.length()) && (0U == suffix.length()))
+                                {
+                                    match = true;
+                                }
+                                else if (0U == prefix.length())
+                                {
+                                    match = fnameOnly.endsWith(suffix);
+                                }
+                                else if (0U == suffix.length())
+                                {
+                                    match = fnameOnly.startsWith(prefix);
+                                }
+                                else
+                                {
+                                    match = (fnameOnly.startsWith(prefix) && fnameOnly.endsWith(suffix));
+                                }
+                            }
+
+                            file.close();
+
+                            if (true == match)
+                            {
+                                LOG_DEBUG("Remove file \"%s\".", fullPath.c_str());
+
+                                if (true == FILESYSTEM.remove(fullPath))
+                                {
+                                    anyRemoved = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            file.close();
+                        }
+
+                        file = dirFile.openNextFile();
+                    }
+                    dirFile.close();
+
+                    if (true == anyRemoved)
+                    {
+                        (void)RestUtil::prepareRspSuccess(jsonDoc);
+                    }
+                    else
+                    {
+                        RestUtil::prepareRspError(jsonDoc, "No matching files found to remove.");
+                        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    }
+                }
+            }
+            else
+            {
+                if (false == FILESYSTEM.remove(path))
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Failed to remove file.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                }
+                else
+                {
+                    (void)RestUtil::prepareRspSuccess(jsonDoc);
+                }
+            }
         }
     }
 
@@ -1742,7 +1816,11 @@ static void handleFileDelete(AsyncWebServerRequest* request)
 
 /**
  * Check the given hostname and returns whether it is valid or not.
- * Validation is according to RFC952.
+ * Validation is according to RFC952 (https://www.rfc-editor.org/rfc/rfc952.txt):
+ * - Must start with a letter (A-Z, a-z)
+ * - May contain letters, digits (0-9), and hyphens (-)
+ * - Must not end with a hyphen
+ * - Length must be within configured limits
  *
  * @param[in] hostname  Hostname which to validate
  *
@@ -1789,8 +1867,9 @@ static bool isValidHostname(const String& hostname)
             }
             else if ('-' == hostname[index])
             {
-                /* No - at the begin */
-                if (0U == index)
+                /* No leading nor trailing hyphen. */
+                if ((0U == index) ||
+                    (hostname.length() - 1U == index))
                 {
                     isValid = false;
                 }
@@ -1805,4 +1884,521 @@ static bool isValidHostname(const String& hostname)
     }
 
     return isValid;
+}
+
+/**
+ * Set the factory partition active to be the next boot partition and notify the client whether it was successful or not.
+ * If it was successful the board will be restarted.
+ *
+ * @param[in] request   HTTP request
+ */
+static void handlePartitionChange(AsyncWebServerRequest* request)
+{
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    const uint32_t      RESTART_DELAY = 100U; /* ms */
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        RestartMgr&                  restartMgr = RestartMgr::getInstance();
+        RestartMgr::RestartReqStatus status     = restartMgr.reqRestart(RESTART_DELAY, true);
+
+        switch (status)
+        {
+        case RestartMgr::RESTART_REQ_STATUS_OK:
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+            break;
+
+        case RestartMgr::RESTART_REQ_STATUS_ERR:
+            RestUtil::prepareRspError(jsonDoc, "Cannot switch to factory partition. Error unknown!");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+            break;
+
+
+        case RestartMgr::RESTART_REQ_STATUS_FACTORY_PARTITION_NOT_FOUND:
+            RestUtil::prepareRspError(jsonDoc, "Factory partition not found!");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+            break;
+
+        case RestartMgr::RESTART_REQ_STATUS_FACTORY_SET_FAILED:
+            RestUtil::prepareRspError(jsonDoc, "Failed to set factory partition as boot partition!");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+            break;
+
+
+        default:
+            break;
+        }
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Disable HomeAssistant MQTT automatic discovery to avoid that the welcome plugin will be discovered in case of a filesystem update.
+ *
+ * @return The status of the HomeAssistant MQTT automatic discovery after this operation.
+ */
+static HomeAssistantDiscoveryStatus disableHomeAssistantAutomaticDiscovery()
+{
+
+    HomeAssistantDiscoveryStatus status      = HA_STATUS_UNKNOWN;
+    SettingsService&             settings    = SettingsService::getInstance();
+
+    /* Key see HomeAssistantMqtt::KEY_HA_DISCOVERY_ENABLE
+     * Include the header is not possible, because MQTT might not be compiled in.
+     */
+    KeyValue* kvHomeAssistantEnableDiscovery = settings.getSettingByKey("ha_ena");
+
+    if ((nullptr != kvHomeAssistantEnableDiscovery))
+    {
+        if (KeyValue::TYPE_BOOL == kvHomeAssistantEnableDiscovery->getValueType())
+        {
+            if (true == settings.open(false))
+            {
+                KeyValueBool* homeAssistantEnableDiscovery = static_cast<KeyValueBool*>(kvHomeAssistantEnableDiscovery);
+
+                homeAssistantEnableDiscovery->setValue(false);
+                settings.close();
+
+                status = HA_DISABLED;
+                LOG_INFO("Home Assistant MQTT automatic discovery disabled for filesystem update.");
+            }
+        }
+    }
+    else
+    {
+        status = HA_DISABLED;
+    }
+
+    return status;
+}
+
+/**
+ * Disable the Home Assistant MQTT automatic discovery and notifiy the client whether it was successful or not.
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleHomeAssistantAutomaticDiscoveryDisable(AsyncWebServerRequest* request)
+{
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        switch (disableHomeAssistantAutomaticDiscovery())
+        {
+        case HA_DISABLED:
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+            break;
+
+        case HA_ENABLED:
+            RestUtil::prepareRspError(jsonDoc, "Home Assistant MQTT automatic discovery could not be disabled.");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+            break;
+
+        case HA_STATUS_UNKNOWN:
+            RestUtil::prepareRspError(jsonDoc, "Could not access setting. Status of Home Assistant MQTT automatic discovery is unnkown.");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+
+        default:
+            break;
+        }
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Get the status of the Home Assistant MQTT automatic discovery.
+ *
+ * @return The status of the Home Assistant MQTT automatic discovery.
+ */
+static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus()
+{
+    HomeAssistantDiscoveryStatus status      = HA_STATUS_UNKNOWN;
+    SettingsService&             settings    = SettingsService::getInstance();
+
+    /* Key see HomeAssistantMqtt::KEY_HA_DISCOVERY_ENABLE
+     * Include the header is not possible, because MQTT might not be compiled in.
+     */
+    KeyValue* kvHomeAssistantEnableDiscovery = settings.getSettingByKey("ha_ena");
+
+    if ((nullptr != kvHomeAssistantEnableDiscovery))
+    {
+        if (KeyValue::TYPE_BOOL == kvHomeAssistantEnableDiscovery->getValueType())
+        {
+            if (true == settings.open(true))
+            {
+                KeyValueBool* homeAssistantEnableDiscovery = static_cast<KeyValueBool*>(kvHomeAssistantEnableDiscovery);
+
+                if (true == homeAssistantEnableDiscovery->getValue())
+                {
+                    status = HA_ENABLED;
+                }
+                else
+                {
+                    status = HA_DISABLED;
+                }
+
+                settings.close();
+            }
+        }
+    }
+    else
+    {
+        status = HA_DISABLED;
+    }
+
+    return status;
+}
+
+/**
+ * Check whether the Home Assistant MQTT automatic discovery is enabled or not and notify the client of the result.
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* request)
+{
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        switch (getHomeAssistantAutomaticDiscoveryStatus())
+        {
+        case HA_ENABLED: {
+            JsonObject data = RestUtil::prepareRspSuccess(jsonDoc);
+            data["status"]  = "enabled";
+            break;
+        }
+
+        case HA_DISABLED: {
+            JsonObject data = RestUtil::prepareRspSuccess(jsonDoc);
+            data["status"]  = "disabled";
+            break;
+        }
+
+        case HA_STATUS_UNKNOWN:
+            RestUtil::prepareRspError(jsonDoc, "Could not access setting. Status of Home Assistant MQTT automatic discovery is unknown.");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Get coredump information or clear coredump.
+ * GET \c "/api/v1/coredump" - Retrieve coredump info and data
+ * GET \c "/api/v1/coredump?decode=true" - Retrieve decoded crash summary
+ * DELETE \c "/api/v1/coredump" - Clear the coredump partition
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleCoredump(AsyncWebServerRequest* request)
+{
+    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE  = 2048U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET == request->method())
+    {
+        JsonObject                      dataObj = RestUtil::prepareRspSuccess(jsonDoc).as<JsonObject>();
+        CoredumpDecoder::CoredumpStatus status  = CoredumpDecoder::COREDUMP_STATUS_OK;
+
+        /* Check if decode/summary is requested */
+        if (true == request->hasParam("decode"))
+        {
+            String decodeParam  = request->getParam("decode")->value();
+            bool   shouldDecode = false;
+
+            if (true == parseStringBool(decodeParam, shouldDecode))
+            {
+                if (true == shouldDecode)
+                {
+                    status = CoredumpDecoder::getCoredumpSummary(dataObj);
+                }
+                else
+                {
+                    status = CoredumpDecoder::getCoredumpInfo(dataObj);
+                }
+            }
+            else
+            {
+                RestUtil::prepareRspError(jsonDoc, "Invalid decode parameter value");
+                httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
+                status         = CoredumpDecoder::COREDUMP_STATUS_OK; /* Skip further processing */
+            }
+        }
+        else
+        {
+            /* Default: return basic info */
+            status = CoredumpDecoder::getCoredumpInfo(dataObj);
+        }
+
+        if (CoredumpDecoder::COREDUMP_STATUS_OK != status)
+        {
+            switch (status)
+            {
+            case CoredumpDecoder::COREDUMP_STATUS_NO_PARTITION:
+                RestUtil::prepareRspError(jsonDoc, "Coredump partition not found");
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                break;
+
+            case CoredumpDecoder::COREDUMP_STATUS_READ_ERROR:
+                RestUtil::prepareRspError(jsonDoc, "Error reading coredump partition");
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                break;
+
+            case CoredumpDecoder::COREDUMP_STATUS_NO_COREDUMP:
+                RestUtil::prepareRspError(jsonDoc, "No coredump data found");
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                break;
+
+            case CoredumpDecoder::COREDUMP_STATUS_INVALID_FORMAT:
+                RestUtil::prepareRspError(jsonDoc, "Invalid coredump format or unable to decode");
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                break;
+
+            default:
+                RestUtil::prepareRspError(jsonDoc, "Unknown error");
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                break;
+            }
+        }
+    }
+    else if (HTTP_DELETE == request->method())
+    {
+        CoredumpDecoder::CoredumpStatus status = CoredumpDecoder::clearCoredump();
+
+        if (CoredumpDecoder::COREDUMP_STATUS_OK == status)
+        {
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+        }
+        else
+        {
+            RestUtil::prepareRspError(jsonDoc, "Failed to clear coredump");
+            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+        }
+    }
+    else
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Download raw coredump image from flash for host-side analysis.
+ * GET \c "/api/v1/coredump/download"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleCoredumpDownload(AsyncWebServerRequest* request)
+{
+    const esp_partition_t*  partition       = nullptr;
+    esp_err_t               err             = ESP_OK;
+    size_t                  imageAddr       = 0U;
+    size_t                  imageSize       = 0U;
+    size_t                  partitionOffset = 0U;
+    AsyncWebServerResponse* response        = nullptr;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const char*             contentType     = "text/plain";
+    const char*             message         = nullptr;
+    bool                    isReadyToStream = false;
+
+    if (nullptr != request)
+    {
+        if (HTTP_GET != request->method())
+        {
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+            message        = "HTTP method not supported.";
+        }
+        else
+        {
+            partition = esp_partition_find_first(
+                ESP_PARTITION_TYPE_DATA,
+                ESP_PARTITION_SUBTYPE_DATA_COREDUMP,
+                nullptr);
+
+            if (nullptr == partition)
+            {
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                message        = "Coredump partition not found.";
+            }
+            else
+            {
+                err = esp_core_dump_image_check();
+
+                if (ESP_ERR_NOT_FOUND == err)
+                {
+                    httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    message        = "No coredump data found.";
+                }
+                else if (ESP_OK != err)
+                {
+                    LOG_WARNING("Coredump image check failed: %d", err);
+                    httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                    message        = "Failed to validate coredump data.";
+                }
+                else
+                {
+                    err = esp_core_dump_image_get(&imageAddr, &imageSize);
+
+                    if (ESP_OK != err)
+                    {
+                        LOG_WARNING("Failed to get coredump image info: %d", err);
+                        httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                        message        = "Failed to get coredump image info.";
+                    }
+                    else
+                    {
+                        const uint64_t partitionStart = partition->address;
+                        const uint64_t partitionEnd   = partitionStart + partition->size;
+                        const uint64_t imageStart     = imageAddr;
+                        const uint64_t imageEnd       = imageStart + imageSize;
+
+                        if ((0U == imageSize) ||
+                            (partitionStart > imageStart) ||
+                            (partitionEnd < imageEnd))
+                        {
+                            LOG_WARNING("Invalid coredump image boundaries: addr=%u size=%u", static_cast<uint32_t>(imageAddr), static_cast<uint32_t>(imageSize));
+                            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                            message        = "Invalid coredump image boundaries.";
+                        }
+                        else
+                        {
+                            partitionOffset = imageAddr - partition->address;
+                            contentType     = "application/octet-stream";
+                            isReadyToStream = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (true == isReadyToStream)
+        {
+            response = request->beginChunkedResponse(
+                contentType,
+                [partition, partitionOffset, imageSize](uint8_t* buffer, size_t maxLen, size_t index) -> size_t {
+                    size_t bytesWritten = 0U;
+
+                    if (imageSize > index)
+                    {
+                        size_t bytesToRead = imageSize - index;
+
+                        if (bytesToRead > maxLen)
+                        {
+                            bytesToRead = maxLen;
+                        }
+
+                        esp_err_t readErr = esp_partition_read(partition, partitionOffset + index, buffer, bytesToRead);
+
+                        if (ESP_OK == readErr)
+                        {
+                            bytesWritten = bytesToRead;
+                        }
+                        else
+                        {
+                            LOG_ERROR("Failed to read coredump chunk at offset %u: %d", static_cast<uint32_t>(partitionOffset + index), readErr);
+                        }
+                    }
+
+                    return bytesWritten;
+                });
+
+            if (nullptr == response)
+            {
+                httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+                contentType    = "text/plain";
+                message        = "Failed to prepare coredump download response.";
+            }
+            else
+            {
+                response->addHeader("Content-Disposition", "attachment; filename=\"coredump.elf\"");
+                response->addHeader("X-Content-Type-Options", "nosniff");
+                request->send(response);
+            }
+        }
+        else
+        {
+            request->send(httpStatusCode, contentType, message);
+        }
+    }
+}
+
+/**
+ * Validate filesystem path to prevent directory traversal attacks.
+ *
+ * @param[in] path  Path to validate
+ *
+ * @return true if path is safe, false if path contains traversal sequences.
+ */
+static bool isPathSafe(const String& path)
+{
+    bool isSafe = true;
+
+    /* Reject paths containing directory traversal sequences */
+    if (0 <= path.indexOf(".."))
+    {
+        isSafe = false;
+    }
+    /* Ensure path starts with / for absolute paths within filesystem */
+    else if ((false == path.isEmpty()) && ('/' != path.charAt(0)))
+    {
+        isSafe = false;
+    }
+    else
+    {
+        /* Path is safe. */
+        ;
+    }
+
+    return isSafe;
 }

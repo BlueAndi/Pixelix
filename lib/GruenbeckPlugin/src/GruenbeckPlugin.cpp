@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   GruenbeckPlugin.cpp
  * @brief  Gruenbeck plugin.
  * @author Yann Le Glaz <yann_le@web.de>
  */
@@ -33,7 +34,6 @@
  * Includes
  *****************************************************************************/
 #include "GruenbeckPlugin.h"
-#include "AsyncHttpClient.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
@@ -60,7 +60,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* GruenbeckPlugin::TOPIC_CONFIG   = "ipAddress";
+const char* GruenbeckPlugin::TOPIC_CONFIG = "ipAddress";
 
 /******************************************************************************
  * Public Methods
@@ -90,11 +90,11 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonObject          jsonCfg = jsonDoc.to<JsonObject>();
         String              ipAddress;
-        JsonVariantConst    jsonIpAddress           = value["ipAddress"];
+        JsonVariantConst    jsonIpAddress = value["ipAddress"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -109,15 +109,15 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
         if (false == jsonIpAddress.isNull())
         {
-            jsonCfg["ipAddress"] = jsonIpAddress.as<String>();
-            isSuccessful = true;
+            jsonCfg["ipAddress"] = jsonIpAddress.as<const char*>();
+            isSuccessful         = true;
         }
 
         if (true == isSuccessful)
         {
             JsonObjectConst jsonCfgConst = jsonCfg;
 
-            isSuccessful = setConfiguration(jsonCfgConst);
+            isSuccessful                 = setConfiguration(jsonCfgConst);
 
             if (true == isSuccessful)
             {
@@ -131,8 +131,8 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
 bool GruenbeckPlugin::hasTopicChanged(const String& topic)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    bool                        hasTopicChanged = m_hasTopicChanged;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       hasTopicChanged = m_hasTopicChanged;
 
     /* Only a single topic, therefore its not necessary to check. */
     PLUGIN_NOT_USED(topic);
@@ -147,128 +147,128 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
-    
-    PluginWithConfig::start(width, height);
 
-    initHttpClient();
+    PluginWithConfig::start(width, height);
 }
 
 void GruenbeckPlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_requestTimer.stop();
 
     PluginWithConfig::stop();
+
+    m_isAllowedToSend = false;
+
+    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+    {
+        RestService::getInstance().abortRequest(m_dynamicRestId);
+        m_dynamicRestId = RestService::INVALID_REST_ID;
+    }
 }
 
 void GruenbeckPlugin::process(bool isConnected)
 {
-    Msg                         msg;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
-
-    /* Only if a network connection is established the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
+    /* Acquire mutex for initial state check and update. */
     {
-        if (true == isConnected)
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                       isRestRequestRequired = false;
+
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established the required information
+         * shall be periodically requested via REST API.
+         */
+        if (false == m_requestTimer.isTimerRunning())
         {
-            if (false == startHttpRequest())
+            if (true == isConnected)
             {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
+                {
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, show standard icon and a '?' */
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
+            {
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
+                {
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, show standard icon and a '?' */
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
+                }
+            }
+        }
+
+        dynamicRestId = m_dynamicRestId;
+    } /* Mutex released here to avoid lock inversion deadlock with RestService. */
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
+    {
+        DynamicJsonDocument jsonDoc(0U);
+        bool                isValidResponse;
+
+        /* Get the response from the REST service. */
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
+        {
+            if (true == isValidResponse)
+            {
+                handleWebResponse(jsonDoc);
+            }
+            else
+            {
+                LOG_WARNING("Connection error.");
+
+                MutexGuard<MutexRecursive> guard(m_mutex);
+
                 /* If a request fails, show standard icon and a '?' */
                 m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
-            else
-            {
-                m_requestTimer.start(UPDATE_PERIOD);
-            }
+
+            MutexGuard<MutexRecursive> guard(m_mutex);
+            m_dynamicRestId   = RestService::INVALID_REST_ID;
+            m_isAllowedToSend = true;
         }
     }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
-         */
-        if (false == isConnected)
-        {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            if (false == startHttpRequest())
-            {
-                /* If a request fails, show standard icon and a '?' */
-                m_view.setFormatText("{hc}?");
-
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
-            }
-            else
-            {
-                m_requestTimer.start(UPDATE_PERIOD);
-            }
-        }
-    }
-
-    if (true == m_taskProxy.receive(msg))
-    {
-        switch(msg.type)
-        {
-        case MSG_TYPE_INVALID:
-            /* Should never happen. */
-            break;
-
-        case MSG_TYPE_RSP:
-            if (nullptr != msg.rsp)
-            {
-                handleWebResponse(*msg.rsp);
-                delete msg.rsp;
-                msg.rsp = nullptr;
-            }
-            break;
-
-        case MSG_TYPE_CONN_CLOSED:
-            LOG_INFO("Connection closed.");
-
-            if (true == m_isConnectionError)
-            {
-                /* If a request fails, show a '?' */
-                m_view.setFormatText("{hc}?");
-
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
-            }
-            m_isConnectionError = false;
-            break;
-
-        case MSG_TYPE_CONN_ERROR:
-            LOG_WARNING("Connection error.");
-            m_isConnectionError = true;
-            break;
-
-        default:
-            /* Should never happen. */
-            break;
-        }
-    }
-}
-
-void GruenbeckPlugin::active(YAGfx& gfx)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_view.update(gfx);
-}
-
-void GruenbeckPlugin::inactive()
-{
-    /* Nothing to do */
 }
 
 void GruenbeckPlugin::update(YAGfx& gfx)
@@ -295,8 +295,8 @@ void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool                status          = false;
-    JsonVariantConst    jsonIpAddress   = jsonCfg["ipAddress"];
+    bool             status        = false;
+    JsonVariantConst jsonIpAddress = jsonCfg["ipAddress"];
 
     if (false == jsonIpAddress.is<String>())
     {
@@ -306,14 +306,14 @@ bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_ipAddress = jsonIpAddress.as<String>();
+        m_ipAddress = jsonIpAddress.as<const char*>();
 
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
 
         m_hasTopicChanged = true;
 
-        status = true;
+        status            = true;
     }
 
     return status;
@@ -321,120 +321,61 @@ bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
 bool GruenbeckPlugin::startHttpRequest()
 {
-    bool status  = false;
+    bool                            status = false;
+    RestService::PreProcessCallback preProcessCallback =
+        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+            return this->preProcessAsyncWebResponse(payload, size, doc);
+        };
 
     if (false == m_ipAddress.isEmpty())
     {
-        String url = String("http://") + m_ipAddress + "/mux_http";
+        String url      = String("http://") + m_ipAddress + "/mux_http?id=42&show=D_Y_10_1~";
 
-        if (true == m_client.begin(url))
+        m_dynamicRestId = RestService::getInstance().get(url, preProcessCallback);
+
+        if (RestService::INVALID_REST_ID == m_dynamicRestId)
         {
-            m_client.addPar("id","42");
-            m_client.addPar("show","D_Y_10_1~");
-
-            if (false == m_client.POST())
-            {
-                LOG_WARNING("POST %s failed.", url.c_str());
-            }
-            else
-            {
-                status = true;
-            }
+            LOG_WARNING("GET %s failed.", url.c_str());
+        }
+        else
+        {
+            status = true;
         }
     }
 
     return status;
 }
 
-void GruenbeckPlugin::initHttpClient()
+bool GruenbeckPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
 {
-    m_client.regOnResponse(
-        [this](const HttpResponse& rsp)
-        {
-            handleAsyncWebResponse(rsp);
-        }
-    );
+    /* Structure of response-payload for requesting D_Y_10_1
+     *
+     * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+     *
+     * <data><code>ok</code><D_Y_10_1>  = 31 bytes
+     * XYZ                              = 3 byte (relevant data)
+     * </D_Y_10_1></data>               = 18 bytes
+     */
 
-    m_client.regOnClosed(
-        [this]()
-        {
-            Msg msg;
+    /* Start index of relevant data */
+    const uint32_t START_INDEX_OF_RELEVANT_DATA = 31U;
 
-            msg.type = MSG_TYPE_CONN_CLOSED;
+    /* Length of relevant data */
+    const uint32_t RELEVANT_DATA_LENGTH         = 3U;
 
-            (void)this->m_taskProxy.send(msg);
-        }
-    );
+    bool           isSuccessful                 = false;
+    char           restCapacity[RELEVANT_DATA_LENGTH + 1];
 
-    m_client.regOnError(
-        [this]()
-        {
-            Msg msg;
-
-            msg.type = MSG_TYPE_CONN_ERROR;
-
-            (void)this->m_taskProxy.send(msg);
-        }
-    );
-}
-
-void GruenbeckPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
-{
-    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    if ((nullptr != payload) &&
+        (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH)))
     {
-        const size_t            JSON_DOC_SIZE   = 256U;
-        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-        if (nullptr != jsonDoc)
-        {
-            /* Structure of response-payload for requesting D_Y_10_1
-            *
-            * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
-            *
-            * <data><code>ok</code><D_Y_10_1>  = 31 bytes
-            * XYZ                              = 3 byte (relevant data)
-            * </D_Y_10_1></data>               = 18 bytes
-            */
-
-            /* Start index of relevant data */
-            const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
-
-            /* Length of relevant data */
-            const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
-
-            bool            isSuccessful                    = false;
-            size_t          payloadSize                     = 0U;
-            const void*     vPayload                        = rsp.getPayload(payloadSize);
-            const char*     payload                         = static_cast<const char*>(vPayload);
-            char            restCapacity[RELEVANT_DATA_LENGTH + 1];
-            Msg             msg;
-
-            if ((nullptr != payload) &&
-                (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH)))
-            {
-                memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
-                restCapacity[RELEVANT_DATA_LENGTH] = '\0';
-            }
-            else
-            {
-                restCapacity[0] = '?';
-                restCapacity[1] = '\0';
-            }
-
-            (*jsonDoc)["restCapacity"] = restCapacity;
-
-            msg.type    = MSG_TYPE_RSP;
-            msg.rsp     = jsonDoc;
-
-            isSuccessful = this->m_taskProxy.send(msg);
-
-            if (false == isSuccessful)
-            {
-                delete jsonDoc;
-                jsonDoc = nullptr;
-            }
-        }
+        memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
+        restCapacity[RELEVANT_DATA_LENGTH] = '\0';
+        jsonDoc["restCapacity"]            = restCapacity;
+        isSuccessful                       = true;
     }
+
+    return isSuccessful;
 }
 
 void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
@@ -447,26 +388,12 @@ void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        String restCapacity = "{hc}";
+        String restCapacity  = "{hc}";
 
-        restCapacity += jsonRestCapacity.as<String>();
-        restCapacity += "%";
+        restCapacity        += jsonRestCapacity.as<const char*>();
+        restCapacity        += "%";
 
         m_view.setFormatText(restCapacity);
-    }
-}
-
-void GruenbeckPlugin::clearQueue()
-{
-    Msg msg;
-
-    while(true == m_taskProxy.receive(msg))
-    {
-        if (MSG_TYPE_RSP == msg.type)
-        {
-            delete msg.rsp;
-            msg.rsp = nullptr;
-        }
     }
 }
 

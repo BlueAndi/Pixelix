@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav me-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">MqttService</h1>
+                <p>The MQTT service allows to configure and manage MQTT broker connections.</p>
+                <p>
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Important:</strong> The primary MQTT broker connection publishes configuration data for plugins, sensors and services. Make sure that its not a security risk to publish this data to the configured broker.
+                    </div>
+                </p>
+                <p>Notes:</p>
+                <ul>
+                    <li>The first configured broker is used as primary connection.</li>
+                    <li>Plugin topics, sensor topics and service topics are managed by the primary connection.</li>
+                    <li>Additional brokers can be used for dedicated plugins.</li>
+                    <li>If TLS is enabled, the root CA certificate, client certificate and the client key are applied.</li>
+                    <li>If TLS is enabled, but no root CA certificate is provided, the connection will be insecure.</li>
+                </ul>
+                <form id="myForm" action="javascript:save()">
+                </form>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var restClient = new pixelix.rest.Client();
+            var timerSettingsCount = 0;
+
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+
+            function createFormGroup(elements) {
+                var $formGroup = $("<div class='form-group'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function createFormCheck(elements) {
+                var $formGroup = $("<div class='form-check'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function createFormCheckInline(elements) {
+                var $formGroup = $("<div class='form-check form-check-inline'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function createInputGroup(elements) {
+                var $formGroup = $("<div class='input-group'></div>");
+                var idx;
+
+                for (idx = 0; idx < elements.length; ++idx) {
+                    $formGroup.append(elements[idx]);
+                }
+                
+                return $formGroup;
+            }
+
+            function createMqttSetting(id, mqttSetting) {
+                var $block = $("<div class='h-100 p-2 bg-body-tertiary border rounded-3 mt-2'></div>");
+                var $row0 = $("<div class='row'></div>")
+                var $row1 = $("<div class='row'></div>")
+                var $row2 = $("<div class='row'></div>")
+                var $row3 = $("<div class='row'></div>")
+                var $row4 = $("<div class='row'></div>")
+                
+                var $checkboxEnabled = $("<input type='checkbox' class='form-check-input' id='" + id + "Enabled' />")
+                                        .prop("checked", mqttSetting.enabled);
+                var $labelEnabled = $("<label class='form-check-label' for='" + id + "Enabled'>Enabled</label>");
+
+                var $useTls = $("<input type='checkbox' class='form-check-input' id='" + id + "UseTls' />")
+                                        .prop("checked", mqttSetting.useTls);
+                var $labelUseTls = $("<label class='form-check-label' for='" + id + "UseTls'>Use TLS</label>");
+
+                var $broker = $("<input type='text' class='form-control' id='" + id + "Broker' />")
+                                        .val(mqttSetting.broker);
+                var $labelBroker = $("<label for='" + id + "Broker'>Broker hostname, e.g. mqtt.example.com</label>");
+
+                var $port = $("<input type='number' class='form-control' id='" + id + "Port' />")
+                                        .val(mqttSetting.port);
+                var $labelPort = $("<label for='" + id + "Port'>Port</label>");
+
+                var $user = $("<input type='text' class='form-control' id='" + id + "User' />")
+                                        .val(mqttSetting.user);
+                var $labelUser = $("<label for='" + id + "User'>User</label>");
+
+                var $password = $("<input type='password' class='form-control' id='" + id + "Password' />")
+                                        .val(mqttSetting.password);
+                var $labelPassword = $("<label for='" + id + "Password'>Password</label>");
+
+                var $rootCaCert = $("<textarea class='form-control' id='" + id + "RootCaCert' rows='4'></textarea>")
+                                        .val(mqttSetting.rootCaCert);
+                var $labelRootCaCert = $("<label for='" + id + "RootCaCert'>Root CA Certificate</label>");
+
+                var $clientCert = $("<textarea class='form-control' id='" + id + "ClientCert' rows='4'></textarea>")
+                                        .val(mqttSetting.clientCert);
+                var $labelClientCert = $("<label for='" + id + "ClientCert'>Client Certificate</label>");
+
+                var $clientKey = $("<textarea class='form-control' id='" + id + "ClientKey' rows='4'></textarea>")
+                                        .val(mqttSetting.clientKey);
+                var $labelClientKey = $("<label for='" + id + "ClientKey'>Client Key</label>");
+
+                $block.append($row0);
+                $block.append($row1);
+                $block.append($row2);
+                $block.append($row3);
+                $block.append($row4);
+
+                $row0.append(
+                    $("<div class='col'></div>")
+                    .append(createFormCheck([
+                        $checkboxEnabled, $labelEnabled
+                    ]))
+                );
+
+                $row0.append(
+                    $("<div class='col'></div>")
+                    .append(createFormCheck([
+                        $useTls, $labelUseTls
+                    ]))
+                );
+
+                $row0.append(
+                    $("<div class='col'></div>")
+                    .append(createFormGroup([
+                        $labelBroker,
+                        $broker
+                    ]))
+                );
+
+                $row0.append(
+                    $("<div class='col'></div>")
+                    .append(createFormGroup([
+                        $labelPort,
+                        $port
+                    ]))
+                );
+
+                $row1.append(
+                    $("<div class='col-6'></div>")
+                    .append(createFormGroup([
+                        $labelUser,
+                        $user
+                    ]))
+                );
+
+                $row1.append(
+                    $("<div class='col-6'></div>")
+                    .append(createFormGroup([
+                        $labelPassword,
+                        $password
+                    ]))
+                );
+
+                $row2.append(
+                    $("<div class='col-12'></div>")
+                    .append(createFormGroup([
+                        $labelRootCaCert,
+                        $rootCaCert
+                    ]))
+                );
+
+                $row3.append(
+                    $("<div class='col-12'></div>")
+                    .append(createFormGroup([
+                        $labelClientCert,
+                        $clientCert
+                    ]))
+                );
+
+                $row4.append(
+                    $("<div class='col-12'></div>")
+                    .append(createFormGroup([
+                        $labelClientKey,
+                        $clientKey
+                    ]))
+                );
+
+                $("#myForm").append($block);
+            }
+
+            function load() {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "GET",
+                    url: restClient.getBaseUri() + "/mqttService/mqtt",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var idx;
+
+                    mqttSettingsCount = rsp.data.mqttSettings.length;
+
+                    for (idx = 0; idx < mqttSettingsCount; ++idx) {
+                        createMqttSetting("mqtt" + idx, rsp.data.mqttSettings[idx]);
+                    }
+
+                    $("#myForm").append($("<button type='submit' class='btn btn-primary' onclick='save()'>Save</button>"));
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getMqttSettings() {
+                var mqttSettings = [];
+                var idx;
+
+                for (idx = 0; idx < mqttSettingsCount; ++idx) {
+                    var mqttSetting = {
+                        enabled: $("#mqtt" + idx + "Enabled").prop("checked"),
+                        useTls: $("#mqtt" + idx + "UseTls").prop("checked"),
+                        broker: $("#mqtt" + idx + "Broker").val(),
+                        port: parseInt($("#mqtt" + idx + "Port").val()),
+                        user: $("#mqtt" + idx + "User").val(),
+                        password: $("#mqtt" + idx + "Password").val(),
+                        rootCaCert: $("#mqtt" + idx + "RootCaCert").val(),
+                        clientCert: $("#mqtt" + idx + "ClientCert").val(),
+                        clientKey: $("#mqtt" + idx + "ClientKey").val()
+                    };
+
+                    mqttSettings.push(mqttSetting);
+                }
+
+                return mqttSettings;
+            }
+
+            function save() {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: restClient.getBaseUri() + "/mqttService/mqtt",
+                    isJsonResponse: true,
+                    parameter: {
+                        mqttSettings: getMqttSettings()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+                menu.create("menu", menu.data);
+
+                load();
+            });
+        </script>
+    </body>
+</html>

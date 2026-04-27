@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   BaseGfxText.hpp
  * @brief  Base GFX text
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -46,6 +47,7 @@
 #include <stdint.h>
 #include "BaseGfx.hpp"
 #include "BaseFont.hpp"
+#include "BaseGfxBrush.hpp"
 
 /******************************************************************************
  * Macros
@@ -58,7 +60,7 @@
 /**
  * The BaseGfxText class provides generic text handling, based on the configured
  * font.
- * 
+ *
  * Features:
  * - Provides a text cursor
  * - Text wrap around
@@ -75,7 +77,8 @@ public:
     BaseGfxText() :
         m_cursorX(0),
         m_cursorY(0),
-        m_textColor(0U),
+        m_solidBrush(),
+        m_brush(&m_solidBrush),
         m_isTextWrapEnabled(false),
         m_font()
     {
@@ -83,13 +86,14 @@ public:
 
     /**
      * Constructs a text object by copy.
-     * 
+     *
      * @param[in] text  Base text, which to copy.
      */
     BaseGfxText(const BaseGfxText& text) :
         m_cursorX(text.m_cursorX),
         m_cursorY(text.m_cursorY),
-        m_textColor(text.m_textColor),
+        m_solidBrush(text.m_solidBrush),
+        m_brush(&m_solidBrush),
         m_isTextWrapEnabled(text.m_isTextWrapEnabled),
         m_font(text.m_font)
     {
@@ -97,14 +101,15 @@ public:
 
     /**
      * Constructs a base text with the given font.
-     * 
-     * @param[in] font      Font
-     * @param[in] color     Text color
+     *
+     * @param[in] font  Font
+     * @param[in] brush Text color brush
      */
-    BaseGfxText(const BaseFont<TColor>& font, const TColor& color = 0U) :
+    BaseGfxText(const BaseFont<TColor>& font, BaseGfxBrush<TColor>& brush) :
         m_cursorX(0),
         m_cursorY(0),
-        m_textColor(color),
+        m_solidBrush(),
+        m_brush(&brush),
         m_isTextWrapEnabled(false),
         m_font(font)
     {
@@ -119,9 +124,9 @@ public:
 
     /**
      * Assigns a base text.
-     * 
+     *
      * @param[in] text  Source base text which to assign.
-     * 
+     *
      * @return The base gfx text object.
      */
     BaseGfxText& operator=(const BaseGfxText<TColor>& text)
@@ -130,7 +135,8 @@ public:
         {
             m_cursorX           = text.m_cursorX;
             m_cursorY           = text.m_cursorY;
-            m_textColor         = text.m_textColor;
+            m_solidBrush        = text.m_solidBrush;
+            m_brush             = text.m_brush;
             m_isTextWrapEnabled = text.m_isTextWrapEnabled;
             m_font              = text.m_font;
         }
@@ -204,23 +210,23 @@ public:
     }
 
     /**
-     * Get text color.
+     * Get brush used to draw text.
      *
-     * @return Text color
+     * @return Brush used to draw text.
      */
-    TColor getTextColor() const
+    BaseGfxBrush<TColor>& getBrush()
     {
-        return m_textColor;
+        return *m_brush;
     }
 
     /**
-     * Set text color.
+     * Set brush used to draw text.
      *
-     * @param[in] color Text color
+     * @param[in] brush Brush used to draw text.
      */
-    void setTextColor(const TColor& color)
+    void setBrush(BaseGfxBrush<TColor>& brush)
     {
-        m_textColor = color;
+        m_brush = &brush;
     }
 
     /**
@@ -238,7 +244,7 @@ public:
      * If enabled and a character will not fit into the current line, it will
      * continue in the next line. Otherwise the text will be cut at the
      * end of the current line.
-     * 
+     *
      * If the text is larger than the whole display can show, there will be no
      * automatic scrolling. The application shall consider this by itself.
      *
@@ -281,10 +287,10 @@ public:
 
     /**
      * Get bounding box of text.
-     * 
+     *
      * It considers text wrap around, based on the given max. line width.
      * It doesn't consider the current text cursor position.
-     * 
+     *
      * If the wrap around is enabled and the text is long, it may happen that
      * the bounding box is larger than the display height. Its in the
      * responsibility of the caller to consider this.
@@ -293,7 +299,7 @@ public:
      * @param[in]   text            Text
      * @param[out]  boxWidth        Bounding box width in pixel
      * @param[out]  boxHeight       Bounding box height in pixel
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool getTextBoundingBox(uint16_t maxLineWidth, const char* text, uint16_t& boxWidth, uint16_t& boxHeight) const
@@ -303,13 +309,13 @@ public:
         if ((nullptr != text) &&
             (nullptr != m_font.getGfxFont()))
         {
-            size_t      idx         = 0U;
-            uint16_t    lineWidth   = 0U;
+            size_t   idx       = 0U;
+            uint16_t lineWidth = 0U;
 
-            boxWidth   = 0U;
-            boxHeight  = 0U;
+            boxWidth           = 0U;
+            boxHeight          = 0U;
 
-            while('\0' != text[idx])
+            while ('\0' != text[idx])
             {
                 uint16_t charWidth  = 0U;
                 uint16_t charHeight = 0U;
@@ -321,7 +327,7 @@ public:
                         boxWidth = lineWidth;
                     }
 
-                    lineWidth = 0U;
+                    lineWidth  = 0U;
                     boxHeight += m_font.getHeight();
                 }
                 else if (true == m_font.getCharBoundingBox(text[idx], charWidth, charHeight))
@@ -343,7 +349,7 @@ public:
                                 boxWidth = lineWidth;
                             }
 
-                            lineWidth = 0U;
+                            lineWidth  = 0U;
                             boxHeight += charHeight;
                         }
                     }
@@ -373,7 +379,7 @@ public:
      * Draw single character at current cursor position. The cursor is
      * automatically moved to the new position. Wrap around handling is
      * performed if configured.
-     * 
+     *
      * A newline will place the cursor on the begin of the next line.
      *
      * @param[in] gfx           Graphics interface
@@ -381,30 +387,28 @@ public:
      */
     void drawChar(BaseGfx<TColor>& gfx, char singleChar)
     {
-        if (nullptr == m_font.getGfxFont())
+        if (nullptr != m_font.getGfxFont())
         {
-            return;
-        }
-
-        /* If text wrap around is enabled and the character is clipping,
-         * jump to the next line.
-         */
-        if (true == m_isTextWrapEnabled)
-        {
-            uint16_t charBoxWidth   = 0U;
-            uint16_t charBoxHeight  = 0U;
-
-            if (true == m_font.getCharBoundingBox(singleChar, charBoxWidth, charBoxHeight))
+            /* If text wrap around is enabled and the character is clipping,
+             * jump to the next line.
+             */
+            if (true == m_isTextWrapEnabled)
             {
-                if (gfx.getWidth() < (m_cursorX + charBoxWidth))
+                uint16_t charBoxWidth  = 0U;
+                uint16_t charBoxHeight = 0U;
+
+                if (true == m_font.getCharBoundingBox(singleChar, charBoxWidth, charBoxHeight))
                 {
-                    m_cursorX = 0;
-                    m_cursorY += charBoxHeight;
+                    if (gfx.getWidth() < (m_cursorX + charBoxWidth))
+                    {
+                        m_cursorX  = 0;
+                        m_cursorY += charBoxHeight;
+                    }
                 }
             }
-        }
 
-        m_font.drawChar(gfx, m_cursorX, m_cursorY, singleChar, m_textColor);
+            m_font.drawChar(gfx, m_cursorX, m_cursorY, singleChar, *m_brush);
+        }
     }
 
     /**
@@ -422,7 +426,7 @@ public:
             return;
         }
 
-        while('\0' != text[idx])
+        while ('\0' != text[idx])
         {
             drawChar(gfx, text[idx]);
             ++idx;
@@ -431,18 +435,18 @@ public:
 
 private:
 
-    int16_t             m_cursorX;              /**< Cursor x-coordinate */
-    int16_t             m_cursorY;              /**< Cursor y-coordinate */
-    TColor              m_textColor;            /**< Text color */
-    bool                m_isTextWrapEnabled;    /**< Is text wrap around enabled or not? */
-    BaseFont<TColor>    m_font;                 /**< The graphical font, which to use. */
-
+    int16_t                   m_cursorX;           /**< Cursor x-coordinate */
+    int16_t                   m_cursorY;           /**< Cursor y-coordinate */
+    BaseGfxSolidBrush<TColor> m_solidBrush;        /**< Solid text color brush. */
+    BaseGfxBrush<TColor>*     m_brush;             /**< Current text color brush. */
+    bool                      m_isTextWrapEnabled; /**< Is text wrap around enabled or not? */
+    BaseFont<TColor>          m_font;              /**< The graphical font, which to use. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_GFX_TEXT_HPP */
+#endif /* BASE_GFX_TEXT_HPP */
 
 /** @} */

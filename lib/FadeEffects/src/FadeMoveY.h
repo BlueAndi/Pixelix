@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   FadeMoveY.h
  * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Yann Le Glaz <yann_le@web.de>
  *
@@ -111,19 +112,18 @@ private:
     /** Fading states. */
     enum FadeState
     {
-        FADE_STATE_INIT = 0,    /**< Initialize fadeing */
-        FADE_STATE_OUT          /**< Fading out is pending */
+        FADE_STATE_INIT = 0, /**< Initialize fadeing */
+        FADE_STATE_OUT       /**< Fading out is pending */
     };
 
-    FadeState   m_state;        /**< Current fading state */
-    int16_t     m_yOffset;      /**< Current y-offset regarding movement */
-
+    FadeState m_state;   /**< Current fading state */
+    int16_t   m_yOffset; /**< Current y-offset regarding movement */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* FADE_MOVE_Y_H */
+#endif /* FADE_MOVE_Y_H */
 
 /** @} */

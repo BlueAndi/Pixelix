@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   RestartState.cpp
  * @brief  System state: Restart
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -35,7 +36,7 @@
 #include "RestartState.h"
 #include "DisplayMgr.h"
 #include "MyWebServer.h"
-#include "UpdateMgr.h"
+#include "RestartMgr.h"
 #include "FileSystem.h"
 #include "Services.h"
 #include "SensorDataProvider.h"
@@ -47,6 +48,7 @@
 #include <Logging.h>
 #include <Util.h>
 #include <ESPmDNS.h>
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -83,10 +85,11 @@ void RestartState::entry(StateMachine& sm)
 
 void RestartState::process(StateMachine& sm)
 {
+    Display& display = Display::getInstance();
+
     UTIL_NOT_USED(sm);
 
     MyWebServer::process();
-    UpdateMgr::getInstance().process();
 
     /* Wait a certain amount of time, because there may be still some pending tasks, which
      * need to be finished before the system is restarted.
@@ -110,19 +113,31 @@ void RestartState::process(StateMachine& sm)
          */
         DisplayMgr::getInstance().end();
 
-        /* Clear display */
-        Display::getInstance().clear();
-        Display::getInstance().show();
+        if (false == RestartMgr::getInstance().isPartitionChange())
+        {
+            /* Clear display */
+            display.clear();
+        }
+        else
+        {
+            TextWidget textWidget(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT, 1, 1);
 
-        /* Wait till all physical pixels are cleared. */
-        while(false == Display::getInstance().isReady())
+            /* Show "Updater". */
+            display.fillScreen(ColorDef::BLACK);
+            textWidget.setFormatStr("{#FF0000}U{#FFFF00}p{#00FF00}d{#00FFFF}a{#0000FF}t{#FF00FF}e{#FF0000}r");
+            textWidget.disableFadeEffect();
+            textWidget.update(display);
+        }
+
+        display.show();
+
+        /* Wait until the LED matrix is updated. */
+        while (false == display.isReady())
         {
             /* Just wait ... */
             ;
         }
 
-        /* Avoid any external request. */
-        UpdateMgr::getInstance().end();
         Topics::end();
 
         /* Stop services.

@@ -47,6 +47,13 @@
 .indicator {
     margin-right:5px;
 }
+.tree-icon {
+    margin-right:5px;
+    cursor: pointer;
+}
+.tree-icon svg {
+    cursor: pointer;
+}
 .tree li a {
     text-decoration: none;
     color:#369;

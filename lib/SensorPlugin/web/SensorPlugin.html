@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,18 +13,21 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -35,47 +39,37 @@
                 <h1 class="mt-5">SensorPlugin</h1>
                 <p><img src="SensorPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows sensor values of the selected sensor channel.</p>
-                <h2>REST API</h2>
-                <h3>Get all installed sensor drivers and their provided channels.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/sensors</code></pre>
-                <h3>Get current selected sensor and channel.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/channel</code></pre>
-                <h3>Set sensor and channel, which values to show.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/channel?sensorIndex=&lt;SENSOR-IDX&gt;&channelIndex=&lt;CHANNEL-IDX&gt;</code></pre>
-                <ul>
-                    <li>SENSOR-IDX: The sensor index.</li>
-                    <li>CHANNEL-IDX: The channel index of the sensor.</li>
-                </ul>
+                <p>Which kind of sensor is available depends on the installed sensor drivers.</p>
                 <h2>Configuration</h2>
                 <h3>Sensor and Channel</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
                             <select class="form-select" id="pluginUid" size="1" onChange="getSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value)">
-                            </select>    
+                            </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="sensorList">Sensor:</label>
                             <select class="form-select" id="sensorList" onChange="updateChannelList(sensorList.options[sensorList.selectedIndex].value)">
-                            </select>    
+                            </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label class="form-label" for="channelList">Channel:</label>
                             <select class="form-select" id="channelList">
-                            </select>    
+                            </select>
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
-                </div>  
+                </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -83,6 +77,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
@@ -94,31 +89,31 @@
 
         <script>
 
-            var pluginName  = "SensorPlugin";
-            var restClient  = new pixelix.rest.Client();
-            var sensors     = [];
-    
+            var pluginName = "SensorPlugin";
+            var restClient = new pixelix.rest.Client();
+            var sensors = [];
+
             function enableUI() {
                 utils.enableForm("myForm", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("myForm", false);
             }
-    
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
+
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -130,7 +125,7 @@
                             $option = $("<option>")
                                 .val(rsp.data.slots[slotIndex].uid)
                                 .text(optionText);
-                            
+
                             $("#pluginUid").append($option);
 
                             ++cnt;
@@ -138,15 +133,15 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
             };
 
             function getSensors() {
-                return restClient.getSensors().then(function(rsp) {
-                    var index   = 0;
+                return restClient.getSensors().then(function (rsp) {
+                    var index = 0;
                     var $option = null;
 
                     sensors = rsp.data.sensors;
@@ -156,8 +151,8 @@
                         .text("-");
 
                     $("#sensorList").append($option);
-                    
-                    for(index = 0; index < sensors.length; ++index) {
+
+                    for (index = 0; index < sensors.length; ++index) {
 
                         if (true === sensors[index].isAvailable) {
 
@@ -174,19 +169,19 @@
                     return Promise.resolve();
                 });
             }
-    
+
             function getSensorAndChannel(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
                     isJsonResponse: true
-                }).then(function(rsp) {
+                }).then(function (rsp) {
 
                     var sensorIndex = 0;
                     var channelIndex = 0;
 
-                    while(rsp.data.sensorIndex !== sensors[sensorIndex].index) {
+                    while (rsp.data.sensorIndex !== sensors[sensorIndex].index) {
                         ++sensorIndex;
                     }
 
@@ -199,16 +194,16 @@
 
                         } else {
                             $("#sensorList").val(rsp.data.sensorIndex);
-                            
+
                             updateChannelList(rsp.data.sensorIndex)
 
                             $("#channelList").val(rsp.data.channelIndex);
                         }
                     }
 
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
@@ -218,29 +213,29 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
+                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
                     isJsonResponse: true,
                     parameter: {
                         sensorIndex: $("#sensorList").val(),
                         channelIndex: $("#channelList").val()
                     }
-                }).then(function(rsp) {
+                }).then(function (rsp) {
                     alert("Ok.");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                }).finally(function () {
                     enableUI();
                 });
             }
 
             function updateChannelList(sensorIndex) {
-                var index   = 0;
+                var index = 0;
                 var $option = null;
 
                 $("#channelList").empty();
 
                 if (0 <= sensorIndex) {
-                    for(index = 0; index < sensors[sensorIndex].channels.length; ++index) {
+                    for (index = 0; index < sensors[sensorIndex].channels.length; ++index) {
 
                         $option = $("<option>")
                             .val(sensors[sensorIndex].channels[index].index)
@@ -251,34 +246,43 @@
                 }
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
-                
-                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Get all available sensors. */
                 getSensors()
-                /* Load all plugin instances. */
-                .then(function() {
-                    return getPluginInstances();
-                }).then(function(cnt) {
-                    var select = document.getElementById("pluginUid");
+                    /* Load all plugin instances. */
+                    .then(function () {
+                        return getPluginInstances();
+                    }).then(function (cnt) {
+                        var select = document.getElementById("pluginUid");
 
-                    if (0 < cnt) {
+                        if (0 < cnt) {
+                            /* Check if UID was passed in URL and auto-select it */
+                            var uidFromUrl = utils.getURLParameter('uid');
+                            if (uidFromUrl) {
+                                for (var i = 0; i < select.options.length; i++) {
+                                    if (select.options[i].value === uidFromUrl) {
+                                        select.selectedIndex = i;
+                                        break;
+                                    }
+                                }
+                            }
 
-                        return getSensorAndChannel(
-                            select.options[select.selectedIndex].value
-                        );
-                    }
-                }).catch(function(err) {
-                    alert("Internal error.");
-                });
+                            return getSensorAndChannel(
+                                select.options[select.selectedIndex].value
+                            );
+                        }
+                    }).catch(function (err) {
+                        alert("Internal error.");
+                    });
             });
         </script>
     </body>
+
 </html>

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   MyWebServer.cpp
  * @brief  Web server
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -61,11 +62,15 @@ static void error(AsyncWebServerRequest* request);
  * Local Variables
  *****************************************************************************/
 
-/** Web server */
-static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
+/**
+ * The web server instance.
+ *
+ * @return Its not a function, it's a variable! Doxygen just gets confused here.
+ */
+static AsyncWebServer gWebServer(WebConfig::WEBSERVER_PORT);
 
 /** Is captive portal enabled? */
-static bool             gIsCaptivePortalEnabled = false;
+static bool gIsCaptivePortalEnabled = false;
 
 /******************************************************************************
  * Public Methods
@@ -154,5 +159,4 @@ static void error(AsyncWebServerRequest* request)
     {
         Pages::error(request);
     }
-
 }

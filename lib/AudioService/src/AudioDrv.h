@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   AudioDrv.h
  * @brief  Audio driver
  * @author Andreas Merkle <web@blue-andi.de>
  * 
@@ -42,6 +43,7 @@
 #include <stdint.h>
 #include <driver/i2s_std.h>
 #include <Mutex.hpp>
+#include <Task.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -87,7 +89,6 @@ protected:
     IAudioObserver()
     {
     }
-
 };
 
 /**
@@ -239,9 +240,7 @@ private:
     static const uint32_t               MAX_OBSERVERS           = 3U;
 
     mutable Mutex       m_mutex;                            /**< Mutex used for concurrent access protection. */
-    TaskHandle_t        m_taskHandle;                       /**< Task handle */
-    bool                m_taskExit;                         /**< Flag to signal the task to exit. */
-    SemaphoreHandle_t   m_xSemaphore;                       /**< Binary semaphore used to signal the task exit. */
+    Task<AudioDrv>        m_task;                     /**< The audio driver task, which will process the audio samples. */
     bool                m_isMicAvailable;                   /**< Is a microphone as input device available? */
     i2s_chan_handle_t   m_i2sRxChannelHandle;               /**< I2S RX channel handle. */
     uint8_t             m_dmaBlockBuffer[DMA_BLOCK_SIZE];   /**< DMA block buffer, used to increase performance. */
@@ -255,9 +254,7 @@ private:
      */
     AudioDrv() :
         m_mutex(),
-        m_taskHandle(nullptr),
-        m_taskExit(false),
-        m_xSemaphore(nullptr),
+        m_task("AudioDrvTask", processTask, TASK_STACK_SIZE, TASK_PRIORITY, TASK_RUN_CORE),
         m_isMicAvailable(false),
         m_i2sRxChannelHandle(nullptr),
         m_dmaBlockBuffer(),
@@ -282,9 +279,9 @@ private:
     /**
      * Processing task.
      *
-     * @param[in]   parameters  Task pParameters
+     * @param[in] self    Pointer to the audio driver instance.
      */
-    static void processTask(void* parameters);
+    static void processTask(AudioDrv* self);
 
     /**
      * Process the main part in the processing task.

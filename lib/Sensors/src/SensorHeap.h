@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SensorHeap.h
  * @brief  Heap memory observer driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -93,7 +94,7 @@ public:
      */
     uint32_t getValue() final
     {
-        return ESP.getFreeHeap();
+        return heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT);
     }
 
     /**
@@ -162,7 +163,7 @@ public:
      */
     uint32_t getValue() final
     {
-        return ESP.getMinFreeHeap();
+        return heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT);
     }
 
     /**
@@ -231,7 +232,7 @@ public:
      */
     uint32_t getValue() final
     {
-        return ESP.getMaxAllocHeap();
+        return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT);
     }
 
     /**

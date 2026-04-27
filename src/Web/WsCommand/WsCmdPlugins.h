@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdPlugins.h
  * @brief  Websocket command get plugins information
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -56,7 +57,7 @@
 /**
  * Websocket command get plugins information
  */
-class WsCmdPlugins: public WsCmd
+class WsCmdPlugins : public WsCmd
 {
 public:
 
@@ -93,7 +94,7 @@ public:
 
 private:
 
-    bool    m_isError;  /**< Any error happened during parameter reception? */
+    bool m_isError; /**< Any error happened during parameter reception? */
 
     WsCmdPlugins(const WsCmdPlugins& cmd);
     WsCmdPlugins& operator=(const WsCmdPlugins& cmd);
@@ -103,6 +104,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* WSCMDPLUGINS_H */
+#endif /* WSCMDPLUGINS_H */
 
 /** @} */

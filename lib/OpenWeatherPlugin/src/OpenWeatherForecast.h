@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   OpenWeatherForecast.h
  * @brief  OpenWeather source for forecast weather data
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -84,7 +85,7 @@ public:
 
     /**
      * Get the API key.
-     * 
+     *
      * @return API key
      */
     const String& getApiKey() const final
@@ -94,7 +95,7 @@ public:
 
     /**
      * Set the API key.
-     * 
+     *
      * @param[in] apiKey    The API key which to set.
      */
     void setApiKey(const String& apiKey) final
@@ -103,8 +104,18 @@ public:
     }
 
     /**
+     * Set the API key.
+     *
+     * @param[in] apiKey    The API key which to set.
+     */
+    void setApiKey(const char* apiKey) final
+    {
+        m_apiKey = apiKey;
+    }
+
+    /**
      * Get the latitude.
-     * 
+     *
      * @return Latitude
      */
     const String& getLatitude() const final
@@ -113,8 +124,8 @@ public:
     }
 
     /**
-     * Set thel latidue.
-     * 
+     * Set the latitude.
+     *
      * @param[in] latitude  The latitude which to set.
      */
     void setLatitude(const String& latitude) final
@@ -123,8 +134,18 @@ public:
     }
 
     /**
+     * Set the latitude.
+     *
+     * @param[in] latitude  The latitude which to set.
+     */
+    void setLatitude(const char* latitude) final
+    {
+        m_latitude = latitude;
+    }
+
+    /**
      * Get the longitude.
-     * 
+     *
      * @return Longitude
      */
     const String& getLongitude() const final
@@ -134,7 +155,7 @@ public:
 
     /**
      * Set the longitude.
-     * 
+     *
      * @param[in] longitude The longitude which to set.
      */
     void setLongitude(const String& longitude) final
@@ -143,9 +164,19 @@ public:
     }
 
     /**
+     * Set the longitude.
+     *
+     * @param[in] longitude The longitude which to set.
+     */
+    void setLongitude(const char* longitude) final
+    {
+        m_longitude = longitude;
+    }
+
+    /**
      * Get the units which are used for temperature and
      * wind speed.
-     * 
+     *
      * @return Units
      */
     const String& getUnits() const final
@@ -155,7 +186,7 @@ public:
 
     /**
      * Set the units to use temperature and wind speed.
-     * 
+     *
      * @param[in] units The units which to set.
      */
     void setUnits(const String& units) final
@@ -164,8 +195,18 @@ public:
     }
 
     /**
+     * Set the units to use temperature and wind speed.
+     *
+     * @param[in] units The units which to set.
+     */
+    void setUnits(const char* units) final
+    {
+        m_units = units;
+    }
+
+    /**
      * Adds the URI to the base URL.
-     * 
+     *
      * @param[out] url  The base URL to use.
      */
     void getUrl(String& url) const final;
@@ -174,7 +215,7 @@ public:
      * Get the filter which to apply on the response from the weather source.
      * Its a positive filter, which means everything marked with true, will
      * be used. Everything else will not be considered.
-     * 
+     *
      * @param[out] jsonFilterDoc    The filter which to use.
      */
     void getFilter(JsonDocument& jsonFilterDoc) const final;
@@ -182,7 +223,7 @@ public:
     /**
      * Parse a response from the weather source and will update its internal
      * data.
-     * 
+     *
      * @param[out] jsonDoc  The JSON response which to parse.
      */
     void parse(const JsonDocument& jsonDoc) final;
@@ -191,9 +232,9 @@ public:
      * Get the min. temperature.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @param[in] day   Forecast day [0; 4]
-     * 
+     *
      * @return Temperature, the unit is according to configuration.
      */
     float getTemperatureMin(uint8_t day) const final;
@@ -202,18 +243,18 @@ public:
      * Get the max. temperature.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
-     * 
+     *
      * @param[in] day   Forecast day [0; 4]
-     * 
+     *
      * @return Temperature, the unit is according to configuration.
      */
     float getTemperatureMax(uint8_t day) const final;
 
     /**
      * Get the weather icon id.
-     * 
+     *
      * @param[in] day   Forecast day [0; 4]
-     * 
+     *
      * @return Weather icon id
      */
     const String getWeatherIconId(uint8_t day) const final;
@@ -225,9 +266,9 @@ private:
      */
     struct WeatherInfo
     {
-        float   temperatureMin; /**< Min. temperature, unit according to configuration. */
-        float   temperatureMax; /**< Max. temperature, unit according to configuration. */
-        String  weatherIconId;  /**< Weather icon id. */
+        float  temperatureMin; /**< Min. temperature, unit according to configuration. */
+        float  temperatureMax; /**< Max. temperature, unit according to configuration. */
+        String weatherIconId;  /**< Weather icon id. */
 
         /** Construct the weather info object. */
         WeatherInfo() :
@@ -243,11 +284,11 @@ private:
         }
     };
 
-    String      m_apiKey;                       /**< OpenWeather API Key */
-    String      m_latitude;                     /**< The latitude. */
-    String      m_longitude;                    /**< The longitude. */
-    String      m_units;                        /**< The units to use for temperature and wind speed. */
-    WeatherInfo m_weatherInfo[FORECAST_DAYS];   /**< Weather forecast info of every day. */
+    String      m_apiKey;                     /**< OpenWeather API Key */
+    String      m_latitude;                   /**< The latitude. */
+    String      m_longitude;                  /**< The longitude. */
+    String      m_units;                      /**< The units to use for temperature and wind speed. */
+    WeatherInfo m_weatherInfo[FORECAST_DAYS]; /**< Weather forecast info of every day. */
 
     /* Not allowed. */
     OpenWeatherForecast(const OpenWeatherForecast& other);
@@ -258,6 +299,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* OPEN_WEATHER_FORECAST_H */
+#endif /* OPEN_WEATHER_FORECAST_H */
 
 /** @} */

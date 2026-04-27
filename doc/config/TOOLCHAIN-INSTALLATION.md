@@ -34,18 +34,16 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 
 ### Linux (Debian, Ubuntu)
 
-1.
-```
-$ sudo apt update
-```
-2.
-```
-$ sudo apt install git
-```
+1. ```sudo apt update```
+2. ```sudo apt install git```
+3. ```sudo git lfs install```
 
 ### Windows
 
 If you like to hack on the console/command shell, just [git for windows](https://gitforwindows.org) is necessary to install. Alternative with a graphical user interface install [TortoiseGIT](https://tortoisegit.org/), which includes [git for windows](https://gitforwindows.org).
+
+1. After git installation open a terminal (command line shell or powershell).
+2. ```git lfs install```
 
 ## Installation Of Test Environment
 
@@ -54,28 +52,15 @@ The test environment is only necessary if you want to modify the sourcecode and 
 
 ### Linux (Debian, Ubuntu)
 
-1.
-```
-$ sudo apt update
-```
-2.
-```
-$ sudo apt install build-essential
-```
-3.
-```
-$ sudo apt-get install manpages-dev
-```
+1. ```sudo apt update```
+2. ```sudo apt install build-essential```
+3. ```sudo apt-get install manpages-dev```
 
 ### Windows
 
-1. For the test environment on windows platform, install [Mingw-w64](http://mingw-w64.org/) by using the [online installer](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer) and following installation settings:
-    * Version: Choose the newest
-    * Architecture: x86_64
-    * Threads: posix
-    * [Exception](https://wiki.qt.io/MinGW-64-bit#Exception_handling:_SJLJ.2C_DWARF.2C_and_SEH): seh
-    * Build revision: 0
-2. Add Mingw binary folder (```C:\Program Files\mingw-w64\<depends-on-your-installation-settings>\mingw64\bin```)to path, see environment variables.
+1. For the test environment on windows platform, install [MSYS2](https://www.msys2.org/) by following its instructions
+2. Open MSYS2 UCRT64 terminal.
+3. Install the gcc compiler package: ```pacman -S mingw-w64-ucrt-x86_64-gcc```
 
 ## Next Step
 
@@ -83,7 +68,7 @@ The necessary tools are now installed and ready to use. The [next step](SW-BUILD
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

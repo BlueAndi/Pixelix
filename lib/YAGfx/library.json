@@ -1,7 +1,7 @@
 {
     "name": "YAGfx",
     "version": "0.1.0",
-    "description": "Yet another graphic library, based on BaseGfx and combined with RGB888 color format.",
+    "description": "Yet another graphic library, based on BaseGfx and combined with RGB888 or RGB565 color format.",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -10,6 +10,8 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Allocator"
+    }, {
         "name": "BaseGfx"
     }],
     "frameworks": "*",

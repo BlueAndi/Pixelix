@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TWAbstractSyntaxTree.h
  * @brief  Text widget abstract syntax tree
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -79,9 +80,8 @@ public:
      */
     TWAbstractSyntaxTree(const TWAbstractSyntaxTree& other) :
         m_tokenTrash(other.m_tokenTrash),
-        m_tokens()
+        m_tokens(other.m_tokens)
     {
-        copy(other.m_tokens);
     }
 
     /**
@@ -157,17 +157,10 @@ public:
 private:
 
     /** Token list */
-    typedef std::vector<TWToken*> TokenList;
+    typedef std::vector<TWToken> TokenList;
 
-    TWToken                       m_tokenTrash; /**< Used for invalid token access. */
-    TokenList                     m_tokens;     /**< Token AST */
-
-    /**
-     * Copy tokens from other AST.
-     *
-     * @param[in] other Other AST which to copy.
-     */
-    void copy(const TokenList& other);
+    TWToken                      m_tokenTrash; /**< Used for invalid token access. */
+    TokenList                    m_tokens;     /**< Token AST */
 };
 
 /******************************************************************************

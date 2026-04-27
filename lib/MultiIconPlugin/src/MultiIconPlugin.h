@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   MultiIconPlugin.h
  * @brief  Multiple icon plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
@@ -102,6 +103,13 @@ public:
     {
         return new (std::nothrow) MultiIconPlugin(name, uid);
     }
+
+    /**
+     * Is plugin enabled or not?
+     *
+     * @return If plugin is enabled, it will return true otherwise false.
+     */
+    bool isEnabled() const final;
 
     /**
      * Get plugin topics, which can be get/set via different communication
@@ -302,14 +310,14 @@ private:
     /**
      * Get persistent configuration in JSON.
      *
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg   Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set persistent configuration in JSON.
      *
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg   Configuration
      *
      * @return If successful set, it will return true otherwise false.
      */

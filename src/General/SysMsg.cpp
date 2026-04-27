@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SysMsg.cpp
  * @brief  System message
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -66,7 +67,7 @@ bool SysMsg::init()
 {
     bool status = false;
 
-    m_plugin = static_cast<SysMsgPlugin*>(PluginMgr::getInstance().install("SysMsgPlugin"));
+    m_plugin    = static_cast<SysMsgPlugin*>(PluginMgr::getInstance().install("SysMsgPlugin"));
 
     if (nullptr != m_plugin)
     {
@@ -96,22 +97,6 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
         {
             LOG_WARNING("System message suppressed.");
         }
-    }
-}
-
-void SysMsg::enableSignal()
-{
-    if (nullptr != m_plugin)
-    {
-        m_plugin->enableSignal();
-    }
-}
-
-void SysMsg::disableSignal()
-{
-    if (nullptr != m_plugin)
-    {
-        m_plugin->disableSignal();
     }
 }
 

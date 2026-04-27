@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   GrabViaMqttPlugin.cpp
  * @brief  Grab information via MQTT API plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -64,6 +65,20 @@ const char* GrabViaMqttPlugin::TOPIC_CONFIG = "grabConfig";
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+bool GrabViaMqttPlugin::isEnabled() const
+{
+    bool isEnabled = false;
+
+    /* The plugin shall only be scheduled if its enabled and text is set. */
+    if ((true == m_isEnabled) &&
+        (false == m_view.getText().isEmpty()))
+    {
+        isEnabled = true;
+    }
+
+    return isEnabled;
+}
 
 void GrabViaMqttPlugin::getTopics(JsonArray& topics) const
 {
@@ -112,7 +127,7 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
         if (false == jsonPath.isNull())
         {
-            jsonCfg["path"] = jsonPath.as<String>();
+            jsonCfg["path"] = jsonPath.as<const char*>();
             isSuccessful    = true;
         }
 
@@ -132,7 +147,7 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
             {
                 const size_t         JSON_DOC_FILTER_SIZE = 256U;
                 DynamicJsonDocument  jsonDocFilter(JSON_DOC_FILTER_SIZE);
-                DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<String>());
+                DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<const char*>());
 
                 if (DeserializationError::Ok == result)
                 {
@@ -166,7 +181,7 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
         if (false == jsonFormat.isNull())
         {
-            jsonCfg["format"] = jsonFormat.as<String>();
+            jsonCfg["format"] = jsonFormat.as<const char*>();
             isSuccessful      = true;
         }
 
@@ -226,21 +241,15 @@ void GrabViaMqttPlugin::start(uint16_t width, uint16_t height)
         if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
         {
             LOG_WARNING("Unknown file id %u.", m_iconFileId);
-            m_view.setupTextOnly();
         }
         else if (false == m_view.loadIcon(iconFullPath))
         {
             LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-            m_view.setupTextOnly();
         }
         else
         {
-            m_view.setupBitmapAndText();
+            ;
         }
-    }
-    else
-    {
-        m_view.setupTextOnly();
     }
 
     subscribe();
@@ -327,58 +336,51 @@ bool GrabViaMqttPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     else
     {
         bool                       reqInit = false;
-        bool                       reqIcon = false;
         MutexGuard<MutexRecursive> guard(m_mutex);
+        FileMgrService::FileId     newIconFileId = jsonIconFileId.as<FileMgrService::FileId>();
 
-        if (m_path != jsonPath.as<String>())
+        if (m_path != jsonPath.as<const char*>())
         {
             unsubscribe();
             reqInit = true;
         }
 
-        if (m_iconFileId != jsonIconFileId.as<FileMgrService::FileId>())
-        {
-            reqIcon = true;
-        }
-
-        m_path       = jsonPath.as<String>();
+        m_path       = jsonPath.as<const char*>();
         m_filter     = jsonFilter;
-        m_iconFileId = jsonIconFileId.as<FileMgrService::FileId>();
-        m_format     = jsonFormat.as<String>();
+        m_format     = jsonFormat.as<const char*>();
         m_multiplier = jsonMultiplier.as<float>();
         m_offset     = jsonOffset.as<float>();
 
-        if (true == reqInit)
+        if (m_iconFileId != newIconFileId)
         {
-            subscribe();
-        }
+            m_iconFileId = newIconFileId;
 
-        /* Load icon immediately */
-        if (true == reqIcon)
-        {
-            if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
+            if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
+            {
+                m_view.clearIcon();
+            }
+            else
             {
                 String iconFullPath;
 
                 if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
                 {
                     LOG_WARNING("Unknown file id %u.", m_iconFileId);
-                    m_view.setupTextOnly();
-                }
-                else if (false == m_view.loadIcon(iconFullPath))
-                {
-                    LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-                    m_view.setupTextOnly();
+                    m_view.clearIcon();
                 }
                 else
                 {
-                    m_view.setupBitmapAndText();
+                    if (false == m_view.loadIcon(iconFullPath))
+                    {
+                        LOG_WARNING("Couldn't load icon: %s", iconFullPath.c_str());
+                    }
                 }
             }
-            else
-            {
-                m_view.setupTextOnly();
-            }
+        }
+
+        if (true == reqInit)
+        {
+            subscribe();
         }
 
         m_hasTopicChanged = true;
@@ -453,10 +455,9 @@ void GrabViaMqttPlugin::subscribe()
 
     if (false == m_path.isEmpty())
     {
-        (void)mqttService.subscribe(m_path,
-            [this](const String& topic, const uint8_t* payload, size_t size) {
-                this->mqttTopicCallback(topic, payload, size);
-            });
+        (void)mqttService.subscribe(MqttService::PRIMARY_MQTT_INST, m_path, [this](const String& topic, const uint8_t* payload, size_t size) {
+            this->mqttTopicCallback(topic, payload, size);
+        });
     }
 }
 
@@ -466,7 +467,7 @@ void GrabViaMqttPlugin::unsubscribe()
 
     if (false == m_path.isEmpty())
     {
-        mqttService.unsubscribe(m_path);
+        mqttService.unsubscribe(MqttService::PRIMARY_MQTT_INST, m_path);
     }
 }
 
@@ -493,7 +494,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
 
         if (true == jsonDocValues.overflowed())
         {
-            LOG_ERROR("Less memory for JSON values available.");
+            LOG_ERROR("JSON document size exceeded.");
 
             /* The last value may be corrupt, throw it away and show the rest. */
             if (0U < valueCount)
@@ -563,7 +564,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
                 const size_t BUFFER_SIZE = 128U;
                 char         buffer[BUFFER_SIZE];
 
-                (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
+                (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<const char*>());
 
                 outputStr += buffer;
             }
@@ -571,11 +572,6 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
             {
                 outputStr += "?";
             }
-        }
-
-        if (true == outputStr.isEmpty())
-        {
-            outputStr = "{hc}-";
         }
 
         LOG_INFO("Grabbed: %s", outputStr.c_str());

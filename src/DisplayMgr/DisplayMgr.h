@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   DisplayMgr.h
  * @brief  Display manager
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -47,14 +48,19 @@
 #include <Board.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
-#include <FadeLinear.h>
-#include <FadeMoveX.h>
-#include <FadeMoveY.h>
 #include <Mutex.hpp>
-#include <YAGfxBitmap.h>
+#include <Task.hpp>
+#include <IndicatorViewBase.hpp>
+#include <Fonts.h>
 
 #include "IPluginMaintenance.hpp"
 #include "SlotList.h"
+#include "FadeEffectController.h"
+#include "DoubleFrameBuffer.h"
+
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+#include <StatisticValue.hpp>
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
 /******************************************************************************
  * Macros
@@ -73,15 +79,19 @@ class DisplayMgr
 {
 public:
 
-    /** Fade effects */
-    enum FadeEffect
+    /** Slot configuration. */
+    typedef struct
     {
-        FADE_EFFECT_NONE = 0, /**< No fade effect */
-        FADE_EFFECT_LINEAR,   /**< Linear dimming fade effect. */
-        FADE_EFFECT_MOVE_X,   /**< Moving fade effect into the direction of negative x-coordinates. */
-        FADE_EFFECT_MOVE_Y,   /**< Moving fade effect into the direction of negative y-coordinates. */
-        FADE_EFFECT_COUNT     /**< Number of fade effects. */
-    };
+        String          name;       /**< Plugin name. */
+        uint16_t        uid;        /**< Plugin UID. */
+        String          alias;      /**< Plugin alias name. */
+        Fonts::FontType fontType;   /**< Font type. */
+        uint32_t        duration;   /**< Duration in ms, how long the plugin will be shown. */
+        bool            isLocked;   /**< Is the slot locked? */
+        bool            isSticky;   /**< Is the slot sticky? */
+        bool            isDisabled; /**< Is the slot disabled? */
+
+    } SlotConfig;
 
     /**
      * Get display manager instance.
@@ -196,6 +206,24 @@ public:
     bool setPluginAliasName(uint16_t uid, const String& alias);
 
     /**
+     * Get the font type of a plugin.
+     * If the given plugin UID is invalid, it will return Fonts::FontType::FONT_TYPE_DEFAULT.
+     *
+     * @param[in] uid   Plugin UID
+     * @return The plugin font type.
+     */
+    Fonts::FontType getPluginFontType(uint16_t uid) const;
+
+    /**
+     * Set the font type of a plugin.
+     *
+     * @param[in] uid       Plugin UID
+     * @param[in] fontType  Plugin font type
+     * @return If successful, it will return true otherwise false.
+     */
+    bool setPluginFontType(uint16_t uid, Fonts::FontType fontType);
+
+    /**
      * Get slot id by plugin UID.
      *
      * @param[in] uid   Plugin UID
@@ -212,6 +240,16 @@ public:
      * @return Plugin which is installed in given slot.
      */
     IPluginMaintenance* getPluginInSlot(uint8_t slotId);
+
+    /**
+     * Get slot configuration.
+     *
+     * @param[in] slotId    Slot id, where to get configuration.
+     * @param[out] config   Slot configuration
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool getSlotConfig(uint8_t slotId, SlotConfig& config) const;
 
     /**
      * Get slot which is marked sticky.
@@ -245,7 +283,7 @@ public:
      * If no enabled plugin is in the slot, it will fail.
      *
      * @param[in] slotId    Id of the slot which to activate.
-     * 
+     *
      * @return If successful activated, it will return true otherwise false.
      */
     bool activateSlot(uint8_t slotId);
@@ -262,17 +300,20 @@ public:
 
     /**
      * Activate next fade effect.
+     * If selected fade effect is FadeEffectController::FADE_EFFECT_COUNT,
+     * the next fade effect will be selected in the order as defined in the
+     * FadeEffectController::FadeEffect enum.
      *
-     * @param[in] fadeEffect fadeEffect to be activated.
+     * @param[in] fadeEffect Fade effect to be activated.
      */
-    void activateNextFadeEffect(FadeEffect fadeEffect);
+    void activateNextFadeEffect(FadeEffectController::FadeEffect fadeEffect);
 
     /**
-     * Get fade effect.
+     * Get selected fade effect.
      *
-     * @return the currently active fadeEffect.
+     * @return The currently selected fade effect.
      */
-    FadeEffect getFadeEffect();
+    FadeEffectController::FadeEffect getFadeEffect() const;
 
     /**
      * Move plugin to a different slot.
@@ -300,7 +341,7 @@ public:
 
     /**
      * Is slot locked?
-     * 
+     *
      * @param[in] slotId    Slot id
      *
      * @return If slot is locked, it will return true otherwise false.
@@ -327,7 +368,7 @@ public:
 
     /**
      * Is slot disabled?
-     * 
+     *
      * @param[in] slotId    Slot id
      *
      * @return If slot is disabled, it will return true otherwise false.
@@ -341,7 +382,7 @@ public:
      *
      * @return Duration in ms
      */
-    uint32_t getSlotDuration(uint8_t slotId);
+    uint32_t getSlotDuration(uint8_t slotId) const;
 
     /**
      * Set slot duration in ms, how long the given plugin will be shown.
@@ -394,31 +435,83 @@ public:
      */
     bool isDisplayOn() const;
 
+    /**
+     * Get indicator state.
+     * If the indicator id is invalid, it will return STATE_OFF.
+     *
+     * @param[in] indicatorId  Id of indicator.
+     *
+     * @return State of the indicator.
+     */
+    IIndicatorView::State getIndicatorState(uint8_t indicatorId) const;
+
+    /**
+     * Set indicator state.
+     * If the indicator id is invalid, it will do nothing.
+     *
+     * The indicator id 255 will be used to turn on/off all indicators at once.
+     *
+     * @param[in] indicatorId  Id of indicator
+     * @param[in] state        State of the indicator.
+     */
+    void setIndicatorState(uint8_t indicatorId, IIndicatorView::State state);
+
+    /**
+     * Get current frames per second (fps).
+     *
+     * @return Current frames per second.
+     */
+    uint32_t getFps() const;
+
+    /**
+     * Indicator id for all indicators.
+     */
+    static const uint8_t INDICATOR_ID_ALL     = IndicatorViewBase::INDICATOR_ID_ALL;
+
+    /**
+     * Indicator id for network connection.
+     */
+    static const uint8_t INDICATOR_ID_NETWORK = 0U;
+
 private:
 
     /** The process task stack size in bytes */
-    static const uint32_t PROCESS_TASK_STACK_SIZE  = 4096U;
+    static const uint32_t PROCESS_TASK_STACK_SIZE        = 5120U;
 
     /** The process task period in ms. */
-    static const uint32_t PROCESS_TASK_PERIOD      = 100U;
+    static const uint32_t PROCESS_TASK_PERIOD            = 100U;
 
     /** The process task shall run on the APP MCU core. */
-    static const BaseType_t PROCESS_TASK_RUN_CORE  = APP_CPU_NUM;
+    static const BaseType_t PROCESS_TASK_RUN_CORE        = APP_CPU_NUM;
 
     /** The process task priority shall be equal than the Arduino loop task priority. */
-    static const UBaseType_t PROCESS_TASK_PRIORITY = 1U;
+    static const UBaseType_t PROCESS_TASK_PRIORITY       = 1U;
 
     /** The update task stack size in bytes */
-    static const uint32_t UPDATE_TASK_STACK_SIZE   = 4096U;
+    static const uint32_t UPDATE_TASK_STACK_SIZE         = 4096U;
 
-    /** The update task period in ms. */
-    static const uint32_t UPDATE_TASK_PERIOD       = 20U;
+    /**
+     * The minimal update task period in ms, which corresponds to 50 fps.
+     * Its the default at start.
+     */
+    static const uint32_t UPDATE_TASK_PERIOD_MIN         = 20U;
+
+    /** The maximal update task period in ms, which corresponds to 5 fps. */
+    static const uint32_t UPDATE_TASK_PERIOD_MAX         = 200U;
+
+    /** The update task period step in ms. */
+    static const uint32_t UPDATE_TASK_PERIOD_STEP        = 5U;
+
+    /**
+     * The minimal duration in ms, which the other tasks shall have at least.
+     */
+    static const uint32_t UPDATE_TASK_MIN_DURATION_OTHER = 10U;
 
     /** The update task shall run on the MCU core with less load. */
-    static const BaseType_t UPDATE_TASK_RUN_CORE   = tskNO_AFFINITY;
+    static const BaseType_t UPDATE_TASK_RUN_CORE         = tskNO_AFFINITY;
 
     /** The update task priority shall be higher than the other application tasks. */
-    static const UBaseType_t UPDATE_TASK_PRIORITY  = 4U;
+    static const UBaseType_t UPDATE_TASK_PRIORITY        = 4U;
 
     /** Mutex to protect concurrent access through the public interface. */
     mutable MutexRecursive m_mutexInterf;
@@ -426,23 +519,23 @@ private:
     /** Mutex to protect the display update against concurrent access. */
     mutable MutexRecursive m_mutexUpdate;
 
-    /** Process task handle */
-    TaskHandle_t m_processTaskHandle;
+    /** Process task */
+    Task<DisplayMgr> m_processTask;
 
-    /** Flag to signal the process task to exit. */
-    bool m_processTaskExit;
+    /** Update task */
+    Task<DisplayMgr> m_updateTask;
 
-    /** Binary semaphore used to signal the process task exited. */
-    SemaphoreHandle_t m_processTaskSemaphore;
+    /** Update task period in ms. This period is observed and adapted on demand. */
+    uint32_t m_updateTaskPeriod;
 
-    /** Update task handle */
-    TaskHandle_t m_updateTaskHandle;
-
-    /** Flag to signal the update task to exit. */
-    bool m_updateTaskExit;
-
-    /** Binary semaphore used to signal the update task exited. */
-    SemaphoreHandle_t m_updateTaskSemaphore;
+    /**
+     * Duration of last update task run in ms.
+     * This is observed to adapt the update task period on demand.
+     * If the duration is too high, the update task period will be increased to reduce
+     * the load. If the duration is low, the update task period will be decreased
+     * to increase the responsiveness.
+     */
+    uint32_t m_updateTaskLastDuration;
 
     /** List of all slots with their connected plugins. */
     SlotList m_slotList;
@@ -457,38 +550,33 @@ private:
     IPluginMaintenance* m_requestedPlugin;
 
     /** Timer, used for changing the slot after a specific duration. */
-    SimpleTimer m_slotTimer;
+    SimpleTimer          m_slotTimer;
 
-    /** Display fade state */
-    enum FadeState
-    {
-        FADE_IDLE = 0, /**< No fading */
-        FADE_IN,       /**< Find in */
-        FADE_OUT       /**< Fade out */
-    };
+    DoubleFrameBuffer    m_doubleFrameBuffer;    /**< Double framebuffer. */
+    FadeEffectController m_fadeEffectController; /**< Fade effect controller. */
+    bool                 m_isNetworkConnected;   /**< Is a network connection established? */
+    IndicatorViewBase    m_indicatorView;        /**< Indicator view shown as overlay to indicate user defined states. */
 
-    /** Frame buffer ids */
-    enum FbId
-    {
-        FB_ID_0 = 0, /**< 1. frame buffer */
-        FB_ID_1,     /**< 2. frame buffer */
-        FB_ID_MAX    /**< Number of frame buffers */
-    };
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 
     /**
-     * A plugin change (inactive -> active) will fade the display content of
-     * the old plugin out and from the new plugin in.
+     * A collection of statistics, which are interesting for debugging purposes.
      */
-    FadeState          m_displayFadeState;
-    YAGfxBitmap*       m_selectedFrameBuffer;     /**< Points to the current framebuffer, used to update the display. */
-    YAGfxDynamicBitmap m_framebuffers[FB_ID_MAX]; /**< Two framebuffers, which will contain the old and the new plugin content. */
-    FadeLinear         m_fadeLinearEffect;        /**< Linear fade effect. */
-    FadeMoveX          m_fadeMoveXEffect;         /**< Moving along x-axis fade effect. */
-    FadeMoveY          m_fadeMoveYEffect;         /**< Moving along y-axis fade effect. */
-    IFadeEffect*       m_fadeEffect;              /**< The fade effect itself. */
-    FadeEffect         m_fadeEffectIndex;         /**< Fade effect index to determine the next fade effect. */
-    bool               m_fadeEffectUpdate;        /**< Flag to indicate that the fadeEffect was updated. */
-    bool               m_isNetworkConnected;      /**< Is a network connection established? */
+    struct Statistics
+    {
+        StatisticValue<uint32_t, 0U, 10U> pluginProcessing;
+        StatisticValue<uint32_t, 0U, 10U> displayUpdate;
+        StatisticValue<uint32_t, 0U, 10U> total;
+        StatisticValue<uint32_t, 0U, 10U> refreshPeriod;
+    };
+
+    /** Statistics log period in ms. */
+    static const uint32_t STATISTICS_LOG_PERIOD = 4000U; /* [ms] */
+    Statistics            m_statistics;                  /**< Statistics data. */
+    SimpleTimer           m_statisticsLogTimer;          /**< Statistics log timer. */
+    uint32_t              m_timestampLastUpdate;         /**< Timestamp of last display update. */
+
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
     /**
      * Constructs the display manager.
@@ -523,18 +611,6 @@ private:
     uint8_t previousSlot(uint8_t slotId);
 
     /**
-     * Start fade effect.
-     */
-    void startFadeOut();
-
-    /**
-     * Fade display content in/out.
-     *
-     * @param[in] dst   Destination display
-     */
-    void fadeInOut(YAGfx& dst);
-
-    /**
      * Process the slots. This shall be called periodically in
      * a higher period than the DEFAULT_PERIOD.
      *
@@ -551,42 +627,18 @@ private:
     void update(void);
 
     /**
-     * Create the process task which is responsible to process all plugins.
+     * Display update task is responsible to refresh the display content.
      *
-     * @return If successful it will return true otherwise false.
+     * @param[in] self Display manager instance.
      */
-    bool createProcessTask();
-
-    /**
-     * Destroy the process task gracefully.
-     */
-    void destroyProcessTask();
-
-    /**
-     * Create the update task which is responsible to update the display content.
-     *
-     * @return If successful it will return true otherwise false.
-     */
-    bool createUpdateTask();
-
-    /**
-     * Destroy the update task gracefully.
-     */
-    void destroyUpdateTask();
+    static void processTask(DisplayMgr* self);
 
     /**
      * Display update task is responsible to refresh the display content.
      *
-     * @param[in]   parameters  Task pParameters
+     * @param[in] self Display manager instance.
      */
-    static void processTask(void* parameters);
-
-    /**
-     * Display update task is responsible to refresh the display content.
-     *
-     * @param[in]   parameters  Task pParameters
-     */
-    static void updateTask(void* parameters);
+    static void updateTask(DisplayMgr* self);
 };
 
 /******************************************************************************

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TextWidget.h
  * @brief  Text Widget
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -49,9 +50,10 @@
 #include <YAColor.h>
 #include <YAFont.h>
 #include <YAGfxText.h>
-#include <SimpleTimer.hpp>
+#include <YAGfxBrush.h>
 #include "Alignment.h"
 #include "TWAbstractSyntaxTree.h"
+#include "ScrollController.h"
 
 /******************************************************************************
  * Macros
@@ -70,14 +72,18 @@
  * Example: "{#FF0000}H{#FFFFFF}ello!" contains a red "H" and a white "ello!".
  *
  * Keywords:
- * - "{#RRGGBB}": Change text color; RRGGBB in hex
+ * - "{#RRGGBB}": Set solid text color; RRGGBB in hex
+ * - "{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH}": Set linear vertical gradient text color; RRGGBB in hex; OFFSET in pixels; LENGTH in pixels.
+ * - "{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH}": Set linear horizontal gradient text color; RRGGBB in hex; OFFSET in pixels; LENGTH in pixels.
+ * - "{stc}": Activate solid text color
+ * - "{lgtc}": Activate linear gradient text color
  * - "{hl}" : Horizontal alignment left
  * - "{hc}" : Horizontal alignment center
  * - "{hr}" : Horizontal alignment right
  * - "{vt}" : Vertical alignment top
  * - "{vc}" : Vertical alignment center
  * - "{vb}" : Vertical alignment bottom
- * - "{xAA}" : Special character hex code
+ * - "{0xCC}" : Special character hex code
  */
 class TextWidget : public Widget
 {
@@ -85,7 +91,7 @@ public:
 
     /**
      * Constructs a text widget with a empty string in default color.
-     * 
+     *
      * @param[in] width     Widget width in pixel.
      * @param[in] height    Widget height in pixel.
      * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
@@ -96,11 +102,11 @@ public:
     /**
      * Constructs a text widget with the given string and its color.
      * If there is no color given, it will be default color.
-     * 
+     *
      * The width and height is set to the parent canvas.
      *
      * @param[in] str   String, which may contain format tags.
-     * @param[in] color Color of the string
+     * @param[in] color Color of the string.
      */
     TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR);
 
@@ -122,14 +128,14 @@ public:
      * Assign the content of a text widget.
      *
      * @param[in] widget Widget, which to assign
-     * 
+     *
      * @return Text widget
      */
     TextWidget& operator=(const TextWidget& widget);
 
     /**
      * Set widget height.
-     * 
+     *
      * @param[in] height Height in pixel
      */
     void setHeight(uint16_t height) override
@@ -141,9 +147,9 @@ public:
     /**
      * Set the text string. It can contain format tags like "#RRGGBB" color
      * information in RGB888 format.
-     * 
+     *
      * Encoding: UTF-8
-     * 
+     *
      * @param[in] formatStrUtf8 UTF-8 string, which may contain format tags.
      */
     void setFormatStr(const String& formatStrUtf8);
@@ -155,7 +161,7 @@ public:
 
     /**
      * Get the text string, which may contain format tags.
-     * 
+     *
      * Encoding: UTF-8
      *
      * @return UTF-8 string, which may contain format tags.
@@ -167,7 +173,7 @@ public:
 
     /**
      * Get the text string, without format tags.
-     * 
+     *
      * Encoding: Internal
      *
      * @return String
@@ -175,23 +181,69 @@ public:
     String getStr() const;
 
     /**
-     * Set the text color of the string.
+     * Get brush used to draw text.
      *
-     * @param[in] color Text color
+     * @return Brush used to draw text.
      */
-    void setTextColor(const Color& color)
+    YAGfxBrush& getBrush()
     {
-        m_gfxText.setTextColor(color);
+        return m_gfxText.getBrush();
     }
 
     /**
-     * Get the text color of the string.
+     * Set brush used to draw text. The brush must be kept alive as long as the text widget is used.
      *
-     * @return Text color
+     * @param[in] brush Brush used to draw text.
      */
-    Color getTextColor() const
+    void setBrush(YAGfxBrush& brush)
     {
-        return m_gfxText.getTextColor();
+        m_gfxText.setBrush(brush);
+    }
+
+    /**
+     * Use the internal solid brush with the already configured color.
+     */
+    void setSolidBrush()
+    {
+        m_gfxText.setBrush(m_solidBrush);
+    }
+
+    /**
+     * Use the internal linear gradient brush with the already configured values.
+     */
+    void setLinearGradientBrush()
+    {
+        m_gfxText.setBrush(m_linearGradientBrush);
+    }
+
+    /**
+     * Set internal solid brush.
+     *
+     * @param[in] color Color of the brush
+     */
+    void setSolidBrush(const Color& color)
+    {
+        m_solidBrush.setColor(color);
+        m_gfxText.setBrush(m_solidBrush);
+    }
+
+    /**
+     * Set internal linear gradient brush.
+     *
+     * @param[in] color1    Start color of the gradient.
+     * @param[in] color2    End color of the gradient.
+     * @param[in] offset    Offset in pixels of the gradient start color.
+     * @param[in] length    Length of the gradient in pixels.
+     * @param[in] vertical  Flag for vertical gradient.
+     */
+    void setLinearGradientBrush(const Color& color1, const Color& color2, uint32_t offset, uint32_t length, bool vertical)
+    {
+        m_linearGradientBrush.setStartColor(color1);
+        m_linearGradientBrush.setEndColor(color2);
+        m_linearGradientBrush.setOffset(offset);
+        m_linearGradientBrush.setLength(length);
+        m_linearGradientBrush.setDirection(vertical);
+        m_gfxText.setBrush(m_linearGradientBrush);
     }
 
     /**
@@ -224,16 +276,7 @@ public:
      */
     static bool setScrollPause(uint32_t pause)
     {
-        bool status = false;
-
-        if ((MIN_SCROLL_PAUSE <= pause) &&
-            (MAX_SCROLL_PAUSE >= pause))
-        {
-            m_scrollPause = pause;
-            status = true;
-        }
-
-        return status;
+        return ScrollController::setScrollPause(pause);
     }
 
     /**
@@ -249,7 +292,7 @@ public:
 
     /**
      * Set the horizontal alignment.
-     * 
+     *
      * @param[in] align The horizontal aligment.
      */
     void setHorizontalAlignment(Alignment::Horizontal align)
@@ -259,7 +302,7 @@ public:
 
     /**
      * Set the vertical alignment.
-     * 
+     *
      * @param[in] align The vertical aligment.
      */
     void setVerticalAlignment(Alignment::Vertical align)
@@ -285,163 +328,127 @@ public:
     }
 
     /** Default text color */
-    static const uint32_t   DEFAULT_TEXT_COLOR      = ColorDef::WHITE;
+    static const uint32_t DEFAULT_TEXT_COLOR                  = ColorDef::WHITE;
+
+    /** Default text color gradient color 1 */
+    static const uint32_t DEFAULT_TEXT_COLOR_GRADIENT_COLOR_1 = ColorDef::RED;
+
+    /** Default text color gradient color 2 */
+    static const uint32_t DEFAULT_TEXT_COLOR_GRADIENT_COLOR_2 = ColorDef::BLUE;
+
+    /** Default text color gradient offset in pixels. */
+    static const int16_t DEFAULT_TEXT_COLOR_GRADIENT_OFFSET   = 0;
+
+    /** Default text color gradient length in pixels. */
+    static const uint16_t DEFAULT_TEXT_COLOR_GRADIENT_LENGTH  = 32U;
+
+    /** Default text color gradient direction (true = vertical, false = horizontal). */
+    static const bool DEFAULT_TEXT_COLOR_GRADIENT_VERTICAL    = true;
 
     /** Widget type string */
-    static const char*      WIDGET_TYPE;
+    static const char* WIDGET_TYPE;
 
     /** Default font */
-    static const YAFont&    DEFAULT_FONT;
-
-    /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 80U;
-
-    /** Minimal scroll pause in ms */
-    static const uint32_t   MIN_SCROLL_PAUSE        = 20U;
-
-    /** Maximal scroll pause in ms */
-    static const uint32_t   MAX_SCROLL_PAUSE        = 500U;
+    static const YAFont& DEFAULT_FONT;
 
 private:
 
     /** Fading brightness delta value per cycle. */
-    static const uint8_t    FADING_BRIGHTNESS_DELTA = 5U;
+    static const uint8_t FADING_BRIGHTNESS_DELTA = 10U;
 
     /** Fading brigthness low (darkest value). */
-    static const uint8_t    FADING_BRIGHTNESS_LOW   = 0U;
+    static const uint8_t FADING_BRIGHTNESS_LOW   = 0U;
 
     /** Fading brigthness high (brigthest value). */
-    static const uint8_t    FADING_BRIGHTNESS_HIGH  = 255U;
+    static const uint8_t FADING_BRIGHTNESS_HIGH  = 255U;
 
     /** Keyword handler method. */
     typedef void (TextWidget::*KeywordHandler)(YAGfx& gfx, const String& keyword);
- 
+
     /**
      * Format keyword row, which specifies how does the keyword look like and
      * its corresponding handler.
      */
     struct FormatKeywordRow
     {
-        const char*     keyword;    /**< Keyword */
-        KeywordHandler  handler;    /**< Handler method */
+        const char*    keyword; /**< Keyword */
+        KeywordHandler handler; /**< Handler method */
     };
 
     /**
      * Table with keywords, which to apply before text is shown.
      */
-    static const FormatKeywordRow   FORMAT_KEYWORD_TABLE_1[];
+    static const FormatKeywordRow FORMAT_KEYWORD_TABLE_1[];
 
     /**
      * Table with keywords, which to apply during text is shown.
      */
-    static const FormatKeywordRow   FORMAT_KEYWORD_TABLE_2[];
+    static const FormatKeywordRow FORMAT_KEYWORD_TABLE_2[];
 
     /**
      * Fade state.
      */
     enum FadeState
     {
-        FADE_STATE_IDLE = 0,    /**< No fading. */
-        FADE_STATE_OUT,         /**< Fading out. */
-        FADE_STATE_IN           /**< Fading in. */
+        FADE_STATE_IDLE = 0, /**< No fading. */
+        FADE_STATE_OUT,      /**< Fading out. */
+        FADE_STATE_IN        /**< Fading in. */
     };
 
-    /**
-     * Scroll information, used per text.
-     */
-    struct ScrollInfo
-    {
-        bool        isEnabled;          /**< Is scrolling enabled? */
-        bool        isScrollingToLeft;  /**< Is text scrolling to left? Otherwise scrolling to top. */
-        int16_t     offsetDest;         /**< Offset destination in pixel */
-        int16_t     offset;             /**< Current offset in pixel */
-        uint16_t    textHeight;         /**< Text height in pixel */
+    String                   m_formatStrUtf8;       /**< Current shown string, which contains format tags. Encoding: UTF-8 */
+    String                   m_formatStrNewUtf8;    /**< New text string, which contains format tags. Encoding: UTF-8 */
+    FadeState                m_fadeState;           /**< The current fade state. Used to switch from old to new text. */
+    uint8_t                  m_fadeBrightness;      /**< Brightness value used for fading. */
+    bool                     m_isFadeEffectEnabled; /**< Is fade effect enabled? */
+    ScrollController         m_scrollCtrl;          /**< Scroll controller for current text */
+    ScrollController         m_scrollCtrlNew;       /**< Scroll controller for new text */
+    uint16_t                 m_textHeight;          /**< Text height in pixel */
+    uint16_t                 m_textHeightNew;       /**< Text height in pixel for new text */
+    bool                     m_prepareNewText;      /**< User set new text, which shall be prepared. */
+    bool                     m_updateText;          /**< New text is prepared shall be updated. */
+    TWAbstractSyntaxTree     m_ast;                 /**< AST for the current format string. Encoding: Internal */
+    TWAbstractSyntaxTree     m_astNew;              /**< AST for the new format string. Encoding: Internal */
+    YAGfxSolidBrush          m_solidBrush;          /**< Solid text color brush. */
+    YAGfxLinearGradientBrush m_linearGradientBrush; /**< Linear gradient text color brush. */
+    YAGfxText                m_gfxText;             /**< GFX for current text. */
 
-        /**
-         * Initializes scroll information.
-         */
-        ScrollInfo() :
-            isEnabled(false),
-            isScrollingToLeft(true),
-            offsetDest(0),
-            offset(0),
-            textHeight(0U)
-        {
-        }
-
-        /**
-         * Clear scroll information.
-         */
-        void clear()
-        {
-            isEnabled           = false;
-            isScrollingToLeft   = true;
-            offsetDest          = 0;
-            offset              = 0;
-            textHeight          = 0U;
-        }
-    };
-
-    String                  m_formatStrUtf8;        /**< Current shown string, which contains format tags. Encoding: UTF-8 */
-    String                  m_formatStrNewUtf8;     /**< New text string, which contains format tags. Encoding: UTF-8 */
-    FadeState               m_fadeState;            /**< The current fade state. Used to switch from old to new text. */
-    uint8_t                 m_fadeBrightness;       /**< Brightness value used for fading. */
-    bool                    m_isFadeEffectEnabled;  /**< Is fade effect enabled? */
-    ScrollInfo              m_scrollInfo;           /**< Scroll information */
-    ScrollInfo              m_scrollInfoNew;        /**< Scroll information for the new text. */
-    bool                    m_prepareNewText;       /**< User set new text, which shall be prepared. */
-    bool                    m_updateText;           /**< New text is prepared shall be updated. */
-    TWAbstractSyntaxTree    m_ast;                  /**< AST for the current format string. Encoding: Internal */
-    TWAbstractSyntaxTree    m_astNew;               /**< AST for the new format string. Encoding: Internal */
-    YAGfxText               m_gfxText;              /**< GFX for current text. */
-    YAGfxText               m_gfxNewText;           /**< GFX for new text. */
-    uint32_t                m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
-    int16_t                 m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
-    SimpleTimer             m_scrollTimer;          /**< Timer, used for scrolling */
-    
     /**
      * Horizontal alignment which is the default one.
      * During an display update it might be overwritten by a keyword, but will always
      * be restored back, after the update is finished.
-     * 
+     *
      * Horizontal alignment is done line by line, divided by a line feed.
      */
-    Alignment::Horizontal   m_hAlign;
+    Alignment::Horizontal m_hAlign;
 
     /**
      * Vertical alignment which is the default one.
      * During an display update it might be overwritten by a keyword, but will always
      * be restored back, after the update is finished.
-     * 
+     *
      * Vertical alignment is done per text block.
      */
-    Alignment::Vertical     m_vAlign;
+    Alignment::Vertical m_vAlign;
 
     /**
      * y-coordinate calculated from vertical alignment.
      */
-    int16_t                 m_vAlignPosY;
-
-    /**
-     * Pause in ms, between each scroll movement.
-     * Its used by all text widget instances.
-     */
-    static uint32_t         m_scrollPause;
+    int16_t m_vAlignPosY;
 
     /**
      * Align the current text horizontal by calculating the x-coordinate of the
      * current text box.
-     * 
+     *
      * Horizontal alignment will only be done for
      * - Static text
      * - Text scrolling from bottom to top
-     * 
+     *
      * Otherwise the x-coordinate will be set to 0.
      *
      * @param[in] gfx       Graphic functionality, used for bound box calculation.
      * @param[in] text      Text for which the alignment is calculated.
      * @param[in] hAlign    Horizontal alignment.
-     * 
+     *
      * @return x-coordinate
      */
     int16_t alignTextHorizontal(YAGfx& gfx, const String& text, Alignment::Horizontal hAlign) const;
@@ -449,43 +456,43 @@ private:
     /**
      * Align the current text vertical by calculating the y-coordinate of the
      * text box.
-     * 
+     *
      * Vertical alignment will only be done for
      * - Static text
      * - Text scrolling from left to right
-     * 
+     *
      * Otherwise the y-coordinate will be set to 0.
      */
     void alignTextVertical();
 
     /**
      * Get the number of lines, which can be used by the text widget.
-     * 
+     *
      * @return Number of lines
      */
     uint16_t getLineCount() const;
 
     /**
      * Can text be shown static or is scrolling required?
-     * 
+     *
      * @param[in] gfx           Graphics interface
      * @param[in] textBoxWidth  Text box width in pixel
      * @param[in] textBoxHeight Text box height in pixel
-     * 
+     *
      * @return If text can be shown static, it will return true otherwise false.
      */
     bool isStaticText(YAGfx& gfx, uint16_t textBoxWidth, uint16_t textBoxHeight) const;
 
     /**
      * Checks new text and prepares the scroll information.
-     * 
+     *
      * @param[in] gfx   The graphics functionality, necessary to determine text width and etc.
      */
     void prepareNewText(YAGfx& gfx);
 
     /**
      * Calculate the cursor start position depended on the scrolling direction.
-     * 
+     *
      * @param[out] curX Cursor x-coordindate
      * @param[out] curY Cursor y-coordinate
      */
@@ -498,29 +505,17 @@ private:
 
     /**
      * Handle fading text out.
-     * 
-     * @param[in] gfx Graphic functionality
      */
     void handleFadeOut();
 
     /**
      * Handle fading text in.
-     * 
-     * @param[in] gfx Graphic functionality
      */
     void handleFadeIn();
 
     /**
-     * Scroll the text depended on the scrolling direction.
-     * It will only update the scrolling offset.
-     * 
-     * @param[in] gfx Graphic functionality
-     */
-    void scrollText(YAGfx& gfx);
-
-    /**
      * Paint the widget with the given graphics interface.
-     * 
+     *
      * @param[in] gfx   Graphics interface
      */
     void paint(YAGfx& gfx) override;
@@ -529,14 +524,14 @@ private:
      * Walks throught the AST and integrates the special character code
      * keywords. Thats means the token will be converted to a text token and
      * its string will be the character code.
-     * 
+     *
      * @param[in, out] ast  The abstract syntax tree (AST)
      */
     void specialCharacterCodeKeywordToText(TWAbstractSyntaxTree& ast);
 
     /**
      * Get only the text from abstract syntax tree.
-     * 
+     *
      * @param[out]  text    Contains only the text from AST after call.
      * @param[in]   ast     The abstract syntax tree.
      */
@@ -544,11 +539,11 @@ private:
 
     /**
      * Get a single line from abstract syntax tree, starting at the given index.
-     * 
+     *
      * @param[out]  singleLine  Contains the single line at the end.
      * @param[in]   ast         The abstract syntax tree.
      * @param[in]   startIdx    Start index in the AST.
-     * 
+     *
      * @return Next index
      */
     uint32_t getSingleLine(String& singleLine, const TWAbstractSyntaxTree& ast, uint32_t startIdx);
@@ -556,7 +551,7 @@ private:
     /**
      * Show formatted text.
      * Format tags:
-     * - #RRGGBB Color in HTML form (RGB888)
+     * - "#RRGGBB" Color in HTML form (RGB888)
      *
      * @param[in] gfx           Graphics, used to draw the characters.
      * @param[in] ast           The abstract syntax tree.
@@ -566,29 +561,29 @@ private:
 
     /**
      * Compares two keywords.
-     * 
+     *
      * @param[in] keyword   Keyword 1, consider wildcards.
      * @param[in] other     Keyword 2, the concrete one.
-     * 
-     * @return If equal, it will return true otherwise false. 
+     *
+     * @return If equal, it will return true otherwise false.
      */
     bool isKeywordEqual(const char* keyword, const char* other) const;
 
     /**
      * Handle concrete keyword.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] table     Keyword table with the handlers
      * @param[in] tableSize Number of elements in the keyword table
      * @param[in] keyword   The keyword which to handle
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool handleKeyword(YAGfx& gfx, const FormatKeywordRow* table, size_t tableSize, const String& keyword);
 
     /**
      * Align text horizontal left.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
@@ -596,7 +591,7 @@ private:
 
     /**
      * Align text horizontal center.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
@@ -604,7 +599,7 @@ private:
 
     /**
      * Align text horizontal right.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
@@ -612,7 +607,7 @@ private:
 
     /**
      * Align text vertical top.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
@@ -620,7 +615,7 @@ private:
 
     /**
      * Align text vertical center.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
@@ -628,23 +623,66 @@ private:
 
     /**
      * Align text vertical bottom.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
     void verticalBottomAligned(YAGfx& gfx, const String& keyword);
 
     /**
-     * Handle text color keyword code.
-     * 
+     * Handle solid text color keyword code.
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
-    void handleColor(YAGfx& gfx, const String& keyword);
+    void handleSolidColor(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Handle linear gradient keyword code, but without changing the
+     * direction.
+     *
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool handleLinearGradient(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Handle vertical linear gradient keyword code.
+     *
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void handleLinearGradientVertical(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Handle horizontal linear gradient keyword code.
+     *
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void handleLinearGradientHorizontal(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Activate solid text color.
+     *
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void solidTextColor(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Activate linear gradient text color.
+     *
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void linearGradientTextColor(YAGfx& gfx, const String& keyword);
 
     /**
      * Move text cursor horizontal.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
@@ -652,18 +690,17 @@ private:
 
     /**
      * Move text cursor vertical.
-     * 
+     *
      * @param[in] gfx       Graphic functionality
      * @param[in] keyword   Keyword
      */
     void verticalMove(YAGfx& gfx, const String& keyword);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* TEXTWIDGET_H */
+#endif /* TEXTWIDGET_H */
 
 /** @} */

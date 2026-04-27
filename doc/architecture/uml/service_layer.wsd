@@ -19,9 +19,13 @@ package "Service" as servicePckg {
         component "SettingsService" as settingsService
     }
 
+    package "RestService" {
+        component "RestService" as restService
+    }
+
     component "MyWebServer" as myWebServer
     component "Pages" as pages
-    component "AsyncHttpClient" as asnyHttpClient
+    component "AsyncHttpClient" as asyncHttpClient
     component "CaptivePortalHandler" as captivePortalHandler
 
     package "AudioService" as audioServicePckg {
@@ -58,7 +62,6 @@ package "Service" as servicePckg {
         component "EspAsyncWebServer" as webServer
         component "AsyncTcpSock" as tcp
         component "mDNS" as dns <<Arduino>>
-        component "ArduinoOTA" <<Arduino>> as ota
         component "LwIP" <<Arduino>> as lwip
         component "ArduinoFFT" as fft
 
@@ -66,7 +69,6 @@ package "Service" as servicePckg {
         pubSubClient ..> tcp
         tcp ..> lwip
         dns ..> lwip
-        ota ..> lwip
         ntp ..> lwip
     }
 
@@ -75,7 +77,7 @@ package "Service" as servicePckg {
 
     myWebServer ...> webServer
     pages ...> webServer
-    asnyHttpClient ....> tcp
+    asyncHttpClient ....> tcp
     captivePortalHandler ...> webServer
 
     spectrumAnalyzer ....> fft
@@ -84,6 +86,7 @@ package "Service" as servicePckg {
     mqttService ......> pubSubClient
     webSocket ...> webServer
     settingsService ......> preferences
+    restService ...> asyncHttpClient
 
     restApi ..> restUtil
 

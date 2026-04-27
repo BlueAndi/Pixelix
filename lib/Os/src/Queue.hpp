@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   Queue.hpp
  * @brief  freeRTOS queue wrapper
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup OPERATING_SYSTEM
  *
  * @{
@@ -83,9 +84,9 @@ public:
     /**
      * Create queue with given length.
      * If the queue is already created, it will fail.
-     * 
+     *
      * @param[in] length    Max. amount of items in the queue.
-     * 
+     *
      * @return If successful created, it will return true otherwise false.
      */
     bool create(size_t length)
@@ -119,12 +120,12 @@ public:
 
     /**
      * Send item to the back of the queue.
-     * 
+     *
      * Note, set ticksToWait to portMAX_DELAY, will wait infinite.
-     * 
+     *
      * @param[in] itemToQueue   The item which to queue (by copy).
      * @param[in] ticksToWait   Ticks to wait until the item is queued.
-     * 
+     *
      * @return If the item is successful send to queue, it will return true otherwise false.
      */
     bool sendToBack(const T& itemToQueue, TickType_t ticksToWait)
@@ -141,12 +142,12 @@ public:
 
     /**
      * Send item to the front of the queue.
-     * 
+     *
      * Note, set ticksToWait to portMAX_DELAY, will wait infinite.
-     * 
+     *
      * @param[in] itemToQueue   The item which to queue (by copy).
      * @param[in] ticksToWait   Ticks to wait until the item is queued.
-     * 
+     *
      * @return If the item is successful send to queue, it will return true otherwise false.
      */
     bool sendToFront(T& itemToQueue, TickType_t ticksToWait)
@@ -163,12 +164,12 @@ public:
 
     /**
      * Receive item from the queue.
-     * 
+     *
      * Note, set ticksToWait to portMAX_DELAY, will wait infinite.
-     * 
+     *
      * @param[in] itemBuffer    The item buffer which the received item is copied to.
      * @param[in] ticksToWait   Ticks to wait until a item is received.
-     * 
+     *
      * @return If a item is successful received from queue, it will return true otherwise false.
      */
     bool receive(T* itemBuffer, TickType_t ticksToWait)
@@ -183,19 +184,40 @@ public:
         return isSuccessful;
     }
 
+    /**
+     * Peek item from Queue
+     *
+     * Note, set ticksToWait to portMAX_DELAY, will wait infinite.A0
+     *
+     * @param[in] itemBuffer The item buffer which the received item is copied to.
+     * @param[in] ticksToWait Ticks to wait until a item is received.A0
+     *
+     * @return If a item is successful peeked from queue, it will return true otherwise false.
+     */
+    bool peek(T* itemBuffer, TickType_t ticksToWait)
+    {
+        bool isSuccessful = false;
+
+        if (pdPASS == xQueuePeek(m_queueHandle, itemBuffer, ticksToWait))
+        {
+            isSuccessful = true;
+        }
+
+        return isSuccessful;
+    }
+
 private:
 
-    QueueHandle_t   m_queueHandle;  /**< Queue handle */
+    QueueHandle_t m_queueHandle; /**< Queue handle */
 
     Queue(const Queue& queue);
     Queue& operator=(const Queue& queue);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* QUEUE_HPP */
+#endif /* QUEUE_HPP */
 
 /** @} */

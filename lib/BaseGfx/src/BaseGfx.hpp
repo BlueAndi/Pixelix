@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   BaseGfx.hpp
  * @brief  Basic graphics interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -83,14 +84,14 @@ public:
      *
      * @return Canvas width in pixel.
      */
-    virtual uint16_t getWidth() const = 0;
+    virtual uint16_t getWidth() const                                                                        = 0;
 
     /**
      * Get canvas height in pixel.
      *
      * @return Canvas height in pixel.
      */
-    virtual uint16_t getHeight() const = 0;
+    virtual uint16_t getHeight() const                                                                       = 0;
 
     /**
      * Get pixel color at given position.
@@ -101,7 +102,7 @@ public:
      *
      * @return Color
      */
-    virtual TColor& getColor(int16_t x, int16_t y) = 0;
+    virtual TColor& getColor(int16_t x, int16_t y)                                                           = 0;
 
     /**
      * Get pixel color at given position.
@@ -111,7 +112,7 @@ public:
      *
      * @return Color
      */
-    virtual const TColor& getColor(int16_t x, int16_t y) const = 0;
+    virtual const TColor& getColor(int16_t x, int16_t y) const                                               = 0;
 
     /**
      * Draw a single pixel at given position.
@@ -120,36 +121,36 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] color Color
      */
-    virtual void drawPixel(int16_t x, int16_t y, const TColor& color) = 0;
+    virtual void drawPixel(int16_t x, int16_t y, const TColor& color)                                        = 0;
 
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
-    virtual TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) = 0;
+    virtual TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset)             = 0;
 
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     virtual const TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const = 0;
@@ -157,41 +158,41 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
-    virtual TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) = 0;
+    virtual TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset)             = 0;
 
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     virtual const TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const = 0;
 
     /**
      * Copy from source, starting at upper left corner (0, 0).
-     * 
+     *
      * If the source size is lower or equal than the destination, the
      * source will be copied complete.
-     * 
+     *
      * If the source size is greater than the destination, the source
      * will be copied partly.
      *
@@ -199,8 +200,8 @@ public:
      */
     void copy(const BaseGfx<TColor>& gfx)
     {
-        uint16_t    minWidth    = std::min(getWidth(), gfx.getWidth());
-        uint16_t    minHeight   = std::min(getHeight(), gfx.getHeight());
+        uint16_t minWidth  = std::min(getWidth(), gfx.getWidth());
+        uint16_t minHeight = std::min(getHeight(), gfx.getHeight());
 
         /* For better performance choose larger side for the internal
          * copy operation.
@@ -209,7 +210,7 @@ public:
         {
             int16_t y;
 
-            for(y = 0; y < minHeight; ++y)
+            for (y = 0; y < minHeight; ++y)
             {
                 internalCopyX(0, y, minWidth, gfx, 0, y);
             }
@@ -218,7 +219,7 @@ public:
         {
             int16_t x;
 
-            for(x = 0; x < minWidth; ++x)
+            for (x = 0; x < minWidth; ++x)
             {
                 internalCopyY(x, 0, minHeight, gfx, x, 0);
             }
@@ -241,14 +242,14 @@ public:
         /* Anything to draw? */
         if (0U < height)
         {
-            uint16_t    dstOffset   = 0U;
-            TColor*     dstAddress  = getFrameBufferYAddr(x, y, height, dstOffset);
+            uint16_t dstOffset  = 0U;
+            TColor*  dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
 
             if (nullptr != dstAddress)
             {
                 uint16_t idx = 0U;
 
-                while(height > idx)
+                while (height > idx)
                 {
                     dstAddress[idx * dstOffset] = color;
                     ++idx;
@@ -273,14 +274,14 @@ public:
         /* Anything to draw? */
         if (0U < width)
         {
-            uint16_t    dstOffset   = 0U;
-            TColor*     dstAddress  = getFrameBufferXAddr(x, y, width, dstOffset);
+            uint16_t dstOffset  = 0U;
+            TColor*  dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
 
             if (nullptr != dstAddress)
             {
                 uint16_t idx = 0U;
 
-                while(width > idx)
+                while (width > idx)
                 {
                     dstAddress[idx * dstOffset] = color;
                     ++idx;
@@ -300,16 +301,16 @@ public:
      */
     void drawLine(int16_t xs, int16_t ys, int16_t xe, int16_t ye, const TColor& color)
     {
-        int16_t dX      = abs(xe - xs);
-        int16_t stepX   = (xs < xe) ? 1 : -1;
-        int16_t dY      = - abs(ye - ys);
-        int16_t stepY   = (ys < ye) ? 1 : -1;
-        int16_t err     = dX + dY;  /* err_xy */
-        int16_t err2    = 0;
+        int16_t dX    = abs(xe - xs);
+        int16_t stepX = (xs < xe) ? 1 : -1;
+        int16_t dY    = -abs(ye - ys);
+        int16_t stepY = (ys < ye) ? 1 : -1;
+        int16_t err   = dX + dY; /* err_xy */
+        int16_t err2  = 0;
 
         /* https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm */
 
-        while(1)
+        while (1)
         {
             drawPixel(xs, ys, color);
 
@@ -354,7 +355,7 @@ public:
     /**
      * Draw a circle with a specific color.
      * https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
-     * 
+     *
      * @param[in] mx        x-coordinate of middle point
      * @param[in] my        y-coordinate of middle point
      * @param[in] radius    Radius in pixel
@@ -362,28 +363,28 @@ public:
      */
     void drawCircle(int16_t mx, int16_t my, uint16_t radius, const TColor& color)
     {
-        int16_t f       = 1 - radius;
-        int16_t ddF_x   = 0;
-        int16_t ddF_y   = -2 * radius;
-        int16_t x       = 0;
-        int16_t y       = radius;
+        int16_t f     = 1 - radius;
+        int16_t ddF_x = 0;
+        int16_t ddF_y = -2 * radius;
+        int16_t x     = 0;
+        int16_t y     = radius;
 
         drawPixel(mx, my + radius, color);
         drawPixel(mx, my - radius, color);
         drawPixel(mx + radius, my, color);
         drawPixel(mx - radius, my, color);
 
-        while(x < y)
+        while (x < y)
         {
-            if (0 <=f)
+            if (0 <= f)
             {
                 --y;
                 ddF_y += 2;
-                f += ddF_y;
+                f     += ddF_y;
             }
             ++x;
             ddF_x += 2;
-            f += ddF_x + 1;
+            f     += ddF_x + 1;
 
             drawPixel(mx + x, my + y, color);
             drawPixel(mx - x, my + y, color);
@@ -424,7 +425,7 @@ public:
             {
                 int16_t yIndex;
 
-                for(yIndex = 0; yIndex < height; ++yIndex)
+                for (yIndex = 0; yIndex < height; ++yIndex)
                 {
                     drawHLine(x, y + yIndex, width, color);
                 }
@@ -433,7 +434,7 @@ public:
             {
                 int16_t xIndex;
 
-                for(xIndex = 0; xIndex < width; ++xIndex)
+                for (xIndex = 0; xIndex < width; ++xIndex)
                 {
                     drawVLine(x + xIndex, y, height, color);
                 }
@@ -454,7 +455,7 @@ public:
     /**
      * Fill a circle with a specific color.
      * https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
-     * 
+     *
      * @param[in] mx        x-coordinate of middle point
      * @param[in] my        y-coordinate of middle point
      * @param[in] radius    Radius in pixel
@@ -462,29 +463,29 @@ public:
      */
     void fillCircle(int16_t mx, int16_t my, uint16_t radius, const TColor& color)
     {
-        int16_t f       = 1 - radius;
-        int16_t ddF_x   = 0;
-        int16_t ddF_y   = -2 * radius;
-        int16_t x       = 0;
-        int16_t y       = radius;
+        int16_t f     = 1 - radius;
+        int16_t ddF_x = 0;
+        int16_t ddF_y = -2 * radius;
+        int16_t x     = 0;
+        int16_t y     = radius;
 
         drawHLine(mx - radius, my, 2 * radius, color);
 
-        while(x < y)
+        while (x < y)
         {
-            if (0 <=f)
+            if (0 <= f)
             {
                 --y;
                 ddF_y += 2;
-                f += ddF_y;
+                f     += ddF_y;
             }
             ++x;
             ddF_x += 2;
-            f += ddF_x + 1;
+            f     += ddF_x + 1;
 
             drawHLine(mx - x, my + y, 2 * x, color);
             drawHLine(mx - x, my - y, 2 * x, color);
-            
+
             drawHLine(mx - y, my + x, 2 * y, color);
             drawHLine(mx - y, my - x, 2 * y, color);
         }
@@ -492,10 +493,10 @@ public:
 
     /**
      * Draw bitmap at specified location by given upper left point.
-     * 
+     *
      * If the bitmap size is lower or equal than the destination, the
      * bitmap will be copied complete.
-     * 
+     *
      * If the bitmap size is greater than the destination, the bitmap
      * will be copied partly.
      *
@@ -505,8 +506,8 @@ public:
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap)
     {
-        uint16_t    minWidth    = std::min(bitmap.getWidth(), getWidth());
-        uint16_t    minHeight   = std::min(bitmap.getHeight(), getHeight());
+        uint16_t minWidth  = std::min(bitmap.getWidth(), getWidth());
+        uint16_t minHeight = std::min(bitmap.getHeight(), getHeight());
 
         adaptCoordAndLength(x, minWidth, getWidth());
         adaptCoordAndLength(y, minHeight, getHeight());
@@ -522,7 +523,7 @@ public:
             {
                 int16_t yIndex;
 
-                for(yIndex = 0; yIndex < minHeight; ++yIndex)
+                for (yIndex = 0; yIndex < minHeight; ++yIndex)
                 {
                     internalCopyX(x, y + yIndex, minWidth, bitmap, 0, yIndex);
                 }
@@ -531,9 +532,59 @@ public:
             {
                 int16_t xIndex;
 
-                for(xIndex = 0; xIndex < minWidth; ++xIndex)
+                for (xIndex = 0; xIndex < minWidth; ++xIndex)
                 {
                     internalCopyY(x + xIndex, y, minHeight, bitmap, xIndex, 0);
+                }
+            }
+        }
+    }
+
+    /**
+     * Draw bitmap at specified location by given upper left point.
+     *
+     * If the bitmap size is lower or equal than the destination, the
+     * bitmap will be copied complete.
+     *
+     * If the bitmap size is greater than the destination, the bitmap
+     * will be copied partly.
+     *
+     * @param[in] x                 x-coordinate of upper left point
+     * @param[in] y                 y-coordinate of upper left point
+     * @param[in] bitmap            Bitmap pixel buffer
+     * @param[in] transparentColor  Color which shall be treated as transparent.
+     */
+    void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap, const TColor& transparentColor)
+    {
+        uint16_t minWidth  = std::min(bitmap.getWidth(), getWidth());
+        uint16_t minHeight = std::min(bitmap.getHeight(), getHeight());
+
+        adaptCoordAndLength(x, minWidth, getWidth());
+        adaptCoordAndLength(y, minHeight, getHeight());
+
+        /* Anything to draw? */
+        if ((0U < minWidth) &&
+            (0U < minHeight))
+        {
+            /* For better performance choose larger side for the internal
+             * copy operation.
+             */
+            if (minWidth >= minHeight)
+            {
+                int16_t yIndex;
+
+                for (yIndex = 0; yIndex < minHeight; ++yIndex)
+                {
+                    internalCopyX(x, y + yIndex, minWidth, bitmap, 0, yIndex, transparentColor);
+                }
+            }
+            else
+            {
+                int16_t xIndex;
+
+                for (xIndex = 0; xIndex < minWidth; ++xIndex)
+                {
+                    internalCopyY(x + xIndex, y, minHeight, bitmap, xIndex, 0, transparentColor);
                 }
             }
         }
@@ -552,12 +603,12 @@ private:
      * Adapts the coordinate and the length for a axis to ensure that
      * the coordinate is inside the valid canvas border and
      * the length, calculated from the coord on, will be inside the valid canvas too.
-     * 
+     *
      * Example for x-axis:
      *      Line shall be drawn from -10 with a length of 80.
      *      The canvas width is 32.
      *      After adaption, the x-coordinate will be 0 and the length will be 32.
-     * 
+     *
      * @param[in,out] coord     x- or y-coordinate, depends on the choosen axis.
      * @param[in,out] length    Width or height which is requested, starting from coord.
      * @param[in] maxLength     Max. length of the choosen axis.
@@ -570,13 +621,13 @@ private:
             /* Out of bounds? */
             if (maxLength < coord)
             {
-                length  = 0U;
-                coord   = 0;
+                length = 0U;
+                coord  = 0;
             }
             else
             {
                 maxLength -= static_cast<uint16_t>(coord);
-                length = std::min(length, maxLength);
+                length     = std::min(length, maxLength);
             }
         }
         /* Negative */
@@ -587,12 +638,12 @@ private:
             /* Out of bounds? */
             if (static_cast<uint16_t>(-coord) > length)
             {
-                length  = 0U;
-                coord   = 0;
+                length = 0U;
+                coord  = 0;
             }
             else
             {
-                length  -= static_cast<uint16_t>(-coord);
+                length -= static_cast<uint16_t>(-coord);
                 coord   = 0;
             }
         }
@@ -601,7 +652,7 @@ private:
     /**
      * Copies pixels along the x-axis from a source at given coordinates to the
      * destination at given coordinates.
-     * 
+     *
      * @param[in] x         Destination x-coordinate.
      * @param[in] y         Destination y-coordinate.
      * @param[in] width     Number of pixels which to copy.
@@ -611,17 +662,17 @@ private:
      */
     void internalCopyX(int16_t x, int16_t y, uint16_t width, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY)
     {
-        uint16_t        dstOffset   = 0U;
-        uint16_t        srcOffset   = 0U;
-        TColor*         dstAddress  = getFrameBufferXAddr(x, y, width, dstOffset);
-        const TColor*   srcAddress  = src.getFrameBufferXAddr(srcX, srcY, width, srcOffset);
+        uint16_t      dstOffset  = 0U;
+        uint16_t      srcOffset  = 0U;
+        TColor*       dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
+        const TColor* srcAddress = src.getFrameBufferXAddr(srcX, srcY, width, srcOffset);
 
         if ((nullptr != dstAddress) &&
             (nullptr != srcAddress))
         {
             uint16_t idx = 0U;
 
-            while(width > idx)
+            while (width > idx)
             {
                 dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
                 ++idx;
@@ -630,9 +681,48 @@ private:
     }
 
     /**
+     * Copies pixels along the x-axis from a source at given coordinates to the
+     * destination at given coordinates. If the source pixel color matches the
+     * transparent color, it will not be copied.
+     *
+     * @param[in] x                 Destination x-coordinate.
+     * @param[in] y                 Destination y-coordinate.
+     * @param[in] width             Number of pixels which to copy.
+     * @param[in] src               Source to copy from.
+     * @param[in] srcX              Source x-coordinate.
+     * @param[in] srcY              Source y-coordinate.
+     * @param[in] transparentColor  Color which shall be treated as transparent.
+     */
+    void internalCopyX(int16_t x, int16_t y, uint16_t width, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY, const TColor& transparentColor)
+    {
+        uint16_t      dstOffset  = 0U;
+        uint16_t      srcOffset  = 0U;
+        TColor*       dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
+        const TColor* srcAddress = src.getFrameBufferXAddr(srcX, srcY, width, srcOffset);
+
+        if ((nullptr != dstAddress) &&
+            (nullptr != srcAddress))
+        {
+            uint16_t idx = 0U;
+
+            while (width > idx)
+            {
+                const TColor* color = &srcAddress[idx * srcOffset];
+
+                if (transparentColor != (*color))
+                {
+                    dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                }
+
+                ++idx;
+            }
+        }
+    }
+
+    /**
      * Copies pixels along the y-axis from a source at given coordinates to the
      * destination at given coordinates.
-     * 
+     *
      * @param[in] x         Destination x-coordinate.
      * @param[in] y         Destination y-coordinate.
      * @param[in] height    Number of pixels which to copy.
@@ -642,19 +732,58 @@ private:
      */
     void internalCopyY(int16_t x, int16_t y, uint16_t height, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY)
     {
-        uint16_t        dstOffset   = 0U;
-        uint16_t        srcOffset   = 0U;
-        TColor*         dstAddress  = getFrameBufferYAddr(x, y, height, dstOffset);
-        const TColor*   srcAddress  = src.getFrameBufferYAddr(srcX, srcY, height, srcOffset);
+        uint16_t      dstOffset  = 0U;
+        uint16_t      srcOffset  = 0U;
+        TColor*       dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
+        const TColor* srcAddress = src.getFrameBufferYAddr(srcX, srcY, height, srcOffset);
 
         if ((nullptr != dstAddress) &&
             (nullptr != srcAddress))
         {
             uint16_t idx = 0U;
 
-            while(height > idx)
+            while (height > idx)
             {
                 dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                ++idx;
+            }
+        }
+    }
+
+    /**
+     * Copies pixels along the y-axis from a source at given coordinates to the
+     * destination at given coordinates. If the source pixel color matches the
+     * transparent color, it will not be copied.
+     *
+     * @param[in] x                 Destination x-coordinate.
+     * @param[in] y                 Destination y-coordinate.
+     * @param[in] height            Number of pixels which to copy.
+     * @param[in] src               Source to copy from.
+     * @param[in] srcX              Source x-coordinate.
+     * @param[in] srcY              Source y-coordinate.
+     * @param[in] transparentColor  Color which shall be treated as transparent.
+     */
+    void internalCopyY(int16_t x, int16_t y, uint16_t height, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY, const TColor& transparentColor)
+    {
+        uint16_t      dstOffset  = 0U;
+        uint16_t      srcOffset  = 0U;
+        TColor*       dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
+        const TColor* srcAddress = src.getFrameBufferYAddr(srcX, srcY, height, srcOffset);
+
+        if ((nullptr != dstAddress) &&
+            (nullptr != srcAddress))
+        {
+            uint16_t idx = 0U;
+
+            while (height > idx)
+            {
+                const TColor* color = &srcAddress[idx * srcOffset];
+
+                if (transparentColor != (*color))
+                {
+                    dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                }
+
                 ++idx;
             }
         }
@@ -665,6 +794,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_GFX_HPP */
+#endif /* BASE_GFX_HPP */
 
 /** @} */

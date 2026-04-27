@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TextWidget.cpp
  * @brief  Text Widget
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -61,34 +62,33 @@
  *****************************************************************************/
 
 /* Initialize text widget type. */
-const char*     TextWidget::WIDGET_TYPE     = "text";
+const char* TextWidget::WIDGET_TYPE                                     = "text";
 
 /* Initialize default font */
-const YAFont&   TextWidget::DEFAULT_FONT    =  Fonts::getFontByType(Fonts::FONT_TYPE_DEFAULT);
+const YAFont& TextWidget::DEFAULT_FONT                                  = Fonts::getFontByType(Fonts::FONT_TYPE_DEFAULT);
 
 /* Initialize keyword list 1: These keywords are only handled once at the begin, before printing the text. */
-const TextWidget::FormatKeywordRow  TextWidget::FORMAT_KEYWORD_TABLE_1[] =
-{
-    {   "{vt}",     &TextWidget::verticalTopAligned         },
-    {   "{vc}",     &TextWidget::verticalCenterAligned      },
-    {   "{vb}",     &TextWidget::verticalBottomAligned      }
+const TextWidget::FormatKeywordRow TextWidget::FORMAT_KEYWORD_TABLE_1[] = {
+    { "{vt}", &TextWidget::verticalTopAligned },
+    { "{vc}", &TextWidget::verticalCenterAligned },
+    { "{vb}", &TextWidget::verticalBottomAligned }
 };
 
 /* Initialize keyword list 2: These keywords are handled during printing the text. */
-const TextWidget::FormatKeywordRow  TextWidget::FORMAT_KEYWORD_TABLE_2[] =
-{
-    {   "{hl}",     &TextWidget::horizontalLeftAligned      },
-    {   "{hc}",     &TextWidget::horizontalCenterAligned    },
-    {   "{hr}",     &TextWidget::horizontalRightAligned     },
+const TextWidget::FormatKeywordRow TextWidget::FORMAT_KEYWORD_TABLE_2[] = {
+    { "{hl}", &TextWidget::horizontalLeftAligned },
+    { "{hc}", &TextWidget::horizontalCenterAligned },
+    { "{hr}", &TextWidget::horizontalRightAligned },
 
-    {   "{#*}",     &TextWidget::handleColor                },
+    { "{#*}", &TextWidget::handleSolidColor },
+    { "{lgv *}", &TextWidget::handleLinearGradientVertical },
+    { "{lgh *}", &TextWidget::handleLinearGradientHorizontal },
+    { "{stc}", &TextWidget::solidTextColor },
+    { "{lgtc}", &TextWidget::linearGradientTextColor },
 
-    {   "{hm *}",   &TextWidget::horizontalMove             },
-    {   "{vm *}",   &TextWidget::verticalMove               }
+    { "{hm *}", &TextWidget::horizontalMove },
+    { "{vm *}", &TextWidget::verticalMove }
 };
-
-/* Set default scroll pause in ms. */
-uint32_t        TextWidget::m_scrollPause   = TextWidget::DEFAULT_SCROLL_PAUSE;
 
 /******************************************************************************
  * Public Methods
@@ -101,16 +101,22 @@ TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
     m_isFadeEffectEnabled(true),
-    m_scrollInfo(),
-    m_scrollInfoNew(),
+    m_scrollCtrl(),
+    m_scrollCtrlNew(),
+    m_textHeight(0U),
+    m_textHeightNew(0U),
     m_prepareNewText(false),
     m_updateText(false),
     m_ast(),
     m_astNew(),
-    m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
-    m_scrollingCnt(0U),
-    m_scrollOffset(0),
-    m_scrollTimer(),
+    m_solidBrush(DEFAULT_TEXT_COLOR),
+    m_linearGradientBrush(
+        DEFAULT_TEXT_COLOR_GRADIENT_COLOR_1,
+        DEFAULT_TEXT_COLOR_GRADIENT_COLOR_2,
+        DEFAULT_TEXT_COLOR_GRADIENT_OFFSET,
+        DEFAULT_TEXT_COLOR_GRADIENT_LENGTH,
+        DEFAULT_TEXT_COLOR_GRADIENT_VERTICAL),
+    m_gfxText(DEFAULT_FONT, m_solidBrush),
     m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
     m_vAlign(Alignment::Vertical::VERTICAL_TOP),
     m_vAlignPosY(0)
@@ -129,16 +135,22 @@ TextWidget::TextWidget(const String& str, const Color& color) :
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
     m_isFadeEffectEnabled(true),
-    m_scrollInfo(),
-    m_scrollInfoNew(),
+    m_scrollCtrl(),
+    m_scrollCtrlNew(),
+    m_textHeight(0U),
+    m_textHeightNew(0U),
     m_prepareNewText(true),
     m_updateText(false),
     m_ast(),
     m_astNew(),
-    m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
-    m_scrollingCnt(0U),
-    m_scrollOffset(0),
-    m_scrollTimer(),
+    m_solidBrush(DEFAULT_TEXT_COLOR),
+    m_linearGradientBrush(
+        DEFAULT_TEXT_COLOR_GRADIENT_COLOR_1,
+        DEFAULT_TEXT_COLOR_GRADIENT_COLOR_2,
+        DEFAULT_TEXT_COLOR_GRADIENT_OFFSET,
+        DEFAULT_TEXT_COLOR_GRADIENT_LENGTH,
+        DEFAULT_TEXT_COLOR_GRADIENT_VERTICAL),
+    m_gfxText(DEFAULT_FONT, m_solidBrush),
     m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
     m_vAlign(Alignment::Vertical::VERTICAL_TOP),
     m_vAlignPosY(0)
@@ -169,16 +181,17 @@ TextWidget::TextWidget(const TextWidget& widget) :
     m_fadeState(widget.m_fadeState),
     m_fadeBrightness(widget.m_fadeBrightness),
     m_isFadeEffectEnabled(widget.m_isFadeEffectEnabled),
-    m_scrollInfo(widget.m_scrollInfo),
-    m_scrollInfoNew(widget.m_scrollInfoNew),
+    m_scrollCtrl(widget.m_scrollCtrl),
+    m_scrollCtrlNew(widget.m_scrollCtrlNew),
+    m_textHeight(widget.m_textHeight),
+    m_textHeightNew(widget.m_textHeightNew),
     m_prepareNewText(widget.m_prepareNewText),
     m_updateText(widget.m_updateText),
     m_ast(widget.m_ast),
     m_astNew(widget.m_astNew),
+    m_solidBrush(widget.m_solidBrush),
+    m_linearGradientBrush(widget.m_linearGradientBrush),
     m_gfxText(widget.m_gfxText),
-    m_scrollingCnt(widget.m_scrollingCnt),
-    m_scrollOffset(widget.m_scrollOffset),
-    m_scrollTimer(widget.m_scrollTimer),
     m_hAlign(widget.m_hAlign),
     m_vAlign(widget.m_vAlign),
     m_vAlignPosY(widget.m_vAlignPosY)
@@ -190,25 +203,26 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
     if (&widget != this)
     {
         Widget::operator=(widget);
-        
-        m_formatStrUtf8         = widget.m_formatStrUtf8;
-        m_formatStrNewUtf8      = widget.m_formatStrNewUtf8;
-        m_fadeState             = widget.m_fadeState;
-        m_fadeBrightness        = widget.m_fadeBrightness;
-        m_isFadeEffectEnabled   = widget.m_isFadeEffectEnabled;
-        m_scrollInfo            = widget.m_scrollInfo;
-        m_scrollInfoNew         = widget.m_scrollInfoNew;
-        m_prepareNewText        = widget.m_prepareNewText;
-        m_updateText            = widget.m_updateText;
-        m_ast                   = widget.m_ast;
-        m_astNew                = widget.m_astNew;
-        m_gfxText               = widget.m_gfxText;
-        m_scrollingCnt          = widget.m_scrollingCnt;
-        m_scrollOffset          = widget.m_scrollOffset;
-        m_scrollTimer           = widget.m_scrollTimer;
-        m_hAlign                = widget.m_hAlign;
-        m_vAlign                = widget.m_vAlign;
-        m_vAlignPosY            = widget.m_vAlignPosY;
+
+        m_formatStrUtf8       = widget.m_formatStrUtf8;
+        m_formatStrNewUtf8    = widget.m_formatStrNewUtf8;
+        m_fadeState           = widget.m_fadeState;
+        m_fadeBrightness      = widget.m_fadeBrightness;
+        m_isFadeEffectEnabled = widget.m_isFadeEffectEnabled;
+        m_scrollCtrl          = widget.m_scrollCtrl;
+        m_scrollCtrlNew       = widget.m_scrollCtrlNew;
+        m_textHeight          = widget.m_textHeight;
+        m_textHeightNew       = widget.m_textHeightNew;
+        m_prepareNewText      = widget.m_prepareNewText;
+        m_updateText          = widget.m_updateText;
+        m_ast                 = widget.m_ast;
+        m_astNew              = widget.m_astNew;
+        m_solidBrush          = widget.m_solidBrush;
+        m_linearGradientBrush = widget.m_linearGradientBrush;
+        m_gfxText             = widget.m_gfxText;
+        m_hAlign              = widget.m_hAlign;
+        m_vAlign              = widget.m_vAlign;
+        m_vAlignPosY          = widget.m_vAlignPosY;
     }
 
     return *this;
@@ -220,9 +234,9 @@ void TextWidget::setFormatStr(const String& formatStrUtf8)
     if (((m_formatStrUtf8 != formatStrUtf8) && (false == m_prepareNewText)) ||
         ((m_formatStrNewUtf8 != formatStrUtf8) && (true == m_prepareNewText)))
     {
-        TWTokenizer             tokenizer;
-        TWAbstractSyntaxTree    ast;
-        String                  formatStrIntern; /* Internal character encoding. */
+        TWTokenizer          tokenizer;
+        TWAbstractSyntaxTree ast;
+        String               formatStrIntern; /* Internal character encoding. */
 
         Utf8::toIntern(formatStrUtf8, formatStrIntern);
 
@@ -232,9 +246,9 @@ void TextWidget::setFormatStr(const String& formatStrUtf8)
         }
         else
         {
-            m_formatStrNewUtf8  = formatStrUtf8;
-            m_prepareNewText    = true;
-            m_astNew            = std::move(ast);
+            m_formatStrNewUtf8 = formatStrUtf8;
+            m_prepareNewText   = true;
+            m_astNew           = std::move(ast);
 
             /* Convert special character codes here to avoid that they need
              * later always special handling.
@@ -247,15 +261,17 @@ void TextWidget::setFormatStr(const String& formatStrUtf8)
 void TextWidget::clear()
 {
     m_formatStrUtf8.clear();
-    m_scrollInfo.clear();
+    m_scrollCtrl.disable();
+    m_textHeight = 0U;
 
     m_formatStrNewUtf8.clear();
-    m_scrollInfoNew.clear();
+    m_scrollCtrlNew.disable();
+    m_textHeightNew  = 0U;
 
     m_prepareNewText = false;
 
     m_ast.clear();
-    
+
     m_vAlignPosY = 0U;
 }
 
@@ -279,12 +295,12 @@ String TextWidget::getStr() const
 bool TextWidget::getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
 {
     bool status = false;
-    
+
     if (false == m_prepareNewText)
     {
-        isScrollingEnabled  = m_scrollInfoNew.isEnabled;
-        scrollingCnt        = m_scrollingCnt;
-        status              = true;
+        isScrollingEnabled = m_scrollCtrlNew.isEnabled();
+        scrollingCnt       = m_scrollCtrlNew.getScrollingCount();
+        status             = true;
     }
 
     return status;
@@ -306,17 +322,17 @@ int16_t TextWidget::alignTextHorizontal(YAGfx& gfx, const String& text, Alignmen
      * - Static text
      * - Text scrolling from bottom to top
      */
-    if ((false == m_scrollInfo.isEnabled) ||
-        ((true == m_scrollInfo.isEnabled) && (false == m_scrollInfo.isScrollingToLeft)))
+    if ((false == m_scrollCtrl.isEnabled()) ||
+        (ScrollController::DIRECTION_VERTICAL == m_scrollCtrl.getDirection()))
     {
-        uint16_t textBoxWidth   = 0U;
-        uint16_t textBoxHeight  = 0U;
+        uint16_t textBoxWidth  = 0U;
+        uint16_t textBoxHeight = 0U;
 
         if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), text.c_str(), textBoxWidth, textBoxHeight))
         {
             UTIL_NOT_USED(textBoxHeight);
 
-            switch(hAlign)
+            switch (hAlign)
             {
             case Alignment::Horizontal::HORIZONTAL_LEFT:
                 xPos = 0;
@@ -345,23 +361,23 @@ void TextWidget::alignTextVertical()
      * - Static text
      * - Text scrolling from left to right
      */
-    if ((false == m_scrollInfo.isEnabled) ||
-        ((true == m_scrollInfo.isEnabled) && (true == m_scrollInfo.isScrollingToLeft)))
+    if ((false == m_scrollCtrl.isEnabled()) ||
+        (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection()))
     {
-        switch(m_vAlign)
+        switch (m_vAlign)
         {
         case Alignment::Vertical::VERTICAL_TOP:
             m_vAlignPosY = 0;
             break;
 
         case Alignment::Vertical::VERTICAL_CENTER:
-            m_vAlignPosY = (m_canvas.getHeight() - m_scrollInfo.textHeight) / 2;
+            m_vAlignPosY = (m_canvas.getHeight() - m_textHeight) / 2;
             break;
 
         case Alignment::Vertical::VERTICAL_BOTTOM:
-            m_vAlignPosY = m_canvas.getHeight() - m_scrollInfo.textHeight;
+            m_vAlignPosY = m_canvas.getHeight() - m_textHeight;
             break;
-        
+
         default:
             m_vAlignPosY = 0;
             break;
@@ -388,7 +404,7 @@ bool TextWidget::isStaticText(YAGfx& gfx, uint16_t textBoxWidth, uint16_t textBo
     /* Single line text widget? */
     if (1U >= getLineCount())
     {
-        /* As long as the text box is smaller than the available width, 
+        /* As long as the text box is smaller than the available width,
          * the text can be static shown (no scrolling).
          */
         if (gfx.getWidth() >= textBoxWidth)
@@ -399,7 +415,7 @@ bool TextWidget::isStaticText(YAGfx& gfx, uint16_t textBoxWidth, uint16_t textBo
     /* Multi-line text widget */
     else
     {
-        /* As long as the text box is smaller than the available height, 
+        /* As long as the text box is smaller than the available height,
          * the text can be static shown (no scrolling).
          */
         if (gfx.getHeight() >= textBoxHeight)
@@ -413,31 +429,27 @@ bool TextWidget::isStaticText(YAGfx& gfx, uint16_t textBoxWidth, uint16_t textBo
 
 void TextWidget::prepareNewText(YAGfx& gfx)
 {
-    uint16_t    textBoxWidth    = 0U;
-    uint16_t    textBoxHeight   = 0U;
-    String      newStr;
-    
+    uint16_t textBoxWidth  = 0U;
+    uint16_t textBoxHeight = 0U;
+    String   newStr;
+
     getText(newStr, m_astNew);
 
     /* Get bounding box of the new text, without any format tags. */
     if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), newStr.c_str(), textBoxWidth, textBoxHeight))
     {
-        m_scrollInfoNew.textHeight  = textBoxHeight;
-
-        /* Stop current scrolling. */
-        m_scrollTimer.stop();
-        m_scrollingCnt = 0U;
+        m_textHeightNew = textBoxHeight;
 
         /* Scenarios:
          *
          * - Independed of number of text widget lines:
          *     - Old text is faded out.
          *     - Static text is shown after faded in.
-         * 
+         *
          * - Single line text widget:
          *     - Scrolling direction is from left to right.
          *     - Start scrolling outside of canvas.
-         * 
+         *
          * - Multi-line text widget:
          *     - Scrolling direction is from bottom to top.
          *     - Start scrolling outside of canvas.
@@ -446,9 +458,9 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         /* Fade effect disabled? */
         if (false == m_isFadeEffectEnabled)
         {
-            m_fadeState         = FADE_STATE_IDLE;
-            m_fadeBrightness    = FADING_BRIGHTNESS_HIGH;
-            m_updateText        = true;
+            m_fadeState      = FADE_STATE_IDLE;
+            m_fadeBrightness = FADING_BRIGHTNESS_HIGH;
+            m_updateText     = true;
         }
         /* No fading active? */
         else if (FADE_STATE_IDLE == m_fadeState)
@@ -456,14 +468,14 @@ void TextWidget::prepareNewText(YAGfx& gfx)
             /* If no text is shown, fade in immediately. */
             if (true == m_formatStrUtf8.isEmpty())
             {
-                m_fadeState         = FADE_STATE_IN;
-                m_fadeBrightness    = FADING_BRIGHTNESS_LOW;
-                m_updateText        = true;
+                m_fadeState      = FADE_STATE_IN;
+                m_fadeBrightness = FADING_BRIGHTNESS_LOW;
+                m_updateText     = true;
             }
             else
             {
-                m_fadeState         = FADE_STATE_OUT;
-                m_fadeBrightness    = FADING_BRIGHTNESS_HIGH;
+                m_fadeState      = FADE_STATE_OUT;
+                m_fadeBrightness = FADING_BRIGHTNESS_HIGH;
             }
         }
         /* Fading in active? */
@@ -482,9 +494,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         if (true == isStaticText(gfx, textBoxWidth, textBoxHeight))
         {
             /* New text is kept static. */
-            m_scrollInfoNew.isEnabled   = false;
-            m_scrollInfoNew.offsetDest  = 0;
-            m_scrollInfoNew.offset      = 0;
+            m_scrollCtrlNew.disable();
         }
         /* If single line text widget, the current text will be scrolled
          * to the left and the new text scrolled in from right.
@@ -492,10 +502,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         else if (1U == getLineCount())
         {
             /* The new text shall scroll in. */
-            m_scrollInfoNew.isEnabled           = true;
-            m_scrollInfoNew.isScrollingToLeft   = true;
-            m_scrollInfoNew.offsetDest          = -textBoxWidth;
-            m_scrollInfoNew.offset              = gfx.getWidth();
+            m_scrollCtrlNew.enable(ScrollController::DIRECTION_HORIZONTAL, gfx.getWidth(), textBoxWidth);
         }
         /* In multi-line text widget the current text will be scrolled
          * to the top and the new text scrolled in from bottom.
@@ -503,10 +510,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         else
         {
             /* The new text shall scroll in. */
-            m_scrollInfoNew.isEnabled           = true;
-            m_scrollInfoNew.isScrollingToLeft   = false;
-            m_scrollInfoNew.offsetDest          = -textBoxHeight;
-            m_scrollInfoNew.offset              = gfx.getHeight() + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
+            m_scrollCtrlNew.enable(ScrollController::DIRECTION_VERTICAL, gfx.getHeight(), textBoxHeight);
         }
     }
 }
@@ -514,22 +518,22 @@ void TextWidget::prepareNewText(YAGfx& gfx)
 void TextWidget::calculateCursorPos(int16_t& curX, int16_t& curY) const
 {
     /* No scrolling? */
-    if (false == m_scrollInfo.isEnabled)
+    if (false == m_scrollCtrl.isEnabled())
     {
         curX = 0;
         curY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     }
     /* Scrolling from left to right? */
-    else if (true == m_scrollInfo.isScrollingToLeft)
+    else if (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection())
     {
-        curX = m_scrollInfo.offset;
+        curX = m_scrollCtrl.getOffset();
         curY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     }
     /* Scrolling from bottom to top. */
     else
     {
         curX = 0;
-        curY = m_scrollInfo.offset;
+        curY = m_scrollCtrl.getOffset();
     }
 
     /* Consider vertical alignment only.
@@ -540,7 +544,7 @@ void TextWidget::calculateCursorPos(int16_t& curX, int16_t& curY) const
 
 void TextWidget::handleFadeEffect()
 {
-    switch(m_fadeState)
+    switch (m_fadeState)
     {
     case FADE_STATE_IDLE:
         /* Nothing to do. */
@@ -552,8 +556,8 @@ void TextWidget::handleFadeEffect()
         /* If text is faded out, replace it with the new text and start fading in. */
         if (FADING_BRIGHTNESS_LOW == m_fadeBrightness)
         {
-            m_fadeState     = FADE_STATE_IN;
-            m_updateText    = true;
+            m_fadeState  = FADE_STATE_IN;
+            m_updateText = true;
         }
         break;
 
@@ -602,44 +606,12 @@ void TextWidget::handleFadeIn()
     }
 }
 
-void TextWidget::scrollText(YAGfx& gfx)
-{
-    /* Handle scrolling text. */
-    if (m_scrollInfo.offsetDest < m_scrollInfo.offset)
-    {
-        --m_scrollInfo.offset;
-    }
-    else if (m_scrollInfo.offsetDest > m_scrollInfo.offset)
-    {
-        ++m_scrollInfo.offset;
-    }
-    else
-    {
-        /* Left to right scrolling. */
-        if (true == m_scrollInfo.isScrollingToLeft)
-        {
-            m_scrollInfo.offset = gfx.getWidth();
-        }
-        /* Bottom to top scrolling? */
-        else
-        {
-            m_scrollInfo.offset = gfx.getHeight();
-        }
-
-        /* Count number of times the text was scrolled complete. */
-        if (UINT32_MAX > m_scrollingCnt)
-        {
-            ++m_scrollingCnt;
-        }
-    }
-}
-
 void TextWidget::paint(YAGfx& gfx)
 {
-    Color   textColor   = m_gfxText.getTextColor();
-    int16_t cursorX     = 0;
-    int16_t cursorY     = 0;
-    
+    int16_t  cursorX = 0;
+    int16_t  cursorY = 0;
+    uint16_t canvasSize;
+
     /* If there is a new text available, it shall be determined how to show it on the display. */
     if (true == m_prepareNewText)
     {
@@ -652,45 +624,37 @@ void TextWidget::paint(YAGfx& gfx)
     {
         m_updateText    = false;
         m_formatStrUtf8 = m_formatStrNewUtf8;
-        m_scrollInfo    = m_scrollInfoNew;
+        m_scrollCtrl    = m_scrollCtrlNew;
+        m_textHeight    = m_textHeightNew;
         m_ast           = std::move(m_astNew);
 
         alignTextVertical();
-
-        if (true == m_scrollInfo.isEnabled)
-        {
-            m_scrollTimer.start(m_scrollPause);
-        }
     }
 
     /* Update text brightness, even if fade effect is disabled. */
-    textColor.setIntensity(m_fadeBrightness);
-    m_gfxText.setTextColor(textColor);
+    m_gfxText.getBrush().setIntensity(m_fadeBrightness);
+
+    /* Update scroll position if needed. */
+    canvasSize = (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection()) ? gfx.getWidth() : gfx.getHeight();
+    (void)m_scrollCtrl.update(canvasSize);
 
     /* Update the cursor position, it may have changed by scrolling. */
     calculateCursorPos(cursorX, cursorY);
     m_gfxText.setTextCursorPos(cursorX, cursorY);
 
     /* Show the text. */
-    show(gfx, m_ast, m_scrollInfo.isEnabled);
+    show(gfx, m_ast, m_scrollCtrl.isEnabled());
 
     /* Handle fade effect. */
     handleFadeEffect();
-
-    /* Is it time to scroll the text(s) again? */
-    if (true == m_scrollTimer.isTimeout())
-    {
-        scrollText(gfx);
-        m_scrollTimer.restart();
-    }
 }
 
 void TextWidget::specialCharacterCodeKeywordToText(TWAbstractSyntaxTree& ast)
 {
-    uint32_t    astLength   = ast.length();
-    uint32_t    idx;
+    uint32_t astLength = ast.length();
+    uint32_t idx;
 
-    for(idx = 0U; idx < astLength; ++idx)
+    for (idx = 0U; idx < astLength; ++idx)
     {
         TWToken& token = ast[idx];
 
@@ -715,21 +679,21 @@ void TextWidget::specialCharacterCodeKeywordToText(TWAbstractSyntaxTree& ast)
 
 void TextWidget::getText(String& text, const TWAbstractSyntaxTree& ast) const
 {
-    uint32_t    length = ast.length();
-    uint32_t    idx;
+    uint32_t length = ast.length();
+    uint32_t idx;
 
     text.clear();
 
-    for(idx = 0U; idx < length; ++idx)
+    for (idx = 0U; idx < length; ++idx)
     {
         const TWToken& token = ast[idx];
 
-        switch(token.getType())
+        switch (token.getType())
         {
         case TWToken::TYPE_KEYWORD:
             /* Skip keyword token. */
             break;
-        
+
         case TWToken::TYPE_TEXT:
             /* fallthrough */
         case TWToken::TYPE_LINE_FEED:
@@ -744,22 +708,22 @@ void TextWidget::getText(String& text, const TWAbstractSyntaxTree& ast) const
 
 uint32_t TextWidget::getSingleLine(String& singleLine, const TWAbstractSyntaxTree& ast, uint32_t startIdx)
 {
-    uint32_t    length      = ast.length();
-    uint32_t    idx         = startIdx;
-    bool        isFinished  = false;
+    uint32_t length     = ast.length();
+    uint32_t idx        = startIdx;
+    bool     isFinished = false;
 
     singleLine.clear();
 
-    while((length > idx) && (false == isFinished))
+    while ((length > idx) && (false == isFinished))
     {
         const TWToken& token = ast[idx];
 
-        switch(token.getType())
+        switch (token.getType())
         {
         case TWToken::TYPE_KEYWORD:
             /* Skip keyword token. */
             break;
-        
+
         case TWToken::TYPE_TEXT:
             singleLine += token.getStr();
             break;
@@ -780,17 +744,20 @@ uint32_t TextWidget::getSingleLine(String& singleLine, const TWAbstractSyntaxTre
 
 void TextWidget::show(YAGfx& gfx, const TWAbstractSyntaxTree& ast, bool isScrolling)
 {
-    uint32_t                astLength       = ast.length();
-    Color                   textColorBackup = m_gfxText.getTextColor(); /* Backup text color */
-    Alignment::Horizontal   hAlignBackup    = m_hAlign;                 /* Backup alignment */
-    Alignment::Vertical     vAlignBackup    = m_vAlign;                 /* Backup alignment */
-    Alignment::Horizontal   hAlign          = m_hAlign;                 /* Used to detect horizontal alignment change */
-    int16_t                 hAlignPosX      = 0;
-    uint32_t                idx;
-    String                  singleLine;
+    uint32_t                 astLength                 = ast.length();
+    YAGfxSolidBrush          solidBrushBackup          = m_solidBrush;          /* Backup solid brush */
+    YAGfxLinearGradientBrush linearGradientBrushBackup = m_linearGradientBrush; /* Backup linear gradient brush */
+    YAGfxBrush&              textBrushBackup           = m_gfxText.getBrush();  /* Backup text brush */
+    Alignment::Horizontal    hAlignBackup              = m_hAlign;              /* Backup alignment */
+    Alignment::Vertical      vAlignBackup              = m_vAlign;              /* Backup alignment */
+    Alignment::Horizontal    hAlign                    = m_hAlign;              /* Used to detect horizontal alignment change */
+    int16_t                  hAlignPosX                = 0;
+    uint32_t                 idx;
+    String                   singleLine;
+    uint8_t                  brushIntensity;
 
     /* First run handles only format tags, which influence the whole text. */
-    for(idx = 0U; idx < astLength; ++idx)
+    for (idx = 0U; idx < astLength; ++idx)
     {
         const TWToken& token = ast[idx];
 
@@ -807,16 +774,16 @@ void TextWidget::show(YAGfx& gfx, const TWAbstractSyntaxTree& ast, bool isScroll
     m_gfxText.setTextCursorPosX(m_gfxText.getTextCursorPosX() + hAlignPosX);
 
     /* Second run, now showing text too. */
-    for(idx = 0U; idx < astLength; ++idx)
+    for (idx = 0U; idx < astLength; ++idx)
     {
         const TWToken& token = ast[idx];
 
-        switch(token.getType())
+        switch (token.getType())
         {
         case TWToken::TYPE_KEYWORD:
             (void)handleKeyword(gfx, FORMAT_KEYWORD_TABLE_2, UTIL_ARRAY_NUM(FORMAT_KEYWORD_TABLE_2), token.getStr().c_str());
             break;
-        
+
         case TWToken::TYPE_TEXT:
             /* Horizontal alignment might be changed by keywords. */
             if (hAlign != m_hAlign)
@@ -845,20 +812,27 @@ void TextWidget::show(YAGfx& gfx, const TWAbstractSyntaxTree& ast, bool isScroll
         }
     }
 
-    /* Restore original in case it was changed by format keywords. */
-    m_gfxText.setTextColor(textColorBackup);
+    /* Restore original backups in case it was changed by format keywords.
+     * Important is to keep the current brush intensity, because it would
+     * disturb the fade effect.
+     */
+    brushIntensity        = m_gfxText.getBrush().getIntensity();
+    m_solidBrush          = solidBrushBackup;
+    m_linearGradientBrush = linearGradientBrushBackup;
+    m_gfxText.setBrush(textBrushBackup);
+    m_gfxText.getBrush().setIntensity(brushIntensity);
     m_hAlign = hAlignBackup;
     m_vAlign = vAlignBackup;
 }
 
 bool TextWidget::isKeywordEqual(const char* keyword, const char* other) const
 {
-    bool    isEqual     = true;
-    bool    isWildcard  = false;
-    size_t  tagIdx      = 0U;
-    size_t  otherIdx    = 0U;
+    bool   isEqual    = true;
+    bool   isWildcard = false;
+    size_t tagIdx     = 0U;
+    size_t otherIdx   = 0U;
 
-    while(('\0' != keyword[tagIdx]) && ('\0' != other[otherIdx]) && (true == isEqual) && (false == isWildcard))
+    while (('\0' != keyword[tagIdx]) && ('\0' != other[otherIdx]) && (true == isEqual) && (false == isWildcard))
     {
         /* Not equal? */
         if (keyword[tagIdx] != other[otherIdx])
@@ -885,10 +859,10 @@ bool TextWidget::isKeywordEqual(const char* keyword, const char* other) const
 
 bool TextWidget::handleKeyword(YAGfx& gfx, const FormatKeywordRow* table, size_t tableSize, const String& keyword)
 {
-    bool    isFound = false;
-    size_t  idx     = 0U;
+    bool   isFound = false;
+    size_t idx     = 0U;
 
-    while((tableSize > idx) && (false == isFound))
+    while ((tableSize > idx) && (false == isFound))
     {
         const FormatKeywordRow* row = &table[idx];
 
@@ -954,12 +928,13 @@ void TextWidget::verticalBottomAligned(YAGfx& gfx, const String& keyword)
     setVerticalAlignment(Alignment::Vertical::VERTICAL_BOTTOM);
 }
 
-void TextWidget::handleColor(YAGfx& gfx, const String& keyword)
+void TextWidget::handleSolidColor(YAGfx& gfx, const String& keyword)
 {
-    size_t          length      = keyword.length();
-    String          colorStr    = String("0x") + keyword.substring(2U, length - 1U); /* {#*} */
-    uint32_t        colorRGB888 = 0U;
-    bool            convStatus  = Util::strToUInt32(colorStr, colorRGB888);
+    /* Keyword format: {#RRGGBB} */
+    size_t   length      = keyword.length();
+    String   colorStr    = String("0x") + keyword.substring(2U, length - 1U); /* {#*} */
+    uint32_t colorRGB888 = 0U;
+    bool     convStatus  = Util::strToUInt32(colorStr, colorRGB888);
 
     UTIL_NOT_USED(gfx);
 
@@ -968,20 +943,110 @@ void TextWidget::handleColor(YAGfx& gfx, const String& keyword)
         Color textColor = colorRGB888;
 
         textColor.setIntensity(m_fadeBrightness);
-        m_gfxText.setTextColor(colorRGB888);
+
+        m_solidBrush.setColor(textColor);
+        m_gfxText.setBrush(m_solidBrush);
     }
+}
+
+bool TextWidget::handleLinearGradient(YAGfx& gfx, const String& keyword)
+{
+    /* Keyword format: {lgX #RRGGBB,#RRGGBB,OFFSET,LENGTH} */
+    bool   isSuccessful = false;
+    size_t length       = keyword.length();
+
+    /* Find comma positions. */
+    size_t comma1       = keyword.indexOf(',', 5U); /* after "{lgX " */
+    size_t comma2       = keyword.indexOf(',', comma1 + 1U);
+    size_t comma3       = keyword.indexOf(',', comma2 + 1U);
+
+    UTIL_NOT_USED(gfx);
+
+    if ((0 <= comma1) && (0 <= comma2) && (0 <= comma3))
+    {
+        String   colorStr1     = String("0x") + keyword.substring(6U, comma1);          /* RRGGBB */
+        String   colorStr2     = String("0x") + keyword.substring(comma1 + 2U, comma2); /* RRGGBB */
+        String   strOffset     = keyword.substring(comma2 + 1U, comma3);                /* OFFSET */
+        String   strLength     = keyword.substring(comma3 + 1U, length - 1U);           /* LENGTH (exclude closing '}') */
+
+        uint32_t colorRGB888_1 = 0U;
+        uint32_t colorRGB888_2 = 0U;
+        int16_t  offset        = 0U;
+        uint16_t gradLength    = 0U;
+
+        bool     convStatus1   = Util::strToUInt32(colorStr1, colorRGB888_1);
+        bool     convStatus2   = Util::strToUInt32(colorStr2, colorRGB888_2);
+        bool     convStatus3   = Util::strToInt16(strOffset, offset);
+        bool     convStatus4   = Util::strToUInt16(strLength, gradLength);
+
+        if ((true == convStatus1) && (true == convStatus2) && (true == convStatus3) && (true == convStatus4))
+        {
+            Color startColor = colorRGB888_1;
+            Color endColor   = colorRGB888_2;
+
+            startColor.setIntensity(m_fadeBrightness);
+            endColor.setIntensity(m_fadeBrightness);
+
+            m_linearGradientBrush.setStartColor(startColor);
+            m_linearGradientBrush.setEndColor(endColor);
+            m_linearGradientBrush.setOffset(offset);
+            m_linearGradientBrush.setLength(gradLength);
+
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
+
+void TextWidget::handleLinearGradientVertical(YAGfx& gfx, const String& keyword)
+{
+    if (true == handleLinearGradient(gfx, keyword))
+    {
+        m_linearGradientBrush.setDirection(true);
+        m_gfxText.setBrush(m_linearGradientBrush);
+    }
+}
+
+void TextWidget::handleLinearGradientHorizontal(YAGfx& gfx, const String& keyword)
+{
+    if (true == handleLinearGradient(gfx, keyword))
+    {
+        m_linearGradientBrush.setDirection(false);
+        m_gfxText.setBrush(m_linearGradientBrush);
+    }
+}
+
+void TextWidget::solidTextColor(YAGfx& gfx, const String& keyword)
+{
+    uint8_t intensity = m_gfxText.getBrush().getIntensity();
+
+    UTIL_NOT_USED(gfx);
+    UTIL_NOT_USED(keyword);
+
+    m_solidBrush.setIntensity(intensity); /* Take over current intensity. */
+    m_gfxText.setBrush(m_solidBrush);
+}
+
+void TextWidget::linearGradientTextColor(YAGfx& gfx, const String& keyword)
+{
+    uint8_t intensity = m_gfxText.getBrush().getIntensity();
+
+    UTIL_NOT_USED(gfx);
+    UTIL_NOT_USED(keyword);
+
+    m_linearGradientBrush.setIntensity(intensity); /* Take over current intensity. */
+    m_gfxText.setBrush(m_linearGradientBrush);
 }
 
 void TextWidget::horizontalMove(YAGfx& gfx, const String& keyword)
 {
-    size_t  length      = keyword.length();
-    String  strOffset   = keyword.substring(4U, length - 1U); /* {hm *} */
-    int32_t offset      = 0;
-    bool    convStatus  = Util::strToInt32(strOffset, offset);
+    size_t  length     = keyword.length();
+    String  strOffset  = keyword.substring(4U, length - 1U); /* {hm *} */
+    int16_t offset     = 0;
+    bool    convStatus = Util::strToInt16(strOffset, offset);
 
-    if ((true == convStatus) &&
-        (INT16_MAX >= offset) &&
-        (INT16_MIN <= offset))
+    if (true == convStatus)
     {
         int16_t x = m_gfxText.getTextCursorPosX() + offset;
         int16_t y = m_gfxText.getTextCursorPosY();
@@ -992,14 +1057,12 @@ void TextWidget::horizontalMove(YAGfx& gfx, const String& keyword)
 
 void TextWidget::verticalMove(YAGfx& gfx, const String& keyword)
 {
-    size_t  length      = keyword.length();
-    String  strOffset   = keyword.substring(4U, length - 1U); /* {vm *} */
-    int32_t offset      = 0;
-    bool    convStatus  = Util::strToInt32(strOffset, offset);
+    size_t  length     = keyword.length();
+    String  strOffset  = keyword.substring(4U, length - 1U); /* {vm *} */
+    int16_t offset     = 0;
+    bool    convStatus = Util::strToInt16(strOffset, offset);
 
-    if ((true == convStatus) &&
-        (INT16_MAX >= offset) &&
-        (INT16_MIN <= offset))
+    if (true == convStatus)
     {
         int16_t x = m_gfxText.getTextCursorPosX();
         int16_t y = m_gfxText.getTextCursorPosY() + offset;

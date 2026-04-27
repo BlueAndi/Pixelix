@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SysMsgPlugin.cpp
  * @brief  System message plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -73,6 +74,7 @@ void SysMsgPlugin::stop()
 void SysMsgPlugin::active(YAGfx& gfx)
 {
     /* Nothing to do. */
+    UTIL_NOT_USED(gfx);
 }
 
 void SysMsgPlugin::inactive()
@@ -90,22 +92,11 @@ void SysMsgPlugin::inactive()
 
 void SysMsgPlugin::update(YAGfx& gfx)
 {
-    bool        isScrollingEnabled  = false;
-    uint32_t    scrollingCnt        = 0U;
-    bool        status              = false;
+    bool     isScrollingEnabled = false;
+    uint32_t scrollingCnt       = 0U;
+    bool     status             = false;
 
     m_view.update(gfx);
-
-    if (true == m_isSignalEnabled)
-    {
-        int16_t xMax = static_cast<int16_t>(gfx.getWidth()) - 1;
-        int16_t yMax = static_cast<int16_t>(gfx.getHeight()) - 1;
-
-        gfx.drawPixel(0, 0, ColorDef::YELLOW);
-        gfx.drawPixel(0, yMax, ColorDef::YELLOW);
-        gfx.drawPixel(xMax, 0, ColorDef::YELLOW);
-        gfx.drawPixel(xMax, yMax, ColorDef::YELLOW);
-    }
 
     status = m_view.getScrollInfo(isScrollingEnabled, scrollingCnt);
 
@@ -165,8 +156,8 @@ void SysMsgPlugin::update(YAGfx& gfx)
 
 void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 {
-    size_t nextWrIndex = m_wrIndex + 1U;
-    nextWrIndex %= MAX_SYS_MSG;
+    size_t nextWrIndex  = m_wrIndex + 1U;
+    nextWrIndex        %= MAX_SYS_MSG;
 
     /* Queue full? */
     if (nextWrIndex == m_rdIndex)
@@ -175,11 +166,11 @@ void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
     }
     else
     {
-        m_messages[m_wrIndex].msg       = msg;
-        m_messages[m_wrIndex].duration  = duration;
-        m_messages[m_wrIndex].max       = max;
+        m_messages[m_wrIndex].msg      = msg;
+        m_messages[m_wrIndex].duration = duration;
+        m_messages[m_wrIndex].max      = max;
 
-        m_wrIndex = nextWrIndex;
+        m_wrIndex                      = nextWrIndex;
 
         /* If plugin is disabled, it will be enabled and next is shown. */
         if (false == isEnabled())
@@ -208,14 +199,14 @@ bool SysMsgPlugin::nextMessage()
         SysMsg& sysMsg = m_messages[m_rdIndex];
 
         m_view.setFormatText(sysMsg.msg);
-        m_duration  = sysMsg.duration;
-        m_max       = sysMsg.max;
-        m_isInit    = true;
+        m_duration = sysMsg.duration;
+        m_max      = sysMsg.max;
+        m_isInit   = true;
 
         ++m_rdIndex;
-        m_rdIndex %= MAX_SYS_MSG;
+        m_rdIndex      %= MAX_SYS_MSG;
 
-        isMsgAvailable = true;
+        isMsgAvailable  = true;
     }
 
     return isMsgAvailable;

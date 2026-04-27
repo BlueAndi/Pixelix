@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2019 - 2025 Andreas Merkle (web@blue-andi.de)
+# Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -166,6 +166,7 @@ def _generate_web_menu(menu_full_path, plugin_list):
         plugin_list (list): List of all plugin names
     """
     with open(menu_full_path, 'w', encoding="utf-8") as file_desc:
+        file_desc.write("\"use strict\";\n\n")
         file_desc.write("var pluginSubMenu = [\n")
 
         for idx, plugin_name in enumerate(plugin_list):
@@ -180,7 +181,7 @@ def _generate_web_menu(menu_full_path, plugin_list):
             else:
                 file_desc.write(",\n")
 
-        file_desc.write("]\n")
+        file_desc.write("];\n")
 
 def _generate_cpp_plugin_list(plugin_list_full_path, plugin_list):
     """Generate the PluginList.cpp source file.

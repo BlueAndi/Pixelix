@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdEffect.cpp
  * @brief  Websocket command to control fade effects
  * @author Yann Le Glaz <yann_le@web.de>
  */
@@ -79,7 +80,9 @@ void WsCmdEffect::execute(AsyncWebSocket* server, uint32_t clientId)
 
         if (1U == m_parCnt)
         {
-            DisplayMgr::getInstance().activateNextFadeEffect(static_cast<DisplayMgr::FadeEffect>(m_fadeEffect));
+            FadeEffectController::FadeEffect fadeEffect = static_cast<FadeEffectController::FadeEffect>(m_fadeEffect);
+
+            DisplayMgr::getInstance().activateNextFadeEffect(fadeEffect);
         }
 
         preparePositiveResponse(msg);
@@ -90,7 +93,7 @@ void WsCmdEffect::execute(AsyncWebSocket* server, uint32_t clientId)
     }
 
     m_isError = false;
-    m_parCnt = 0U;
+    m_parCnt  = 0U;
 }
 
 void WsCmdEffect::setPar(const char* par)
@@ -101,7 +104,7 @@ void WsCmdEffect::setPar(const char* par)
         {
             m_isError = true;
         }
-         ++m_parCnt;
+        ++m_parCnt;
     }
     else
     {

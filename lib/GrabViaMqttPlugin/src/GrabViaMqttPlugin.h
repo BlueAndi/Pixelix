@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   GrabViaMqttPlugin.h
  * @brief  Grab information via MQTT API plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -108,6 +109,13 @@ public:
     {
         return new (std::nothrow) GrabViaMqttPlugin(name, uid);
     }
+
+    /**
+     * Is plugin enabled or not?
+     *
+     * @return If plugin is enabled, it will return true otherwise false.
+     */
+    bool isEnabled() const final;
 
     /**
      * Get font type.
@@ -286,25 +294,18 @@ private:
     /**
      * Get configuration in JSON.
      *
-     * @param[out] cfg  Configuration
+     * @param[out] jsonCfg   Configuration
      */
     void getConfiguration(JsonObject& jsonCfg) const final;
 
     /**
      * Set configuration in JSON.
      *
-     * @param[in] cfg   Configuration
+     * @param[in] jsonCfg   Configuration
      *
      * @return If successful set, it will return true otherwise false.
      */
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
-
-    /**
-     * Request new data.
-     *
-     * @return If successful it will return true otherwise false.
-     */
-    bool startHttpRequest(void);
 
     /**
      * Get value from JSON source by the filter.
@@ -315,11 +316,6 @@ private:
      * @param[out]  values  Array of values in JSON format
      */
     void getJsonValueByFilter(JsonVariantConst src, JsonVariantConst filter, JsonArray& values);
-
-    /**
-     * Clear the task proxy queue.
-     */
-    void clearQueue();
 
     /**
      * Subscribe MQTT topic to be informed about value changes.

@@ -10,13 +10,15 @@
     }],
     "license": "MIT",
     "dependencies": [{
+        "name": "Allocator"
+    }, {
         "name": "Logging"
     }, {
         "name": "YAGfx"
     }, {
         "owner": "bblanchon",
         "name": "ArduinoJson",
-        "version": "~6.21.5"
+        "version": "~6.21.6"
     }, {
         "name": "Fonts"
     }, {

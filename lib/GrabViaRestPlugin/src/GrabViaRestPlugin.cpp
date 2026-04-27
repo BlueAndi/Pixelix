@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   GrabViaRestPlugin.cpp
  * @brief  Grab information via REST plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -65,6 +66,20 @@ const char* GrabViaRestPlugin::TOPIC_CONFIG = "grabConfig";
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+bool GrabViaRestPlugin::isEnabled() const
+{
+    bool isEnabled = false;
+
+    /* The plugin shall only be scheduled if its enabled and text is set. */
+    if ((true == m_isEnabled) &&
+        (false == m_view.getText().isEmpty()))
+    {
+        isEnabled = true;
+    }
+
+    return isEnabled;
+}
 
 void GrabViaRestPlugin::getTopics(JsonArray& topics) const
 {
@@ -114,13 +129,13 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
         if (false == jsonMethod.isNull())
         {
-            jsonCfg["method"] = jsonMethod.as<String>();
+            jsonCfg["method"] = jsonMethod.as<const char*>();
             isSuccessful      = true;
         }
 
         if (false == jsonUrl.isNull())
         {
-            jsonCfg["url"] = jsonUrl.as<String>();
+            jsonCfg["url"] = jsonUrl.as<const char*>();
             isSuccessful   = true;
         }
 
@@ -140,7 +155,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             {
                 const size_t         JSON_DOC_FILTER_SIZE = 256U;
                 DynamicJsonDocument  jsonDocFilter(JSON_DOC_FILTER_SIZE);
-                DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<String>());
+                DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<const char*>());
 
                 if (DeserializationError::Ok == result)
                 {
@@ -174,7 +189,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
         if (false == jsonFormat.isNull())
         {
-            jsonCfg["format"] = jsonFormat.as<String>();
+            jsonCfg["format"] = jsonFormat.as<const char*>();
             isSuccessful      = true;
         }
 
@@ -224,7 +239,6 @@ void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
-
     PluginWithConfig::start(width, height);
 
     if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
@@ -234,24 +248,16 @@ void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
         if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
         {
             LOG_WARNING("Unknown file id %u.", m_iconFileId);
-            m_view.setupTextOnly();
         }
         else if (false == m_view.loadIcon(iconFullPath))
         {
             LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-            m_view.setupTextOnly();
         }
         else
         {
-            m_view.setupBitmapAndText();
+            ;
         }
     }
-    else
-    {
-        m_view.setupTextOnly();
-    }
-
-    initHttpClient();
 }
 
 void GrabViaRestPlugin::stop()
@@ -261,101 +267,114 @@ void GrabViaRestPlugin::stop()
     m_requestTimer.stop();
 
     PluginWithConfig::stop();
+
+    m_isAllowedToSend = false;
+
+    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+    {
+        RestService::getInstance().abortRequest(m_dynamicRestId);
+        m_dynamicRestId = RestService::INVALID_REST_ID;
+    }
 }
 
 void GrabViaRestPlugin::process(bool isConnected)
 {
-    Msg                        msg;
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
-
-    /* Only if a network connection is established the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
+    /* Acquire mutex for initial state check and update. */
     {
-        if (true == isConnected)
-        {
-            if (false == startHttpRequest())
-            {
-                /* If a request fails, a '?' will be shown. */
-                m_view.setFormatText("{hc}?");
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established, the required information
+         * shall be periodically requested via REST API.
+         */
+        if (false == m_requestTimer.isTimerRunning())
+        {
+            if (true == isConnected)
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
+                {
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, a '?' will be shown. */
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
+            {
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
+                {
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, a '?' will be shown. */
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
+                }
+            }
+        }
+
+        dynamicRestId = m_dynamicRestId;
+    }
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
+    {
+        DynamicJsonDocument jsonDoc(0U);
+        bool                isValidResponse;
+
+        /* Get the response from the REST service. */
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
+        {
+            if (true == isValidResponse)
+            {
+                handleWebResponse(jsonDoc);
             }
             else
             {
-                m_requestTimer.start(UPDATE_PERIOD);
-            }
-        }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
-         */
-        if (false == isConnected)
-        {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            if (false == startHttpRequest())
-            {
-                /* If a request fails, a '?' will be shown. */
-                m_view.setFormatText("{hc}?");
+                LOG_WARNING("Connection error.");
 
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
-            }
-            else
-            {
-                m_requestTimer.start(UPDATE_PERIOD);
-            }
-        }
-    }
+                MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (true == m_taskProxy.receive(msg))
-    {
-        switch (msg.type)
-        {
-        case MSG_TYPE_INVALID:
-            /* Should never happen. */
-            break;
-
-        case MSG_TYPE_RSP:
-            if (nullptr != msg.rsp)
-            {
-                handleWebResponse(*msg.rsp);
-                delete msg.rsp;
-                msg.rsp = nullptr;
-            }
-            break;
-
-        case MSG_TYPE_CONN_CLOSED:
-            LOG_INFO("Connection closed.");
-
-            if (true == m_isConnectionError)
-            {
                 /* If a request fails, show standard icon and a '?' */
                 m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
-            m_isConnectionError = false;
-            break;
 
-        case MSG_TYPE_CONN_ERROR:
-            LOG_WARNING("Connection error.");
-            m_isConnectionError = true;
-            break;
-
-        default:
-            /* Should never happen. */
-            break;
+            MutexGuard<MutexRecursive> guard(m_mutex);
+            m_dynamicRestId   = RestService::INVALID_REST_ID;
+            m_isAllowedToSend = true;
         }
     }
 }
@@ -430,52 +449,45 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     }
     else
     {
-        bool                       reqIcon = false;
         MutexGuard<MutexRecursive> guard(m_mutex);
+        FileMgrService::FileId     newIconFileId = jsonIconFileId.as<FileMgrService::FileId>();
 
-        if (m_iconFileId != jsonIconFileId.as<FileMgrService::FileId>())
+        m_method                                 = jsonMethod.as<const char*>();
+        m_url                                    = jsonUrl.as<const char*>();
+        m_filter                                 = jsonFilter;
+        m_format                                 = jsonFormat.as<const char*>();
+        m_multiplier                             = jsonMultiplier.as<float>();
+        m_offset                                 = jsonOffset.as<float>();
+
+        if (m_iconFileId != newIconFileId)
         {
-            reqIcon = true;
-        }
+            m_iconFileId = newIconFileId;
 
-        m_method     = jsonMethod.as<String>();
-        m_url        = jsonUrl.as<String>();
-        m_filter     = jsonFilter;
-        m_iconFileId = jsonIconFileId.as<FileMgrService::FileId>();
-        m_format     = jsonFormat.as<String>();
-        m_multiplier = jsonMultiplier.as<float>();
-        m_offset     = jsonOffset.as<float>();
-
-        /* Force update on display */
-        m_requestTimer.start(UPDATE_PERIOD_SHORT);
-
-        /* Load icon immediately */
-        if (true == reqIcon)
-        {
-            if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
+            if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
+            {
+                m_view.clearIcon();
+            }
+            else
             {
                 String iconFullPath;
 
                 if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
                 {
                     LOG_WARNING("Unknown file id %u.", m_iconFileId);
-                    m_view.setupTextOnly();
-                }
-                else if (false == m_view.loadIcon(iconFullPath))
-                {
-                    LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-                    m_view.setupTextOnly();
+                    m_view.clearIcon();
                 }
                 else
                 {
-                    m_view.setupBitmapAndText();
+                    if (false == m_view.loadIcon(iconFullPath))
+                    {
+                        LOG_WARNING("Couldn't load icon: %s", iconFullPath.c_str());
+                    }
                 }
             }
-            else
-            {
-                m_view.setupTextOnly();
-            }
         }
+
+        /* Force update on display */
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
 
         m_hasTopicChanged = true;
 
@@ -487,123 +499,78 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
 bool GrabViaRestPlugin::startHttpRequest()
 {
-    bool status = false;
+    bool                            status = false;
+    RestService::PreProcessCallback preProcessCallback =
+        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+            return this->preProcessAsyncWebResponse(payload, size, doc);
+        };
 
     if (false == m_url.isEmpty())
     {
-        if (true == m_client.begin(m_url))
+        if (true == m_method.equalsIgnoreCase("GET"))
         {
-            if (true == m_method.equalsIgnoreCase("GET"))
+            m_dynamicRestId = RestService::getInstance().get(m_url, preProcessCallback);
+
+            if (RestService::INVALID_REST_ID == m_dynamicRestId)
             {
-                if (false == m_client.GET())
-                {
-                    LOG_WARNING("GET %s failed.", m_url.c_str());
-                }
-                else
-                {
-                    status = true;
-                }
-            }
-            else if (true == m_method.equalsIgnoreCase("POST"))
-            {
-                if (false == m_client.POST())
-                {
-                    LOG_WARNING("POST %s failed.", m_url.c_str());
-                }
-                else
-                {
-                    status = true;
-                }
+                LOG_WARNING("GET %s failed.", m_url.c_str());
             }
             else
             {
-                LOG_WARNING("Invalid HTTP method %s.", m_method.c_str());
+                status = true;
             }
+        }
+        else if (true == m_method.equalsIgnoreCase("POST"))
+        {
+            m_dynamicRestId = RestService::getInstance().post(m_url, preProcessCallback);
+
+            if (RestService::INVALID_REST_ID == m_dynamicRestId)
+            {
+                LOG_WARNING("POST %s failed.", m_url.c_str());
+            }
+            else
+            {
+                status = true;
+            }
+        }
+        else
+        {
+            LOG_WARNING("Invalid HTTP method %s.", m_method.c_str());
         }
     }
 
     return status;
 }
 
-void GrabViaRestPlugin::initHttpClient()
+bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
 {
-    /* Note: All registered callbacks are running in a different task context!
-     *       Therefore it is not allowed to access a member here directly.
-     *       The processing must be deferred via task proxy.
-     */
-    m_client.regOnResponse(
-        [this](const HttpResponse& rsp) {
-            handleAsyncWebResponse(rsp);
-        });
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_client.regOnClosed(
-        [this]() {
-            Msg msg;
-
-            msg.type = MSG_TYPE_CONN_CLOSED;
-
-            (void)this->m_taskProxy.send(msg);
-        });
-
-    m_client.regOnError(
-        [this]() {
-            Msg msg;
-
-            msg.type = MSG_TYPE_CONN_ERROR;
-
-            (void)this->m_taskProxy.send(msg);
-        });
-}
-
-void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
-{
-    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    if ((nullptr == payload) ||
+        (0U == payloadSize))
     {
-        const size_t         JSON_DOC_SIZE = 4096U;
-        DynamicJsonDocument* jsonDoc       = new (std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+        LOG_WARNING("Empty response received.");
+    }
+    else if (true == m_filter.overflowed())
+    {
+        LOG_ERROR("JSON document size exceeded.");
+    }
+    else
+    {
+        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
 
-        if (nullptr != jsonDoc)
+        if (DeserializationError::Ok != error.code())
         {
-            bool        isSuccessful = false;
-            size_t      payloadSize  = 0U;
-            const void* vPayload     = rsp.getPayload(payloadSize);
-            const char* payload      = static_cast<const char*>(vPayload);
-
-            if (true == m_filter.overflowed())
-            {
-                LOG_ERROR("Less memory for filter available.");
-            }
-            else if ((nullptr == payload) ||
-                     (0U == payloadSize))
-            {
-                LOG_ERROR("No payload.");
-            }
-            else
-            {
-                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
-
-                if (DeserializationError::Ok != error.code())
-                {
-                    LOG_WARNING("JSON parse error: %s", error.c_str());
-                }
-                else
-                {
-                    Msg msg;
-
-                    msg.type     = MSG_TYPE_RSP;
-                    msg.rsp      = jsonDoc;
-
-                    isSuccessful = this->m_taskProxy.send(msg);
-                }
-            }
-
-            if (false == isSuccessful)
-            {
-                delete jsonDoc;
-                jsonDoc = nullptr;
-            }
+            LOG_WARNING("JSON parse error: %s", error.c_str());
+        }
+        else
+        {
+            isSuccessful = true;
         }
     }
+
+    return isSuccessful;
 }
 
 void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantConst filter, JsonArray& values)
@@ -673,12 +640,18 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     String              outputStr;
     size_t              valueCount = 0U;
 
-    getJsonValueByFilter(jsonDoc, m_filter, jsonValuesArray);
+    /* Protect against concurrent access. */
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        getJsonValueByFilter(jsonDoc, m_filter, jsonValuesArray);
+    }
+
     valueCount = jsonValuesArray.size();
 
     if (true == jsonDocValues.overflowed())
     {
-        LOG_ERROR("Less memory for JSON values available.");
+        LOG_ERROR("JSON document size exceeded.");
 
         /* The last value may be corrupt, throw it away and show the rest. */
         if (0U < valueCount)
@@ -748,7 +721,7 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
             const size_t BUFFER_SIZE = 128U;
             char         buffer[BUFFER_SIZE];
 
-            (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
+            (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<const char*>());
 
             outputStr += buffer;
         }
@@ -758,28 +731,9 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         }
     }
 
-    if (true == outputStr.isEmpty())
-    {
-        outputStr = "{hc}-";
-    }
-
     LOG_INFO("Grabbed: %s", outputStr.c_str());
 
     m_view.setFormatText(outputStr);
-}
-
-void GrabViaRestPlugin::clearQueue()
-{
-    Msg msg;
-
-    while (true == m_taskProxy.receive(msg))
-    {
-        if (MSG_TYPE_RSP == msg.type)
-        {
-            delete msg.rsp;
-            msg.rsp = nullptr;
-        }
-    }
 }
 
 /******************************************************************************

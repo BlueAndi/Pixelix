@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   Display.cpp
  * @brief  HUB75 matrix display
  * @author Mariano Dupont <marianomd@gmail.com>
  */
@@ -54,8 +55,7 @@
  * Local Variables
  *****************************************************************************/
 
-const HUB75_I2S_CFG::i2s_pins   Display::I2S_PINS =
-{
+const HUB75_I2S_CFG::i2s_pins Display::I2S_PINS = {
     CONFIG_HUB75_R1_PIN,
     CONFIG_HUB75_G1_PIN,
     CONFIG_HUB75_B1_PIN,
@@ -72,18 +72,18 @@ const HUB75_I2S_CFG::i2s_pins   Display::I2S_PINS =
     CONFIG_HUB75_CLK_PIN
 };
 
-const HUB75_I2S_CFG             Display::MATRIX_CFG  =
-{
+const HUB75_I2S_CFG Display::MATRIX_CFG = {
     CONFIG_LED_MATRIX_WIDTH,            /* Panel width */
     CONFIG_LED_MATRIX_HEIGHT,           /* Panel height */
     CONFIG_HUB75_CHAIN_LENGTH,          /* Chain length */
     I2S_PINS,                           /* Pin mapping */
     CONFIG_HUB75_DRIVER,                /* Driver */
+    CONFIG_HUB75_LINE_DRIVER,           /* Line driver */
     false,                              /* Use DMA double buffer */
-    HUB75_I2S_CFG::HZ_8M,               /* I2S clock speed */
+    HUB75_I2S_CFG::HZ_15M,              /* I2S clock speed */
     DEFAULT_LAT_BLANKING,               /* How many clock cycles to blank OE before/after LAT signal change. */
     CONFIG_HUB75_CLOCK_PHASE,           /* Clock phase */
-    60U,                                /* Min. refresh/scan rate */
+    72U,                                /* Min. refresh/scan rate */
     CONFIG_HUB75_PIXEL_COLOR_DEPTH_BITS /* Pixel color depth bits, e.g. 8 bits means 8 bit per color, therefore 24 bit for RGB. */
 };
 
@@ -118,17 +118,19 @@ void Display::show()
         int16_t y;
         int16_t x;
 
-        for(y = 0; y < Board::LedMatrix::height; ++y)
+        for (y = 0; y < Board::LedMatrix::height; ++y)
         {
-            for(x = 0; x < Board::LedMatrix::width; ++x)
+            for (x = 0; x < Board::LedMatrix::width; ++x)
             {
                 Color& color = m_ledMatrix.getColor(x, y);
 
 #if CONFIG_DISPLAY_ROTATE180 != 0
                 m_panel.drawPixelRGB888(
-                    Board::LedMatrix::width - x - 1, 
+                    Board::LedMatrix::width - x - 1,
                     Board::LedMatrix::height - y - 1,
-                    color.getRed(), color.getGreen(), color.getBlue());
+                    color.getRed(),
+                    color.getGreen(),
+                    color.getBlue());
 #else
                 m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
 #endif

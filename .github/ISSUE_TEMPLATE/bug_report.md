@@ -1,34 +1,42 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: "[Bug]"
-labels: ''
+name: Bug Report
+about: Help us improve by reporting bugs
+title: "[Bug] "
+labels: 'bug'
 assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Summary
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+What happened?
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Steps to Reproduce
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+How can we reproduce it?
 
-**Please complete the following information:**
- - Development board: [e.g. ESP32-DevKit-v1]
- - Version: [e.g. 6.0.0]
+1.
+2.
+3.
 
-**Additional context**
-Add any other context about the problem here.
+## Expected Behavior
 
-**Log**
-If applicable, add serial log output to support the analysis.
+What did you expect to happen?
+
+## Hardware and Version
+
+- Board: [e.g. ESP32-DevKit-v1]
+- Pixelix version: [e.g. 6.0.0]
+- OS: [e.g. Windows, macOS, Linux]
+
+## Logs (Optional)
+
+Paste relevant serial logs here.
+
+## Screenshot or Video (Optional)
+
+Add a screenshot or short video if it helps explain the issue.
+
+## Extra Notes (Optional)
+
+Anything else we should know.

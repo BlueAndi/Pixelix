@@ -1,0 +1,39 @@
+@startuml plugin-stop
+
+participant Plugin
+participant RestService
+participant "RestService::m_requestQueue" as requestQ
+participant "RestService::m_responseQueue" as responseQ
+participant AsyncHttpClient
+
+autoactivate on
+
+-> Plugin: stop()
+    Plugin -> RestService: abortRequest(restId)
+        loop (request in m_requestQueue) && (false == isRequestFound)
+            alt req.restId == restId
+                RestService -> requestQ: erase Request, isRequestFound = true
+                RestService <-- requestQ
+            end
+        end   
+
+        alt restId == m_activeRestId
+            RestService -> AsyncHttpClient: end()
+            RestService <-- AsyncHttpClient
+
+            RestService -> RestService: m_activeRestId = INVALID_REST_ID, m_activePreProcessCallback = nullptr, isRequestFound = true
+            return
+        end
+
+        alt false == isRequestFound
+            loop (response in m_responseQueue) && (false == isRequestFound)
+                alt response.restId == restId
+                    RestService -> responseQ: erase response, isRequestFound = true
+                    RestService <-- responseQ
+                end
+            end  
+        end
+    Plugin <-- RestService
+<-- Plugin
+
+@enduml

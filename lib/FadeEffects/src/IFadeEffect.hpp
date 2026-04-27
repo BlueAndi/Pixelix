@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   IFadeEffect.hpp
  * @brief  Basic fade effect interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -73,7 +74,7 @@ public:
     /**
      * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
      */
-    virtual void init() = 0;
+    virtual void init()                                                    = 0;
 
     /**
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
@@ -84,7 +85,7 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual bool fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next) = 0;
+    virtual bool fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)  = 0;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
@@ -107,13 +108,12 @@ protected:
     }
 
 private:
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_IFADEEFFECT_HPP */
+#endif /* BASE_IFADEEFFECT_HPP */
 
 /** @} */

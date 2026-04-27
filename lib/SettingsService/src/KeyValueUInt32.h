@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   KeyValueUInt32.h
  * @brief  Key value pair of uint32_t type
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -62,7 +63,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] key       Key
      * @param[in] name      User friendly name
      * @param[in] defValue  Default value
@@ -76,7 +77,7 @@ public:
 
     /**
      * Constructs a key value pair.
-     * 
+     *
      * @param[in] pref      Preferences
      * @param[in] key       Key
      * @param[in] name      User friendly name
@@ -92,7 +93,7 @@ public:
     /**
      * Destroys a key value pair.
      */
-    ~KeyValueUInt32()
+    ~KeyValueUInt32() override
     {
     }
 
@@ -137,6 +138,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* KEY_VALUE_UINT32_H */
+#endif /* KEY_VALUE_UINT32_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Rgb888
+ * @file   Rgb888.cpp
+ * @brief  Color in RGB888 format
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
@@ -63,7 +64,7 @@ void Rgb888::turnColorWheel(uint8_t wheelPos)
     const uint8_t COL_PARTS = 3U;
     const uint8_t COL_RANGE = UINT8_MAX / COL_PARTS;
 
-    wheelPos = UINT8_MAX - wheelPos;
+    wheelPos                = UINT8_MAX - wheelPos;
 
     /* Red + Blue ? */
     if (wheelPos < COL_RANGE)
@@ -76,19 +77,19 @@ void Rgb888::turnColorWheel(uint8_t wheelPos)
     else if (wheelPos < (2 * COL_RANGE))
     {
         wheelPos -= COL_RANGE;
-        
-        m_red   = 0U;
-        m_green = COL_PARTS * wheelPos;
-        m_blue  = UINT8_MAX - wheelPos * COL_PARTS;
+
+        m_red     = 0U;
+        m_green   = COL_PARTS * wheelPos;
+        m_blue    = UINT8_MAX - wheelPos * COL_PARTS;
     }
     /* Red + Green */
     else
     {
         wheelPos -= ((COL_PARTS - 1U) * COL_RANGE);
-        
-        m_red   = COL_PARTS * wheelPos;
-        m_green = UINT8_MAX - wheelPos * COL_PARTS;
-        m_blue  = 0U;
+
+        m_red     = COL_PARTS * wheelPos;
+        m_green   = UINT8_MAX - wheelPos * COL_PARTS;
+        m_blue    = 0U;
     }
 }
 

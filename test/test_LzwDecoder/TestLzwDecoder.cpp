@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   TestLzwDecoder.cpp
  * @brief  Test LZW decoder.
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -58,6 +59,8 @@ static void testLzwDecoder();
  * Local Variables
  *****************************************************************************/
 
+/* clang-format off */
+
 /** LZW min. code length = 2 bits */
 static const uint8_t    INPUT_DATA[] =
 {
@@ -83,6 +86,8 @@ static const uint8_t    EXPECTED_DATA[] =
     /* 9 */ 0x02, 0x02, 0x02, 0x02, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01
 };
 
+/* clang-format on */
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -105,7 +110,7 @@ static const uint8_t    EXPECTED_DATA[] =
  * @param[in] argc  Number of command line arguments
  * @param[in] argv  Command line arguments
  */
-extern int main(int argc, char **argv)
+extern int main(int argc, char** argv)
 {
     UTIL_NOT_USED(argc);
     UTIL_NOT_USED(argv);
@@ -142,18 +147,18 @@ extern void tearDown(void)
  */
 static void testLzwDecoder()
 {
-    LzwDecoder  lzwDecoder;
-    size_t      srcIndex = 0;
-    size_t      dstIndex = 0;
-    uint8_t     lzwMinCodeLength = 2;
-    uint8_t     dstBuffer[256];
-    bool        result = false;
+    LzwDecoder lzwDecoder;
+    size_t     srcIndex         = 0;
+    size_t     dstIndex         = 0;
+    uint8_t    lzwMinCodeLength = 2;
+    uint8_t    dstBuffer[256];
+    bool       result = false;
 
-    lzwDecoder.init(lzwMinCodeLength);
+    TEST_ASSERT_EQUAL(true, lzwDecoder.init());
+    lzwDecoder.setup(lzwMinCodeLength);
 
     result = lzwDecoder.decode(
-        [&srcIndex](uint8_t& data) -> bool
-        {
+        [&srcIndex](uint8_t& data) -> bool {
             TEST_ASSERT_LESS_THAN_INT32(sizeof(INPUT_DATA), srcIndex);
 
             data = INPUT_DATA[srcIndex];
@@ -163,16 +168,14 @@ static void testLzwDecoder()
 
             return true;
         },
-        [&dstIndex](uint8_t data) -> bool
-        {
+        [&dstIndex](uint8_t data) -> bool {
             TEST_ASSERT_LESS_THAN_INT32(sizeof(EXPECTED_DATA), dstIndex);
 
             TEST_ASSERT_EQUAL_UINT8(EXPECTED_DATA[dstIndex], data);
             ++dstIndex;
 
             return true;
-        }
-    );
+        });
 
     TEST_ASSERT_EQUAL(true, result);
     TEST_ASSERT_EQUAL(sizeof(INPUT_DATA), srcIndex);

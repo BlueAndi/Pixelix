@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,18 +13,19 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -53,10 +55,12 @@
                     <li><a href="https://github.com/ryannevell">Ryan Nevell</a></li>
                     <li><a href="https://www.darc.de/">DG7MGY</a></li>
                     <li><a href="https://github.com/emmanuel-ferdman">Emmanuel Ferdman</a></li>
+                    <li><a href="https://github.com/Yoshi367">Niklas Kümmel</a></li>
+                    <li><a href="https://github.com/sgshryock">Gordon Shryock</a></li>
                 </ul>
                 <h2>Used third party libraries</h2>
                 <div class="table-responsive">
-                    <table class="table table-dark">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>Library</th>
@@ -66,7 +70,8 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><a href="https://github.com/platformio/platform-espressif32">ESP32 Arduino Framework v2.x.x</a></td>
+                                <td><a href="https://github.com/platformio/platform-espressif32">ESP32 Arduino Framework
+                                        v2.x.x</a></td>
                                 <td>ESP32 Arduino Framework</td>
                                 <td>Apache-2.0 License</td>
                             </tr>
@@ -81,13 +86,13 @@
                                 <td>LGPL-3.0 License</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a></td>
+                                <td><a href="https://github.com/ESP32Async/ESPAsyncWebServer">ESPAsyncWebServer</a></td>
                                 <td>ESPAsyncWebServer</td>
-                                <td>LGPL-2.1 License</td>
+                                <td>LGPL-3.0 License</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/yubox-node-org/AsyncTCPSock">AsyncTCPSock</a></td>
-                                <td>AsyncTCPSock</td>
+                                <td><a href="https://github.com/ESP32Async/AsyncTCP">AsyncTCP</a></td>
+                                <td>AsyncTCP</td>
                                 <td>LGPL-3.0 License</td>
                             </tr>
                             <tr>
@@ -101,8 +106,8 @@
                                 <td>MIT License</td>
                             </tr>
                             <tr>
-                                <td><a href="https://getbootstrap.com/">Boostrap</a></td>
-                                <td>Boostrap</td>
+                                <td><a href="https://getbootstrap.com/">Bootstrap</a></td>
+                                <td>Bootstrap</td>
                                 <td>MIT License</td>
                             </tr>
                             <tr>
@@ -127,7 +132,8 @@
                             </tr>
                             <tr>
                                 <td><a href="https://github.com/Sensirion/arduino-sht">arduino-sht</a></td>
-                                <td>An Arduino library for reading the SHT3x family of temperature and humidity sensors.</td>
+                                <td>An Arduino library for reading the SHT3x family of temperature and humidity sensors.
+                                </td>
                                 <td>BSD-3-Clause License</td>
                             </tr>
                             <tr>
@@ -162,7 +168,13 @@
                             </tr>
                             <tr>
                                 <td><a href="https://github.com/hmueller01/pubsubclient3">PubSubClient3</a></td>
-                                <td>This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT.</td>
+                                <td>This library provides a client for doing simple publish/subscribe messaging with a
+                                    server that supports MQTT.</td>
+                                <td>MIT License</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/tobozo/ESP32-PsRamFS">ESP32-PSRamFS</a></td>
+                                <td>ESP32-PsRamFS is a pseudo RamDisk library for Arduino-ESP32, with vfs compliance.</td>
                                 <td>MIT License</td>
                             </tr>
                         </tbody>
@@ -175,21 +187,24 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
-                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT
+                        License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
 
         <script>
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.create("menu", menu.captivePortal);
             });
         </script>
     </body>
+
 </html>

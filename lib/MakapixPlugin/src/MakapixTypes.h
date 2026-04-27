@@ -1,0 +1,105 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @file   MakapixTypes.h
+ * @brief  Makapix common types
+ * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup PLUGIN
+ *
+ * @{
+ */
+
+#ifndef MAKAPIX_TYPES_H
+#define MAKAPIX_TYPES_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+#include <stdint.h>
+#include <functional>
+#include <ArduinoJson.h>
+#include <FileSystem.h>
+
+/******************************************************************************
+ * Macros
+ *****************************************************************************/
+
+#if CONFIG_FILESYSTEM_PSRAMFS_ENABLE == 0
+
+/** Use standard filesystem for file cache. */
+#define FILE_CACHE_FS FILESYSTEM
+
+#else
+
+/** Use PSRAM filesystem for file cache. */
+#define FILE_CACHE_FS PSRamFS
+
+#endif /* CONFIG_FILESYSTEM_PSRAMFS_ENABLE == 0 */
+
+/** Constants */
+namespace Constant
+{
+/**
+ * Maximum number of items to add to the playlist once when playing a channel.
+ * It should be lower than or equal to PLAYLIST_MAX_ENTRIES. But consider the
+ * required JSON document size for the MQTT response.
+ */
+static constexpr uint32_t CHANNEL_PAGE_ITEM_LIMIT = 4U;
+
+} /* namespace Constant */
+
+/******************************************************************************
+ * Types and Classes
+ *****************************************************************************/
+
+/** Show artwork callback prototype. */
+typedef std::function<void(void)> MakapixShowArtworkCallback;
+
+/** Next artwork callback prototype. */
+typedef std::function<void(void)> MakapixNextArtworkCallback;
+
+/** Previous artwork callback prototype. */
+typedef std::function<void(void)> MakapixPrevArtworkCallback;
+
+/** Play channel callback prototype. */
+typedef std::function<void(const char* channelName, const char* userSqid, const char* hashtag)> MakapixPlayChannelCallback;
+
+/** On response callback prototype. */
+typedef std::function<void(const JsonDocument& jsonDoc)> MakapixOnResponseCallback;
+
+/******************************************************************************
+ * Functions
+ *****************************************************************************/
+
+#endif /* MAKAPIX_TYPES_H */
+
+/** @} */

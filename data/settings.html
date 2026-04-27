@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -12,18 +13,19 @@
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto" id="menu">
+                    <ul class="navbar-nav me-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -48,7 +50,8 @@
             <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Settings</h1>
-                <p>Note, some settings may only be applied after a system restart.</p>
+                <p>Setting changes need a restart to take effect.</p>
+                <p><button class="btn btn-light" type="button" onclick="restart();" disabled>Restart</button></p>
                 <p id="settings"></p>
             </div>
         </main>
@@ -57,7 +60,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2025 (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -65,6 +68,7 @@
         <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
@@ -77,8 +81,28 @@
 
         <!-- Custom javascript -->
         <script>
-            var restClient  = new pixelix.rest.Client();
+            var restClient = new pixelix.rest.Client();
             var data = [];
+
+            /* Disable all UI elements. */
+            function disableUI() {
+                $("main :button").prop("disabled", true);
+            }
+
+            /* Enable all UI elements. */
+            function enableUI() {
+                $("main :button").prop("disabled", false);
+            }
+
+            function restart() {
+                disableUI();
+
+                restClient.restart().then(function (rsp) {
+                    return dialog.showInfo("<p>Ok.</p>");
+                }).catch(function (err) {
+                    return dialog.showError("<p>Error: " + err + "</p>");
+                });
+            }
 
             function store(id) {
                 var $input = $("#" + id);
@@ -91,27 +115,27 @@
                     value = $input.val();
                 }
 
-                restClient.setSetting(data[index].key, value).then(function(rsp) {
+                restClient.setSetting(data[index].key, value).then(function (rsp) {
                     return dialog.showInfo("<p>Successful stored.</p>");
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     return dialog.showError("<p>Error: " + rsp.error.msg + "</p>");
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 var index = 0;
 
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                restClient.getSettingKeys().then(function(result) {
+                restClient.getSettingKeys().then(function (result) {
                     var promise = null;
-                    var promises = []
+                    var promises = [];
                     var index = 0;
 
-                    for(index = 0; index < result.data.settings.length; ++index) {
-                        promise = restClient.getSettingByKey(result.data.settings[index]).then(function(result) {
+                    for (index = 0; index < result.data.settings.length; ++index) {
+                        promise = restClient.getSettingByKey(result.data.settings[index]).then(function (result) {
                             data.push(result.data);
                             return Promise.resolve();
                         });
@@ -120,22 +144,22 @@
                     }
 
                     return Promise.all(promises);
-                }).then(function() {
-                    var $block      = null;
-                    var $label      = null;
-                    var $formGroup  = null;
-                    var $formCheck  = null;
+                }).then(function () {
+                    var $block = null;
+                    var $label = null;
+                    var $formGroup = null;
+                    var $formCheck = null;
                     var $inputField = null;
-                    var $button     = null;
+                    var $button = null;
 
-                    for(index = 0; index < data.length; ++index) {
-                        $block      = $("<div>")
-                                    .attr("class", "form-group h-100 p-2 bg-body-tertiary border rounded-3 mt-2");
+                    for (index = 0; index < data.length; ++index) {
+                        $block = $("<div>")
+                            .attr("class", "form-group h-100 p-2 bg-body-tertiary border rounded-3 mt-2");
 
-                        $label      = $("<label>")
-                                    .attr("for", "setting-" + index)
-                                    .attr("class", "form-label")
-                                    .text(data[index].name);
+                        $label = $("<label>")
+                            .attr("for", "setting-" + index)
+                            .attr("class", "form-label")
+                            .text(data[index].name);
 
                         if ("string" === typeof data[index].value) {
                             inputFieldType = "text"
@@ -146,31 +170,31 @@
                             }
 
                             $inputField = $("<input>")
-                                    .attr("class", "form-control")
-                                    .attr("id", "setting-" + index)
-                                    .attr("placeholder", "")
-                                    .attr("type", inputFieldType)
-                                    .attr("minlength", data[index].minlength)
-                                    .attr("maxlength", data[index].maxlength)
-                                    .val(data[index].value);
+                                .attr("class", "form-control")
+                                .attr("id", "setting-" + index)
+                                .attr("placeholder", "")
+                                .attr("type", inputFieldType)
+                                .attr("minlength", data[index].minlength)
+                                .attr("maxlength", data[index].maxlength)
+                                .val(data[index].value);
 
                         } else if ("number" === typeof data[index].value) {
                             $inputField = $("<input>")
-                                    .attr("class", "form-control")
-                                    .attr("id", "setting-" + index)
-                                    .attr("placeholder", "")
-                                    .attr("type", "number")
-                                    .attr("min", data[index].min)
-                                    .attr("max", data[index].max)
-                                    .val(data[index].value);
+                                .attr("class", "form-control")
+                                .attr("id", "setting-" + index)
+                                .attr("placeholder", "")
+                                .attr("type", "number")
+                                .attr("min", data[index].min)
+                                .attr("max", data[index].max)
+                                .val(data[index].value);
 
                         } else if ("boolean" === typeof data[index].value) {
 
                             $inputField = $("<input>")
-                                    .attr("class", "form-check-input")
-                                    .attr("id", "setting-" + index)
-                                    .attr("placeholder", "")
-                                    .attr("type", "checkbox");
+                                .attr("class", "form-check-input")
+                                .attr("id", "setting-" + index)
+                                .attr("placeholder", "")
+                                .attr("type", "checkbox");
 
                             if (true === data[index].value) {
                                 $($inputField).attr("checked", true);
@@ -179,54 +203,59 @@
                             $label.attr("class", "form-check-label");
 
                             $formCheck = $("<div>")
-                                    .attr("class", "form-check")
-                                    .append($inputField)
-                                    .append($label)
+                                .attr("class", "form-check")
+                                .append($inputField)
+                                .append($label)
 
                         } else if ("object" === typeof data[index].value) {
                             $inputField = $("<textarea>")
-                                    .attr("class", "form-control")
-                                    .attr("id", "setting-" + index)
-                                    .attr("placeholder", "")
-                                    .attr("cols", 40)
-                                    .attr("rows", 20)
-                                    .attr("style", "font-family: monospace;")
-                                    .attr("minlength", data[index].minlength)
-                                    .attr("maxlength", data[index].maxlength)
-                                    .val(JSON.stringify(data[index].value, null, 2));
+                                .attr("class", "form-control")
+                                .attr("id", "setting-" + index)
+                                .attr("placeholder", "")
+                                .attr("cols", 40)
+                                .attr("rows", 20)
+                                .attr("style", "font-family: monospace;")
+                                .attr("minlength", data[index].minlength)
+                                .attr("maxlength", data[index].maxlength)
+                                .val(JSON.stringify(data[index].value, null, 2));
 
                         } else {
                             console.error("Data type" + typeof data[index].value + "not handled.");
                         }
 
-                        $button     = $("<button>")
-                                    .attr("class", "btn btn-primary")
-                                    .attr("onclick", "store(\"setting-" + index + "\");")
-                                    .text("Store");
+                        $button = $("<button>")
+                            .attr("class", "btn btn-primary")
+                            .attr("onclick", "store(\"setting-" + index + "\");")
+                            .text("Store");
 
                         if (null !== $formCheck) {
-                            $formGroup  = $("<div>")
+                            $formGroup = $("<div>")
                                 .attr("class", "form-group")
                                 .append($formCheck);
 
                         } else {
 
-                            $formGroup  = $("<div>")
-                                        .attr("class", "form-group")
-                                        .append($label)
-                                        .append($inputField);
+                            $formGroup = $("<div>")
+                                .attr("class", "form-group")
+                                .append($label)
+                                .append($inputField);
                         }
 
                         $block.append($formGroup);
-                        $block.append($button)
+                        $block.append($button);
 
                         $("#settings").append($block);
 
                         /* Reset */
                         $formCheck = null;
                     }
+                }).then(function () {
+                    enableUI();
+                }).catch(function (err) {
+                    return dialog.showError("<p>Error: " + err + "</p>");
                 });
             });
         </script>
     </body>
+
 </html>

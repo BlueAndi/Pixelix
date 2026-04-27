@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   SysMsgPlugin.h
  * @brief  System message plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -80,8 +81,7 @@ public:
         m_isInit(true),
         m_messages(),
         m_wrIndex(0U),
-        m_rdIndex(0U),
-        m_isSignalEnabled(false)
+        m_rdIndex(0U)
     {
     }
 
@@ -102,12 +102,12 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)SysMsgPlugin(name, uid);
+        return new (std::nothrow) SysMsgPlugin(name, uid);
     }
 
     /**
      * Get font type.
-     * 
+     *
      * @return The font type the plugin uses.
      */
     Fonts::FontType getFontType() const final
@@ -118,10 +118,10 @@ public:
     /**
      * Set font type.
      * The plugin may skip the font type in case it gets conflicts with the layout.
-     * 
+     *
      * A font type change will only be considered if it is set before the start()
      * method is called!
-     * 
+     *
      * @param[in] fontType  The font type which the plugin shall use.
      */
     void setFontType(Fonts::FontType fontType) final
@@ -133,17 +133,17 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
-     * 
+     *
      * If your display layout depends on canvas or font size, calculate it
      * here.
-     * 
+     *
      * Overwrite it if your plugin needs to know that it was installed.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
-    
+
     /**
      * Stop the plugin. This is called only once during plugin lifetime.
      */
@@ -181,22 +181,6 @@ public:
     void show(const String& msg, uint32_t duration, uint32_t max);
 
     /**
-     * Enable signal in the corners as additional user information.
-     */
-    void enableSignal()
-    {
-        m_isSignalEnabled = true;
-    }
-
-    /**
-     * Disable signal in the corners as additional user information.
-     */
-    void disableSignal()
-    {
-        m_isSignalEnabled = false;
-    }
-
-    /**
      * Show next message in the queue and abort the current one.
      * If no message is in the queue anymore, the plugin will be disabled.
      */
@@ -219,9 +203,9 @@ private:
      */
     struct SysMsg
     {
-        String      msg;        /**< Message */
-        uint32_t    duration;   /**< Duration in ms, how long the text shall be shown. */
-        uint32_t    max;        /**< Maximum number how often a scrolling text shall be shown. */
+        String   msg;      /**< Message */
+        uint32_t duration; /**< Duration in ms, how long the text shall be shown. */
+        uint32_t max;      /**< Maximum number how often a scrolling text shall be shown. */
 
         /**
          * Construct a system message.
@@ -241,29 +225,27 @@ private:
         }
     };
 
-    _SysMsgPlugin::View m_view;                 /**< View with all widgets. */
-    SimpleTimer         m_timer;                /**< Timer used to observer minimum duration */
-    uint32_t            m_duration;             /**< Duration in ms, how long a non-scrolling text shall be shown. */
-    uint32_t            m_max;                  /**< Maximum number how often a scrolling text shall be shown. */
-    bool                m_isInit;               /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
-    SysMsg              m_messages[MAX_SYS_MSG];/**< System message buffer */
-    size_t              m_wrIndex;              /**< System message buffer write index. */
-    size_t              m_rdIndex;              /**< System message buffer read index. */
-    bool                m_isSignalEnabled;      /**< Is signal enabled? */
+    _SysMsgPlugin::View m_view;                  /**< View with all widgets. */
+    SimpleTimer         m_timer;                 /**< Timer used to observer minimum duration */
+    uint32_t            m_duration;              /**< Duration in ms, how long a non-scrolling text shall be shown. */
+    uint32_t            m_max;                   /**< Maximum number how often a scrolling text shall be shown. */
+    bool                m_isInit;                /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
+    SysMsg              m_messages[MAX_SYS_MSG]; /**< System message buffer */
+    size_t              m_wrIndex;               /**< System message buffer write index. */
+    size_t              m_rdIndex;               /**< System message buffer read index. */
 
     /**
      * Show next message from the queue.
-     * 
+     *
      * @return If a message is available to be shown, it will return true otherwise false.
      */
     bool nextMessage();
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* SYSMSGPLUGIN_H */
+#endif /* SYSMSGPLUGIN_H */
 
 /** @} */

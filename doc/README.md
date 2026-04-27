@@ -14,28 +14,26 @@
 
 ## Hardware
 
-* [Boards](./boards/README.md)
-* [Sensors](SENSORS.md)
+- [Boards](./boards/README.md)
+- [Sensors](SENSORS.md)
 
 ## Software
 
-* [Software architecture](./architecture/README.md)
-* [Software configuration management](./config/README.md)
-    * [Toolchain installation](./config/TOOLCHAIN-INSTALLATION.md)
-    * [Software build](./config/SW-BUILD.md)
-    * [Software update](./config/SW-UPDATE.md)
-* [Plugins](PLUGINS.md)
-* [Plugin Development](PLUGIN-DEV.md)
-* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.7.0)
-* [MQTT](MQTT.md)
-* [Home Assistant REST Wrapper](HOMEASSISTANT.md)
-* [Websocket API description](WEBSOCKET.md)
-* [Alternative icons](ICONS.md)
-* [Configuration examples for GrabViaMqttPlugin and GrabViaRestPlugin.](./grabConfigs/README.md)
+- [Software architecture](./architecture/README.md)
+- [Software configuration management](./config/README.md)
+  - [Toolchain installation](./config/TOOLCHAIN-INSTALLATION.md)
+  - [Software build](./config/SW-BUILD.md)
+  - [Software update](./config/SW-UPDATE.md)
+- [Plugins](PLUGINS.md)
+- [Plugin Development](PLUGIN-DEV.md)
+- [Websocket API description](WEBSOCKET.md)
+- [Coredump Analysis & Debugging](COREDUMP-ANALYSIS.md)
+- [Alternative icons](ICONS.md)
+- [Configuration examples for GrabViaMqttPlugin and GrabViaRestPlugin.](./grabConfigs/README.md)
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   AudioDrv.cpp
  * @brief  Audio driver
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -53,7 +54,7 @@
  * Only the left channel is supported.
  * Workaround, see https://github.com/espressif/arduino-esp32/issues/7177
  */
-#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_RIGHT 
+#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_RIGHT
 
 #else
 
@@ -62,7 +63,7 @@
  */
 #define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_LEFT
 
-#endif  
+#endif
 
 #else
 
@@ -108,7 +109,7 @@ bool AudioDrv::start()
             m_sampleWriteIndex = 0U;
 
             /* Create binary semaphore to signal task exit. */
-            m_xSemaphore = xSemaphoreCreateBinary();
+            m_xSemaphore       = xSemaphoreCreateBinary();
 
             if (nullptr == m_xSemaphore)
             {
@@ -116,18 +117,18 @@ bool AudioDrv::start()
             }
             else
             {
-                BaseType_t  osRet   = pdFAIL;
+                BaseType_t osRet = pdFAIL;
 
                 /* Task shall run */
-                m_taskExit = false;
+                m_taskExit       = false;
 
-                osRet = xTaskCreateUniversal(   processTask,
-                                                "audioDrvTask",
-                                                TASK_STACK_SIZE,
-                                                this,
-                                                TASK_PRIORITY,
-                                                &m_taskHandle,
-                                                TASK_RUN_CORE);
+                osRet            = xTaskCreateUniversal(processTask,
+                    "audioDrvTask",
+                    TASK_STACK_SIZE,
+                    this,
+                    TASK_PRIORITY,
+                    &m_taskHandle,
+                    TASK_RUN_CORE);
 
                 /* Task creation failed? */
                 if (pdPASS != osRet)
@@ -202,7 +203,7 @@ void AudioDrv::processTask(void* parameters)
         {
             LOG_INFO("I2S channel allocated.");
 
-            while(false == tthis->m_taskExit)
+            while (false == tthis->m_taskExit)
             {
                 tthis->process();
             }
@@ -224,9 +225,9 @@ void AudioDrv::processTask(void* parameters)
 
 void AudioDrv::process()
 {
-    size_t      bytesRead           = 0U;
-    uint8_t*    dmaBlockBufferAddr  = &m_dmaBlockBuffer[m_dmaBlockBufferWriteIndex];
-    size_t      dmaBlockBufferSize  = sizeof(m_dmaBlockBuffer) - m_dmaBlockBufferWriteIndex;
+    size_t   bytesRead          = 0U;
+    uint8_t* dmaBlockBufferAddr = &m_dmaBlockBuffer[m_dmaBlockBufferWriteIndex];
+    size_t   dmaBlockBufferSize = sizeof(m_dmaBlockBuffer) - m_dmaBlockBufferWriteIndex;
 
     if (ESP_OK == i2s_channel_read(m_i2sRxChannelHandle, dmaBlockBufferAddr, dmaBlockBufferSize, &bytesRead, DMA_BLOCK_TIMEOUT))
     {
@@ -235,15 +236,15 @@ void AudioDrv::process()
         /* One DMA block read? */
         if (sizeof(m_dmaBlockBuffer) <= m_dmaBlockBufferWriteIndex)
         {
-            uint16_t            sampleIdx;
-            void*               vDmaBlockBuffer = static_cast<void*>(m_dmaBlockBuffer);
-            int32_t*            samples         = static_cast<int32_t*>(vDmaBlockBuffer);
-            MutexGuard<Mutex>   guard(m_mutex);
+            uint16_t          sampleIdx;
+            void*             vDmaBlockBuffer = static_cast<void*>(m_dmaBlockBuffer);
+            int32_t*          samples         = static_cast<int32_t*>(vDmaBlockBuffer);
+            MutexGuard<Mutex> guard(m_mutex);
 
-            for(sampleIdx = 0U; sampleIdx < SAMPLES_PER_DMA_BLOCK; ++sampleIdx)
+            for (sampleIdx = 0U; sampleIdx < SAMPLES_PER_DMA_BLOCK; ++sampleIdx)
             {
                 /* Down shift to get the real value. */
-                int32_t sample24bit = samples[sampleIdx] >> I2S_SAMPLE_SHIFT;
+                int32_t sample24bit                = samples[sampleIdx] >> I2S_SAMPLE_SHIFT;
 
                 m_sampleBuffer[m_sampleWriteIndex] = sample24bit;
                 ++m_sampleWriteIndex;
@@ -262,9 +263,9 @@ void AudioDrv::process()
                 {
                     uint32_t observerIndex = 0U;
 
-                    m_sampleWriteIndex = 0U;
+                    m_sampleWriteIndex     = 0U;
 
-                    while(observerIndex < MAX_OBSERVERS)
+                    while (observerIndex < MAX_OBSERVERS)
                     {
                         IAudioObserver* observer = m_observers[observerIndex];
 
@@ -285,10 +286,9 @@ void AudioDrv::process()
 
 bool AudioDrv::initI2S()
 {
-    bool                isSuccessful    = false;
-    esp_err_t           i2sRet          = ESP_OK;
-    i2s_chan_config_t   i2sChanConfig   =
-    {
+    bool              isSuccessful  = false;
+    esp_err_t         i2sRet        = ESP_OK;
+    i2s_chan_config_t i2sChanConfig = {
         I2S_NUM_AUTO,
         I2S_ROLE_MASTER,
         DMA_BLOCKS,
@@ -304,12 +304,10 @@ bool AudioDrv::initI2S()
     }
     else
     {
-        i2s_std_config_t    i2sStdConfig    =
-        {
+        i2s_std_config_t i2sStdConfig = {
             I2S_STD_CLK_DEFAULT_CONFIG(SAMPLE_RATE),
             I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_BITS_PER_SAMPLE, I2S_SLOT_MODE_MONO),
-            {
-                I2S_GPIO_UNUSED,
+            { I2S_GPIO_UNUSED,
                 static_cast<gpio_num_t>(Board::Pin::i2sSerialClock),
                 static_cast<gpio_num_t>(Board::Pin::i2sWordSelect),
                 I2S_GPIO_UNUSED,
@@ -317,9 +315,8 @@ bool AudioDrv::initI2S()
                 {
                     0, /* Do not invert MCLK output. */
                     0, /* Do not invert BCLK input/output. */
-                    0 /* Do not invert the WS input/output. */
-                }
-            }
+                    0  /* Do not invert the WS input/output. */
+                } }
         };
 
         /* Default is only receiving left slot in mono mode,
@@ -343,7 +340,7 @@ bool AudioDrv::initI2S()
             isSuccessful = true;
         }
     }
-    
+
     return isSuccessful;
 }
 

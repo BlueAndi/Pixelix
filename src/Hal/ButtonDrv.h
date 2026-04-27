@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   ButtonDrv.h
  * @brief  Button driver
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup HAL
  *
  * @{
@@ -42,6 +43,7 @@
 #include "Arduino.h"
 #include <SimpleTimer.hpp>
 #include <Io.hpp>
+#include <Task.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,10 +62,10 @@
  */
 typedef enum
 {
-    BUTTON_ID_OK = 0,   /**< Button "ok" */
-    BUTTON_ID_LEFT,     /**< Button "left "*/
-    BUTTON_ID_RIGHT,    /**< Button "right" */
-    BUTTON_ID_CNT       /**< Number of buttons */
+    BUTTON_ID_OK = 0, /**< Button "ok" */
+    BUTTON_ID_LEFT,   /**< Button "left "*/
+    BUTTON_ID_RIGHT,  /**< Button "right" */
+    BUTTON_ID_CNT     /**< Number of buttons */
 
 } ButtonId;
 
@@ -72,10 +74,10 @@ typedef enum
  */
 typedef enum
 {
-    BUTTON_STATE_NC = 0,    /**< Button is not connected. */
-    BUTTON_STATE_UNKNOWN,   /**< Button state is unknown yet. */
-    BUTTON_STATE_RELEASED,  /**< Button is released. */
-    BUTTON_STATE_PRESSED    /**< Button is pressed. */
+    BUTTON_STATE_NC = 0,   /**< Button is not connected. */
+    BUTTON_STATE_UNKNOWN,  /**< Button state is unknown yet. */
+    BUTTON_STATE_RELEASED, /**< Button is released. */
+    BUTTON_STATE_PRESSED   /**< Button is pressed. */
 
 } ButtonState;
 
@@ -95,7 +97,7 @@ public:
 
     /**
      * Notify the observer about the new button state.
-     * 
+     *
      * @param[in] buttonId  The id of the related button.
      * @param[in] state     New button state of the button.
      */
@@ -109,7 +111,6 @@ protected:
     IButtonObserver()
     {
     }
-
 };
 
 /**
@@ -121,10 +122,10 @@ public:
 
     /**
      * Get the button driver instance.
-     * 
+     *
      * @return Button driver instance.
      */
-    static ButtonDrv&   getInstance()
+    static ButtonDrv& getInstance()
     {
         static ButtonDrv instance; /* singleton idiom to force initialization in the first usage. */
 
@@ -133,16 +134,16 @@ public:
 
     /**
      * Initialize the driver.
-     * 
+     *
      * @return If successful initialized it will return true otherwise false.
      */
     bool init();
 
     /**
      * Get button state.
-     * 
+     *
      * @param[in] buttonId  The id of the related button.
-     * 
+     *
      * @return Button state
      */
     ButtonState getState(ButtonId buttonId);
@@ -150,7 +151,7 @@ public:
     /**
      * Register an observer to get notifyed about button
      * state changes. Only one observer is supported!
-     * 
+     *
      * @param[in] observer  The button observer
      */
     void registerObserver(IButtonObserver& observer);
@@ -165,7 +166,7 @@ public:
      * A low level of the wakeup source will trigger the wakeup.
      * Ensure that all buttons are released at the time of calling it,
      * otherwise the wakeup will occurre immediately.
-     * 
+     *
      * @return If not all buttons are released, it will return false and the
      *          wakeup sources are not enabled. Otherwise it will return true
      *          and the wakeup sources are enabled.
@@ -177,44 +178,47 @@ private:
     /**
      * The digital input buttons.
      */
-    static const IoPin*     BUTTON_PIN[BUTTON_ID_CNT];
+    static const IoPin* BUTTON_PIN[BUTTON_ID_CNT];
 
     /**
      * Debouncing time in ms.
      */
-    static const uint32_t   DEBOUNCING_TIME         = 100U;
+    static const uint32_t DEBOUNCING_TIME = 100U;
 
-    TaskHandle_t        m_buttonTaskHandle;     /**< Button task handle */
-    ButtonState         m_state[BUTTON_ID_CNT]; /**< Current button states */
-    SimpleTimer         m_timer[BUTTON_ID_CNT]; /**< Timer used for debouncing */
-    SemaphoreHandle_t   m_xSemaphore;           /**< Semaphore lock */
-    IButtonObserver*    m_observer;             /**< Observer for button state changes */
+    Task<ButtonDrv>       m_buttonTask;           /**< Button task. */
+    SemaphoreHandle_t     m_xSemaphore;           /**< Semaphore to protect button state member. */
+    ButtonState           m_state[BUTTON_ID_CNT]; /**< Current button states */
+    SimpleTimer           m_timer[BUTTON_ID_CNT]; /**< Timer used for debouncing */
+    IButtonObserver*      m_observer;             /**< Observer for button state changes */
 
-    /** Button task stack size in bytes */
-    static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048U;
+    /** Button task stack size in bytes. */
+    static const uint32_t BUTTON_TASK_STACKE_SIZE = 2048U;
 
-    /** MCU core where the button task shall run */
-    static const BaseType_t BUTTON_TASK_RUN_CORE    = APP_CPU_NUM;
+    /** Button task priority. */
+    static const UBaseType_t BUTTON_TASK_PRIORITY = 1U;
 
-    /** Task period in ms */
-    static const uint32_t   BUTTON_TASK_PERIOD      = 10U;
+    /** MCU core where the button task shall run. */
+    static const BaseType_t BUTTON_TASK_RUN_CORE  = APP_CPU_NUM;
 
-    /** Button debouncing time in ms */
-    static const uint32_t   BUTTON_DEBOUNCE_TIME    = 100U;
+    /** Task period in ms. */
+    static const uint32_t BUTTON_TASK_PERIOD      = 10U;
+
+    /** Button debouncing time in ms. */
+    static const uint32_t BUTTON_DEBOUNCE_TIME    = 100U;
 
     /**
      * Constructs the button driver instance.
      */
     ButtonDrv() :
-        m_buttonTaskHandle(nullptr),
+        m_buttonTask("buttonTask", buttonTask, BUTTON_TASK_STACKE_SIZE, BUTTON_TASK_PRIORITY, BUTTON_TASK_RUN_CORE),
+        m_xSemaphore(nullptr),
         m_state(),
         m_timer(),
-        m_xSemaphore(nullptr),
         m_observer(nullptr)
     {
         uint8_t buttonIdx = 0U;
 
-        while(BUTTON_ID_CNT > buttonIdx)
+        while (BUTTON_ID_CNT > buttonIdx)
         {
             /* No pin connected? */
             if (IoPin::NC == BUTTON_PIN[buttonIdx]->getPinNo())
@@ -249,8 +253,13 @@ private:
     ButtonDrv& operator=(const ButtonDrv& drv);
 
     /**
+     * Attach buttons to the interrupt service routine (ISR).
+     */
+    void attachButtonsToInterrupt();
+
+    /**
      * Set button state.
-     * 
+     *
      * @param[in] buttonId  The id of the button.
      * @param[in] state     The state of the button.
      */
@@ -259,10 +268,10 @@ private:
     /**
      * Button task is responsible for debouncing and updating the user button state
      * accordingly.
-     * 
-     * @param[in]   parameters  Task pParameters
+     *
+     * @param[in] self Button driver instance.
      */
-    static void buttonTask(void* parameters);
+    static void buttonTask(ButtonDrv* self);
 
     /**
      * Button task main loop running in object context.
@@ -278,6 +287,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BUTTONDRV_H */
+#endif /* BUTTONDRV_H */
 
 /** @} */

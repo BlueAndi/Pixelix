@@ -1,0 +1,12 @@
+[
+    {
+        "component": "sensor",
+        "discovery": {
+            "name": "WiFi Signal Strength",
+            "unit_of_meas": "dBm",
+            "ic": "mdi:signal",
+            "dev_cla": "signal_strength",
+            "val_tpl": "{{ value_json.value }}"
+        }
+    }
+]

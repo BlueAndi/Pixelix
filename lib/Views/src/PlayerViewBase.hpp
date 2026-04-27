@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   PlayerViewBase.hpp
  * @brief  Base class for view with icon, text and progress bar.
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup PLUGIN
@@ -43,10 +44,10 @@
  * Includes
  *****************************************************************************/
 #include "Layouts.h"
-#include "./layouts/PlayerViewGeneric.h"
-#include "./layouts/PlayerView32x8.h"
-#include "./layouts/PlayerView32x16.h"
-#include "./layouts/PlayerView64x64.h"
+#include "./layout/PlayerViewGeneric.h"
+#include "./layout/PlayerView32x8.h"
+#include "./layout/PlayerView32x16.h"
+#include "./layout/PlayerView64x64.h"
 
 /******************************************************************************
  * Macros
@@ -58,13 +59,14 @@
 
 /**
  * View for icon, text and progress bar.
- * 
+ *
  * @tparam option   Layout which to choose
  */
-template< Layout option >
+template < Layout option >
 class PlayerView : public PlayerViewGeneric
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -74,10 +76,11 @@ public:
 /**
  * View for icon, text and progress bar for 32x8 display.
  */
-template<>
+template <>
 class PlayerView<LAYOUT_32X8> : public PlayerView32x8
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -87,10 +90,11 @@ public:
 /**
  * View for icon, text and progress bar for 32x16 display.
  */
-template<>
+template <>
 class PlayerView<LAYOUT_32X16> : public PlayerView32x16
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -100,10 +104,11 @@ public:
 /**
  * View for icon, text and progress bar for 64x64 display.
  */
-template<>
+template <>
 class PlayerView<LAYOUT_64X64> : public PlayerView64x64
 {
 public:
+
     /**
      * Destroys the view.
      */
@@ -117,6 +122,6 @@ using PlayerViewBase = PlayerView<LAYOUT_TYPE>;
  * Functions
  *****************************************************************************/
 
-#endif  /* PLAYER_VIEW_BASE_HPP */
+#endif /* PLAYER_VIEW_BASE_HPP */
 
 /** @} */

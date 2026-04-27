@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   BaseGfxBitmap.hpp
  * @brief  Basic graphics bitmap
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -61,7 +62,7 @@
  * This interface provides the base bitmap functions, which are
  * color format agnostic. This way it can be used for different
  * kind of color formats, e.g. RGB565 or RGB888 format.
- * 
+ *
  * Inside a base bitmap it can be drawn with the standard base
  * graphic functionality.
  *
@@ -89,12 +90,11 @@ protected:
     }
 
 private:
-
 };
 
 /**
  * This class provides a static allocated bitmap.
- * 
+ *
  * @tparam TColor   The color representation.
  * @tparam width    Pixel bitmap width in pixels
  * @tparam height   Pixel bitmap height in pixels
@@ -114,7 +114,7 @@ public:
 
     /**
      * Constructs the bitmap by copy.
-     * 
+     *
      * @param[in] bitmap    Source bitmap, which to copy.
      */
     BaseGfxStaticBitmap(const BaseGfxStaticBitmap& bitmap) :
@@ -132,9 +132,9 @@ public:
 
     /**
      * Assigns a bitmap.
-     * 
+     *
      * @param[in] bitmap    Source bitmap
-     * 
+     *
      * @return Bitmap
      */
     BaseGfxStaticBitmap& operator=(const BaseGfxStaticBitmap& bitmap)
@@ -149,7 +149,7 @@ public:
             {
                 size_t idx = 0U;
 
-                while(PIXEL_BUFFER_SIZE > idx)
+                while (PIXEL_BUFFER_SIZE > idx)
                 {
                     m_pixels[idx] = bitmap.m_pixels[idx];
 
@@ -163,7 +163,7 @@ public:
 
     /**
      * Get the width of the bitmap in pixels.
-     * 
+     *
      * @return Width in pixels
      */
     uint16_t getWidth() const override
@@ -173,7 +173,7 @@ public:
 
     /**
      * Get the height of the bitmap in pixels.
-     * 
+     *
      * @return Height in pixels
      */
     uint16_t getHeight() const override
@@ -192,8 +192,8 @@ public:
      */
     TColor& getColor(int16_t x, int16_t y) override
     {
-        static TColor   trash;
-        TColor*         pixel   = &trash;
+        static TColor trash;
+        TColor*       pixel = &trash;
 
         if ((0 <= x) &&
             (0 <= y) &&
@@ -216,8 +216,8 @@ public:
      */
     const TColor& getColor(int16_t x, int16_t y) const override
     {
-        static TColor   trash;
-        const TColor*   pixel   = &trash;
+        static TColor trash;
+        const TColor* pixel = &trash;
 
         if ((0 <= x) &&
             (0 <= y) &&
@@ -251,15 +251,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) override
@@ -271,8 +271,8 @@ public:
             (width >= (x + length)) &&
             (height > y))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = 1U;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = 1U;
         }
 
         return addr;
@@ -281,15 +281,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const override
@@ -301,8 +301,8 @@ public:
             (width >= (x + length)) &&
             (height > y))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = 1U;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = 1U;
         }
 
         return addr;
@@ -311,15 +311,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) override
@@ -331,8 +331,8 @@ public:
             (width > x) &&
             (height >= (y + length)))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = width;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = width;
         }
 
         return addr;
@@ -341,15 +341,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const override
@@ -361,8 +361,8 @@ public:
             (width > x) &&
             (height >= (y + length)))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = width;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = width;
         }
 
         return addr;
@@ -371,17 +371,17 @@ public:
 private:
 
     /** Number of pixels in the pixel buffer. */
-    static const uint16_t   PIXEL_BUFFER_SIZE   = width * height;
+    static const uint16_t PIXEL_BUFFER_SIZE = width * height;
 
-    TColor  m_pixels[PIXEL_BUFFER_SIZE];    /**< Pixel buffer */
+    TColor                m_pixels[PIXEL_BUFFER_SIZE]; /**< Pixel buffer */
 
     /**
      * Map the x- and y-coordinates to the pixel buffer index.
      * No out of bounds check!
-     * 
+     *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
-     * 
+     *
      * @return Pixel buffer position
      */
     size_t pixelMap(uint16_t x, uint16_t y) const
@@ -392,10 +392,11 @@ private:
 
 /**
  * This class provides a dynamic allocated bitmap.
- * 
- * @tparam TColor   The color representation.
+ *
+ * @tparam TColor       The color representation.
+ * @tparam TAllocator   The allocator type.
  */
-template < typename TColor >
+template < typename TColor, typename TAllocator >
 class BaseGfxDynamicBitmap : public BaseGfxBitmap<TColor>
 {
 public:
@@ -413,7 +414,7 @@ public:
 
     /**
      * Constructs the bitmap.
-     * 
+     *
      * @param[in] width     Pixel bitmap width in pixels
      * @param[in] height    Pixel bitmap height in pixels
      */
@@ -425,14 +426,14 @@ public:
     {
         if (nullptr == m_pixels)
         {
-            m_width     = 0U;
-            m_height    = 0U;
+            m_width  = 0U;
+            m_height = 0U;
         }
     }
 
     /**
      * Constructs the bitmap by copy.
-     * 
+     *
      * @param[in] bitmap    Source bitmap
      */
     BaseGfxDynamicBitmap(const BaseGfxDynamicBitmap& bitmap) :
@@ -443,8 +444,8 @@ public:
     {
         if (nullptr == m_pixels)
         {
-            m_width     = 0U;
-            m_height    = 0U;
+            m_width  = 0U;
+            m_height = 0U;
         }
     }
 
@@ -458,9 +459,9 @@ public:
 
     /**
      * Assigns a bitmap.
-     * 
+     *
      * @param[in] bitmap    Source bitmap
-     * 
+     *
      * @return Bitmap
      */
     BaseGfxDynamicBitmap& operator=(const BaseGfxDynamicBitmap& bitmap)
@@ -478,8 +479,8 @@ public:
                     (m_height != bitmap.m_height))
                 {
                     releasePixels(m_pixels);
-                    m_width     = 0U;
-                    m_height    = 0U;
+                    m_width  = 0U;
+                    m_height = 0U;
                 }
 
                 /* If pixel buffer is released, allocate with the appropriate size. */
@@ -489,18 +490,18 @@ public:
 
                     if (nullptr != m_pixels)
                     {
-                        m_width     = bitmap.m_width;
-                        m_height    = bitmap.m_height;
+                        m_width  = bitmap.m_width;
+                        m_height = bitmap.m_height;
                     }
                 }
 
                 /* If pixel buffer is available, copy the values from the source bitmap. */
                 if (nullptr != m_pixels)
                 {
-                    const size_t    PIXEL_BUFFER_SIZE   = m_width * m_height;
-                    size_t          idx                 = 0U;
+                    const size_t PIXEL_BUFFER_SIZE = m_width * m_height;
+                    size_t       idx               = 0U;
 
-                    while(PIXEL_BUFFER_SIZE > idx)
+                    while (PIXEL_BUFFER_SIZE > idx)
                     {
                         m_pixels[idx] = bitmap.m_pixels[idx];
 
@@ -516,7 +517,7 @@ public:
     /**
      * Create internal pixel buffer.
      * If a pixel buffer already exists, it will fail.
-     * 
+     *
      * @param[in] width     Pixel bitmap width in pixels
      * @param[in] height    Pixel bitmap height in pixels
      *
@@ -532,8 +533,8 @@ public:
 
             if (nullptr != m_pixels)
             {
-                m_width     = width;
-                m_height    = height;
+                m_width      = width;
+                m_height     = height;
 
                 isSuccessful = true;
             }
@@ -548,13 +549,13 @@ public:
     void release()
     {
         releasePixels(m_pixels);
-        m_width     = 0U;
-        m_height    = 0U;
+        m_width  = 0U;
+        m_height = 0U;
     }
 
     /**
      * Get the width of the bitmap in pixels.
-     * 
+     *
      * @return Width in pixels
      */
     uint16_t getWidth() const override
@@ -564,7 +565,7 @@ public:
 
     /**
      * Get the height of the bitmap in pixels.
-     * 
+     *
      * @return Height in pixels
      */
     uint16_t getHeight() const override
@@ -583,8 +584,8 @@ public:
      */
     TColor& getColor(int16_t x, int16_t y) override
     {
-        static TColor   trash;
-        TColor*         pixel   = &trash;
+        static TColor trash;
+        TColor*       pixel = &trash;
 
         if ((nullptr != m_pixels) &&
             (0 <= x) &&
@@ -608,8 +609,8 @@ public:
      */
     const TColor& getColor(int16_t x, int16_t y) const override
     {
-        static TColor   trash;
-        const TColor*   pixel   = &trash;
+        static TColor trash;
+        const TColor* pixel = &trash;
 
         if ((nullptr != m_pixels) &&
             (0 <= x) &&
@@ -645,15 +646,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) override
@@ -666,8 +667,8 @@ public:
             (m_width >= (x + length)) &&
             (m_height > y))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = 1U;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = 1U;
         }
 
         return addr;
@@ -676,15 +677,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the x-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on x-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const TColor* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const override
@@ -697,8 +698,8 @@ public:
             (m_width >= (x + length)) &&
             (m_height > y))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = 1U;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = 1U;
         }
 
         return addr;
@@ -707,15 +708,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) override
@@ -728,8 +729,8 @@ public:
             (m_width > x) &&
             (m_height >= (y + length)))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = m_width;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = m_width;
         }
 
         return addr;
@@ -738,15 +739,15 @@ public:
     /**
      * Get the address inside the framebuffer at certain coordinates.
      * If the requested length is not available, it will return nullptr.
-     * 
+     *
      * To address pixel by pixel on the y-axis, the returned offset shall be considered.
      * Otherwise its not guaranteed to address out of bounds!
-     * 
+     *
      * @param[in] x         x-coordinate
      * @param[in] y         y-coordinate
      * @param[in] length    Requested number of colors on y-axis.
      * @param[out] offset   Address offset in pixel which to use to calculate address of next pixel.
-     * 
+     *
      * @return Address in the framebuffer or nullptr.
      */
     const TColor* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const override
@@ -759,8 +760,8 @@ public:
             (m_width > x) &&
             (m_height >= (y + length)))
         {
-            addr    = &m_pixels[pixelMap(x, y)];
-            offset  = m_width;
+            addr   = &m_pixels[pixelMap(x, y)];
+            offset = m_width;
         }
 
         return addr;
@@ -768,7 +769,7 @@ public:
 
     /**
      * Use this function to determine whether a internal bitmap buffer is allocated or not.
-     * 
+     *
      * @return If no bitmap buffer is allocated, it will return false otherwise true.
      */
     bool isAllocated() const
@@ -778,17 +779,17 @@ public:
 
 private:
 
-    TColor*     m_pixels;   /**< Pixel buffer */
-    uint16_t    m_width;    /**< Bitmap width in pixels */
-    uint16_t    m_height;   /**< Bitmap height in pixels */
+    TColor*  m_pixels; /**< Pixel buffer */
+    uint16_t m_width;  /**< Bitmap width in pixels */
+    uint16_t m_height; /**< Bitmap height in pixels */
 
     /**
      * Map the x- and y-coordinates to the pixel buffer index.
      * No out of bounds check!
-     * 
+     *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
-     * 
+     *
      * @return Pixel buffer position
      */
     size_t pixelMap(uint16_t x, uint16_t y) const
@@ -798,24 +799,26 @@ private:
 
     /**
      * Release pixel buffer if allocated.
-     * 
+     *
      * @param[inout] pixels     Pixel buffer which to release.
      */
     void releasePixels(TColor*& pixels)
     {
         if (nullptr != pixels)
         {
-            delete[] pixels;
+            TAllocator allocator;
+
+            allocator.deallocateArray(pixels);
             pixels = nullptr;
         }
     }
 
     /**
      * Allocate pixel buffer.
-     * 
+     *
      * @param[in] width     Pixel bitmap with in pixels
      * @param[in] height    Pixel bitmap height in pixels
-     * 
+     *
      * @return If successful, it will return the pixel buffer otherwise nullptr.
      */
     TColor* allocatePixels(uint16_t width, uint16_t height)
@@ -825,7 +828,9 @@ private:
         if ((0U < width) &&
             (0U < height))
         {
-            buffer = new(std::nothrow) TColor[width * height];
+            TAllocator allocator;
+
+            buffer = allocator.allocateArray(width * height);
         }
 
         return buffer;
@@ -836,6 +841,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_GFX_BITMAP_HPP */
+#endif /* BASE_GFX_BITMAP_HPP */
 
 /** @} */

@@ -1,0 +1,178 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @file   MultiIconView64x64.h
+ * @brief  View with multiple icons for 64x64 LED matrix
+ * @author Andreas Merkle <web@blue-andi.de>
+ * @addtogroup PLUGIN
+ *
+ * @{
+ */
+
+#ifndef MULTI_ICON_VIEW_64X64_H
+#define MULTI_ICON_VIEW_64X64_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+#include <YAGfx.h>
+#include <BitmapWidget.h>
+#include <Util.h>
+#include <FileSystem.h>
+
+#include "../interface/IMultiIconView.h"
+
+/******************************************************************************
+ * Macros
+ *****************************************************************************/
+
+/******************************************************************************
+ * Types and Classes
+ *****************************************************************************/
+
+/**
+ * View for 64x64 LED matrix with multiple icons.
+ */
+class MultiIconView64x64 : public IMultiIconView
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    MultiIconView64x64();
+    /**
+     * Destroy the view.
+     */
+    virtual ~MultiIconView64x64()
+    {
+    }
+
+    /**
+     * Initialize view, which will prepare the widgets and the default values.
+     *
+     * @param[in] width     Display width in pixel.
+     * @param[in] height    Display height in pixel.
+     */
+    void init(uint16_t width, uint16_t height) override
+    {
+        UTIL_NOT_USED(width);
+        UTIL_NOT_USED(height);
+    }
+
+    /**
+     * Update the underlying canvas.
+     *
+     * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
+     */
+    void update(YAGfx& gfx) override;
+
+    /**
+     * Load icon image from filesystem and show in the slot with the given id.
+     *
+     * @param[in] slotId    The id of the slot.
+     * @param[in] filename  Image filename
+     * @param[in] fs        Filesystem instance (optional, default is standard filesystem)
+     *
+     * @return If successul, it will return true otherwise false.
+     */
+    bool loadIcon(uint8_t slotId, const String& filename, FS& fs = FILESYSTEM) override;
+
+    /**
+     * Clear icon in the slot with the given id.
+     *
+     * @param[in] slotId    The id of the slot.
+     */
+    void clearIcon(uint8_t slotId) override;
+
+    /**
+     * Check if the icon slot with the given id is empty or not.
+     *
+     * @param[in] slotId    The id of the slot.
+     *
+     * @return If the icon slot is empty, it will return true otherwise false.
+     */
+    bool isIconSlotEmpty(uint8_t slotId) const override;
+
+    /**
+     * Max. number of icons.
+     */
+    static const uint8_t MAX_ICON_SLOTS = 4U;
+
+protected:
+
+    BitmapWidget m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
+
+private:
+
+    MultiIconView64x64(const MultiIconView64x64& other);
+    MultiIconView64x64& operator=(const MultiIconView64x64& other);
+
+    /**
+     * Get the active number of icon slosts.
+     *
+     * @return Number of active icon slots
+     */
+    uint8_t getActiveIconSlots();
+
+    /**
+     * Re-order the icons, depended on the number of active icon slots.
+     */
+    void reorder();
+
+    /**
+     * Apply layout with just one icon.
+     */
+    void applyLayout1();
+
+    /**
+     * Apply layout with two icons.
+     */
+    void applyLayout2();
+
+    /**
+     * Apply layout with three icons.
+     */
+    void applyLayout3();
+
+    /**
+     * Apply layout with four icons.
+     */
+    void applyLayout4();
+};
+
+/******************************************************************************
+ * Functions
+ *****************************************************************************/
+
+#endif /* MULTI_ICON_VIEW_64X64_H */
+
+/** @} */

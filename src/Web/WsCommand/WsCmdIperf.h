@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   WsCmdIperf.h
  * @brief  Websocket command to start/stop iperf
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -47,9 +48,8 @@
  *****************************************************************************/
 #include "WsCmd.h"
 
-extern "C"
-{
-    #include "iperf.h"
+extern "C" {
+#include "iperf.h"
 }
 
 /******************************************************************************
@@ -63,7 +63,7 @@ extern "C"
 /**
  * Websocket command to to start/stop iperf
  */
-class WsCmdIperf: public WsCmd
+class WsCmdIperf : public WsCmd
 {
 public:
 
@@ -113,11 +113,11 @@ private:
         CMD_STOP        /**< Stop iperf */
     };
 
-    bool        m_isError;          /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;           /**< Number of received parameters */
-    Cmd         m_cmd;              /**< iperf command */
-    iperf_cfg_t m_cfg;              /**< iperf configuration */
-    bool        m_isIperfRunning;   /**< Is iperf running or not? */
+    bool        m_isError;        /**< Any error happened during parameter reception? */
+    uint8_t     m_parCnt;         /**< Number of received parameters */
+    Cmd         m_cmd;            /**< iperf command */
+    iperf_cfg_t m_cfg;            /**< iperf configuration */
+    bool        m_isIperfRunning; /**< Is iperf running or not? */
 
     WsCmdIperf(const WsCmdIperf& cmd);
     WsCmdIperf& operator=(const WsCmdIperf& cmd);
@@ -134,6 +134,6 @@ private:
 
 #endif /* CONFIG_FEATURE_IPERF == 1 */
 
-#endif  /* WSCMDIPERF_H */
+#endif /* WSCMDIPERF_H */
 
 /** @} */

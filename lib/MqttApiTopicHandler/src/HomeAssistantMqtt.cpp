@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   HomeAssistantMqtt.cpp
  * @brief  Home Assistant MQTT extension
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -78,7 +79,7 @@ const char* HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_PREFIX = "homeassistant";
 const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_ENABLE     = "ha_ena";
 
 /* Initialize Home Assistant discovery enable flag name */
-const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_ENABLE    = "Enable Home Assistant Discovery";
+const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_ENABLE    = "Enable Home Assistant MQTT Discovery";
 
 /* Initialize Home Assistant discovery enable flag default value */
 const bool HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_ENABLE  = false;
@@ -151,7 +152,7 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const Stri
         /* Filename for the HA discovery info available? */
         else if (true == jsonHomeAssistant.is<String>())
         {
-            String discoveryInfoFileName = jsonHomeAssistant.as<String>();
+            String discoveryInfoFileName = jsonHomeAssistant.as<const char*>();
 
             if (false == discoveryInfoFileName.isEmpty())
             {
@@ -218,7 +219,7 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
                     LOG_DEBUG("Component: %s", component.c_str());
 
                     /* Purge retained discovery info. */
-                    if (false == mqttService.publish(mqttDiscoveryInfoTopic, "", true))
+                    if (false == mqttService.publish(MqttService::PRIMARY_MQTT_INST, mqttDiscoveryInfoTopic, "", true))
                     {
                         LOG_WARNING("Failed to purge HA discovery of %s.", objectId.c_str());
                     }
@@ -400,7 +401,7 @@ bool HomeAssistantMqtt::loadDiscoveryInfo(JsonDocument& jsonDoc, const String& f
                 }
                 else
                 {
-                    String component = jsonComponent.as<String>();
+                    String component = jsonComponent.as<const char*>();
 
                     /* Component shall not be empty and
                      * shall not contain a comma, because it is used as delimiter.
@@ -472,7 +473,7 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
         for (idx = 0U; idx < discoveryInfoArrayCount; ++idx)
         {
             JsonObjectConst discoveryInfo        = jsonDiscoveryInfoArray[idx];
-            String          component            = discoveryInfo["component"].as<String>();
+            String          component            = discoveryInfo["component"].as<const char*>();
             JsonObjectConst jsonDiscovery        = discoveryInfo["discovery"];
             int8_t          discoveryEntityIndex = (1U == discoveryInfoArrayCount) ? -1 : idx;
             String          objectId             = getObjectId(mqttDiscoveryInfo.entityId, mqttDiscoveryInfo.topic, discoveryEntityIndex);
@@ -499,7 +500,7 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
             if (0U < serializeJson(jsonDoc, mqttDiscoveryContent))
             {
                 /* Publish retained to ensure that HomeAssistant will recognize the device entity. */
-                if (false == mqttService.publish(mqttDiscoveryTopic, mqttDiscoveryContent.c_str(), true))
+                if (false == mqttService.publish(MqttService::PRIMARY_MQTT_INST, mqttDiscoveryTopic, mqttDiscoveryContent.c_str(), true))
                 {
                     LOG_WARNING("Failed to provide HA discovery info of %s.", objectId.c_str());
                 }

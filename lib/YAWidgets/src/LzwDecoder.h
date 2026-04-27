@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   LzwDecoder.h
  * @brief  LZW decoder for GIF images
  * @author Andreas Merkle <web@blue-andi.de>
  *
@@ -46,6 +47,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <functional>
+#include <TypedAllocator.hpp>
+#include <PsAllocator.hpp>
 
 /******************************************************************************
  * Macros
@@ -68,62 +71,60 @@ public:
     typedef std::function<bool(uint8_t& data)> ReadFromInStream;
 
     /** Prototype for writing decoded data to output stream. */
-    typedef std::function<bool(uint8_t& data)> WriteToOutStream;
+    typedef std::function<bool(uint8_t data)> WriteToOutStream;
 
     /**
      * Construct a LZW decoder object.
      */
-    LzwDecoder() :
-        m_isInitialState(true),
-        m_lzwMinCodeWidth(0U),
-        m_clearCode(0U),
-        m_endCode(0U),
-        m_nextCode(0U),
-        m_maxCode(0U),
-        m_codeWidth(0U),
-        m_bitsInBuffer(0U),
-        m_codeBuffer(0U),
-        m_firstByte(0U),
-        m_inCode(0U),
-        m_prevCode(0U),
-        m_codes(nullptr),
-        m_stack(nullptr),
-        m_stackPtr(nullptr)
-    {
-    }
+    LzwDecoder();
+
+    /**
+     * Copy construct a LZW decoder object.
+     *
+     * @param[in] other Another LZW decoder
+     */
+    LzwDecoder(const LzwDecoder& other);
 
     /**
      * Destroy LZW decoder object.
-     * 
+     *
      */
     ~LzwDecoder()
     {
-        if (nullptr != m_codes)
-        {
-            delete[] m_codes;
-        }
-
-        if (nullptr != m_stack)
-        {
-            delete[] m_stack;
-        }
+        deInit();
     }
 
     /**
-     * Initialize with the LZW min. code width (number of bits).
+     * Assignment operator.
+     *
+     * @param[in] other Another LZW decoder.
+     *
+     * @return Reference to this LZW decoder.
+     */
+    LzwDecoder& operator=(const LzwDecoder& other);
+
+    /**
+     * Initialize the LZW decoder.
      * It will allocate internal memory for the decompression. Use the deInit()
      * after successful decompression to release it again.
-     * 
+     *
+     * @return If successful initialized, it will return true otherwise false.
+     */
+    bool init();
+
+    /**
+     * Initialize with the LZW min. code width (number of bits).
+     *
      * @param[in] lzwMinCodeWidth   LZW min. code width
      */
-    void init(uint8_t lzwMinCodeWidth);
+    void setup(uint8_t lzwMinCodeWidth);
 
     /**
      * Decodes input stream (code stream) and write it the output stream.
-     * 
+     *
      * @param[in] readFromInStreamFunc  Callback used to read from input stream.
      * @param[in] writeToOutStreamFunc  Callback used to write to output stream.
-     * 
+     *
      * @return If successful decoded, it will return true otherwise false.
      */
     bool decode(const ReadFromInStream& readFromInStreamFunc, const WriteToOutStream& writeToOutStreamFunc);
@@ -137,36 +138,69 @@ public:
 private:
 
     /**
+     * Memory allocator type for prefix codes.
+     */
+    typedef TypedAllocator<uint16_t, PsAllocator> PrefixCodeAllocator;
+
+    /**
+     * Memory allocator type for suffix bytes.
+     */
+    typedef TypedAllocator<uint8_t, PsAllocator> SuffixByteAllocator;
+
+    /**
+     * Memory allocator type for stack.
+     */
+    typedef TypedAllocator<uint8_t, PsAllocator> StackAllocator;
+
+    /**
      * Max. number of codes.
      * 2^12 = 4096
      */
-    static const size_t CODE_LIMIT  = 4096U;
+    static const size_t CODE_LIMIT = 4096U;
 
     /**
      * Max. stack size in byte.
      * 2^12 = 4096
      */
-    static const size_t STACK_SIZE  = 4096U;
+    static const size_t STACK_SIZE = 4096U;
 
-    bool        m_isInitialState;   /**< Is LZW decoder initialization state or not. */
-    uint32_t    m_lzwMinCodeWidth;  /**< LZW min. code width in bits */
-    uint32_t    m_clearCode;        /**< Code for clear request. */
-    uint32_t    m_endCode;          /**< Code which marks the end. */
-    uint32_t    m_nextCode;         /**< Next code */
-    uint32_t    m_maxCode;          /**< Max. code */
-    uint32_t    m_codeWidth;        /**< Code width in bits */
-    uint32_t    m_bitsInBuffer;     /**< Number of bits in code buffer */
-    uint32_t    m_codeBuffer;       /**< Code buffer used to retrieve a code */
-    uint32_t    m_firstByte;        /**< First byte */
-    uint32_t    m_inCode;           /**< In code */
-    uint32_t    m_prevCode;         /**< Previous code */
-    uint32_t*   m_codes;            /**< Array of codes */
-    uint8_t*    m_stack;            /**< Stack */
-    uint8_t*    m_stackPtr;         /**< Current stack pointer on stack */
+    PrefixCodeAllocator m_prefixCodeAllocator; /**< Memory allocator for prefix codes. */
+    SuffixByteAllocator m_suffixByteAllocator; /**< Memory allocator for suffix bytes. */
+    StackAllocator      m_stackAllocator;      /**< Memory allocator for stack. */
+    bool                m_isInitialState;      /**< Is LZW decoder initialization state or not. */
+    uint32_t            m_lzwMinCodeWidth;     /**< LZW min. code width in bits */
+    uint32_t            m_clearCode;           /**< Code for clear request. */
+    uint32_t            m_endCode;             /**< Code which marks the end. */
+    uint32_t            m_nextCode;            /**< Next code */
+    uint32_t            m_maxCode;             /**< Max. code */
+    uint32_t            m_codeWidth;           /**< Code width in bits */
+    uint32_t            m_bitsInBuffer;        /**< Number of bits in code buffer */
+    uint32_t            m_codeBuffer;          /**< Code buffer used to retrieve a code */
+    uint32_t            m_firstByte;           /**< First byte */
+    uint32_t            m_inCode;              /**< In code */
+    uint32_t            m_prevCode;            /**< Previous code */
+    uint16_t*           m_prefixCodes;         /**< Prefix code table. */
+    uint8_t*            m_suffixBytes;         /**< Suffix byte table. */
+    uint8_t*            m_stack;               /**< Stack */
+    uint8_t*            m_stackPtr;            /**< Current stack pointer on stack */
 
-    /* Not allowed */
-    LzwDecoder(const LzwDecoder& other);
-    LzwDecoder& operator=(const LzwDecoder& other);
+    /**
+     * Copy code table from another LZW decoder.
+     *
+     * @param[in] other Another LZW decoder
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool copyCode(const LzwDecoder& other);
+
+    /**
+     * Copy stack from another LZW decoder.
+     *
+     * @param[in] other Another LZW decoder
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool copyStack(const LzwDecoder& other);
 
     /**
      * Clear code tables.
@@ -175,7 +209,7 @@ private:
 
     /**
      * Get the code.
-     * 
+     *
      * @param[out] code                 The retrieved code.
      * @param[in] readFromInStreamFunc  Callback to read from input stream on demand.
      *
@@ -185,20 +219,19 @@ private:
 
     /**
      * Decompress code to output stream.
-     * 
+     *
      * @param[in] code                  The retrieved code.
      * @param[in] writeToOutStreamFunc  Callback to write to output stream on demand.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
-    bool decompress(uint32_t& code, const WriteToOutStream& writeToOutStreamFunc);
-
+    bool decompress(uint32_t code, const WriteToOutStream& writeToOutStreamFunc);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* LZW_DECODER_H */
+#endif /* LZW_DECODER_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2025 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
+ * @file   ButtonActions.cpp
  * @brief  Button actions
  * @author Andreas Merkle <web@blue-andi.de>
  */
@@ -210,6 +211,8 @@ void ButtonActions::decreaseBrightness()
     uint8_t     brightnessSoftLimitMin = 0U;
     uint8_t     brightnessSoftLimitMax = 0U;
 
+    displayMgr.getBrightnessSoftLimits(brightnessSoftLimitMin, brightnessSoftLimitMax);
+
     if (BRIGHTNESS_DELTA > brightness)
     {
         brightness      = 0U;
@@ -262,11 +265,7 @@ void ButtonActions::previousSlot() const
 
 void ButtonActions::nextFadeEffect() const
 {
-    DisplayMgr::FadeEffect currentFadeEffect = DisplayMgr::getInstance().getFadeEffect();
-    uint8_t                fadeEffectId      = static_cast<uint8_t>(currentFadeEffect);
-    DisplayMgr::FadeEffect nextFadeEffect    = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
-
-    DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
+    DisplayMgr::getInstance().activateNextFadeEffect(FadeEffectController::FADE_EFFECT_COUNT);
 }
 
 void ButtonActions::showIpAddress() const
