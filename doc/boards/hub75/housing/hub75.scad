@@ -87,11 +87,11 @@ panel_mount_hole_diameter = 3.2; // Diameter of the panel/spacer mounting holes 
 
 // Parameters for backplate
 backplate_thickness = frame_wall_thickness; // Thickness of the backplate in mm
-backplate_corner_radius = 3; // Corner radius of the backplate in mm for better fit in the rounded frame contour
 backplate_slot_depth = 1.5; // Depth of the rail groove into each side wall in mm
+backplate_corner_radius = max(0, frame_corner_radius - (frame_wall_thickness - backplate_slot_depth + fit_tolerance)); // Corner radius of the backplate derived from frame corner geometry in mm
 backplate_slot_wall = 2.0; // Thickness of the rear wall behind the backplate slot in mm
 backplate_bottom_stop_height = frame_wall_thickness; // Bottom stop for the sliding backplate in mm
-backplate_top_clearance = frame_corner_side_relief + fit_tolerance; // Required clearance below the rounded top corners so the side slots stay closed in mm
+backplate_top_clearance = 0; // Top inset of the backplate in mm (0 = flush with frame top when fully inserted)
 backplate_top_opening_extra = fit_tolerance + 0.6; // Additional insertion relief above geometric minimum in mm
 backplate_top_opening_side_relief = 0; // Keep side walls intact so guide grooves are not widened away in mm
 backplate_top_opening_x = max(0, frame_wall_thickness - backplate_slot_depth - backplate_top_opening_side_relief); // Distance of top slot opening start from outer side wall in mm
@@ -105,11 +105,12 @@ panel_stop_opening_width = panel_width - 2 * frame_panel_stop_overlap;
 panel_stop_opening_height = panel_height - 2 * frame_panel_stop_overlap;
 frame_front_opening_width = faceplate_cutout_width - 2 * frame_faceplate_glue_lip;
 frame_front_opening_height = faceplate_cutout_height - 2 * frame_faceplate_glue_lip;
+frame_foot_height_effective = (frame_height - panel_cavity_height) / 2; // Stand foot height so feet are flush with the lower edge of the rear frame cutout in mm
 backplate_width = frame_width - 2 * (frame_wall_thickness - backplate_slot_depth) - 2 * fit_tolerance;
 backplate_height = frame_height - backplate_bottom_stop_height - backplate_top_clearance;
 backplate_top_opening_corner_depth = backplate_top_opening_x < frame_corner_radius ? frame_corner_radius - sqrt(pow(frame_corner_radius, 2) - pow(frame_corner_radius - backplate_top_opening_x, 2)) : 0; // Corner intrusion depth at the actual top slot opening X position in mm
-backplate_top_opening_depth_raw = backplate_height + fit_tolerance; // Minimum opening depth required to insert the full backplate height from the top in mm
-backplate_top_opening_depth = max(backplate_top_opening_depth_raw, backplate_top_opening_corner_depth + backplate_top_opening_extra); // Effective top opening depth: full insertion requirement plus corner clearance in mm
+backplate_top_opening_depth_raw = backplate_top_opening_corner_depth; // Geometric corner intrusion depth that must be cleared at the slot entry in mm
+backplate_top_opening_depth = backplate_top_opening_depth_raw + backplate_top_opening_extra; // Effective top opening depth with insertion relief in mm
 backplate_bottom_z = backplate_bottom_stop_height;
 
 function centered_offset(outer, inner) = (outer - inner) / 2;
@@ -150,16 +151,51 @@ module rounded_cube_xz(size_xyz, radius)
 				rounded_profile_xz(size_xyz[0], size_xyz[2], radius);
 }
 
+module top_rounded_profile_xz(width, height, radius)
+{
+	$fn = rounded_fn;
+	radius_limited = max(0, min(radius, min(width / 2, height)));
+
+	if (radius_limited > 0)
+	{
+		union()
+		{
+			/* Start with rounded corners on all sides. */
+			translate([radius_limited, radius_limited])
+				offset(r=radius_limited)
+					square([width - 2 * radius_limited, height - 2 * radius_limited]);
+
+			/* Fill only the lower corners to keep bottom edges planar. */
+			square([radius_limited, radius_limited]);
+
+			translate([width - radius_limited, 0])
+				square([radius_limited, radius_limited]);
+		}
+	}
+	else
+	{
+		square([width, height]);
+	}
+}
+
+module top_rounded_cube_xz(size_xyz, radius)
+{
+	translate([0, size_xyz[1], 0])
+		rotate([90, 0, 0])
+			linear_extrude(height=size_xyz[1])
+				top_rounded_profile_xz(size_xyz[0], size_xyz[2], radius);
+}
+
 module frame_stand_feet()
 {
 	left_foot_x = frame_foot_inset;
 	right_foot_x = frame_width - frame_foot_inset - frame_foot_width;
 
 	translate([left_foot_x, frame_depth, 0])
-		cube([frame_foot_width, frame_foot_depth, frame_foot_height]);
+		cube([frame_foot_width, frame_foot_depth, frame_foot_height_effective]);
 
 	translate([right_foot_x, frame_depth, 0])
-		cube([frame_foot_width, frame_foot_depth, frame_foot_height]);
+		cube([frame_foot_width, frame_foot_depth, frame_foot_height_effective]);
 }
 
 module y_hole_from_back(x_pos, z_pos, diameter, depth)
@@ -290,7 +326,7 @@ module board()
 
 module backplate()
 {
-	rounded_cube_xz(
+	top_rounded_cube_xz(
 		[backplate_width, backplate_thickness, backplate_height],
 		min(backplate_corner_radius, min(backplate_width, backplate_height) / 2)
 	);
