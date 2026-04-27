@@ -232,68 +232,76 @@ void OpenMeteoPlugin::inactive()
 
 void OpenMeteoPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    bool                       isRestRequestRequired = false;
-    DynamicJsonDocument        jsonDoc(0U);
-    bool                       isValidResponse;
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
+    /* Acquire mutex for initial state check and update. */
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                       isRestRequestRequired = false;
 
-    /* Only if a network connection is established the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
-    {
-        if (true == isConnected)
-        {
-            isRestRequestRequired = true;
-        }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established the required information
+         * shall be periodically requested via REST API.
          */
-        if (false == isConnected)
+        if (false == m_requestTimer.isTimerRunning())
         {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            isRestRequestRequired = true;
-        }
-    }
-
-    /* Request of new weather information via REST API required? */
-    if (true == isRestRequestRequired)
-    {
-        /* Only one request can be sent at a time. */
-        if (true == m_isAllowedToSend)
-        {
-            if (false == startHttpRequest())
+            if (true == isConnected)
             {
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
-            }
-            else
-            {
-                m_requestTimer.start(m_updatePeriod);
-                m_isAllowedToSend = false;
+                isRestRequestRequired = true;
             }
         }
-    }
+        else
+        {
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
+            {
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                isRestRequestRequired = true;
+            }
+        }
 
-    if (nullptr != m_slotInterf)
-    {
-        m_view.setViewDuration(m_slotInterf->getDuration());
-    }
+        /* Request of new weather information via REST API required? */
+        if (true == isRestRequestRequired)
+        {
+            /* Only one request can be sent at a time. */
+            if (true == m_isAllowedToSend)
+            {
+                if (false == startHttpRequest())
+                {
+                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                }
+                else
+                {
+                    m_requestTimer.start(m_updatePeriod);
+                    m_isAllowedToSend = false;
+                }
+            }
+        }
 
-    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+        if (nullptr != m_slotInterf)
+        {
+            m_view.setViewDuration(m_slotInterf->getDuration());
+        }
+
+        dynamicRestId = m_dynamicRestId;
+    } /* Mutex released here to avoid lock inversion deadlock with RestService. */
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
     {
+        DynamicJsonDocument jsonDoc(0U);
+        bool                isValidResponse;
+
         /* Get the response from the REST service. */
-        if (true == RestService::getInstance().getResponse(m_dynamicRestId, isValidResponse, jsonDoc))
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
             if (true == isValidResponse)
             {
@@ -302,9 +310,12 @@ void OpenMeteoPlugin::process(bool isConnected)
             else
             {
                 LOG_WARNING("Connection error.");
+
+                MutexGuard<MutexRecursive> guard(m_mutex);
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
 
+            MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
         }

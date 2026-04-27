@@ -279,74 +279,82 @@ void GrabViaRestPlugin::stop()
 
 void GrabViaRestPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    DynamicJsonDocument        jsonDoc(0U);
-    bool                       isValidResponse;
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
-
-    /* Only if a network connection is established, the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
+    /* Acquire mutex for initial state check and update. */
     {
-        if (true == isConnected)
-        {
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
-            {
-                if (false == startHttpRequest())
-                {
-                    /* If a request fails, a '?' will be shown. */
-                    m_view.setFormatText("{hc}?");
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
-                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-                }
-                else
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established, the required information
+         * shall be periodically requested via REST API.
+         */
+        if (false == m_requestTimer.isTimerRunning())
+        {
+            if (true == isConnected)
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
                 {
-                    m_requestTimer.start(UPDATE_PERIOD);
-                    m_isAllowedToSend = false;
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, a '?' will be shown. */
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
-         */
-        if (false == isConnected)
+        else
         {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
             {
-                if (false == startHttpRequest())
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
                 {
-                    /* If a request fails, a '?' will be shown. */
-                    m_view.setFormatText("{hc}?");
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, a '?' will be shown. */
+                        m_view.setFormatText("{hc}?");
 
-                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-                }
-                else
-                {
-                    m_requestTimer.start(UPDATE_PERIOD);
-                    m_isAllowedToSend = false;
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
+
+        dynamicRestId = m_dynamicRestId;
     }
 
-    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+    if (RestService::INVALID_REST_ID != dynamicRestId)
     {
+        DynamicJsonDocument jsonDoc(0U);
+        bool                isValidResponse;
+
         /* Get the response from the REST service. */
-        if (true == RestService::getInstance().getResponse(m_dynamicRestId, isValidResponse, jsonDoc))
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
             if (true == isValidResponse)
             {
@@ -356,12 +364,15 @@ void GrabViaRestPlugin::process(bool isConnected)
             {
                 LOG_WARNING("Connection error.");
 
+                MutexGuard<MutexRecursive> guard(m_mutex);
+
                 /* If a request fails, show standard icon and a '?' */
                 m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
 
+            MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
         }
@@ -536,7 +547,12 @@ bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (true == m_filter.overflowed())
+    if ((nullptr == payload) ||
+        (0U == payloadSize))
+    {
+        LOG_WARNING("Empty response received.");
+    }
+    else if (true == m_filter.overflowed())
     {
         LOG_ERROR("JSON document size exceeded.");
     }

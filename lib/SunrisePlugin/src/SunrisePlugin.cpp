@@ -193,68 +193,77 @@ void SunrisePlugin::stop()
 
 void SunrisePlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    DynamicJsonDocument        jsonDoc(0U);
-    bool                       isValidResponse;
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
-
-    /* Only if a network connection is established the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
+    /* Acquire mutex for initial state check and update. */
     {
-        if (true == isConnected)
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                       isRestRequestRequired = false;
+
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established the required information
+         * shall be periodically requested via REST API.
+         */
+        if (false == m_requestTimer.isTimerRunning())
         {
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
+            if (true == isConnected)
             {
-                if (false == startHttpRequest())
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
                 {
-                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-                }
-                else
-                {
-                    m_requestTimer.start(UPDATE_PERIOD);
-                    m_isAllowedToSend = false;
+                    if (false == startHttpRequest())
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
-         */
-        if (false == isConnected)
+        else
         {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
             {
-                if (false == startHttpRequest())
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
                 {
-                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-                }
-                else
-                {
-                    m_requestTimer.start(UPDATE_PERIOD);
-                    m_isAllowedToSend = false;
+                    if (false == startHttpRequest())
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
-    }
 
-    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+        dynamicRestId = m_dynamicRestId;
+    } /* Mutex released here to avoid lock inversion deadlock with RestService. */
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
     {
+        DynamicJsonDocument jsonDoc(0U);
+        bool                isValidResponse;
+
         /* Get the response from the REST service. */
-        if (true == RestService::getInstance().getResponse(m_dynamicRestId, isValidResponse, jsonDoc))
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
             if (true == isValidResponse)
             {
@@ -263,9 +272,12 @@ void SunrisePlugin::process(bool isConnected)
             else
             {
                 LOG_WARNING("Connection error.");
+
+                MutexGuard<MutexRecursive> guard(m_mutex);
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
 
+            MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
         }
@@ -364,47 +376,56 @@ bool SunrisePlugin::startHttpRequest()
 
 bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
 {
-    bool                            isSuccessful = false;
-    const size_t                    FILTER_SIZE  = 128U;
-    StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
+    bool isSuccessful = false;
 
-    /* Example:
-     * {
-     *   "results":
-     *   {
-     *     "sunrise":"2015-05-21T05:05:35+00:00",
-     *     "sunset":"2015-05-21T19:22:59+00:00",
-     *     "solar_noon":"2015-05-21T12:14:17+00:00",
-     *     "day_length":51444,
-     *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
-     *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
-     *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
-     *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
-     *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
-     *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
-     *   },
-     *    "status":"OK"
-     * }
-     */
-
-    jsonFilterDoc["results"]["sunrise"] = true;
-    jsonFilterDoc["results"]["sunset"]  = true;
-
-    if (true == jsonFilterDoc.overflowed())
+    if ((nullptr == payload) ||
+        (0U == payloadSize))
     {
-        LOG_ERROR("JSON document size exceeded.");
+        LOG_WARNING("Received empty response.");
     }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
+        const size_t                    FILTER_SIZE = 128U;
+        StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
-        if (DeserializationError::Ok != error.code())
+        /* Example:
+         * {
+         *   "results":
+         *   {
+         *     "sunrise":"2015-05-21T05:05:35+00:00",
+         *     "sunset":"2015-05-21T19:22:59+00:00",
+         *     "solar_noon":"2015-05-21T12:14:17+00:00",
+         *     "day_length":51444,
+         *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
+         *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
+         *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
+         *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
+         *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
+         *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
+         *   },
+         *    "status":"OK"
+         * }
+         */
+
+        jsonFilterDoc["results"]["sunrise"] = true;
+        jsonFilterDoc["results"]["sunset"]  = true;
+
+        if (true == jsonFilterDoc.overflowed())
         {
-            LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+            LOG_ERROR("JSON document size exceeded.");
         }
         else
         {
-            isSuccessful = true;
+            DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
+
+            if (DeserializationError::Ok != error.code())
+            {
+                LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+            }
+            else
+            {
+                isSuccessful = true;
+            }
         }
     }
 

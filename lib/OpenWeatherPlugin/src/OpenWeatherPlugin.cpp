@@ -243,78 +243,86 @@ void OpenWeatherPlugin::inactive()
 
 void OpenWeatherPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    bool                       isRestRequestRequired = false;
-    DynamicJsonDocument        jsonDoc(0U);
-    bool                       isValidResponse;
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
+    /* Acquire mutex for initial state check and update. */
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                       isRestRequestRequired = false;
 
-    /* Only if a network connection is established the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
-    {
-        if (true == isConnected)
-        {
-            isRestRequestRequired = true;
-        }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established the required information
+         * shall be periodically requested via REST API.
          */
-        if (false == isConnected)
+        if (false == m_requestTimer.isTimerRunning())
         {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            isRestRequestRequired = true;
-        }
-    }
-
-    /* Request of new weather information via REST API required? */
-    if (true == isRestRequestRequired)
-    {
-        const IOpenWeatherGeneric* source = getWeatherSourceByStatus();
-
-        /* A request without API key makes no sense. */
-        if ((nullptr != source) &&
-            (false == source->getApiKey().isEmpty()))
-        {
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
+            if (true == isConnected)
             {
-                if (false == startHttpRequest(source))
-                {
-                    LOG_WARNING("Failed to request weather info.");
+                isRestRequestRequired = true;
+            }
+        }
+        else
+        {
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
+            {
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                isRestRequestRequired = true;
+            }
+        }
 
-                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-                }
-                else
+        /* Request of new weather information via REST API required? */
+        if (true == isRestRequestRequired)
+        {
+            const IOpenWeatherGeneric* source = getWeatherSourceByStatus();
+
+            /* A request without API key makes no sense. */
+            if ((nullptr != source) &&
+                (false == source->getApiKey().isEmpty()))
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
                 {
-                    weatherRequestStarted();
-                    m_requestTimer.start(m_updatePeriod);
-                    m_isAllowedToSend = false;
+                    if (false == startHttpRequest(source))
+                    {
+                        LOG_WARNING("Failed to request weather info.");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        weatherRequestStarted();
+                        m_requestTimer.start(m_updatePeriod);
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
-    }
 
-    if (nullptr != m_slotInterf)
-    {
-        m_view.setViewDuration(m_slotInterf->getDuration());
-    }
+        if (nullptr != m_slotInterf)
+        {
+            m_view.setViewDuration(m_slotInterf->getDuration());
+        }
 
-    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+        dynamicRestId = m_dynamicRestId;
+    } /* Mutex released here to avoid lock inversion deadlock with RestService. */
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
     {
+        DynamicJsonDocument jsonDoc(0U);
+        bool                isValidResponse;
+
         /* Get the response from the REST service. */
-        if (true == RestService::getInstance().getResponse(m_dynamicRestId, isValidResponse, jsonDoc))
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
             if (true == isValidResponse)
             {
@@ -323,9 +331,12 @@ void OpenWeatherPlugin::process(bool isConnected)
             else
             {
                 LOG_WARNING("Connection error.");
+
+                MutexGuard<MutexRecursive> guard(m_mutex);
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
 
+            MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
         }
@@ -577,7 +588,12 @@ bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
     MutexGuard<MutexRecursive> guard(m_mutex);
     const IOpenWeatherGeneric* source = getWeatherSourceByStatus();
 
-    if (nullptr != source)
+    if ((nullptr == payload) ||
+        (0U == payloadSize))
+    {
+        LOG_WARNING("OpenWeather payload invalid.");
+    }
+    else if (nullptr != source)
     {
         const size_t                    FILTER_SIZE = 640U;
         StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
@@ -601,6 +617,10 @@ bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
                 isSuccessful = true;
             }
         }
+    }
+    else
+    {
+        LOG_WARNING("No active OpenWeather source for response preprocessing.");
     }
 
     return isSuccessful;
