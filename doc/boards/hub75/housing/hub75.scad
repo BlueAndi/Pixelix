@@ -29,6 +29,11 @@ show_board = false;
 panel_width = 192; // Width of the LED matrix panel in mm
 panel_height = 192; // Height of the LED matrix panel in mm
 panel_depth = 15; // Depth of the LED matrix panel in mm
+panel_mounting_holes_h_distance = 170; // Distance between mounting holes in mm
+panel_mounting_holes_v_distance = 148; // Distance between mounting holes in mm
+panel_mounting_holes_diameter = 3.2; // Diameter of the mounting holes in mm
+panel_mounting_holes_offset_x = (panel_width - panel_mounting_holes_h_distance) / 2; // X offset of the mounting holes from the center of the panel in mm
+panel_mounting_holes_offset_z = (panel_height - panel_mounting_holes_v_distance) / 2; // Z offset of the mounting holes from the center of the panel in mm
 
 // Parameters AdaFruit Matrix Portal S3
 board_width = 1.75 * factor_inc_to_mm; // Width of the MatrixPortal S3 board in mm
@@ -38,12 +43,19 @@ board_mounting_holes_h_distance = 1.6 * factor_inc_to_mm; // Distance between mo
 board_mounting_holes_v_distance = 0.78 * factor_inc_to_mm; // Distance between mounting holes in mm (0.78 inches converted to mm)
 board_mounting_holes_diameter = 3.2; // Diameter of the mounting holes in mm
 board_mounting_holes_offset_x = (board_width - board_mounting_holes_h_distance) / 2; // X offset of the mounting holes from the center of the board in mm
-board_mounting_holes_offset_y = (board_height - board_mounting_holes_v_distance) / 2; // Y offset of the mounting holes from the center of the board in mm
+board_mounting_holes_offset_z = (board_height - board_mounting_holes_v_distance) / 2; // Z offset of the mounting holes from the center of the board in mm
 
 // Parameters for the LED matrix panel spacer
 spacer_thickness = 3; // Thickness of the spacer in mm
 spacer_width = panel_width; // Width of the spacer in mm
 spacer_height = panel_height; // Height of the spacer in mm
+spacer_mounting_holes_diameter = panel_mounting_holes_diameter + 0.4; // Diameter of the mounting holes in the spacer in mm (with clearance for the panel mounting holes)
+spacer_mounting_holes_offset_x = panel_mounting_holes_offset_x; // X offset of the mounting holes from the center of the spacer in mm (same as panel)
+spacer_mounting_holes_offset_z = panel_mounting_holes_offset_z; // Z offset of the mounting holes from the center of the spacer in mm (same as panel)
+spacer_opening_width = 165; // Width of the opening in the spacer for the board connectors in mm
+spacer_opening_height = 72; // Height of the opening in the spacer for the board connectors in mm
+spacer_opening_offset_x = (spacer_width - spacer_opening_width) / 2; // X offset of the opening in the spacer from the center in mm
+spacer_opening_offset_z = 14; // Z offset of the opening in the spacer from the bottom in mm
 
 // Parameters for frame
 frame_panel_space = 0.5; // Space between the frame and the LED matrix panel in mm
@@ -101,6 +113,8 @@ panel_cavity_width = panel_width + 2 * frame_panel_space;
 panel_cavity_height = panel_height + 2 * frame_panel_space;
 panel_cavity_depth_start = faceplate_recess_depth + frame_panel_stop_depth;
 frame_depth = panel_cavity_depth_start + panel_depth + spacer_thickness + board_depth + frame_rear_clearance; // Body depth of the frame in mm
+spacer_opening_x = spacer_opening_offset_x;
+spacer_opening_z = spacer_opening_offset_z;
 panel_stop_opening_width = panel_width - 2 * frame_panel_stop_overlap;
 panel_stop_opening_height = panel_height - 2 * frame_panel_stop_overlap;
 frame_front_opening_width = faceplate_cutout_width - 2 * frame_faceplate_glue_lip;
@@ -215,10 +229,10 @@ module local_y_hole(x_pos, y_pos, z_pos, diameter, depth)
 module board_mount_pattern(hole_diameter, depth, standoff_diameter=0)
 {
 	hole_positions = [
-		[board_mounting_holes_offset_x, board_mounting_holes_offset_y],
-		[board_width - board_mounting_holes_offset_x, board_mounting_holes_offset_y],
-		[board_mounting_holes_offset_x, board_height - board_mounting_holes_offset_y],
-		[board_width - board_mounting_holes_offset_x, board_height - board_mounting_holes_offset_y]
+		[board_mounting_holes_offset_x, board_mounting_holes_offset_z],
+		[board_width - board_mounting_holes_offset_x, board_mounting_holes_offset_z],
+		[board_mounting_holes_offset_x, board_height - board_mounting_holes_offset_z],
+		[board_width - board_mounting_holes_offset_x, board_height - board_mounting_holes_offset_z]
 	];
 
 	for (position = hole_positions)
@@ -227,11 +241,13 @@ module board_mount_pattern(hole_diameter, depth, standoff_diameter=0)
 		{
 			if (standoff_diameter > 0)
 			{
-				cylinder(d=standoff_diameter, h=depth, $fn=48);
+				rotate([-90, 0, 0])
+					cylinder(d=standoff_diameter, h=depth, $fn=48);
 			}
 
 			translate([0, -eps, 0])
-				cylinder(d=hole_diameter, h=depth + 2 * eps, $fn=48);
+				rotate([-90, 0, 0])
+					cylinder(d=hole_diameter, h=depth + 2 * eps, $fn=48);
 		}
 	}
 }
@@ -248,7 +264,25 @@ module panel_mount_pattern(hole_diameter, depth)
 	for (position = hole_positions)
 	{
 		translate([position[0], -eps, position[1]])
-			cylinder(d=hole_diameter, h=depth + 2 * eps, $fn=48);
+			rotate([-90, 0, 0])
+				cylinder(d=hole_diameter, h=depth + 2 * eps, $fn=48);
+	}
+}
+
+module spacer_mount_pattern(hole_diameter, depth)
+{
+	hole_positions = [
+		[spacer_mounting_holes_offset_x, spacer_mounting_holes_offset_z],
+		[spacer_width - spacer_mounting_holes_offset_x, spacer_mounting_holes_offset_z],
+		[spacer_mounting_holes_offset_x, spacer_height - spacer_mounting_holes_offset_z],
+		[spacer_width - spacer_mounting_holes_offset_x, spacer_height - spacer_mounting_holes_offset_z]
+	];
+
+	for (position = hole_positions)
+	{
+		translate([position[0], -eps, position[1]])
+			rotate([-90, 0, 0])
+				cylinder(d=hole_diameter, h=depth + 2 * eps, $fn=48);
 	}
 }
 
@@ -293,7 +327,12 @@ module spacer()
 				}
 		}
 
-		panel_mount_pattern(panel_mount_hole_diameter, spacer_thickness);
+		spacer_mount_pattern(spacer_mounting_holes_diameter, spacer_thickness);
+
+		cutout_cube(
+			[spacer_opening_x, -eps, spacer_opening_z],
+			[spacer_opening_width, spacer_thickness + 2 * eps, spacer_opening_height]
+		);
 
 		translate([
 			centered_offset(spacer_width, board_width),
