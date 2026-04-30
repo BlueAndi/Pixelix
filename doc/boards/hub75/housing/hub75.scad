@@ -57,6 +57,10 @@ spacer_opening_height = 72; // Height of the opening in the spacer for the board
 spacer_opening_offset_x = (spacer_width - spacer_opening_width) / 2; // X offset of the opening in the spacer from the center in mm
 spacer_opening_offset_z = 14; // Z offset of the opening in the spacer from the bottom in mm
 
+// Fixed faceplate dimensions
+faceplate_width_fixed = 202; // Fixed width of the faceplate in mm
+faceplate_height_fixed = 200; // Fixed height of the faceplate in mm
+
 // Parameters for frame
 frame_panel_space = 0.5; // Space between the frame and the LED matrix panel in mm
 frame_wall_thickness = 3; // Thickness of the frame walls in mm
@@ -72,12 +76,12 @@ frame_foot_width = 26; // Width of one stand foot in X direction in mm
 frame_foot_depth = 18; // Stand foot extension behind the frame in Y direction in mm
 frame_foot_height = 8; // Stand foot height from the base in Z direction in mm
 frame_foot_inset = 16; // Distance from outer frame side to stand foot in mm
-frame_width = max(panel_width + 2 * frame_panel_space + 2 * frame_wall_thickness, panel_width + 4 + 2 * frame_corner_clearance + 2 * frame_faceplate_outer_margin); // Total width of the frame in mm
-frame_height = max(panel_height + 2 * frame_panel_space + 2 * frame_wall_thickness, panel_height + 4 + 2 * frame_corner_clearance + 2 * frame_faceplate_outer_margin); // Total height of the frame in mm
+frame_width = max(panel_width + 2 * frame_panel_space + 2 * frame_wall_thickness, faceplate_width_fixed + 2 * frame_corner_clearance + 2 * frame_faceplate_outer_margin); // Total width of the frame in mm
+frame_height = max(panel_height + 2 * frame_panel_space + 2 * frame_wall_thickness, faceplate_height_fixed + 2 * frame_corner_clearance + 2 * frame_faceplate_outer_margin); // Total height of the frame in mm
 
 // Parameters faceplate
-faceplate_width = panel_width + 4; // Width of the faceplate in mm
-faceplate_height = panel_height + 4; // Height of the faceplate in mm
+faceplate_width = faceplate_width_fixed; // Width of the faceplate in mm
+faceplate_height = faceplate_height_fixed; // Height of the faceplate in mm
 faceplate_thickness = 3; // Thickness of the faceplate in mm
 faceplate_cutout_panel_space = 1; // Space between the faceplate cutout and the LED matrix panel in mm
 faceplate_cutout_width = panel_width + 2 * faceplate_cutout_panel_space; // Width of the faceplate cutout in mm
