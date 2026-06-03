@@ -197,7 +197,8 @@ String RestApiTopicHandler::getUri(const String& entityId, const String& topic) 
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE = 8192U;
+    const size_t        JSON_DOC_SIZE       = 10240U;
+    const size_t        JSON_PAR_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj        = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
@@ -211,6 +212,12 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
     if ((HTTP_GET == request->method()) &&
         (nullptr != topicMetaData->getTopicFunc))
     {
+        
+        /* passing params with get requests for advanced web config uses */
+        DynamicJsonDocument jsonDocPar(JSON_PAR_DOC_SIZE);
+        par2Json(jsonDocPar, request);
+        dataObj["pars"] = jsonDocPar.as<JsonObject>();
+
         /* Topic data will be transported in the HTTP body as JSON. */
         if (false == topicMetaData->getTopicFunc(topicMetaData->topic, dataObj))
         {
@@ -256,7 +263,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
     else if ((HTTP_POST == request->method()) &&
              (nullptr != topicMetaData->setTopicFunc))
     {
-        DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
+        DynamicJsonDocument jsonDocPar(JSON_PAR_DOC_SIZE);
         JsonObjectConst     jsonValue;
 
         /* JSON in the body has higher priority than the HTTP parameters! */
