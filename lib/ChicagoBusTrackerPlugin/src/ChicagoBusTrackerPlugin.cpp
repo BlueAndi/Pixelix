@@ -107,20 +107,24 @@ bool ChicagoBusTrackerPlugin::getTopic(const String& topic, JsonObject& value) c
         getConfiguration(value);
         isSuccessful = true;
     }
-    if (true == topic.equals(TOPIC_ROUTES))
+    else if (true == topic.equals(TOPIC_ROUTES))
     {
         const_cast<ChicagoBusTrackerPlugin*>(this)->getRoutes(value);
         isSuccessful = true;
     }
-    if (true == topic.equals(TOPIC_STOPS))
+    else if (true == topic.equals(TOPIC_STOPS))
     {
         const_cast<ChicagoBusTrackerPlugin*>(this)->getStops(value);
         isSuccessful = true;
     }
-    if (true == topic.equals(TOPIC_DIRS))
+    else if (true == topic.equals(TOPIC_DIRS))
     {
         const_cast<ChicagoBusTrackerPlugin*>(this)->getDirections(value);
         isSuccessful = true;
+    }
+    else
+    {
+        /* Not supported topic. */
     }
 
     return isSuccessful;
