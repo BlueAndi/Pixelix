@@ -371,7 +371,7 @@ void ChicagoBusTrackerPlugin::update(YAGfx& gfx)
 
 String ChicagoBusTrackerPlugin::getApiKey() const
 {
-    if ((apiKey.isEmpty()) || (apiKey == "null"))
+    if (apiKey.isEmpty() || (apiKey == "null"))
     {
         const size_t        JSON_DOC_SIZE = 44U;
         DynamicJsonDocument jsonDocApiKey(JSON_DOC_SIZE);
@@ -640,14 +640,14 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     String nxt                       = nextEstimate["prdctdn"].as<String>();
     // String thd                       = thirdEstimate["prdctdn"].as<String>();
 
-    if (des != "null" && des != "" && true == m_dest)
+    if ((des != "null") && (des != "") && (true == m_dest))
     {
         m_routeInfoText  = COLOR_DISPLAY;
         m_routeInfoText += rte;
         m_routeInfoText += " to ";
         m_routeInfoText += des;
     }
-    else if (rte == "null" || rte == "")
+    else if ((rte == "null") || (rte == ""))
     {
         m_routeInfoText  = COLOR_DELAY;
         m_routeInfoText += m_rte;
@@ -658,7 +658,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
         m_routeInfoText += rte;
     }
 
-    if (true == m_orig && stpnm != "" && stpnm != "null")
+    if ((true == m_orig) && (stpnm != "") && (stpnm != "null"))
     {
         m_routeInfoText += " from " + stpnm;
     }
@@ -670,7 +670,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     }
     else if (est == "DLY")
     {
-        if (nxt != "null" && nxt != "")
+        if ((nxt != "null") && (nxt != ""))
         {
             m_arrivalsInfotext  = COLOR_DELAY;
             m_arrivalsInfotext += est;
@@ -685,7 +685,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
             m_arrivalsInfotext += est;
         }
     }
-    else if (est == "null" || est == "")
+    else if ((est == "null") || (est == ""))
     {
         m_arrivalsInfotext  = COLOR_DELAY;
         m_arrivalsInfotext += " NO DATA ";
@@ -697,7 +697,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
         m_arrivalsInfotext += " min";
     }
 
-    if (true == m_two && nxt != "null" && nxt != "")
+    if ((true == m_two) && (nxt != "null") && (nxt != ""))
     {
         m_arrivalsInfotext += COLOR_DISPLAY;
         m_arrivalsInfotext += " / ";
