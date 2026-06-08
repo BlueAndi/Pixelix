@@ -132,18 +132,18 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t JSON_DOC_SIZE = 1024U;
-        
+        const size_t        JSON_DOC_SIZE = 1024U;
+
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        
-        JsonObject       jsonCfg    = jsonDoc.to<JsonObject>();
-        JsonVariantConst jsonApiKey = value["apiKey"];
-        JsonVariantConst jsonRte    = value["rte"];
-        JsonVariantConst jsonDir    = value["dir"];
-        JsonVariantConst jsonStpid  = value["stpid"];
-        JsonVariantConst jsonOrig   = value["orig"];
-        JsonVariantConst jsonDest   = value["dest"];
-        JsonVariantConst jsonTwo    = value["two"];
+
+        JsonObject          jsonCfg    = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonApiKey = value["apiKey"];
+        JsonVariantConst    jsonRte    = value["rte"];
+        JsonVariantConst    jsonDir    = value["dir"];
+        JsonVariantConst    jsonStpid  = value["stpid"];
+        JsonVariantConst    jsonOrig   = value["orig"];
+        JsonVariantConst    jsonDest   = value["dest"];
+        JsonVariantConst    jsonTwo    = value["two"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -158,11 +158,12 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
 
         if (false == jsonApiKey.isNull())
         {
-            apiKey = jsonApiKey.as<String>();
+            apiKey            = jsonApiKey.as<String>();
             jsonCfg["apiKey"] = apiKey;
 
-            File sharedFile = LittleFS.open(API_KEY_FILE_PATH, "w");
-            if (sharedFile) {
+            File sharedFile   = LittleFS.open(API_KEY_FILE_PATH, "w");
+            if (sharedFile)
+            {
                 DynamicJsonDocument sharedDoc(256);
                 sharedDoc["apiKey"] = apiKey;
                 serializeJson(sharedDoc, sharedFile);
@@ -377,7 +378,7 @@ void ChicagoBusTrackerPlugin::update(YAGfx& gfx)
 
 String ChicagoBusTrackerPlugin::getApiKey()
 {
-    if (apiKey.isEmpty() || apiKey == "null") 
+    if (apiKey.isEmpty() || apiKey == "null")
     {
         if (LittleFS.exists(API_KEY_FILE_PATH))
         {
@@ -399,13 +400,13 @@ void ChicagoBusTrackerPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["apiKey"]          = apiKey;
-    jsonCfg["rte"]             = m_rte;
-    jsonCfg["dir"]             = m_dir;
-    jsonCfg["stpid"]           = m_stpid;
-    jsonCfg["orig"]            = m_orig;
-    jsonCfg["dest"]            = m_dest;
-    jsonCfg["two"]             = m_two; // TODO: multi-row layouts
+    jsonCfg["apiKey"] = apiKey;
+    jsonCfg["rte"]    = m_rte;
+    jsonCfg["dir"]    = m_dir;
+    jsonCfg["stpid"]  = m_stpid;
+    jsonCfg["orig"]   = m_orig;
+    jsonCfg["dest"]   = m_dest;
+    jsonCfg["two"]    = m_two; // TODO: multi-row layouts
 }
 
 bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -486,10 +487,9 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
         m_hasTopicChanged = true;
 
-        status = true;
+        status            = true;
     }
     return status;
-
 }
 
 bool ChicagoBusTrackerPlugin::startHttpRequest()
@@ -505,21 +505,21 @@ bool ChicagoBusTrackerPlugin::startHttpRequest()
         (false == m_stpid.isEmpty()) &&
         (false == m_dir.isEmpty()))
     {
-        String url = CHICAGO_BUS_BASE_URI;
+        String url       = CHICAGO_BUS_BASE_URI;
 
         /* Documentation:
          * https://www.transitchicago.com/developers/bustracker/
          */
-        url        += "/getpredictions?key=";
-        url        += apiKey;
-        url        += "&format=json";
-        url        += "&rt=";
-        url        += m_rte;
-        url        += "&dir=";
-        url        += m_dir;
-        url        += "&stpid=";
-        url        += m_stpid;
-        url        += "&top=3";
+        url             += "/getpredictions?key=";
+        url             += apiKey;
+        url             += "&format=json";
+        url             += "&rt=";
+        url             += m_rte;
+        url             += "&dir=";
+        url             += m_dir;
+        url             += "&stpid=";
+        url             += m_stpid;
+        url             += "&top=3";
 
         m_dynamicRestId  = RestService::getInstance().get(url, preProcessCallback);
 
@@ -587,7 +587,7 @@ bool ChicagoBusTrackerPlugin::preProcessAsyncWebResponse(const char* payload, si
         LOG_ERROR("JSON document size exceeded.");
     }
     else if ((nullptr == payload) ||
-            (0U == payloadSize))
+             (0U == payloadSize))
     {
         LOG_ERROR("No payload.");
     }
@@ -658,7 +658,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     }
     else if (est == "null" || est == "")
     {
-        m_arrivalsInfotext = COLOR_DELAY;
+        m_arrivalsInfotext  = COLOR_DELAY;
         m_arrivalsInfotext += " NO DATA ";
     }
     else
@@ -669,12 +669,12 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     if (true == m_two && nxt != "null" && nxt != "")
     {
         m_arrivalsInfotext += COLOR_DISPLAY;
-        m_arrivalsInfotext += " / " + 
-            (nxt == "DLY" 
-                ? (COLOR_DELAY + nxt) 
-                : nxt == "DUE" 
-                    ? (COLOR_DUE + nxt) 
-                    : nxt + " min");
+        m_arrivalsInfotext += " / " +
+                              (nxt == "DLY"
+                                      ? (COLOR_DELAY + nxt)
+                                  : nxt == "DUE"
+                                      ? (COLOR_DUE + nxt)
+                                      : nxt + " min");
     }
 
     LOG_DEBUG("Time prediction to print %s", m_arrivalsInfotext.c_str());
@@ -684,18 +684,18 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     m_view.setArrivalsInfoText(m_arrivalsInfotext);
 }
 
-void ChicagoBusTrackerPlugin::getRoutes(JsonObject &jsonRtes)
+void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
-    HTTPClient http;
+    HTTPClient                 http;
 
-    apiKey = getApiKey();
+    apiKey      = getApiKey();
 
-    String url = CHICAGO_BUS_BASE_URI;
-    url += "/getroutes?";
-    url += "key=";
-    url += apiKey;
-    url += "&format=json";
+    String url  = CHICAGO_BUS_BASE_URI;
+    url        += "/getroutes?";
+    url        += "key=";
+    url        += apiKey;
+    url        += "&format=json";
 
     http.begin(url);
     http.useHTTP10();
@@ -704,14 +704,14 @@ void ChicagoBusTrackerPlugin::getRoutes(JsonObject &jsonRtes)
     {
         if (httpCode == HTTP_CODE_OK)
         {
-            Stream& input = http.getStream();
-            DynamicJsonDocument jsonDoc(10240U);
+            Stream&                         input = http.getStream();
+            DynamicJsonDocument             jsonDoc(10240U);
             StaticJsonDocument<FILTER_SIZE> filter;
-            
-            filter["bustime-response"]["routes"][0]["rt"] = true;
+
+            filter["bustime-response"]["routes"][0]["rt"]   = true;
             filter["bustime-response"]["routes"][0]["rtnm"] = true;
-            
-            DeserializationError error = deserializeJson(jsonDoc, input, DeserializationOption::Filter(filter));
+
+            DeserializationError error                      = deserializeJson(jsonDoc, input, DeserializationOption::Filter(filter));
 
             if (error)
             {
@@ -729,7 +729,7 @@ void ChicagoBusTrackerPlugin::getRoutes(JsonObject &jsonRtes)
                 obj["rtnm"]    = routes[i]["rtnm"];
             }
         }
-            else
+        else
         {
             LOG_ERROR("HTTP %s Did not understand API Response", httpCode);
         }
@@ -742,7 +742,7 @@ void ChicagoBusTrackerPlugin::getRoutes(JsonObject &jsonRtes)
 }
 
 
-void ChicagoBusTrackerPlugin::getDirections(JsonObject &jsonDirs)
+void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -753,15 +753,15 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject &jsonDirs)
 
     HTTPClient http;
 
-    apiKey = getApiKey();
+    apiKey      = getApiKey();
 
-    String url = CHICAGO_BUS_BASE_URI;
-    url += "/getdirections?";
-    url += "key=";
-    url += apiKey;
-    url += "&rt=";
-    url += rt;
-    url += "&format=json";
+    String url  = CHICAGO_BUS_BASE_URI;
+    url        += "/getdirections?";
+    url        += "key=";
+    url        += apiKey;
+    url        += "&rt=";
+    url        += rt;
+    url        += "&format=json";
 
     http.begin(url);
     http.useHTTP10();
@@ -770,29 +770,29 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject &jsonDirs)
     {
         if (httpCode == HTTP_CODE_OK)
         {
-            Stream& input = http.getStream();
-            DynamicJsonDocument jsonDoc(224U);
+            Stream&                         input = http.getStream();
+            DynamicJsonDocument             jsonDoc(224U);
             StaticJsonDocument<FILTER_SIZE> filter;
-            
+
             filter["bustime-response"]["directions"][0]["id"] = true;
             // TODO: return 'name' (localized) to web UI as well
             // filter["bustime-response"]["directions"][0]["name"] = true;
 
-            DeserializationError error = deserializeJson(jsonDoc, input);
+            DeserializationError error                        = deserializeJson(jsonDoc, input);
             if (error)
             {
                 LOG_ERROR(String(error.c_str()));
                 jsonDirs.createNestedObject("error");
                 jsonDirs["error"]["msg"] = String(error.f_str());
             }
-            JsonArray dirsOut = jsonDirs.createNestedArray("dirs");
+            JsonArray dirsOut    = jsonDirs.createNestedArray("dirs");
             JsonArray directions = jsonDoc["bustime-response"]["directions"].as<JsonArray>();
             for (int i = 0; i < directions.size(); i++)
             {
                 dirsOut.add(directions[i]["id"]);
             }
         }
-            else
+        else
         {
             LOG_ERROR("HTTP %s Did not understand API Response", httpCode);
         }
@@ -805,30 +805,30 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject &jsonDirs)
 }
 
 
-void ChicagoBusTrackerPlugin::getStops(JsonObject &jsonStops)
+void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_requestTimer.start(UPDATE_PERIOD_SHORT);
 
-    String rt = jsonStops["pars"]["rt"].as<String>();
+    String rt  = jsonStops["pars"]["rt"].as<String>();
     String dir = jsonStops["pars"]["dir"].as<String>();
     jsonStops.remove("pars");
     jsonStops["stops"] = JsonArray();
 
     HTTPClient http;
 
-    apiKey = getApiKey();
+    apiKey      = getApiKey();
 
-    String url = CHICAGO_BUS_BASE_URI;
-    url += "/getstops?";
-    url += "key=";
-    url += apiKey;
-    url += "&rt=";
-    url += rt;
-    url += "&dir=";
-    url += dir;
-    url += "&format=json";
+    String url  = CHICAGO_BUS_BASE_URI;
+    url        += "/getstops?";
+    url        += "key=";
+    url        += apiKey;
+    url        += "&rt=";
+    url        += rt;
+    url        += "&dir=";
+    url        += dir;
+    url        += "&format=json";
 
     http.begin(url);
     http.useHTTP10();
@@ -837,14 +837,14 @@ void ChicagoBusTrackerPlugin::getStops(JsonObject &jsonStops)
     {
         if (httpCode == HTTP_CODE_OK)
         {
-            Stream& input = http.getStream();
-            DynamicJsonDocument jsonDoc(8192U);
+            Stream&                         input = http.getStream();
+            DynamicJsonDocument             jsonDoc(8192U);
             StaticJsonDocument<FILTER_SIZE> filter;
 
             filter["bustime-response"]["stops"][0]["stpid"] = true;
             filter["bustime-response"]["stops"][0]["stpnm"] = true;
 
-            DeserializationError error = deserializeJson(jsonDoc, input, DeserializationOption::Filter(filter));
+            DeserializationError error                      = deserializeJson(jsonDoc, input, DeserializationOption::Filter(filter));
             if (error)
             {
                 LOG_ERROR(String(error.c_str()));
@@ -852,12 +852,12 @@ void ChicagoBusTrackerPlugin::getStops(JsonObject &jsonStops)
                 jsonStops["error"]["msg"] = String(error.f_str());
             }
             JsonArray stopsOut = jsonStops.createNestedArray("stops");
-            JsonArray stops = jsonDoc["bustime-response"]["stops"].as<JsonArray>();
+            JsonArray stops    = jsonDoc["bustime-response"]["stops"].as<JsonArray>();
             for (int i = 0; i < stops.size(); i++)
             {
                 JsonObject obj = stopsOut.createNestedObject();
-                obj["stpid"] = stops[i]["stpid"];
-                obj["stpnm"] = stops[i]["stpnm"];
+                obj["stpid"]   = stops[i]["stpid"];
+                obj["stpnm"]   = stops[i]["stpnm"];
             }
         }
         else

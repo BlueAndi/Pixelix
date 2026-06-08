@@ -299,7 +299,7 @@ public:
 
     /**
      * Get CTA Bus Tracker API key.
-     * 
+     *
      * @return CTA Bus Tracker API key
      */
     String getApiKey();
@@ -353,45 +353,44 @@ private:
 
     /**
      * Period between arrival prediction updates.
-     * API is updated every 1 minute, we go every 2 min to keep 
+     * API is updated every 1 minute, we go every 2 min to keep
      * within the daily API limits when fetching multiple stops.
      */
-    static const uint32_t UPDATE_PERIOD         = SIMPLE_TIMER_MINUTES(2U);
+    static const uint32_t UPDATE_PERIOD        = SIMPLE_TIMER_MINUTES(2U);
 
     /**
      * 30 second timer used for scheduling config reloads and keeping
      * arrivals requests from colloding with web config requests
      */
-    static const uint32_t UPDATE_PERIOD_SHORT   = SIMPLE_TIMER_SECONDS(30U);
+    static const uint32_t UPDATE_PERIOD_SHORT  = SIMPLE_TIMER_SECONDS(30U);
 
     /** Time for duration tick period in ms */
-    static const uint32_t DURATION_TICK_PERIOD  = SIMPLE_TIMER_SECONDS(1U);
+    static const uint32_t DURATION_TICK_PERIOD = SIMPLE_TIMER_SECONDS(1U);
 
     /**
      * Single definition used by all Web UI endpoints (getRoutes, getStops...)
      */
-    static const size_t FILTER_SIZE             = 192U;
+    static const size_t            FILTER_SIZE = 192U;
 
 
-
-    _ChicagoBusTrackerPlugin::View m_view;           /**< View with all widgets. */
-    String                 m_arrivalsInfotext;       /**< Bus arrivals info text */
-    String                 m_routeInfoText;          /**< Bus route display info text */
-    String                 m_displayColor;           /**< String format prefix for main color */
-    String                 m_delayColor;             /**< String format prefix for delayed status */
-    String                 m_dueColor;               /**< String format prefix for bus due status */
-    String                 m_rte;                    /**< CTA Bus route ID (e.g. 81, 151, X49)*/
-    String                 m_dir;                    /**< CTA-defined route direction (e.g. Southbound) */
-    String                 m_stpid;                  /**< CTA-defined stop ID (numeric) */
-    bool                   m_orig;                   /**< option to show origin (selected stop name) */
-    bool                   m_dest;                   /**< option to show destination (end of line in chosen direction) */
-    bool                   m_two;                    /**< option to show next 2 arrivals instead of just one */
-    SimpleTimer            m_requestTimer;           /**< Timer used for cyclic request of new data. */
-    mutable MutexRecursive m_mutex;                  /**< Mutex to protect against concurrent access. */
-    const ISlotPlugin*     m_slotInterf;             /**< Slot interface */
-    bool                   m_hasTopicChanged;        /**< Has the topic content changed? */
-    uint32_t               m_dynamicRestId;          /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
-    bool                   m_isAllowedToSend;        /**< Is allowed to send REST-Api request? */
+    _ChicagoBusTrackerPlugin::View m_view;             /**< View with all widgets. */
+    String                         m_arrivalsInfotext; /**< Bus arrivals info text */
+    String                         m_routeInfoText;    /**< Bus route display info text */
+    String                         m_displayColor;     /**< String format prefix for main color */
+    String                         m_delayColor;       /**< String format prefix for delayed status */
+    String                         m_dueColor;         /**< String format prefix for bus due status */
+    String                         m_rte;              /**< CTA Bus route ID (e.g. 81, 151, X49)*/
+    String                         m_dir;              /**< CTA-defined route direction (e.g. Southbound) */
+    String                         m_stpid;            /**< CTA-defined stop ID (numeric) */
+    bool                           m_orig;             /**< option to show origin (selected stop name) */
+    bool                           m_dest;             /**< option to show destination (end of line in chosen direction) */
+    bool                           m_two;              /**< option to show next 2 arrivals instead of just one */
+    SimpleTimer                    m_requestTimer;     /**< Timer used for cyclic request of new data. */
+    mutable MutexRecursive         m_mutex;            /**< Mutex to protect against concurrent access. */
+    const ISlotPlugin*             m_slotInterf;       /**< Slot interface */
+    bool                           m_hasTopicChanged;  /**< Has the topic content changed? */
+    uint32_t                       m_dynamicRestId;    /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
+    bool                           m_isAllowedToSend;  /**< Is allowed to send REST-Api request? */
 
     /**
      * Get configuration in JSON.
@@ -437,24 +436,24 @@ private:
 
     /**
      * Return a list of CTA bus routes to the Web UI
-     * 
+     *
      * @param[in] jsonRtes  Web resposne as JSON document
      */
-    void getRoutes(JsonObject &jsonRtes);
+    void getRoutes(JsonObject& jsonRtes);
 
     /**
      * Return a list of direction IDs for a given CTA bus route to the Web UI
-     * 
+     *
      * @param[in] jsonDirs  Web response as JSON document
      */
-    void getDirections(JsonObject &jsonDirs);
+    void getDirections(JsonObject& jsonDirs);
 
     /**
      * Return a list of CTA bus stops to the Web UI
-     * 
+     *
      * @param[in] jsonStops Web response as JSON document
      */
-    void getStops(JsonObject &jsonStops);
+    void getStops(JsonObject& jsonStops);
 };
 
 /******************************************************************************
