@@ -42,7 +42,6 @@
 #include <math.h>
 #include <HttpStatus.h>
 #include <HTTPClient.h>
-#include <LittleFS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -162,18 +161,8 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
 
         if (false == jsonApiKey.isNull())
         {
-            apiKey            = jsonApiKey.as<String>();
-            jsonCfg["apiKey"] = apiKey;
-
-            File sharedFile   = LittleFS.open(API_KEY_FILE_PATH, "w");
-            if (sharedFile)
-            {
-                DynamicJsonDocument sharedDoc(256);
-                sharedDoc["apiKey"] = apiKey;
-                serializeJson(sharedDoc, sharedFile);
-                sharedFile.close();
-            }
-            isSuccessful = true;
+            jsonCfg["apiKey"] = jsonApiKey.as<String>();
+            isSuccessful      = true;
         }
         if (false == jsonRte.isNull())
         {
@@ -382,18 +371,27 @@ void ChicagoBusTrackerPlugin::update(YAGfx& gfx)
 
 String ChicagoBusTrackerPlugin::getApiKey() const
 {
-    if (apiKey.isEmpty() || apiKey == "null")
+    if ((apiKey.isEmpty()) || (apiKey == "null"))
     {
-        if (LittleFS.exists(API_KEY_FILE_PATH))
+        const size_t        JSON_DOC_SIZE = 44U;
+        DynamicJsonDocument jsonDocApiKey(JSON_DOC_SIZE);
+        JsonFile            jsonFile(FILESYSTEM);
+
+        if (false == jsonFile.load(API_KEY_FILE_PATH, jsonDocApiKey))
         {
-            fs::File sharedFile = LittleFS.open(API_KEY_FILE_PATH, "r");
-            if (sharedFile)
-            {
-                DynamicJsonDocument sharedDoc(512);
-                deserializeJson(sharedDoc, sharedFile);
-                apiKey = sharedDoc["apiKey"].as<String>();
-                sharedFile.close();
-            }
+            LOG_WARNING("Failed to load shared ChicagoBusTracker API key");
+        }
+        else if (false == jsonDocApiKey.is<JsonObjectConst>())
+        {
+            LOG_ERROR("ChicagoBusTracker API key document should contain a JSON object");
+        }
+        else if (false == jsonDocApiKey["apiKey"].is<String>())
+        {
+            LOG_ERROR("ChicagoBusTracker on-disk API key is not a string");
+        }
+        else
+        {
+            return jsonDocApiKey["apiKey"];
         }
     }
     return apiKey;
@@ -456,10 +454,25 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        apiKey  = jsonApiKey.as<String>();
-        m_rte   = jsonRte.as<String>();
-        m_dir   = jsonDir.as<String>();
-        m_stpid = jsonStpid.as<String>();
+        apiKey                            = jsonApiKey.as<String>();
+        m_rte                             = jsonRte.as<String>();
+        m_dir                             = jsonDir.as<String>();
+        m_stpid                           = jsonStpid.as<String>();
+
+        const size_t        JSON_DOC_SIZE = 44U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonFile            jsonFile(FILESYSTEM);
+
+        jsonDoc["apiKey"] = apiKey;
+
+        if (false == jsonFile.save(API_KEY_FILE_PATH, jsonDoc))
+        {
+            LOG_ERROR("Failed to save ChicagoBusTracker API key.");
+        }
+        else
+        {
+            /* proceed with other fields */
+        }
 
         if (jsonOrig.as<bool>())
         {
@@ -629,15 +642,20 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
 
     if (des != "null" && des != "" && true == m_dest)
     {
-        m_routeInfoText = COLOR_DISPLAY + rte + " to " + des;
+        m_routeInfoText  = COLOR_DISPLAY;
+        m_routeInfoText += rte;
+        m_routeInfoText += " to ";
+        m_routeInfoText += des;
     }
     else if (rte == "null" || rte == "")
     {
-        m_routeInfoText = COLOR_DELAY + m_rte;
+        m_routeInfoText  = COLOR_DELAY;
+        m_routeInfoText += m_rte;
     }
     else
     {
-        m_routeInfoText = COLOR_DISPLAY + rte;
+        m_routeInfoText  = COLOR_DISPLAY;
+        m_routeInfoText += rte;
     }
 
     if (true == m_orig && stpnm != "" && stpnm != "null")
@@ -647,17 +665,24 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
 
     if (est == "DUE")
     {
-        m_arrivalsInfotext = COLOR_DUE + est;
+        m_arrivalsInfotext  = COLOR_DUE;
+        m_arrivalsInfotext += est;
     }
     else if (est == "DLY")
     {
         if (nxt != "null" && nxt != "")
         {
-            m_arrivalsInfotext = COLOR_DELAY + est + m_displayColor + " / " + nxt + " min";
+            m_arrivalsInfotext  = COLOR_DELAY;
+            m_arrivalsInfotext += est;
+            m_arrivalsInfotext += COLOR_DISPLAY;
+            m_arrivalsInfotext += " / ";
+            m_arrivalsInfotext += nxt;
+            m_arrivalsInfotext += " min";
         }
         else
         {
-            m_arrivalsInfotext = COLOR_DELAY + est;
+            m_arrivalsInfotext  = COLOR_DELAY;
+            m_arrivalsInfotext += est;
         }
     }
     else if (est == "null" || est == "")
@@ -667,18 +692,21 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     }
     else
     {
-        m_arrivalsInfotext = COLOR_DISPLAY + est + " min";
+        m_arrivalsInfotext  = COLOR_DISPLAY;
+        m_arrivalsInfotext += est;
+        m_arrivalsInfotext += " min";
     }
 
     if (true == m_two && nxt != "null" && nxt != "")
     {
         m_arrivalsInfotext += COLOR_DISPLAY;
-        m_arrivalsInfotext += " / " +
-                              (nxt == "DLY"
-                                      ? (COLOR_DELAY + nxt)
-                                  : nxt == "DUE"
-                                      ? (COLOR_DUE + nxt)
-                                      : nxt + " min");
+        m_arrivalsInfotext += " / ";
+        m_arrivalsInfotext +=
+            (nxt == "DLY"
+                    ? (COLOR_DELAY + nxt)
+                : nxt == "DUE"
+                    ? (COLOR_DUE + nxt)
+                    : nxt + " min");
     }
 
     LOG_DEBUG("Time prediction to print %s", m_arrivalsInfotext.c_str());
