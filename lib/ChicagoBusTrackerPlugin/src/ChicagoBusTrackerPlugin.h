@@ -329,20 +329,20 @@ private:
      */
     static const char* API_KEY_FILE_PATH;
 
-    /** Colors used for display:
-     * DISPLAY: meant to look like the amber LEDs on a real bus/train
-     * DUE: CTA official green color to indicate imminent arrival
-     * DELAY: CTA official red color to indicate delayed arrival
+    /**
+     * DISPLAY: meant to look like the amber LEDs on a real bus/train display
      */
     static const char* COLOR_DISPLAY;
-    static const char* COLOR_DELAY;
-    static const char* COLOR_DUE;
 
     /**
-     * Static String holds one API key for all Bus Tracker instances
+     * DUE: CTA official green color to indicate imminent arrival
      */
-    static String apiKey;
+    static const char* COLOR_DELAY;
 
+    /**
+     * DELAY: CTA official red color to indicate delayed arrival
+     */
+    static const char* COLOR_DUE;
 
     /**
      * Period between arrival prediction updates.
@@ -363,8 +363,12 @@ private:
     /**
      * Single definition used by all Web UI endpoints (getRoutes, getStops...)
      */
-    static const size_t            FILTER_SIZE = 192U;
+    static const size_t FILTER_SIZE            = 192U;
 
+    /**
+     * Static String holds one API key for all Bus Tracker instances
+     */
+    static String                  apiKey;
 
     _ChicagoBusTrackerPlugin::View m_view;             /**< View with all widgets. */
     String                         m_arrivalsInfotext; /**< Bus arrivals info text */
