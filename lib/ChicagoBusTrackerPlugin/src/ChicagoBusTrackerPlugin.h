@@ -297,13 +297,6 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get CTA Bus Tracker API key.
-     *
-     * @return CTA Bus Tracker API key
-     */
-    String getApiKey();
-
 private:
 
     /**
@@ -391,6 +384,13 @@ private:
     bool                           m_hasTopicChanged;  /**< Has the topic content changed? */
     uint32_t                       m_dynamicRestId;    /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
     bool                           m_isAllowedToSend;  /**< Is allowed to send REST-Api request? */
+
+    /**
+     * Get CTA Bus Tracker API key.
+     *
+     * @return CTA Bus Tracker API key
+     */
+    String getApiKey() const;
 
     /**
      * Get configuration in JSON.

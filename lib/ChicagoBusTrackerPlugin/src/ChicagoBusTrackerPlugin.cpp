@@ -376,7 +376,7 @@ void ChicagoBusTrackerPlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-String ChicagoBusTrackerPlugin::getApiKey()
+String ChicagoBusTrackerPlugin::getApiKey() const
 {
     if (apiKey.isEmpty() || apiKey == "null")
     {
