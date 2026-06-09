@@ -443,21 +443,21 @@ private:
      *
      * @param[in] jsonRtes  Web resposne as JSON document
      */
-    void getRoutes(JsonObject& jsonRtes);
+    void getRoutes(JsonObject& jsonRtes) const;
 
     /**
      * Return a list of direction IDs for a given CTA bus route to the Web UI
      *
      * @param[in] jsonDirs  Web response as JSON document
      */
-    void getDirections(JsonObject& jsonDirs);
+    void getDirections(JsonObject& jsonDirs) const;
 
     /**
      * Return a list of CTA bus stops to the Web UI
      *
      * @param[in] jsonStops Web response as JSON document
      */
-    void getStops(JsonObject& jsonStops);
+    void getStops(JsonObject& jsonStops) const;
 };
 
 /******************************************************************************

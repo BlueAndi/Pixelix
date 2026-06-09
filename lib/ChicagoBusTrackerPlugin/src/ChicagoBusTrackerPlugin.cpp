@@ -108,17 +108,17 @@ bool ChicagoBusTrackerPlugin::getTopic(const String& topic, JsonObject& value) c
     }
     else if (true == topic.equals(TOPIC_ROUTES))
     {
-        const_cast<ChicagoBusTrackerPlugin*>(this)->getRoutes(value);
+        getRoutes(value);
         isSuccessful = true;
     }
     else if (true == topic.equals(TOPIC_STOPS))
     {
-        const_cast<ChicagoBusTrackerPlugin*>(this)->getStops(value);
+        getStops(value);
         isSuccessful = true;
     }
     else if (true == topic.equals(TOPIC_DIRS))
     {
-        const_cast<ChicagoBusTrackerPlugin*>(this)->getDirections(value);
+        getDirections(value);
         isSuccessful = true;
     }
     else
@@ -158,7 +158,6 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
          * Check only for the key/value pair availability.
          * The type check will follow in the setConfiguration().
          */
-
         if (false == jsonApiKey.isNull())
         {
             jsonCfg["apiKey"] = jsonApiKey.as<String>();
@@ -716,7 +715,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     m_view.setArrivalsInfoText(m_arrivalsInfotext);
 }
 
-void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes)
+void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
     HTTPClient                 http;
@@ -774,13 +773,11 @@ void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes)
 }
 
 
-void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs)
+void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-
-    String rt = jsonDirs["pars"]["rt"].as<String>();
+    String                     rt = jsonDirs["pars"]["rt"].as<String>();
     jsonDirs.remove("pars");
 
     HTTPClient http;
@@ -837,14 +834,12 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs)
 }
 
 
-void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops)
+void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-
-    String rt  = jsonStops["pars"]["rt"].as<String>();
-    String dir = jsonStops["pars"]["dir"].as<String>();
+    String                     rt  = jsonStops["pars"]["rt"].as<String>();
+    String                     dir = jsonStops["pars"]["dir"].as<String>();
     jsonStops.remove("pars");
     jsonStops["stops"] = JsonArray();
 
