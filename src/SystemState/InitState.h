@@ -143,8 +143,10 @@ private:
 
     /**
      * Welcome the user on the very first start.
+     *
+     * @param[in] isVeryFirstStart    Is it the very first start of the device?
      */
-    void welcome();
+    void welcome(bool isVeryFirstStart);
 
     /**
      * Checks whether the filesystem content is compatible to the Pixelix version.

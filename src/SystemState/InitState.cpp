@@ -426,10 +426,15 @@ void InitState::exit(StateMachine& sm)
                      * Of course a error may happened during loading the plugin installation,
                      * in this case show the welcome screen too.
                      */
-                    welcome();
+                    welcome(true);
 
                     /* Save the plugin installation, so the user can configure it by its own in the web page settings. */
                     PluginMgr::getInstance().save();
+                }
+                else
+                {
+                    /* Welcome the user as long as the welcome plugin is available. */
+                    welcome(false);
                 }
             }
 
@@ -506,22 +511,44 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     }
 }
 
-void InitState::welcome()
+void InitState::welcome(bool isVeryFirstStart)
 {
-    IPluginMaintenance* welcomePlugin         = PluginMgr::getInstance().install(WELCOME_PLUGIN_TYPE);
-    IconTextPlugin*     concreteWelcomePlugin = static_cast<IconTextPlugin*>(welcomePlugin);
+    const String    WELCOME_PLUGIN_ALIAS = "_welcome";
+    IconTextPlugin* welcomePlugin        = nullptr;
 
-    if (nullptr != concreteWelcomePlugin)
+    if (true == isVeryFirstStart)
+    {
+        PluginMgr& pluginMgr = PluginMgr::getInstance();
+
+        welcomePlugin        = static_cast<IconTextPlugin*>(pluginMgr.install(WELCOME_PLUGIN_TYPE));
+
+        if (nullptr != welcomePlugin)
+        {
+            pluginMgr.setPluginAliasName(welcomePlugin, WELCOME_PLUGIN_ALIAS);
+        }
+    }
+    else
+    {
+        /* Try to find the welcome plugin by its alias. */
+        IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginByAlias(WELCOME_PLUGIN_ALIAS);
+
+        if (nullptr != plugin)
+        {
+            welcomePlugin = static_cast<IconTextPlugin*>(plugin);
+        }
+    }
+
+    if (nullptr != welcomePlugin)
     {
         FileMgrService::FileId iconFileId = FileMgrService::getInstance().getFileIdByName("smiley");
 
         if (FileMgrService::FILE_ID_INVALID != iconFileId)
         {
-            (void)concreteWelcomePlugin->loadIcon(iconFileId, true);
+            (void)welcomePlugin->loadIcon(iconFileId, true);
         }
 
-        concreteWelcomePlugin->setText("{hc}Hello World!", true);
-        concreteWelcomePlugin->enable();
+        welcomePlugin->setText("{hc}Hello World!", true);
+        welcomePlugin->enable();
     }
 }
 

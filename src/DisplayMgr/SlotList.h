@@ -173,6 +173,15 @@ public:
     const IPluginMaintenance* getPlugin(uint8_t slotId) const;
 
     /**
+     * Get the slot id by plugin alias name.
+     *
+     * @param[in] alias The plugin alias name which to search for.
+     *
+     * @return If plugin slot is found, it will return its slot id otherwise SLOT_ID_INVALID.
+     */
+    uint8_t getSlotIdByPluginAlias(const String& alias) const;
+
+    /**
      * Set plugin to slot.
      *
      * If slot is locked, it will fail.

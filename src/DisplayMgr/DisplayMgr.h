@@ -242,6 +242,15 @@ public:
     IPluginMaintenance* getPluginInSlot(uint8_t slotId);
 
     /**
+     * Get plugin by alias name.
+     *
+     * @param[in] alias    Plugin alias name.
+     *
+     * @return Plugin which is installed with the given alias.
+     */
+    IPluginMaintenance* getPluginByAlias(const String& alias);
+
+    /**
      * Get slot configuration.
      *
      * @param[in] slotId    Slot id, where to get configuration.
