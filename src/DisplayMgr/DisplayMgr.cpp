@@ -501,6 +501,15 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
     return plugin;
 }
 
+IPluginMaintenance* DisplayMgr::getPluginByAlias(const String& alias)
+{
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+    uint8_t                    slotId = m_slotList.getSlotIdByPluginAlias(alias);
+    IPluginMaintenance*        plugin = m_slotList.getPlugin(slotId);
+
+    return plugin;
+}
+
 bool DisplayMgr::getSlotConfig(uint8_t slotId, SlotConfig& config) const
 {
     bool                       isSuccessful = false;

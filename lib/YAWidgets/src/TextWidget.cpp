@@ -296,10 +296,12 @@ bool TextWidget::getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
 {
     bool status = false;
 
-    if (false == m_prepareNewText)
+    if ((false == m_prepareNewText) &&
+        (false == m_updateText) &&
+        (FADE_STATE_OUT != m_fadeState))
     {
-        isScrollingEnabled = m_scrollCtrlNew.isEnabled();
-        scrollingCnt       = m_scrollCtrlNew.getScrollingCount();
+        isScrollingEnabled = m_scrollCtrl.isEnabled();
+        scrollingCnt       = m_scrollCtrl.getScrollingCount();
         status             = true;
     }
 

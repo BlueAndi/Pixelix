@@ -159,6 +159,36 @@ const IPluginMaintenance* SlotList::getPlugin(uint8_t slotId) const
     return plugin;
 }
 
+uint8_t SlotList::getSlotIdByPluginAlias(const String& alias) const
+{
+    uint8_t slotId = SLOT_ID_INVALID;
+
+    if (nullptr != m_slots)
+    {
+        slotId = 0U;
+
+        while (m_maxSlots > slotId)
+        {
+            if (false == m_slots[slotId].isEmpty())
+            {
+                if (alias == m_slots[slotId].getPlugin()->getAlias())
+                {
+                    break;
+                }
+            }
+
+            ++slotId;
+        }
+
+        if (m_maxSlots <= slotId)
+        {
+            slotId = SLOT_ID_INVALID;
+        }
+    }
+
+    return slotId;
+}
+
 bool SlotList::setPlugin(uint8_t slotId, IPluginMaintenance* plugin)
 {
     bool isSuccessful = false;

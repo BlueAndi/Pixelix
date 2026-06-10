@@ -88,14 +88,32 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
 {
     if (nullptr != m_plugin)
     {
-        uint8_t slotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_plugin->getUID());
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
 
         /* Important: Call first show() to enable plugin. Otherwise the slot activation request will fail. */
         m_plugin->show(msg, duration, max);
 
-        if (false == DisplayMgr::getInstance().activateSlot(slotId))
+        if (false == displayMgr.activateSlot(slotId))
         {
-            LOG_WARNING("System message suppressed.");
+            bool isRecovered = false;
+
+            if (SlotList::SLOT_ID_INVALID != displayMgr.getStickySlot())
+            {
+                displayMgr.clearSticky();
+            }
+
+            displayMgr.enableSlot(slotId);
+            isRecovered = displayMgr.activateSlot(slotId);
+
+            if (false == isRecovered)
+            {
+                LOG_WARNING("System message suppressed.");
+            }
+            else
+            {
+                LOG_WARNING("System message activation recovered.");
+            }
         }
     }
 }
