@@ -93,6 +93,7 @@ struct HtmlPageRoute
 
 static String tmplPageProcessor(const String& var);
 static void   htmlPage(AsyncWebServerRequest* request);
+static bool   isNotSourceMapRequest(AsyncWebServerRequest* request);
 
 namespace tmpl
 {
@@ -254,7 +255,8 @@ void Pages::init(AsyncWebServer& srv)
         const char* route = gStaticRoutesWithCache[idx];
 
         (void)srv.serveStatic(route, FILESYSTEM, route, "max-age=3600")
-            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str())
+            .setFilter(isNotSourceMapRequest);
 
         ++idx;
     }
@@ -380,6 +382,35 @@ static void htmlPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, request->url(), "text/html", false, tmplPageProcessor);
+}
+
+/**
+ * Check whether the request is not for a source map file.
+ *
+ * The source map files are used for debugging and do not contain any sensitive information.
+ * They are not needed for the normal operation of the web interface and can be excluded from
+ * caching to save memory and improve performance.
+ *
+ * @param[in] request   HTTP request
+ *
+ * @return true if request is not a source map request.
+ */
+static bool isNotSourceMapRequest(AsyncWebServerRequest* request)
+{
+    bool result = true;
+
+    if (nullptr != request)
+    {
+        const String& url = request->url();
+
+        if ((true == url.endsWith(".map")) ||
+            (true == url.endsWith(".map.gz")))
+        {
+            result = false;
+        }
+    }
+
+    return result;
 }
 
 /**
