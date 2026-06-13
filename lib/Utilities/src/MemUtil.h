@@ -66,30 +66,38 @@ namespace MemUtil
 /**
  * Get total heap size which is available for malloc/new operation.
  *
+ * @param[in] capabilities    Memory capabilities used for heap operations. Default is 0, which means internal and default memory.
+ *
  * @return Heap size in byte.
  */
-extern size_t getTotalHeapSize();
+extern size_t getTotalHeapSize(uint32_t capabilities = 0U);
 
 /**
  * Get heap size which is available for malloc/new operation.
  *
+ * @param[in] capabilities    Memory capabilities used for heap operations. Default is 0, which means internal and default memory.
+ *
  * @return Heap size in byte.
  */
-extern size_t getFreeHeapSize();
+extern size_t getFreeHeapSize(uint32_t capabilities = 0U);
 
 /**
  * Get the largest free block of memory able to be allocated.
  *
+ * @param[in] capabilities    Memory capabilities used for heap operations. Default is 0, which means internal and default memory.
+ *
  * @return Size of the largest free block in byte.
  */
-extern size_t getLargestFreeBlockSize();
+extern size_t getLargestFreeBlockSize(uint32_t capabilities = 0U);
 
 /**
  * Get the minimum free heap size since boot.
  *
- * @return size_t
+ * @param[in] capabilities    Memory capabilities used for heap operations. Default is 0, which means internal and default memory.
+ *
+ * @return Size of the minimum free heap since boot in byte.
  */
-extern size_t getMinFreeHeapSize();
+extern size_t getMinFreeHeapSize(uint32_t capabilities = 0U);
 
 /**
  * Check if PSRAM is available.
