@@ -639,22 +639,13 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     String nxt                       = nextEstimate["prdctdn"].as<String>();
     // String thd                       = thirdEstimate["prdctdn"].as<String>();
 
+    m_routeInfoText                  = "";
+
     if ((des != "null") && (des != "") && (true == m_dest))
     {
-        m_routeInfoText  = COLOR_DISPLAY;
-        m_routeInfoText += rte;
+        m_routeInfoText += COLOR_DISPLAY;
         m_routeInfoText += " to ";
         m_routeInfoText += des;
-    }
-    else if ((rte == "null") || (rte == ""))
-    {
-        m_routeInfoText  = COLOR_DELAY;
-        m_routeInfoText += m_rte;
-    }
-    else
-    {
-        m_routeInfoText  = COLOR_DISPLAY;
-        m_routeInfoText += rte;
     }
 
     if ((true == m_orig) && (stpnm != "") && (stpnm != "null"))
@@ -710,6 +701,15 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
 
     LOG_DEBUG("Time prediction to print %s", m_arrivalsInfotext.c_str());
     LOG_DEBUG("Route number received %s", m_routeInfoText.c_str());
+
+    if ((rte == "null") || (rte == ""))
+    {
+        m_view.setRouteNumberText(COLOR_DELAY + m_rte);
+    }
+    else
+    {
+        m_view.setRouteNumberText(COLOR_DISPLAY + rte);
+    }
 
     m_view.setRouteInfoText(m_routeInfoText);
     m_view.setArrivalsInfoText(m_arrivalsInfotext);

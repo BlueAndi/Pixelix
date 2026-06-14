@@ -125,29 +125,47 @@ public:
     void update(YAGfx& gfx) override;
 
     /**
+     * Set the route number text
+     *
+     * @param[in] text  Text to display
+     */
+    void setRouteNumberText(const String& text) override;
+
+    /**
      * Set the route info text
-     * 
+     *
      * @param[in] text  Text to display
      */
     void setRouteInfoText(const String& text) override;
 
     /**
      * Set the arrivals info text
-     * 
+     *
      * @param[in] text  Text to display
      */
     void setArrivalsInfoText(const String& text) override;
 
 protected:
 
-    Fonts::FontType       m_fontType;                    /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget            m_routeWidget;                 /**< Route information widget */
-    TextWidget            m_arrivalsWidget;              /**< Arrivals information widget */
+    Fonts::FontType m_fontType;        /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget      m_routeWidget;     /**< Route information widget */
+    TextWidget      m_arrivalsWidget;  /**< Arrivals information widget */
+    String          m_routeNumberText; /**< Route number text to display */
+    String          m_routeInfoText;   /**< Route degails text (stop name, destination) */
 
 private:
 
     ChicagoBusTrackerView32x8(const ChicagoBusTrackerView32x8& other);
     ChicagoBusTrackerView32x8& operator=(const ChicagoBusTrackerView32x8& other);
+
+    /**
+     * 32x8 combines route number and route info into a single routeWidget
+     *
+     */
+    void updateRouteWidgets()
+    {
+        m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
+    }
 };
 
 /******************************************************************************

@@ -137,13 +137,25 @@ public:
     }
 
     /**
+     * Set route number text (formatted).
+     *
+     * @param[in] formatText    Formatted text to show.
+     */
+    void setRouteNumberText(const String& formatText) override
+    {
+        m_routeNumberText = formatText;
+        updateRouteWidgets();
+    }
+
+    /**
      * Set route text (formatted).
      *
      * @param[in] formatText    Formatted text to show.
      */
     void setRouteInfoText(const String& formatText) override
     {
-        m_routeWidget.setFormatStr(formatText);
+        m_routeInfoText = formatText;
+        updateRouteWidgets();
     }
 
     /**
@@ -200,14 +212,26 @@ protected:
      */
     static const int16_t ARR_SECTION_Y       = 0;
 
-    Fonts::FontType      m_fontType;       /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget           m_routeWidget;    /**< Route information widget */
-    TextWidget           m_arrivalsWidget; /**< Arrivals information widget */
+    Fonts::FontType      m_fontType;        /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget           m_routeWidget;     /**< Route information widget */
+    TextWidget           m_arrivalsWidget;  /**< Arrivals information widget */
+    String               m_routeNumberText; /**< Route number text (formatted) */
+    String               m_routeInfoText;   /**< Route info text (stop name, destination) */
 
 private:
 
     ChicagoBusTrackerViewGeneric(const ChicagoBusTrackerViewGeneric& other);
     ChicagoBusTrackerViewGeneric& operator=(const ChicagoBusTrackerViewGeneric& other);
+
+    /**
+     * 32x8 has one route widget; bigger displays separate route number and route info.
+     * This method is where display-size-specific logic goes to update all applicable widgets.
+     *
+     */
+    void updateRouteWidgets()
+    {
+        m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
+    }
 };
 
 /******************************************************************************

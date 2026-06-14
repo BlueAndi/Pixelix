@@ -121,7 +121,9 @@ ChicagoBusTrackerView32x8::ChicagoBusTrackerView32x8() :
     IChicagoBusTrackerView(),
     m_fontType(Fonts::FONT_TYPE_DEFAULT),
     m_routeWidget(RTE_SECTION_WIDTH, RTE_SECTION_HEIGHT, RTE_SECTION_X, RTE_SECTION_Y),
-    m_arrivalsWidget(ARR_SECTION_WIDTH, ARR_SECTION_HEIGHT, ARR_SECTION_X, ARR_SECTION_Y)
+    m_arrivalsWidget(ARR_SECTION_WIDTH, ARR_SECTION_HEIGHT, ARR_SECTION_X, ARR_SECTION_Y),
+    m_routeNumberText(""),
+    m_routeInfoText("")
 {
     m_routeWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     m_routeWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_LEFT);
@@ -137,9 +139,16 @@ void ChicagoBusTrackerView32x8::update(YAGfx& gfx)
     m_arrivalsWidget.update(gfx);
 }
 
+void ChicagoBusTrackerView32x8::setRouteNumberText(const String& text)
+{
+    m_routeNumberText = text;
+    updateRouteWidgets();
+}
+
 void ChicagoBusTrackerView32x8::setRouteInfoText(const String& text)
 {
-    m_routeWidget.setFormatStr(text);
+    m_routeInfoText = text;
+    updateRouteWidgets();
 }
 
 void ChicagoBusTrackerView32x8::setArrivalsInfoText(const String& text)
