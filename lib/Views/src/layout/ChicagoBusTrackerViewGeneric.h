@@ -157,6 +157,7 @@ public:
     }
 
 protected:
+
     /**
      * Route Info section width in pixels.
      */
@@ -199,9 +200,9 @@ protected:
      */
     static const int16_t ARR_SECTION_Y       = 0;
 
-    Fonts::FontType       m_fontType;                    /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget            m_routeWidget;                 /**< Route information widget */
-    TextWidget            m_arrivalsWidget;              /**< Arrivals information widget */
+    Fonts::FontType      m_fontType;       /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget           m_routeWidget;    /**< Route information widget */
+    TextWidget           m_arrivalsWidget; /**< Arrivals information widget */
 
 private:
 

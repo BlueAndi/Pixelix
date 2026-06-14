@@ -197,7 +197,7 @@ String RestApiTopicHandler::getUri(const String& entityId, const String& topic) 
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE     = 10240U;
+    const size_t        JSON_DOC_SIZE     = 9216U;
     const size_t        JSON_PAR_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj        = jsonDoc.createNestedObject("data");

@@ -135,8 +135,7 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 1024U;
-
+        const size_t        JSON_DOC_SIZE = 256U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
         JsonObject          jsonCfg    = jsonDoc.to<JsonObject>();
