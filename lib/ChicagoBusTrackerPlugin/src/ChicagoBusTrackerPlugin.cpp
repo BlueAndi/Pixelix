@@ -520,7 +520,8 @@ bool ChicagoBusTrackerPlugin::startHttpRequest()
         (false == m_stpid.isEmpty()) &&
         (false == m_dir.isEmpty()))
     {
-        String url       = CHICAGO_BUS_BASE_URI;
+        String url = CHICAGO_BUS_BASE_URI;
+        url.reserve(148U);
 
         /* Documentation:
          * https://www.transitchicago.com/developers/bustracker/
@@ -561,28 +562,28 @@ bool ChicagoBusTrackerPlugin::preProcessAsyncWebResponse(const char* payload, si
         "bustime-response": {
             "prd": [
                 {
-                "tmstmp": "20250421 16:04",
-                "typ": "A",
-                "stpnm": "Madison & Jefferson",
-                "stpid": "456",
-                "vid": "8184",
-                "dstp": 686,
-                "rt": "20",
-                "rtdd": "20",
-                "rtdir": "Westbound",
-                "des": "Austin",
-                "prdtm": "20250421 16:06",
-                "tablockid": "20 -803",
-                "tatripid": "1040713",
-                "origtatripno": "262522629",
-                "dly": false,
-                "dyn": 0,
-                "prdctdn": "DUE",
-                "zone": "",
-                "psgld": "",
-                "stst": 57120,
-                "stsd": "2025-04-21",
-                "flagstop": 0
+                    "tmstmp": "20250421 16:04",
+                    "typ": "A",
+                    "stpnm": "Madison & Jefferson",
+                    "stpid": "456",
+                    "vid": "8184",
+                    "dstp": 686,
+                    "rt": "20",
+                    "rtdd": "20",
+                    "rtdir": "Westbound",
+                    "des": "Austin",
+                    "prdtm": "20250421 16:06",
+                    "tablockid": "20 -803",
+                    "tatripid": "1040713",
+                    "origtatripno": "262522629",
+                    "dly": false,
+                    "dyn": 0,
+                    "prdctdn": "DUE",
+                    "zone": "",
+                    "psgld": "",
+                    "stst": 57120,
+                    "stsd": "2025-04-21",
+                    "flagstop": 0
                 },
                 ...
             ]
@@ -719,13 +720,16 @@ void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes) const
     MutexGuard<MutexRecursive> guard(m_mutex);
     HTTPClient                 http;
 
-    apiKey      = getApiKey();
+    apiKey = getApiKey();
 
-    String url  = CHICAGO_BUS_BASE_URI;
-    url        += "/getroutes?";
-    url        += "key=";
-    url        += apiKey;
-    url        += "&format=json";
+    String url;
+    url.reserve(98U);
+
+    url += CHICAGO_BUS_BASE_URI;
+    url += "/getroutes?";
+    url += "key=";
+    url += apiKey;
+    url += "&format=json";
 
     http.begin(url);
     http.useHTTP10();
@@ -781,15 +785,18 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs) const
 
     HTTPClient http;
 
-    apiKey      = getApiKey();
+    apiKey = getApiKey();
 
-    String url  = CHICAGO_BUS_BASE_URI;
-    url        += "/getdirections?";
-    url        += "key=";
-    url        += apiKey;
-    url        += "&rt=";
-    url        += rt;
-    url        += "&format=json";
+    String url;
+    url.reserve(110U);
+
+    url += CHICAGO_BUS_BASE_URI;
+    url += "/getdirections?";
+    url += "key=";
+    url += apiKey;
+    url += "&rt=";
+    url += rt;
+    url += "&format=json";
 
     http.begin(url);
     http.useHTTP10();
@@ -844,17 +851,19 @@ void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops) const
 
     HTTPClient http;
 
-    apiKey      = getApiKey();
+    apiKey = getApiKey();
 
-    String url  = CHICAGO_BUS_BASE_URI;
-    url        += "/getstops?";
-    url        += "key=";
-    url        += apiKey;
-    url        += "&rt=";
-    url        += rt;
-    url        += "&dir=";
-    url        += dir;
-    url        += "&format=json";
+    String url;
+    url.reserve(120U);
+    url += CHICAGO_BUS_BASE_URI;
+    url += "/getstops?";
+    url += "key=";
+    url += apiKey;
+    url += "&rt=";
+    url += rt;
+    url += "&dir=";
+    url += dir;
+    url += "&format=json";
 
     http.begin(url);
     http.useHTTP10();
