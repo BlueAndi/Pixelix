@@ -683,8 +683,33 @@ void TextWidget::getText(String& text, const TWAbstractSyntaxTree& ast) const
 {
     uint32_t length = ast.length();
     uint32_t idx;
+    size_t   textLength = 1U; /* String termination */
 
+    /* Determine the single line length by walking through the AST. */
+    for (idx = 0U; idx < length; ++idx)
+    {
+        const TWToken& token = ast[idx];
+
+        switch (token.getType())
+        {
+        case TWToken::TYPE_KEYWORD:
+            /* Skip keyword token. */
+            break;
+
+        case TWToken::TYPE_TEXT:
+            /* fallthrough */
+        case TWToken::TYPE_LINE_FEED:
+            textLength += token.getStr().length();
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    /* Clear and reserve space for the single line string to avoid multiple reallocations. */
     text.clear();
+    text.reserve(textLength);
 
     for (idx = 0U; idx < length; ++idx)
     {
@@ -710,12 +735,44 @@ void TextWidget::getText(String& text, const TWAbstractSyntaxTree& ast) const
 
 uint32_t TextWidget::getSingleLine(String& singleLine, const TWAbstractSyntaxTree& ast, uint32_t startIdx)
 {
-    uint32_t length     = ast.length();
-    uint32_t idx        = startIdx;
-    bool     isFinished = false;
+    uint32_t length           = ast.length();
+    uint32_t idx              = startIdx;
+    bool     isFinished       = false;
+    size_t   singleLineLength = 1U; /* String termination */
 
+    /* Determine the single line length by walking through the AST. */
+    while ((length > idx) && (false == isFinished))
+    {
+        const TWToken& token = ast[idx];
+
+        switch (token.getType())
+        {
+        case TWToken::TYPE_KEYWORD:
+            /* Skip keyword token. */
+            break;
+
+        case TWToken::TYPE_TEXT:
+            singleLineLength += token.getStr().length();
+            break;
+
+        case TWToken::TYPE_LINE_FEED:
+            isFinished = true;
+            break;
+
+        default:
+            break;
+        }
+
+        ++idx;
+    }
+
+    /* Clear and reserve space for the single line string to avoid multiple reallocations. */
     singleLine.clear();
+    singleLine.reserve(singleLineLength);
 
+    /* Build single line string. */
+    idx        = startIdx;
+    isFinished = false;
     while ((length > idx) && (false == isFinished))
     {
         const TWToken& token = ast[idx];

@@ -430,6 +430,9 @@ static String sanitizeHashString(const uint8_t* hash, size_t hashLen)
 
     if ((nullptr != hash) && (0U < hashLen))
     {
+        /* Reserve capacity upfront to avoid repeated heap reallocations inside the loop. */
+        (void)hashString.reserve(hashLen);
+
         size_t idx = 0U;
 
         while (hashLen > idx)

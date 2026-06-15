@@ -483,6 +483,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
     }
     else
     {
+        const size_t        BUFFER_SIZE = 128U;
         DynamicJsonDocument jsonDocValues(JSON_DOC_SIZE);
         JsonArray           jsonValuesArray = jsonDocValues.to<JsonArray>();
         size_t              index           = 0U;
@@ -503,6 +504,12 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
             }
         }
 
+        /* Reserve capacity upfront to avoid repeated heap reallocations inside the loop. */
+        if (0U < valueCount)
+        {
+            (void)outputStr.reserve(valueCount * (BUFFER_SIZE + m_delimiter.length()));
+        }
+
         for (index = 0U; index < valueCount; ++index)
         {
             JsonVariantConst jsonValue = jsonValuesArray[index];
@@ -516,9 +523,8 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
             if ((true == jsonValue.is<float>()) &&
                 (false == Util::isFormatSpecifierInStr(m_format, 's'))) /* Prevent mistake which may cause a LoadProhibited core panic by snprintf. */
             {
-                const size_t BUFFER_SIZE = 128U;
-                char         buffer[BUFFER_SIZE];
-                float        value = jsonValue.as<float>();
+                char  buffer[BUFFER_SIZE];
+                float value = jsonValue.as<float>();
 
                 /* Is it not a number? */
                 if (true == std::isnan(value))
@@ -539,9 +545,8 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
             else if ((true == jsonValue.is<String>()) &&
                      (true == Util::isFormatSpecifierInStr(m_format, 'f')))
             {
-                const size_t BUFFER_SIZE = 128U;
-                char         buffer[BUFFER_SIZE];
-                float        value = jsonValue.as<String>().toFloat();
+                char  buffer[BUFFER_SIZE];
+                float value = jsonValue.as<String>().toFloat();
 
                 /* Is it not a number? */
                 if (true == std::isnan(value))
@@ -561,8 +566,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
             /* Is it a string? */
             else if (true == jsonValue.is<String>())
             {
-                const size_t BUFFER_SIZE = 128U;
-                char         buffer[BUFFER_SIZE];
+                char buffer[BUFFER_SIZE];
 
                 (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<const char*>());
 
