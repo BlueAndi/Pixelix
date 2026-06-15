@@ -68,6 +68,9 @@ bool TWTokenizer::parse(TWAbstractSyntaxTree& ast, const String& formattedText)
     size_t beginIdx            = 0U;
     String result;
 
+    /* Reserve space for the result string to avoid multiple reallocations. */
+    (void)result.reserve(formattedText.length());
+
     /* Clear the AST first to ensure there is no old stuff inside. */
     ast.clear();
 
