@@ -261,6 +261,20 @@ public:
     }
 
     /**
+     * Reserve memory for the string.
+     *
+     * @param[in] size Number of bytes to reserve.
+     *
+     * @return true on success, otherwise false.
+     */
+    bool reserve(unsigned int size)
+    {
+        m_stdStr.reserve(size);
+
+        return (m_stdStr.capacity() >= size) ? true : false;
+    }
+
+    /**
      * Return the substring from index to the end.
      *
      * @param[in] index Index.
