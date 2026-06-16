@@ -1074,18 +1074,25 @@ bool GifImgPlayer::parseImageDescriptor()
 
 void GifImgPlayer::applyDisposalMethod()
 {
-    switch (m_disposalMethod)
+    /* Disposal method according to GIF 89a specification:
+     * - DISPOSAL_METHOD_NO_ACTION
+     *     - No disposal specified. The decoder is not required to take any action.
+     * - DISPOSAL_METHOD_NO_DISPOSE
+     *     - GIF 89a specification: Do not dispose. The graphic is to be left in place.
+     * - DISPOSAL_METHOD_RESTORE_TO_BACKGROUND
+     *     - GIF 89a specification: Restore to background color. The area used by the graphic must be restored to the background color.
+     * - DISPOSAL_METHOD_RESTORE_TO_PREVIOUS
+     *     - GIF 89a specification: Restore to previous. The decoder is required to restore the area overwritten by the graphic with what was there prior to rendering the graphic.
+     *     - GIF 89a specification: The mode Restore To Previous is intended to be used in small sections of the graphic; the use of this mode imposes
+     *       severe demands on the decoder to store the section of the graphic that needs to be saved. For this reason, this mode should be used
+     *       sparingly. This mode is not intended to save an entire graphic or large areas of a graphic; when this is the case, the encoder should
+     *       make every attempt to make the sections of the graphic to be restored be separate graphics in the data stream. In the case where
+     *       a decoder is not capable of saving an area of a graphic marked as Restore To Previous, it is recommended that a decoder restore to
+     *       the background color.
+     */
+    if ((DISPOSAL_METHOD_RESTORE_TO_BACKGROUND == m_disposalMethod) ||
+        (DISPOSAL_METHOD_RESTORE_TO_PREVIOUS == m_disposalMethod))
     {
-    /* GIF 89a specification: No disposal specified. The decoder is not required to take any action. */
-    case DISPOSAL_METHOD_NO_ACTION:
-        break;
-
-    /* GIF 89a specification: Do not dispose. The graphic is to be left in place. */
-    case DISPOSAL_METHOD_NO_DISPOSE:
-        break;
-
-    /* GIF 89a specification: Restore to background color. The area used by the graphic must be restored to the background color. */
-    case DISPOSAL_METHOD_RESTORE_TO_BACKGROUND:
         /* If no global color table is available, the background color index is invalid and the background will be treated as transparent. */
         if (nullptr == m_globalColorTable)
         {
@@ -1104,28 +1111,6 @@ void GifImgPlayer::applyDisposalMethod()
 
             m_canvas.fillScreen(bgColor);
         }
-        break;
-
-    /* GIF 89a specification: Restore to previous. The decoder is required to restore the area overwritten by the graphic with what was there prior to rendering the graphic. */
-    case DISPOSAL_METHOD_RESTORE_TO_PREVIOUS: {
-        PaletteColor* paletteColor = &m_globalColorTable[m_bgColorIndex];
-        Color         bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
-
-        /* GIF 89a specification:
-         * The mode Restore To Previous is intended to be used in small sections of the graphic; the use of this mode imposes
-         * severe demands on the decoder to store the section of the graphic that needs to be saved. For this reason, this mode should be used
-         * sparingly.  This mode is not intended to save an entire graphic or large areas of a graphic; when this is the case, the encoder should
-         * make every attempt to make the sections of the graphic to be restored be separate graphics in the data stream. In the case where
-         * a decoder is not capable of saving an area of a graphic marked as Restore To Previous, it is recommended that a decoder restore to
-         * the background color.
-         */
-        m_canvas.fillScreen(bgColor);
-    }
-    break;
-
-    default:
-        /* Not defined by GIF 89a specification. */
-        break;
     }
 }
 
