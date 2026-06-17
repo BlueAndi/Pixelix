@@ -47,7 +47,7 @@
 #include "Layouts.h"
 #include "./layout/ChicagoBusTrackerViewGeneric.h"
 #include "./layout/ChicagoBusTrackerView32x8.h"
-// #include "./layout/ChicagoBusTrackerView32x16.h"
+#include "./layout/ChicagoBusTrackerView32x16.h"
 // #include "./layout/ChicagoBusTrackerView64x64.h"
 
 /******************************************************************************
@@ -66,7 +66,7 @@
 template < Layout option >
 class ChicagoBusTrackerView : public ChicagoBusTrackerViewGeneric
 {
-    public:
+public:
 
     /**
      * Destroys the view.
@@ -91,16 +91,16 @@ public:
 /**
  * View for Chicago Bus Tracker for 32x16 display.
  */
-// template <>
-// class ChicagoBusTrackerView<LAYOUT_32X16> : public ChicagoBusTrackerView32x16
-// {
-// public:
+template <>
+class ChicagoBusTrackerView<LAYOUT_32X16> : public ChicagoBusTrackerView32x16
+{
+public:
 
-//     /**
-//      * Destroys the view.
-//      */
-//     virtual ~ChicagoBusTrackerView() = default;
-// };
+    /**
+     * Destroys the view.
+     */
+    virtual ~ChicagoBusTrackerView() = default;
+};
 
 /**
  * View for Chicago Bus Tracker for 64x64 display.
