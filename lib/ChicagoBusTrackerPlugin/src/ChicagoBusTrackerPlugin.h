@@ -78,8 +78,7 @@ public:
     ChicagoBusTrackerPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
         m_view(),
-        m_arrivalsInfotext(" NO DATA "),
-        m_routeInfoText(" - "),
+        m_routeInfoText(""),
         m_rte("55"),
         m_dir("Eastbound"),
         m_stpid("10507"),
@@ -370,24 +369,20 @@ private:
      */
     static String                  apiKey;
 
-    _ChicagoBusTrackerPlugin::View m_view;             /**< View with all widgets. */
-    String                         m_arrivalsInfotext; /**< Bus arrivals info text */
-    String                         m_routeInfoText;    /**< Bus route display info text */
-    String                         m_displayColor;     /**< String format prefix for main color */
-    String                         m_delayColor;       /**< String format prefix for delayed status */
-    String                         m_dueColor;         /**< String format prefix for bus due status */
-    String                         m_rte;              /**< CTA Bus route ID (e.g. 81, 151, X49)*/
-    String                         m_dir;              /**< CTA-defined route direction (e.g. Southbound) */
-    String                         m_stpid;            /**< CTA-defined stop ID (numeric) */
-    bool                           m_orig;             /**< option to show origin (selected stop name) */
-    bool                           m_dest;             /**< option to show destination (end of line in chosen direction) */
-    bool                           m_two;              /**< option to show next 2 arrivals instead of just one */
-    SimpleTimer                    m_requestTimer;     /**< Timer used for cyclic request of new data. */
-    mutable MutexRecursive         m_mutex;            /**< Mutex to protect against concurrent access. */
-    const ISlotPlugin*             m_slotInterf;       /**< Slot interface */
-    bool                           m_hasTopicChanged;  /**< Has the topic content changed? */
-    uint32_t                       m_dynamicRestId;    /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
-    bool                           m_isAllowedToSend;  /**< Is allowed to send REST-Api request? */
+    _ChicagoBusTrackerPlugin::View m_view;            /**< View with all widgets. */
+    String                         m_routeInfoText;   /**< Bus route display info text */
+    String                         m_rte;             /**< CTA Bus route ID (e.g. 81, 151, X49)*/
+    String                         m_dir;             /**< CTA-defined route direction (e.g. Southbound) */
+    String                         m_stpid;           /**< CTA-defined stop ID (numeric) */
+    bool                           m_orig;            /**< option to show origin (selected stop name) */
+    bool                           m_dest;            /**< option to show destination (end of line in chosen direction) */
+    bool                           m_two;             /**< option to show next 2 arrivals instead of just one */
+    SimpleTimer                    m_requestTimer;    /**< Timer used for cyclic request of new data. */
+    mutable MutexRecursive         m_mutex;           /**< Mutex to protect against concurrent access. */
+    const ISlotPlugin*             m_slotInterf;      /**< Slot interface */
+    bool                           m_hasTopicChanged; /**< Has the topic content changed? */
+    uint32_t                       m_dynamicRestId;   /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
+    bool                           m_isAllowedToSend; /**< Is allowed to send REST-Api request? */
 
     /**
      * Get CTA Bus Tracker API key.

@@ -77,49 +77,63 @@ public:
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
-    virtual void init(uint16_t width, uint16_t height)   = 0;
+    virtual void init(uint16_t width, uint16_t height)    = 0;
 
     /**
      * Get font type.
      *
      * @return The font type the view uses.
      */
-    virtual Fonts::FontType getFontType() const          = 0;
+    virtual Fonts::FontType getFontType() const           = 0;
 
     /**
      * Set font type.
      *
      * @param[in] fontType  The font type which the view shall use.
      */
-    virtual void setFontType(Fonts::FontType fontType)   = 0;
+    virtual void setFontType(Fonts::FontType fontType)    = 0;
 
     /**
      * Update the underlying canvas.
      *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    virtual void update(YAGfx& gfx)                      = 0;
+    virtual void update(YAGfx& gfx)                       = 0;
 
     /**
      * Set the route number text
      *
      * @param[in] text Text to display
      */
-    virtual void setRouteNumberText(const String& text)  = 0;
+    virtual void setRouteNumberText(const String& text)   = 0;
 
     /**
      * Set text for the route information part
      *
      * @param[in] text  Text to display
      */
-    virtual void setRouteInfoText(const String& text)    = 0;
+    virtual void setRouteInfoText(const String& text)     = 0;
 
     /**
-     * Set text for the arrivals information part
+     * Set text for the first arrival information part
      *
      * @param[in] text  Text to display
      */
-    virtual void setArrivalsInfoText(const String& text) = 0;
+    virtual void setFirstArrivalText(const String& text)  = 0;
+
+    /**
+     * Set text for the second arrival information part
+     *
+     * @param[in] text  Text to display
+     */
+    virtual void setSecondArrivalText(const String& text) = 0;
+
+    /**
+     * Set text for the third arrival information part
+     *
+     * @param[in] text  Text to display
+     */
+    virtual void setThirdArrivalText(const String& text)  = 0;
 
 protected:
 

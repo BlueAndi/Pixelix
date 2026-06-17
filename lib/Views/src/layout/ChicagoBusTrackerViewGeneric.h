@@ -49,6 +49,7 @@
 #include <TextWidget.h>
 #include <Util.h>
 #include <FileSystem.h>
+#include <Logging.h>
 
 #include "../interface/IChicagoBusTrackerView.h"
 #include "ViewConfig.h"
@@ -76,7 +77,12 @@ public:
         IChicagoBusTrackerView(),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_routeWidget(RTE_SECTION_WIDTH, RTE_SECTION_HEIGHT, RTE_SECTION_X, RTE_SECTION_Y),
-        m_arrivalsWidget(ARR_SECTION_WIDTH, ARR_SECTION_HEIGHT, ARR_SECTION_X, ARR_SECTION_Y)
+        m_arrivalsWidget(ARR_SECTION_WIDTH, ARR_SECTION_HEIGHT, ARR_SECTION_X, ARR_SECTION_Y),
+        m_routeNumberText(" - "),
+        m_routeInfoText(""),
+        m_firstArrivalText(" NO DATA "),
+        m_secondArrivalText(""),
+        m_thirdArrivalText("")
     {
     }
 
@@ -144,7 +150,6 @@ public:
     void setRouteNumberText(const String& formatText) override
     {
         m_routeNumberText = formatText;
-        updateRouteWidgets();
     }
 
     /**
@@ -155,17 +160,69 @@ public:
     void setRouteInfoText(const String& formatText) override
     {
         m_routeInfoText = formatText;
-        updateRouteWidgets();
     }
 
     /**
-     * Set arrivals text (formatted).
+     * Set first arrival text (formatted).
      *
      * @param[in] formatText    Formatted text to show.
      */
-    void setArrivalsInfoText(const String& formatText) override
+    void setFirstArrivalText(const String& formatText) override
     {
-        m_arrivalsWidget.setFormatStr(formatText);
+        m_firstArrivalText = formatText;
+    }
+
+    /**
+     * Set second arrival text (formatted).
+     *
+     * @param[in] formatText    Formatted text to show.
+     */
+    void setSecondArrivalText(const String& formatText) override
+    {
+        m_secondArrivalText = formatText;
+    }
+
+    /**
+     * Set third arrival text (formatted).
+     *
+     * @param[in] formatText    Formatted text to show.
+     */
+    void setThirdArrivalText(const String& formatText) override
+    {
+        m_firstArrivalText = formatText;
+    }
+
+    /**
+     * 32x8 has one route widget; bigger displays separate route number and route info.
+     * This method is where display-size-specific logic goes to update all applicable widgets.
+     *
+     */
+    void updateWidgets()
+    {
+        String arrivalsInfo = "";
+
+        m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
+
+        arrivalsInfo += m_firstArrivalText;
+
+        if ((m_secondArrivalText != "null") && (m_secondArrivalText != ""))
+        {
+            arrivalsInfo += "{#ff5500}";
+            arrivalsInfo += " / ";
+            arrivalsInfo += m_secondArrivalText;
+        }
+
+        if ((m_thirdArrivalText != "null") && (m_thirdArrivalText != ""))
+        {
+            arrivalsInfo += "{#ff5500}";
+            arrivalsInfo += " / ";
+            arrivalsInfo += m_thirdArrivalText;
+        }
+
+        m_arrivalsWidget.setFormatStr(arrivalsInfo);
+
+        LOG_DEBUG("Chicago Bus Route: " + m_routeWidget.getFormatStr());
+        LOG_DEBUG("Chicago Bus Arrival: " + m_arrivalsWidget.getFormatStr());
     }
 
 protected:
@@ -212,26 +269,19 @@ protected:
      */
     static const int16_t ARR_SECTION_Y       = 0;
 
-    Fonts::FontType      m_fontType;        /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget           m_routeWidget;     /**< Route information widget */
-    TextWidget           m_arrivalsWidget;  /**< Arrivals information widget */
-    String               m_routeNumberText; /**< Route number text (formatted) */
-    String               m_routeInfoText;   /**< Route info text (stop name, destination) */
+    Fonts::FontType      m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget           m_routeWidget;       /**< Route information widget */
+    TextWidget           m_arrivalsWidget;    /**< Arrivals information widget */
+    String               m_routeNumberText;   /**< Route number text (formatted) */
+    String               m_routeInfoText;     /**< Route info text (stop name, destination) */
+    String               m_firstArrivalText;  /**< First arrival text info. */
+    String               m_secondArrivalText; /**< Seccond arrival text info. */
+    String               m_thirdArrivalText;  /**< Third arrival text info. */
 
 private:
 
     ChicagoBusTrackerViewGeneric(const ChicagoBusTrackerViewGeneric& other);
     ChicagoBusTrackerViewGeneric& operator=(const ChicagoBusTrackerViewGeneric& other);
-
-    /**
-     * 32x8 has one route widget; bigger displays separate route number and route info.
-     * This method is where display-size-specific logic goes to update all applicable widgets.
-     *
-     */
-    void updateRouteWidgets()
-    {
-        m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
-    }
 };
 
 /******************************************************************************

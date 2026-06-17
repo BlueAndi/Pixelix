@@ -49,6 +49,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <Util.h>
+#include <Logging.h>
 
 #include "../interface/IChicagoBusTrackerView.h"
 #include "ViewConfig.h"
@@ -129,43 +130,94 @@ public:
      *
      * @param[in] text  Text to display
      */
-    void setRouteNumberText(const String& text) override;
+    void setRouteNumberText(const String& text) override
+    {
+        m_routeNumberText = text;
+    }
 
     /**
      * Set the route info text
      *
      * @param[in] text  Text to display
      */
-    void setRouteInfoText(const String& text) override;
+    void setRouteInfoText(const String& text) override
+    {
+        m_routeInfoText = text;
+    }
 
     /**
-     * Set the arrivals info text
+     * Set the first arrival info text
      *
      * @param[in] text  Text to display
      */
-    void setArrivalsInfoText(const String& text) override;
+    void setFirstArrivalText(const String& text) override
+    {
+        m_firstArrivalText = text;
+    }
+
+    /**
+     * Set the second arrival info text
+     *
+     * @param[in] text  Text to display
+     */
+    void setSecondArrivalText(const String& text) override
+    {
+        m_secondArrivalText = text;
+    }
+
+    /**
+     * Set the third arrival info text
+     *
+     * @param[in] text  Text to display
+     */
+    void setThirdArrivalText(const String& text) override
+    {
+        m_thirdArrivalText = text;
+    }
+
+    void updateWidgets()
+    {
+        String arrivalsInfo = "";
+
+        m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
+
+        arrivalsInfo += m_firstArrivalText;
+
+        if ((m_secondArrivalText != "null") && (m_secondArrivalText != ""))
+        {
+            arrivalsInfo += "{#ff5500}";
+            arrivalsInfo += " / ";
+            arrivalsInfo += m_secondArrivalText;
+        }
+
+        if ((m_thirdArrivalText != "null") && (m_thirdArrivalText != ""))
+        {
+            arrivalsInfo += "{#ff5500}";
+            arrivalsInfo += " / ";
+            arrivalsInfo += m_thirdArrivalText;
+        }
+
+        m_arrivalsWidget.setFormatStr(arrivalsInfo);
+
+        LOG_DEBUG("Chicago Bus Route: " + m_routeWidget.getFormatStr());
+        LOG_DEBUG("Chicago Bus Arrival: " + m_arrivalsWidget.getFormatStr());
+    }
 
 protected:
 
-    Fonts::FontType m_fontType;        /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget      m_routeWidget;     /**< Route information widget */
-    TextWidget      m_arrivalsWidget;  /**< Arrivals information widget */
-    String          m_routeNumberText; /**< Route number text to display */
-    String          m_routeInfoText;   /**< Route degails text (stop name, destination) */
+    Fonts::FontType m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget      m_routeWidget;       /**< Route information widget */
+    TextWidget      m_arrivalsWidget;    /**< Arrivals information widget */
+    String          m_routeNumberText;   /**< Route number text (formatted) */
+    String          m_routeInfoText;     /**< Route info text (stop name, destination) */
+    String          m_firstArrivalText;  /**< First arrival text info. */
+    String          m_secondArrivalText; /**< Seccond arrival text info. */
+    String          m_thirdArrivalText;  /**< Third arrival text info. */
 
 private:
 
     ChicagoBusTrackerView32x8(const ChicagoBusTrackerView32x8& other);
     ChicagoBusTrackerView32x8& operator=(const ChicagoBusTrackerView32x8& other);
-
-    /**
-     * 32x8 combines route number and route info into a single routeWidget
-     *
-     */
-    void updateRouteWidgets()
-    {
-        m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
-    }
 };
 
 /******************************************************************************

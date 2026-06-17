@@ -629,79 +629,22 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     JsonVariantConst response        = jsonDoc["bustime-response"]["prd"];
     JsonVariantConst currentEstimate = response[0];
     JsonVariantConst nextEstimate    = response[1];
-    // TODO: 32px-tall layout could fit 3 arrival times...
-    // JsonVariantConst thirdEstimate = response[2];
-    String rte                       = currentEstimate["rt"].as<String>();
-    String est                       = currentEstimate["prdctdn"].as<String>();
-    String dir                       = currentEstimate["rtdir"].as<String>();
-    String des                       = currentEstimate["des"].as<String>();
-    String stpnm                     = currentEstimate["stpnm"].as<String>();
-    String nxt                       = nextEstimate["prdctdn"].as<String>();
-    // String thd                       = thirdEstimate["prdctdn"].as<String>();
+    JsonVariantConst thirdEstimate   = response[2];
 
-    m_routeInfoText                  = "";
+    String           rte             = currentEstimate["rt"].as<String>();
+    String           first           = currentEstimate["prdctdn"].as<String>();
+    String           dir             = currentEstimate["rtdir"].as<String>();
+    String           dest            = currentEstimate["des"].as<String>();
+    String           stpnm           = currentEstimate["stpnm"].as<String>();
+    String           second          = nextEstimate["prdctdn"].as<String>();
+    String           third           = thirdEstimate["prdctdn"].as<String>();
 
-    if ((des != "null") && (des != "") && (true == m_dest))
-    {
-        m_routeInfoText += COLOR_DISPLAY;
-        m_routeInfoText += " to ";
-        m_routeInfoText += des;
-    }
-
-    if ((true == m_orig) && (stpnm != "") && (stpnm != "null"))
-    {
-        m_routeInfoText += " from " + stpnm;
-    }
-
-    if (est == "DUE")
-    {
-        m_arrivalsInfotext  = COLOR_DUE;
-        m_arrivalsInfotext += est;
-    }
-    else if (est == "DLY")
-    {
-        if ((nxt != "null") && (nxt != ""))
-        {
-            m_arrivalsInfotext  = COLOR_DELAY;
-            m_arrivalsInfotext += est;
-            m_arrivalsInfotext += COLOR_DISPLAY;
-            m_arrivalsInfotext += " / ";
-            m_arrivalsInfotext += nxt;
-            m_arrivalsInfotext += " min";
-        }
-        else
-        {
-            m_arrivalsInfotext  = COLOR_DELAY;
-            m_arrivalsInfotext += est;
-        }
-    }
-    else if ((est == "null") || (est == ""))
-    {
-        m_arrivalsInfotext  = COLOR_DELAY;
-        m_arrivalsInfotext += " NO DATA ";
-    }
-    else
-    {
-        m_arrivalsInfotext  = COLOR_DISPLAY;
-        m_arrivalsInfotext += est;
-        m_arrivalsInfotext += " min";
-    }
-
-    if ((true == m_two) && (nxt != "null") && (nxt != ""))
-    {
-        m_arrivalsInfotext += COLOR_DISPLAY;
-        m_arrivalsInfotext += " / ";
-        m_arrivalsInfotext +=
-            (nxt == "DLY"
-                    ? (COLOR_DELAY + nxt)
-                : nxt == "DUE"
-                    ? (COLOR_DUE + nxt)
-                    : nxt + " min");
-    }
-
-    LOG_DEBUG("Time prediction to print %s", m_arrivalsInfotext.c_str());
-    LOG_DEBUG("Route number received %s", m_routeInfoText.c_str());
-
+    /**
+     * Route Number:
+     * 32x8 concats with routeInfo and scrolls as needed;
+     * 32x16 and 64x64 keep it static in the top left
+     *
+     */
     if ((rte == "null") || (rte == ""))
     {
         m_view.setRouteNumberText(COLOR_DELAY + m_rte);
@@ -711,8 +654,80 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
         m_view.setRouteNumberText(COLOR_DISPLAY + rte);
     }
 
+    /**
+     * Route Info:
+     * if dest and orig are both false, this is empty.
+     * 32x8 concats with routeNumber and scrolls as needed.
+     * 32x16 will place this in the top right IF it is not empty.
+     * 64x64 will place this in the top right IF it is not empty.
+     *
+     */
+    m_routeInfoText = "";
+    
+    if ((dest != "null") && (dest != "") && (true == m_dest))
+    {
+        m_routeInfoText += COLOR_DISPLAY;
+        m_routeInfoText += " to ";
+        m_routeInfoText += dest;
+    }
+
+    if ((true == m_orig) && (stpnm != "") && (stpnm != "null"))
+    {
+        m_routeInfoText += COLOR_DISPLAY;
+        m_routeInfoText += " from " + stpnm;
+    }
+
     m_view.setRouteInfoText(m_routeInfoText);
-    m_view.setArrivalsInfoText(m_arrivalsInfotext);
+
+    /**
+     * Arrivals information:
+     * Up to 3 upcoming arrivals are fetched.
+     * 32x8 can display up to two, depending on m_two
+     * 32x16 can display up to two, depending on m_two
+     * 64x64 can display up to three, depending on m_two
+     *
+     */
+    if (first == "DUE")
+    {
+        m_view.setFirstArrivalText(COLOR_DUE + first);
+    }
+    else if (first == "DLY")
+    {
+        m_view.setFirstArrivalText(COLOR_DELAY + first);
+    }
+    else if ((first == "null") || (first == ""))
+    {
+        first = " NO DATA ";
+        m_view.setFirstArrivalText(COLOR_DELAY + first);
+    }
+    else
+    {
+        first += " min";
+        m_view.setFirstArrivalText(COLOR_DISPLAY + first);
+    }
+
+    if ((true == m_two) && (second != "null") && (second != ""))
+    {
+        if (second == "DLY")
+        {
+            m_view.setSecondArrivalText(COLOR_DELAY + second);
+        }
+        else if (second == "DUE")
+        {
+            m_view.setSecondArrivalText(COLOR_DUE + second);
+        }
+        else
+        {
+            second += " min";
+            m_view.setSecondArrivalText(COLOR_DISPLAY + second);
+        }
+    }
+    else
+    {
+        m_view.setSecondArrivalText("");
+    }
+
+    m_view.updateWidgets();
 }
 
 void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes) const
