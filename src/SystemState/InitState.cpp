@@ -54,6 +54,7 @@
 #include "WebConfig.h"
 #include "FileSystem.h"
 #include "JsonFile.h"
+#include <PsramJsonDocument.hpp>
 #include "Version.h"
 #include "Services.h"
 #include "Topics.h"
@@ -554,10 +555,10 @@ void InitState::welcome(bool isVeryFirstStart)
 
 bool InitState::isFsCompatible()
 {
-    bool                isCompatible = false;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    bool              isCompatible = false;
+    JsonFile          jsonFile(FILESYSTEM);
+    const size_t      JSON_DOC_SIZE = 512U;
+    PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
     {

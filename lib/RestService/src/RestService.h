@@ -175,7 +175,7 @@ private:
         Response() :
             restId(INVALID_REST_ID),
             isRsp(false),
-            jsonDocData(4096U)
+            jsonDocData(0U)
         {
         }
 

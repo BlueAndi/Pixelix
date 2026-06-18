@@ -41,6 +41,7 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <PsramJsonDocument.hpp>
 #include <Util.h>
 #include <SettingsService.h>
 #include <TopicHandlerService.h>
@@ -166,14 +167,14 @@ void PluginMgr::unregisterAllPluginTopics()
 
 bool PluginMgr::load()
 {
-    bool                isSuccessful = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE = 4096U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              fullConfigFileName  = Plugin::CONFIG_PATH;
+    bool              isSuccessful = true;
+    JsonFile          jsonFile(FILESYSTEM);
+    const size_t      JSON_DOC_SIZE = 4096U;
+    PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String            fullConfigFileName  = Plugin::CONFIG_PATH;
 
-    fullConfigFileName                     += "/";
-    fullConfigFileName                     += CONFIG_FILE_NAME;
+    fullConfigFileName                   += "/";
+    fullConfigFileName                   += CONFIG_FILE_NAME;
 
     if (false == jsonFile.load(fullConfigFileName, jsonDoc))
     {
@@ -208,17 +209,17 @@ bool PluginMgr::load()
 
 void PluginMgr::save()
 {
-    String              installation;
-    uint8_t             slotId        = 0;
-    const size_t        JSON_DOC_SIZE = 4096U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonArray           jsonSlots = jsonDoc.createNestedArray("slotConfiguration");
-    JsonFile            jsonFile(FILESYSTEM);
-    String              fullConfigFileName  = Plugin::CONFIG_PATH;
-    DisplayMgr&         displayMgr          = DisplayMgr::getInstance();
+    String            installation;
+    uint8_t           slotId        = 0;
+    const size_t      JSON_DOC_SIZE = 4096U;
+    PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+    JsonArray         jsonSlots = jsonDoc.createNestedArray("slotConfiguration");
+    JsonFile          jsonFile(FILESYSTEM);
+    String            fullConfigFileName  = Plugin::CONFIG_PATH;
+    DisplayMgr&       displayMgr          = DisplayMgr::getInstance();
 
-    fullConfigFileName                     += "/";
-    fullConfigFileName                     += CONFIG_FILE_NAME;
+    fullConfigFileName                   += "/";
+    fullConfigFileName                   += CONFIG_FILE_NAME;
 
     for (slotId = 0; slotId < displayMgr.getMaxSlots(); ++slotId)
     {

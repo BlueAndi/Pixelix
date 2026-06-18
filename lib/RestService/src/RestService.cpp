@@ -386,6 +386,8 @@ void RestService::handleHttpResponse(const HttpRsp& httpRsp)
         /* If a callback is found, it shall be applied. */
         else if (nullptr != m_activePreProcessCallback)
         {
+            rsp.jsonDocData = DynamicJsonDocument(payloadSize);
+
             if (true == m_activePreProcessCallback(payload, payloadSize, rsp.jsonDocData))
             {
                 rsp.isRsp = true;
@@ -399,6 +401,8 @@ void RestService::handleHttpResponse(const HttpRsp& httpRsp)
         }
         else
         {
+            rsp.jsonDocData            = DynamicJsonDocument(payloadSize);
+
             DeserializationError error = deserializeJson(rsp.jsonDocData, payload, payloadSize);
 
             if (DeserializationError::Ok != error.code())
