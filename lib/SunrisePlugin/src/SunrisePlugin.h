@@ -341,18 +341,18 @@ private:
      *
      * @param[in] payload     Payload of the web response
      * @param[in] payloadSize Size of the payload
-     * @param[out] jsonDoc    DynamicJsonDocument used to store result in.
+     * @param[out] jsonDoc    PsramJsonDocument used to store result in.
      *
      * @return If successful it will return true otherwise false.
      */
-    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc);
+    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 
     /**
      * Handle a web response from the server.
      *
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const PsramJsonDocument& jsonDoc);
 
     /**
      * Add the daylight saving (if available) and GMT offset values to the given

@@ -105,16 +105,16 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 1024U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonMethod     = value["method"];
-        JsonVariantConst    jsonUrl        = value["url"];
-        JsonVariantConst    jsonFilter     = value["filter"];
-        JsonVariantConst    jsonIconFileId = value["iconFileId"];
-        JsonVariantConst    jsonFormat     = value["format"];
-        JsonVariantConst    jsonMultiplier = value["multiplier"];
-        JsonVariantConst    jsonOffset     = value["offset"];
+        const size_t      JSON_DOC_SIZE = 1024U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonMethod     = value["method"];
+        JsonVariantConst  jsonUrl        = value["url"];
+        JsonVariantConst  jsonFilter     = value["filter"];
+        JsonVariantConst  jsonIconFileId = value["iconFileId"];
+        JsonVariantConst  jsonFormat     = value["format"];
+        JsonVariantConst  jsonMultiplier = value["multiplier"];
+        JsonVariantConst  jsonOffset     = value["offset"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -154,7 +154,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             else if (true == jsonFilter.is<String>())
             {
                 const size_t         JSON_DOC_FILTER_SIZE = 256U;
-                DynamicJsonDocument  jsonDocFilter(JSON_DOC_FILTER_SIZE);
+                PsramJsonDocument    jsonDocFilter(JSON_DOC_FILTER_SIZE);
                 DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<const char*>());
 
                 if (DeserializationError::Ok == result)
@@ -350,8 +350,8 @@ void GrabViaRestPlugin::process(bool isConnected)
 
     if (RestService::INVALID_REST_ID != dynamicRestId)
     {
-        DynamicJsonDocument jsonDoc(0U);
-        bool                isValidResponse;
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
 
         /* Get the response from the REST service. */
         if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
@@ -501,7 +501,7 @@ bool GrabViaRestPlugin::startHttpRequest()
 {
     bool                            status = false;
     RestService::PreProcessCallback preProcessCallback =
-        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+        [this](const char* payload, size_t size, PsramJsonDocument& doc) {
             return this->preProcessAsyncWebResponse(payload, size, doc);
         };
 
@@ -542,7 +542,7 @@ bool GrabViaRestPlugin::startHttpRequest()
     return status;
 }
 
-bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
+bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
@@ -631,15 +631,15 @@ void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantCo
     }
 }
 
-void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void GrabViaRestPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
-    const size_t        BUFFER_SIZE   = 128U;
-    const size_t        JSON_DOC_SIZE = 1024U;
-    DynamicJsonDocument jsonDocValues(JSON_DOC_SIZE);
-    JsonArray           jsonValuesArray = jsonDocValues.to<JsonArray>();
-    size_t              index           = 0U;
-    String              outputStr;
-    size_t              valueCount = 0U;
+    const size_t      BUFFER_SIZE   = 128U;
+    const size_t      JSON_DOC_SIZE = 1024U;
+    PsramJsonDocument jsonDocValues(JSON_DOC_SIZE);
+    JsonArray         jsonValuesArray = jsonDocValues.to<JsonArray>();
+    size_t            index           = 0U;
+    String            outputStr;
+    size_t            valueCount = 0U;
 
     /* Protect against concurrent access. */
     {

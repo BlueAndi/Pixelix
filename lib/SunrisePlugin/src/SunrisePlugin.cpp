@@ -100,12 +100,12 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonLongitude  = value["longitude"];
-        JsonVariantConst    jsonLatitude   = value["latitude"];
-        JsonVariantConst    jsonTimeFormat = value["timeFormat"];
+        const size_t      JSON_DOC_SIZE = 512U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonLongitude  = value["longitude"];
+        JsonVariantConst  jsonLatitude   = value["latitude"];
+        JsonVariantConst  jsonTimeFormat = value["timeFormat"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -259,8 +259,8 @@ void SunrisePlugin::process(bool isConnected)
 
     if (RestService::INVALID_REST_ID != dynamicRestId)
     {
-        DynamicJsonDocument jsonDoc(0U);
-        bool                isValidResponse;
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
 
         /* Get the response from the REST service. */
         if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
@@ -350,7 +350,7 @@ bool SunrisePlugin::startHttpRequest()
 {
     bool                            status = false;
     RestService::PreProcessCallback preProcessCallback =
-        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+        [this](const char* payload, size_t size, PsramJsonDocument& doc) {
             return this->preProcessAsyncWebResponse(payload, size, doc);
         };
 
@@ -374,7 +374,7 @@ bool SunrisePlugin::startHttpRequest()
     return status;
 }
 
-bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
+bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     bool isSuccessful = false;
 
@@ -432,7 +432,7 @@ bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t paylo
     return isSuccessful;
 }
 
-void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void SunrisePlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
     JsonVariantConst jsonResults = jsonDoc["results"];
     JsonVariantConst jsonSunrise = jsonResults["sunrise"];

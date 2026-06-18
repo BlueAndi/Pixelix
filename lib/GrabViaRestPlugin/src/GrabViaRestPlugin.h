@@ -300,7 +300,7 @@ private:
     _GrabViaRestPlugin::View m_view;            /**< View with all widgets. */
     String                   m_method;          /**< HTTP method. */
     String                   m_url;             /**< REST URL. */
-    DynamicJsonDocument      m_filter;          /**< Filter used for the response in JSON format. */
+    PsramJsonDocument        m_filter;          /**< Filter used for the response in JSON format. */
     FileMgrService::FileId   m_iconFileId;      /**< Icon file id. */
     String                   m_format;          /**< Format used to embed the retrieved filtered value. */
     String                   m_delimiter;       /**< Delimiter is used in case several values shall be shown, because of an JSON array. */
@@ -341,11 +341,11 @@ private:
      *
      * @param[in] payload     Payload of the web response
      * @param[in] payloadSize Size of the payload
-     * @param[out] jsonDoc    DynamicJsonDocument used to store result in.
+     * @param[out] jsonDoc    PsramJsonDocument used to store result in.
      *
      * @return If successful it will return true otherwise false.
      */
-    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc);
+    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 
     /**
      * Get value from JSON source by the filter.
@@ -362,7 +362,7 @@ private:
      *
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const PsramJsonDocument& jsonDoc);
 };
 
 /******************************************************************************

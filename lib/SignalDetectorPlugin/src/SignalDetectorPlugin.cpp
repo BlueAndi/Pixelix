@@ -109,12 +109,12 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& 
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg     = jsonDoc.to<JsonObject>();
-        JsonArrayConst      jsonTones   = value["tones"];
-        JsonVariantConst    jsonText    = value["text"];
-        JsonVariantConst    jsonPushUrl = value["pushUrl"];
+        const size_t      JSON_DOC_SIZE = 512U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg     = jsonDoc.to<JsonObject>();
+        JsonArrayConst    jsonTones   = value["tones"];
+        JsonVariantConst  jsonText    = value["text"];
+        JsonVariantConst  jsonPushUrl = value["pushUrl"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -320,8 +320,8 @@ void SignalDetectorPlugin::process(bool isConnected)
 
     if (RestService::INVALID_REST_ID != dynamicRestId)
     {
-        DynamicJsonDocument jsonDoc(0U);
-        bool                isValidResponse;
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
 
         /* Get the response from the REST service. */
         if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
@@ -458,7 +458,7 @@ bool SignalDetectorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 bool SignalDetectorPlugin::startHttpRequest()
 {
     bool                            status             = false;
-    RestService::PreProcessCallback preProcessCallback = [](const char* payload, size_t size, DynamicJsonDocument& doc) {
+    RestService::PreProcessCallback preProcessCallback = [](const char* payload, size_t size, PsramJsonDocument& doc) {
         UTIL_NOT_USED(payload);
         UTIL_NOT_USED(size);
         UTIL_NOT_USED(doc);
