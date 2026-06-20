@@ -39,6 +39,8 @@ tags:
     description: Sensor information
   - name: Service
     description: Service depended information
+  - name: ChicagoBusTrackerPlugin
+    description: Plugin specific API
   - name: CountdownPlugin
     description: Plugin specific API
   - name: DateTimePlugin
@@ -244,6 +246,149 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/chicagobus:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get configuration
+      description: |
+        Get ChicagoBusTracker configuration.
+        Specifies a route, stop, direction, and display options.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/0/chicagobus
+        ```
+      operationId: getConfiguration
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                - $ref: "#/components/schemas/ChicagoBusConfig"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Set configuration
+      description: |
+        Set ChicagoBusTrackerPlugin configuration options.
+        You need to set the apiKey and a route, direction, and stop.
+        You can choose whether or not to show the origin and destination.
+        You can choose the number of upcoming arrivals to show.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -F "apiKey=00000000" -F "rte=55" -F "dir=Eastbound" -F "stpid=10507" -F "orig=false" -F "dest=true" -F "two=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobus
+        ```
+      operationId: setConfiguration
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ChicagoBusConfig"
+  /display/uid/{uid}/chicagobusroutes:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get list of bus routes
+      description: |
+        Returns a list of all CTA bus routes with 
+        their ID (55, X49, etc) 
+        and name ("Garfield", "Western Express", etc).
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusroutes
+        ```
+      operationId: getChicagoBusRoutes
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChicagoBusRoutes"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/chicagobusdirections:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+      - rte:
+        in: query
+        name: rte
+        schema:
+          type: string
+        required: true
+        description: CTA Bus route ID (e.g. 55, X49, 111A)
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get list of directions for a given bus route ID
+      description: |
+        Returns a list of valid directions for a given bus route.
+        This is always a pair of strings, either
+        `["Northbound", "Southbound"]` or `["Eastbound", "Westbound"]`
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusdirections?rte=55
+        ```
+      operationId: getChicagoBusDirections
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChicagoBusDirections"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/chicagobusstops:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+      - rte:
+        in: query
+        name: rte
+        schema:
+          type: string
+        required: true
+        description: CTA Bus route ID (e.g. 55, X49, 111A)
+      - dir:
+        in: query
+        name: dir
+        schema:
+          type: string
+          enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+        required: true
+        description: Direction to list stop IDs for
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get list of stops for a given bus route ID and direction
+      description: |
+        Returns a list of bus stop IDs for a given route and direction
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusstops?rte=55&dir=Eastbound
+        ```
+      operationId: getChicagoBusDirections
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChicagoBusStops"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/config:
@@ -2820,6 +2965,86 @@ components:
           type: string
           description: The request result.
           example: ok
+    ChicagoBusConfig:
+      type: object
+      required:
+        - apiKey
+        - rte
+        - dir
+        - stpid
+        - orig
+        - dest
+        - two
+      properties:
+        apiKey:
+          type: string
+          description: CTA Bus Tracker API key
+        rte:
+          type: string
+          description: CTA Bus Route ID (e.g. 55, X49, 111A)
+        dir:
+          type: string
+          enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+          description: Direction for the selected route
+        stpid:
+          type: string
+          description: CTA Bus Stop ID
+        orig:
+          type: boolean
+          description: Whether to show the stop name in the route info section
+        dest:
+          type: boolean
+          description: Whether to show the destination for the selected route and direction in the route info section
+        two:
+          type: boolean
+          description: Whether to print one (false) or two (true) upcoming arrivals
+    ChicagoBusDirections:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            dirs:
+              type: array
+              items:
+                type: string
+                enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+              description: Valid directions for a given route
+    ChicagoBusRoutes:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            pars: null
+            routes:
+              type: array
+              items:
+                type: object
+                properties:
+                  rt:
+                    type: string
+                    description: Route ID (e.g. 55, X49, 111A)
+                  rtnm:
+                    type: string
+                    description: Route name (e.g. Garfield, Western Express)
+    ChicagoBusStops:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            stops:
+              type: array
+              items:
+                type: object
+                properties:
+                  stpid:
+                    type: string
+                    description: Stop ID (usually a number up to 6 digits)
+                  stpnm:
+                    type: string
+                    description: Stop name (e.g. 55th Street & St. Louis)
     Countdown:
       type: object
       required:
@@ -3449,6 +3674,7 @@ components:
               items:
                 type: string
                 example:
+                  - ChicagoBusTrackerPlugin
                   - CountdownPlugin
                   - DateTimePlugin
                   - FirePlugin
