@@ -84,7 +84,7 @@ public:
         m_stpid("10507"),
         m_orig(true),
         m_dest(true),
-        m_two(false),
+        m_count(2),
         m_requestTimer(),
         m_mutex(),
         m_slotInterf(nullptr),
@@ -376,7 +376,7 @@ private:
     String                         m_stpid;           /**< CTA-defined stop ID (numeric) */
     bool                           m_orig;            /**< option to show origin (selected stop name) */
     bool                           m_dest;            /**< option to show destination (end of line in chosen direction) */
-    bool                           m_two;             /**< option to show next 2 arrivals instead of just one */
+    uint8_t                        m_count;           /**< how many arrivals to show (1-3) */
     SimpleTimer                    m_requestTimer;    /**< Timer used for cyclic request of new data. */
     mutable MutexRecursive         m_mutex;           /**< Mutex to protect against concurrent access. */
     const ISlotPlugin*             m_slotInterf;      /**< Slot interface */

@@ -61,6 +61,14 @@
                             <select class="form-select" id="stops" size="1" onchange="handleChange('stops')"></select>
                         </div>
                         <div class="form-group mb-3">
+                            <label class="form-label" for="count">Arrivals Count:</label>
+                            <select class="form-select" id="count" size="1" onchange="handleChange('count')">
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                                <option value=3>3</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="origin" name="origin" />
                                 <label class="form-label" for="origin">Show stop name (e.g. "...from 55th Street & St. Louis"):</label>
@@ -68,10 +76,6 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="dest" name="dest" />
                                 <label class="form-label" for="dest">Show destination (e.g. "...to Museum of Science and Industry"):</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="two" name="two" />
-                                <label class="form-label" for="two">Show next 2 arrivals (instead of just one):</label>
                             </div>
                         </div>
                         <input name="submit" type="submit" value="Update"/>
@@ -111,6 +115,7 @@
                 routes: "",
                 directions: "",
                 stops: "",
+                count: 2
             }
 
             function enableUI() {
@@ -237,7 +242,7 @@
                         return
                     }
 
-                    const { apiKey, rte, stpid, dir, orig, dest, two } = rsp.data
+                    const { apiKey, rte, stpid, dir, orig, dest, count } = rsp.data
 
                     $("#apiKey").val(apiKey)
 
@@ -253,14 +258,15 @@
                     const stpelem = generateOptions("stops", [selected.stops])
                     selectSelectedProperty(stpelem, [selected.stops])
 
+                    selected.count = count
+                    const countelem = document.getElementById("count")
+                    countelem.selectedIndex = count - 1
+
                     const originelem = document.getElementById("origin")
                     originelem.checked = orig
 
                     const destelem = document.getElementById("dest")
                     destelem.checked = dest
-
-                    const twoelem = document.getElementById("two")
-                    twoelem.checked = two
                 } catch (e) {
                     console.log("Internal error.")
                     console.log(e)
@@ -278,7 +284,7 @@
                     stpid: selected.stops,
                     orig: $("#origin")[0].checked,
                     dest: $("#dest")[0].checked,
-                    two: $("#two")[0].checked,
+                    count: $("#count")[0].value,
                 }
 
                 return utils

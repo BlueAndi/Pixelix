@@ -145,7 +145,7 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
         JsonVariantConst    jsonStpid  = value["stpid"];
         JsonVariantConst    jsonOrig   = value["orig"];
         JsonVariantConst    jsonDest   = value["dest"];
-        JsonVariantConst    jsonTwo    = value["two"];
+        JsonVariantConst    jsonCount  = value["count"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -187,10 +187,10 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
             jsonCfg["dest"] = jsonDest.as<String>() == "true";
             isSuccessful    = true;
         }
-        if (false == jsonTwo.isNull())
+        if (false == jsonCount.isNull())
         {
-            jsonCfg["two"] = jsonTwo.as<String>() == "true";
-            isSuccessful   = true;
+            jsonCfg["count"] = jsonCount.as<uint8_t>();
+            isSuccessful     = true;
         }
 
         if (true == isSuccessful)
@@ -406,7 +406,7 @@ void ChicagoBusTrackerPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["stpid"]  = m_stpid;
     jsonCfg["orig"]   = m_orig;
     jsonCfg["dest"]   = m_dest;
-    jsonCfg["two"]    = m_two; // TODO: multi-row layouts
+    jsonCfg["count"]  = m_count;
 }
 
 bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -418,7 +418,7 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     JsonVariantConst jsonStpid  = jsonCfg["stpid"];
     JsonVariantConst jsonOrig   = jsonCfg["orig"];
     JsonVariantConst jsonDest   = jsonCfg["dest"];
-    JsonVariantConst jsonTwo    = jsonCfg["two"];
+    JsonVariantConst jsonCount  = jsonCfg["count"];
 
     if (false == jsonApiKey.is<String>())
     {
@@ -444,9 +444,9 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("No destination preference provided");
     }
-    else if (false == jsonTwo.is<bool>())
+    else if (false == jsonCount.is<uint8_t>())
     {
-        LOG_WARNING("No two predictions preference provided");
+        LOG_WARNING("No prediction count preference provided");
     }
     else
     {
@@ -456,6 +456,8 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         m_rte                             = jsonRte.as<String>();
         m_dir                             = jsonDir.as<String>();
         m_stpid                           = jsonStpid.as<String>();
+
+        uint8_t             count         = jsonCount.as<uint8_t>();
 
         const size_t        JSON_DOC_SIZE = 44U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -490,13 +492,13 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
             m_dest = true;
         }
 
-        if (jsonTwo.as<bool>())
+        if ((0 >= count) || (3 < count))
         {
-            m_two = true;
+            LOG_ERROR("Invalid count preference: must be 1-3");
         }
         else
         {
-            m_two = false;
+            m_count = count;
         }
 
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -663,7 +665,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
      *
      */
     m_routeInfoText = "";
-    
+
     if ((dest != "null") && (dest != "") && (true == m_dest))
     {
         m_routeInfoText += COLOR_DISPLAY;
@@ -706,7 +708,7 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
         m_view.setFirstArrivalText(COLOR_DISPLAY + first);
     }
 
-    if ((true == m_two) && (second != "null") && (second != ""))
+    if ((m_count > 1) && (second != "null") && (second != ""))
     {
         if (second == "DLY")
         {
@@ -725,6 +727,27 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     else
     {
         m_view.setSecondArrivalText("");
+    }
+
+    if ((m_count > 2) && (third != "null") && (third != ""))
+    {
+        if (third == "DLY")
+        {
+            m_view.setThirdArrivalText(COLOR_DELAY + third);
+        }
+        else if (third == "DUE")
+        {
+            m_view.setThirdArrivalText(COLOR_DUE + third);
+        }
+        else
+        {
+            third += " min";
+            m_view.setThirdArrivalText(COLOR_DISPLAY + third);
+        }
+    }
+    else
+    {
+        m_view.setThirdArrivalText("");
     }
 
     m_view.updateWidgets();
