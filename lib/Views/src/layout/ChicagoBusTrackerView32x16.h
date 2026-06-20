@@ -27,7 +27,7 @@
 *******************************************************************************/
 /**
  * @file   ChicagoBusTrackerView32x16.h
- * @brief  Chicago bus tracker view tith route and arrivals info 32x16 LED matrix
+ * @brief  Chicago bus tracker view with route and arrivals info 32x16 LED matrix
  * @author Julie Hill <queenkjuul@pm.me>
  * @addtogroup PLUGIN
  *
@@ -230,7 +230,7 @@ protected:
     TextWidget      m_topInfoWidget;     /**< Top-right widget, next to route number */
     TextWidget      m_bottomInfoWidget;  /**< Lower full-width widget */
     String          m_routeNumberText;   /**< Route number text to display */
-    String          m_routeInfoText;     /**< Route degails text (stop name, destination) */
+    String          m_routeInfoText;     /**< Route details text (stop name, destination) */
     String          m_firstArrivalText;  /**< First upcoming arrival text (formatted) */
     String          m_secondArrivalText; /**< Second upcoming arrival text (formatted, optional) */
     String          m_thirdArrivalText;  /**< Third upcoming arrival text (formatted, optional) */
