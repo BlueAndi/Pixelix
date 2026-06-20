@@ -345,10 +345,9 @@ private:
 
     /**
      * Period between arrival prediction updates.
-     * API is updated every 1 minute, we go every 2 min to keep
-     * within the daily API limits when fetching multiple stops.
+     * API is updated every 1 minute
      */
-    static const uint32_t UPDATE_PERIOD        = SIMPLE_TIMER_MINUTES(2U);
+    static const uint32_t UPDATE_PERIOD        = SIMPLE_TIMER_MINUTES(1U);
 
     /**
      * 30 second timer used for scheduling config reloads and keeping
