@@ -125,19 +125,23 @@
                 const elem = document.getElementById(elementId)
                 const value = elem.value
                 selected[elementId] = value
-                switch (elementId) {
-                    case "pluginUid":
-                        await getConfig(value)
-                        await getRoutes()
-                        await getDirections()
-                        await getStops()
-                        return
-                    case "routes":
-                        await getDirections()
-                        await getStops()
-                        return
-                    case "directions":
-                        await getStops()
+                try {
+                    switch (elementId) {
+                        case "pluginUid":
+                            await getConfig(value)
+                            await getRoutes()
+                            await getDirections()
+                            await getStops()
+                            return
+                        case "routes":
+                            await getDirections()
+                            await getStops()
+                            return
+                        case "directions":
+                            await getStops()
+                    }
+                } catch (e) {
+                    console.error("Error fetching data: ", e)
                 }
             }
 
@@ -148,7 +152,7 @@
                 valueproperty = null
             ) {
                 const element = document.getElementById(elementId)
-                if (!element || !values) {
+                if (!element || !values || values.length === 0) {
                     return element
                 }
 
@@ -169,7 +173,7 @@
             }
 
             function selectSelectedProperty(element, value) {
-                const options = Array.from(element?.options ?? []).map((o) => o?.value)
+                const options = Array.from(element?.options ?? [{ value }]).map((o) => o?.value)
                 var foundIndex = options.findIndex((v) => v == value)
                 if (foundIndex < 0) {
                     console.warn("Not Found: ", value, options)
@@ -287,6 +291,10 @@
                 .then(function (rsp) {
                     alert("Ok.")
                 })
+                .then(() => getConfig(pluginUid))
+                .then(getRoutes)
+                .then(getDirections)
+                .then(getStops)
                 .catch(function (rsp) {
                     alert("Failed.")
                 })
