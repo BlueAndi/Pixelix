@@ -199,27 +199,23 @@ public:
      */
     void updateWidgets()
     {
-        String arrivalsInfo = "";
 
         m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
 
-        arrivalsInfo += m_firstArrivalText;
+        String m_arrivalsInfoText  = "";
+        m_arrivalsInfoText        += m_firstArrivalText;
 
         if ((m_secondArrivalText != "null") && (m_secondArrivalText != ""))
         {
-            arrivalsInfo += "{#ff5500}";
-            arrivalsInfo += " / ";
-            arrivalsInfo += m_secondArrivalText;
+            appendArrivalInfo(m_secondArrivalText);
         }
 
         if ((m_thirdArrivalText != "null") && (m_thirdArrivalText != ""))
         {
-            arrivalsInfo += "{#ff5500}";
-            arrivalsInfo += " / ";
-            arrivalsInfo += m_thirdArrivalText;
+            appendArrivalInfo(m_thirdArrivalText);
         }
 
-        m_arrivalsWidget.setFormatStr(arrivalsInfo);
+        m_arrivalsWidget.setFormatStr(m_arrivalsInfoText);
 
         LOG_DEBUG("Chicago Bus Route: " + m_routeWidget.getFormatStr());
         LOG_DEBUG("Chicago Bus Arrival: " + m_arrivalsWidget.getFormatStr());
@@ -230,58 +226,71 @@ protected:
     /**
      * Route Info section width in pixels.
      */
-    static const uint16_t RTE_SECTION_WIDTH  = 12U;
+    static const uint16_t RTE_SECTION_WIDTH    = 12U;
 
     /**
      * Route Info section height in pixels.
      */
-    static const uint16_t RTE_SECTION_HEIGHT = 8U;
+    static const uint16_t RTE_SECTION_HEIGHT   = 8U;
 
     /**
      * Text widget x-coordinate in pixels.
      * Left aligned, after icon.
      */
-    static const int16_t RTE_SECTION_X       = 0;
+    static const int16_t RTE_SECTION_X         = 0;
 
     /**
      * Text widget y-coordinate in pixels.
      */
-    static const int16_t RTE_SECTION_Y       = 0;
+    static const int16_t RTE_SECTION_Y         = 0;
 
     /**
      * Text width in pixels.
      */
-    static const uint16_t ARR_SECTION_WIDTH  = CONFIG_LED_MATRIX_WIDTH - RTE_SECTION_WIDTH;
+    static const uint16_t ARR_SECTION_WIDTH    = CONFIG_LED_MATRIX_WIDTH - RTE_SECTION_WIDTH;
 
     /**
      * Text height in pixels.
      */
-    static const uint16_t ARR_SECTION_HEIGHT = 8U;
+    static const uint16_t ARR_SECTION_HEIGHT   = 8U;
 
     /**
      * Text widget x-coordinate in pixels.
      * Left aligned, after icon.
      */
-    static const int16_t ARR_SECTION_X       = RTE_SECTION_WIDTH + 1;
+    static const int16_t ARR_SECTION_X         = RTE_SECTION_WIDTH + 1;
 
     /**
      * Text widget y-coordinate in pixels.
      */
-    static const int16_t ARR_SECTION_Y       = 0;
+    static const int16_t ARR_SECTION_Y         = 0;
 
-    Fonts::FontType      m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget           m_routeWidget;       /**< Route information widget */
-    TextWidget           m_arrivalsWidget;    /**< Arrivals information widget */
-    String               m_routeNumberText;   /**< Route number text (formatted) */
-    String               m_routeInfoText;     /**< Route info text (stop name, destination) */
-    String               m_firstArrivalText;  /**< First arrival text info. */
-    String               m_secondArrivalText; /**< Seccond arrival text info. */
-    String               m_thirdArrivalText;  /**< Third arrival text info. */
+    /**
+     * Color to mimic CTA vehicles' amber LED screens
+     */
+    static constexpr const char* DISPLAY_COLOR = "{#FF5500}";
+
+    Fonts::FontType              m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget                   m_routeWidget;       /**< Route information widget */
+    TextWidget                   m_arrivalsWidget;    /**< Arrivals information widget */
+    String                       m_routeNumberText;   /**< Route number text (formatted) */
+    String                       m_routeInfoText;     /**< Route info text (stop name, destination) */
+    String                       m_arrivalsInfoText;  /**< String containing the concatenated arrivals info */
+    String                       m_firstArrivalText;  /**< First arrival text info. */
+    String                       m_secondArrivalText; /**< Seccond arrival text info. */
+    String                       m_thirdArrivalText;  /**< Third arrival text info. */
 
 private:
 
     ChicagoBusTrackerViewGeneric(const ChicagoBusTrackerViewGeneric& other);
     ChicagoBusTrackerViewGeneric& operator=(const ChicagoBusTrackerViewGeneric& other);
+
+    void                          appendArrivalInfo(String info)
+    {
+        m_arrivalsInfoText += DISPLAY_COLOR;
+        m_arrivalsInfoText += " / ";
+        m_arrivalsInfoText += info;
+    }
 };
 
 /******************************************************************************

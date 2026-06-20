@@ -177,27 +177,22 @@ public:
 
     void updateWidgets()
     {
-        String arrivalsInfo = "";
-
         m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
 
-        arrivalsInfo += m_firstArrivalText;
+        m_arrivalsInfoText  = "";
+        m_arrivalsInfoText += m_firstArrivalText;
 
         if ((m_secondArrivalText != "null") && (m_secondArrivalText != ""))
         {
-            arrivalsInfo += "{#ff5500}";
-            arrivalsInfo += " / ";
-            arrivalsInfo += m_secondArrivalText;
+            appendArrivalInfo(m_secondArrivalText);
         }
 
         if ((m_thirdArrivalText != "null") && (m_thirdArrivalText != ""))
         {
-            arrivalsInfo += "{#ff5500}";
-            arrivalsInfo += " / ";
-            arrivalsInfo += m_thirdArrivalText;
+            appendArrivalInfo(m_thirdArrivalText);
         }
 
-        m_arrivalsWidget.setFormatStr(arrivalsInfo);
+        m_arrivalsWidget.setFormatStr(m_arrivalsInfoText);
 
         LOG_DEBUG("Chicago Bus Route: " + m_routeWidget.getFormatStr());
         LOG_DEBUG("Chicago Bus Arrival: " + m_arrivalsWidget.getFormatStr());
@@ -205,19 +200,32 @@ public:
 
 protected:
 
-    Fonts::FontType m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget      m_routeWidget;       /**< Route information widget */
-    TextWidget      m_arrivalsWidget;    /**< Arrivals information widget */
-    String          m_routeNumberText;   /**< Route number text (formatted) */
-    String          m_routeInfoText;     /**< Route info text (stop name, destination) */
-    String          m_firstArrivalText;  /**< First arrival text info. */
-    String          m_secondArrivalText; /**< Seccond arrival text info. */
-    String          m_thirdArrivalText;  /**< Third arrival text info. */
+    /**
+     * Color to mimic CTA vehicles' amber LED screens
+     */
+    static constexpr const char* DISPLAY_COLOR = "{#FF5500}";
+
+    Fonts::FontType              m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget                   m_routeWidget;       /**< Route information widget */
+    TextWidget                   m_arrivalsWidget;    /**< Arrivals information widget */
+    String                       m_routeNumberText;   /**< Route number text (formatted) */
+    String                       m_routeInfoText;     /**< Route info text (stop name, destination) */
+    String                       m_arrivalsInfoText;  /**< String containing the concatenated arrivals info */
+    String                       m_firstArrivalText;  /**< First arrival text info. */
+    String                       m_secondArrivalText; /**< Seccond arrival text info. */
+    String                       m_thirdArrivalText;  /**< Third arrival text info. */
 
 private:
 
     ChicagoBusTrackerView32x8(const ChicagoBusTrackerView32x8& other);
     ChicagoBusTrackerView32x8& operator=(const ChicagoBusTrackerView32x8& other);
+
+    void                       appendArrivalInfo(String info)
+    {
+        m_arrivalsInfoText += DISPLAY_COLOR;
+        m_arrivalsInfoText += " / ";
+        m_arrivalsInfoText += info;
+    }
 };
 
 /******************************************************************************

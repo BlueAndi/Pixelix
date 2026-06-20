@@ -149,9 +149,9 @@ ChicagoBusTrackerView32x16::ChicagoBusTrackerView32x16() :
     m_routeNumberWidget(RTE_NUMBER_WIDTH, RTE_NUMBER_HEIGHT, RTE_NUMBER_X, RTE_NUMBER_Y),
     m_topInfoWidget(RTE_INFO_WIDTH, RTE_INFO_HEIGHT, RTE_INFO_X, RTE_INFO_Y),
     m_bottomInfoWidget(ARR_SECTION_WIDTH, ARR_SECTION_HEIGHT, ARR_SECTION_X, ARR_SECTION_Y),
-    m_routeNumberText(" - "),
+    m_routeNumberText(""),
     m_routeInfoText(""),
-    m_firstArrivalText(" NO DATA "),
+    m_firstArrivalText(""),
     m_secondArrivalText(""),
     m_thirdArrivalText("")
 {
@@ -166,6 +166,16 @@ ChicagoBusTrackerView32x16::ChicagoBusTrackerView32x16() :
     m_bottomInfoWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     m_bottomInfoWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_RIGHT);
     m_bottomInfoWidget.disableFadeEffect();
+
+    m_routeNumberText.reserve(16U);
+    m_routeInfoText.reserve(128U);
+    m_arrivalsInfoText.reserve(64U);
+    m_firstArrivalText.reserve(18U);
+    m_secondArrivalText.reserve(18U);
+    m_thirdArrivalText.reserve(18U);
+
+    m_routeNumberText  = " - ";
+    m_firstArrivalText = " NO DATA ";
 }
 
 void ChicagoBusTrackerView32x16::update(YAGfx& gfx)

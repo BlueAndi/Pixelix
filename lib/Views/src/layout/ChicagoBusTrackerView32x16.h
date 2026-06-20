@@ -182,63 +182,67 @@ public:
      */
     void updateWidgets()
     {
-        String arrivalsInfo = "";
+        m_arrivalsInfoText = "";
 
         m_routeNumberWidget.setFormatStr(m_routeNumberText);
 
         /* No route text (orig+dest disabled) so put first arrival in top row */
         if ((m_routeInfoText == "null") || (m_routeInfoText == ""))
         {
-            arrivalsInfo += m_secondArrivalText;
+            m_arrivalsInfoText += m_secondArrivalText;
             if ((m_thirdArrivalText != "null") && (m_thirdArrivalText != ""))
             {
-                arrivalsInfo += "{#ff5500}";
-                arrivalsInfo += " / ";
-                arrivalsInfo += m_thirdArrivalText;
+                appendArrivalInfo(m_thirdArrivalText);
             }
-            m_topInfoWidget.setFormatStr(m_firstArrivalText);
-            m_bottomInfoWidget.setFormatStr(arrivalsInfo);
         }
         /* Route info provided: concat all available arrivals into a single line below */
         else
         {
-            arrivalsInfo += m_firstArrivalText;
-
+            m_arrivalsInfoText += m_firstArrivalText;
             if ((m_secondArrivalText != "null") && (m_secondArrivalText != ""))
             {
-                arrivalsInfo += "{#ff5500}";
-                arrivalsInfo += " / ";
-                arrivalsInfo += m_secondArrivalText;
+                appendArrivalInfo(m_secondArrivalText);
             }
 
             if ((m_thirdArrivalText != "null") && (m_thirdArrivalText != ""))
             {
-                arrivalsInfo += "{#ff5500}";
-                arrivalsInfo += " / ";
-                arrivalsInfo += m_thirdArrivalText;
+                appendArrivalInfo(m_thirdArrivalText);
             }
-
-            m_topInfoWidget.setFormatStr(m_routeInfoText);
-            m_bottomInfoWidget.setFormatStr(arrivalsInfo);
         }
+
+        m_topInfoWidget.setFormatStr(m_routeInfoText);
+        m_bottomInfoWidget.setFormatStr(m_arrivalsInfoText);
     }
 
 protected:
 
-    Fonts::FontType m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget      m_routeNumberWidget; /**< Route number widget */
-    TextWidget      m_topInfoWidget;     /**< Top-right widget, next to route number */
-    TextWidget      m_bottomInfoWidget;  /**< Lower full-width widget */
-    String          m_routeNumberText;   /**< Route number text to display */
-    String          m_routeInfoText;     /**< Route details text (stop name, destination) */
-    String          m_firstArrivalText;  /**< First upcoming arrival text (formatted) */
-    String          m_secondArrivalText; /**< Second upcoming arrival text (formatted, optional) */
-    String          m_thirdArrivalText;  /**< Third upcoming arrival text (formatted, optional) */
+    /**
+     * Color to mimic CTA vehicles' amber LED screens
+     */
+    static constexpr const char* DISPLAY_COLOR = "{#FF5500}";
+
+    Fonts::FontType              m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget                   m_routeNumberWidget; /**< Route number widget */
+    TextWidget                   m_topInfoWidget;     /**< Top-right widget, next to route number */
+    TextWidget                   m_bottomInfoWidget;  /**< Lower full-width widget */
+    String                       m_routeNumberText;   /**< Route number text to display */
+    String                       m_routeInfoText;     /**< Route details text (stop name, destination) */
+    String                       m_arrivalsInfoText;  /**< String containing the concatenated arrivals info */
+    String                       m_firstArrivalText;  /**< First upcoming arrival text (formatted) */
+    String                       m_secondArrivalText; /**< Second upcoming arrival text (formatted, optional) */
+    String                       m_thirdArrivalText;  /**< Third upcoming arrival text (formatted, optional) */
 
 private:
 
     ChicagoBusTrackerView32x16(const ChicagoBusTrackerView32x16& other);
     ChicagoBusTrackerView32x16& operator=(const ChicagoBusTrackerView32x16& other);
+
+    void                        appendArrivalInfo(String info)
+    {
+        m_arrivalsInfoText += DISPLAY_COLOR;
+        m_arrivalsInfoText += " / ";
+        m_arrivalsInfoText += info;
+    }
 };
 
 /******************************************************************************
