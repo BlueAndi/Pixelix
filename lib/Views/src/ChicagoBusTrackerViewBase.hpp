@@ -48,7 +48,7 @@
 #include "./layout/ChicagoBusTrackerViewGeneric.h"
 #include "./layout/ChicagoBusTrackerView32x8.h"
 #include "./layout/ChicagoBusTrackerView32x16.h"
-// #include "./layout/ChicagoBusTrackerView64x64.h"
+#include "./layout/ChicagoBusTrackerView64x64.h"
 
 /******************************************************************************
  * Macros
@@ -105,16 +105,16 @@ public:
 /**
  * View for Chicago Bus Tracker for 64x64 display.
  */
-// template <>
-// class ChicagoBusTrackerView<LAYOUT_64X64> : public ChicagoBusTrackerView64x64
-// {
-// public:
+template <>
+class ChicagoBusTrackerView<LAYOUT_64X64> : public ChicagoBusTrackerView64x64
+{
+public:
 
-//     /**
-//      * Destroys the view.
-//      */
-//     virtual ~ChicagoBusTrackerView() = default;
-// };
+    /**
+     * Destroys the view.
+     */
+    virtual ~ChicagoBusTrackerView() = default;
+};
 
 /** View for Chicago Bus Tracker, considering the display size. */
 using ChicagoBusTrackerViewBase = ChicagoBusTrackerView<LAYOUT_TYPE>;
