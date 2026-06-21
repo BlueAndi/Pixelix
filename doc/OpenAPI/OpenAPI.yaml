@@ -263,14 +263,14 @@ paths:
         ```bash
         $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/0/chicagobus
         ```
-      operationId: getConfiguration
+      operationId: getChicagoBusConfig
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                - $ref: "#/components/schemas/ChicagoBusConfig"
+                $ref: "#/components/schemas/ChicagoBusConfig"
       security:
         - pixelixAuth: []
     post:
@@ -287,12 +287,19 @@ paths:
         ```bash
         $ curl -u luke:skywalker -F "apiKey=00000000" -F "rte=55" -F "dir=Eastbound" -F "stpid=10507" -F "orig=false" -F "dest=true" -F "two=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobus
         ```
-      operationId: setConfiguration
+      operationId: setChicagoBusConfig
       requestBody:
         content:
           multipart/form-data:
             schema:
               $ref: "#/components/schemas/ChicagoBusConfig"
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
   /display/uid/{uid}/chicagobusroutes:
     parameters:
       - $ref: "#/components/parameters/uid"
@@ -322,8 +329,7 @@ paths:
   /display/uid/{uid}/chicagobusdirections:
     parameters:
       - $ref: "#/components/parameters/uid"
-      - rte:
-        in: query
+      - in: query
         name: rte
         schema:
           type: string
@@ -355,15 +361,13 @@ paths:
   /display/uid/{uid}/chicagobusstops:
     parameters:
       - $ref: "#/components/parameters/uid"
-      - rte:
-        in: query
+      - in: query
         name: rte
         schema:
           type: string
         required: true
         description: CTA Bus route ID (e.g. 55, X49, 111A)
-      - dir:
-        in: query
+      - in: query
         name: dir
         schema:
           type: string
@@ -381,7 +385,7 @@ paths:
         ```bash
         $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusstops?rte=55&dir=Eastbound
         ```
-      operationId: getChicagoBusDirections
+      operationId: getChicagoBusStops
       responses:
         "200":
           description: Ok
@@ -3017,7 +3021,6 @@ components:
         data:
           type: object
           properties:
-            pars: null
             routes:
               type: array
               items:
