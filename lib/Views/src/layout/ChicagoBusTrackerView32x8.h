@@ -220,7 +220,12 @@ private:
     ChicagoBusTrackerView32x8(const ChicagoBusTrackerView32x8& other);
     ChicagoBusTrackerView32x8& operator=(const ChicagoBusTrackerView32x8& other);
 
-    void                       appendArrivalInfo(String info)
+    /**
+     * Append another arrival time to m_arrivalsInfoText
+     *
+     * @param[in] info  Arrival time text (e.g. '6 min')
+     */
+    void appendArrivalInfo(const String& info)
     {
         m_arrivalsInfoText += DISPLAY_COLOR;
         m_arrivalsInfoText += " / ";

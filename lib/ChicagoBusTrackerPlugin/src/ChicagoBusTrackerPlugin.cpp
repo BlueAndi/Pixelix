@@ -179,12 +179,12 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
         }
         if (false == jsonOrig.isNull())
         {
-            jsonCfg["orig"] = jsonOrig.as<String>() == "true";
+            jsonCfg["orig"] = jsonOrig.as<String>().equalsIgnoreCase("true");
             isSuccessful    = true;
         }
         if (false == jsonDest.isNull())
         {
-            jsonCfg["dest"] = jsonDest.as<String>() == "true";
+            jsonCfg["dest"] = jsonDest.as<String>().equalsIgnoreCase("true");
             isSuccessful    = true;
         }
         if (false == jsonCount.isNull())
@@ -483,13 +483,13 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
             m_orig = false;
         }
 
-        if (!jsonDest.as<bool>())
+        if (jsonDest.as<bool>())
         {
-            m_dest = false;
+            m_dest = true;
         }
         else
         {
-            m_dest = true;
+            m_dest = false;
         }
 
         if ((0 >= count) || (3 < count))
@@ -756,7 +756,10 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
 void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
-    HTTPClient                 http;
+
+    jsonRtes.remove("pars");
+
+    HTTPClient http;
 
     apiKey = getApiKey();
 
