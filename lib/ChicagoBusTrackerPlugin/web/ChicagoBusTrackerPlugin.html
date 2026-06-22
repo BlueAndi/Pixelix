@@ -36,6 +36,10 @@
                 <p><img src="ChicagoBusTrackerPlugin.png" alt="Screenshot" /></p>
                 <p>Shows estimated arrival times for a given route+stop+direction</p>
                 <p>Times are updated at least every 2 minutes</p>
+                <p>First, you must set an API key and click Update. Then, the lists of routes and stops will populate.</p>
+                <p>You cannot fetch route or stop IDs from the REST API without an API key.</p>
+                <p>You can sign up for a CTA Bus Tracker API key <a href="https://www.ctabustracker.com/account">from the CTA Developer Portal website</a></p>
+                <p>The CTA API limits are quite generous; this plugin will never own its own exhaust your API request quota, even running the maximum number of plugin instances.</p>
                 <h2>Configuration</h2>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
