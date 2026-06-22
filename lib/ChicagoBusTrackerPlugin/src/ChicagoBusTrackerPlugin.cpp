@@ -159,22 +159,22 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
          */
         if (false == jsonApiKey.isNull())
         {
-            jsonCfg["apiKey"] = jsonApiKey.as<String>();
+            jsonCfg["apiKey"] = jsonApiKey.as<const char*>();
             isSuccessful      = true;
         }
         if (false == jsonRte.isNull())
         {
-            jsonCfg["rte"] = jsonRte.as<String>();
+            jsonCfg["rte"] = jsonRte.as<const char*>();
             isSuccessful   = true;
         }
         if (false == jsonDir.isNull())
         {
-            jsonCfg["dir"] = jsonDir.as<String>();
+            jsonCfg["dir"] = jsonDir.as<const char*>();
             isSuccessful   = true;
         }
         if (false == jsonStpid.isNull())
         {
-            jsonCfg["stpid"] = jsonStpid.as<String>();
+            jsonCfg["stpid"] = jsonStpid.as<const char*>();
             isSuccessful     = true;
         }
         if (false == jsonOrig.isNull())
@@ -452,10 +452,10 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        apiKey                            = jsonApiKey.as<String>();
-        m_rte                             = jsonRte.as<String>();
-        m_dir                             = jsonDir.as<String>();
-        m_stpid                           = jsonStpid.as<String>();
+        apiKey                            = jsonApiKey.as<const char*>();
+        m_rte                             = jsonRte.as<const char*>();
+        m_dir                             = jsonDir.as<const char*>();
+        m_stpid                           = jsonStpid.as<const char*>();
 
         uint8_t             count         = jsonCount.as<uint8_t>();
 
@@ -633,13 +633,13 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     JsonVariantConst nextEstimate    = response[1];
     JsonVariantConst thirdEstimate   = response[2];
 
-    String           rte             = currentEstimate["rt"].as<String>();
-    String           first           = currentEstimate["prdctdn"].as<String>();
-    String           dir             = currentEstimate["rtdir"].as<String>();
-    String           dest            = currentEstimate["des"].as<String>();
-    String           stpnm           = currentEstimate["stpnm"].as<String>();
-    String           second          = nextEstimate["prdctdn"].as<String>();
-    String           third           = thirdEstimate["prdctdn"].as<String>();
+    String           rte             = currentEstimate["rt"].as<const char*>();
+    String           dir             = currentEstimate["rtdir"].as<const char*>();
+    String           dest            = currentEstimate["des"].as<const char*>();
+    String           stpnm           = currentEstimate["stpnm"].as<const char*>();
+    String           first           = currentEstimate["prdctdn"].as<const char*>();
+    String           second          = nextEstimate["prdctdn"].as<const char*>();
+    String           third           = thirdEstimate["prdctdn"].as<const char*>();
 
     /**
      * Route Number:
@@ -821,7 +821,7 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    String                     rt = jsonDirs["pars"]["rt"].as<String>();
+    const char*                rt = jsonDirs["pars"]["rt"].as<const char*>();
     jsonDirs.remove("pars");
 
     HTTPClient http;
@@ -885,8 +885,8 @@ void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    String                     rt  = jsonStops["pars"]["rt"].as<String>();
-    String                     dir = jsonStops["pars"]["dir"].as<String>();
+    const char*                rt  = jsonStops["pars"]["rt"].as<const char*>();
+    const char*                dir = jsonStops["pars"]["dir"].as<const char*>();
     jsonStops.remove("pars");
     jsonStops["stops"] = JsonArray();
 
