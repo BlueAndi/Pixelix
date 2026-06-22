@@ -202,8 +202,8 @@ public:
 
         m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
 
-        String m_arrivalsInfoText  = "";
-        m_arrivalsInfoText        += m_firstArrivalText;
+        m_arrivalsInfoText  = "";
+        m_arrivalsInfoText += m_firstArrivalText;
 
         if ((m_secondArrivalText != "null") && (m_secondArrivalText != ""))
         {
