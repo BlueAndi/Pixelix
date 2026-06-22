@@ -68,9 +68,6 @@
  */
 const char* ChicagoBusTrackerPlugin::CHICAGO_BUS_BASE_URI = "http://ctabustracker.com/bustime/api/v3";
 
-/* Initialize shared API key config file. */
-const char* ChicagoBusTrackerPlugin::API_KEY_FILE_PATH    = "/configuration/chicago_bus_api_key.json";
-
 /* Initialize plugin topics. */
 const char* ChicagoBusTrackerPlugin::TOPIC_CONFIG         = "chicagobus";
 const char* ChicagoBusTrackerPlugin::TOPIC_ROUTES         = "chicagobusroutes";
@@ -82,7 +79,7 @@ const char* ChicagoBusTrackerPlugin::COLOR_DISPLAY        = "{#FF5500}";
 const char* ChicagoBusTrackerPlugin::COLOR_DELAY          = "{#FD1000}";
 const char* ChicagoBusTrackerPlugin::COLOR_DUE            = "{#00AF02}";
 
-// Share the key across all instances.
+/* Share the key across all instances. */
 String ChicagoBusTrackerPlugin::apiKey                    = "";
 
 /******************************************************************************
@@ -234,8 +231,6 @@ void ChicagoBusTrackerPlugin::start(uint16_t width, uint16_t height)
     m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
-
-    apiKey = getApiKey();
 }
 
 void ChicagoBusTrackerPlugin::stop()
@@ -367,34 +362,6 @@ void ChicagoBusTrackerPlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-String ChicagoBusTrackerPlugin::getApiKey() const
-{
-    if (apiKey.isEmpty() || (apiKey == "null"))
-    {
-        const size_t        JSON_DOC_SIZE = 44U;
-        DynamicJsonDocument jsonDocApiKey(JSON_DOC_SIZE);
-        JsonFile            jsonFile(FILESYSTEM);
-
-        if (false == jsonFile.load(API_KEY_FILE_PATH, jsonDocApiKey))
-        {
-            LOG_WARNING("Failed to load shared ChicagoBusTracker API key");
-        }
-        else if (false == jsonDocApiKey.is<JsonObjectConst>())
-        {
-            LOG_ERROR("ChicagoBusTracker API key document should contain a JSON object");
-        }
-        else if (false == jsonDocApiKey["apiKey"].is<String>())
-        {
-            LOG_ERROR("ChicagoBusTracker on-disk API key is not a string");
-        }
-        else
-        {
-            return jsonDocApiKey["apiKey"];
-        }
-    }
-    return apiKey;
-}
-
 // TODO: Add locale option to config for CTA API V3
 void ChicagoBusTrackerPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
@@ -452,27 +419,12 @@ bool ChicagoBusTrackerPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        apiKey                            = jsonApiKey.as<const char*>();
-        m_rte                             = jsonRte.as<const char*>();
-        m_dir                             = jsonDir.as<const char*>();
-        m_stpid                           = jsonStpid.as<const char*>();
+        apiKey        = jsonApiKey.as<const char*>();
+        m_rte         = jsonRte.as<const char*>();
+        m_dir         = jsonDir.as<const char*>();
+        m_stpid       = jsonStpid.as<const char*>();
 
-        uint8_t             count         = jsonCount.as<uint8_t>();
-
-        const size_t        JSON_DOC_SIZE = 44U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonFile            jsonFile(FILESYSTEM);
-
-        jsonDoc["apiKey"] = apiKey;
-
-        if (false == jsonFile.save(API_KEY_FILE_PATH, jsonDoc))
-        {
-            LOG_ERROR("Failed to save ChicagoBusTracker API key.");
-        }
-        else
-        {
-            /* proceed with other fields */
-        }
+        uint8_t count = jsonCount.as<uint8_t>();
 
         if (jsonOrig.as<bool>())
         {
@@ -761,9 +713,7 @@ void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes) const
 
     HTTPClient http;
 
-    apiKey = getApiKey();
-
-    String url;
+    String     url;
     url.reserve(98U);
 
     url += CHICAGO_BUS_BASE_URI;
@@ -826,9 +776,7 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs) const
 
     HTTPClient http;
 
-    apiKey = getApiKey();
-
-    String url;
+    String     url;
     url.reserve(110U);
 
     url += CHICAGO_BUS_BASE_URI;
@@ -892,9 +840,7 @@ void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops) const
 
     HTTPClient http;
 
-    apiKey = getApiKey();
-
-    String url;
+    String     url;
     url.reserve(120U);
     url += CHICAGO_BUS_BASE_URI;
     url += "/getstops?";
