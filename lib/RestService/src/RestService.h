@@ -44,6 +44,7 @@
 #include <HttpService.h>
 #include <Mutex.hpp>
 #include <ArduinoJson.h>
+#include <PsramJsonDocument.hpp>
 #include <map>
 #include <Logging.h>
 #include <vector>
@@ -71,7 +72,7 @@ public:
     /**
      * Prototype of a preprocessing callback for a successful response.
      */
-    typedef std::function<bool(const char*, size_t, DynamicJsonDocument&)> PreProcessCallback;
+    typedef std::function<bool(const char*, size_t, PsramJsonDocument&)> PreProcessCallback;
 
     /**
      * Get the REST service instance.
@@ -144,7 +145,7 @@ public:
      *
      * @return If a response is available, it will return true otherwise false.
      */
-    bool getResponse(uint32_t restId, bool& isValidRsp, DynamicJsonDocument& payload);
+    bool getResponse(uint32_t restId, bool& isValidRsp, PsramJsonDocument& payload);
 
     /**
      * Aborts a pending request. If there is already a response in the response queue it will be deleted as well.
@@ -165,9 +166,9 @@ private:
      */
     struct Response
     {
-        uint32_t            restId;      /**< Used to identify plugin in RestService. */
-        bool                isRsp;       /**< true: successful response, false: request failed */
-        DynamicJsonDocument jsonDocData; /**< Content of the response. Only valid if isRsp == true. */
+        uint32_t          restId;      /**< Used to identify plugin in RestService. */
+        bool              isRsp;       /**< true: successful response, false: request failed */
+        PsramJsonDocument jsonDocData; /**< Content of the response. Only valid if isRsp == true. */
 
         /**
          * Constructs a response.
@@ -175,14 +176,14 @@ private:
         Response() :
             restId(INVALID_REST_ID),
             isRsp(false),
-            jsonDocData(4096U)
+            jsonDocData(0U)
         {
         }
 
         /**
          * Constructs a response.
          *
-         * @param[in] dataSize Size of the DynamicJsonDocument which holds the data.
+         * @param[in] dataSize Size of the PsramJsonDocument which holds the data.
          */
         explicit Response(size_t dataSize) :
             restId(INVALID_REST_ID),

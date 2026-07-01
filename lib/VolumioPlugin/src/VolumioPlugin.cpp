@@ -90,10 +90,10 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg  = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonHost = value["host"];
+        const size_t      JSON_DOC_SIZE = 512U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg  = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonHost = value["host"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -256,8 +256,8 @@ void VolumioPlugin::process(bool isConnected)
     if (RestService::INVALID_REST_ID != dynamicRestId)
     {
         /* Get the response from the REST service. */
-        DynamicJsonDocument jsonDoc(0U);
-        bool                isValidResponse;
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
 
         if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
@@ -365,7 +365,7 @@ bool VolumioPlugin::startHttpRequest()
 {
     bool                            status = false;
     RestService::PreProcessCallback preProcessCallback =
-        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+        [this](const char* payload, size_t size, PsramJsonDocument& doc) {
             return this->preProcessAsyncWebResponse(payload, size, doc);
         };
 
@@ -388,7 +388,7 @@ bool VolumioPlugin::startHttpRequest()
     return status;
 }
 
-bool VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
+bool VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     bool                            isSuccessful = false;
     const size_t                    FILTER_SIZE  = 128U;
@@ -422,7 +422,7 @@ bool VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t paylo
     return isSuccessful;
 }
 
-void VolumioPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void VolumioPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
     JsonVariantConst jsonStatus  = jsonDoc["status"];
     JsonVariantConst jsonTitle   = jsonDoc["title"];

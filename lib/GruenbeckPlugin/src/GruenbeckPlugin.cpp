@@ -90,11 +90,11 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg = jsonDoc.to<JsonObject>();
-        String              ipAddress;
-        JsonVariantConst    jsonIpAddress = value["ipAddress"];
+        const size_t      JSON_DOC_SIZE = 512U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg = jsonDoc.to<JsonObject>();
+        String            ipAddress;
+        JsonVariantConst  jsonIpAddress = value["ipAddress"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -242,8 +242,8 @@ void GruenbeckPlugin::process(bool isConnected)
 
     if (RestService::INVALID_REST_ID != dynamicRestId)
     {
-        DynamicJsonDocument jsonDoc(0U);
-        bool                isValidResponse;
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
 
         /* Get the response from the REST service. */
         if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
@@ -323,7 +323,7 @@ bool GruenbeckPlugin::startHttpRequest()
 {
     bool                            status = false;
     RestService::PreProcessCallback preProcessCallback =
-        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+        [this](const char* payload, size_t size, PsramJsonDocument& doc) {
             return this->preProcessAsyncWebResponse(payload, size, doc);
         };
 
@@ -346,7 +346,7 @@ bool GruenbeckPlugin::startHttpRequest()
     return status;
 }
 
-bool GruenbeckPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
+bool GruenbeckPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     /* Structure of response-payload for requesting D_Y_10_1
      *
@@ -378,7 +378,7 @@ bool GruenbeckPlugin::preProcessAsyncWebResponse(const char* payload, size_t pay
     return isSuccessful;
 }
 
-void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void GruenbeckPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
     JsonVariantConst jsonRestCapacity = jsonDoc["restCapacity"];
 

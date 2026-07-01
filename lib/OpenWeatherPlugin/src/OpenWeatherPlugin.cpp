@@ -104,16 +104,16 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonSourceId     = value["sourceId"];
-        JsonVariantConst    jsonUpdatePeriod = value["updatePeriod"];
-        JsonVariantConst    jsonApiKey       = value["apiKey"];
-        JsonVariantConst    jsonLatitude     = value["latitude"];
-        JsonVariantConst    jsonLongitude    = value["longitude"];
-        JsonVariantConst    jsonWeatherInfo  = value["weatherInfo"];
-        JsonVariantConst    jsonUnits        = value["units"];
+        const size_t      JSON_DOC_SIZE = 512U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg          = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonSourceId     = value["sourceId"];
+        JsonVariantConst  jsonUpdatePeriod = value["updatePeriod"];
+        JsonVariantConst  jsonApiKey       = value["apiKey"];
+        JsonVariantConst  jsonLatitude     = value["latitude"];
+        JsonVariantConst  jsonLongitude    = value["longitude"];
+        JsonVariantConst  jsonWeatherInfo  = value["weatherInfo"];
+        JsonVariantConst  jsonUnits        = value["units"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -318,8 +318,8 @@ void OpenWeatherPlugin::process(bool isConnected)
 
     if (RestService::INVALID_REST_ID != dynamicRestId)
     {
-        DynamicJsonDocument jsonDoc(0U);
-        bool                isValidResponse;
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
 
         /* Get the response from the REST service. */
         if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
@@ -553,7 +553,7 @@ bool OpenWeatherPlugin::startHttpRequest(const IOpenWeatherGeneric* source)
 {
     bool                            status = false;
     RestService::PreProcessCallback preProcessCallback =
-        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+        [this](const char* payload, size_t size, PsramJsonDocument& doc) {
             return this->preProcessAsyncWebResponse(payload, size, doc);
         };
 
@@ -582,7 +582,7 @@ bool OpenWeatherPlugin::startHttpRequest(const IOpenWeatherGeneric* source)
     return status;
 }
 
-bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
+bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
@@ -626,7 +626,7 @@ bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
     return isSuccessful;
 }
 
-void OpenWeatherPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void OpenWeatherPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
     IOpenWeatherGeneric* source = getWeatherSourceByStatus();
 
