@@ -475,7 +475,7 @@ bool ChicagoBusTrackerPlugin::startHttpRequest()
         (false == m_dir.isEmpty()))
     {
         String url = CHICAGO_BUS_BASE_URI;
-        url.reserve(148U);
+        (void)url.reserve(148U);
 
         /* Documentation:
          * https://www.transitchicago.com/developers/bustracker/
@@ -714,7 +714,7 @@ void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes) const
     HTTPClient http;
 
     String     url;
-    url.reserve(98U);
+    (void)url.reserve(98U);
 
     url += CHICAGO_BUS_BASE_URI;
     url += "/getroutes?";
@@ -777,7 +777,7 @@ void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs) const
     HTTPClient http;
 
     String     url;
-    url.reserve(110U);
+    (void)url.reserve(110U);
 
     url += CHICAGO_BUS_BASE_URI;
     url += "/getdirections?";
@@ -841,7 +841,7 @@ void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops) const
     HTTPClient http;
 
     String     url;
-    url.reserve(120U);
+    (void)url.reserve(120U);
     url += CHICAGO_BUS_BASE_URI;
     url += "/getstops?";
     url += "key=";

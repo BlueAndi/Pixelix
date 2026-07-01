@@ -135,12 +135,12 @@ ChicagoBusTrackerView32x8::ChicagoBusTrackerView32x8() :
     m_arrivalsWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     m_arrivalsWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_LEFT);
 
-    m_routeNumberText.reserve(16U);
-    m_routeInfoText.reserve(128U);
-    m_arrivalsInfoText.reserve(64U);
-    m_firstArrivalText.reserve(18U);
-    m_secondArrivalText.reserve(18U);
-    m_thirdArrivalText.reserve(18U);
+    (void)m_routeNumberText.reserve(16U);
+    (void)m_routeInfoText.reserve(128U);
+    (void)m_arrivalsInfoText.reserve(64U);
+    (void)m_firstArrivalText.reserve(18U);
+    (void)m_secondArrivalText.reserve(18U);
+    (void)m_thirdArrivalText.reserve(18U);
 
     m_routeNumberText  = " - ";
     m_firstArrivalText = " NO DATA ";
