@@ -177,7 +177,7 @@ public:
 
     /**
      * 32x8 uses one widget for all route info, one widget for arrivals
-     * 
+     *
      */
     void updateWidgets()
     {
