@@ -175,6 +175,10 @@ public:
         m_thirdArrivalText = text;
     }
 
+    /**
+     * 32x8 uses one widget for all route info, one widget for arrivals
+     * 
+     */
     void updateWidgets()
     {
         m_routeWidget.setFormatStr(m_routeNumberText + m_routeInfoText);
