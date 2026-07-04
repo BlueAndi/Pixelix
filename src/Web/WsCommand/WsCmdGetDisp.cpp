@@ -37,6 +37,7 @@
 #include "DisplayMgr.h"
 #include "SlotList.h"
 
+#include <Logging.h>
 #include <Util.h>
 #include <Display.h>
 
@@ -76,98 +77,91 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
     {
         sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
+    else if (false == ensureFramebuffer())
+    {
+        LOG_WARNING("Websocket GETDISP failed: framebuffer allocation failed.");
+        sendNegativeResponse(server, clientId, "\"Internal error.\"");
+    }
     else
     {
-        constexpr size_t fbLength    = CONFIG_LED_MATRIX_WIDTH * CONFIG_LED_MATRIX_HEIGHT;
-        uint32_t*        framebuffer = new (std::nothrow) uint32_t[fbLength];
+        String         msg;
+        uint8_t        slotId = SlotList::SLOT_ID_INVALID;
 
-        if (nullptr == framebuffer)
+        uint32_t       lastColor;                          /* The color that started a repeat sequence.   */
+        uint32_t       color      = 0U;                    /* Actual color in read order.                 */
+        size_t         index      = 1U;                    /* Next value from framebuffer to used.        */
+        uint32_t       repeat     = 0U;                    /* Repeat count for current color.             */
+        const uint32_t REPEAT_MAX = 0xFFU;                 /* Maximum repeat color counter value.         */
+        GetDispState   state      = STATE_GETDISP_COLLECT; /* Frame buffer reading state. */
+
+        DisplayMgr::getInstance().getFBCopy(m_framebuffer, FRAMEBUFFER_LENGTH, &slotId);
+
+        preparePositiveResponse(msg);
+        msg       += slotId;
+
+        /* RGB data is send in a "compressed" format using a repeat counter in
+         * the upper 8 bits. The send values are <rep>:<r>:<g>:<b>.
+         * The repeat counter indicates how often the same color shall be used
+         * in subsequent pixels. Use a small state machine to calculate the
+         * repeat counter.
+         *
+         * Example:
+         * A black only 32x8 framebuffer would be send as a single 0xFF000000 value.
+         *
+         */
+        lastColor  = m_framebuffer[0];
+
+        while (state != STATE_GETDISP_FINISH)
         {
-            sendNegativeResponse(server, clientId, "\"Internal error.\"");
-        }
-        else
-        {
-            String         msg;
-            uint8_t        slotId = SlotList::SLOT_ID_INVALID;
-
-            uint32_t       lastColor;                          /* The color that started a repeat sequence.   */
-            uint32_t       color      = 0U;                    /* Actual color in read order.                 */
-            size_t         index      = 1U;                    /* Next value from framebuffer to used.        */
-            uint32_t       repeat     = 0U;                    /* Repeat count for current color.             */
-            const uint32_t REPEAT_MAX = 0xFFU;                 /* Maximum repeat color counter value.         */
-            GetDispState   state      = STATE_GETDISP_COLLECT; /* Frame buffer reading state. */
-
-            DisplayMgr::getInstance().getFBCopy(framebuffer, fbLength, &slotId);
-
-            preparePositiveResponse(msg);
-            msg       += slotId;
-
-            /* RGB data is send in a "compressed" format using a repeat counter in
-             * the upper 8 bits. The send values are <rep>:<r>:<g>:<b>.
-             * The repeat counter indicates how often the same color shall be used
-             * in subsequent pixels. Use a small state machine to calculate the
-             * repeat counter.
-             *
-             * Example:
-             * A black only 32x8 framebuffer would be send as a single 0xFF000000 value.
-             *
-             */
-            lastColor  = framebuffer[0];
-
-            while (state != STATE_GETDISP_FINISH)
+            if (STATE_GETDISP_COLLECT == state)
             {
-                if (STATE_GETDISP_COLLECT == state)
+                if (FRAMEBUFFER_LENGTH > index)
                 {
-                    if (index < fbLength)
+                    color = m_framebuffer[index];
+                    if (color != lastColor)
                     {
-                        color = framebuffer[index];
-                        if (color != lastColor)
-                        {
-                            /* Color has changed, send out current sequence */
-                            state = STATE_GETDISP_SEND;
-                        }
-                        else
-                        {
-                            ++repeat;
-                            if (REPEAT_MAX == repeat)
-                            {
-                                /* 8-bit repeat counter maximum reached, send color sequence. */
-                                state = STATE_GETDISP_SEND;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        /* End of frame buffer reached, send final color sequence. */
+                        /* Color has changed, send out current sequence */
                         state = STATE_GETDISP_SEND;
                     }
-                    ++index;
-                }
-                else /* STATE_GETDISP_SEND */
-                {
-                    msg += DELIMITER;
-
-                    /* Lower 24 bits is RGB, upper 8 bits repeat count. */
-                    msg += Util::uint32ToHex(lastColor | (repeat << 24U));
-
-                    if (index < fbLength)
-                    {
-                        lastColor = color;
-                        repeat    = 0U;
-                        state     = STATE_GETDISP_COLLECT;
-                    }
                     else
                     {
-                        /* Frame buffer length consumed, terminate state machine loop. */
-                        state = STATE_GETDISP_FINISH;
+                        ++repeat;
+                        if (REPEAT_MAX == repeat)
+                        {
+                            /* 8-bit repeat counter maximum reached, send color sequence. */
+                            state = STATE_GETDISP_SEND;
+                        }
                     }
                 }
+                else
+                {
+                    /* End of frame buffer reached, send final color sequence. */
+                    state = STATE_GETDISP_SEND;
+                }
+                ++index;
             }
+            else /* STATE_GETDISP_SEND */
+            {
+                msg += DELIMITER;
 
-            delete[] framebuffer;
+                /* Lower 24 bits is RGB, upper 8 bits repeat count. */
+                msg += Util::uint32ToHex(lastColor | (repeat << 24U));
 
-            sendResponse(server, clientId, msg);
+                if (FRAMEBUFFER_LENGTH > index)
+                {
+                    lastColor = color;
+                    repeat    = 0U;
+                    state     = STATE_GETDISP_COLLECT;
+                }
+                else
+                {
+                    /* Frame buffer length consumed, terminate state machine loop. */
+                    state = STATE_GETDISP_FINISH;
+                }
+            }
         }
+
+        sendResponse(server, clientId, msg);
     }
 
     m_isError = false;
@@ -178,6 +172,27 @@ void WsCmdGetDisp::setPar(const char* par)
     UTIL_NOT_USED(par);
 
     m_isError = true;
+}
+
+bool WsCmdGetDisp::ensureFramebuffer()
+{
+    bool isAvailable = false;
+
+    if (nullptr != m_framebuffer)
+    {
+        isAvailable = true;
+    }
+    else
+    {
+        m_framebuffer = new (std::nothrow) uint32_t[FRAMEBUFFER_LENGTH];
+
+        if (nullptr != m_framebuffer)
+        {
+            isAvailable = true;
+        }
+    }
+
+    return isAvailable;
 }
 
 /******************************************************************************
