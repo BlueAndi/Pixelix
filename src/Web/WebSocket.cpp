@@ -200,6 +200,9 @@ void WebSocketSrv::process()
     {
         WebSocketMsg* msg = nullptr;
 
+        /* Release stale websocket clients and related buffers. */
+        m_webSocket.cleanupClients();
+
         /* Handle all messages in the input queue. */
         while (true == m_msgQueue.receive(&msg, 0U))
         {
