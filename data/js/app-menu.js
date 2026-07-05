@@ -1,5 +1,9 @@
 "use strict";
 
+/* Auto-generated shared menu bundle. */
+
+"use strict";
+
 var menu = {}
 
 menu.data = [{
@@ -133,3 +137,123 @@ menu._createSubMenuItem = function($div, subMenuItem) {
 
     return isActive;
 };
+
+
+"use strict";
+
+var pluginSubMenu = [
+    {
+        title: "ChicagoBusTrackerPlugin",
+        hyperRef: "/plugins/ChicagoBusTrackerPlugin/ChicagoBusTrackerPlugin.html"
+    },
+    {
+        title: "CountdownPlugin",
+        hyperRef: "/plugins/CountdownPlugin/CountdownPlugin.html"
+    },
+    {
+        title: "DateTimePlugin",
+        hyperRef: "/plugins/DateTimePlugin/DateTimePlugin.html"
+    },
+    {
+        title: "DDPPlugin",
+        hyperRef: "/plugins/DDPPlugin/DDPPlugin.html"
+    },
+    {
+        title: "FirePlugin",
+        hyperRef: "/plugins/FirePlugin/FirePlugin.html"
+    },
+    {
+        title: "GameOfLifePlugin",
+        hyperRef: "/plugins/GameOfLifePlugin/GameOfLifePlugin.html"
+    },
+    {
+        title: "GrabViaMqttPlugin",
+        hyperRef: "/plugins/GrabViaMqttPlugin/GrabViaMqttPlugin.html"
+    },
+    {
+        title: "GrabViaRestPlugin",
+        hyperRef: "/plugins/GrabViaRestPlugin/GrabViaRestPlugin.html"
+    },
+    {
+        title: "GruenbeckPlugin",
+        hyperRef: "/plugins/GruenbeckPlugin/GruenbeckPlugin.html"
+    },
+    {
+        title: "IconTextLampPlugin",
+        hyperRef: "/plugins/IconTextLampPlugin/IconTextLampPlugin.html"
+    },
+    {
+        title: "IconTextPlugin",
+        hyperRef: "/plugins/IconTextPlugin/IconTextPlugin.html"
+    },
+    {
+        title: "MatrixPlugin",
+        hyperRef: "/plugins/MatrixPlugin/MatrixPlugin.html"
+    },
+    {
+        title: "MultiIconPlugin",
+        hyperRef: "/plugins/MultiIconPlugin/MultiIconPlugin.html"
+    },
+    {
+        title: "OpenMeteoPlugin",
+        hyperRef: "/plugins/OpenMeteoPlugin/OpenMeteoPlugin.html"
+    },
+    {
+        title: "OpenWeatherPlugin",
+        hyperRef: "/plugins/OpenWeatherPlugin/OpenWeatherPlugin.html"
+    },
+    {
+        title: "RainbowPlugin",
+        hyperRef: "/plugins/RainbowPlugin/RainbowPlugin.html"
+    },
+    {
+        title: "SensorPlugin",
+        hyperRef: "/plugins/SensorPlugin/SensorPlugin.html"
+    },
+    {
+        title: "SignalDetectorPlugin",
+        hyperRef: "/plugins/SignalDetectorPlugin/SignalDetectorPlugin.html"
+    },
+    {
+        title: "SoundReactivePlugin",
+        hyperRef: "/plugins/SoundReactivePlugin/SoundReactivePlugin.html"
+    },
+    {
+        title: "SunrisePlugin",
+        hyperRef: "/plugins/SunrisePlugin/SunrisePlugin.html"
+    },
+    {
+        title: "SysMsgPlugin",
+        hyperRef: "/plugins/SysMsgPlugin/SysMsgPlugin.html"
+    },
+    {
+        title: "TempHumidPlugin",
+        hyperRef: "/plugins/TempHumidPlugin/TempHumidPlugin.html"
+    },
+    {
+        title: "VolumioPlugin",
+        hyperRef: "/plugins/VolumioPlugin/VolumioPlugin.html"
+    },
+    {
+        title: "WifiStatusPlugin",
+        hyperRef: "/plugins/WifiStatusPlugin/WifiStatusPlugin.html"
+    },
+    {
+        title: "WormPlugin",
+        hyperRef: "/plugins/WormPlugin/WormPlugin.html"
+    }
+];
+
+
+"use strict";
+
+var serviceSubMenu = [
+    {
+        title: "MqttService",
+        hyperRef: "/services/MqttService/MqttService.html"
+    },
+    {
+        title: "TimerService",
+        hyperRef: "/services/TimerService/TimerService.html"
+    }
+];
