@@ -17,6 +17,7 @@ Each plugin is identified by its unique UID.
   - [MultiIconPlugin](#multiiconplugin)
 - [Dedicated plugins](#dedicated-plugins)
   - [BatteryPlugin](#batteryplugin)
+  - [ChicagoBusTrackerPlugin](#chicagobustrackerplugin)
   - [CountdownPlugin](#countdownplugin)
   - [DateTimePlugin](#datetimeplugin)
   - [DDPPlugin](#ddpplugin)
@@ -84,6 +85,24 @@ Dedicated plugins are plugins which only serves one single purpose thy are only 
 ### BatteryPlugin
 
 This plugin displays the battery symbol with state of charge bar.
+
+### ChicagoBusTrackerPlugin
+
+Fetches upcoming bus arrival times from the [CTA Bus Tracker API](https://ctabustracker.com). Each plugin instance handles a single route + stop + direction.
+
+To use it, you need to [create a developer account with the CTA and request a Bus Tracker API key](https://www.ctabustracker.com/account). It is recommended to first set only the API Key in the plugin configuration, then allow up to 2 minutes for the default data to be fetched: upcoming bus times for `55 to Museum of Science & Industry from 55th Street & St. Louis`.
+
+Once you've confirmed the route information is loading correctly, proceed with configuring the route + direction + stop.
+
+Note that CTA's API is not the most reliable service in the world -- brief outages are fairly common, so wait and try again before giving up.
+
+Also note that if a given bus route is not currently operating, or there are no expected arrivals within the next 30 minutes, the display will read `NO DATA` - this does not necessarily indicate an issue with the plugin, nor an API outage.
+
+All configuration can also be set via the REST API, and route information can be queried with these endpoints:
+
+- `/chicagobusroutes`: returns all CTA bus routes, their ID numbers, and their display names
+- `/chicagobusdirections?rt=XX`: Returns the valid directions for the given route number, usually `["Eastbound", "Westbound"]` or `["Northbound", "Southbound"]`. `XX` is the bus route ID, such as `4`, `55`, `X49`, `151`, etc.
+- `/chicagobusstops?rt=XX&dir=$DIRECTION`: returns a list of all stops for a given route and direction, with their numeric ID and display name. `XX` is the route ID, such as `4`, `55`, `X49`, `151`, etc. `$DIRECTION` is one of the verbatim strings from the `/ctabusdirections` response: usually one of `Eastbound`, `Westbound`, `Northbound`, `Southbound`
 
 ### CountdownPlugin
 

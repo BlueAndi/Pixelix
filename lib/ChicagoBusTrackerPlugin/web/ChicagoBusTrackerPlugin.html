@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav me-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">ChicagoBusTrackerPlugin</h1>
+                <p><img src="ChicagoBusTrackerPlugin.png" alt="Screenshot" /></p>
+                <p>Shows estimated arrival times for a given route+stop+direction</p>
+                <p>Times are updated at least every 2 minutes</p>
+                <p>First, you must set an API key and click Update. Then, the lists of routes and stops will populate.</p>
+                <p>You cannot fetch route or stop IDs from the REST API without an API key.</p>
+                <p>You can sign up for a CTA Bus Tracker API key <a href="https://www.ctabustracker.com/account">from the CTA Developer Portal website</a></p>
+                <p>The CTA API limits are quite generous; this plugin will never own its own exhaust your API request quota, even running the maximum number of plugin instances.</p>
+                <h2>Configuration</h2>
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUid" size="1" onChange="handleChange('pluginUid')">
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="apiKey">CTA Bus Tracker API Key:</label>
+                            <input class="form-control" type="text" id="apiKey" name="apiKey" />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="routes">Route:</label>
+                            <select class="form-control" id="routes" name="routes" size="1" onchange="handleChange('routes')"></select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="directions">Direction:</label>
+                            <select class="form-control" id="directions" name="directions" size="1" onchange="handleChange('directions')"></select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="stops">Stop:</label>
+                            <select class="form-select" id="stops" size="1" onchange="handleChange('stops')"></select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="count">Arrivals Count:</label>
+                            <select class="form-select" id="count" size="1" onchange="handleChange('count')">
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                                <option value=3>3</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="origin" name="origin" />
+                                <label class="form-label" for="origin">Show stop name (e.g. "...from 55th Street & St. Louis"):</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="dest" name="dest" />
+                                <label class="form-label" for="dest">Show destination (e.g. "...to Museum of Science and Industry"):</label>
+                            </div>
+                        </div>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2026 Julie Hill (queenkjuul@pm.me)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var pluginName  = "ChicagoBusTrackerPlugin";
+            var restClient  = new pixelix.rest.Client();
+            var rootPluginId = ""
+            var selected = {
+                routes: "",
+                directions: "",
+                stops: "",
+                count: 2
+            }
+
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+
+            async function handleChange(elementId) {
+                const elem = document.getElementById(elementId)
+                const value = elem.value
+                selected[elementId] = value
+                try {
+                    switch (elementId) {
+                        case "pluginUid":
+                            await getConfig(value)
+                            await getRoutes()
+                            await getDirections()
+                            await getStops()
+                            return
+                        case "routes":
+                            await getDirections()
+                            await getStops()
+                            return
+                        case "directions":
+                            await getStops()
+                    }
+                } catch (e) {
+                    console.error("Error fetching data: ", e)
+                }
+            }
+
+            function generateOptions(
+                elementId,
+                values,
+                textproperty = null,
+                valueproperty = null
+            ) {
+                const element = document.getElementById(elementId)
+                if (!element || !values || values.length === 0) {
+                    return element
+                }
+
+                element.innerHTML = ""
+
+                const options = Array.from(element.options).map((o) => o.value)
+
+                values.forEach((value) => {
+                    const optionValue = value[valueproperty] ?? value
+                    const optionText = value[textproperty] ?? value
+                    const option = document.createElement("option")
+                    option.value = optionValue
+                    option.text = optionText
+                    element.appendChild(option)
+                })
+
+                return element
+            }
+
+            function selectSelectedProperty(element, value) {
+                const options = Array.from(element?.options ?? [{ value }]).map((o) => o?.value)
+                var foundIndex = options.findIndex((v) => v == value)
+                if (foundIndex < 0) {
+                    console.warn("Not Found: ", value, options)
+                    foundIndex = 0
+                }
+                element.selectedIndex = foundIndex
+                selected[element.id] = element.value
+            }
+
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+
+                            $("#pluginUid").append($option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+
+
+            async function getConfig(pluginUid) {
+                disableUI()
+                rootPluginId = pluginUid
+
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                        isJsonResponse: true,
+                    })
+
+                    if (!rsp.data) {
+                        return
+                    }
+
+                    const { apiKey, rte, stpid, dir, orig, dest, count } = rsp.data
+
+                    $("#apiKey").val(apiKey)
+
+                    selected.routes = rte
+                    const routeselem = generateOptions("routes", [selected.routes])
+                    selectSelectedProperty(routeselem, selected.routes)
+
+                    selected.directions = dir
+                    const direlem = generateOptions("directions", [selected.directions])
+                    selectSelectedProperty(direlem, selected.directions)
+
+                    selected.stops = stpid
+                    const stpelem = generateOptions("stops", [selected.stops])
+                    selectSelectedProperty(stpelem, [selected.stops])
+
+                    selected.count = count
+                    const countelem = document.getElementById("count")
+                    countelem.selectedIndex = count - 1
+
+                    const originelem = document.getElementById("origin")
+                    originelem.checked = orig
+
+                    const destelem = document.getElementById("dest")
+                    destelem.checked = dest
+                } catch (e) {
+                    console.log("Internal error.")
+                    console.log(e)
+                }
+                enableUI()
+            }
+
+            function setConfig(pluginUid) {
+                disableUI()
+                rootPluginId = pluginUid
+                const parameter = {
+                    apiKey: $("#apiKey").val(),
+                    rte: selected.routes,
+                    dir: selected.directions,
+                    stpid: selected.stops,
+                    orig: $("#origin")[0].checked,
+                    dest: $("#dest")[0].checked,
+                    count: $("#count")[0].value,
+                }
+
+                return utils
+                .makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                    isJsonResponse: true,
+                    parameter,
+                })
+                .then(function (rsp) {
+                    alert("Ok.")
+                })
+                .then(() => getConfig(pluginUid))
+                .then(getRoutes)
+                .then(getDirections)
+                .then(getStops)
+                .catch(function (rsp) {
+                    alert("Failed.")
+                })
+                .finally(function () {
+                    enableUI()
+                })
+            }
+
+            async function getRoutes() {
+                disableUI()
+
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: "/rest/api/v1/display/uid/" + rootPluginId + "/chicagobusroutes",
+                        isJsonResponse: true,
+                    })
+                    const routes = rsp?.data?.routes
+                    if (!routes) {
+                        return
+                    }
+                    values = routes?.map((route) => {
+                        return {
+                        value: route.rt,
+                        text: route.rt + " - " + route.rtnm,
+                        }
+                    })
+                    const routeselem = generateOptions("routes", values, "text", "value")
+                    selectSelectedProperty(routeselem, selected["routes"])
+                } catch (e) {
+                    console.error("Error getting routes: ", e)
+                }
+                enableUI()
+            }
+
+            async function getDirections() {
+                disableUI()
+
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url:
+                        "/rest/api/v1/display/uid/" +
+                        rootPluginId +
+                        "/chicagobusdirections?rt=" +
+                        selected.routes,
+                        isJsonResponse: true,
+                    })
+                    const { dirs } = rsp?.data
+                    if (!dirs) {
+                        return
+                    }
+                    const direlem = generateOptions("directions", dirs)
+                    selectSelectedProperty(direlem, selected.directions)
+                } catch (e) {
+                    console.error("Error getting directions: ", e)
+                }
+                enableUI()
+            }
+
+            async function getStops() {
+                disableUI()
+
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url:
+                        "/rest/api/v1/display/uid/" +
+                        rootPluginId +
+                        "/chicagobusstops?rt=" +
+                        selected.routes +
+                        "&dir=" +
+                        selected.directions,
+                        isJsonResponse: true,
+                    })
+                    const { stops } = rsp?.data
+                    if (!stops) {
+                        return
+                    }
+                    const stopsElem = generateOptions("stops", stops, "stpnm", "stpid")
+                    selectSelectedProperty(stopsElem, selected.stops)
+                } catch (e) {
+                    console.error("Error getting stops: ", e)
+                }
+                enableUI()
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+                menu.create("menu", menu.data);
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+
+                /* Load all plugin instances. */
+                getPluginInstances()
+                    .then(function(cnt) {
+                        var select = document.getElementById("pluginUid");
+
+                        if (0 < cnt) {
+                            rootPluginId = select.options[select.selectedIndex].value
+                            return getConfig(rootPluginId);
+                        }
+                    })
+                    .then(getRoutes)
+                    .then(getDirections)
+                    .then(getStops);
+            });
+        </script>
+    </body>
+</html>
