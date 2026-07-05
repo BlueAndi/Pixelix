@@ -80,7 +80,7 @@ void Utf8::toIntern(const String& utf8, String& intern)
 
     /* Clear and reserve space for the internal string to avoid multiple reallocations. */
     intern.clear();
-    intern.reserve(utf8Length);
+    (void)intern.reserve(utf8Length);
 
     while (utf8Length > utf8Index)
     {

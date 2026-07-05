@@ -709,7 +709,7 @@ void TextWidget::getText(String& text, const TWAbstractSyntaxTree& ast) const
 
     /* Clear and reserve space for the single line string to avoid multiple reallocations. */
     text.clear();
-    text.reserve(textLength);
+    (void)text.reserve(textLength);
 
     for (idx = 0U; idx < length; ++idx)
     {
@@ -768,7 +768,7 @@ uint32_t TextWidget::getSingleLine(String& singleLine, const TWAbstractSyntaxTre
 
     /* Clear and reserve space for the single line string to avoid multiple reallocations. */
     singleLine.clear();
-    singleLine.reserve(singleLineLength);
+    (void)singleLine.reserve(singleLineLength);
 
     /* Build single line string. */
     idx        = startIdx;
