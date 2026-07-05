@@ -36,6 +36,7 @@
 #include "HttpServiceWorker.h"
 #include "HttpResponseSink.h"
 #include <Logging.h>
+#include <new>
 
 /******************************************************************************
  * Compiler Switches
@@ -136,7 +137,7 @@ void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerR
     /* HTTP over TLS required? */
     if (true == request.url.startsWith(PREFIX_HTTPS))
     {
-        WiFiClientSecure* secureClient = new WiFiClientSecure();
+        WiFiClientSecure* secureClient = new (std::nothrow) WiFiClientSecure();
 
         if (nullptr != secureClient)
         {

@@ -41,6 +41,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <stdlib.h>
 #include <HTTPClient.h>
 
 /******************************************************************************
@@ -81,7 +82,7 @@ struct HttpRsp
     {
         if (nullptr != payload)
         {
-            delete[] payload;
+            free(payload);
             payload = nullptr;
             size    = 0U;
         }

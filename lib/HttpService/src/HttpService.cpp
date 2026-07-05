@@ -37,6 +37,7 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <Logging.h>
+#include <utility>
 
 /******************************************************************************
  * Compiler Switches
@@ -134,7 +135,7 @@ void HttpService::process()
             /* Handle received HTTP responses. */
             if (INVALID_HTTP_JOB_ID != m_workerData.response.jobId)
             {
-                m_responseList.emplace_back(m_workerData.response);
+                m_responseList.emplace_back(std::move(m_workerData.response));
 
                 /* Clear worker response. */
                 m_workerData.response = WorkerResponse();
@@ -149,7 +150,7 @@ void HttpService::process()
                 /* Check for new requests to process. */
                 if (false == m_requestList.empty())
                 {
-                    m_workerData.request = m_requestList.front();
+                    m_workerData.request = std::move(m_requestList.front());
                     m_activeJobId        = m_workerData.request.jobId;
 
                     /* Remove the request from the list. */
@@ -225,7 +226,7 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
         {
             if (jobId == it->jobId)
             {
-                workerRsp = *it;
+                workerRsp = std::move(*it);
 
                 /* Remove the response from the list. */
                 (void)m_responseList.erase(it);
