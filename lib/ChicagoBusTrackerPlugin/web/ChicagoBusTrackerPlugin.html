@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         <!-- Styles -->
         <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
-        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
-        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+        <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -82,7 +83,7 @@
                                 <label class="form-label" for="dest">Show destination (e.g. "...to Museum of Science and Industry"):</label>
                             </div>
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
             </div>
@@ -109,8 +110,8 @@
 
         <script>
 
-            var pluginName  = "ChicagoBusTrackerPlugin";
-            var restClient  = new pixelix.rest.Client();
+            var pluginName = "ChicagoBusTrackerPlugin";
+            var restClient = new pixelix.rest.Client();
             var rootPluginId = ""
             var selected = {
                 routes: "",
@@ -190,13 +191,13 @@
             }
 
             function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
@@ -211,8 +212,8 @@
                             optionText += ")";
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
 
                             $("#pluginUid").append($option);
 
@@ -221,7 +222,7 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
@@ -289,107 +290,106 @@
                 }
 
                 return utils
-                .makeRequest({
+                    .makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                        isJsonResponse: true,
+                        parameter,
+                    })
+                    .then(function (rsp) {
+                        alert("Ok.")
+                    })
+                    .then(() => getConfig(pluginUid))
+                    .then(getRoutes)
+                    .then(getDirections)
+                    .then(getStops)
+                    .catch(function (rsp) {
+                        alert("Failed.")
+                    })
+                    .finally(function () {
+                        enableUI()
+                    })
+            }
+
+            /**
+             * Submit a relative CTA API path to the device proxy and poll until
+             * the response is ready. Requests are serialized — the caller drives
+             * the next fetch only after awaiting this one.
+             *
+             * @param {string} path - Relative path, e.g. "/getroutes" or
+             *                        "/getdirections?rt=55".
+             * @returns {Promise<object>} Resolved CTA API response object.
+             */
+            async function proxyFetch(path) {
+                const baseUrl = "/rest/api/v1/display/uid/" + rootPluginId + "/chicagobusrequest";
+
+                await utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                    url: baseUrl,
                     isJsonResponse: true,
-                    parameter,
-                })
-                .then(function (rsp) {
-                    alert("Ok.")
-                })
-                .then(() => getConfig(pluginUid))
-                .then(getRoutes)
-                .then(getDirections)
-                .then(getStops)
-                .catch(function (rsp) {
-                    alert("Failed.")
-                })
-                .finally(function () {
-                    enableUI()
-                })
+                    parameter: { path }
+                });
+
+                const maxRetries = 20;
+                for (let i = 0; i < maxRetries; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const rsp = await utils.makeRequest({ method: "GET", url: baseUrl, isJsonResponse: true });
+                    const data = rsp?.data;
+                    if (data?.error) {
+                            throw new Error("Proxy error for " + path + ": " + data.error);
+                    }
+                    if (data && data.pending !== true) {
+                            return data;
+                    }
+                }
+                throw new Error("Proxy timeout for: " + path);
             }
 
             async function getRoutes() {
-                disableUI()
-
+                disableUI();
                 try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url: "/rest/api/v1/display/uid/" + rootPluginId + "/chicagobusroutes",
-                        isJsonResponse: true,
-                    })
-                    const routes = rsp?.data?.routes
-                    if (!routes) {
-                        return
-                    }
-                    values = routes?.map((route) => {
-                        return {
-                        value: route.rt,
-                        text: route.rt + " - " + route.rtnm,
-                        }
-                    })
-                    const routeselem = generateOptions("routes", values, "text", "value")
-                    selectSelectedProperty(routeselem, selected["routes"])
+                    const data = await proxyFetch("/getroutes");
+                    const routes = data?.["bustime-response"]?.routes;
+                    if (!routes) { return; }
+                    const values = routes.map(route => ({ value: route.rt, text: route.rt + " - " + route.rtnm }));
+                    const elem = generateOptions("routes", values, "text", "value");
+                    selectSelectedProperty(elem, selected.routes);
                 } catch (e) {
-                    console.error("Error getting routes: ", e)
+                    console.error("Error getting routes:", e);
                 }
-                enableUI()
+                enableUI();
             }
 
             async function getDirections() {
-                disableUI()
-
+                disableUI();
                 try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url:
-                        "/rest/api/v1/display/uid/" +
-                        rootPluginId +
-                        "/chicagobusdirections?rt=" +
-                        selected.routes,
-                        isJsonResponse: true,
-                    })
-                    const { dirs } = rsp?.data
-                    if (!dirs) {
-                        return
-                    }
-                    const direlem = generateOptions("directions", dirs)
-                    selectSelectedProperty(direlem, selected.directions)
+                    const data = await proxyFetch("/getdirections?rt=" + encodeURIComponent(selected.routes));
+                    const directions = data?.["bustime-response"]?.directions;
+                    if (!directions) { return; }
+                    const dirs = directions.map(d => d.id);
+                    const elem = generateOptions("directions", dirs);
+                    selectSelectedProperty(elem, selected.directions);
                 } catch (e) {
-                    console.error("Error getting directions: ", e)
+                    console.error("Error getting directions:", e);
                 }
-                enableUI()
+                enableUI();
             }
 
             async function getStops() {
-                disableUI()
-
+                disableUI();
                 try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url:
-                        "/rest/api/v1/display/uid/" +
-                        rootPluginId +
-                        "/chicagobusstops?rt=" +
-                        selected.routes +
-                        "&dir=" +
-                        selected.directions,
-                        isJsonResponse: true,
-                    })
-                    const { stops } = rsp?.data
-                    if (!stops) {
-                        return
-                    }
-                    const stopsElem = generateOptions("stops", stops, "stpnm", "stpid")
-                    selectSelectedProperty(stopsElem, selected.stops)
+                    const data = await proxyFetch("/getstops?rt=" + encodeURIComponent(selected.routes) + "&dir=" + encodeURIComponent(selected.directions));
+                    const stops = data?.["bustime-response"]?.stops;
+                    if (!stops) { return; }
+                    const elem = generateOptions("stops", stops, "stpnm", "stpid");
+                    selectSelectedProperty(elem, selected.stops);
                 } catch (e) {
-                    console.error("Error getting stops: ", e)
+                    console.error("Error getting stops:", e);
                 }
-                enableUI()
+                enableUI();
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
@@ -399,7 +399,7 @@
 
                 /* Load all plugin instances. */
                 getPluginInstances()
-                    .then(function(cnt) {
+                    .then(function (cnt) {
                         var select = document.getElementById("pluginUid");
 
                         if (0 < cnt) {
@@ -413,4 +413,5 @@
             });
         </script>
     </body>
+
 </html>
