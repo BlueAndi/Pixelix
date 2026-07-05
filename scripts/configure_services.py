@@ -38,7 +38,7 @@ _LIB_PATH = "./lib"
 
 _WEB_DATA_PATH = "./data/services"
 
-_MENU_FULL_PATH = "./data/js/servicesSubMenu.js"
+_MENU_FULL_PATH = "./scripts/servicesSubMenu.js"
 
 _SERVICE_LIST_FULL_PATH = "./src/Generated/Services.cpp"
 _SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/Services.cpp"
@@ -51,8 +51,10 @@ _SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/Services.cpp"
 # Functions
 ################################################################################
 
+
 def _sort_key(file_path):
     return os.path.basename(file_path)
+
 
 def calculate_path_checksum(paths):
     """Recursively calculates a checksum representing the contents of all files
@@ -85,6 +87,7 @@ def calculate_path_checksum(paths):
 
     return hasher.hexdigest()
 
+
 def _load_json_file(full_path):
     """Load JSON file.
 
@@ -104,6 +107,7 @@ def _load_json_file(full_path):
         pass
 
     return data
+
 
 def _clean_up_folders(service_list, dst_path):
     """Remove folders in destination path, which are not present in the source path.
@@ -139,6 +143,7 @@ def _clean_up_folders(service_list, dst_path):
 
     return is_cleaned_up
 
+
 def _copy_files(src_files, dst_path):
     """Copy service web related files from /lib/<service-name> to /data/services/<service-name>.
         If no destination folder exists, it will be created.
@@ -158,6 +163,7 @@ def _copy_files(src_files, dst_path):
         except FileNotFoundError:
             print(" -> file not found!")
 
+
 def _generate_web_menu(menu_full_path, service_list):
     """Generate the menu.json file.
 
@@ -166,14 +172,14 @@ def _generate_web_menu(menu_full_path, service_list):
         service_list (list): List of all service names
     """
     with open(menu_full_path, 'w', encoding="utf-8") as file_desc:
-        file_desc.write("\"use strict\";\n\n")
         file_desc.write("var serviceSubMenu = [\n")
 
         for idx, service_name in enumerate(service_list):
 
             file_desc.write("    {\n")
             file_desc.write(f"        title: \"{service_name}\",\n")
-            file_desc.write(f"        hyperRef: \"/services/{service_name}/{service_name}.html\"\n")
+            file_desc.write(
+                f"        hyperRef: \"/services/{service_name}/{service_name}.html\"\n")
             file_desc.write("    }")
 
             if idx == (len(service_list) - 1):
@@ -182,6 +188,7 @@ def _generate_web_menu(menu_full_path, service_list):
                 file_desc.write(",\n")
 
         file_desc.write("];\n")
+
 
 def _generate_cpp_service(service_list_full_path, service_list):
     """Generate the Service.cpp source file.
@@ -208,9 +215,9 @@ def _generate_cpp_service(service_list_full_path, service_list):
         includes += f"#include <{service_name}.h>"
 
         start_calls += f"    if (false == {service_name}::getInstance().start())\n"
-        start_calls +=  "    {\n"
-        start_calls +=  "        isSuccessful = false;\n"
-        start_calls +=  "    }\n"
+        start_calls += "    {\n"
+        start_calls += "        isSuccessful = false;\n"
+        start_calls += "    }\n"
 
         process_calls += f"    {service_name}::getInstance().process();"
 
@@ -239,6 +246,7 @@ def _generate_cpp_service(service_list_full_path, service_list):
     with open(service_list_full_path, "w", encoding="utf-8") as file_desc:
         file_desc.write(result)
 
+
 def configure_services(service_list, layout):
     """Generate all service related artifacts.
 
@@ -266,38 +274,46 @@ def configure_services(service_list, layout):
         service_lib_web_path = service_lib_path + "/web"
 
         if os.path.isdir(service_lib_path) is False:
-            print(f"\tSkipping {service_name}, because {service_lib_path} doesn't exist.")
+            print(
+                f"\tSkipping {service_name}, because {service_lib_path} doesn't exist.")
             skip_list.append(service_name)
 
         elif os.path.isdir(service_lib_web_path) is False:
-            print(f"\tSkipping {service_name}, because {service_lib_web_path} doesn't exist.")
+            print(
+                f"\tSkipping {service_name}, because {service_lib_web_path} doesn't exist.")
             skip_list_web.append(service_name)
 
         else:
             data_web_service_path = _WEB_DATA_PATH + "/" + service_name
 
-            data_web_service_path_checksum = calculate_path_checksum([data_web_service_path])
+            data_web_service_path_checksum = calculate_path_checksum(
+                [data_web_service_path])
 
             src_files = []
 
-            service_lib_data = _load_json_file(service_lib_path + "/pixelix.json")
+            service_lib_data = _load_json_file(
+                service_lib_path + "/pixelix.json")
 
             if service_lib_data is None:
                 src_files = os.listdir(service_lib_web_path)
-                src_files = [service_lib_web_path + "/" + src_file for src_file in src_files]
+                src_files = [service_lib_web_path + "/" +
+                             src_file for src_file in src_files]
             else:
 
                 if service_lib_data["pixelix"]["type"] != "service":
-                    print(f"\tSkipping {service_name}, because its type isn't service in pixelix.json.")
+                    print(
+                        f"\tSkipping {service_name}, because its type isn't service in pixelix.json.")
                     skip_list.append(service_name)
 
                 elif service_lib_data["pixelix"]["name"] != service_name:
-                    print(f"\tSkipping {service_name}, because service name doesn't match with pixelix.json.")
+                    print(
+                        f"\tSkipping {service_name}, because service name doesn't match with pixelix.json.")
 
                 else:
                     web_files = service_lib_data["pixelix"]["web"]["files"]
                     layout_specific_files = []
-                    src_files = [service_lib_path + "/" + file_rel_path for file_rel_path in web_files]
+                    src_files = [service_lib_path + "/" +
+                                 file_rel_path for file_rel_path in web_files]
 
                     # Search for layout specific files or use generic file list.
                     for lib_layout in service_lib_data["pixelix"]["web"]["layouts"]:
@@ -309,11 +325,13 @@ def configure_services(service_list, layout):
                             if layout_specific_files is None:
                                 layout_specific_files = lib_layout["files"]
 
-                    layout_specific_files_full_path = [service_lib_path + "/" + file_rel_path for file_rel_path in layout_specific_files]
+                    layout_specific_files_full_path = [
+                        service_lib_path + "/" + file_rel_path for file_rel_path in layout_specific_files]
                     src_files = src_files + layout_specific_files_full_path
 
             if src_files:
-                service_lib_web_path_checksum = calculate_path_checksum(src_files)
+                service_lib_web_path_checksum = calculate_path_checksum(
+                    src_files)
 
                 if data_web_service_path_checksum != service_lib_web_path_checksum:
                     print("\tCopy web data:")
@@ -333,7 +351,7 @@ def configure_services(service_list, layout):
 
     if (is_generation_required is True) or \
         (os.path.exists(_MENU_FULL_PATH) is False) or \
-        (os.path.exists(_SERVICE_LIST_FULL_PATH) is False):
+            (os.path.exists(_SERVICE_LIST_FULL_PATH) is False):
 
         print("\tGenerating services web menu.")
         _generate_web_menu(_MENU_FULL_PATH, service_list_web)

@@ -25,6 +25,8 @@
 ################################################################################
 # Imports
 ################################################################################
+import os
+
 from config_model import ConfigModel
 from configure_plugins import configure_plugins
 from configure_services import configure_services
@@ -33,6 +35,10 @@ from configure_topic_handlers import configure_topic_handlers
 ################################################################################
 # Variables
 ################################################################################
+_MENU_BASE_FULL_PATH = "./scripts/menu_base.js"
+_PLUGIN_SUB_MENU_FULL_PATH = "./scripts/pluginsSubMenu.js"
+_SERVICE_SUB_MENU_FULL_PATH = "./scripts/servicesSubMenu.js"
+_APP_MENU_FULL_PATH = "./data/js/app-menu.js"
 
 ################################################################################
 # Classes
@@ -42,6 +48,29 @@ from configure_topic_handlers import configure_topic_handlers
 # Functions
 ################################################################################
 
+
+def _generate_app_menu():
+    """Generate app-menu.js from static and generated menu fragments."""
+    source_files = [
+        _MENU_BASE_FULL_PATH,
+        _PLUGIN_SUB_MENU_FULL_PATH,
+        _SERVICE_SUB_MENU_FULL_PATH
+    ]
+    fragments = []
+
+    for source_file in source_files:
+        if os.path.exists(source_file) is False:
+            raise FileNotFoundError(f"Missing menu source file: {source_file}")
+
+        with open(source_file, "r", encoding="utf-8") as file_desc:
+            fragments.append(file_desc.read().strip())
+
+    app_menu = "\n\n".join(fragments).strip() + "\n"
+
+    with open(_APP_MENU_FULL_PATH, "w", encoding="utf-8") as file_desc:
+        file_desc.write(app_menu)
+
+
 def configure(config_full_path, layout):
     """Configures the plugins according to configuration.
 
@@ -49,7 +78,8 @@ def configure(config_full_path, layout):
         config_full_path (str): Full path to configuration file.
         layout (str): The display layout.
     """
-    print(f"Configure plugins and services: {config_full_path} with layout {layout}")
+    print(
+        f"Configure plugins and services: {config_full_path} with layout {layout}")
 
     # Load configuration
     config_model = ConfigModel()
@@ -63,6 +93,7 @@ def configure(config_full_path, layout):
 
         configure_plugins(plugin_list, layout)
         configure_services(service_list, layout)
+        _generate_app_menu()
         configure_topic_handlers(topic_handler_list)
 
 ################################################################################

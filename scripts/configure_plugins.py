@@ -38,7 +38,7 @@ _LIB_PATH = "./lib"
 
 _WEB_DATA_PATH = "./data/plugins"
 
-_MENU_FULL_PATH = "./data/js/pluginsSubMenu.js"
+_MENU_FULL_PATH = "./scripts/pluginsSubMenu.js"
 
 _PLUGIN_LIST_FULL_PATH = "./src/Generated/PluginList.cpp"
 _PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.cpp"
@@ -51,8 +51,10 @@ _PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.cpp"
 # Functions
 ################################################################################
 
+
 def _sort_key(file_path):
     return os.path.basename(file_path)
+
 
 def calculate_path_checksum(paths):
     """Recursively calculates a checksum representing the contents of all files
@@ -85,6 +87,7 @@ def calculate_path_checksum(paths):
 
     return hasher.hexdigest()
 
+
 def _load_json_file(full_path):
     """Load JSON file.
 
@@ -104,6 +107,7 @@ def _load_json_file(full_path):
         pass
 
     return data
+
 
 def _clean_up_folders(plugin_list, dst_path):
     """Remove folders in destination path, which are not present in the source path.
@@ -139,6 +143,7 @@ def _clean_up_folders(plugin_list, dst_path):
 
     return is_cleaned_up
 
+
 def _copy_files(src_files, dst_path):
     """Copy plugin web related files from /lib/<plugin-name> to /data/plugins/<plugin-name>.
         If no destination folder exists, it will be created.
@@ -158,6 +163,7 @@ def _copy_files(src_files, dst_path):
         except FileNotFoundError:
             print(" -> file not found!")
 
+
 def _generate_web_menu(menu_full_path, plugin_list):
     """Generate the menu.json file.
 
@@ -166,14 +172,14 @@ def _generate_web_menu(menu_full_path, plugin_list):
         plugin_list (list): List of all plugin names
     """
     with open(menu_full_path, 'w', encoding="utf-8") as file_desc:
-        file_desc.write("\"use strict\";\n\n")
         file_desc.write("var pluginSubMenu = [\n")
 
         for idx, plugin_name in enumerate(plugin_list):
 
             file_desc.write("    {\n")
             file_desc.write(f"        title: \"{plugin_name}\",\n")
-            file_desc.write(f"        hyperRef: \"/plugins/{plugin_name}/{plugin_name}.html\"\n")
+            file_desc.write(
+                f"        hyperRef: \"/plugins/{plugin_name}/{plugin_name}.html\"\n")
             file_desc.write("    }")
 
             if idx == (len(plugin_list) - 1):
@@ -182,6 +188,7 @@ def _generate_web_menu(menu_full_path, plugin_list):
                 file_desc.write(",\n")
 
         file_desc.write("];\n")
+
 
 def _generate_cpp_plugin_list(plugin_list_full_path, plugin_list):
     """Generate the PluginList.cpp source file.
@@ -213,6 +220,7 @@ def _generate_cpp_plugin_list(plugin_list_full_path, plugin_list):
     with open(plugin_list_full_path, "w", encoding="utf-8") as file_desc:
         file_desc.write(result)
 
+
 def configure_plugins(plugin_list, layout):
     """Handle all plugin related artifacts.
 
@@ -238,38 +246,46 @@ def configure_plugins(plugin_list, layout):
         plugin_lib_web_path = plugin_lib_path + "/web"
 
         if os.path.isdir(plugin_lib_path) is False:
-            print(f"\tSkipping {plugin_name}, because {plugin_lib_path} doesn't exist.")
+            print(
+                f"\tSkipping {plugin_name}, because {plugin_lib_path} doesn't exist.")
             skip_list.append(plugin_name)
 
         elif os.path.isdir(plugin_lib_web_path) is False:
-            print(f"\tSkipping {plugin_name}, because {plugin_lib_web_path} doesn't exist.")
+            print(
+                f"\tSkipping {plugin_name}, because {plugin_lib_web_path} doesn't exist.")
             skip_list.append(plugin_name)
 
         else:
             data_web_plugin_path = _WEB_DATA_PATH + "/" + plugin_name
 
-            data_web_plugin_path_checksum = calculate_path_checksum([data_web_plugin_path])
+            data_web_plugin_path_checksum = calculate_path_checksum(
+                [data_web_plugin_path])
 
             src_files = []
 
-            plugin_lib_data = _load_json_file(plugin_lib_path + "/pixelix.json")
+            plugin_lib_data = _load_json_file(
+                plugin_lib_path + "/pixelix.json")
 
             if plugin_lib_data is None:
                 src_files = os.listdir(plugin_lib_web_path)
-                src_files = [plugin_lib_web_path + "/" + src_file for src_file in src_files]
+                src_files = [plugin_lib_web_path + "/" +
+                             src_file for src_file in src_files]
             else:
 
                 if plugin_lib_data["pixelix"]["type"] != "plugin":
-                    print(f"\tSkipping {plugin_name}, because its type isn't plugin in pixelix.json.")
+                    print(
+                        f"\tSkipping {plugin_name}, because its type isn't plugin in pixelix.json.")
                     skip_list.append(plugin_name)
 
                 elif plugin_lib_data["pixelix"]["name"] != plugin_name:
-                    print(f"\tSkipping {plugin_name}, because plugin name doesn't match with pixelix.json.")
+                    print(
+                        f"\tSkipping {plugin_name}, because plugin name doesn't match with pixelix.json.")
 
                 else:
                     web_files = plugin_lib_data["pixelix"]["web"]["files"]
                     layout_specific_files = []
-                    src_files = [plugin_lib_path + "/" + file_rel_path for file_rel_path in web_files]
+                    src_files = [plugin_lib_path + "/" +
+                                 file_rel_path for file_rel_path in web_files]
 
                     # Search for layout specific files or use generic file list.
                     for lib_layout in plugin_lib_data["pixelix"]["web"]["layouts"]:
@@ -281,11 +297,13 @@ def configure_plugins(plugin_list, layout):
                             if layout_specific_files is None:
                                 layout_specific_files = lib_layout["files"]
 
-                    layout_specific_files_full_path = [plugin_lib_path + "/" + file_rel_path for file_rel_path in layout_specific_files]
+                    layout_specific_files_full_path = [
+                        plugin_lib_path + "/" + file_rel_path for file_rel_path in layout_specific_files]
                     src_files = src_files + layout_specific_files_full_path
 
             if src_files:
-                plugin_lib_web_path_checksum = calculate_path_checksum(src_files)
+                plugin_lib_web_path_checksum = calculate_path_checksum(
+                    src_files)
 
                 if data_web_plugin_path_checksum != plugin_lib_web_path_checksum:
                     print("\tCopy web data:")
@@ -302,7 +320,7 @@ def configure_plugins(plugin_list, layout):
 
     if (is_generation_required is True) or \
         (os.path.exists(_MENU_FULL_PATH) is False) or \
-        (os.path.exists(_PLUGIN_LIST_FULL_PATH) is False):
+            (os.path.exists(_PLUGIN_LIST_FULL_PATH) is False):
 
         print("\tGenerating plugins web menu.")
         _generate_web_menu(_MENU_FULL_PATH, plugin_list)
