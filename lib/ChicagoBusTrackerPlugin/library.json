@@ -1,0 +1,27 @@
+{
+    "name": "ChicagoBusTrackerPlugin",
+    "version": "0.1.0",
+    "description": "Shows Chicago local bus arrival times for a given stop and direction",
+    "authors": [{
+        "name": "Julie Hill",
+        "email": "queenkjuul@pm.me",
+        "url": "https://github.com/queenkjuul",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Logging"
+    }, {
+        "name": "LittleFS"
+    }, {
+        "name": "Plugin"
+    }, {
+        "name": "Views"
+    }, {
+        "name": "Utilities"
+    }, {
+        "name": "RestService"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}
