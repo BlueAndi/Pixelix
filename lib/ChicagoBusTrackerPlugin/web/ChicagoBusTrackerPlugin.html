@@ -128,6 +128,44 @@
                 utils.enableForm("myForm", false);
             }
 
+            function hasApiKeyConfigured() {
+                return 0 < $("#apiKey").val().trim().length;
+            }
+
+            function clearSelectOptions(elementId) {
+                const element = document.getElementById(elementId)
+                if (element) {
+                    element.innerHTML = ""
+                }
+            }
+
+            function setSelectEnabled(elementId, isEnabled) {
+                const element = document.getElementById(elementId)
+                if (element) {
+                    element.disabled = !isEnabled
+                }
+            }
+
+            function resetDependentSelections() {
+                selected.routes = ""
+                selected.directions = ""
+                selected.stops = ""
+
+                clearSelectOptions("routes")
+                clearSelectOptions("directions")
+                clearSelectOptions("stops")
+            }
+
+            function updateDependentControlState() {
+                const isApiKeyConfigured = hasApiKeyConfigured()
+                const hasRouteSelection = 0 < selected.routes.length
+                const hasDirectionSelection = 0 < selected.directions.length
+
+                setSelectEnabled("routes", isApiKeyConfigured)
+                setSelectEnabled("directions", isApiKeyConfigured && hasRouteSelection)
+                setSelectEnabled("stops", isApiKeyConfigured && hasRouteSelection && hasDirectionSelection)
+            }
+
             async function handleChange(elementId) {
                 const elem = document.getElementById(elementId)
                 const value = elem.value
@@ -136,9 +174,15 @@
                     switch (elementId) {
                         case "pluginUid":
                             await getConfig(value)
-                            await getRoutes()
-                            await getDirections()
-                            await getStops()
+                            if (hasApiKeyConfigured()) {
+                                await getRoutes()
+                                await getDirections()
+                                await getStops()
+                            }
+                            else {
+                                resetDependentSelections()
+                                updateDependentControlState()
+                            }
                             return
                         case "routes":
                             await getDirections()
@@ -248,17 +292,22 @@
 
                     $("#apiKey").val(apiKey)
 
-                    selected.routes = rte
-                    const routeselem = generateOptions("routes", [selected.routes])
-                    selectSelectedProperty(routeselem, selected.routes)
+                    if (hasApiKeyConfigured()) {
+                        selected.routes = rte
+                        const routeselem = generateOptions("routes", [selected.routes])
+                        selectSelectedProperty(routeselem, selected.routes)
 
-                    selected.directions = dir
-                    const direlem = generateOptions("directions", [selected.directions])
-                    selectSelectedProperty(direlem, selected.directions)
+                        selected.directions = dir
+                        const direlem = generateOptions("directions", [selected.directions])
+                        selectSelectedProperty(direlem, selected.directions)
 
-                    selected.stops = stpid
-                    const stpelem = generateOptions("stops", [selected.stops])
-                    selectSelectedProperty(stpelem, [selected.stops])
+                        selected.stops = stpid
+                        const stpelem = generateOptions("stops", [selected.stops])
+                        selectSelectedProperty(stpelem, [selected.stops])
+                    }
+                    else {
+                        resetDependentSelections()
+                    }
 
                     selected.count = count
                     const countelem = document.getElementById("count")
@@ -274,6 +323,7 @@
                     console.log(e)
                 }
                 enableUI()
+                updateDependentControlState()
             }
 
             function setConfig(pluginUid) {
@@ -300,14 +350,23 @@
                         alert("Ok.")
                     })
                     .then(() => getConfig(pluginUid))
-                    .then(getRoutes)
-                    .then(getDirections)
-                    .then(getStops)
+                    .then(function () {
+                        if (hasApiKeyConfigured()) {
+                            return getRoutes()
+                                .then(getDirections)
+                                .then(getStops);
+                        }
+
+                        resetDependentSelections();
+                        updateDependentControlState();
+                        return Promise.resolve();
+                    })
                     .catch(function (rsp) {
                         alert("Failed.")
                     })
                     .finally(function () {
                         enableUI()
+                        updateDependentControlState()
                     })
             }
 
@@ -346,11 +405,20 @@
             }
 
             async function getRoutes() {
+                if (!hasApiKeyConfigured()) {
+                    resetDependentSelections()
+                    updateDependentControlState()
+                    return;
+                }
+
                 disableUI();
                 try {
                     const data = await proxyFetch("/getroutes");
                     const routes = data?.["bustime-response"]?.routes;
-                    if (!routes) { return; }
+                    if (!routes) {
+                        resetDependentSelections()
+                        return;
+                    }
                     const values = routes.map(route => ({ value: route.rt, text: route.rt + " - " + route.rtnm }));
                     const elem = generateOptions("routes", values, "text", "value");
                     selectSelectedProperty(elem, selected.routes);
@@ -358,14 +426,30 @@
                     console.error("Error getting routes:", e);
                 }
                 enableUI();
+                updateDependentControlState()
             }
 
             async function getDirections() {
+                if (!hasApiKeyConfigured() || (0 === selected.routes.length)) {
+                    clearSelectOptions("directions")
+                    clearSelectOptions("stops")
+                    selected.directions = ""
+                    selected.stops = ""
+                    updateDependentControlState()
+                    return;
+                }
+
                 disableUI();
                 try {
                     const data = await proxyFetch("/getdirections?rt=" + encodeURIComponent(selected.routes));
                     const directions = data?.["bustime-response"]?.directions;
-                    if (!directions) { return; }
+                    if (!directions) {
+                        clearSelectOptions("directions")
+                        clearSelectOptions("stops")
+                        selected.directions = ""
+                        selected.stops = ""
+                        return;
+                    }
                     const dirs = directions.map(d => d.id);
                     const elem = generateOptions("directions", dirs);
                     selectSelectedProperty(elem, selected.directions);
@@ -373,20 +457,33 @@
                     console.error("Error getting directions:", e);
                 }
                 enableUI();
+                updateDependentControlState()
             }
 
             async function getStops() {
+                if (!hasApiKeyConfigured() || (0 === selected.routes.length) || (0 === selected.directions.length)) {
+                    clearSelectOptions("stops")
+                    selected.stops = ""
+                    updateDependentControlState()
+                    return;
+                }
+
                 disableUI();
                 try {
                     const data = await proxyFetch("/getstops?rt=" + encodeURIComponent(selected.routes) + "&dir=" + encodeURIComponent(selected.directions));
                     const stops = data?.["bustime-response"]?.stops;
-                    if (!stops) { return; }
+                    if (!stops) {
+                        clearSelectOptions("stops")
+                        selected.stops = ""
+                        return;
+                    }
                     const elem = generateOptions("stops", stops, "stpnm", "stpid");
                     selectSelectedProperty(elem, selected.stops);
                 } catch (e) {
                     console.error("Error getting stops:", e);
                 }
                 enableUI();
+                updateDependentControlState()
             }
 
             $(document).ready(function () {
@@ -396,6 +493,8 @@
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
+                resetDependentSelections();
+                updateDependentControlState();
 
                 /* Load all plugin instances. */
                 getPluginInstances()
@@ -407,9 +506,17 @@
                             return getConfig(rootPluginId);
                         }
                     })
-                    .then(getRoutes)
-                    .then(getDirections)
-                    .then(getStops);
+                    .then(function () {
+                        if (hasApiKeyConfigured()) {
+                            return getRoutes()
+                                .then(getDirections)
+                                .then(getStops);
+                        }
+
+                        enableUI();
+                        updateDependentControlState();
+                        return Promise.resolve();
+                    });
             });
         </script>
     </body>

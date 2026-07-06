@@ -783,6 +783,8 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
 
 bool ChicagoBusTrackerPlugin::startProxyRequest(const String& path)
 {
+    bool isSuccessful = false;
+
     /* Abort any in-flight or queued proxy request before starting a new one. */
     if (RestService::INVALID_REST_ID != m_proxyRestId)
     {
@@ -794,29 +796,40 @@ bool ChicagoBusTrackerPlugin::startProxyRequest(const String& path)
     m_proxyResultReady = false;
     m_proxyHasError    = false;
 
-    String url;
-    (void)url.reserve(160U);
-    url += CHICAGO_BUS_BASE_URI;
-    url += path;
-    url += (0 <= path.indexOf('?')) ? "&" : "?";
-    url += "key=";
-    url += apiKey;
-    url += "&format=json";
-
-    RestService::PreProcessCallback preProcess =
-        [this, path](const char* payload, size_t size, PsramJsonDocument& doc) {
-            return this->preProcessProxyResponse(path, payload, size, doc);
-        };
-
-    m_proxyRestId = RestService::getInstance().get(url, preProcess);
-
-    if (RestService::INVALID_REST_ID == m_proxyRestId)
+    if (true == apiKey.isEmpty())
     {
-        LOG_WARNING("Proxy GET %s failed.", url.c_str());
-        return false;
+        LOG_WARNING("Proxy: API key missing.");
+    }
+    else
+    {
+        RestService::PreProcessCallback preProcess =
+            [this, path](const char* payload, size_t size, PsramJsonDocument& doc) {
+                return this->preProcessProxyResponse(path, payload, size, doc);
+            };
+        String url;
+
+        (void)url.reserve(160U);
+
+        url           += CHICAGO_BUS_BASE_URI;
+        url           += path;
+        url           += (0 <= path.indexOf('?')) ? "&" : "?";
+        url           += "key=";
+        url           += apiKey;
+        url           += "&format=json";
+
+        m_proxyRestId  = RestService::getInstance().get(url, preProcess);
+
+        if (RestService::INVALID_REST_ID == m_proxyRestId)
+        {
+            LOG_WARNING("Proxy GET %s failed.", url.c_str());
+        }
+        else
+        {
+            isSuccessful = true;
+        }
     }
 
-    return true;
+    return isSuccessful;
 }
 
 bool ChicagoBusTrackerPlugin::preProcessProxyResponse(const String& path, const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
