@@ -91,16 +91,12 @@ int32_t Playlist::add(uint32_t postId, const char* storageKey, const char* nativ
             Entry   entry;
             uint8_t insertIdx = (m_beginIdx + m_playlist.size()) % m_maxEntries;
             Sha256  hash;
-            char    storageShard[9U] = { 0 };
-
-            generateSHA256(hash, storageKey);
-            snprintf(storageShard, sizeof(storageShard), "%02x/%02x/%02x", hash[0U], hash[1U], hash[2U]);
 
             entry.postId       = postId;
             entry.storageKey   = storageKey;
-            entry.storageShard = storageShard;
             entry.nativeFormat = nativeFormat;
             entry.dwellTime    = dwellTime;
+            computeStorageShardV2(storageKey, entry.storageShard);
 
             if (m_maxEntries > m_playlist.size())
             {
@@ -276,6 +272,26 @@ void Playlist::generateSHA256(Sha256& hash, const String& text) const
     mbedtls_md_update(&ctx, (const unsigned char*)text.c_str(), text.length());
     mbedtls_md_finish(&ctx, hash);
     mbedtls_md_free(&ctx);
+}
+
+void Playlist::computeStorageShardV2(const String& storageKey, String& storageShard) const
+{
+    /*
+     * 2-level shard: "24/07" — the low 6 bits of each of the first two SHA-256
+     * digest bytes, rendered as zero-padded hex ("00".."3f"). 64*64 = 4096
+     * shards.
+     */
+    Sha256 hash;
+    char   buffer[3U];
+
+    generateSHA256(hash, storageKey);
+
+    (void)storageShard.reserve(5U); /* 2 hex chars + '/' + 2 hex chars + '\0' */
+    snprintf(buffer, sizeof(buffer), "%02x", hash[0] & 0x3f);
+    storageShard  = buffer;
+    storageShard += "/";
+    snprintf(buffer, sizeof(buffer), "%02x", hash[1] & 0x3f);
+    storageShard += buffer;
 }
 
 /******************************************************************************

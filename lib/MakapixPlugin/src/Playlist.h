@@ -238,8 +238,10 @@ private:
         String storageKey;
 
         /**
-         * Artwork storage shard, based on the first three bytes of
-         * sha256 hash of the storage key. It is used to determine the storage server URL for artwork retrieval.
+         * Artwork storage shard, a opaque relative vault path (e.g. "23/16").
+         * Use verbatim — do not parse, validate, or assume a fixed depth; the number
+         * of components may change.
+         * It is used to determine the storage server URL for artwork retrieval.
          */
         String storageShard;
 
@@ -292,6 +294,18 @@ private:
      *
      */
     void generateSHA256(Sha256& hash, const String& text) const;
+
+    /**
+     * Compute storage shard for given storage key.
+     *
+     * 2-level shard: "24/07" — the low 6 bits of each of the first two SHA-256
+     * digest bytes, rendered as zero-padded hex ("00".."3f"). 64*64 = 4096
+     * shards.
+     *
+     * @param[in] storageKey    Storage key to compute the shard.
+     * @param[out] storageShard Computed storage shard.
+     */
+    void computeStorageShardV2(const String& storageKey, String& storageShard) const;
 };
 
 /******************************************************************************
