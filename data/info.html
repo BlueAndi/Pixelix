@@ -57,7 +57,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="Pixelix" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
@@ -292,84 +292,74 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Custom javascript -->
         <script>
-            var availableHeapSize = parseInt("~HEAP_SIZE_AVAILABLE~");
-            var heapSize = parseInt("~HEAP_SIZE~");
-            var availablePsramSize = parseInt("~PSRAM_SIZE_AVAILABLE~");
-            var psramSize = parseInt("~PSRAM_SIZE~");
-            var filesystemSize = parseInt("~FS_SIZE~");
-            var usedFilesystemSize = parseInt("~FS_SIZE_USED~");
+            let availableHeapSize = Number.parseInt("~HEAP_SIZE_AVAILABLE~");
+            let heapSize = Number.parseInt("~HEAP_SIZE~");
+            let availablePsramSize = Number.parseInt("~PSRAM_SIZE_AVAILABLE~");
+            let psramSize = Number.parseInt("~PSRAM_SIZE~");
+            let filesystemSize = Number.parseInt("~FS_SIZE~");
+            let usedFilesystemSize = Number.parseInt("~FS_SIZE_USED~");
 
-            if (isNaN(availableHeapSize)) {
+            if (Number.isNaN(availableHeapSize)) {
                 availableHeapSize = 0;
             }
 
-            if (isNaN(heapSize)) {
+            if (Number.isNaN(heapSize)) {
                 heapSize = 1;
             }
 
-            if (isNaN(availablePsramSize)) {
+            if (Number.isNaN(availablePsramSize)) {
                 availablePsramSize = 0;
             }
 
-            if (isNaN(psramSize)) {
+            if (Number.isNaN(psramSize)) {
                 psramSize = 1;
             }
 
-            if (isNaN(filesystemSize)) {
+            if (Number.isNaN(filesystemSize)) {
                 filesystemSize = 1;
             }
 
-            if (isNaN(usedFilesystemSize)) {
+            if (Number.isNaN(usedFilesystemSize)) {
                 usedFilesystemSize = 1;
             }
 
-            var availableFsSize = filesystemSize - usedFilesystemSize;
-            var availableHeapSizeInPercent = Math.round(availableHeapSize * 100 / heapSize);
-            var availablePsramSizeInPercent = Math.round(availablePsramSize * 100 / psramSize);
-            var availableFsSizeInPercent = Math.round(availableFsSize * 100 / filesystemSize);
+            const availableFsSize = filesystemSize - usedFilesystemSize;
+            const availableHeapSizeInPercent = Math.round(availableHeapSize * 100 / heapSize);
+            const availablePsramSizeInPercent = Math.round(availablePsramSize * 100 / psramSize);
+            const availableFsSizeInPercent = Math.round(availableFsSize * 100 / filesystemSize);
 
             function drawGauge(containerId, usedPercent) {
-                var r = 54;
-                var cx = 70;
-                var cy = 70;
-                var sw = 14;
-                var c = 2 * Math.PI * r;
-                var usedLen = (usedPercent / 100) * c;
-                var freeLen = c - usedLen;
+                const r = 54;
+                const cx = 70;
+                const cy = 70;
+                const sw = 14;
+                const c = 2 * Math.PI * r;
+                const usedLen = (usedPercent / 100) * c;
+                const freeLen = c - usedLen;
 
-                var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">'
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">`
                     /* Track circle */
-                    + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"'
-                    + ' stroke="rgba(255,255,255,0.06)" stroke-width="' + sw + '"/>'
+                    + `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${sw}"/>`
                     /* Full green circle: free background */
-                    + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"'
-                    + ' stroke="rgb(25,135,84)" stroke-width="' + (sw - 2) + '"'
-                    + ' transform="rotate(-90 ' + cx + ' ' + cy + ')"/>'
+                    + `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgb(25,135,84)" stroke-width="${sw - 2}" transform="rotate(-90 ${cx} ${cy})"/>`
                     /* Red arc on top: covers the used portion from 12 o'clock */
-                    + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"'
-                    + ' stroke="rgb(220,53,69)" stroke-width="' + (sw - 2) + '"'
-                    + ' stroke-dasharray="' + usedLen.toFixed(1) + ' ' + freeLen.toFixed(1) + '"'
-                    + ' transform="rotate(-90 ' + cx + ' ' + cy + ')"/>'
+                    + `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgb(220,53,69)" stroke-width="${sw - 2}" stroke-dasharray="${usedLen.toFixed(1)} ${freeLen.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>`
                     /* Center: percentage */
-                    + '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle"'
-                    + ' fill="white" font-size="20" font-weight="700" font-family="system-ui,sans-serif">'
-                    + usedPercent + '%</text>'
-                    + '<text x="' + cx + '" y="' + (cy + 14) + '" text-anchor="middle"'
-                    + ' fill="rgba(255,255,255,0.4)" font-size="10" font-family="system-ui,sans-serif">used</text>'
-                    + '</svg>';
+                    + `<text x="${cx}" y="${cy - 4}" text-anchor="middle" fill="white" font-size="20" font-weight="700" font-family="system-ui,sans-serif">${usedPercent}%</text>`
+                    + `<text x="${cx}" y="${cy + 14}" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="10" font-family="system-ui,sans-serif">used</text>`
+                    + `</svg>`;
 
                 document.getElementById(containerId).innerHTML = svg;
             }
 
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
@@ -378,11 +368,11 @@
                 drawGauge("canvasChartPsram", 100 - availablePsramSizeInPercent);
                 drawGauge("canvasChartFs", 100 - availableFsSizeInPercent);
 
-                $("#availableHeapSize").text(availableHeapSize + " byte");
-                $("#usedHeapSize").text((heapSize - availableHeapSize) + " byte");
-                $("#availablePsramSize").text(availablePsramSize + " byte");
-                $("#usedPsramSize").text((psramSize - availablePsramSize) + " byte");
-                $("#availableFsSize").text(availableFsSize + " byte");
+                document.getElementById("availableHeapSize").textContent = availableHeapSize + " byte";
+                document.getElementById("usedHeapSize").textContent = (heapSize - availableHeapSize) + " byte";
+                document.getElementById("availablePsramSize").textContent = availablePsramSize + " byte";
+                document.getElementById("usedPsramSize").textContent = (psramSize - availablePsramSize) + " byte";
+                document.getElementById("availableFsSize").textContent = availableFsSize + " byte";
             });
         </script>
     </body>

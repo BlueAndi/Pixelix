@@ -17,7 +17,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -67,24 +67,24 @@
                                     <label class="form-label">Playback Controls:</label>
                                     <div class="d-grid gap-2">
                                         <div class="btn-group gap-2" role="group" aria-label="Playback controls">
-                                            <button type="button" id="btnPrev" class="btn btn-primary" onClick="playPrev(pluginUid.options[pluginUid.selectedIndex].value)">Previous</button>
-                                            <button type="button" id="btnPause" class="btn btn-primary" onClick="pause(pluginUid.options[pluginUid.selectedIndex].value)">Pause</button>
-                                            <button type="button" id="btnNext" class="btn btn-primary" onClick="playNext(pluginUid.options[pluginUid.selectedIndex].value)">Next</button>
+                                            <button type="button" id="btnPrev" class="btn btn-primary">Previous</button>
+                                            <button type="button" id="btnPause" class="btn btn-primary">Pause</button>
+                                            <button type="button" id="btnNext" class="btn btn-primary">Next</button>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="form-label">Quick Channel Selection:</label>
                                     <div class="d-grid gap-2">
-                                        <button type="button" id="btnAll" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'all')">Recent Artworks</button>
-                                        <button type="button" id="btnPromoted" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'promoted')">Promoted Artworks</button>
-                                        <button type="button" id="btnUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'user')">Own Artworks</button>
+                                        <button type="button" id="btnAll" class="btn btn-secondary">Recent Artworks</button>
+                                        <button type="button" id="btnPromoted" class="btn btn-secondary">Promoted Artworks</button>
+                                        <button type="button" id="btnUser" class="btn btn-secondary">Own Artworks</button>
                                         <div class="input-group mb-2">
-                                            <button type="button" id="btnByUser" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'by_user')">Artwork By User</button>
+                                            <button type="button" id="btnByUser" class="btn btn-secondary">Artwork By User</button>
                                             <input type="text" id="userSqid" class="form-control" placeholder="Enter username" maxlength="64" />
                                         </div>
                                         <div class="input-group">
-                                            <button type="button" id="btnByHashtag" class="btn btn-secondary" onClick="playChannel(pluginUid.options[pluginUid.selectedIndex].value, 'hashtag')">Artwork By Hashtag</button>
+                                            <button type="button" id="btnByHashtag" class="btn btn-secondary">Artwork By Hashtag</button>
                                             <input type="text" id="hashtag" class="form-control" placeholder="Enter hashtag" maxlength="64" />
                                         </div>
                                     </div>
@@ -97,10 +97,10 @@
                     <div class="tab-pane fade" id="configuration" role="tabpanel" aria-labelledby="configuration-tab">
                         <h3>Makapix</h3>
                         <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                            <form id="formConfig" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                            <form id="formConfig">
                                 <div class="form-group mb-3">
                                     <label class="form-label" for="pluginUid">Plugin UID:</label>
-                                    <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                                    <select class="form-select" id="pluginUid" size="1">
                                     </select>
                                 </div>
                                 <div class="form-group mb-3">
@@ -171,8 +171,8 @@
                                 <div class="form-group mb-3">
                                     <p>Click the button below to provision a new Makapix player. This will generate a unique player key and registration code.</p>
                                     <div class="d-grid gap-2">
-                                        <button type="button" id="btnProvision" class="btn btn-primary" onClick="provisionPlayer(pluginUid.options[pluginUid.selectedIndex].value)">Provision Player</button>
-                                        <button type="button" id="btnGetProvisionStatus" class="btn btn-secondary" onClick="getProvisionStatus(pluginUid.options[pluginUid.selectedIndex].value)">Get Provision Status</button>
+                                        <button type="button" id="btnProvision" class="btn btn-primary">Provision Player</button>
+                                        <button type="button" id="btnGetProvisionStatus" class="btn btn-secondary">Get Provision Status</button>
                                     </div>
                                 </div>
                             </form>
@@ -219,8 +219,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
@@ -231,8 +230,13 @@
 
         <script>
 
-            var pluginName = "MakapixPlugin";
-            var restClient = new pixelix.rest.Client();
+            const pluginName = "MakapixPlugin";
+            const restClient = new pixelix.rest.Client();
+
+            function getSelectedPluginUid() {
+                const select = document.getElementById("pluginUid");
+                return select.options[select.selectedIndex].value;
+            }
 
             function enableUI() {
                 utils.enableForm("formConfig", true);
@@ -244,125 +248,129 @@
                 utils.enableForm("formPlayControl", false);
             }
 
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function (rsp) {
-                    var slotIndex = 0;
-                    var cnt = 0;
-                    var $option = null;
-                    var optionText = ""
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
 
-                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
+                            const optionText = rsp.data.slots[slotIndex].uid;
 
-                            $option = $("<option>")
-                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                .text(optionText);
+                            const option = document.createElement("option");
+                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.textContent = optionText;
 
-                            $("#pluginUid").append($option);
+                            document.getElementById("pluginUid").appendChild(option);
 
                             ++cnt;
                         }
                     }
 
-                    return Promise.resolve(cnt);
-                }).catch(function (rsp) {
+                    return cnt;
+                } catch (rsp) {
                     alert("Internal error.");
-                    return Promise.resolve(0);
-                });
-            };
-
-            function getConfig(pluginUid) {
-                disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
-                    isJsonResponse: true
-                }).then(function (rsp) {
-                    $("#playerKey").val(rsp.data.playerKey);
-                    $("#mqttInstance").val(rsp.data.mqttInstance);
-                }).catch(function (rsp) {
-                    alert("Internal error.");
-                }).finally(function () {
-                    enableUI();
-                });
+                    return 0;
+                }
             }
 
-            function setConfig(pluginUid) {
+            async function getConfig(pluginUid) {
+                disableUI();
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                        isJsonResponse: true
+                    });
+                    document.getElementById("playerKey").value = rsp.data.playerKey;
+                    document.getElementById("mqttInstance").value = rsp.data.mqttInstance;
+                } catch (rsp) {
+                    alert("Internal error.");
+                } finally {
+                    enableUI();
+                }
+            }
+
+            async function setConfig(pluginUid) {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
-                    isJsonResponse: true,
-                    parameter: {
-                        playerKey: $("#playerKey").val(),
-                        mqttInstance: $("#mqttInstance").val()
-                    }
-                }).then(function (rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                        isJsonResponse: true,
+                        parameter: {
+                            playerKey: document.getElementById("playerKey").value,
+                            mqttInstance: document.getElementById("mqttInstance").value
+                        }
+                    });
                     alert("Ok.");
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function getStatus(pluginUid) {
+            async function getStatus(pluginUid) {
                 disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
-                    isJsonResponse: true
-                }).then(function (rsp) {
-                    var channel = rsp.data.channel;
-                    var status = rsp.data.status;
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        isJsonResponse: true
+                    });
+                    const channel = rsp.data.channel;
+                    const status = rsp.data.status;
 
                     /* Clear all active states. */
-                    $('#btnAll').removeClass('active');
-                    $('#btnPromoted').removeClass('active');
-                    $('#btnUser').removeClass('active');
-                    $('#btnByUser').removeClass('active');
-                    $('#btnByHashtag').removeClass('active');
+                    document.getElementById("btnAll").classList.remove("active");
+                    document.getElementById("btnPromoted").classList.remove("active");
+                    document.getElementById("btnUser").classList.remove("active");
+                    document.getElementById("btnByUser").classList.remove("active");
+                    document.getElementById("btnByHashtag").classList.remove("active");
 
                     /* Set active state for current channel. */
-                    $('#btn' + channel.charAt(0).toUpperCase() + channel.slice(1)).addClass('active');
+                    const channelBtn = document.getElementById("btn" + channel.charAt(0).toUpperCase() + channel.slice(1));
+                    if (channelBtn !== null) {
+                        channelBtn.classList.add("active");
+                    }
 
                     if (rsp.data.userSquid !== undefined) {
-                        $("#userSqid").val(rsp.data.userSquid);
+                        document.getElementById("userSqid").value = rsp.data.userSquid;
                     }
 
                     if (rsp.data.hashtag !== undefined) {
-                        $("#hashtag").val(rsp.data.hashtag);
+                        document.getElementById("hashtag").value = rsp.data.hashtag;
                     }
 
                     /* Set pause button state. */
                     if (status === "paused") {
-                        $('#btnPause').addClass('active');
+                        document.getElementById("btnPause").classList.add("active");
                     }
                     else {
-                        $('#btnPause').removeClass('active');
+                        document.getElementById("btnPause").classList.remove("active");
                     }
 
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function playChannel(pluginUid, channelName) {
-                var parameter = {
+            async function playChannel(pluginUid, channelName) {
+                const parameter = {
                     action: "playChannel",
                     channelName: channelName
                 };
 
                 if (channelName === "by_user") {
-                    parameter.userSqid = $("#userSqid").val();
+                    parameter.userSqid = document.getElementById("userSqid").value;
                 }
                 else if (channelName === "hashtag") {
-                    parameter.hashtag = $("#hashtag").val();
+                    parameter.hashtag = document.getElementById("hashtag").value;
 
                     /* Remove leading '#' if present. */
                     if (parameter.hashtag.startsWith("#")) {
@@ -372,162 +380,179 @@
 
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
-                    isJsonResponse: true,
-                    parameter: parameter
-                }).then(function (rsp) {
-                    return getStatus(pluginUid);
-                }).catch(function (rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        isJsonResponse: true,
+                        parameter: parameter
+                    });
+                    await getStatus(pluginUid);
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function playNext(pluginUid) {
+            async function playNext(pluginUid) {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
-                    isJsonResponse: true,
-                    parameter: {
-                        action: "next"
-                    }
-                }).then(function (rsp) {
-                    return getStatus(pluginUid);
-                }).catch(function (rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        isJsonResponse: true,
+                        parameter: {
+                            action: "next"
+                        }
+                    });
+                    await getStatus(pluginUid);
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function pause(pluginUid) {
+            async function pause(pluginUid) {
                 disableUI();
 
-                var isPaused = $('#btnPause').hasClass('active');
-                var action = isPaused ? "continue" : "pause";
+                const isPaused = document.getElementById("btnPause").classList.contains("active");
+                const action = isPaused ? "continue" : "pause";
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
-                    isJsonResponse: true,
-                    parameter: {
-                        action: action
-                    }
-                }).then(function (rsp) {
-                    return getStatus(pluginUid);
-                }).catch(function (rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        isJsonResponse: true,
+                        parameter: {
+                            action: action
+                        }
+                    });
+                    await getStatus(pluginUid);
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function playPrev(pluginUid) {
+            async function playPrev(pluginUid) {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
-                    isJsonResponse: true,
-                    parameter: {
-                        action: "previous"
-                    }
-                }).then(function (rsp) {
-                    return getStatus(pluginUid);
-                }).catch(function (rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        isJsonResponse: true,
+                        parameter: {
+                            action: "previous"
+                        }
+                    });
+                    await getStatus(pluginUid);
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function getProvisionStatus(pluginUid) {
-                var payload = {};
+            async function getProvisionStatus(pluginUid) {
+                const payload = {};
 
                 disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
-                    isJsonResponse: true,
-                    parameter: payload
-                }).then(function (rsp) {
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                        isJsonResponse: true,
+                        parameter: payload
+                    });
                     if (rsp.data.status === "pending") {
                         alert("Provisioning is still pending. Please try again later.");
                     }
                     else if (rsp.data.status === "completed") {
-                        $("#resultPlayerKey").text(rsp.data.playerKey);
-                        $("#resultRegistrationCode").text(rsp.data.registrationCode);
-                        $("#resultExpiresAt").text(rsp.data.registrationCodeExpiresAt);
-                        $("#resultMqttHost").text(rsp.data.mqttBroker.host);
-                        $("#resultMqttPort").text(rsp.data.mqttBroker.port);
-                        $("#provisionResult").show();
+                        document.getElementById("resultPlayerKey").textContent = rsp.data.playerKey;
+                        document.getElementById("resultRegistrationCode").textContent = rsp.data.registrationCode;
+                        document.getElementById("resultExpiresAt").textContent = rsp.data.registrationCodeExpiresAt;
+                        document.getElementById("resultMqttHost").textContent = rsp.data.mqttBroker.host;
+                        document.getElementById("resultMqttPort").textContent = rsp.data.mqttBroker.port;
+                        document.getElementById("provisionResult").style.display = "block";
                     }
                     else {
                         alert("Provisioning not started.");
                     }
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Failed to get provision status. Please try again.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function provisionPlayer(pluginUid) {
-                var payload = {};
+            async function provisionPlayer(pluginUid) {
+                const payload = {};
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
-                    isJsonResponse: true,
-                    parameter: payload
-                }).then(function (rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                        isJsonResponse: true,
+                        parameter: payload
+                    });
                     alert("Makapix player provision is pending. Please wait...");
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Failed to provision player. Please try again.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
+
+                /* Wire up event handlers. */
+                document.getElementById("btnPrev").addEventListener("click", () => playPrev(getSelectedPluginUid()));
+                document.getElementById("btnPause").addEventListener("click", () => pause(getSelectedPluginUid()));
+                document.getElementById("btnNext").addEventListener("click", () => playNext(getSelectedPluginUid()));
+                document.getElementById("btnAll").addEventListener("click", () => playChannel(getSelectedPluginUid(), "all"));
+                document.getElementById("btnPromoted").addEventListener("click", () => playChannel(getSelectedPluginUid(), "promoted"));
+                document.getElementById("btnUser").addEventListener("click", () => playChannel(getSelectedPluginUid(), "user"));
+                document.getElementById("btnByUser").addEventListener("click", () => playChannel(getSelectedPluginUid(), "by_user"));
+                document.getElementById("btnByHashtag").addEventListener("click", () => playChannel(getSelectedPluginUid(), "hashtag"));
+                document.getElementById("btnProvision").addEventListener("click", () => provisionPlayer(getSelectedPluginUid()));
+                document.getElementById("btnGetProvisionStatus").addEventListener("click", () => getProvisionStatus(getSelectedPluginUid()));
+                document.getElementById("pluginUid").addEventListener("change", () => getConfig(getSelectedPluginUid()));
+                document.getElementById("formConfig").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    setConfig(getSelectedPluginUid());
+                });
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
 
                 /* Load all plugin instances. */
-                getPluginInstances().then(function (cnt) {
-                    var select = document.getElementById("pluginUid");
+                const cnt = await getPluginInstances();
+                const select = document.getElementById("pluginUid");
 
-                    if (0 < cnt) {
-                        /* Check if UID was passed in URL and auto-select it */
-                        var uidFromUrl = utils.getURLParameter('uid');
-                        if (uidFromUrl) {
-                            for (var i = 0; i < select.options.length; i++) {
-                                if (select.options[i].value === uidFromUrl) {
-                                    select.selectedIndex = i;
-                                    break;
-                                }
+                if (0 < cnt) {
+                    /* Check if UID was passed in URL and auto-select it */
+                    const uidFromUrl = utils.getURLParameter("uid");
+                    if (uidFromUrl) {
+                        for (let i = 0; i < select.options.length; i++) {
+                            if (select.options[i].value === uidFromUrl) {
+                                select.selectedIndex = i;
+                                break;
                             }
                         }
-
-                        return getConfig(
-                            select.options[select.selectedIndex].value
-                        ).then(function () {
-                            return getStatus(
-                                select.options[select.selectedIndex].value
-                            );
-                        });
                     }
-                });
+
+                    await getConfig(select.options[select.selectedIndex].value);
+                    await getStatus(select.options[select.selectedIndex].value);
+                }
             });
         </script>
     </body>

@@ -1,6 +1,9 @@
 "use strict";
 
-var utils = window.utils || {};
+/* Attach the namespaces explicitly to window: in a classic (non-module) script a
+ * top-level "const" does NOT create a global property, but every page relies on
+ * utils/dialog/pixelix being globally available. */
+const utils = (window.utils = window.utils || {});
 
 utils.getURLParameter = function (name) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -8,446 +11,348 @@ utils.getURLParameter = function (name) {
 };
 
 utils.enableForm = function (formId, enableIt) {
-    var form = document.getElementById(formId);
-    var elements = form.elements;
-    var index = 0;
+    const form = document.getElementById(formId);
 
-    for (index = 0; index < elements.length; ++index) {
-        elements[index].disabled = (false === enableIt) ? true : false;
+    for (const element of form.elements) {
+        element.disabled = (enableIt === false);
     }
 };
 
 utils.obj2FormData = function (obj, formData = new FormData()) {
 
-    this.formData = formData;
-
-    this.createFormData = function (obj, subKeyStr = "") {
-
-        for (let i in obj) {
-            let value = obj[i];
-            let subKeyStrTrans;
-
-            if (obj instanceof Array) {
-                subKeyStrTrans = subKeyStr ? subKeyStr + "._" + i + "_" : i;
-            } else {
-                subKeyStrTrans = subKeyStr ? subKeyStr + "." + i : i;
-            }
-
-            if ((typeof (value) === "string") || (typeof (value) === "number") || (typeof (value) === "boolean") || (value instanceof File)) {
-
-                this.formData.append(subKeyStrTrans, value);
-
-            } else if (typeof (value) === "object") {
-
-                this.createFormData(value, subKeyStrTrans);
-            }
+    const append = (value, key) => {
+        if ((typeof value === "string") || (typeof value === "number") || (typeof value === "boolean") || (value instanceof File)) {
+            formData.append(key, value);
+        } else if ((typeof value === "object") && (value !== null)) {
+            build(value, key);
         }
-    }
+    };
 
-    this.createFormData(obj);
+    const build = (data, prefix = "") => {
+        const isArray = Array.isArray(data);
 
-    return this.formData;
+        for (const i in data) {
+            const key = prefix
+                ? (isArray ? `${prefix}._${i}_` : `${prefix}.${i}`)
+                : i;
+
+            append(data[i], key);
+        }
+    };
+
+    build(obj);
+
+    return formData;
 };
 
 utils.makeRequest = function (options) {
-    return new Promise(function (resolve, reject) {
-        if ("object" !== typeof options) {
+    return new Promise((resolve, reject) => {
+        if (typeof options !== "object") {
             reject({ msg: "Arguments are missing." });
-        } else if ("string" !== typeof options.method) {
+            return;
+        }
+        if (typeof options.method !== "string") {
             reject({ msg: "Request method is missing." });
-        } else if ("string" !== typeof options.url) {
+            return;
+        }
+        if (typeof options.url !== "string") {
             reject({ msg: "URL is missing." });
-        } else {
-            var xhr = new XMLHttpRequest();
-            var formData = null;
-            var urlEncodedPar = "";
-            var isJsonResponse = false;
-            var isFirst = true;
-            var key;
+            return;
+        }
 
-            if ("object" === typeof options.formData) {
-                formData = options.formData;
-            }
-            else if ("object" === typeof options.parameter) {
-                if ("get" === options.method.toLowerCase()) {
-                    urlEncodedPar += "?";
+        /* XMLHttpRequest is kept on purpose: fetch() cannot report upload
+         * progress, which the firmware/file upload pages rely on via onProgress. */
+        const xhr = new XMLHttpRequest();
+        const isJsonResponse = (typeof options.isJsonResponse === "boolean") ? options.isJsonResponse : false;
+        let formData = null;
+        let urlEncodedPar = "";
 
-                    for (key in options.parameter) {
-                        if (true === isFirst) {
-                            isFirst = false;
-                        } else {
-                            urlEncodedPar += "&";
-                        }
-                        urlEncodedPar += encodeURIComponent(key);
-                        urlEncodedPar += "=";
-                        urlEncodedPar += encodeURIComponent(options.parameter[key]);
-                    }
-                } else {
-                    formData = utils.obj2FormData(options.parameter);
-                }
-            }
+        if (typeof options.formData === "object") {
+            formData = options.formData;
+        } else if (typeof options.parameter === "object") {
+            if (options.method.toLowerCase() === "get") {
+                const parts = Object.entries(options.parameter).map(
+                    ([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+                );
 
-            if ("boolean" === typeof options.isJsonResponse) {
-                isJsonResponse = options.isJsonResponse;
-            }
-
-            xhr.open(options.method, options.url + urlEncodedPar);
-
-            if ("undefined" !== typeof options.headers) {
-                Object.keys(options.headers).forEach(function (key) {
-                    xhr.setRequestHeader(key, options.headers[key]);
-                });
-            }
-
-            if ("function" === typeof options.onProgress) {
-                xhr.upload.onprogress = options.onProgress;
-            }
-
-            xhr.onload = function () {
-                var jsonRsp = null;
-
-                if (200 !== xhr.status) {
-                    if (true === isJsonResponse) {
-                        jsonRsp = JSON.parse(xhr.response);
-                        reject(jsonRsp);
-                    } else {
-                        reject(xhr.response);
-                    }
-                } else {
-                    if (true === isJsonResponse) {
-                        jsonRsp = JSON.parse(xhr.response);
-
-                        if ("ok" === jsonRsp.status) {
-                            resolve(jsonRsp);
-                        } else {
-                            reject(jsonRsp);
-                        }
-                    } else {
-                        resolve(xhr.response);
-                    }
-                }
-            };
-
-            xhr.ontimeout = function () {
-                console.error(xhr.statusText);
-                reject("Timeout");
-            };
-
-            xhr.onerror = function () {
-                console.error(xhr.statusText);
-                reject("Error");
-            };
-
-            if (null === formData) {
-                xhr.send();
+                urlEncodedPar = "?" + parts.join("&");
             } else {
-                xhr.send(formData);
+                formData = utils.obj2FormData(options.parameter);
             }
         }
-    });
-};
 
-utils.readJsonFile = function (file) {
-    return new Promise(function (resolve, reject) {
-        var rawFile = new XMLHttpRequest();
+        xhr.open(options.method, options.url + urlEncodedPar);
 
-        rawFile.overrideMimeType("application/json");
-        rawFile.open("GET", file, true);
-        rawFile.onreadystatechange = function () {
-            if ((4 === rawFile.readyState) && ("200" === rawFile.status)) {
-                resolve(rawFile.responseText);
+        if (typeof options.headers !== "undefined") {
+            for (const [key, value] of Object.entries(options.headers)) {
+                xhr.setRequestHeader(key, value);
             }
         }
-        rawFile.send(null);
-    });
-};
 
-utils.checkBMPFile = function (file) {
-    return new Promise(function (resolve, reject) {
-        var reader = new FileReader();
+        if (typeof options.onProgress === "function") {
+            xhr.upload.onprogress = options.onProgress;
+        }
 
-        reader.onload = function (e) {
-            resolve(e.target.result);
+        xhr.onload = () => {
+            if (isJsonResponse === true) {
+                const jsonRsp = JSON.parse(xhr.response);
+
+                if ((xhr.status === 200) && (jsonRsp.status === "ok")) {
+                    resolve(jsonRsp);
+                } else {
+                    reject(jsonRsp);
+                }
+            } else if (xhr.status === 200) {
+                resolve(xhr.response);
+            } else {
+                reject(xhr.response);
+            }
         };
 
-        reader.readAsArrayBuffer(file);
-    }).then(function (buffer) {
-        var bitmapHeaderSize = 54;
-        var header = new Uint8Array(buffer, 0, bitmapHeaderSize);
-        var planes = (header[27] << 8) | (header[26] << 0);
-        var bitsPerPixel = (header[29] << 8) | (header[28] << 0);
-        var compression = (header[33] << 24) | (header[32] << 16) | (header[31] << 8) | (header[30] << 0);
-        var paletteColors = (header[49] << 24) | (header[48] << 16) | (header[47] << 8) | (header[46] << 0);
-        var promise = null;
+        xhr.ontimeout = () => {
+            console.error(xhr.statusText);
+            reject("Timeout");
+        };
 
-        if ("BM" !== String.fromCharCode.apply(null, header.subarray(0, 2))) {
-            promise = Promise.reject("No bitmap file.");
-        } else if (1 !== planes) {
-            promise = Promise.reject("Only 1 plane is supported.");
-        } else if ((24 !== bitsPerPixel) && (32 !== bitsPerPixel)) {
-            promise = Promise.reject("Only 24 or 32 bpp are supported.");
-        } else if (0 !== compression) {
-            promise = Promise.reject("No compression is supported.");
-        } else if (0 !== paletteColors) {
-            promise = Promise.reject("Color palette not supported.");
-        } else {
-            promise = Promise.resolve();
-        }
+        xhr.onerror = () => {
+            console.error(xhr.statusText);
+            reject("Error");
+        };
 
-        return promise;
+        xhr.send(formData);
     });
 };
 
+utils.readJsonFile = async function (file) {
+    /* Modernized to fetch(); the previous XHR version compared xhr.status
+     * (a number) against the string "200" and therefore never resolved. */
+    const response = await fetch(file);
 
-var dialog = window.dialog || {};
+    return response.text();
+};
+
+utils.checkBMPFile = async function (file) {
+    const buffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => reject("Failed to read file.");
+        reader.readAsArrayBuffer(file);
+    });
+
+    const bitmapHeaderSize = 54;
+    const header = new Uint8Array(buffer, 0, bitmapHeaderSize);
+    const planes = (header[27] << 8) | (header[26] << 0);
+    const bitsPerPixel = (header[29] << 8) | (header[28] << 0);
+    const compression = (header[33] << 24) | (header[32] << 16) | (header[31] << 8) | (header[30] << 0);
+    const paletteColors = (header[49] << 24) | (header[48] << 16) | (header[47] << 8) | (header[46] << 0);
+
+    if (String.fromCharCode.apply(null, header.subarray(0, 2)) !== "BM") {
+        throw "No bitmap file.";
+    } else if (planes !== 1) {
+        throw "Only 1 plane is supported.";
+    } else if ((bitsPerPixel !== 24) && (bitsPerPixel !== 32)) {
+        throw "Only 24 or 32 bpp are supported.";
+    } else if (compression !== 0) {
+        throw "No compression is supported.";
+    } else if (paletteColors !== 0) {
+        throw "Color palette not supported.";
+    }
+};
+
+const dialog = (window.dialog = window.dialog || {});
+
+dialog._getModal = function () {
+    return bootstrap.Modal.getOrCreateInstance(document.getElementById("modalDialog"));
+};
+
+dialog._createCloseButton = function () {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "btn btn-secondary";
+    button.setAttribute("data-bs-dismiss", "modal");
+    button.textContent = "Ok";
+
+    return button;
+};
+
+dialog._prepare = function (headerClass, footerButtons) {
+    const header = document.getElementById("dialogHeader");
+    const footer = document.getElementById("dialogFooter");
+
+    header.className = headerClass;
+    footer.replaceChildren(...footerButtons);
+};
 
 dialog._show = function (title, message, isBlocking) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve) => {
+        const modalElement = document.getElementById("modalDialog");
+        const waitOnClick = (isBlocking === true);
 
-        var waitOnClick = false;
+        document.getElementById("dialogTitle").textContent = title;
+        document.getElementById("dialogBody").innerHTML = message;
 
-        if (("boolean" === typeof isBlocking) &&
-            (true == isBlocking)) {
-            waitOnClick = true;
-        }
-
-        $("#dialogTitle").text(title);
-        $("#dialogBody").html(message);
-
-        $("#modalDialog").on("shown.bs.modal", function () {
-            $("#modalDialog").off("shown.bs.modal");
-
-            if (false === waitOnClick) {
-                resolve();
-            }
-        });
-
-        $("#modalDialog").modal("show");
-
-        if (true === waitOnClick) {
-            $("#modalDialog .btn-secondary").click(function () {
-                resolve();
+        if (waitOnClick === false) {
+            modalElement.addEventListener("shown.bs.modal", () => resolve(), { once: true });
+        } else {
+            /* Blocking: resolve on any secondary button (e.g. both Yes and No). */
+            modalElement.querySelectorAll(".btn-secondary").forEach((button) => {
+                button.addEventListener("click", () => resolve(), { once: true });
             });
         }
+
+        dialog._getModal().show();
     });
-}
+};
 
 dialog.hide = function () {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve) => {
+        const modalElement = document.getElementById("modalDialog");
 
-        $("#modalDialog").on("hidden.bs.modal", function () {
-            $("#modalDialog").off("hidden.bs.modal");
-            resolve();
-        });
+        modalElement.addEventListener("hidden.bs.modal", () => resolve(), { once: true });
 
-        $("#modalDialog").modal("hide");
+        dialog._getModal().hide();
     });
-}
+};
 
 dialog.showInfo = function (message, isBlocking) {
-    var $btnClose = $("<button>")
-        .attr("type", "button")
-        .attr("class", "btn btn-secondary")
-        .attr("data-bs-dismiss", "modal")
-        .text("Ok")
-
-    $("#dialogHeader").removeClass();
-    $("#dialogFooter").empty();
-
-    $("#dialogHeader").addClass("modal-header bg-primary text-white");
-    $("#dialogFooter").append($btnClose);
+    dialog._prepare("modal-header bg-primary text-white", [dialog._createCloseButton()]);
 
     return dialog._show("Info", message, isBlocking);
-}
+};
 
 dialog.showWarning = function (message, isBlocking) {
-    var $btnClose = $("<button>")
-        .attr("type", "button")
-        .attr("class", "btn btn-secondary")
-        .attr("data-bs-dismiss", "modal")
-        .text("Ok")
-
-    $("#dialogHeader").removeClass();
-    $("#dialogFooter").empty();
-
-    $("#dialogHeader").addClass("modal-header bg-warning");
-    $("#dialogFooter").append($btnClose);
+    dialog._prepare("modal-header bg-warning", [dialog._createCloseButton()]);
 
     return dialog._show("Warning", message, isBlocking);
-}
+};
 
 dialog.showError = function (message, isBlocking) {
-    var $btnClose = $("<button>")
-        .attr("type", "button")
-        .attr("class", "btn btn-secondary")
-        .attr("data-bs-dismiss", "modal")
-        .text("Ok")
-
-    $("#dialogHeader").removeClass();
-    $("#dialogFooter").empty();
-
-    $("#dialogHeader").addClass("modal-header bg-danger text-white");
-    $("#dialogFooter").append($btnClose);
+    dialog._prepare("modal-header bg-danger text-white", [dialog._createCloseButton()]);
 
     return dialog._show("Error", message, isBlocking);
-}
+};
 
 dialog.show = function (title, message, isBlocking) {
-    $("#dialogHeader").removeClass();
-    $("#dialogFooter").empty();
-
-    $("#dialogHeader").addClass("modal-header bg-dark text-white");
+    dialog._prepare("modal-header bg-dark text-white", []);
 
     return dialog._show(title, message, isBlocking);
-}
+};
 
 dialog.showYesNo = function (title, message, onYes, onNo, isBlocking) {
-    var $btnYes = $("<button>")
-        .attr("type", "button")
-        .attr("class", "btn btn-secondary")
-        .attr("data-bs-dismiss", "modal")
-        .text("Yes")
-        .on("click", function () {
-            if (typeof onYes === "function") onYes();
-        });
+    const yesButton = document.createElement("button");
+    const noButton = document.createElement("button");
 
-    var $btnNo = $("<button>")
-        .attr("type", "button")
-        .attr("class", "btn btn-secondary")
-        .attr("data-bs-dismiss", "modal")
-        .text("No")
-        .on("click", function () {
-            if (typeof onNo === "function") onNo();
-        });
+    yesButton.type = "button";
+    yesButton.className = "btn btn-secondary";
+    yesButton.setAttribute("data-bs-dismiss", "modal");
+    yesButton.textContent = "Yes";
+    yesButton.addEventListener("click", () => {
+        if (typeof onYes === "function") {
+            onYes();
+        }
+    });
 
-    $("#dialogHeader").removeClass();
-    $("#dialogFooter").empty();
+    noButton.type = "button";
+    noButton.className = "btn btn-secondary";
+    noButton.setAttribute("data-bs-dismiss", "modal");
+    noButton.textContent = "No";
+    noButton.addEventListener("click", () => {
+        if (typeof onNo === "function") {
+            onNo();
+        }
+    });
 
-    $("#dialogHeader").addClass("modal-header bg-warning");
-    $("#dialogFooter").append($btnYes).append($btnNo);
+    dialog._prepare("modal-header bg-warning", [yesButton, noButton]);
 
     return dialog._show(title, message, isBlocking);
 };
 
 dialog.updateMessage = function (message) {
-    $("#dialogBody").html(message);
+    document.getElementById("dialogBody").innerHTML = message;
 };
 
+/* "pixelix" is a shared namespace that ws.js also declares as a top-level name.
+ * In classic (non-module) scripts only "var" permits the same top-level
+ * identifier across multiple files; const/let would throw on redeclaration when
+ * both files are loaded on the same page (e.g. debug.html, display.html). */
 var pixelix = window.pixelix || {};
 
-pixelix.rest = {};
+pixelix.rest = pixelix.rest || {};
 
-pixelix.rest.Client = function (options) {
-    this._hostname = "";
-    this._baseUri = "/rest/api/v1";
+pixelix.rest.Client = class {
+    constructor(options) {
+        this._hostname = "";
+        this._baseUri = "/rest/api/v1";
 
-    if ("object" === typeof options) {
-        if ("string" === typeof options.hostname) {
+        if ((typeof options === "object") && (typeof options.hostname === "string")) {
             this._hostname = options.hostname;
         }
     }
-};
 
-pixelix.rest.Client.prototype.getBaseUri = function () {
-    return this._baseUri;
-}
+    getBaseUri() {
+        return this._baseUri;
+    }
 
-pixelix.rest.Client.prototype.listFiles = function (path = "/", page = "0") {
-    return utils.makeRequest({
-        method: "GET",
-        url: this._hostname + this._baseUri + "/fs",
-        isJsonResponse: true,
-        parameter: {
-            dir: path,
-            page: page
-        }
-    });
-};
+    listFiles(path = "/", page = "0") {
+        return utils.makeRequest({
+            method: "GET",
+            url: this._hostname + this._baseUri + "/fs",
+            isJsonResponse: true,
+            parameter: {
+                dir: path,
+                page: page
+            }
+        });
+    }
 
-pixelix.rest.Client.prototype.listAllFiles = function (path = "/") {
-    var page = 0;
-    var data = [];
-    var client = this;
-    var handler = function (rsp) {
-        var promise = null;
+    async listAllFiles(path = "/") {
+        const files = [];
+        let page = 0;
 
-        if (0 < rsp.data.length) {
-            data = data.concat(rsp.data);
+        for (;;) {
+            const rsp = await this.listFiles(path, page);
+
+            if (rsp.data.length === 0) {
+                break;
+            }
+
+            files.push(...rsp.data);
             ++page;
-            promise = client.listFiles(path, page).then(handler);
-        } else {
-            promise = Promise.resolve(data);
         }
-        return promise;
-    };
 
-    return this.listFiles(path, page).then(handler);
-};
+        return files;
+    }
 
-pixelix.rest.Client.prototype.listAllFilesRecursive = function (path = "/") {
-    var data = [];
-    var client = this;
-    var handler = function (directory) {
-        var promise = null;
-        var idx = 0;
-        var listOfDirectoryIndizes = [];
-
-        if (0 < directory.listing.length) {
-
-            for (idx = 0; idx < directory.listing.length; ++idx) {
-                if (directory.listing[idx].type === "dir") {
-                    listOfDirectoryIndizes.push(idx);
+    async listAllFilesRecursive(path = "/") {
+        const walk = async (directory) => {
+            for (const item of directory.listing) {
+                if (item.type === "dir") {
+                    item.listing = await this.listAllFiles(item.name);
+                    await walk(item);
                 }
             }
 
-            if (0 < listOfDirectoryIndizes.length) {
+            return directory;
+        };
 
-                promise = Promise.resolve();
+        const listing = await this.listAllFiles(path);
 
-                for (idx = 0; idx < listOfDirectoryIndizes.length; idx++) {
-                    promise = promise.then(function () {
-                        var directoryIdx = listOfDirectoryIndizes.shift();
-
-                        return client.listAllFiles(directory.listing[directoryIdx].name).then(function (rsp) {
-                            var item = directory.listing[directoryIdx];
-                            item.listing = rsp;
-
-                            return Promise.resolve(item);
-                        }).then(handler);
-                    });
-                }
-
-                promise = promise.then(function () {
-                    return Promise.resolve(directory);
-                });
-
-            } else {
-                promise = Promise.resolve(directory);
-            }
-
-        } else {
-            promise = Promise.resolve(directory);
-        }
-
-        return promise;
-    };
-
-    return this.listAllFiles(path).then(function (rsp) {
-        return Promise.resolve({
+        return walk({
             name: path,
             size: 0,
             type: "dir",
-            listing: rsp
+            listing: listing
         });
-    }).then(handler);
-};
+    }
 
-pixelix.rest.Client.prototype.readFile = function (filename) {
-    var promise = null;
-    if ("string" !== typeof filename) {
-        promise = Promise.reject();
-    } else {
-        promise = utils.makeRequest({
+    readFile(filename) {
+        if (typeof filename !== "string") {
+            return Promise.reject();
+        }
+
+        return utils.makeRequest({
             method: "GET",
             url: this._hostname + this._baseUri + "/fs/file",
             isJsonResponse: false,
@@ -457,22 +362,15 @@ pixelix.rest.Client.prototype.readFile = function (filename) {
         });
     }
 
-    return promise;
-};
+    writeFile(filename, content, mimeType) {
+        if ((typeof filename !== "string") || (typeof mimeType !== "string")) {
+            return Promise.reject();
+        }
 
-pixelix.rest.Client.prototype.writeFile = function (filename, content, mimeType) {
-    var promise = null;
-    var formData = null;
-
-    if ("string" !== typeof filename) {
-        promise = Promise.reject();
-    } else if ("string" !== typeof mimeType) {
-        promise = Promise.reject();
-    } else {
-        formData = new FormData();
+        const formData = new FormData();
         formData.append("file", new Blob([content], { type: mimeType }), filename);
 
-        promise = utils.makeRequest({
+        return utils.makeRequest({
             method: "POST",
             url: this._hostname + this._baseUri + "/fs/file",
             isJsonResponse: true,
@@ -480,16 +378,12 @@ pixelix.rest.Client.prototype.writeFile = function (filename, content, mimeType)
         });
     }
 
-    return promise;
-};
+    removeFile(filename) {
+        if (typeof filename !== "string") {
+            return Promise.reject();
+        }
 
-pixelix.rest.Client.prototype.removeFile = function (filename) {
-    var promise = null;
-
-    if ("string" !== typeof filename) {
-        promise = Promise.reject();
-    } else {
-        promise = utils.makeRequest({
+        return utils.makeRequest({
             method: "DELETE",
             url: this._hostname + this._baseUri + "/fs/file",
             isJsonResponse: true,
@@ -499,40 +393,36 @@ pixelix.rest.Client.prototype.removeFile = function (filename) {
         });
     }
 
-    return promise;
-};
+    getPluginInstances() {
+        return utils.makeRequest({
+            method: "GET",
+            url: this._baseUri + "/display/slots",
+            isJsonResponse: true
+        });
+    }
 
-pixelix.rest.Client.prototype.getPluginInstances = function () {
-    return utils.makeRequest({
-        method: "GET",
-        url: this._baseUri + "/display/slots",
-        isJsonResponse: true
-    });
-};
+    getSensors() {
+        return utils.makeRequest({
+            method: "GET",
+            url: this._baseUri + "/sensors",
+            isJsonResponse: true
+        });
+    }
 
-pixelix.rest.Client.prototype.getSensors = function () {
-    return utils.makeRequest({
-        method: "GET",
-        url: this._baseUri + "/sensors",
-        isJsonResponse: true
-    });
-};
+    getSettingKeys() {
+        return utils.makeRequest({
+            method: "GET",
+            url: this._baseUri + "/settings",
+            isJsonResponse: true
+        });
+    }
 
-pixelix.rest.Client.prototype.getSettingKeys = function () {
-    return utils.makeRequest({
-        method: "GET",
-        url: this._baseUri + "/settings",
-        isJsonResponse: true
-    });
-};
+    getSettingByKey(key) {
+        if (typeof key !== "string") {
+            return Promise.reject();
+        }
 
-pixelix.rest.Client.prototype.getSettingByKey = function (key) {
-    var promise = null;
-
-    if ("string" !== typeof key) {
-        promise = Promise.reject();
-    } else {
-        promise = utils.makeRequest({
+        return utils.makeRequest({
             method: "GET",
             url: this._baseUri + "/setting",
             isJsonResponse: true,
@@ -542,18 +432,12 @@ pixelix.rest.Client.prototype.getSettingByKey = function (key) {
         });
     }
 
-    return promise;
-};
+    setSetting(key, value) {
+        if ((typeof key !== "string") || (typeof value === "undefined")) {
+            return Promise.reject();
+        }
 
-pixelix.rest.Client.prototype.setSetting = function (key, value) {
-    var promise = null;
-
-    if ("string" !== typeof key) {
-        promise = Promise.reject();
-    } else if ("undefined" === typeof value) {
-        promise = Promise.reject();
-    } else {
-        promise = utils.makeRequest({
+        return utils.makeRequest({
             method: "POST",
             url: this._baseUri + "/setting",
             isJsonResponse: true,
@@ -564,26 +448,20 @@ pixelix.rest.Client.prototype.setSetting = function (key, value) {
         });
     }
 
-    return promise;
-};
+    restart() {
+        return utils.makeRequest({
+            method: "POST",
+            url: this._baseUri + "/restart",
+            isJsonResponse: true
+        });
+    }
 
-pixelix.rest.Client.prototype.restart = function () {
-    return utils.makeRequest({
-        method: "POST",
-        url: this._baseUri + "/restart",
-        isJsonResponse: true
-    });
-};
+    fileMgrUploadFile(file, fileSize) {
+        if ((typeof file !== "object") || (typeof fileSize !== "number")) {
+            return Promise.reject();
+        }
 
-pixelix.rest.Client.prototype.fileMgrUploadFile = function (file, fileSize) {
-    var promise = null;
-
-    if ("object" !== typeof file) {
-        promise = Promise.reject();
-    } else if ("number" !== typeof fileSize) {
-        promise = Promise.reject();
-    } else {
-        promise = utils.makeRequest({
+        return utils.makeRequest({
             method: "POST",
             url: this._hostname + this._baseUri + "/fileMgrService/upload",
             isJsonResponse: true,
@@ -596,16 +474,12 @@ pixelix.rest.Client.prototype.fileMgrUploadFile = function (file, fileSize) {
         });
     }
 
-    return promise;
-};
+    fileMgrRemoveFile(fileId) {
+        if (typeof fileId !== "number") {
+            return Promise.reject();
+        }
 
-pixelix.rest.Client.prototype.fileMgrRemoveFile = function (fileId) {
-    var promise = null;
-
-    if ("number" !== typeof fileId) {
-        promise = Promise.reject();
-    } else {
-        promise = utils.makeRequest({
+        return utils.makeRequest({
             method: "POST",
             url: this._hostname + this._baseUri + "/fileMgrService/remove",
             isJsonResponse: true,
@@ -615,24 +489,20 @@ pixelix.rest.Client.prototype.fileMgrRemoveFile = function (fileId) {
         });
     }
 
-    return promise;
-};
+    getDisplayState() {
+        return utils.makeRequest({
+            method: "GET",
+            url: this._baseUri + "/display/power",
+            isJsonResponse: true
+        });
+    }
 
-pixelix.rest.Client.prototype.getDisplayState = function () {
-    return utils.makeRequest({
-        method: "GET",
-        url: this._baseUri + "/display/power",
-        isJsonResponse: true
-    });
-};
+    setDisplayState(state) {
+        if (typeof state !== "string") {
+            return Promise.reject();
+        }
 
-pixelix.rest.Client.prototype.setDisplayState = function (state) {
-    var promise = null;
-
-    if ("string" !== typeof state) {
-        promise = Promise.reject();
-    } else {
-        promise = utils.makeRequest({
+        return utils.makeRequest({
             method: "POST",
             url: this._baseUri + "/display/power",
             isJsonResponse: true,
@@ -641,6 +511,4 @@ pixelix.rest.Client.prototype.setDisplayState = function (state) {
             }
         });
     }
-
-    return promise;
 };

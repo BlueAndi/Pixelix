@@ -11,6 +11,7 @@ __pycache__
 scripts/pluginsSubMenu.js
 scripts/servicesSubMenu.js
 data/js/app-menu.js
+data/js/*SubMenu.js
 data/plugins/
 data/services/
 doc/doxygen/html/

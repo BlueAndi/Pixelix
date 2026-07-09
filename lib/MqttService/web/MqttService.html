@@ -15,7 +15,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -49,7 +49,7 @@
                     <li>If TLS is enabled, the root CA certificate, client certificate and the client key are applied.</li>
                     <li>If TLS is enabled, but no root CA certificate is provided, the connection will be insecure.</li>
                 </ul>
-                <form id="myForm" action="javascript:save()">
+                <form id="myForm">
                 </form>
             </div>
         </main>
@@ -63,8 +63,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
@@ -75,8 +74,8 @@
 
         <script>
 
-            var restClient = new pixelix.rest.Client();
-            var timerSettingsCount = 0;
+            const restClient = new pixelix.rest.Client();
+            let mqttSettingsCount = 0;
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -86,244 +85,201 @@
                 utils.enableForm("myForm", false);
             }
 
-            function createFormGroup(elements) {
-                var $formGroup = $("<div class='form-group'></div>");
-                var idx;
+            function createContainer(className, elements) {
+                const container = document.createElement("div");
+                container.className = className;
+                elements.forEach((element) => container.appendChild(element));
+                return container;
+            }
 
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
-                }
-                
-                return $formGroup;
+            function createFormGroup(elements) {
+                return createContainer("form-group", elements);
             }
 
             function createFormCheck(elements) {
-                var $formGroup = $("<div class='form-check'></div>");
-                var idx;
-
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
-                }
-                
-                return $formGroup;
+                return createContainer("form-check", elements);
             }
 
             function createFormCheckInline(elements) {
-                var $formGroup = $("<div class='form-check form-check-inline'></div>");
-                var idx;
-
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
-                }
-                
-                return $formGroup;
+                return createContainer("form-check form-check-inline", elements);
             }
 
             function createInputGroup(elements) {
-                var $formGroup = $("<div class='input-group'></div>");
-                var idx;
+                return createContainer("input-group", elements);
+            }
 
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
+            function createTextInput(type, id, value) {
+                const input = document.createElement("input");
+                input.type = type;
+                input.className = "form-control";
+                input.id = id;
+                input.value = value;
+                return input;
+            }
+
+            function createCheckbox(id, checked) {
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.className = "form-check-input";
+                input.id = id;
+                input.checked = checked;
+                return input;
+            }
+
+            function createTextArea(id, value) {
+                const textarea = document.createElement("textarea");
+                textarea.className = "form-control";
+                textarea.id = id;
+                textarea.rows = 4;
+                textarea.value = value;
+                return textarea;
+            }
+
+            function createLabel(className, forId, text) {
+                const label = document.createElement("label");
+                if (className) {
+                    label.className = className;
                 }
-                
-                return $formGroup;
+                label.setAttribute("for", forId);
+                label.textContent = text;
+                return label;
             }
 
             function createMqttSetting(id, mqttSetting) {
-                var $block = $("<div class='h-100 p-2 bg-body-tertiary border rounded-3 mt-2'></div>");
-                var $row0 = $("<div class='row'></div>")
-                var $row1 = $("<div class='row'></div>")
-                var $row2 = $("<div class='row'></div>")
-                var $row3 = $("<div class='row'></div>")
-                var $row4 = $("<div class='row'></div>")
-                
-                var $checkboxEnabled = $("<input type='checkbox' class='form-check-input' id='" + id + "Enabled' />")
-                                        .prop("checked", mqttSetting.enabled);
-                var $labelEnabled = $("<label class='form-check-label' for='" + id + "Enabled'>Enabled</label>");
+                const block = document.createElement("div");
+                block.className = "h-100 p-2 bg-body-tertiary border rounded-3 mt-2";
 
-                var $useTls = $("<input type='checkbox' class='form-check-input' id='" + id + "UseTls' />")
-                                        .prop("checked", mqttSetting.useTls);
-                var $labelUseTls = $("<label class='form-check-label' for='" + id + "UseTls'>Use TLS</label>");
+                const row0 = createContainer("row", []);
+                const row1 = createContainer("row", []);
+                const row2 = createContainer("row", []);
+                const row3 = createContainer("row", []);
+                const row4 = createContainer("row", []);
 
-                var $broker = $("<input type='text' class='form-control' id='" + id + "Broker' />")
-                                        .val(mqttSetting.broker);
-                var $labelBroker = $("<label for='" + id + "Broker'>Broker hostname, e.g. mqtt.example.com</label>");
+                const checkboxEnabled = createCheckbox(id + "Enabled", mqttSetting.enabled);
+                const labelEnabled = createLabel("form-check-label", id + "Enabled", "Enabled");
 
-                var $port = $("<input type='number' class='form-control' id='" + id + "Port' />")
-                                        .val(mqttSetting.port);
-                var $labelPort = $("<label for='" + id + "Port'>Port</label>");
+                const useTls = createCheckbox(id + "UseTls", mqttSetting.useTls);
+                const labelUseTls = createLabel("form-check-label", id + "UseTls", "Use TLS");
 
-                var $user = $("<input type='text' class='form-control' id='" + id + "User' />")
-                                        .val(mqttSetting.user);
-                var $labelUser = $("<label for='" + id + "User'>User</label>");
+                const broker = createTextInput("text", id + "Broker", mqttSetting.broker);
+                const labelBroker = createLabel("", id + "Broker", "Broker hostname, e.g. mqtt.example.com");
 
-                var $password = $("<input type='password' class='form-control' id='" + id + "Password' />")
-                                        .val(mqttSetting.password);
-                var $labelPassword = $("<label for='" + id + "Password'>Password</label>");
+                const port = createTextInput("number", id + "Port", mqttSetting.port);
+                const labelPort = createLabel("", id + "Port", "Port");
 
-                var $rootCaCert = $("<textarea class='form-control' id='" + id + "RootCaCert' rows='4'></textarea>")
-                                        .val(mqttSetting.rootCaCert);
-                var $labelRootCaCert = $("<label for='" + id + "RootCaCert'>Root CA Certificate</label>");
+                const user = createTextInput("text", id + "User", mqttSetting.user);
+                const labelUser = createLabel("", id + "User", "User");
 
-                var $clientCert = $("<textarea class='form-control' id='" + id + "ClientCert' rows='4'></textarea>")
-                                        .val(mqttSetting.clientCert);
-                var $labelClientCert = $("<label for='" + id + "ClientCert'>Client Certificate</label>");
+                const password = createTextInput("password", id + "Password", mqttSetting.password);
+                const labelPassword = createLabel("", id + "Password", "Password");
 
-                var $clientKey = $("<textarea class='form-control' id='" + id + "ClientKey' rows='4'></textarea>")
-                                        .val(mqttSetting.clientKey);
-                var $labelClientKey = $("<label for='" + id + "ClientKey'>Client Key</label>");
+                const rootCaCert = createTextArea(id + "RootCaCert", mqttSetting.rootCaCert);
+                const labelRootCaCert = createLabel("", id + "RootCaCert", "Root CA Certificate");
 
-                $block.append($row0);
-                $block.append($row1);
-                $block.append($row2);
-                $block.append($row3);
-                $block.append($row4);
+                const clientCert = createTextArea(id + "ClientCert", mqttSetting.clientCert);
+                const labelClientCert = createLabel("", id + "ClientCert", "Client Certificate");
 
-                $row0.append(
-                    $("<div class='col'></div>")
-                    .append(createFormCheck([
-                        $checkboxEnabled, $labelEnabled
-                    ]))
-                );
+                const clientKey = createTextArea(id + "ClientKey", mqttSetting.clientKey);
+                const labelClientKey = createLabel("", id + "ClientKey", "Client Key");
 
-                $row0.append(
-                    $("<div class='col'></div>")
-                    .append(createFormCheck([
-                        $useTls, $labelUseTls
-                    ]))
-                );
+                block.appendChild(row0);
+                block.appendChild(row1);
+                block.appendChild(row2);
+                block.appendChild(row3);
+                block.appendChild(row4);
 
-                $row0.append(
-                    $("<div class='col'></div>")
-                    .append(createFormGroup([
-                        $labelBroker,
-                        $broker
-                    ]))
-                );
+                row0.appendChild(createContainer("col", [createFormCheck([checkboxEnabled, labelEnabled])]));
+                row0.appendChild(createContainer("col", [createFormCheck([useTls, labelUseTls])]));
+                row0.appendChild(createContainer("col", [createFormGroup([labelBroker, broker])]));
+                row0.appendChild(createContainer("col", [createFormGroup([labelPort, port])]));
 
-                $row0.append(
-                    $("<div class='col'></div>")
-                    .append(createFormGroup([
-                        $labelPort,
-                        $port
-                    ]))
-                );
+                row1.appendChild(createContainer("col-6", [createFormGroup([labelUser, user])]));
+                row1.appendChild(createContainer("col-6", [createFormGroup([labelPassword, password])]));
 
-                $row1.append(
-                    $("<div class='col-6'></div>")
-                    .append(createFormGroup([
-                        $labelUser,
-                        $user
-                    ]))
-                );
+                row2.appendChild(createContainer("col-12", [createFormGroup([labelRootCaCert, rootCaCert])]));
+                row3.appendChild(createContainer("col-12", [createFormGroup([labelClientCert, clientCert])]));
+                row4.appendChild(createContainer("col-12", [createFormGroup([labelClientKey, clientKey])]));
 
-                $row1.append(
-                    $("<div class='col-6'></div>")
-                    .append(createFormGroup([
-                        $labelPassword,
-                        $password
-                    ]))
-                );
-
-                $row2.append(
-                    $("<div class='col-12'></div>")
-                    .append(createFormGroup([
-                        $labelRootCaCert,
-                        $rootCaCert
-                    ]))
-                );
-
-                $row3.append(
-                    $("<div class='col-12'></div>")
-                    .append(createFormGroup([
-                        $labelClientCert,
-                        $clientCert
-                    ]))
-                );
-
-                $row4.append(
-                    $("<div class='col-12'></div>")
-                    .append(createFormGroup([
-                        $labelClientKey,
-                        $clientKey
-                    ]))
-                );
-
-                $("#myForm").append($block);
+                document.getElementById("myForm").appendChild(block);
             }
 
-            function load() {
+            async function load() {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/mqttService/mqtt",
-                    isJsonResponse: true
-                }).then(function(rsp) {
-                    var idx;
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/mqttService/mqtt",
+                        isJsonResponse: true
+                    });
 
                     mqttSettingsCount = rsp.data.mqttSettings.length;
 
-                    for (idx = 0; idx < mqttSettingsCount; ++idx) {
+                    for (let idx = 0; idx < mqttSettingsCount; ++idx) {
                         createMqttSetting("mqtt" + idx, rsp.data.mqttSettings[idx]);
                     }
 
-                    $("#myForm").append($("<button type='submit' class='btn btn-primary' onclick='save()'>Save</button>"));
-
-                }).catch(function(rsp) {
+                    const saveButton = document.createElement("button");
+                    saveButton.type = "submit";
+                    saveButton.className = "btn btn-primary";
+                    saveButton.textContent = "Save";
+                    document.getElementById("myForm").appendChild(saveButton);
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             function getMqttSettings() {
-                var mqttSettings = [];
-                var idx;
+                const mqttSettings = [];
 
-                for (idx = 0; idx < mqttSettingsCount; ++idx) {
-                    var mqttSetting = {
-                        enabled: $("#mqtt" + idx + "Enabled").prop("checked"),
-                        useTls: $("#mqtt" + idx + "UseTls").prop("checked"),
-                        broker: $("#mqtt" + idx + "Broker").val(),
-                        port: parseInt($("#mqtt" + idx + "Port").val()),
-                        user: $("#mqtt" + idx + "User").val(),
-                        password: $("#mqtt" + idx + "Password").val(),
-                        rootCaCert: $("#mqtt" + idx + "RootCaCert").val(),
-                        clientCert: $("#mqtt" + idx + "ClientCert").val(),
-                        clientKey: $("#mqtt" + idx + "ClientKey").val()
-                    };
-
-                    mqttSettings.push(mqttSetting);
+                for (let idx = 0; idx < mqttSettingsCount; ++idx) {
+                    mqttSettings.push({
+                        enabled: document.getElementById("mqtt" + idx + "Enabled").checked,
+                        useTls: document.getElementById("mqtt" + idx + "UseTls").checked,
+                        broker: document.getElementById("mqtt" + idx + "Broker").value,
+                        port: Number.parseInt(document.getElementById("mqtt" + idx + "Port").value),
+                        user: document.getElementById("mqtt" + idx + "User").value,
+                        password: document.getElementById("mqtt" + idx + "Password").value,
+                        rootCaCert: document.getElementById("mqtt" + idx + "RootCaCert").value,
+                        clientCert: document.getElementById("mqtt" + idx + "ClientCert").value,
+                        clientKey: document.getElementById("mqtt" + idx + "ClientKey").value
+                    });
                 }
 
                 return mqttSettings;
             }
 
-            function save() {
+            async function save() {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/mqttService/mqtt",
-                    isJsonResponse: true,
-                    parameter: {
-                        mqttSettings: getMqttSettings()
-                    }
-                }).then(function(rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/mqttService/mqtt",
+                        isJsonResponse: true,
+                        parameter: {
+                            mqttSettings: getMqttSettings()
+                        }
+                    });
                     alert("Ok.");
-                }).catch(function(rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            $(document).ready(function() {
+            document.addEventListener("DOMContentLoaded", () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
+
+                document.getElementById("myForm").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    save();
+                });
 
                 load();
             });

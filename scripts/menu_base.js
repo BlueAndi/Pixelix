@@ -1,6 +1,9 @@
 "use strict";
 
-var menu = {}
+/* Attach to window explicitly: pages reference "menu" (and the plugin/service
+ * arrays appended by the build) as globals, which a top-level const would not
+ * provide in a classic script. */
+const menu = (window.menu = window.menu || {});
 
 menu.data = [{
     "title": "Home",
@@ -52,81 +55,82 @@ menu.captivePortal = [{
 }];
 
 menu.addSubMenu = function (menuData, title, subMenu) {
-    var index = 0;
-
-    for (index = 0; index < menuData.length; ++index) {
-        if (menuData[index].title === title) {
-            menuData[index].subMenu = menuData[index].subMenu.concat(subMenu);
+    for (const item of menuData) {
+        if (item.title === title) {
+            item.subMenu = item.subMenu.concat(subMenu);
             break;
         }
     }
-}
+};
 
 menu.create = function (ulId, menuData) {
-    var index = 0;
-
-    for (index = 0; index < menuData.length; ++index) {
-        if ("undefined" === typeof menuData[index].subMenu) {
-            menu._createMenuItem(ulId, menuData[index]);
+    for (const menuItem of menuData) {
+        if (typeof menuItem.subMenu === "undefined") {
+            menu._createMenuItem(ulId, menuItem);
         } else {
-            menu._createSubMenu(ulId, menuData[index]);
+            menu._createSubMenu(ulId, menuItem);
         }
     }
 };
 
 menu._createMenuItem = function (ulId, menuItem) {
-    var listItem = $("<li>").attr("class", "nav-item");
-    var anchor = $("<a>")
-        .attr("class", "nav-link")
-        .attr("href", menuItem.hyperRef)
-        .text(menuItem.title);
+    const listItem = document.createElement("li");
+    listItem.className = "nav-item";
+
+    const anchor = document.createElement("a");
+    anchor.className = "nav-link";
+    anchor.href = menuItem.hyperRef;
+    anchor.textContent = menuItem.title;
 
     if (location.pathname === menuItem.hyperRef) {
-        $(anchor).addClass("active");
+        anchor.classList.add("active");
     }
 
-    $(listItem).append(anchor)
-    $("#" + ulId).append(listItem)
+    listItem.appendChild(anchor);
+    document.getElementById(ulId).appendChild(listItem);
 };
 
 menu._createSubMenu = function (ulId, menuItem) {
-    var listItem = $("<li>").attr("class", "nav-item dropdown");
-    var anchor = $("<a>")
-        .attr("class", "nav-link dropdown-toggle")
-        .attr("href", "#")
-        .attr("id", menuItem.title + "-dropdown")
-        .attr("role", "button")
-        .attr("data-bs-toggle", "dropdown")
-        .attr("aria-haspopup", "true")
-        .attr("aria-expanded", "false")
-        .text(menuItem.title);
-    var div = $("<div>")
-        .attr("class", "dropdown-menu scrollable-menu")
-        .attr("aria-labelledby", menuItem.title + "-dropdown");
-    var index = 0;
+    const listItem = document.createElement("li");
+    listItem.className = "nav-item dropdown";
 
-    for (index = 0; index < menuItem.subMenu.length; ++index) {
-        if (true === menu._createSubMenuItem(div, menuItem.subMenu[index])) {
-            $(listItem).addClass("active");
+    const anchor = document.createElement("a");
+    anchor.className = "nav-link dropdown-toggle";
+    anchor.href = "#";
+    anchor.id = menuItem.title + "-dropdown";
+    anchor.setAttribute("role", "button");
+    anchor.setAttribute("data-bs-toggle", "dropdown");
+    anchor.setAttribute("aria-haspopup", "true");
+    anchor.setAttribute("aria-expanded", "false");
+    anchor.textContent = menuItem.title;
+
+    const div = document.createElement("div");
+    div.className = "dropdown-menu scrollable-menu";
+    div.setAttribute("aria-labelledby", menuItem.title + "-dropdown");
+
+    for (const subMenuItem of menuItem.subMenu) {
+        if (menu._createSubMenuItem(div, subMenuItem) === true) {
+            listItem.classList.add("active");
         }
     }
 
-    $(listItem).append(anchor);
-    $(listItem).append(div);
-    $("#" + ulId).append(listItem);
+    listItem.appendChild(anchor);
+    listItem.appendChild(div);
+    document.getElementById(ulId).appendChild(listItem);
 };
 
-menu._createSubMenuItem = function ($div, subMenuItem) {
-    var anchor = $("<a>")
-        .attr("class", "dropdown-item")
-        .attr("href", subMenuItem.hyperRef)
-        .text(subMenuItem.title);
-    var isActive = false;
+menu._createSubMenuItem = function (container, subMenuItem) {
+    const anchor = document.createElement("a");
+    anchor.className = "dropdown-item";
+    anchor.href = subMenuItem.hyperRef;
+    anchor.textContent = subMenuItem.title;
 
-    $($div).append(anchor);
+    container.appendChild(anchor);
+
+    let isActive = false;
 
     if (location.pathname === subMenuItem.hyperRef) {
-        $(anchor).addClass("active");
+        anchor.classList.add("active");
         isActive = true;
     }
 

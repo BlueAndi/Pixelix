@@ -16,7 +16,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
@@ -67,13 +67,13 @@
                             <strong>Important:</strong> Updating the filesystem will erase all your configuration data. Before proceeding, make sure to create a backup of your configuration to avoid losing any settings.
                         </div>
                         </p>
-                        <button class="btn btn-light" type="button" onclick="goToPixelixUpdaterPressed()" disabled>Go to PixelixUpdater</button>
+                        <button class="btn btn-light" type="button" id="btnGoToUpdater" disabled>Go to PixelixUpdater</button>
                     </div>
 
                     <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
                         <br />
                         <p>Backup the configuration.</p>
-                        <button class="btn btn-light" id="buttonBackup" type="button" onclick="backup();" disabled>Save As</button>
+                        <button class="btn btn-light" id="btnBackup" type="button" disabled>Save As</button>
                     </div>
 
                     <div class="tab-pane fade" id="restore" role="tabpanel" aria-labelledby="restore-tab">
@@ -81,7 +81,7 @@
                         <p>Restore the configuration.</p>
                         <div class="input-group">
                             <input type="file" class="form-control" id="backupFile" accept=".zip">
-                            <button class="btn btn-light" type="button" onclick="restore();" disabled>Restore</button>
+                            <button class="btn btn-light" type="button" id="btnRestore" disabled>Restore</button>
                         </div>
                         <div class="progress">
                             <div id="progressBarRestore" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
@@ -91,7 +91,7 @@
                     <div class="tab-pane fade" id="restart" role="tabpanel" aria-labelledby="restart-tab">
                         <br />
                         <p>Restart the system now: </p>
-                        <p><button class="btn btn-light" type="button" onclick="restart();" disabled>Restart</button></p>
+                        <p><button class="btn btn-light" type="button" id="btnRestart" disabled>Restart</button></p>
                     </div>
 
                 </div>
@@ -108,8 +108,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
@@ -125,45 +124,45 @@
         <!-- Custom javascript -->
         <script>
 
-            var restClient = new pixelix.rest.Client();
-            var zip = new JSZip();
-            var hostname = "~HOSTNAME~";
+            const restClient = new pixelix.rest.Client();
+            const zip = new JSZip();
+            const hostname = "~HOSTNAME~";
 
             /* Disable all UI elements. */
             function disableUI() {
-                $("main :button").prop("disabled", true);
+                document.querySelectorAll("main button").forEach((button) => {
+                    button.disabled = true;
+                });
             }
 
             /* Enable all UI elements. */
             function enableUI() {
-                $("main :button").prop("disabled", false);
-            }
-
-            function updateProgressBar(id, progress) {
-                var progressInt = Math.round(progress);
-                $("#" + id).css("width", progressInt + "%").attr("aria-valuenow", progressInt);
-                $("#" + id).text(progressInt + "%");
-            }
-
-            function getConfigurationFiles() {
-                return restClient.listAllFiles("/configuration").then(function (items) {
-                    fileUrlList = [];
-
-                    for (index = 0; index < items.length; ++index) {
-                        fileUrlList.push({
-                            name: items[index].name,
-                            url: restClient.getBaseUri() + "/fs/file?path=" + encodeURIComponent(items[index].name)
-                        });
-                    }
-
-                    return Promise.resolve(fileUrlList);
+                document.querySelectorAll("main button").forEach((button) => {
+                    button.disabled = false;
                 });
             }
 
-            function urlToPromise(url) {
-                return new Promise(function (resolve, reject) {
+            function updateProgressBar(id, progress) {
+                const progressInt = Math.round(progress);
+                const bar = document.getElementById(id);
 
-                    JSZipUtils.getBinaryContent(url, function (err, data) {
+                bar.style.width = progressInt + "%";
+                bar.setAttribute("aria-valuenow", progressInt);
+                bar.textContent = progressInt + "%";
+            }
+
+            async function getConfigurationFiles() {
+                const items = await restClient.listAllFiles("/configuration");
+
+                return items.map((item) => ({
+                    name: item.name,
+                    url: restClient.getBaseUri() + "/fs/file?path=" + encodeURIComponent(item.name)
+                }));
+            }
+
+            function urlToPromise(url) {
+                return new Promise((resolve, reject) => {
+                    JSZipUtils.getBinaryContent(url, (err, data) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -173,149 +172,126 @@
                 });
             }
 
-            function downloadWithBlob(fileUrlList) {
-                return new Promise(function (resolve, reject) {
-                    fileUrlList.forEach(function (fileUrl, index) {
-                        var filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf('/') + 1);
-                        zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary: true });
-                    });
-                    zip.generateAsync({ type: 'blob' }).then(function (content) {
-                        var date = new Date();
-                        var day = date.getDate();
-                        day = ((day < 10) ? '0' : '') + day;
-                        var month = date.getMonth() + 1;
-                        month = ((month < 10) ? '0' : '') + month;
-                        var year = date.getFullYear();
-                        var hour = date.getHours();
-                        hour = ((hour < 10) ? '0' : '') + hour;
-                        var minutes = date.getMinutes();
-                        minutes = ((minutes < 10) ? '0' : '') + minutes;
-                        var seconds = date.getSeconds();
-                        seconds = ((seconds < 10) ? '0' : '') + seconds;
-                        var filename = hostname + "_" + year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
-                        saveAs(content, filename);
-                        resolve();
-                    });
+            async function downloadWithBlob(fileUrlList) {
+                fileUrlList.forEach((fileUrl) => {
+                    const filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf("/") + 1);
+                    zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary: true });
                 });
+
+                const content = await zip.generateAsync({ type: "blob" });
+                const date = new Date();
+                const pad = (value) => String(value).padStart(2, "0");
+                const filename = hostname + "_" +
+                    date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate()) + "_" +
+                    pad(date.getHours()) + pad(date.getMinutes()) + pad(date.getSeconds()) + "_backup.zip";
+
+                saveAs(content, filename);
             }
 
-            function backup() {
-                dialog.show("Backup", "<p>Please wait, backup is in progress.</p>").then(function () {
-                    return getConfigurationFiles();
-                }).then(function (fileUrlList) {
-                    return downloadWithBlob(fileUrlList);
-                }).then(function () {
+            async function backup() {
+                try {
+                    await dialog.show("Backup", "<p>Please wait, backup is in progress.</p>");
+
+                    const fileUrlList = await getConfigurationFiles();
+                    await downloadWithBlob(fileUrlList);
+
                     dialog.showInfo("<p>Backup successful.</p>");
-                }).catch(function () {
+                } catch (err) {
                     dialog.showError("<p>Backup failed.</p>");
-                });
+                }
             }
 
-            function restore() {
-                var elem = document.getElementById("backupFile");
-                var progress = 0;
+            async function restore() {
+                const elem = document.getElementById("backupFile");
+                let progress = 0;
 
                 updateProgressBar("progressBarRestore", progress);
 
-                if (0 === elem.files.length) {
-
+                if (elem.files.length === 0) {
                     dialog.showWarning("<p>No file selected.</p>");
+                    return;
+                }
 
-                } else {
-                    var file = elem.files[0];
-                    var fileSize = file.size;
+                const file = elem.files[0];
 
-                    if (false === file.name.endsWith(".zip")) {
+                if (file.name.endsWith(".zip") === false) {
+                    dialog.showError("<p>Unknown file: " + file.name + "</p>");
+                    return;
+                }
 
-                        dialog.showError("<p>Unknown file: " + file.name + "</p>");
+                try {
+                    await dialog.show("Restore", "<p>Please wait, restore is in progress.</p>");
 
-                    } else {
+                    progress = 2;
+                    updateProgressBar("progressBarRestore", progress);
 
-                        dialog.show("Restore", "<p>Please wait, restore is in progress.</p>").then(function () {
-                            progress = 2;
-                            updateProgressBar("progressBarRestore", progress);
+                    await restClient.removeFile("/configuration/*.json");
 
-                            return restClient.removeFile("/configuration/*.json")
-                        }).then(function () {
-                            progress = 10;
-                            updateProgressBar("progressBarRestore", progress);
+                    progress = 10;
+                    updateProgressBar("progressBarRestore", progress);
 
-                            return zip.loadAsync(file);
-                        }).then(function (zipObj) {
-                            return new Promise(function (resolve, reject) {
-                                var files = Object.keys(zipObj.files);
-                                var progressPerFile = (90 - progress) / files.length;
-                                var promiseChain = Promise.resolve();
+                    const zipObj = await zip.loadAsync(file);
+                    const filenames = Object.keys(zipObj.files);
+                    const progressPerFile = (90 - progress) / filenames.length;
 
-                                files.forEach(function (filename) {
-                                    var fileType = "text";
-                                    var mimeType = "text/plain";
+                    for (const filename of filenames) {
+                        let fileType = "text";
+                        let mimeType = "text/plain";
 
-                                    if (true === filename.endsWith(".json")) {
-                                        fileType = "text";
-                                        mimeType = "text/plain";
-                                    } else if ((true === filename.endsWith(".bmp")) ||
-                                        (true === filename.endsWith(".gif"))) {
+                        if (filename.endsWith(".json")) {
+                            fileType = "text";
+                            mimeType = "text/plain";
+                        } else if (filename.endsWith(".bmp") || filename.endsWith(".gif")) {
+                            if (JSZip.support.blob) {
+                                fileType = "blob";
+                                mimeType = "application/octet-stream";
+                            } else if (JSZip.support.uint8array) {
+                                fileType = "uint8array";
+                                mimeType = "application/octet-stream";
+                            }
+                        }
 
-                                        if (JSZip.support.blob) {
-                                            fileType = "blob";
-                                            mimeType = "application/octet-stream";
-                                        } else if (JSZip.support.uint8array) {
-                                            fileType = "uint8array";
-                                            mimeType = "application/octet-stream";
-                                        }
-                                    }
+                        const data = await zipObj.file(filename).async(fileType);
 
-                                    promiseChain = promiseChain.then(function () {
-                                        return zipObj.file(filename).async(fileType).then(function (data) {
-                                            progress += progressPerFile;
-                                            updateProgressBar("progressBarRestore", progress);
+                        progress += progressPerFile;
+                        updateProgressBar("progressBarRestore", progress);
 
-                                            return restClient.writeFile("/configuration/" + filename, data, mimeType);
-                                        }.bind(zipObj))
-                                    }.bind(zipObj));
-                                });
-
-                                return promiseChain.then(function () {
-                                    resolve();
-                                });
-                            });
-                        }).then(function () {
-                            progress = 90;
-                            updateProgressBar("progressBarRestore", progress);
-                        }).then(function () {
-                            return restClient.restart();
-                        }).then(function () {
-                            progress = 100;
-                            updateProgressBar("progressBarRestore", progress);
-
-                            return dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
-                        }).catch(function () {
-                            dialog.showError("<p>Restore failed.</p>");
-                        });
+                        await restClient.writeFile("/configuration/" + filename, data, mimeType);
                     }
+
+                    progress = 90;
+                    updateProgressBar("progressBarRestore", progress);
+
+                    await restClient.restart();
+
+                    progress = 100;
+                    updateProgressBar("progressBarRestore", progress);
+
+                    dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
+                } catch (err) {
+                    dialog.showError("<p>Restore failed.</p>");
                 }
             }
 
             /* Restart device */
-            function restart() {
+            async function restart() {
                 disableUI();
 
-                restClient.restart().then(function (rsp) {
-                    return dialog.showInfo("<p>Ok.</p>");
-                }).catch(function (err) {
-                    return dialog.showError("<p>Error: " + err + "</p>");
-                });
+                try {
+                    await restClient.restart();
+                    await dialog.showInfo("<p>Ok.</p>");
+                } catch (err) {
+                    await dialog.showError("<p>Error: " + err + "</p>");
+                }
             }
 
-            /* Handle popup button yes pressed. Disables the HomeAssistant automatic discovery before requesting a change of acitve partitions. */
+            /* Handle popup button yes pressed. Disables the HomeAssistant automatic discovery before requesting a change of active partitions. */
             function homeAssistantPopUpYesPressed() {
                 disableUI();
 
-                disableHomeAssistantAutomaticDiscovery()
-                    .finally(() => {
-                        setTimeout(sendPartitionChangeRequest, 5000);
-                    });
+                disableHomeAssistantAutomaticDiscovery().finally(() => {
+                    setTimeout(sendPartitionChangeRequest, 5000);
+                });
             }
 
             /* Handle popup button no pressed. Requests a change of active partitions */
@@ -324,67 +300,74 @@
             }
 
             /* Request HomeAssistant automatic discovery to be disabled. */
-            function disableHomeAssistantAutomaticDiscovery() {
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/disable",
-                    isJsonResponse: true
-                }).then(function (rsp) {
+            async function disableHomeAssistantAutomaticDiscovery() {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/disable",
+                        isJsonResponse: true
+                    });
                     dialog.showInfo("<p>HomeAssistant automatic discovery is now disabled. </p>");
-                }).catch(function (rsp) {
-                    dialog.showError("<p>HomeAssistant automatic discovery could not be disabled. </p>")
-                });
+                } catch (rsp) {
+                    dialog.showError("<p>HomeAssistant automatic discovery could not be disabled. </p>");
+                }
             }
 
             /* Request change of active partition. */
-            function sendPartitionChangeRequest() {
-                var intervalId = 0;
-                var seconds = 10;
+            async function sendPartitionChangeRequest() {
+                let seconds = 10;
 
                 disableUI();
 
-                utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/partitionChange",
-                    isJsonResponse: true
-                }).then(function (rsp) {
-                    return dialog.showInfo(`<p>Reload in ${seconds}s</p>`);
-                }).then(function () {
-                    return new Promise(function (resolve) {
-                        intervalId = setInterval(() => {
-                            if (0 < seconds) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/partitionChange",
+                        isJsonResponse: true
+                    });
+
+                    await dialog.showInfo(`<p>Reload in ${seconds}s</p>`);
+
+                    await new Promise((resolve) => {
+                        const intervalId = setInterval(() => {
+                            if (seconds > 0) {
                                 seconds--;
                                 dialog.updateMessage(`<p>Reload in ${seconds}s</p>`);
                             }
 
-                            if (0 === seconds) {
+                            if (seconds === 0) {
+                                clearInterval(intervalId);
                                 resolve();
                             }
                         }, 1000);
 
-                        $("#modalDialog .btn-secondary").click(function () {
-                            resolve();
+                        document.querySelectorAll("#modalDialog .btn-secondary").forEach((button) => {
+                            button.addEventListener("click", () => {
+                                clearInterval(intervalId);
+                                resolve();
+                            }, { once: true });
                         });
                     });
-                }).then(function () {
-                    clearInterval(intervalId);
+
                     location.reload();
-                }).catch(function (rsp) {
-                    dialog.showError("<p>Error: " + rsp + "</p>")
+                } catch (rsp) {
+                    dialog.showError("<p>Error: " + rsp + "</p>");
                     enableUI();
-                });
+                }
             }
 
-            /* Handle "Go to PixelixUpdater" button pressed. If the Home Assistant automatic discovery is enabled 
+            /* Handle "Go to PixelixUpdater" button pressed. If the Home Assistant automatic discovery is enabled
             the user will be asked whether or not it should be disabled. Afterwards a partition change will be requested. */
-            function goToPixelixUpdaterPressed() {
+            async function goToPixelixUpdaterPressed() {
                 disableUI();
 
-                utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/status",
-                    isJsonResponse: true
-                }).then(function (rsp) {
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/homeAssistant/automaticDiscovery/status",
+                        isJsonResponse: true
+                    });
+
                     if (rsp.data && rsp.data.status === "enabled") {
                         dialog.showYesNo('HomeAssistant', '<p>In case of a filesystem update the HomeAssistant MQTT discovery feature needs to be disabled. Current status is enabled. Do you want to disable it? </p>', homeAssistantPopUpYesPressed, homeAssistantPopUpNoPressed, true);
                     } else if (rsp.data && rsp.data.status === "disabled") {
@@ -393,30 +376,25 @@
                         console.error("Unexpected response!");
                         enableUI();
                     }
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     dialog.showYesNo('HomeAssistant', '<p>In case of a filesystem update the HomeAssistant MQTT discovery feature needs to be disabled. Current status is unknown. Do you want to disable it? </p>', homeAssistantPopUpYesPressed, homeAssistantPopUpNoPressed, true);
-                });
+                }
             }
 
             /* Execute after page is ready. */
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                $("#inputFile").on("change", function () {
-                    var fileName = $(this).val().split("\\").pop();
-                    $(this).next(".custom-file-label").addClass("selected").html(fileName);
-
-                    updateProgressBar("progressBar", 0);
-                });
-
-                $("#backupFile").on("change", function () {
-                    var fileName = $(this).val().split("\\").pop();
-                    $(this).next(".custom-file-label").addClass("selected").html(fileName);
-
+                document.getElementById("backupFile").addEventListener("change", () => {
                     updateProgressBar("progressBarRestore", 0);
                 });
+
+                document.getElementById("btnGoToUpdater").addEventListener("click", goToPixelixUpdaterPressed);
+                document.getElementById("btnBackup").addEventListener("click", backup);
+                document.getElementById("btnRestore").addEventListener("click", restore);
+                document.getElementById("btnRestart").addEventListener("click", restart);
 
                 enableUI();
             });

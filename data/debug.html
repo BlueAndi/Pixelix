@@ -17,7 +17,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
@@ -62,16 +62,16 @@
                         <br />
                         <div class="btn-toolbar" role="toolbar" aria-label="Log Toolbar">
                             <div class="btn-group me-2" role="group" aria-label="Log Control">
-                                <button class="btn btn-light" id="buttonLog" type="button" onclick="toggleLogging();" disabled>Start</button>
-                                <button class="btn btn-light" type="button" onclick="clearLog();" disabled>Clear</button>
+                                <button class="btn btn-light" id="btnLog" type="button" disabled>Start</button>
+                                <button class="btn btn-light" id="btnClear" type="button" disabled>Clear</button>
                             </div>
                             <div class="btn-group me-2" role="group" aria-label="Log Levels">
-                                <button type="button" class="btn btn-outline-log-level-info" id="buttonInfo" aria-pressed="true">INFO</button>
-                                <button type="button" class="btn btn-outline-log-level-warning" id="buttonWarning" aria-pressed="true">WARNING</button>
-                                <button type="button" class="btn btn-outline-log-level-error" id="buttonError" aria-pressed="true">ERROR</button>
-                                <button type="button" class="btn btn-outline-log-level-fatal" id="buttonFatal" aria-pressed="true">FATAL</button>
-                                <button type="button" class="btn btn-outline-log-level-debug" id="buttonDebug" aria-pressed="true">DEBUG</button>
-                                <button type="button" class="btn btn-outline-log-level-trace" id="buttonTrace" aria-pressed="true">TRACE</button>
+                                <button type="button" class="btn btn-outline-log-level-info" id="btnInfo" aria-pressed="true">INFO</button>
+                                <button type="button" class="btn btn-outline-log-level-warning" id="btnWarning" aria-pressed="true">WARNING</button>
+                                <button type="button" class="btn btn-outline-log-level-error" id="btnError" aria-pressed="true">ERROR</button>
+                                <button type="button" class="btn btn-outline-log-level-fatal" id="btnFatal" aria-pressed="true">FATAL</button>
+                                <button type="button" class="btn btn-outline-log-level-debug" id="btnDebug" aria-pressed="true">DEBUG</button>
+                                <button type="button" class="btn btn-outline-log-level-trace" id="btnTrace" aria-pressed="true">TRACE</button>
                             </div>
                         </div>
                         <p>Note, only the last 40 messages are shown.</p>
@@ -98,7 +98,7 @@
                         <p>Measure the performance with iperf.</p>
                         <p>Start/Stop the iperf server:</p>
                         <p>
-                            <button class="btn btn-light" id="buttonMeasurement" type="button" onclick="toggleMeasurement();" disabled>Start</button>
+                            <button class="btn btn-light" id="btnMeasurement" type="button" disabled>Start</button>
                         </p>
                     </div>
 
@@ -106,10 +106,10 @@
                         <br />
                         <div class="btn-toolbar" role="toolbar" aria-label="Coredump Toolbar">
                             <div class="btn-group me-2" role="group" aria-label="Coredump Actions">
-                                <button class="btn btn-light" id="buttonCoredumpRefresh" type="button" onclick="refreshCoredumpInfo();" disabled>Refresh</button>
-                                <button class="btn btn-light" id="buttonCoredumpDecode" type="button" onclick="showCoredumpDecodedDetails();" disabled>Additional Decode</button>
-                                <button class="btn btn-light" id="buttonCoredumpDownload" type="button" onclick="downloadCoredump();" disabled>Download ELF</button>
-                                <button class="btn btn-light" id="buttonCoredumpClear" type="button" onclick="clearCoredump();" disabled>Clear</button>
+                                <button class="btn btn-light" id="btnCoredumpRefresh" type="button" disabled>Refresh</button>
+                                <button class="btn btn-light" id="btnCoredumpDecode" type="button" disabled>Additional Decode</button>
+                                <button class="btn btn-light" id="btnCoredumpDownload" type="button" disabled>Download ELF</button>
+                                <button class="btn btn-light" id="btnCoredumpClear" type="button" disabled>Clear</button>
                             </div>
                         </div>
                         <p>View coredump summary and download raw ELF for host-side analysis.</p>
@@ -156,7 +156,7 @@
                     <div class="tab-pane fade" id="restart" role="tabpanel" aria-labelledby="restart-tab">
                         <br />
                         <p>Restart the system now: </p>
-                        <p><button class="btn btn-light" type="button" onclick="restart();" disabled>Restart</button></p>
+                        <p><button class="btn btn-light" type="button" id="btnRestart" disabled>Restart</button></p>
                     </div>
 
                 </div>
@@ -172,13 +172,11 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
@@ -186,23 +184,23 @@
 
         <!-- Custom javascript -->
         <script>
-            var wsClient = new pixelix.ws.Client();
-            var maxLogs = 40;   /* Max. number of stored log messages. */
-            var isPageUnload = false;
-            var isLoggingEnabled = false;
-            var isMeasurementEnabled = false;
-            var filter = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
-            var isIperfAvailable = false;
-            var isCoredumpTabInitialized = false;
+            const wsClient = new pixelix.ws.Client();
+            const maxLogs = 40;   /* Max. number of stored log messages. */
+            let isPageUnload = false;
+            let isLoggingEnabled = false;
+            let isMeasurementEnabled = false;
+            const filter = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
+            let isIperfAvailable = false;
+            let isCoredumpTabInitialized = false;
 
             function setCoredumpCell(id, value) {
-                var text = "-";
+                let text = "-";
 
-                if (("undefined" !== typeof value) && (null !== value) && ("" !== value)) {
+                if ((typeof value !== "undefined") && (value !== null) && (value !== "")) {
                     text = value;
                 }
 
-                $(id).text(text);
+                document.querySelector(id).textContent = text;
             }
 
             function resetCoredumpView() {
@@ -217,9 +215,9 @@
             }
 
             function renderCoredumpData(data) {
-                var hasCoredump = false;
-                var hasBacktrace = false;
-                var backtraceText = "-";
+                let hasCoredump = false;
+                let hasBacktrace = false;
+                let backtraceText = "-";
 
                 if (("undefined" !== typeof data.hasCoredump) && (null !== data.hasCoredump)) {
                     hasCoredump = (true === data.hasCoredump);
@@ -252,14 +250,14 @@
             }
 
             function setCoredumpButtonsState(isDisabled) {
-                $("#buttonCoredumpRefresh").prop("disabled", isDisabled);
-                $("#buttonCoredumpDecode").prop("disabled", isDisabled);
-                $("#buttonCoredumpDownload").prop("disabled", isDisabled);
-                $("#buttonCoredumpClear").prop("disabled", isDisabled);
+                document.getElementById("btnCoredumpRefresh").disabled = isDisabled;
+                document.getElementById("btnCoredumpDecode").disabled = isDisabled;
+                document.getElementById("btnCoredumpDownload").disabled = isDisabled;
+                document.getElementById("btnCoredumpClear").disabled = isDisabled;
             }
 
             function escapeHtml(text) {
-                var escaped = String(text);
+                let escaped = String(text);
 
                 escaped = escaped.replaceAll("&", "&amp;");
                 escaped = escaped.replaceAll("<", "&lt;");
@@ -270,25 +268,18 @@
                 return escaped;
             }
 
-            function showCoredumpDecodedDetails() {
+            async function showCoredumpDecodedDetails() {
                 setCoredumpButtonsState(true);
 
-                fetch("/rest/api/v1/coredump?decode=true", {
-                    method: "GET"
-                }).then(function (rsp) {
-                    return rsp.json().then(function (body) {
-                        return {
-                            ok: rsp.ok,
-                            status: rsp.status,
-                            body: body
-                        };
-                    });
-                }).then(function (result) {
+                try {
+                    const rsp = await fetch("/rest/api/v1/coredump?decode=true", { method: "GET" });
+                    const body = await rsp.json();
+                    const result = { ok: rsp.ok, status: rsp.status, body: body };
+
                     if ((true === result.ok) && ("ok" === result.body.status)) {
-                        var data = result.body.data || {};
-                        var hasDump = false;
-                        var title = "Coredump Decode";
-                        var details = "";
+                        const data = result.body.data || {};
+                        const title = "Coredump Decode";
+                        let hasDump = false;
 
                         if (("undefined" !== typeof data.hasCoredump) && (null !== data.hasCoredump)) {
                             hasDump = (true === data.hasCoredump);
@@ -297,90 +288,78 @@
                         }
 
                         if (false === hasDump) {
-                            return dialog.showInfo("<p>No coredump data available.</p>");
+                            await dialog.showInfo("<p>No coredump data available.</p>");
+                        } else {
+                            const details = escapeHtml(JSON.stringify(data, null, 2));
+                            await dialog.showInfo("<p>Extended decoded data:</p><pre class='text-start' style='max-height:420px; overflow:auto; white-space:pre-wrap;'>" + details + "</pre>", title);
                         }
-
-                        details = escapeHtml(JSON.stringify(data, null, 2));
-                        return dialog.showInfo("<p>Extended decoded data:</p><pre class='text-start' style='max-height:420px; overflow:auto; white-space:pre-wrap;'>" + details + "</pre>", title);
                     } else if (("undefined" !== typeof result.body.error) && ("undefined" !== typeof result.body.error.msg)) {
-                        return dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
+                        await dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
                     } else {
-                        return dialog.showError("<p>Error: Could not decode coredump details.</p>");
+                        await dialog.showError("<p>Error: Could not decode coredump details.</p>");
                     }
-                }).catch(function (err) {
+                } catch (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    return dialog.showError("<p>Error: Could not decode coredump details.</p>");
-                }).finally(function () {
+                    await dialog.showError("<p>Error: Could not decode coredump details.</p>");
+                } finally {
                     setCoredumpButtonsState(false);
-                });
+                }
             }
 
-            function refreshCoredumpInfo() {
+            async function refreshCoredumpInfo() {
                 setCoredumpButtonsState(true);
 
-                fetch("/rest/api/v1/coredump?decode=true", {
-                    method: "GET"
-                }).then(function (rsp) {
-                    return rsp.json().then(function (body) {
-                        return {
-                            ok: rsp.ok,
-                            status: rsp.status,
-                            body: body
-                        };
-                    });
-                }).then(function (result) {
+                try {
+                    const rsp = await fetch("/rest/api/v1/coredump?decode=true", { method: "GET" });
+                    const body = await rsp.json();
+                    const result = { ok: rsp.ok, status: rsp.status, body: body };
+
                     if ((true === result.ok) && ("ok" === result.body.status)) {
                         renderCoredumpData(result.body.data || {});
                     } else if (("undefined" !== typeof result.body.error) && ("undefined" !== typeof result.body.error.msg)) {
                         resetCoredumpView();
                         setCoredumpCell("#coredumpHasDump", "No");
-                        return dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
+                        await dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
                     } else {
-                        return dialog.showError("<p>Error: Could not read coredump information.</p>");
+                        await dialog.showError("<p>Error: Could not read coredump information.</p>");
                     }
-                }).catch(function (err) {
+                } catch (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    return dialog.showError("<p>Error: Could not read coredump information.</p>");
-                }).finally(function () {
+                    await dialog.showError("<p>Error: Could not read coredump information.</p>");
+                } finally {
                     setCoredumpButtonsState(false);
-                });
+                }
             }
 
-            function clearCoredump() {
+            async function clearCoredump() {
                 setCoredumpButtonsState(true);
 
-                fetch("/rest/api/v1/coredump", {
-                    method: "DELETE"
-                }).then(function (rsp) {
-                    return rsp.json().then(function (body) {
-                        return {
-                            ok: rsp.ok,
-                            status: rsp.status,
-                            body: body
-                        };
-                    });
-                }).then(function (result) {
+                try {
+                    const rsp = await fetch("/rest/api/v1/coredump", { method: "DELETE" });
+                    const body = await rsp.json();
+                    const result = { ok: rsp.ok, status: rsp.status, body: body };
+
                     if ((true === result.ok) && ("ok" === result.body.status)) {
                         resetCoredumpView();
                         setCoredumpCell("#coredumpHasDump", "No");
-                        return dialog.showInfo("<p>Coredump cleared.</p>");
+                        await dialog.showInfo("<p>Coredump cleared.</p>");
                     } else if (("undefined" !== typeof result.body.error) && ("undefined" !== typeof result.body.error.msg)) {
-                        return dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
+                        await dialog.showError("<p>Error: " + result.body.error.msg + "</p>");
                     } else {
-                        return dialog.showError("<p>Error: Failed to clear coredump.</p>");
+                        await dialog.showError("<p>Error: Failed to clear coredump.</p>");
                     }
-                }).catch(function (err) {
+                } catch (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    return dialog.showError("<p>Error: Failed to clear coredump.</p>");
-                }).finally(function () {
+                    await dialog.showError("<p>Error: Failed to clear coredump.</p>");
+                } finally {
                     setCoredumpButtonsState(false);
-                });
+                }
             }
 
             function downloadCoredump() {
@@ -388,9 +367,9 @@
             }
 
             function toggleLogLevel(logLevel) {
-                var index = filter.indexOf(logLevel);
+                const index = filter.indexOf(logLevel);
 
-                if (0 > index) {
+                if (index < 0) {
                     filter.push(logLevel);
                 } else {
                     filter.splice(index, 1);
@@ -398,7 +377,7 @@
             }
 
             function clearLog() {
-                $("#loggingOutput > tbody").empty();
+                document.querySelector("#loggingOutput > tbody").replaceChildren();
             }
 
             /* If websocket connection is unexpectedly closed, alert the user. */
@@ -411,7 +390,7 @@
             }
 
             function logLevel2Color(logLevel) {
-                var color = "";
+                let color = "";
 
                 switch (logLevel) {
                     case 0:
@@ -448,211 +427,196 @@
 
             /* Handle every websocket event. */
             function wsOnEvent(evt) {
-                var logLevel = pixelix.ws.getLogLevelStr(evt.level);
-                var index = filter.indexOf(logLevel);
-                var $row = $("<tr>");
-                var $colTimestamp = $("<td>").text(evt.timestamp);
-                var $logLevelText = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level));
-                var $colLogLevel = $("<td>").append($logLevelText);
-                var $colFilename = $("<td>").text(evt.filename);
-                var $colLine = $("<td>").text(evt.line);
-                var $colText = $("<td>").text(evt.text);
-                var rowCount = $("#loggingOutput > tbody tr").length;
+                const logLevel = pixelix.ws.getLogLevelStr(evt.level);
+                const index = filter.indexOf(logLevel);
+                const tbody = document.querySelector("#loggingOutput > tbody");
 
-                if (0 <= index) {
-
-                    if (maxLogs < rowCount) {
-                        $("#loggingOutput > tbody > tr:last-child").remove();
-                    }
-
-                    $($row).append($colTimestamp)
-                        .append($colLogLevel)
-                        .append($colFilename)
-                        .append($colLine)
-                        .append($colText);
-
-                    $("#loggingOutput > tbody").prepend($row);
+                if (index < 0) {
+                    return;
                 }
+
+                const rowCount = tbody.querySelectorAll("tr").length;
+
+                if (maxLogs < rowCount) {
+                    const lastRow = tbody.querySelector("tr:last-child");
+
+                    if (lastRow !== null) {
+                        lastRow.remove();
+                    }
+                }
+
+                const colTimestamp = document.createElement("td");
+                colTimestamp.textContent = evt.timestamp;
+
+                const logLevelText = document.createElement("span");
+                logLevelText.textContent = pixelix.ws.getLogLevelStr(evt.level);
+                logLevelText.style.color = logLevel2Color(evt.level);
+                const colLogLevel = document.createElement("td");
+                colLogLevel.appendChild(logLevelText);
+
+                const colFilename = document.createElement("td");
+                colFilename.textContent = evt.filename;
+
+                const colLine = document.createElement("td");
+                colLine.textContent = evt.line;
+
+                const colText = document.createElement("td");
+                colText.textContent = evt.text;
+
+                const row = document.createElement("tr");
+                row.appendChild(colTimestamp);
+                row.appendChild(colLogLevel);
+                row.appendChild(colFilename);
+                row.appendChild(colLine);
+                row.appendChild(colText);
+
+                tbody.prepend(row);
             }
 
             /* Disable all UI elements. */
             function disableUI() {
-                $("main :button").prop("disabled", true);
+                document.querySelectorAll("main button").forEach((button) => {
+                    button.disabled = true;
+                });
             }
 
             /* Enable all UI elements. */
             function enableUI() {
-                $("main :button").prop("disabled", false);
+                document.querySelectorAll("main button").forEach((button) => {
+                    button.disabled = false;
+                });
 
-                if (false == isIperfAvailable) {
-                    $("#buttonMeasurement").prop("disabled", true);
+                if (isIperfAvailable === false) {
+                    document.getElementById("btnMeasurement").disabled = true;
                 }
             }
 
             /* Toggle logging */
-            function toggleLogging() {
+            async function toggleLogging() {
                 disableUI();
 
-                wsClient.setLog({
-                    enable: (false === isLoggingEnabled) ? true : false
-                }).then(function (rsp) {
-                    isLoggingEnabled = rsp.isEnabled;
+                try {
+                    const rsp = await wsClient.setLog({
+                        enable: (isLoggingEnabled === false)
+                    });
 
-                    if (false == rsp.isEnabled) {
-                        $("#buttonLog").text("Start");
-                    } else {
-                        $("#buttonLog").text("Stop");
-                    }
-                }).catch(function (err) {
+                    isLoggingEnabled = rsp.isEnabled;
+                    document.getElementById("btnLog").textContent = (rsp.isEnabled === false) ? "Start" : "Stop";
+                } catch (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             /* Restart device */
-            function restart() {
+            async function restart() {
                 disableUI();
 
-                wsClient.restart().then(function (rsp) {
-                    return dialog.showInfo("<p>Ok.</p>");
-                }).catch(function (err) {
-                    return dialog.showError("<p>Error: " + err + "</p>");
-                });
+                try {
+                    await wsClient.restart();
+                    await dialog.showInfo("<p>Ok.</p>");
+                } catch (err) {
+                    await dialog.showError("<p>Error: " + err + "</p>");
+                }
             }
 
             /* Toggle measurement */
-            function toggleMeasurement() {
+            async function toggleMeasurement() {
                 disableUI();
 
-                wsClient.setIperf({
-                    enable: (false === isMeasurementEnabled) ? true : false
-                }).then(function (rsp) {
+                try {
+                    const rsp = await wsClient.setIperf({
+                        enable: (isMeasurementEnabled === false)
+                    });
+
                     isMeasurementEnabled = rsp.isEnabled;
+                    document.getElementById("btnMeasurement").textContent = (rsp.isEnabled === false) ? "Start" : "Stop";
 
-                    if (false == rsp.isEnabled) {
-                        $("#buttonMeasurement").text("Start");
-                    } else {
-                        $("#buttonMeasurement").text("Stop");
-                    }
-
-                    return dialog.showInfo("<p>Ok.</p>");
-                }).catch(function (err) {
+                    await dialog.showInfo("<p>Ok.</p>");
+                } catch (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    return dialog.showError("<p>Error.</p>");
-                }).finally(function () {
+                    await dialog.showError("<p>Error.</p>");
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             /* Execute after page is ready. */
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                $("#buttonInfo").click(function (e) {
-                    e.preventDefault();
-                    $(this).toggleClass("active");
-                    toggleLogLevel($(this).text());
+                document.querySelectorAll("#btnInfo, #btnWarning, #btnError, #btnFatal, #btnDebug, #btnTrace").forEach((button) => {
+                    button.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        button.classList.toggle("active");
+                        toggleLogLevel(button.textContent);
+                    });
                 });
 
-                $("#buttonWarning").click(function (e) {
-                    e.preventDefault();
-                    $(this).toggleClass("active");
-                    toggleLogLevel($(this).text());
-                });
+                document.getElementById("btnLog").addEventListener("click", toggleLogging);
+                document.getElementById("btnClear").addEventListener("click", clearLog);
+                document.getElementById("btnMeasurement").addEventListener("click", toggleMeasurement);
+                document.getElementById("btnCoredumpRefresh").addEventListener("click", refreshCoredumpInfo);
+                document.getElementById("btnCoredumpDecode").addEventListener("click", showCoredumpDecodedDetails);
+                document.getElementById("btnCoredumpDownload").addEventListener("click", downloadCoredump);
+                document.getElementById("btnCoredumpClear").addEventListener("click", clearCoredump);
+                document.getElementById("btnRestart").addEventListener("click", restart);
 
-                $("#buttonError").click(function (e) {
-                    e.preventDefault();
-                    $(this).toggleClass("active");
-                    toggleLogLevel($(this).text());
-                });
-
-                $("#buttonFatal").click(function (e) {
-                    e.preventDefault();
-                    $(this).toggleClass("active");
-                    toggleLogLevel($(this).text());
-                });
-
-                $("#buttonDebug").click(function (e) {
-                    e.preventDefault();
-                    $(this).toggleClass("active");
-                    toggleLogLevel($(this).text());
-                });
-
-                $("#buttonTrace").click(function (e) {
-                    e.preventDefault();
-                    $(this).toggleClass("active");
-                    toggleLogLevel($(this).text());
-                });
-
-                $("#coredump-tab").on("shown.bs.tab", function () {
-                    if (false === isCoredumpTabInitialized) {
+                document.getElementById("coredump-tab").addEventListener("shown.bs.tab", () => {
+                    if (isCoredumpTabInitialized === false) {
                         isCoredumpTabInitialized = true;
                         refreshCoredumpInfo();
                     }
                 });
 
                 /* Connect to pixelix */
-                wsClient.connect({
-                    protocol: "~WS_PROTOCOL~",
-                    hostname: location.hostname,
-                    port: parseInt("~WS_PORT~"),
-                    endpoint: "~WS_ENDPOINT~",
-                    onClosed: wsOnClosed,
-                    onEvent: wsOnEvent
-                }).then(function () {
-                    /* Get current log status */
-                    return wsClient.getLog();
-                }).then(function (rsp) {
-                    isLoggingEnabled = rsp.isEnabled;
+                try {
+                    await wsClient.connect({
+                        protocol: "~WS_PROTOCOL~",
+                        hostname: location.hostname,
+                        port: Number.parseInt("~WS_PORT~"),
+                        endpoint: "~WS_ENDPOINT~",
+                        onClosed: wsOnClosed,
+                        onEvent: wsOnEvent
+                    });
 
-                    /* Update logging button text, depended on status. */
-                    if (false === rsp.isEnabled) {
-                        $("#buttonLog").text("Start");
-                    } else {
-                        $("#buttonLog").text("Stop");
-                    }
+                    /* Get current log status. */
+                    const logRsp = await wsClient.getLog();
+                    isLoggingEnabled = logRsp.isEnabled;
+                    document.getElementById("btnLog").textContent = (logRsp.isEnabled === false) ? "Start" : "Stop";
 
                     /* Enable GUI elements, except measurement button. */
                     enableUI();
 
-                    /* Get current iperf status */
-                    return wsClient.getIperf();
-                }).then(function (rsp) {
-                    isMeasurementEnabled = rsp.isEnabled;
-
-                    /* Update iperf button text, depended on status. */
-                    if (false === rsp.isEnabled) {
-                        $("#buttonMeasurement").text("Start");
-                    } else {
-                        $("#buttonMeasurement").text("Stop");
-                    }
+                    /* Get current iperf status. */
+                    const iperfRsp = await wsClient.getIperf();
+                    isMeasurementEnabled = iperfRsp.isEnabled;
+                    document.getElementById("btnMeasurement").textContent = (iperfRsp.isEnabled === false) ? "Start" : "Stop";
 
                     /* Enable measurement button too. */
                     isIperfAvailable = true;
                     enableUI();
-
-                }).catch(function (err) {
+                } catch (err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                });
-
+                }
             });
 
             /* If the page is left, there shall be no message shown regarding
              * unexpected websocket lost.
              */
-            $(window).bind("beforeunload", function () {
+            window.addEventListener("beforeunload", () => {
                 isPageUnload = true;
 
-                if (null !== wsClient) {
+                if (wsClient !== null) {
                     wsClient.disconnect();
                 }
             });
