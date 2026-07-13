@@ -68,9 +68,9 @@
                         <div class="form-group mb-3">
                             <label class="form-label" for="count">Arrivals Count:</label>
                             <select class="form-select" id="count" size="1" onchange="handleChange('count')">
-                                <option value=1>1</option>
-                                <option value=2>2</option>
-                                <option value=3>3</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -180,8 +180,8 @@
                                 await getStops()
                             }
                             else {
-                                resetDependentSelections()
-                                updateDependentControlState()
+                                // Keep the configured values visible.
+                                updateDependentControlState();
                             }
                             return
                         case "routes":
@@ -292,21 +292,26 @@
 
                     $("#apiKey").val(apiKey)
 
-                    if (hasApiKeyConfigured()) {
-                        selected.routes = rte
-                        const routeselem = generateOptions("routes", [selected.routes])
-                        selectSelectedProperty(routeselem, selected.routes)
+                    // Always restore the stored configuration.
+                    selected.routes = rte ?? "";
+                    selected.directions = dir ?? "";
+                    selected.stops = stpid ?? "";
 
-                        selected.directions = dir
-                        const direlem = generateOptions("directions", [selected.directions])
-                        selectSelectedProperty(direlem, selected.directions)
-
-                        selected.stops = stpid
-                        const stpelem = generateOptions("stops", [selected.stops])
-                        selectSelectedProperty(stpelem, [selected.stops])
+                    // Populate the selects with the current values so they survive
+                    // the first Update even before an API key is configured.
+                    const routeElem = generateOptions("routes", selected.routes ? [selected.routes] : []);
+                    if (selected.routes) {
+                        selectSelectedProperty(routeElem, selected.routes);
                     }
-                    else {
-                        resetDependentSelections()
+
+                    const directionElem = generateOptions("directions", selected.directions ? [selected.directions] : []);
+                    if (selected.directions) {
+                        selectSelectedProperty(directionElem, selected.directions);
+                    }
+
+                    const stopElem = generateOptions("stops", selected.stops ? [selected.stops] : []);
+                    if (selected.stops) {
+                        selectSelectedProperty(stopElem, selected.stops);
                     }
 
                     selected.count = count
@@ -357,7 +362,6 @@
                                 .then(getStops);
                         }
 
-                        resetDependentSelections();
                         updateDependentControlState();
                         return Promise.resolve();
                     })
@@ -391,14 +395,14 @@
 
                 const maxRetries = 20;
                 for (let i = 0; i < maxRetries; i++) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     const rsp = await utils.makeRequest({ method: "GET", url: baseUrl, isJsonResponse: true });
                     const data = rsp?.data;
                     if (data?.error) {
-                            throw new Error("Proxy error for " + path + ": " + data.error);
+                        throw new Error("Proxy error for " + path + ": " + data.error);
                     }
                     if (data && data.pending !== true) {
-                            return data;
+                        return data;
                     }
                 }
                 throw new Error("Proxy timeout for: " + path);
