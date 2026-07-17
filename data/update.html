@@ -125,7 +125,6 @@
         <script>
 
             const restClient = new pixelix.rest.Client();
-            const zip = new JSZip();
             const hostname = "~HOSTNAME~";
 
             /* Disable all UI elements. */
@@ -173,6 +172,8 @@
             }
 
             async function downloadWithBlob(fileUrlList) {
+                /* Use a fresh zip instance per backup to avoid accumulating files across operations. */
+                const zip = new JSZip();
                 /* Limit the number of concurrent requests. The device has only a small internal heap. */
                 const MAX_CONCURRENT_REQUESTS = 2;
                 let                           index = 0;
@@ -243,7 +244,7 @@
                     progress = 10;
                     updateProgressBar("progressBarRestore", progress);
 
-                    const zipObj = await zip.loadAsync(file);
+                    const zipObj = await new JSZip().loadAsync(file);
                     const filenames = Object.keys(zipObj.files);
                     const progressPerFile = (90 - progress) / filenames.length;
 
