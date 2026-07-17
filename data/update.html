@@ -173,10 +173,23 @@
             }
 
             async function downloadWithBlob(fileUrlList) {
-                fileUrlList.forEach((fileUrl) => {
-                    const filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf("/") + 1);
-                    zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary: true });
-                });
+                /* Limit the number of concurrent requests. The device has only a small internal heap. */
+                const MAX_CONCURRENT_REQUESTS = 2;
+                let                           index = 0;
+
+                const worker = async () => {
+                    while (index < fileUrlList.length) {
+                        const fileUrl      = fileUrlList[index];
+                        const filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf("/") + 1);
+
+                        ++index;
+
+                        const data = await urlToPromise(fileUrl.url);
+                        zip.file(filenameOnly, data, { binary: true });
+                    }
+                };
+
+                await Promise.all(Array.from({ length: MAX_CONCURRENT_REQUESTS }, worker));
 
                 const content = await zip.generateAsync({ type: "blob" });
                 const date = new Date();
