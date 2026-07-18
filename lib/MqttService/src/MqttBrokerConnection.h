@@ -255,25 +255,42 @@ private:
     typedef std::vector<Subscriber> SubscriberList;
 
     /** MQTT port */
-    static const uint16_t MQTT_PORT         = 1883U;
+    static const uint16_t MQTT_PORT             = 1883U;
 
     /**
      * MQTT socket timeout in s. Keep it low to improve systems responsiveness.
      * Otherwise a reconnect may take a while and blocks any other activities.
      * The same for reading and writing to the socket.
      */
-    static const uint16_t MQTT_SOCK_TIMEOUT = 1U;
+    static const uint16_t MQTT_SOCK_TIMEOUT     = 1U;
+
+    /**
+     * TLS connect timeout in s, which limits the TCP connect and the socket
+     * receive/transmit during connection establishment. The framework default
+     * of 30 s would block the calling task longer than the task watchdog
+     * timeout. The sum of TLS_CONNECT_TIMEOUT and TLS_HANDSHAKE_TIMEOUT shall
+     * be lower than the task watchdog timeout (see TASK_WDT_TIMEOUT_S).
+     */
+    static const uint16_t TLS_CONNECT_TIMEOUT   = 4U;
+
+    /**
+     * TLS handshake timeout in s. The framework default of 120 s would block
+     * the calling task longer than the task watchdog timeout. The sum of
+     * TLS_CONNECT_TIMEOUT and TLS_HANDSHAKE_TIMEOUT shall be lower than the
+     * task watchdog timeout (see TASK_WDT_TIMEOUT_S).
+     */
+    static const uint16_t TLS_HANDSHAKE_TIMEOUT = 4U;
 
     /**
      * Reconnect period in ms.
      */
-    static const uint32_t RECONNECT_PERIOD  = SIMPLE_TIMER_SECONDS(10U);
+    static const uint32_t RECONNECT_PERIOD      = SIMPLE_TIMER_SECONDS(10U);
 
     /**
      * Max. MQTT client buffer size in byte.
      * Received MQTT messages greather than this will be skipped.
      */
-    static const size_t MAX_BUFFER_SIZE     = 2048U;
+    static const size_t MAX_BUFFER_SIZE         = 2048U;
 
 
     String              m_clientId;        /**< MQTT client identifier */
