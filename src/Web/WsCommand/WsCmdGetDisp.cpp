@@ -40,6 +40,7 @@
 #include <Logging.h>
 #include <Util.h>
 #include <Display.h>
+#include <MemUtil.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -61,6 +62,15 @@
  * Local Variables
  *****************************************************************************/
 
+/**
+ * Minimum size of the largest allocatable internal heap block, which is required
+ * to serve a GETDISP request. Below this limit the request is rejected, so the
+ * client can retry later instead of risking an out-of-memory situation on boards
+ * without PSRAM. The largest free block is used, because it predicts whether the
+ * next allocation succeeds on the fragmented heap.
+ */
+static const size_t MIN_FREE_BLOCK_FOR_GETDISP = 8U * 1024U;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -77,6 +87,12 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
     {
         sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
+    else if (MIN_FREE_BLOCK_FOR_GETDISP > MemUtil::getLargestFreeBlockSize())
+    {
+        /* Reject under low memory, so the client can retry later. */
+        LOG_WARNING("Websocket GETDISP rejected: low memory, largest free heap block: %u byte.", MemUtil::getLargestFreeBlockSize());
+        sendNegativeResponse(server, clientId, "\"Low memory, please retry.\"");
+    }
     else if (false == ensureFramebuffer())
     {
         LOG_WARNING("Websocket GETDISP failed: framebuffer allocation failed.");
@@ -86,7 +102,6 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
     {
         String         msg;
         uint8_t        slotId = SlotList::SLOT_ID_INVALID;
-
         uint32_t       lastColor;                          /* The color that started a repeat sequence.   */
         uint32_t       color      = 0U;                    /* Actual color in read order.                 */
         size_t         index      = 1U;                    /* Next value from framebuffer to used.        */
