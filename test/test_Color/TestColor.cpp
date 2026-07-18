@@ -180,7 +180,7 @@ static void testColor888()
     Rgb888 myColorC = myColorB;
 
     /* Default color is black */
-    TEST_ASSERT_EQUAL_UINT32(0u, myColorA);
+    TEST_ASSERT_EQUAL_UINT32(0U, myColorA);
 
     /* Does the color assignment works? */
     TEST_ASSERT_EQUAL_UINT8(ColorUtil::rgb888Red(ColorDef::TOMATO), myColorB.getRed());
@@ -220,16 +220,15 @@ static void testColor888()
     TEST_ASSERT_EQUAL_UINT8(0x56u, myColorA.getBlue());
 
     /* Dim color 25% darker */
-    myColorA = 0xc8c8c8u;
-    myColorA.setIntensity(192);
+    myColorA = 0xC8C8C8U;
+    myColorA.dim(192U);
     TEST_ASSERT_EQUAL_UINT8(0x96u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0x96u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x96u, myColorA.getBlue());
 
-    /* Dim a color by 0%, which means no change.
-     * And additional check non-destructive base colors.
-     */
-    myColorA.setIntensity(255);
+    /* Dim a color by 0%, which means no change. */
+    myColorA = 0xC8C8C8U;
+    myColorA.dim(255U);
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getBlue());
@@ -243,7 +242,7 @@ static void testColor565()
     Rgb565 myColorA;
     Rgb565 myColorB;
 
-    myColorB.fromRgb565(0x0821);
+    myColorB.fromRgb565(0x0821U);
 
     Rgb565 myColorC = myColorB;
 
@@ -287,17 +286,18 @@ static void testColor565()
     TEST_ASSERT_EQUAL_UINT8(0x34u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x50u, myColorA.getBlue());
 
-    /* Dim color 25% darker */
-    myColorA = 0xc8c8c8u;
-    myColorA.setIntensity(192);
-    TEST_ASSERT_EQUAL_UINT8(0x96u, myColorA.getRed());
-    TEST_ASSERT_EQUAL_UINT8(0x96u, myColorA.getGreen());
-    TEST_ASSERT_EQUAL_UINT8(0x96u, myColorA.getBlue());
-
-    /* Dim a color by 0%, which means no change.
-     * And additional check non-destructive base colors.
+    /* Dim color 25% darker. The dimmed base colors are re-quantized to the
+     * 5-6-5 format, so the read back values differ slightly from RGB888.
      */
-    myColorA.setIntensity(255);
+    myColorA = 0xC8C8C8U;
+    myColorA.dim(192U);
+    TEST_ASSERT_EQUAL_UINT8(0x90u, myColorA.getRed());
+    TEST_ASSERT_EQUAL_UINT8(0x94u, myColorA.getGreen());
+    TEST_ASSERT_EQUAL_UINT8(0x90u, myColorA.getBlue());
+
+    /* Dim a color by 0%, which means no change. */
+    myColorA = 0xC8C8C8U;
+    myColorA.dim(255U);
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getBlue());

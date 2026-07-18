@@ -79,17 +79,15 @@ bool FadeLinear::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 
     if ((Color::MAX_BRIGHT - FADING_STEP) <= m_intensity)
     {
-        dimBitmap(next, Color::MAX_BRIGHT);
+        gfx.copyDimmed(next, Color::MAX_BRIGHT);
         m_state    = FADE_STATE_INIT;
         isFinished = true;
     }
     else
     {
-        dimBitmap(next, m_intensity);
+        gfx.copyDimmed(next, m_intensity);
         m_intensity += FADING_STEP;
     }
-
-    gfx.copy(next);
 
     return isFinished;
 }
@@ -109,17 +107,15 @@ bool FadeLinear::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 
     if ((Color::MIN_BRIGHT + FADING_STEP) >= m_intensity)
     {
-        dimBitmap(prev, Color::MIN_BRIGHT);
+        gfx.copyDimmed(prev, Color::MIN_BRIGHT);
         m_state    = FADE_STATE_INIT;
         isFinished = true;
     }
     else
     {
-        dimBitmap(prev, m_intensity);
+        gfx.copyDimmed(prev, m_intensity);
         m_intensity -= FADING_STEP;
     }
-
-    gfx.copy(prev);
 
     return isFinished;
 }
@@ -131,22 +127,6 @@ bool FadeLinear::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void FadeLinear::dimBitmap(YAGfxBitmap& bitmap, uint8_t intensity)
-{
-    uint16_t width  = bitmap.getWidth();
-    uint16_t height = bitmap.getHeight();
-    int16_t  x;
-    int16_t  y;
-
-    for (y = 0; y < height; ++y)
-    {
-        for (x = 0; x < width; ++x)
-        {
-            bitmap.getColor(x, y).setIntensity(intensity);
-        }
-    }
-}
 
 /******************************************************************************
  * External Functions

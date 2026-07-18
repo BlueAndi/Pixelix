@@ -58,8 +58,9 @@
 /**
  * Color, which is based on the three base colors red, green and blue.
  * The base colors are internal stored as 8-bit values, so in RGB888 format.
- * Additional one byte is used for color intensity, used for non-destructive
- * fading.
+ *
+ * The color intensity is not stored per pixel. Dimming is applied destructively
+ * via dim(), which keeps the color as small as possible in memory.
  */
 class Rgb888
 {
@@ -77,8 +78,7 @@ public:
     Rgb888() :
         m_red(0U),
         m_green(0U),
-        m_blue(0U),
-        m_intensity(MAX_BRIGHT)
+        m_blue(0U)
     {
     }
 
@@ -91,7 +91,6 @@ public:
 
     /**
      * Specialized constructor, used in case every base color (RGB) is given.
-     * The color intensity will be set to max. bright.
      *
      * @param[in] red   Red value
      * @param[in] green Green value
@@ -100,39 +99,19 @@ public:
     Rgb888(uint8_t red, uint8_t green, uint8_t blue) :
         m_red(red),
         m_green(green),
-        m_blue(blue),
-        m_intensity(MAX_BRIGHT)
-    {
-    }
-
-    /**
-     * Specialized constructor, used in case every base color (RGB) and
-     * the intensity is given.
-     *
-     * @param[in] red       Red value
-     * @param[in] green     Green value
-     * @param[in] blue      Blue value
-     * @param[in] intensity Color intensity [0; 255]
-     */
-    Rgb888(uint8_t red, uint8_t green, uint8_t blue, uint8_t intensity) :
-        m_red(red),
-        m_green(green),
-        m_blue(blue),
-        m_intensity(intensity)
+        m_blue(blue)
     {
     }
 
     /**
      * Specialized constructor, used in case a color value (RGB) is given as uint32 type.
-     * Color intensity will be set to max. bright.
      *
      * @param[in] value Color value in 24 bit format
      */
     Rgb888(uint32_t value) :
         m_red(ColorUtil::rgb888Red(value)),
         m_green(ColorUtil::rgb888Green(value)),
-        m_blue(ColorUtil::rgb888Blue(value)),
-        m_intensity(MAX_BRIGHT)
+        m_blue(ColorUtil::rgb888Blue(value))
     {
     }
 
@@ -144,8 +123,7 @@ public:
     Rgb888(const Rgb888& color) :
         m_red(color.m_red),
         m_green(color.m_green),
-        m_blue(color.m_blue),
-        m_intensity(color.m_intensity)
+        m_blue(color.m_blue)
     {
     }
 
@@ -160,10 +138,9 @@ public:
     {
         if (this != &color)
         {
-            m_red       = color.m_red;
-            m_green     = color.m_green;
-            m_blue      = color.m_blue;
-            m_intensity = color.m_intensity;
+            m_red   = color.m_red;
+            m_green = color.m_green;
+            m_blue  = color.m_blue;
         }
 
         return *this;
@@ -178,7 +155,7 @@ public:
      */
     bool operator==(const Rgb888& other) const
     {
-        return (m_red == other.m_red) && (m_green == other.m_green) && (m_blue == other.m_blue) && (m_intensity == other.m_intensity);
+        return (m_red == other.m_red) && (m_green == other.m_green) && (m_blue == other.m_blue);
     }
 
     /**
@@ -190,7 +167,7 @@ public:
      */
     bool operator!=(const Rgb888& other) const
     {
-        return (m_red != other.m_red) || (m_green != other.m_green) || (m_blue != other.m_blue) || (m_intensity != other.m_intensity);
+        return (m_red != other.m_red) || (m_green != other.m_green) || (m_blue != other.m_blue);
     }
 
     /**
@@ -198,11 +175,11 @@ public:
      */
     operator uint32_t() const
     {
-        return ColorUtil::to888(getRed(), getGreen(), getBlue());
+        return ColorUtil::to888(m_red, m_green, m_blue);
     }
 
     /**
-     * Get base color information with respect to current intensity.
+     * Get base color information.
      *
      * @param[out] red      Red value
      * @param[out] green    Green value
@@ -210,14 +187,13 @@ public:
      */
     void get(uint8_t& red, uint8_t& green, uint8_t& blue) const
     {
-        red   = applyIntensity(m_red);
-        green = applyIntensity(m_green);
-        blue  = applyIntensity(m_blue);
+        red   = m_red;
+        green = m_green;
+        blue  = m_blue;
     }
 
     /**
      * Set base color information.
-     * Intensity is not changed.
      *
      * @param[in] red   Red value
      * @param[in] green Green value
@@ -231,24 +207,7 @@ public:
     }
 
     /**
-     * Set base color information, incl. intensity.
-     *
-     * @param[in] red       Red value
-     * @param[in] green     Green value
-     * @param[in] blue      Blue value
-     * @param[in] intensity Color intensity [0; 255]
-     */
-    void set(uint8_t red, uint8_t green, uint8_t blue, uint8_t intensity)
-    {
-        m_red       = red;
-        m_green     = green;
-        m_blue      = blue;
-        m_intensity = intensity;
-    }
-
-    /**
      * Set new color information by RGB24 value.
-     * The intensity won't change.
      *
      * @param[in] value Color value (RGB) in 24 bit format
      */
@@ -266,7 +225,7 @@ public:
      */
     uint8_t getRed() const
     {
-        return applyIntensity(m_red);
+        return m_red;
     }
 
     /**
@@ -276,7 +235,7 @@ public:
      */
     uint8_t getGreen() const
     {
-        return applyIntensity(m_green);
+        return m_green;
     }
 
     /**
@@ -286,17 +245,7 @@ public:
      */
     uint8_t getBlue() const
     {
-        return applyIntensity(m_blue);
-    }
-
-    /**
-     * Get color intensity.
-     *
-     * @return Color intensity [0; 255] - 0: min. bright / 255: max. bright
-     */
-    uint8_t getIntensity() const
-    {
-        return m_intensity;
+        return m_blue;
     }
 
     /**
@@ -330,13 +279,16 @@ public:
     }
 
     /**
-     * Set color intensity.
+     * Dim the color by the given brightness level. This scales the base colors
+     * in place, so it is a destructive operation.
      *
-     * @param[in] intensity Color intensity [0; 255] - 0: min. bright / 255: max. bright
+     * @param[in] level Brightness level [0; 255] - 0: black / 255: no change.
      */
-    void setIntensity(uint8_t intensity)
+    void dim(uint8_t level)
     {
-        m_intensity = intensity;
+        m_red   = static_cast<uint8_t>((static_cast<uint16_t>(m_red) * level) / MAX_BRIGHT);
+        m_green = static_cast<uint8_t>((static_cast<uint16_t>(m_green) * level) / MAX_BRIGHT);
+        m_blue  = static_cast<uint8_t>((static_cast<uint16_t>(m_blue) * level) / MAX_BRIGHT);
     }
 
     /**
@@ -350,22 +302,16 @@ public:
 
     /**
      * Convert color information to RGB565 format.
-     * The intensity will be considered in the conversion.
      *
      * @return Color value (RGB) in 16 bit format
      */
     uint16_t toRgb565() const
     {
-        uint8_t red   = getRed();
-        uint8_t green = getGreen();
-        uint8_t blue  = getBlue();
-
-        return ColorUtil::to565(red, green, blue);
+        return ColorUtil::to565(m_red, m_green, m_blue);
     }
 
     /**
      * Set new color information by RGB565 value.
-     * The intensity won't change.
      *
      * @param[in] value Color value (RGB) in 16 bit format
      */
@@ -378,20 +324,9 @@ public:
 
 private:
 
-    uint8_t m_red;       /**< Red intensity value */
-    uint8_t m_green;     /**< Green intensity value */
-    uint8_t m_blue;      /**< Blue intensity value */
-    uint8_t m_intensity; /**< Color intensity [0; 255] - 0: min. bright / 255: max. bright */
-
-    /**
-     * Calculate the base color with respect to the current intensity.
-     *
-     * @return Base color with considered intensity.
-     */
-    inline uint8_t applyIntensity(uint8_t baseColor) const
-    {
-        return (static_cast<uint16_t>(baseColor) * static_cast<uint16_t>(m_intensity)) / MAX_BRIGHT;
-    }
+    uint8_t m_red;   /**< Red intensity value */
+    uint8_t m_green; /**< Green intensity value */
+    uint8_t m_blue;  /**< Blue intensity value */
 };
 
 /******************************************************************************

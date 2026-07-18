@@ -227,6 +227,36 @@ public:
     }
 
     /**
+     * Copy from source, starting at upper left corner (0, 0), while dimming
+     * every pixel by the given brightness level.
+     *
+     * The source is not modified, so this is a non-destructive dim used e.g.
+     * for fade in/out effects. It replaces the former approach of storing a
+     * per-pixel intensity in the color and dimming the source in place.
+     *
+     * @param[in] gfx       Graphics interface of source
+     * @param[in] intensity Brightness level [0; 255] - 0: black / 255: no change.
+     */
+    void copyDimmed(const BaseGfx<TColor>& gfx, uint8_t intensity)
+    {
+        uint16_t minWidth  = std::min(getWidth(), gfx.getWidth());
+        uint16_t minHeight = std::min(getHeight(), gfx.getHeight());
+        int16_t  x;
+        int16_t  y;
+
+        for (y = 0; y < minHeight; ++y)
+        {
+            for (x = 0; x < minWidth; ++x)
+            {
+                TColor color = gfx.getColor(x, y);
+
+                color.dim(intensity);
+                drawPixel(x, y, color);
+            }
+        }
+    }
+
+    /**
      * Draw vertical line.
      * Note, this is faster than using drawLine().
      *
