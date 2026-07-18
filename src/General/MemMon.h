@@ -41,6 +41,17 @@
  * Compile Switches
  *****************************************************************************/
 
+/**
+ * Enables cyclic reporting of the FreeRTOS task stack usage (minimum free
+ * stack since task start) via the memory monitor. It is disabled by default,
+ * because enumerating all tasks needs a temporary heap allocation. Enable it
+ * (e.g. via build_flags: -DCONFIG_MEM_MON_STACK_STATS=1) to measure real stack
+ * usage before trimming any task stack size.
+ */
+#ifndef CONFIG_MEM_MON_STACK_STATS
+#define CONFIG_MEM_MON_STACK_STATS (0)
+#endif /* CONFIG_MEM_MON_STACK_STATS */
+
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -115,6 +126,17 @@ public:
 private:
 
     SimpleTimer m_timer; /**< Timer used for cyclic processing. */
+
+#if (0 != CONFIG_MEM_MON_STACK_STATS)
+
+    /**
+     * Report the stack usage (minimum free stack since start) of all FreeRTOS
+     * tasks. Used to find tasks whose stack size can be trimmed to save internal
+     * RAM, and to detect tasks running close to a stack overflow.
+     */
+    void reportTaskStackStats();
+
+#endif /* (0 != CONFIG_MEM_MON_STACK_STATS) */
 
     /**
      * Constructs the memory monitor.

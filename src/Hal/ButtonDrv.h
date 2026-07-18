@@ -192,7 +192,7 @@ private:
     IButtonObserver*      m_observer;             /**< Observer for button state changes */
 
     /** Button task stack size in bytes. */
-    static const uint32_t BUTTON_TASK_STACKE_SIZE = 2048U;
+    static const uint32_t BUTTON_TASK_STACKE_SIZE = 1536U;
 
     /** Button task priority. */
     static const UBaseType_t BUTTON_TASK_PRIORITY = 1U;
