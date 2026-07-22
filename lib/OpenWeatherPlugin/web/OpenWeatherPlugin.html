@@ -17,7 +17,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -43,10 +43,10 @@
                 <p>On a 64x64 layout the weather forecast of a week will be displayed too.</p>
                 <p>An API key is required to access the OpenWeather API. <a href="https://openweathermap.org/appid" target="_blank">Get your API key here.</a></p>
                 <h2>Configuration</h2>
-                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                <form id="myForm">
                     <div class="form-group mb-3">
                         <label class="form-label" for="pluginUid">Plugin UID:</label>
-                        <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <select class="form-select" id="pluginUid" size="1">
                         </select>
                     </div>
                     <div class="form-group mb-3">
@@ -113,8 +113,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
@@ -125,8 +124,8 @@
 
         <script>
 
-            var pluginName = "OpenWeatherPlugin";
-            var restClient = new pixelix.rest.Client();
+            const pluginName = "OpenWeatherPlugin";
+            const restClient = new pixelix.rest.Client();
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -136,158 +135,158 @@
                 utils.enableForm("myForm", false);
             }
 
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function (rsp) {
-                    var slotIndex = 0;
-                    var cnt = 0;
-                    var $option = null;
-                    var optionText = ""
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
 
-                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
+                            let optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
 
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-"
+                                optionText += "-";
                             } else {
-                                optionText += rsp.data.slots[slotIndex].alias
+                                optionText += rsp.data.slots[slotIndex].alias;
                             }
 
                             optionText += ")";
 
-                            $option = $("<option>")
-                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                .text(optionText);
+                            const option = document.createElement("option");
+                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.textContent = optionText;
 
-                            $("#pluginUid").append($option);
+                            document.getElementById("pluginUid").appendChild(option);
 
                             ++cnt;
                         }
                     }
 
-                    return Promise.resolve(cnt);
-                }).catch(function (rsp) {
+                    return cnt;
+                } catch (rsp) {
                     alert("Internal error.");
-                    return Promise.resolve(0);
-                });
-            };
-
-            function setWeatherInfo(value) {
-                var idx;
-
-                if (value & 0x01) {
-                    $("#temperature").prop('checked', true);
-                } else {
-                    $("#temperature").prop('checked', false);
-                }
-
-                if (value & 0x02) {
-                    $("#humidity").prop('checked', true);
-                } else {
-                    $("#humidity").prop('checked', false);
-                }
-
-                if (value & 0x04) {
-                    $("#windSpeed").prop('checked', true);
-                } else {
-                    $("#windSpeed").prop('checked', false);
-                }
-
-                if (value & 0x08) {
-                    $("#uvIndex").prop('checked', true);
-                } else {
-                    $("#uvIndex").prop('checked', false);
+                    return 0;
                 }
             }
 
-            function getConfig(pluginUid) {
+            function setWeatherInfo(value) {
+                const temperature = document.querySelector("#temperature");
+                if (null !== temperature) {
+                    temperature.checked = (0 !== (value & 0x01));
+                }
+
+                const humidity = document.querySelector("#humidity");
+                if (null !== humidity) {
+                    humidity.checked = (0 !== (value & 0x02));
+                }
+
+                const windSpeed = document.querySelector("#windSpeed");
+                if (null !== windSpeed) {
+                    windSpeed.checked = (0 !== (value & 0x04));
+                }
+
+                const uvIndex = document.querySelector("#uvIndex");
+                if (null !== uvIndex) {
+                    uvIndex.checked = (0 !== (value & 0x08));
+                }
+            }
+
+            async function getConfig(pluginUid) {
                 disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/weather",
-                    isJsonResponse: true
-                }).then(function (rsp) {
-                    $("#sourceId").val(rsp.data.sourceId);
-                    $("#updatePeriod").val(rsp.data.updatePeriod);
-                    $("#apiKey").val(rsp.data.apiKey);
-                    $("#latitude").val(rsp.data.latitude);
-                    $("#longitude").val(rsp.data.longitude);
-                    $("#units").val(rsp.data.units);
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/weather",
+                        isJsonResponse: true
+                    });
+                    document.getElementById("sourceId").value = rsp.data.sourceId;
+                    document.getElementById("updatePeriod").value = rsp.data.updatePeriod;
+                    document.getElementById("apiKey").value = rsp.data.apiKey;
+                    document.getElementById("latitude").value = rsp.data.latitude;
+                    document.getElementById("longitude").value = rsp.data.longitude;
+                    document.getElementById("units").value = rsp.data.units;
                     setWeatherInfo(rsp.data.weatherInfo);
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             function getWeatherInfo() {
-                var weatherInfo = 0;
-                var $boxes = $('input[name=weatherInfo]:checked');
+                let weatherInfo = 0;
+                const boxes = document.querySelectorAll('input[name=weatherInfo]:checked');
 
-                $boxes.each(function () {
-                    weatherInfo += parseInt(this.value);
+                boxes.forEach((box) => {
+                    weatherInfo += Number.parseInt(box.value);
                 });
 
                 return weatherInfo;
             }
 
-            function setConfig(pluginUid) {
+            async function setConfig(pluginUid) {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/weather",
-                    isJsonResponse: true,
-                    parameter: {
-                        sourceId: $("#sourceId").val(),
-                        updatePeriod: $("#updatePeriod").val(),
-                        apiKey: $("#apiKey").val(),
-                        latitude: $("#latitude").val(),
-                        longitude: $("#longitude").val(),
-                        weatherInfo: getWeatherInfo(),
-                        units: $("#units").val()
-                    }
-                }).then(function (rsp) {
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/weather",
+                        isJsonResponse: true,
+                        parameter: {
+                            sourceId: document.getElementById("sourceId").value,
+                            updatePeriod: document.getElementById("updatePeriod").value,
+                            apiKey: document.getElementById("apiKey").value,
+                            latitude: document.getElementById("latitude").value,
+                            longitude: document.getElementById("longitude").value,
+                            weatherInfo: getWeatherInfo(),
+                            units: document.getElementById("units").value
+                        }
+                    });
                     alert("Ok.");
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
+
+                document.getElementById("myForm").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    setConfig(document.getElementById("pluginUid").value);
+                });
+
+                document.getElementById("pluginUid").addEventListener("change", () => {
+                    getConfig(document.getElementById("pluginUid").value);
+                });
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
 
                 /* Load all plugin instances. */
-                getPluginInstances().then(function (cnt) {
-                    var select = document.getElementById("pluginUid");
+                const cnt = await getPluginInstances();
+                const select = document.getElementById("pluginUid");
 
-                    if (0 < cnt) {
-                        /* Check if UID was passed in URL and auto-select it */
-                        var uidFromUrl = utils.getURLParameter('uid');
-                        if (uidFromUrl) {
-                            for (var i = 0; i < select.options.length; i++) {
-                                if (select.options[i].value === uidFromUrl) {
-                                    select.selectedIndex = i;
-                                    break;
-                                }
+                if (0 < cnt) {
+                    /* Check if UID was passed in URL and auto-select it */
+                    const uidFromUrl = utils.getURLParameter('uid');
+                    if (uidFromUrl) {
+                        for (let i = 0; i < select.options.length; i++) {
+                            if (select.options[i].value === uidFromUrl) {
+                                select.selectedIndex = i;
+                                break;
                             }
                         }
-
-                        return getConfig(
-                            select.options[select.selectedIndex].value
-                        );
                     }
-                });
+
+                    await getConfig(select.options[select.selectedIndex].value);
+                }
             });
         </script>
     </body>

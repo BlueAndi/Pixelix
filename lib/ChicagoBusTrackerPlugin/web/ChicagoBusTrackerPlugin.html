@@ -16,7 +16,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
@@ -43,10 +43,10 @@
                 <p>The CTA API limits are quite generous; this plugin will never own its own exhaust your API request quota, even running the maximum number of plugin instances.</p>
                 <h2>Configuration</h2>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <form id="myForm">
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUid" size="1" onChange="handleChange('pluginUid')">
+                            <select class="form-select" id="pluginUid" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -55,19 +55,19 @@
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="routes">Route:</label>
-                            <select class="form-control" id="routes" name="routes" size="1" onchange="handleChange('routes')"></select>
+                            <select class="form-control" id="routes" name="routes" size="1"></select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="directions">Direction:</label>
-                            <select class="form-control" id="directions" name="directions" size="1" onchange="handleChange('directions')"></select>
+                            <select class="form-control" id="directions" name="directions" size="1"></select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="stops">Stop:</label>
-                            <select class="form-select" id="stops" size="1" onchange="handleChange('stops')"></select>
+                            <select class="form-select" id="stops" size="1"></select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="count">Arrivals Count:</label>
-                            <select class="form-select" id="count" size="1" onchange="handleChange('count')">
+                            <select class="form-select" id="count" size="1">
                                 <option value="1">1</option>
                                 <option value="2">2</option>
                                 <option value="3">3</option>
@@ -99,8 +99,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/app-menu.js"></script>
@@ -110,10 +109,10 @@
 
         <script>
 
-            var pluginName = "ChicagoBusTrackerPlugin";
-            var restClient = new pixelix.rest.Client();
-            var rootPluginId = ""
-            var selected = {
+            const pluginName = "ChicagoBusTrackerPlugin";
+            const restClient = new pixelix.rest.Client();
+            let rootPluginId = "";
+            const selected = {
                 routes: "",
                 directions: "",
                 stops: "",
@@ -129,7 +128,7 @@
             }
 
             function hasApiKeyConfigured() {
-                return 0 < $("#apiKey").val().trim().length;
+                return 0 < document.getElementById("apiKey").value.trim().length;
             }
 
             function clearSelectOptions(elementId) {
@@ -225,7 +224,7 @@
 
             function selectSelectedProperty(element, value) {
                 const options = Array.from(element?.options ?? [{ value }]).map((o) => o?.value)
-                var foundIndex = options.findIndex((v) => v == value)
+                let foundIndex = options.findIndex((v) => v == value)
                 if (foundIndex < 0) {
                     console.warn("Not Found: ", value, options)
                     foundIndex = 0
@@ -234,17 +233,15 @@
                 selected[element.id] = element.value
             }
 
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function (rsp) {
-                    var slotIndex = 0;
-                    var cnt = 0;
-                    var $option = null;
-                    var optionText = ""
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
 
-                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
+                            let optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
 
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
@@ -255,22 +252,22 @@
 
                             optionText += ")";
 
-                            $option = $("<option>")
-                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                .text(optionText);
+                            const option = document.createElement("option");
+                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.text = optionText;
 
-                            $("#pluginUid").append($option);
+                            document.getElementById("pluginUid").appendChild(option);
 
                             ++cnt;
                         }
                     }
 
-                    return Promise.resolve(cnt);
-                }).catch(function (rsp) {
+                    return cnt;
+                } catch (rsp) {
                     alert("Internal error.");
-                    return Promise.resolve(0);
-                });
-            };
+                    return 0;
+                }
+            }
 
 
             async function getConfig(pluginUid) {
@@ -290,7 +287,7 @@
 
                     const { apiKey, rte, stpid, dir, orig, dest, count } = rsp.data
 
-                    $("#apiKey").val(apiKey)
+                    document.getElementById("apiKey").value = apiKey
 
                     // Always restore the stored configuration.
                     selected.routes = rte ?? "";
@@ -331,47 +328,42 @@
                 updateDependentControlState()
             }
 
-            function setConfig(pluginUid) {
+            async function setConfig(pluginUid) {
                 disableUI()
                 rootPluginId = pluginUid
                 const parameter = {
-                    apiKey: $("#apiKey").val(),
+                    apiKey: document.getElementById("apiKey").value,
                     rte: selected.routes,
                     dir: selected.directions,
                     stpid: selected.stops,
-                    orig: $("#origin")[0].checked,
-                    dest: $("#dest")[0].checked,
-                    count: $("#count")[0].value,
+                    orig: document.getElementById("origin").checked,
+                    dest: document.getElementById("dest").checked,
+                    count: document.getElementById("count").value,
                 }
 
-                return utils
-                    .makeRequest({
+                try {
+                    await utils.makeRequest({
                         method: "POST",
                         url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
                         isJsonResponse: true,
                         parameter,
                     })
-                    .then(function (rsp) {
-                        alert("Ok.")
-                    })
-                    .then(() => getConfig(pluginUid))
-                    .then(function () {
-                        if (hasApiKeyConfigured()) {
-                            return getRoutes()
-                                .then(getDirections)
-                                .then(getStops);
-                        }
-
+                    alert("Ok.")
+                    await getConfig(pluginUid)
+                    if (hasApiKeyConfigured()) {
+                        await getRoutes()
+                        await getDirections()
+                        await getStops()
+                    }
+                    else {
                         updateDependentControlState();
-                        return Promise.resolve();
-                    })
-                    .catch(function (rsp) {
-                        alert("Failed.")
-                    })
-                    .finally(function () {
-                        enableUI()
-                        updateDependentControlState()
-                    })
+                    }
+                } catch (rsp) {
+                    alert("Failed.")
+                } finally {
+                    enableUI()
+                    updateDependentControlState()
+                }
             }
 
             /**
@@ -399,10 +391,10 @@
                     const rsp = await utils.makeRequest({ method: "GET", url: baseUrl, isJsonResponse: true });
                     const data = rsp?.data;
                     if (data?.error) {
-                        throw new Error("Proxy error for " + path + ": " + data.error);
+                            throw new Error("Proxy error for " + path + ": " + data.error);
                     }
                     if (data && data.pending !== true) {
-                        return data;
+                            return data;
                     }
                 }
                 throw new Error("Proxy timeout for: " + path);
@@ -490,7 +482,7 @@
                 updateDependentControlState()
             }
 
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", async function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
@@ -500,27 +492,35 @@
                 resetDependentSelections();
                 updateDependentControlState();
 
+                /* Wire up event handlers. */
+                document.getElementById("myForm").addEventListener("submit", function (event) {
+                    event.preventDefault();
+                    setConfig(document.getElementById("pluginUid").value);
+                });
+                document.getElementById("pluginUid").addEventListener("change", () => handleChange("pluginUid"));
+                document.getElementById("routes").addEventListener("change", () => handleChange("routes"));
+                document.getElementById("directions").addEventListener("change", () => handleChange("directions"));
+                document.getElementById("stops").addEventListener("change", () => handleChange("stops"));
+                document.getElementById("count").addEventListener("change", () => handleChange("count"));
+
                 /* Load all plugin instances. */
-                getPluginInstances()
-                    .then(function (cnt) {
-                        var select = document.getElementById("pluginUid");
+                const cnt = await getPluginInstances();
+                const select = document.getElementById("pluginUid");
 
-                        if (0 < cnt) {
-                            rootPluginId = select.options[select.selectedIndex].value
-                            return getConfig(rootPluginId);
-                        }
-                    })
-                    .then(function () {
-                        if (hasApiKeyConfigured()) {
-                            return getRoutes()
-                                .then(getDirections)
-                                .then(getStops);
-                        }
+                if (0 < cnt) {
+                    rootPluginId = select.options[select.selectedIndex].value
+                    await getConfig(rootPluginId);
+                }
 
-                        enableUI();
-                        updateDependentControlState();
-                        return Promise.resolve();
-                    });
+                if (hasApiKeyConfigured()) {
+                    await getRoutes();
+                    await getDirections();
+                    await getStops();
+                }
+                else {
+                    enableUI();
+                    updateDependentControlState();
+                }
             });
         </script>
     </body>

@@ -17,7 +17,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -42,10 +42,10 @@
                 <h2>Configuration</h2>
                 <h3>Target Date</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <form id="myForm">
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                            <select class="form-select" id="pluginUid" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -75,8 +75,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
@@ -87,8 +86,8 @@
 
         <script>
 
-            var pluginName = "CountdownPlugin";
-            var restClient = new pixelix.rest.Client();
+            const pluginName = "CountdownPlugin";
+            const restClient = new pixelix.rest.Client();
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -98,17 +97,15 @@
                 utils.enableForm("myForm", false);
             }
 
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function (rsp) {
-                    var slotIndex = 0;
-                    var cnt = 0;
-                    var $option = null;
-                    var optionText = ""
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
 
-                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
+                            let optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
 
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
@@ -119,95 +116,105 @@
 
                             optionText += ")";
 
-                            $option = $("<option>")
-                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                .text(optionText);
+                            const option = document.createElement("option");
+                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.textContent = optionText;
 
-                            $("#pluginUid").append($option);
+                            document.getElementById("pluginUid").append(option);
 
                             ++cnt;
                         }
                     }
 
-                    return Promise.resolve(cnt);
-                }).catch(function (rsp) {
+                    return cnt;
+                } catch (rsp) {
                     alert("Internal error.");
-                    return Promise.resolve(0);
-                });
-            };
+                    return 0;
+                }
+            }
 
-            function getConfig(pluginUid) {
+            async function getConfig(pluginUid) {
                 disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
-                    isJsonResponse: true
-                }).then(function (rsp) {
-                    var targetDateInput = document.getElementById("targetDate");
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
+                        isJsonResponse: true
+                    });
+                    const targetDateInput = document.getElementById("targetDate");
                     targetDateInput.valueAsDate = new Date(rsp.data.year + "-" + rsp.data.month + "-" + rsp.data.day);
-                    $("#targetDayPlural").val(rsp.data.descPlural);
-                    $("#targetDaySingular").val(rsp.data.descSingular);
-                }).catch(function (rsp) {
+                    document.getElementById("targetDayPlural").value = rsp.data.descPlural;
+                    document.getElementById("targetDaySingular").value = rsp.data.descSingular;
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function setConfig(pluginUid) {
+            async function setConfig(pluginUid) {
                 disableUI();
 
-                var date = new Date($("#targetDate").val());
+                const date = new Date(document.getElementById("targetDate").value);
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
-                    isJsonResponse: true,
-                    parameter: {
-                        day: date.getDate(),
-                        month: date.getMonth() + 1,
-                        year: date.getFullYear(),
-                        descPlural: $("#targetDayPlural").val(),
-                        descSingular: $("#targetDaySingular").val()
-                    }
-                }).then(function (rsp) {
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
+                        isJsonResponse: true,
+                        parameter: {
+                            day: date.getDate(),
+                            month: date.getMonth() + 1,
+                            year: date.getFullYear(),
+                            descPlural: document.getElementById("targetDayPlural").value,
+                            descSingular: document.getElementById("targetDaySingular").value
+                        }
+                    });
                     alert("Ok.");
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
+
+                document.getElementById("myForm").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    setConfig(document.getElementById("pluginUid").value);
+                });
+
+                document.getElementById("pluginUid").addEventListener("change", () => {
+                    getConfig(document.getElementById("pluginUid").value);
+                });
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
 
                 /* Load all plugin instances. */
-                getPluginInstances().then(function (cnt) {
-                    var select = document.getElementById("pluginUid");
+                const cnt = await getPluginInstances();
+                const select = document.getElementById("pluginUid");
 
-                    if (0 < cnt) {
-                        /* Check if UID was passed in URL and auto-select it */
-                        var uidFromUrl = utils.getURLParameter('uid');
-                        if (uidFromUrl) {
-                            for (var i = 0; i < select.options.length; i++) {
-                                if (select.options[i].value === uidFromUrl) {
-                                    select.selectedIndex = i;
-                                    break;
-                                }
+                if (0 < cnt) {
+                    /* Check if UID was passed in URL and auto-select it */
+                    const uidFromUrl = utils.getURLParameter('uid');
+                    if (uidFromUrl) {
+                        for (let i = 0; i < select.options.length; i++) {
+                            if (select.options[i].value === uidFromUrl) {
+                                select.selectedIndex = i;
+                                break;
                             }
                         }
-
-                        return getConfig(
-                            select.options[select.selectedIndex].value
-                        );
                     }
-                });
+
+                    await getConfig(
+                        select.options[select.selectedIndex].value
+                    );
+                }
             });
         </script>
     </body>

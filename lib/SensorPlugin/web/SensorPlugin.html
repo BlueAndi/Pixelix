@@ -17,7 +17,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -43,15 +43,15 @@
                 <h2>Configuration</h2>
                 <h3>Sensor and Channel</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <form id="myForm">
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUid" size="1" onChange="getSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value)">
+                            <select class="form-select" id="pluginUid" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="sensorList">Sensor:</label>
-                            <select class="form-select" id="sensorList" onChange="updateChannelList(sensorList.options[sensorList.selectedIndex].value)">
+                            <select class="form-select" id="sensorList">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -74,8 +74,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
@@ -86,9 +85,9 @@
 
         <script>
 
-            var pluginName = "SensorPlugin";
-            var restClient = new pixelix.rest.Client();
-            var sensors = [];
+            const pluginName = "SensorPlugin";
+            const restClient = new pixelix.rest.Client();
+            let sensors = [];
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -98,17 +97,16 @@
                 utils.enableForm("myForm", false);
             }
 
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function (rsp) {
-                    var slotIndex = 0;
-                    var cnt = 0;
-                    var $option = null;
-                    var optionText = ""
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
+                    const pluginUidSelect = document.getElementById("pluginUid");
 
-                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
+                            let optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
 
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
@@ -119,64 +117,60 @@
 
                             optionText += ")";
 
-                            $option = $("<option>")
-                                .val(rsp.data.slots[slotIndex].uid)
-                                .text(optionText);
+                            const option = document.createElement("option");
+                            option.value = rsp.data.slots[slotIndex].uid;
+                            option.textContent = optionText;
 
-                            $("#pluginUid").append($option);
+                            pluginUidSelect.appendChild(option);
 
                             ++cnt;
                         }
                     }
 
-                    return Promise.resolve(cnt);
-                }).catch(function (rsp) {
+                    return cnt;
+                } catch (rsp) {
                     alert("Internal error.");
-                    return Promise.resolve(0);
-                });
-            };
-
-            function getSensors() {
-                return restClient.getSensors().then(function (rsp) {
-                    var index = 0;
-                    var $option = null;
-
-                    sensors = rsp.data.sensors;
-
-                    $option = $("<option>")
-                        .val(-1)
-                        .text("-");
-
-                    $("#sensorList").append($option);
-
-                    for (index = 0; index < sensors.length; ++index) {
-
-                        if (true === sensors[index].isAvailable) {
-
-                            $option = $("<option>")
-                                .val(sensors[index].index)
-                                .text(sensors[index].name);
-
-                            $("#sensorList").append($option);
-                        }
-                    }
-
-                    $("#sensorList").val(-1);
-
-                    return Promise.resolve();
-                });
+                    return 0;
+                }
             }
 
-            function getSensorAndChannel(pluginUid) {
-                disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
-                    isJsonResponse: true
-                }).then(function (rsp) {
+            async function getSensors() {
+                const rsp = await restClient.getSensors();
+                const sensorListSelect = document.getElementById("sensorList");
 
-                    var sensorIndex = 0;
-                    var channelIndex = 0;
+                sensors = rsp.data.sensors;
+
+                const firstOption = document.createElement("option");
+                firstOption.value = -1;
+                firstOption.textContent = "-";
+
+                sensorListSelect.appendChild(firstOption);
+
+                for (let index = 0; index < sensors.length; ++index) {
+
+                    if (true === sensors[index].isAvailable) {
+
+                        const option = document.createElement("option");
+                        option.value = sensors[index].index;
+                        option.textContent = sensors[index].name;
+
+                        sensorListSelect.appendChild(option);
+                    }
+                }
+
+                sensorListSelect.value = -1;
+            }
+
+            async function getSensorAndChannel(pluginUid) {
+                disableUI();
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
+                        isJsonResponse: true
+                    });
+
+                    let sensorIndex = 0;
 
                     while (rsp.data.sensorIndex !== sensors[sensorIndex].index) {
                         ++sensorIndex;
@@ -186,98 +180,112 @@
 
                         if (false === sensors[sensorIndex].isAvailable) {
 
-                            $("#sensorList").val(-1);
-                            $("#channelList").empty();
+                            document.getElementById("sensorList").value = -1;
+                            document.getElementById("channelList").replaceChildren();
 
                         } else {
-                            $("#sensorList").val(rsp.data.sensorIndex);
+                            document.getElementById("sensorList").value = rsp.data.sensorIndex;
 
                             updateChannelList(rsp.data.sensorIndex)
 
-                            $("#channelList").val(rsp.data.channelIndex);
+                            document.getElementById("channelList").value = rsp.data.channelIndex;
                         }
                     }
 
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            function setConfig(pluginUid) {
+            async function setConfig(pluginUid) {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
-                    isJsonResponse: true,
-                    parameter: {
-                        sensorIndex: $("#sensorList").val(),
-                        channelIndex: $("#channelList").val()
-                    }
-                }).then(function (rsp) {
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/channel",
+                        isJsonResponse: true,
+                        parameter: {
+                            sensorIndex: document.getElementById("sensorList").value,
+                            channelIndex: document.getElementById("channelList").value
+                        }
+                    });
                     alert("Ok.");
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             function updateChannelList(sensorIndex) {
-                var index = 0;
-                var $option = null;
+                const channelListSelect = document.getElementById("channelList");
 
-                $("#channelList").empty();
+                channelListSelect.replaceChildren();
 
                 if (0 <= sensorIndex) {
-                    for (index = 0; index < sensors[sensorIndex].channels.length; ++index) {
+                    for (let index = 0; index < sensors[sensorIndex].channels.length; ++index) {
 
-                        $option = $("<option>")
-                            .val(sensors[sensorIndex].channels[index].index)
-                            .text(sensors[sensorIndex].channels[index].name);
+                        const option = document.createElement("option");
+                        option.value = sensors[sensorIndex].channels[index].index;
+                        option.textContent = sensors[sensorIndex].channels[index].name;
 
-                        $("#channelList").append($option);
+                        channelListSelect.appendChild(option);
                     }
                 }
             }
 
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
+                document.getElementById("myForm").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    setConfig(document.getElementById("pluginUid").value);
+                });
+
+                document.getElementById("pluginUid").addEventListener("change", (event) => {
+                    getSensorAndChannel(event.target.value);
+                });
+
+                document.getElementById("sensorList").addEventListener("change", (event) => {
+                    updateChannelList(event.target.value);
+                });
+
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
 
-                /* Get all available sensors. */
-                getSensors()
-                    /* Load all plugin instances. */
-                    .then(function () {
-                        return getPluginInstances();
-                    }).then(function (cnt) {
-                        var select = document.getElementById("pluginUid");
+                try {
+                    /* Get all available sensors. */
+                    await getSensors();
 
-                        if (0 < cnt) {
-                            /* Check if UID was passed in URL and auto-select it */
-                            var uidFromUrl = utils.getURLParameter('uid');
-                            if (uidFromUrl) {
-                                for (var i = 0; i < select.options.length; i++) {
-                                    if (select.options[i].value === uidFromUrl) {
-                                        select.selectedIndex = i;
-                                        break;
-                                    }
+                    /* Load all plugin instances. */
+                    const cnt = await getPluginInstances();
+
+                    const select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+                        /* Check if UID was passed in URL and auto-select it */
+                        const uidFromUrl = utils.getURLParameter('uid');
+                        if (uidFromUrl) {
+                            for (let i = 0; i < select.options.length; i++) {
+                                if (select.options[i].value === uidFromUrl) {
+                                    select.selectedIndex = i;
+                                    break;
                                 }
                             }
-
-                            return getSensorAndChannel(
-                                select.options[select.selectedIndex].value
-                            );
                         }
-                    }).catch(function (err) {
-                        alert("Internal error.");
-                    });
+
+                        await getSensorAndChannel(
+                            select.options[select.selectedIndex].value
+                        );
+                    }
+                } catch (err) {
+                    alert("Internal error.");
+                }
             });
         </script>
     </body>

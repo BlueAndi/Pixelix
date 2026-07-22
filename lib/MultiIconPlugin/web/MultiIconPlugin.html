@@ -17,7 +17,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -46,16 +46,16 @@
                             <div class="mb-3">
                                 <label class="form-label">Zoom Level:</label>
                                 <div class="btn-group" role="group" aria-label="Icon zoom controls">
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoomOriginal" value="1" checked autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoomOriginal" value="1" checked autocomplete="off" />
                                     <label class="btn btn-outline-primary" for="iconZoomOriginal">Original</label>
 
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom2x" value="2" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom2x" value="2" autocomplete="off" />
                                     <label class="btn btn-outline-primary" for="iconZoom2x">2x</label>
 
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom4x" value="4" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom4x" value="4" autocomplete="off" />
                                     <label class="btn btn-outline-primary" for="iconZoom4x">4x</label>
 
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom8x" value="8" autocomplete="off" onchange="updateIconPickerZoom()" />
+                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom8x" value="8" autocomplete="off" />
                                     <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
                                 </div>
                             </div>
@@ -76,18 +76,18 @@
                 <h2>Configuration</h2>
                 <h3>Slot icons</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myFormSlot" enctype="multipart/form-data" action="javascript:setSlotsByForm('myFormSlot')">
+                    <form id="myFormSlot" enctype="multipart/form-data">
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUidSlot">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidSlot" name="pluginUid" size="1" onChange="updateForms()">
+                            <select class="form-select" id="pluginUidSlot" name="pluginUid" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="icon0FileId">Icon 0 file id:</label>
                             <div class="input-group">
                                 <input class="form-control" type="number" id="icon0FileId" name="icon0FileId" min="0" max="255" />
-                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog('icon0FileId')">Select...</button>
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearIconFileId('icon0FileId')">Clear</button>
+                                <button class="btn btn-outline-primary" type="button">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button">Clear</button>
                             </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
@@ -95,8 +95,8 @@
                             <label class="form-label" for="icon1FileId">Icon 1 file id:</label>
                             <div class="input-group">
                                 <input class="form-control" type="number" id="icon1FileId" name="icon1FileId" min="0" max="255" />
-                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog('icon1FileId')">Select...</button>
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearIconFileId('icon1FileId')">Clear</button>
+                                <button class="btn btn-outline-primary" type="button">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button">Clear</button>
                             </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
@@ -104,8 +104,8 @@
                             <label class="form-label" for="icon2FileId">Icon 2 file id:</label>
                             <div class="input-group">
                                 <input class="form-control" type="number" id="icon2FileId" name="icon2FileId" min="0" max="255" />
-                                <button class="btn btn-outline-primary" type="button" onclick="openIconPickerDialog('icon2FileId')">Select...</button>
-                                <button class="btn btn-outline-secondary" type="button" onclick="clearIconFileId('icon2FileId')">Clear</button>
+                                <button class="btn btn-outline-primary" type="button">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button">Clear</button>
                             </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
@@ -124,8 +124,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
@@ -136,11 +135,11 @@
 
         <script>
 
-            var pluginName = "MultiIconPlugin";
-            var restClient = new pixelix.rest.Client();
-            var iconPickerModal = null;
-            var iconPickerZoom = 1;
-            var iconPickerTargetInputId = "";
+            const pluginName = "MultiIconPlugin";
+            const restClient = new pixelix.rest.Client();
+            let iconPickerModal = null;
+            let iconPickerZoom = 1;
+            let iconPickerTargetInputId = "";
 
             function applyZoomToImage(image) {
                 if (1 === iconPickerZoom) {
@@ -155,13 +154,12 @@
             }
 
             function updateIconPickerZoom() {
-                var selectedZoom = parseInt(document.querySelector("input[name='iconZoomOptions']:checked").value, 10);
-                var images;
+                const selectedZoom = Number.parseInt(document.querySelector("input[name='iconZoomOptions']:checked").value, 10);
+                const images = document.querySelectorAll("#iconPickerOverview img");
 
                 iconPickerZoom = selectedZoom;
-                images = document.querySelectorAll("#iconPickerOverview img");
 
-                images.forEach(function (image) {
+                images.forEach((image) => {
                     applyZoomToImage(image);
                 });
             }
@@ -180,48 +178,66 @@
                 document.getElementById(targetInputId).value = 255;
             }
 
+            function serializeFormAll(formId) {
+                const form = document.getElementById(formId);
+                const data = [];
+
+                form.querySelectorAll("[name]").forEach((element) => {
+                    data.push({ name: element.name, value: element.value });
+                });
+
+                return data;
+            }
+
             function fillIconPicker(fileTable) {
-                var $overview = $("#iconPickerOverview");
-                var idx;
+                const overview = document.getElementById("iconPickerOverview");
 
-                $overview.empty();
+                overview.replaceChildren();
 
-                for (idx = 0; idx < fileTable.length; ++idx) {
+                for (let idx = 0; idx < fileTable.length; ++idx) {
                     if (0 < fileTable[idx].fullPath.length) {
-                        (function (fileId, fullPath) {
-                            var $fileId = $("<p>").text("[" + fileId + "]");
-                            var $img = $("<img>")
-                                .attr("src", fullPath)
-                                .attr("alt", "Icon " + fileId)
-                                .on("load", function () {
-                                    applyZoomToImage(this);
-                                });
-                            var $name = $("<p>").text(fullPath.replace(/^.*[\\\/]/, ""));
-                            var $button = $("<button>")
-                                .attr("type", "button")
-                                .attr("class", "btn btn-primary btn-sm")
-                                .text("Use")
-                                .on("click", function () {
-                                    selectIconFileId(fileId);
-                                });
-                            var $card = $("<div>")
-                                .attr("class", "bg-body text-center m-2 p-2 bd-highlight border rounded")
-                                .append($fileId)
-                                .append($img)
-                                .append($name)
-                                .append($button);
+                        const fileId = idx;
+                        const fullPath = fileTable[idx].fullPath;
 
-                            $overview.append($card);
-                        })(idx, fileTable[idx].fullPath);
+                        const fileIdText = document.createElement("p");
+                        fileIdText.textContent = "[" + fileId + "]";
+
+                        const img = document.createElement("img");
+                        img.setAttribute("src", fullPath);
+                        img.setAttribute("alt", "Icon " + fileId);
+                        img.addEventListener("load", function () {
+                            applyZoomToImage(this);
+                        });
+
+                        const name = document.createElement("p");
+                        name.textContent = fullPath.replace(/^.*[\\\/]/, "");
+
+                        const button = document.createElement("button");
+                        button.setAttribute("type", "button");
+                        button.setAttribute("class", "btn btn-primary btn-sm");
+                        button.textContent = "Use";
+                        button.addEventListener("click", () => {
+                            selectIconFileId(fileId);
+                        });
+
+                        const card = document.createElement("div");
+                        card.setAttribute("class", "bg-body text-center m-2 p-2 bd-highlight border rounded");
+                        card.append(fileIdText);
+                        card.append(img);
+                        card.append(name);
+                        card.append(button);
+
+                        overview.append(card);
                     }
                 }
             }
 
-            function openIconPickerDialog(targetInputId) {
+            async function openIconPickerDialog(targetInputId) {
                 iconPickerTargetInputId = targetInputId;
 
-                return restClient.readFile("/configuration/fileMgr.json").then(function (rsp) {
-                    var jsonRsp = JSON.parse(rsp);
+                try {
+                    const rsp = await restClient.readFile("/configuration/fileMgr.json");
+                    const jsonRsp = JSON.parse(rsp);
 
                     fillIconPicker(jsonRsp.fileTable);
 
@@ -230,9 +246,9 @@
                     }
 
                     iconPickerModal.show();
-                }).catch(function () {
+                } catch (e) {
                     alert("Failed to load icon list. Open the icons page once to initialize it.");
-                });
+                }
             }
 
             function enableUI() {
@@ -243,57 +259,54 @@
                 utils.enableForm("myFormSlot", false);
             }
 
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function (rsp) {
-                    var elemIndex = 0;
-                    var slotIndex = 0;
-                    var cnt = 0;
-                    var elements = document.getElementsByName("pluginUid");
-                    var $option = null;
-                    var optionText = ""
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
+                    const elements = document.getElementsByName("pluginUid");
 
-                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
+                            let optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
 
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-"
+                                optionText += "-";
                             } else {
-                                optionText += rsp.data.slots[slotIndex].alias
+                                optionText += rsp.data.slots[slotIndex].alias;
                             }
 
                             optionText += ")";
 
-                            for (elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+                            for (let elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
-                                $option = $("<option>")
-                                    .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                    .text(optionText);
+                                const option = document.createElement("option");
+                                option.setAttribute("value", "" + rsp.data.slots[slotIndex].uid);
+                                option.textContent = optionText;
 
-                                $(elements[elemIndex]).append($option);
+                                elements[elemIndex].append(option);
                             }
 
                             ++cnt;
                         }
                     }
 
-                    return Promise.resolve(cnt);
-                }).catch(function (rsp) {
+                    return cnt;
+                } catch (rsp) {
                     alert("Internal error.");
-                    return Promise.resolve(0);
-                });
-            };
+                    return 0;
+                }
+            }
 
             function getSlotsByForm(formId) {
-                var values = $("#" + formId).serializeAllArray();
-                var pluginUid = 0;
-                var icon0FileId = 0xff;
-                var icon1FileId = 0xff;
-                var icon2FileId = 0xff;
+                const values = serializeFormAll(formId);
+                let pluginUid = 0;
+                let icon0FileId = 0xff;
+                let icon1FileId = 0xff;
+                let icon2FileId = 0xff;
 
-                $.each(values, function (idx, field) {
+                values.forEach((field) => {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
                     } else if (field.name === "icon0FileId") {
@@ -307,37 +320,39 @@
                     }
                 });
 
-                getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId);
+                return getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId);
             }
 
-            function getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId) {
+            async function getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId) {
                 disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/slots",
-                    isJsonResponse: true
-                }).then(function (rsp) {
-                    var icon0FileIdInput = document.getElementById("icon0FileId");
-                    var icon1FileIdInput = document.getElementById("icon1FileId");
-                    var icon2FileIdInput = document.getElementById("icon2FileId");
+
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/slots",
+                        isJsonResponse: true
+                    });
+
+                    const icon0FileIdInput = document.getElementById("icon0FileId");
+                    const icon1FileIdInput = document.getElementById("icon1FileId");
+                    const icon2FileIdInput = document.getElementById("icon2FileId");
 
                     icon0FileIdInput.value = rsp.data.slots[0];
                     icon1FileIdInput.value = rsp.data.slots[1];
                     icon2FileIdInput.value = rsp.data.slots[2];
-
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             function setSlotsByForm(formId) {
-                var values = $("#" + formId).serializeAllArray();
-                var pluginUid = 0;
-                var slots = [255, 255, 255];
+                const values = serializeFormAll(formId);
+                let pluginUid = 0;
+                const slots = [255, 255, 255];
 
-                $.each(values, function (idx, field) {
+                values.forEach((field) => {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
                     } else if (field.name === "icon0FileId") {
@@ -351,74 +366,86 @@
                     }
                 });
 
-                setSlots(pluginUid, slots);
+                return setSlots(pluginUid, slots);
             }
 
-            function setSlots(pluginUid, slots) {
+            async function setSlots(pluginUid, slots) {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/slots",
-                    isJsonResponse: true,
-                    parameter: {
-                        slots: slots
-                    }
-                }).then(function (rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/slots",
+                        isJsonResponse: true,
+                        parameter: {
+                            slots: slots
+                        }
+                    });
+
                     alert("Ok.");
-                }).catch(function (rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function () {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             function updateForms() {
-                var selectText = document.getElementById("pluginUidSlot");
+                const selectText = document.getElementById("pluginUidSlot");
 
                 if (0 <= selectText.selectedIndex) {
 
-                    return getSlotsByForm('myFormSlot');
+                    return getSlotsByForm("myFormSlot");
                 }
             }
 
-            (function ($) {
-                $.fn.serializeAllArray = function () {
-                    var data = $(this).serializeArray();
-
-                    $(':disabled[name]', this).each(function () {
-                        data.push({ name: this.name, value: $(this).val() });
-                    });
-
-                    return data;
-                }
-            })(jQuery);
-
-            $(document).ready(function () {
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
+
+                /* Wire up the zoom radio buttons. */
+                document.querySelectorAll("input[name='iconZoomOptions']").forEach((radio) => {
+                    radio.addEventListener("change", updateIconPickerZoom);
+                });
+
+                /* Wire up the plugin UID selection. */
+                document.getElementById("pluginUidSlot").addEventListener("change", updateForms);
+
+                /* Wire up the slot form submission. */
+                document.getElementById("myFormSlot").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    setSlotsByForm("myFormSlot");
+                });
+
+                /* Wire up the icon picker and clear buttons. */
+                ["icon0FileId", "icon1FileId", "icon2FileId"].forEach((inputId) => {
+                    const inputGroup = document.getElementById(inputId).parentElement;
+                    const buttons = inputGroup.querySelectorAll("button");
+
+                    buttons[0].addEventListener("click", () => openIconPickerDialog(inputId));
+                    buttons[1].addEventListener("click", () => clearIconFileId(inputId));
+                });
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
 
                 /* Load all plugin instances. */
-                getPluginInstances().then(function (cnt) {
-                    if (0 < cnt) {
-                        /* Check if UID was passed in URL and auto-select it */
-                        var uidFromUrl = utils.getURLParameter('uid');
-                        if (uidFromUrl) {
-                            var selectSlot = document.getElementById("pluginUidSlot");
-                            for (var i = 0; i < selectSlot.options.length; i++) {
-                                if (selectSlot.options[i].value === uidFromUrl) {
-                                    selectSlot.selectedIndex = i;
-                                    break;
-                                }
+                const cnt = await getPluginInstances();
+                if (0 < cnt) {
+                    /* Check if UID was passed in URL and auto-select it */
+                    const uidFromUrl = utils.getURLParameter("uid");
+                    if (uidFromUrl) {
+                        const selectSlot = document.getElementById("pluginUidSlot");
+                        for (let i = 0; i < selectSlot.options.length; i++) {
+                            if (selectSlot.options[i].value === uidFromUrl) {
+                                selectSlot.selectedIndex = i;
+                                break;
                             }
                         }
-                        updateForms();
                     }
-                });
+                    updateForms();
+                }
             });
         </script>
     </body>

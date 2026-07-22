@@ -30,7 +30,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -63,13 +63,13 @@
                         <input class="form-control" type="text" id="ssid" name="ssid" value="~SSID~" /><br />
                         <label class="form-label" for="passphrase">Passphrase:</label><br />
                         <input class="form-control" type="password" id="passphrase" name="passphrase" value="~PASSPHRASE~" /><br />
-                        <input type="button" value="Store configuration" onclick="store()" />
+                        <input type="button" value="Store configuration" id="btnStore" />
                     </div>
                 </p>
                 <p>WiFi MAC address: ~MAC_ADDR~</p>
                 <h2>Restart</h2>
                 <p>
-                    <input type="button" value="Restart now" onclick="restart()" />
+                    <input type="button" value="Restart now" id="btnRestart" />
                 </p>
             </div>
         </main>
@@ -83,39 +83,35 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
 
         <script>
-            function store() {
-                var formData    = new FormData();
-                var xhr         = new XMLHttpRequest();
-                var ssid        = document.getElementById("ssid");
-                var passphrase  = document.getElementById("passphrase");
-    
-                formData.append("ssid", ssid.value);
-                formData.append("passphrase", passphrase.value);
-    
-                xhr.open("POST", "/");
-                xhr.onload = function() {
-                    alert(xhr.response);
-                };
-                xhr.send(formData);
+            async function store() {
+                const formData = new FormData();
+
+                formData.append("ssid", document.getElementById("ssid").value);
+                formData.append("passphrase", document.getElementById("passphrase").value);
+
+                const response = await fetch("/", { method: "POST", body: formData });
+
+                alert(await response.text());
             }
-    
-            function restart() {
-                var formData    = new FormData();
-                var xhr         = new XMLHttpRequest();
-    
+
+            async function restart() {
+                const formData = new FormData();
+
                 formData.append("restart", "now");
-    
-                xhr.open("POST", "/");
-                xhr.onload = function() {
-                    alert(xhr.response);
-                };
-                xhr.send(formData);
+
+                const response = await fetch("/", { method: "POST", body: formData });
+
+                alert(await response.text());
             }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                document.getElementById("btnStore").addEventListener("click", store);
+                document.getElementById("btnRestart").addEventListener("click", restart);
+            });
         </script>
     </body>
 </html>

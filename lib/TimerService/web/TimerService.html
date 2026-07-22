@@ -15,7 +15,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX"
                         data-bs-toggle="tooltip" data-bs-placement="bottom"
@@ -46,7 +46,7 @@
                     <li>If the brightness level is greater than the max. brightness soft limit, the max. soft limit will be set.</li>
                     <li>The timer uses the local time. See its time zone in the settings.</li>
                 </ul>
-                <form id="myForm" action="javascript:save()">
+                <form id="myForm">
                 </form>
             </div>
         </main>
@@ -60,8 +60,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
@@ -72,8 +71,8 @@
 
         <script>
 
-            var restClient = new pixelix.rest.Client();
-            var timerSettingsCount = 0;
+            const restClient = new pixelix.rest.Client();
+            let timerSettingsCount = 0;
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -84,51 +83,78 @@
             }
 
             function clearAllTimerSettings() {
-                $("#myForm").empty();
+                document.getElementById("myForm").replaceChildren();
+            }
+
+            function createContainer(className, elements) {
+                const container = document.createElement("div");
+                container.className = className;
+                elements.forEach((element) => container.appendChild(element));
+                return container;
             }
 
             function createFormGroup(elements) {
-                var $formGroup = $("<div class='form-group'></div>");
-                var idx;
-
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
-                }
-                
-                return $formGroup;
+                return createContainer("form-group", elements);
             }
 
             function createFormCheck(elements) {
-                var $formGroup = $("<div class='form-check'></div>");
-                var idx;
-
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
-                }
-                
-                return $formGroup;
+                return createContainer("form-check", elements);
             }
 
             function createFormCheckInline(elements) {
-                var $formGroup = $("<div class='form-check form-check-inline'></div>");
-                var idx;
-
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
-                }
-                
-                return $formGroup;
+                return createContainer("form-check form-check-inline", elements);
             }
 
             function createInputGroup(elements) {
-                var $formGroup = $("<div class='input-group'></div>");
-                var idx;
+                return createContainer("input-group", elements);
+            }
 
-                for (idx = 0; idx < elements.length; ++idx) {
-                    $formGroup.append(elements[idx]);
+            function createLabel(className, forId, text) {
+                const label = document.createElement("label");
+                if (className) {
+                    label.className = className;
                 }
-                
-                return $formGroup;
+                label.setAttribute("for", forId);
+                label.textContent = text;
+                return label;
+            }
+
+            function createSpan(className, text) {
+                const span = document.createElement("span");
+                span.className = className;
+                span.textContent = text;
+                return span;
+            }
+
+            function createCheckbox(id, checked) {
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.className = "form-check-input";
+                input.id = id;
+                input.checked = checked;
+                return input;
+            }
+
+            function createRadio(name, id, value, checked) {
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.className = "form-check-input";
+                input.name = name;
+                input.id = id;
+                input.value = value;
+                input.checked = checked;
+                return input;
+            }
+
+            function createNumberInput(id, value, min, max) {
+                const input = document.createElement("input");
+                input.type = "number";
+                input.className = "form-control";
+                input.id = id;
+                input.min = min;
+                input.max = max;
+                input.value = value;
+                return input;
             }
 
             function brightnessValueToPercent(value) {
@@ -143,215 +169,162 @@
                 if (0 > percent) {
                     return -1;
                 }
-                
+
                 return (percent * 255 / 100).toFixed();
             }
 
             function createTimerSetting(id, timerSetting) {
-                var $block = $("<div class='h-100 p-2 bg-body-tertiary border rounded-3 mt-2'></div>");
-                var $row = $("<div class='row'></div>")
-                
-                var $checkboxEnabled = $("<input type='checkbox' class='form-check-input' id='" + id + "Enabled' />")
-                                        .prop("checked", timerSetting.enabled);
-                var $labelEnabled = $("<label class='form-check-label' for='" + id + "Enabled'>Enabled</label>");
+                const days = [
+                    ["Su", "sunday"],
+                    ["Mo", "monday"],
+                    ["Tu", "tuesday"],
+                    ["We", "wednesday"],
+                    ["Th", "thursday"],
+                    ["Fr", "friday"],
+                    ["Sa", "saturday"]
+                ];
 
-                var $labelHour = $("<label for='" + id + "Hour'>Hour:</label>");
-                var $inputHour = $("<input type='number' class='form-control' id='" + id + "Hour' min='0' max='23' />")
-                                    .val(timerSetting.hour);
+                const enabledCol = createContainer("col", [
+                    createFormCheck([
+                        createCheckbox(id + "Enabled", timerSetting.enabled),
+                        createLabel("form-check-label", id + "Enabled", "Enabled")
+                    ])
+                ]);
 
-                var $labelMinute = $("<label for='" + id + "Minute'>Minute:</label>");
-                var $inputMinute = $("<input type='number' class='form-control' id='" + id + "Minute' min='0' max='59' />")
-                                    .val(timerSetting.minute);
+                const hourCol = createContainer("col", [
+                    createFormGroup([
+                        createLabel("", id + "Hour", "Hour:"),
+                        createNumberInput(id + "Hour", timerSetting.hour, "0", "23")
+                    ])
+                ]);
 
-                var $checkboxMo = $("<input type='checkbox' class='form-check-input' id='" + id + "Mo' />")
-                                    .prop("checked", timerSetting.monday);
-                var $labelMo = $("<label class='form-check-label' for='" + id + "Mo'>Mo</label>");
+                const minuteCol = createContainer("col", [
+                    createFormGroup([
+                        createLabel("", id + "Minute", "Minute:"),
+                        createNumberInput(id + "Minute", timerSetting.minute, "0", "59")
+                    ])
+                ]);
 
-                var $checkboxTu = $("<input type='checkbox' class='form-check-input' id='" + id + "Tu' />")
-                                    .prop("checked", timerSetting.tuesday);
-                var $labelTu = $("<label class='form-check-label' for='" + id + "Tu'>Tu</label>");
+                const daysCol = createContainer("col", days.map(([abbr, key]) => createFormCheckInline([
+                    createCheckbox(id + abbr, timerSetting[key]),
+                    createLabel("form-check-label", id + abbr, abbr)
+                ])));
 
-                var $checkboxWe = $("<input type='checkbox' class='form-check-input' id='" + id + "We' />")
-                                    .prop("checked", timerSetting.wednesday);
-                var $labelWe = $("<label class='form-check-label' for='" + id + "We'>We</label>");
+                const displayCol = createContainer("col", [
+                    createSpan("m-2", "Display:"),
+                    createFormCheck([
+                        createLabel("", id + "DisplayStateNone", "None"),
+                        createRadio(id + "DisplayState", id + "DisplayStateNone", "0", 0 === timerSetting.displayState)
+                    ]),
+                    createFormCheck([
+                        createLabel("", id + "DisplayStateOn", "On"),
+                        createRadio(id + "DisplayState", id + "DisplayStateOn", "1", 1 === timerSetting.displayState)
+                    ]),
+                    createFormCheck([
+                        createLabel("", id + "DisplayStateOff", "Off"),
+                        createRadio(id + "DisplayState", id + "DisplayStateOff", "2", 2 === timerSetting.displayState)
+                    ])
+                ]);
 
-                var $checkboxTh = $("<input type='checkbox' class='form-check-input' id='" + id + "Th' />")
-                                    .prop("checked", timerSetting.thursday);
-                var $labelTh = $("<label class='form-check-label' for='" + id + "Th'>Th</label>");
+                const brightnessCol = createContainer("col", [
+                    createLabel("", id + "Brightness", "Brightness:"),
+                    createInputGroup([
+                        createNumberInput(id + "Brightness", brightnessValueToPercent(timerSetting.brightness), "-1", "100"),
+                        createSpan("input-group-text", "%")
+                    ])
+                ]);
 
-                var $checkboxFr = $("<input type='checkbox' class='form-check-input' id='" + id + "Fr' />")
-                                    .prop("checked", timerSetting.friday);
-                var $labelFr = $("<label class='form-check-label' for='" + id + "Fr'>Fr</label>");
+                const row = createContainer("row", [enabledCol, hourCol, minuteCol, daysCol, displayCol, brightnessCol]);
 
-                var $checkboxSa = $("<input type='checkbox' class='form-check-input' id='" + id + "Sa' />")
-                                    .prop("checked", timerSetting.saturday);
-                var $labelSa = $("<label class='form-check-label' for='" + id + "Sa'>Sa</label>");
+                const block = document.createElement("div");
+                block.className = "h-100 p-2 bg-body-tertiary border rounded-3 mt-2";
+                block.appendChild(row);
 
-                var $checkboxSu = $("<input type='checkbox' class='form-check-input' id='" + id + "Su' />")
-                                    .prop("checked", timerSetting.sunday);
-                var $labelSu = $("<label class='form-check-label' for='" + id + "Su'>Su</label>");
-
-                var $labelDisplayStateNone = $("<label for='" + id + "DisplayStateNone'>None</label>");
-                var $radioDisplayStateNone = $("<input type='radio' class='form-check-input' name='" + id + "DisplayState' id='" + id + "DisplayStateNone' value='0' />")
-                                            .prop("checked", 0 === timerSetting.displayState);
-                var $labelDisplayStateOn = $("<label for='" + id + "DisplayStateOn'>On</label>");
-                var $radioDisplayStateOn = $("<input type='radio' class='form-check-input' name='" + id + "DisplayState' id='" + id + "DisplayStateOn' value='1' />")
-                                            .prop("checked", 1 === timerSetting.displayState);
-                var $labelDisplayStateOff = $("<label for='" + id + "DisplayStateOff'>Off</label>");
-                var $radioDisplayStateOff = $("<input type='radio' class='form-check-input' name='" + id + "DisplayState' id='" + id + "DisplayStateOff' value='2' />")
-                                            .prop("checked", 2 === timerSetting.displayState);
-
-                var $labelBrightness = $("<label for='" + id + "Brightness'>Brightness:</label>");
-                var $inputBrightness = $("<input type='number' class='form-control' id='" + id + "Brightness' min='-1' max='100' />")
-                                    .val(brightnessValueToPercent(timerSetting.brightness));
-
-                $block.append($row);
-
-                $row.append(
-                    $("<div class='col'></div>")
-                    .append(createFormCheck([
-                        $checkboxEnabled, $labelEnabled
-                    ]))
-                );
-
-                $row.append(
-                    $("<div class='col'></div>")
-                    .append(createFormGroup([
-                        $labelHour, $inputHour
-                    ]))
-                );
-
-                $row.append(
-                    $("<div class='col'></div>")
-                    .append(createFormGroup([
-                        $labelMinute, $inputMinute
-                    ]))
-                );
-
-                $row.append(
-                    $("<div class='col'></div>")
-                    .append(createFormCheckInline([
-                        $checkboxSu, $labelSu
-                    ]))
-                    .append(createFormCheckInline([
-                        $checkboxMo, $labelMo
-                    ]))
-                    .append(createFormCheckInline([
-                        $checkboxTu, $labelTu
-                    ]))
-                    .append(createFormCheckInline([
-                        $checkboxWe, $labelWe
-                    ]))
-                    .append(createFormCheckInline([
-                        $checkboxTh, $labelTh
-                    ]))
-                    .append(createFormCheckInline([
-                        $checkboxFr, $labelFr
-                    ]))
-                    .append(createFormCheckInline([
-                        $checkboxSa, $labelSa
-                    ]))
-                );
-
-                $row.append(
-                    $("<div class='col'></div>")
-                    .append($("<span class='m-2'>Display:</span>"))
-                    .append(createFormCheck([
-                        $labelDisplayStateNone, $radioDisplayStateNone
-                    ]))
-                    .append(createFormCheck([
-                        $labelDisplayStateOn, $radioDisplayStateOn
-                    ]))
-                    .append(createFormCheck([
-                        $labelDisplayStateOff, $radioDisplayStateOff
-                    ]))
-                );
-
-                $row.append(
-                    $("<div class='col'></div>")
-                    .append($labelBrightness)
-                    .append(createInputGroup([
-                        $inputBrightness, $("<span class='input-group-text'>%</span>")
-                    ]))
-                );
-
-                $("#myForm").append($block);
+                document.getElementById("myForm").appendChild(block);
             }
 
-            function load() {
+            async function load() {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/timerService/timer",
-                    isJsonResponse: true
-                }).then(function(rsp) {
-                    var idx;
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/timerService/timer",
+                        isJsonResponse: true
+                    });
 
                     timerSettingsCount = rsp.data.timerSettings.length;
 
-                    for (idx = 0; idx < timerSettingsCount; ++idx) {
+                    for (let idx = 0; idx < timerSettingsCount; ++idx) {
                         createTimerSetting("timer" + idx, rsp.data.timerSettings[idx]);
                     }
 
-                    $("#myForm").append($("<button type='submit' class='btn btn-primary' onclick='save()'>Save</button>"));
-
-                }).catch(function(rsp) {
+                    const saveButton = document.createElement("button");
+                    saveButton.type = "submit";
+                    saveButton.className = "btn btn-primary";
+                    saveButton.textContent = "Save";
+                    document.getElementById("myForm").appendChild(saveButton);
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
             function getTimerSettings() {
-                var timerSettings = [];
-                var idx;
+                const timerSettings = [];
 
-                for (idx = 0; idx < timerSettingsCount; ++idx) {
-                    var timerSetting = {
-                        enabled: $("#timer" + idx + "Enabled").prop("checked"),
-                        displayState: $("input[name='timer" + idx + "DisplayState']:checked").val(),
-                        hour: $("#timer" + idx + "Hour").val(),
-                        minute: $("#timer" + idx + "Minute").val(),
-                        brightness: brightnessPercentToValue($("#timer" + idx + "Brightness").val()),
-                        monday: $("#timer" + idx + "Mo").prop("checked"),
-                        tuesday: $("#timer" + idx + "Tu").prop("checked"),
-                        wednesday: $("#timer" + idx + "We").prop("checked"),
-                        thursday: $("#timer" + idx + "Th").prop("checked"),
-                        friday: $("#timer" + idx + "Fr").prop("checked"),
-                        saturday: $("#timer" + idx + "Sa").prop("checked"),
-                        sunday: $("#timer" + idx + "Su").prop("checked")
-                    };
+                for (let idx = 0; idx < timerSettingsCount; ++idx) {
+                    const displayStateRadio = document.querySelector("input[name='timer" + idx + "DisplayState']:checked");
 
-                    timerSettings.push(timerSetting);
+                    timerSettings.push({
+                        enabled: document.getElementById("timer" + idx + "Enabled").checked,
+                        displayState: displayStateRadio ? displayStateRadio.value : undefined,
+                        hour: document.getElementById("timer" + idx + "Hour").value,
+                        minute: document.getElementById("timer" + idx + "Minute").value,
+                        brightness: brightnessPercentToValue(document.getElementById("timer" + idx + "Brightness").value),
+                        monday: document.getElementById("timer" + idx + "Mo").checked,
+                        tuesday: document.getElementById("timer" + idx + "Tu").checked,
+                        wednesday: document.getElementById("timer" + idx + "We").checked,
+                        thursday: document.getElementById("timer" + idx + "Th").checked,
+                        friday: document.getElementById("timer" + idx + "Fr").checked,
+                        saturday: document.getElementById("timer" + idx + "Sa").checked,
+                        sunday: document.getElementById("timer" + idx + "Su").checked
+                    });
                 }
 
                 return timerSettings;
             }
 
-            function save() {
+            async function save() {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/timerService/timer",
-                    isJsonResponse: true,
-                    parameter: {
-                        timerSettings: getTimerSettings()
-                    }
-                }).then(function(rsp) {
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/timerService/timer",
+                        isJsonResponse: true,
+                        parameter: {
+                            timerSettings: getTimerSettings()
+                        }
+                    });
                     alert("Ok.");
-                }).catch(function(rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            $(document).ready(function() {
+            document.addEventListener("DOMContentLoaded", () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
+
+                document.getElementById("myForm").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    save();
+                });
 
                 load();
             });

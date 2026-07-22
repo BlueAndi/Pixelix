@@ -16,7 +16,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
@@ -50,7 +50,7 @@
             <div class="container">
                 <h1 class="mt-5">Settings</h1>
                 <p>Setting changes need a restart to take effect.</p>
-                <p><button class="btn btn-light" type="button" onclick="restart();" disabled>Restart</button></p>
+                <p><button class="btn btn-light" type="button" id="btnRestart" disabled>Restart</button></p>
                 <p id="settings"></p>
             </div>
         </main>
@@ -64,8 +64,7 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
+        <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
@@ -76,179 +75,187 @@
 
         <!-- Custom javascript -->
         <script>
-            var restClient = new pixelix.rest.Client();
-            var data = [];
+            const restClient = new pixelix.rest.Client();
+            const data = [];
 
             /* Disable all UI elements. */
             function disableUI() {
-                $("main :button").prop("disabled", true);
+                document.querySelectorAll("main button").forEach((button) => {
+                    button.disabled = true;
+                });
             }
 
             /* Enable all UI elements. */
             function enableUI() {
-                $("main :button").prop("disabled", false);
+                document.querySelectorAll("main button").forEach((button) => {
+                    button.disabled = false;
+                });
             }
 
-            function restart() {
+            async function restart() {
                 disableUI();
 
-                restClient.restart().then(function (rsp) {
-                    return dialog.showInfo("<p>Ok.</p>");
-                }).catch(function (err) {
-                    return dialog.showError("<p>Error: " + err + "</p>");
-                });
+                try {
+                    await restClient.restart();
+                    await dialog.showInfo("<p>Ok.</p>");
+                } catch (err) {
+                    await dialog.showError("<p>Error: " + err + "</p>");
+                }
             }
 
-            function store(id) {
-                var $input = $("#" + id);
-                var index = parseInt(id.substring(8));
-                var value = null;
+            async function store(id) {
+                const input = document.getElementById(id);
+                const index = Number.parseInt(id.substring(8));
+                let value = null;
 
-                if ("checkbox" === $input.attr("type")) {
-                    value = $input.is(":checked");
+                if (input.type === "checkbox") {
+                    value = input.checked;
                 } else {
-                    value = $input.val();
+                    value = input.value;
                 }
 
-                restClient.setSetting(data[index].key, value).then(function (rsp) {
-                    return dialog.showInfo("<p>Successful stored.</p>");
-                }).catch(function (rsp) {
-                    return dialog.showError("<p>Error: " + rsp.error.msg + "</p>");
-                });
+                try {
+                    await restClient.setSetting(data[index].key, value);
+                    await dialog.showInfo("<p>Successful stored.</p>");
+                } catch (rsp) {
+                    await dialog.showError("<p>Error: " + rsp.error.msg + "</p>");
+                }
             }
 
-            $(document).ready(function () {
-                var index = 0;
+            function createSettingBlock(setting, index) {
+                const block = document.createElement("div");
+                block.className = "form-group h-100 p-2 bg-body-tertiary border rounded-3 mt-2";
 
+                const label = document.createElement("label");
+                label.setAttribute("for", "setting-" + index);
+                label.className = "form-label";
+                label.textContent = setting.name;
+
+                let inputField = null;
+                let formCheck = null;
+
+                if (typeof setting.value === "string") {
+                    let inputFieldType = "text";
+
+                    if ((typeof setting.isSecret === "boolean") && (setting.isSecret === true)) {
+                        inputFieldType = "password";
+                    }
+
+                    inputField = document.createElement("input");
+                    inputField.className = "form-control";
+                    inputField.id = "setting-" + index;
+                    inputField.placeholder = "";
+                    inputField.type = inputFieldType;
+                    if (setting.minlength != null) {
+                        inputField.setAttribute("minlength", setting.minlength);
+                    }
+                    if (setting.maxlength != null) {
+                        inputField.setAttribute("maxlength", setting.maxlength);
+                    }
+                    inputField.value = setting.value;
+
+                } else if (typeof setting.value === "number") {
+                    inputField = document.createElement("input");
+                    inputField.className = "form-control";
+                    inputField.id = "setting-" + index;
+                    inputField.placeholder = "";
+                    inputField.type = "number";
+                    if (setting.min != null) {
+                        inputField.setAttribute("min", setting.min);
+                    }
+                    if (setting.max != null) {
+                        inputField.setAttribute("max", setting.max);
+                    }
+                    inputField.value = setting.value;
+
+                } else if (typeof setting.value === "boolean") {
+                    inputField = document.createElement("input");
+                    inputField.className = "form-check-input";
+                    inputField.id = "setting-" + index;
+                    inputField.placeholder = "";
+                    inputField.type = "checkbox";
+
+                    if (setting.value === true) {
+                        inputField.checked = true;
+                    }
+
+                    label.className = "form-check-label";
+
+                    formCheck = document.createElement("div");
+                    formCheck.className = "form-check";
+                    formCheck.appendChild(inputField);
+                    formCheck.appendChild(label);
+
+                } else if (typeof setting.value === "object") {
+                    inputField = document.createElement("textarea");
+                    inputField.className = "form-control";
+                    inputField.id = "setting-" + index;
+                    inputField.placeholder = "";
+                    inputField.cols = 40;
+                    inputField.rows = 20;
+                    inputField.style.fontFamily = "monospace";
+                    if (setting.minlength != null) {
+                        inputField.setAttribute("minlength", setting.minlength);
+                    }
+                    if (setting.maxlength != null) {
+                        inputField.setAttribute("maxlength", setting.maxlength);
+                    }
+                    inputField.value = JSON.stringify(setting.value, null, 2);
+
+                } else {
+                    console.error("Data type" + typeof setting.value + "not handled.");
+                }
+
+                const button = document.createElement("button");
+                button.className = "btn btn-primary";
+                button.textContent = "Store";
+                button.addEventListener("click", () => store("setting-" + index));
+
+                const formGroup = document.createElement("div");
+                formGroup.className = "form-group";
+
+                if (formCheck !== null) {
+                    formGroup.appendChild(formCheck);
+                } else {
+                    formGroup.appendChild(label);
+                    formGroup.appendChild(inputField);
+                }
+
+                block.appendChild(formGroup);
+                block.appendChild(button);
+
+                return block;
+            }
+
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                restClient.getSettingKeys().then(function (result) {
-                    var promise = null;
-                    var promises = [];
-                    var index = 0;
+                try {
+                    const result = await restClient.getSettingKeys();
 
-                    for (index = 0; index < result.data.settings.length; ++index) {
-                        promise = restClient.getSettingByKey(result.data.settings[index]).then(function (result) {
-                            data.push(result.data);
-                            return Promise.resolve();
-                        });
+                    /* Fetch all settings concurrently; Promise.all preserves the key order. */
+                    const responses = await Promise.all(
+                        result.data.settings.map((key) => restClient.getSettingByKey(key))
+                    );
 
-                        promises.push(promise);
-                    }
+                    responses.forEach((response) => data.push(response.data));
 
-                    return Promise.all(promises);
-                }).then(function () {
-                    var $block = null;
-                    var $label = null;
-                    var $formGroup = null;
-                    var $formCheck = null;
-                    var $inputField = null;
-                    var $button = null;
+                    const settingsContainer = document.getElementById("settings");
 
-                    for (index = 0; index < data.length; ++index) {
-                        $block = $("<div>")
-                            .attr("class", "form-group h-100 p-2 bg-body-tertiary border rounded-3 mt-2");
+                    data.forEach((setting, index) => {
+                        settingsContainer.appendChild(createSettingBlock(setting, index));
+                    });
 
-                        $label = $("<label>")
-                            .attr("for", "setting-" + index)
-                            .attr("class", "form-label")
-                            .text(data[index].name);
-
-                        if ("string" === typeof data[index].value) {
-                            inputFieldType = "text"
-                            if ("boolean" === typeof data[index].isSecret) {
-                                if (true === data[index].isSecret) {
-                                    inputFieldType = "password"
-                                }
-                            }
-
-                            $inputField = $("<input>")
-                                .attr("class", "form-control")
-                                .attr("id", "setting-" + index)
-                                .attr("placeholder", "")
-                                .attr("type", inputFieldType)
-                                .attr("minlength", data[index].minlength)
-                                .attr("maxlength", data[index].maxlength)
-                                .val(data[index].value);
-
-                        } else if ("number" === typeof data[index].value) {
-                            $inputField = $("<input>")
-                                .attr("class", "form-control")
-                                .attr("id", "setting-" + index)
-                                .attr("placeholder", "")
-                                .attr("type", "number")
-                                .attr("min", data[index].min)
-                                .attr("max", data[index].max)
-                                .val(data[index].value);
-
-                        } else if ("boolean" === typeof data[index].value) {
-
-                            $inputField = $("<input>")
-                                .attr("class", "form-check-input")
-                                .attr("id", "setting-" + index)
-                                .attr("placeholder", "")
-                                .attr("type", "checkbox");
-
-                            if (true === data[index].value) {
-                                $($inputField).attr("checked", true);
-                            }
-
-                            $label.attr("class", "form-check-label");
-
-                            $formCheck = $("<div>")
-                                .attr("class", "form-check")
-                                .append($inputField)
-                                .append($label)
-
-                        } else if ("object" === typeof data[index].value) {
-                            $inputField = $("<textarea>")
-                                .attr("class", "form-control")
-                                .attr("id", "setting-" + index)
-                                .attr("placeholder", "")
-                                .attr("cols", 40)
-                                .attr("rows", 20)
-                                .attr("style", "font-family: monospace;")
-                                .attr("minlength", data[index].minlength)
-                                .attr("maxlength", data[index].maxlength)
-                                .val(JSON.stringify(data[index].value, null, 2));
-
-                        } else {
-                            console.error("Data type" + typeof data[index].value + "not handled.");
-                        }
-
-                        $button = $("<button>")
-                            .attr("class", "btn btn-primary")
-                            .attr("onclick", "store(\"setting-" + index + "\");")
-                            .text("Store");
-
-                        if (null !== $formCheck) {
-                            $formGroup = $("<div>")
-                                .attr("class", "form-group")
-                                .append($formCheck);
-
-                        } else {
-
-                            $formGroup = $("<div>")
-                                .attr("class", "form-group")
-                                .append($label)
-                                .append($inputField);
-                        }
-
-                        $block.append($formGroup);
-                        $block.append($button);
-
-                        $("#settings").append($block);
-
-                        /* Reset */
-                        $formCheck = null;
-                    }
-                }).then(function () {
                     enableUI();
-                }).catch(function (err) {
-                    return dialog.showError("<p>Error: " + err + "</p>");
-                });
+                } catch (err) {
+                    await dialog.showError("<p>Error: " + err + "</p>");
+                }
+            });
+
+            document.addEventListener("DOMContentLoaded", () => {
+                document.getElementById("btnRestart").addEventListener("click", restart);
             });
         </script>
     </body>
