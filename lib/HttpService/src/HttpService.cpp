@@ -295,6 +295,20 @@ void HttpService::abortJob(HttpJobId jobId)
                             (void)m_workerData.mutex.give();
                             break;
                         }
+
+                        /* The worker already finished the job and is idle, so it will never consume jobToAbort. Discard the pending
+                         * response and treat the job as aborted, otherwise this loop would wait forever and block the calling task.
+                         */
+                        if (jobId == m_workerData.response.jobId)
+                        {
+                            m_workerData.response   = WorkerResponse();
+                            m_workerData.jobToAbort = INVALID_HTTP_JOB_ID;
+                            m_activeJobId           = INVALID_HTTP_JOB_ID;
+                            isAborted               = true;
+                            (void)m_workerData.mutex.give();
+                            break;
+                        }
+
                         /* No pending job anymore? */
                         if (INVALID_HTTP_JOB_ID == m_workerData.jobToAbort)
                         {

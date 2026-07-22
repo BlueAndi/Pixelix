@@ -1001,9 +1001,8 @@ void TextWidget::handleSolidColor(YAGfx& gfx, const String& keyword)
     {
         Color textColor = colorRGB888;
 
-        textColor.setIntensity(m_fadeBrightness);
-
         m_solidBrush.setColor(textColor);
+        m_solidBrush.setIntensity(m_fadeBrightness);
         m_gfxText.setBrush(m_solidBrush);
     }
 }
@@ -1043,11 +1042,9 @@ bool TextWidget::handleLinearGradient(YAGfx& gfx, const String& keyword)
             Color startColor = colorRGB888_1;
             Color endColor   = colorRGB888_2;
 
-            startColor.setIntensity(m_fadeBrightness);
-            endColor.setIntensity(m_fadeBrightness);
-
             m_linearGradientBrush.setStartColor(startColor);
             m_linearGradientBrush.setEndColor(endColor);
+            m_linearGradientBrush.setIntensity(m_fadeBrightness);
             m_linearGradientBrush.setOffset(offset);
             m_linearGradientBrush.setLength(gradLength);
 

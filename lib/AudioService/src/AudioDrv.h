@@ -188,7 +188,7 @@ public:
 private:
 
     /** Task stack size in bytes */
-    static const uint32_t TASK_STACK_SIZE                  = 8096U;
+    static const uint32_t TASK_STACK_SIZE                  = 4096U;
 
     /** MCU core where the task shall run */
     static const BaseType_t TASK_RUN_CORE                  = PRO_CPU_NUM;

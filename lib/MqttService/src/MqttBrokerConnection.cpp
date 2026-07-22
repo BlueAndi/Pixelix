@@ -108,6 +108,14 @@ bool MqttBrokerConnection::setupClient(bool useTls, const char* rootCaCert, cons
 
             if (nullptr != secureClient)
             {
+                /* The connection establishment blocks the calling task. Limit
+                 * the connect and handshake timeouts, otherwise the framework
+                 * defaults (30 s connect, 120 s handshake) may trigger the
+                 * task watchdog. Note, both methods take seconds.
+                 */
+                (void)secureClient->setTimeout(TLS_CONNECT_TIMEOUT);
+                secureClient->setHandshakeTimeout(TLS_HANDSHAKE_TIMEOUT);
+
                 if (nullptr == rootCaCert)
                 {
                     secureClient->setInsecure();

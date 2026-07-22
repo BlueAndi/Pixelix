@@ -104,15 +104,21 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
 
     if (nullptr != request)
     {
-        String                  content;
-        AsyncWebServerResponse* response;
-
-        (void)serializeJsonPretty(jsonDoc, content);
-
-        response = request->beginResponse(httpStatusCode, "application/json", content);
+        /* Serialize the JSON document directly into a streamed response instead
+         * of buffering the whole (pretty printed) response in a temporary String
+         * first. This avoids a large transient allocation and its copy on the
+         * internal heap and reduces heap fragmentation, which is essential on
+         * boards without PSRAM. Compact serialization is used on purpose, as the
+         * response is consumed by machines, not humans.
+         */
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
 
         if (nullptr != response)
         {
+            response->setCode(static_cast<int>(httpStatusCode));
+
+            (void)serializeJson(jsonDoc, *response);
+
             /* ----- Add security headers: ----- */
 
             /* Prevents browsers from MIME-sniffing responses, forcing them to

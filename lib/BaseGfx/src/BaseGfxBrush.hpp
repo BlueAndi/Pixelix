@@ -120,7 +120,8 @@ public:
      */
     BaseGfxSolidBrush() :
         BaseGfxBrush<TColor>(),
-        m_color()
+        m_color(),
+        m_intensity(TColor::MAX_BRIGHT)
     {
     }
 
@@ -131,7 +132,8 @@ public:
      */
     BaseGfxSolidBrush(const TColor& color) :
         BaseGfxBrush<TColor>(),
-        m_color(color)
+        m_color(color),
+        m_intensity(TColor::MAX_BRIGHT)
     {
     }
 
@@ -152,9 +154,14 @@ public:
      */
     TColor getColor(int16_t x, int16_t y) const override
     {
+        TColor color = m_color;
+
         (void)x;
         (void)y;
-        return m_color;
+
+        color.dim(m_intensity);
+
+        return color;
     }
 
     /**
@@ -164,7 +171,7 @@ public:
      */
     uint8_t getIntensity() const override
     {
-        return m_color.getIntensity();
+        return m_intensity;
     }
 
     /**
@@ -174,7 +181,7 @@ public:
      */
     void setIntensity(uint8_t intensity) override
     {
-        m_color.setIntensity(intensity);
+        m_intensity = intensity;
     }
 
     /**
@@ -199,7 +206,8 @@ public:
 
 private:
 
-    TColor m_color; /**< Color of the brush. */
+    TColor  m_color;     /**< Color of the brush. */
+    uint8_t m_intensity; /**< Brush intensity [0; 255] - 0: min. bright / 255: max. bright. */
 };
 
 /**
@@ -221,8 +229,9 @@ public:
         m_startColor(),
         m_endColor(),
         m_offset(0),
-        m_gradientLength(32U),    /* Default gradient length in pixels. */
-        m_verticalGradient(false) /* Default horizontal gradient. */
+        m_gradientLength(32U),     /* Default gradient length in pixels. */
+        m_verticalGradient(false), /* Default horizontal gradient. */
+        m_intensity(TColor::MAX_BRIGHT)
     {
     }
 
@@ -242,7 +251,8 @@ public:
         m_endColor(endColor),
         m_offset(offset),
         m_gradientLength(gradientLength),
-        m_verticalGradient(verticalGradient)
+        m_verticalGradient(verticalGradient),
+        m_intensity(TColor::MAX_BRIGHT)
     {
     }
 
@@ -286,7 +296,11 @@ public:
             ratio = static_cast<uint8_t>((pos * 255) / m_gradientLength);
         }
 
-        return blendColors(m_startColor, m_endColor, ratio);
+        TColor color = blendColors(m_startColor, m_endColor, ratio);
+
+        color.dim(m_intensity);
+
+        return color;
     }
 
     /**
@@ -296,7 +310,7 @@ public:
      */
     uint8_t getIntensity() const override
     {
-        return m_startColor.getIntensity();
+        return m_intensity;
     }
 
     /**
@@ -306,8 +320,7 @@ public:
      */
     void setIntensity(uint8_t intensity) override
     {
-        m_startColor.setIntensity(intensity);
-        m_endColor.setIntensity(intensity);
+        m_intensity = intensity;
     }
 
     /**
@@ -418,6 +431,7 @@ private:
     int16_t  m_offset;           /**< Offset in pixels of the gradient start color. */
     uint16_t m_gradientLength;   /**< Length of the gradient in pixels. */
     bool     m_verticalGradient; /**< Flag for vertical gradient. */
+    uint8_t  m_intensity;        /**< Brush intensity [0; 255] - 0: min. bright / 255: max. bright. */
 
     /**
      * Blend two colors based on a ratio (integer version).

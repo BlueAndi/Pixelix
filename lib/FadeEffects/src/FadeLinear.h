@@ -124,14 +124,6 @@ private:
 
     FadeState m_state;     /**< Current fading state */
     uint8_t   m_intensity; /**< Current color intensity [0; 255] - 0: min. bright / 255: max. bright */
-
-    /**
-     * Dim bitmap to a specific intensity.
-     *
-     * @param[inout] bitmap The bitmap which to dim down/up.
-     * @param[in] intensity The intensity to set.
-     */
-    void dimBitmap(YAGfxBitmap& bitmap, uint8_t intensity);
 };
 
 /******************************************************************************
