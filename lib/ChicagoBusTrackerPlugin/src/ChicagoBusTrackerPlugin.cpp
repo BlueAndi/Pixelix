@@ -41,7 +41,6 @@
 #include <Util.h>
 #include <math.h>
 #include <HttpStatus.h>
-#include <HTTPClient.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -70,9 +69,7 @@ const char* ChicagoBusTrackerPlugin::CHICAGO_BUS_BASE_URI = "http://ctabustracke
 
 /* Initialize plugin topics. */
 const char* ChicagoBusTrackerPlugin::TOPIC_CONFIG         = "chicagobus";
-const char* ChicagoBusTrackerPlugin::TOPIC_ROUTES         = "chicagobusroutes";
-const char* ChicagoBusTrackerPlugin::TOPIC_DIRS           = "chicagobusdirections";
-const char* ChicagoBusTrackerPlugin::TOPIC_STOPS          = "chicagobusstops";
+const char* ChicagoBusTrackerPlugin::TOPIC_PROXY          = "chicagobusrequest";
 
 /* Initialize display colors. */
 const char* ChicagoBusTrackerPlugin::COLOR_DISPLAY        = "{#FF5500}";
@@ -89,9 +86,7 @@ String ChicagoBusTrackerPlugin::apiKey                    = "";
 void ChicagoBusTrackerPlugin::getTopics(JsonArray& topics) const
 {
     (void)topics.add(TOPIC_CONFIG);
-    (void)topics.add(TOPIC_ROUTES);
-    (void)topics.add(TOPIC_STOPS);
-    (void)topics.add(TOPIC_DIRS);
+    (void)topics.add(TOPIC_PROXY);
 }
 
 bool ChicagoBusTrackerPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -103,19 +98,34 @@ bool ChicagoBusTrackerPlugin::getTopic(const String& topic, JsonObject& value) c
         getConfiguration(value);
         isSuccessful = true;
     }
-    else if (true == topic.equals(TOPIC_ROUTES))
+    else if (true == topic.equals(TOPIC_PROXY))
     {
-        getRoutes(value);
-        isSuccessful = true;
-    }
-    else if (true == topic.equals(TOPIC_STOPS))
-    {
-        getStops(value);
-        isSuccessful = true;
-    }
-    else if (true == topic.equals(TOPIC_DIRS))
-    {
-        getDirections(value);
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        if (true == m_proxyResultReady)
+        {
+            /* Deep-copy the proxy result into value and free the PSRAM document. */
+            for (auto kv : m_proxyResult.as<JsonObjectConst>())
+            {
+                value[kv.key()] = kv.value();
+            }
+            m_proxyResult      = PsramJsonDocument(0U);
+            m_proxyResultReady = false;
+        }
+        else if (RestService::INVALID_REST_ID != m_proxyRestId)
+        {
+            value["pending"] = true;
+        }
+        else if (true == m_proxyHasError)
+        {
+            value["error"]  = "Request failed.";
+            m_proxyHasError = false;
+        }
+        else
+        {
+            value["pending"] = false;
+        }
+
         isSuccessful = true;
     }
     else
@@ -202,6 +212,37 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
             }
         }
     }
+    else if (true == topic.equals(TOPIC_PROXY))
+    {
+        JsonVariantConst jsonPath = value["path"];
+
+        if (false == jsonPath.is<String>())
+        {
+            LOG_WARNING("Proxy: No path provided.");
+        }
+        else
+        {
+            String path = jsonPath.as<String>();
+
+            /* Allow only well-formed relative CTA API paths to prevent open-proxy abuse. */
+            if (false == path.startsWith("/get"))
+            {
+                LOG_WARNING("Proxy: Path must start with /get.");
+            }
+            else if (0 <= path.indexOf("://"))
+            {
+                LOG_WARNING("Proxy: Protocol injection rejected.");
+            }
+            else if (0 <= path.indexOf("key="))
+            {
+                LOG_WARNING("Proxy: API key injection rejected.");
+            }
+            else
+            {
+                isSuccessful = startProxyRequest(path);
+            }
+        }
+    }
 
     return isSuccessful;
 }
@@ -248,6 +289,16 @@ void ChicagoBusTrackerPlugin::stop()
         RestService::getInstance().abortRequest(m_dynamicRestId);
         m_dynamicRestId = RestService::INVALID_REST_ID;
     }
+
+    if (RestService::INVALID_REST_ID != m_proxyRestId)
+    {
+        RestService::getInstance().abortRequest(m_proxyRestId);
+        m_proxyRestId = RestService::INVALID_REST_ID;
+    }
+
+    m_proxyResult      = PsramJsonDocument(0U);
+    m_proxyResultReady = false;
+    m_proxyHasError    = false;
 }
 
 void ChicagoBusTrackerPlugin::active(YAGfx& gfx)
@@ -263,6 +314,7 @@ void ChicagoBusTrackerPlugin::inactive()
 void ChicagoBusTrackerPlugin::process(bool isConnected)
 {
     uint32_t dynamicRestId;
+    uint32_t proxyRestId;
 
     /* Acquire mutex for initial state check and update. */
     {
@@ -318,6 +370,7 @@ void ChicagoBusTrackerPlugin::process(bool isConnected)
         }
 
         dynamicRestId = m_dynamicRestId;
+        proxyRestId   = m_proxyRestId;
     } /* Mutex released here to avoid lock inversion deadlock with RestService. */
 
     if (RestService::INVALID_REST_ID != dynamicRestId)
@@ -343,6 +396,29 @@ void ChicagoBusTrackerPlugin::process(bool isConnected)
             MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
+        }
+    }
+
+    if (RestService::INVALID_REST_ID != proxyRestId)
+    {
+        PsramJsonDocument proxyDoc(0U);
+        bool              isValidResponse;
+
+        if (true == RestService::getInstance().getResponse(proxyRestId, isValidResponse, proxyDoc))
+        {
+            MutexGuard<MutexRecursive> guard(m_mutex);
+            m_proxyRestId = RestService::INVALID_REST_ID;
+
+            if (true == isValidResponse)
+            {
+                m_proxyResult      = std::move(proxyDoc);
+                m_proxyResultReady = true;
+            }
+            else
+            {
+                LOG_WARNING("Proxy request failed.");
+                m_proxyHasError = true;
+            }
         }
     }
 }
@@ -705,193 +781,112 @@ void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonD
     m_view.updateWidgets();
 }
 
-void ChicagoBusTrackerPlugin::getRoutes(JsonObject& jsonRtes) const
+bool ChicagoBusTrackerPlugin::startProxyRequest(const String& path)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool isSuccessful = false;
 
-    jsonRtes.remove("pars");
-
-    HTTPClient http;
-
-    String     url;
-    (void)url.reserve(98U);
-
-    url += CHICAGO_BUS_BASE_URI;
-    url += "/getroutes?";
-    url += "key=";
-    url += apiKey;
-    url += "&format=json";
-
-    http.begin(url);
-    http.useHTTP10();
-    int httpCode = http.GET();
-    if (httpCode > 0)
+    /* Abort any in-flight or queued proxy request before starting a new one. */
+    if (RestService::INVALID_REST_ID != m_proxyRestId)
     {
-        if (httpCode == HTTP_CODE_OK)
-        {
-            Stream&                         input = http.getStream();
-            DynamicJsonDocument             jsonDoc(10240U);
-            StaticJsonDocument<FILTER_SIZE> filter;
+        RestService::getInstance().abortRequest(m_proxyRestId);
+        m_proxyRestId = RestService::INVALID_REST_ID;
+    }
 
-            filter["bustime-response"]["routes"][0]["rt"]   = true;
-            filter["bustime-response"]["routes"][0]["rtnm"] = true;
+    m_proxyResult      = PsramJsonDocument(0U);
+    m_proxyResultReady = false;
+    m_proxyHasError    = false;
 
-            DeserializationError error                      = deserializeJson(jsonDoc, input, DeserializationOption::Filter(filter));
-
-            if (error)
-            {
-                LOG_ERROR(String(error.c_str()));
-                jsonRtes.createNestedObject("error");
-                jsonRtes["error"]["msg"] = String(error.f_str());
-            }
-            JsonArray routesOut = jsonRtes.createNestedArray("routes");
-            JsonArray routes    = jsonDoc["bustime-response"]["routes"].as<JsonArray>();
-
-            for (int i = 0; i < routes.size(); i++)
-            {
-                JsonObject obj = routesOut.createNestedObject();
-                obj["rt"]      = routes[i]["rt"];
-                obj["rtnm"]    = routes[i]["rtnm"];
-            }
-        }
-        else
-        {
-            LOG_ERROR("HTTP %s Did not understand API Response", httpCode);
-        }
+    if (true == apiKey.isEmpty())
+    {
+        LOG_WARNING("Proxy: API key missing.");
     }
     else
     {
-        LOG_ERROR("Negative HTTP response code, HttpClient error");
+        RestService::PreProcessCallback preProcess =
+            [this, path](const char* payload, size_t size, PsramJsonDocument& doc) {
+                return this->preProcessProxyResponse(path, payload, size, doc);
+            };
+        String url;
+
+        (void)url.reserve(160U);
+
+        url           += CHICAGO_BUS_BASE_URI;
+        url           += path;
+        url           += (0 <= path.indexOf('?')) ? "&" : "?";
+        url           += "key=";
+        url           += apiKey;
+        url           += "&format=json";
+
+        m_proxyRestId  = RestService::getInstance().get(url, preProcess);
+
+        if (RestService::INVALID_REST_ID == m_proxyRestId)
+        {
+            LOG_WARNING("Proxy GET %s failed.", url.c_str());
+        }
+        else
+        {
+            isSuccessful = true;
+        }
     }
-    http.end();
+
+    return isSuccessful;
 }
 
-
-void ChicagoBusTrackerPlugin::getDirections(JsonObject& jsonDirs) const
+bool ChicagoBusTrackerPlugin::preProcessProxyResponse(const String& path, const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                isSuccessful = false;
+    DynamicJsonDocument filter(FILTER_SIZE);
 
-    const char*                rt = jsonDirs["pars"]["rt"].as<const char*>();
-    jsonDirs.remove("pars");
-
-    HTTPClient http;
-
-    String     url;
-    (void)url.reserve(110U);
-
-    url += CHICAGO_BUS_BASE_URI;
-    url += "/getdirections?";
-    url += "key=";
-    url += apiKey;
-    url += "&rt=";
-    url += rt;
-    url += "&format=json";
-
-    http.begin(url);
-    http.useHTTP10();
-    int httpCode = http.GET();
-    if (httpCode > 0)
+    if (true == path.startsWith("/getroutes"))
     {
-        if (httpCode == HTTP_CODE_OK)
-        {
-            Stream&                         input = http.getStream();
-            DynamicJsonDocument             jsonDoc(224U);
-            StaticJsonDocument<FILTER_SIZE> filter;
-
-            filter["bustime-response"]["directions"][0]["id"] = true;
-            // TODO: return 'name' (localized) to web UI as well
-            // filter["bustime-response"]["directions"][0]["name"] = true;
-
-            DeserializationError error                        = deserializeJson(jsonDoc, input);
-            if (error)
-            {
-                LOG_ERROR(String(error.c_str()));
-                jsonDirs.createNestedObject("error");
-                jsonDirs["error"]["msg"] = String(error.f_str());
-            }
-            JsonArray dirsOut    = jsonDirs.createNestedArray("dirs");
-            JsonArray directions = jsonDoc["bustime-response"]["directions"].as<JsonArray>();
-            for (int i = 0; i < directions.size(); i++)
-            {
-                dirsOut.add(directions[i]["id"]);
-            }
-        }
-        else
-        {
-            LOG_ERROR("HTTP %s Did not understand API Response", httpCode);
-        }
+        filter["bustime-response"]["routes"][0]["rt"]   = true;
+        filter["bustime-response"]["routes"][0]["rtnm"] = true;
+    }
+    else if (true == path.startsWith("/getdirections"))
+    {
+        filter["bustime-response"]["directions"][0]["id"] = true;
+    }
+    else if (true == path.startsWith("/getstops"))
+    {
+        filter["bustime-response"]["stops"][0]["stpid"] = true;
+        filter["bustime-response"]["stops"][0]["stpnm"] = true;
     }
     else
     {
-        LOG_ERROR("Negative HTTP response code, HttpClient error");
-    }
-    http.end();
-}
+        /* Unknown endpoint — pass through without filtering. */
+        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize);
 
-
-void ChicagoBusTrackerPlugin::getStops(JsonObject& jsonStops) const
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    const char*                rt  = jsonStops["pars"]["rt"].as<const char*>();
-    const char*                dir = jsonStops["pars"]["dir"].as<const char*>();
-    jsonStops.remove("pars");
-    jsonStops["stops"] = JsonArray();
-
-    HTTPClient http;
-
-    String     url;
-    (void)url.reserve(120U);
-    url += CHICAGO_BUS_BASE_URI;
-    url += "/getstops?";
-    url += "key=";
-    url += apiKey;
-    url += "&rt=";
-    url += rt;
-    url += "&dir=";
-    url += dir;
-    url += "&format=json";
-
-    http.begin(url);
-    http.useHTTP10();
-    int httpCode = http.GET();
-    if (httpCode > 0)
-    {
-        if (httpCode == HTTP_CODE_OK)
+        if (DeserializationError::Ok != error.code())
         {
-            Stream&                         input = http.getStream();
-            DynamicJsonDocument             jsonDoc(8192U);
-            StaticJsonDocument<FILTER_SIZE> filter;
-
-            filter["bustime-response"]["stops"][0]["stpid"] = true;
-            filter["bustime-response"]["stops"][0]["stpnm"] = true;
-
-            DeserializationError error                      = deserializeJson(jsonDoc, input, DeserializationOption::Filter(filter));
-            if (error)
-            {
-                LOG_ERROR(String(error.c_str()));
-                jsonStops.createNestedObject("error");
-                jsonStops["error"]["msg"] = String(error.f_str());
-            }
-            JsonArray stopsOut = jsonStops.createNestedArray("stops");
-            JsonArray stops    = jsonDoc["bustime-response"]["stops"].as<JsonArray>();
-            for (int i = 0; i < stops.size(); i++)
-            {
-                JsonObject obj = stopsOut.createNestedObject();
-                obj["stpid"]   = stops[i]["stpid"];
-                obj["stpnm"]   = stops[i]["stpnm"];
-            }
+            LOG_WARNING("Proxy JSON parse error: %s", error.c_str());
         }
         else
         {
-            LOG_ERROR("HTTP %s Did not understand API Response", httpCode);
+            isSuccessful = true;
         }
+
+        return isSuccessful;
+    }
+
+    if (true == filter.overflowed())
+    {
+        LOG_ERROR("Proxy: filter document overflowed.");
     }
     else
     {
-        LOG_ERROR("Negative HTTP response code, HttpClient error");
+        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+        if (DeserializationError::Ok != error.code())
+        {
+            LOG_WARNING("Proxy JSON parse error: %s", error.c_str());
+        }
+        else
+        {
+            isSuccessful = true;
+        }
     }
-    http.end();
+
+    return isSuccessful;
 }
 
 

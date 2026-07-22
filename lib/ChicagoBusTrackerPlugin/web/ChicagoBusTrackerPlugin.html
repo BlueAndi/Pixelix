@@ -1,17 +1,18 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         <!-- Styles -->
         <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
-        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
-        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+        <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
@@ -67,9 +68,9 @@
                         <div class="form-group mb-3">
                             <label class="form-label" for="count">Arrivals Count:</label>
                             <select class="form-select" id="count" size="1" onchange="handleChange('count')">
-                                <option value=1>1</option>
-                                <option value=2>2</option>
-                                <option value=3>3</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -82,7 +83,7 @@
                                 <label class="form-label" for="dest">Show destination (e.g. "...to Museum of Science and Industry"):</label>
                             </div>
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
             </div>
@@ -109,8 +110,8 @@
 
         <script>
 
-            var pluginName  = "ChicagoBusTrackerPlugin";
-            var restClient  = new pixelix.rest.Client();
+            var pluginName = "ChicagoBusTrackerPlugin";
+            var restClient = new pixelix.rest.Client();
             var rootPluginId = ""
             var selected = {
                 routes: "",
@@ -127,6 +128,44 @@
                 utils.enableForm("myForm", false);
             }
 
+            function hasApiKeyConfigured() {
+                return 0 < $("#apiKey").val().trim().length;
+            }
+
+            function clearSelectOptions(elementId) {
+                const element = document.getElementById(elementId)
+                if (element) {
+                    element.innerHTML = ""
+                }
+            }
+
+            function setSelectEnabled(elementId, isEnabled) {
+                const element = document.getElementById(elementId)
+                if (element) {
+                    element.disabled = !isEnabled
+                }
+            }
+
+            function resetDependentSelections() {
+                selected.routes = ""
+                selected.directions = ""
+                selected.stops = ""
+
+                clearSelectOptions("routes")
+                clearSelectOptions("directions")
+                clearSelectOptions("stops")
+            }
+
+            function updateDependentControlState() {
+                const isApiKeyConfigured = hasApiKeyConfigured()
+                const hasRouteSelection = 0 < selected.routes.length
+                const hasDirectionSelection = 0 < selected.directions.length
+
+                setSelectEnabled("routes", isApiKeyConfigured)
+                setSelectEnabled("directions", isApiKeyConfigured && hasRouteSelection)
+                setSelectEnabled("stops", isApiKeyConfigured && hasRouteSelection && hasDirectionSelection)
+            }
+
             async function handleChange(elementId) {
                 const elem = document.getElementById(elementId)
                 const value = elem.value
@@ -135,9 +174,15 @@
                     switch (elementId) {
                         case "pluginUid":
                             await getConfig(value)
-                            await getRoutes()
-                            await getDirections()
-                            await getStops()
+                            if (hasApiKeyConfigured()) {
+                                await getRoutes()
+                                await getDirections()
+                                await getStops()
+                            }
+                            else {
+                                // Keep the configured values visible.
+                                updateDependentControlState();
+                            }
                             return
                         case "routes":
                             await getDirections()
@@ -190,13 +235,13 @@
             }
 
             function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
+                return restClient.getPluginInstances().then(function (rsp) {
+                    var slotIndex = 0;
+                    var cnt = 0;
+                    var $option = null;
+                    var optionText = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             optionText = rsp.data.slots[slotIndex].uid;
@@ -211,8 +256,8 @@
                             optionText += ")";
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
+                                .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                .text(optionText);
 
                             $("#pluginUid").append($option);
 
@@ -221,7 +266,7 @@
                     }
 
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                }).catch(function (rsp) {
                     alert("Internal error.");
                     return Promise.resolve(0);
                 });
@@ -247,17 +292,27 @@
 
                     $("#apiKey").val(apiKey)
 
-                    selected.routes = rte
-                    const routeselem = generateOptions("routes", [selected.routes])
-                    selectSelectedProperty(routeselem, selected.routes)
+                    // Always restore the stored configuration.
+                    selected.routes = rte ?? "";
+                    selected.directions = dir ?? "";
+                    selected.stops = stpid ?? "";
 
-                    selected.directions = dir
-                    const direlem = generateOptions("directions", [selected.directions])
-                    selectSelectedProperty(direlem, selected.directions)
+                    // Populate the selects with the current values so they survive
+                    // the first Update even before an API key is configured.
+                    const routeElem = generateOptions("routes", selected.routes ? [selected.routes] : []);
+                    if (selected.routes) {
+                        selectSelectedProperty(routeElem, selected.routes);
+                    }
 
-                    selected.stops = stpid
-                    const stpelem = generateOptions("stops", [selected.stops])
-                    selectSelectedProperty(stpelem, [selected.stops])
+                    const directionElem = generateOptions("directions", selected.directions ? [selected.directions] : []);
+                    if (selected.directions) {
+                        selectSelectedProperty(directionElem, selected.directions);
+                    }
+
+                    const stopElem = generateOptions("stops", selected.stops ? [selected.stops] : []);
+                    if (selected.stops) {
+                        selectSelectedProperty(stopElem, selected.stops);
+                    }
 
                     selected.count = count
                     const countelem = document.getElementById("count")
@@ -273,6 +328,7 @@
                     console.log(e)
                 }
                 enableUI()
+                updateDependentControlState()
             }
 
             function setConfig(pluginUid) {
@@ -289,117 +345,164 @@
                 }
 
                 return utils
-                .makeRequest({
+                    .makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                        isJsonResponse: true,
+                        parameter,
+                    })
+                    .then(function (rsp) {
+                        alert("Ok.")
+                    })
+                    .then(() => getConfig(pluginUid))
+                    .then(function () {
+                        if (hasApiKeyConfigured()) {
+                            return getRoutes()
+                                .then(getDirections)
+                                .then(getStops);
+                        }
+
+                        updateDependentControlState();
+                        return Promise.resolve();
+                    })
+                    .catch(function (rsp) {
+                        alert("Failed.")
+                    })
+                    .finally(function () {
+                        enableUI()
+                        updateDependentControlState()
+                    })
+            }
+
+            /**
+             * Submit a relative CTA API path to the device proxy and poll until
+             * the response is ready. Requests are serialized — the caller drives
+             * the next fetch only after awaiting this one.
+             *
+             * @param {string} path - Relative path, e.g. "/getroutes" or
+             *                        "/getdirections?rt=55".
+             * @returns {Promise<object>} Resolved CTA API response object.
+             */
+            async function proxyFetch(path) {
+                const baseUrl = "/rest/api/v1/display/uid/" + rootPluginId + "/chicagobusrequest";
+
+                await utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                    url: baseUrl,
                     isJsonResponse: true,
-                    parameter,
-                })
-                .then(function (rsp) {
-                    alert("Ok.")
-                })
-                .then(() => getConfig(pluginUid))
-                .then(getRoutes)
-                .then(getDirections)
-                .then(getStops)
-                .catch(function (rsp) {
-                    alert("Failed.")
-                })
-                .finally(function () {
-                    enableUI()
-                })
+                    parameter: { path }
+                });
+
+                const maxRetries = 20;
+                for (let i = 0; i < maxRetries; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    const rsp = await utils.makeRequest({ method: "GET", url: baseUrl, isJsonResponse: true });
+                    const data = rsp?.data;
+                    if (data?.error) {
+                        throw new Error("Proxy error for " + path + ": " + data.error);
+                    }
+                    if (data && data.pending !== true) {
+                        return data;
+                    }
+                }
+                throw new Error("Proxy timeout for: " + path);
             }
 
             async function getRoutes() {
-                disableUI()
-
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url: "/rest/api/v1/display/uid/" + rootPluginId + "/chicagobusroutes",
-                        isJsonResponse: true,
-                    })
-                    const routes = rsp?.data?.routes
-                    if (!routes) {
-                        return
-                    }
-                    values = routes?.map((route) => {
-                        return {
-                        value: route.rt,
-                        text: route.rt + " - " + route.rtnm,
-                        }
-                    })
-                    const routeselem = generateOptions("routes", values, "text", "value")
-                    selectSelectedProperty(routeselem, selected["routes"])
-                } catch (e) {
-                    console.error("Error getting routes: ", e)
+                if (!hasApiKeyConfigured()) {
+                    resetDependentSelections()
+                    updateDependentControlState()
+                    return;
                 }
-                enableUI()
+
+                disableUI();
+                try {
+                    const data = await proxyFetch("/getroutes");
+                    const routes = data?.["bustime-response"]?.routes;
+                    if (!routes) {
+                        resetDependentSelections()
+                        return;
+                    }
+                    const values = routes.map(route => ({ value: route.rt, text: route.rt + " - " + route.rtnm }));
+                    const elem = generateOptions("routes", values, "text", "value");
+                    selectSelectedProperty(elem, selected.routes);
+                } catch (e) {
+                    console.error("Error getting routes:", e);
+                }
+                enableUI();
+                updateDependentControlState()
             }
 
             async function getDirections() {
-                disableUI()
-
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url:
-                        "/rest/api/v1/display/uid/" +
-                        rootPluginId +
-                        "/chicagobusdirections?rt=" +
-                        selected.routes,
-                        isJsonResponse: true,
-                    })
-                    const { dirs } = rsp?.data
-                    if (!dirs) {
-                        return
-                    }
-                    const direlem = generateOptions("directions", dirs)
-                    selectSelectedProperty(direlem, selected.directions)
-                } catch (e) {
-                    console.error("Error getting directions: ", e)
+                if (!hasApiKeyConfigured() || (0 === selected.routes.length)) {
+                    clearSelectOptions("directions")
+                    clearSelectOptions("stops")
+                    selected.directions = ""
+                    selected.stops = ""
+                    updateDependentControlState()
+                    return;
                 }
-                enableUI()
+
+                disableUI();
+                try {
+                    const data = await proxyFetch("/getdirections?rt=" + encodeURIComponent(selected.routes));
+                    const directions = data?.["bustime-response"]?.directions;
+                    if (!directions) {
+                        clearSelectOptions("directions")
+                        clearSelectOptions("stops")
+                        selected.directions = ""
+                        selected.stops = ""
+                        return;
+                    }
+                    const dirs = directions.map(d => d.id);
+                    const elem = generateOptions("directions", dirs);
+                    selectSelectedProperty(elem, selected.directions);
+                } catch (e) {
+                    console.error("Error getting directions:", e);
+                }
+                enableUI();
+                updateDependentControlState()
             }
 
             async function getStops() {
-                disableUI()
-
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url:
-                        "/rest/api/v1/display/uid/" +
-                        rootPluginId +
-                        "/chicagobusstops?rt=" +
-                        selected.routes +
-                        "&dir=" +
-                        selected.directions,
-                        isJsonResponse: true,
-                    })
-                    const { stops } = rsp?.data
-                    if (!stops) {
-                        return
-                    }
-                    const stopsElem = generateOptions("stops", stops, "stpnm", "stpid")
-                    selectSelectedProperty(stopsElem, selected.stops)
-                } catch (e) {
-                    console.error("Error getting stops: ", e)
+                if (!hasApiKeyConfigured() || (0 === selected.routes.length) || (0 === selected.directions.length)) {
+                    clearSelectOptions("stops")
+                    selected.stops = ""
+                    updateDependentControlState()
+                    return;
                 }
-                enableUI()
+
+                disableUI();
+                try {
+                    const data = await proxyFetch("/getstops?rt=" + encodeURIComponent(selected.routes) + "&dir=" + encodeURIComponent(selected.directions));
+                    const stops = data?.["bustime-response"]?.stops;
+                    if (!stops) {
+                        clearSelectOptions("stops")
+                        selected.stops = ""
+                        return;
+                    }
+                    const elem = generateOptions("stops", stops, "stpnm", "stpid");
+                    selectSelectedProperty(elem, selected.stops);
+                } catch (e) {
+                    console.error("Error getting stops:", e);
+                }
+                enableUI();
+                updateDependentControlState()
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
+                resetDependentSelections();
+                updateDependentControlState();
 
                 /* Load all plugin instances. */
                 getPluginInstances()
-                    .then(function(cnt) {
+                    .then(function (cnt) {
                         var select = document.getElementById("pluginUid");
 
                         if (0 < cnt) {
@@ -407,10 +510,19 @@
                             return getConfig(rootPluginId);
                         }
                     })
-                    .then(getRoutes)
-                    .then(getDirections)
-                    .then(getStops);
+                    .then(function () {
+                        if (hasApiKeyConfigured()) {
+                            return getRoutes()
+                                .then(getDirections)
+                                .then(getStops);
+                        }
+
+                        enableUI();
+                        updateDependentControlState();
+                        return Promise.resolve();
+                    });
             });
         </script>
     </body>
+
 </html>

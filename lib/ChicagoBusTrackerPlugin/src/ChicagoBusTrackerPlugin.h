@@ -90,7 +90,11 @@ public:
         m_slotInterf(nullptr),
         m_hasTopicChanged(false),
         m_dynamicRestId(RestService::INVALID_REST_ID),
-        m_isAllowedToSend(true)
+        m_isAllowedToSend(true),
+        m_proxyRestId(RestService::INVALID_REST_ID),
+        m_proxyResult(0U),
+        m_proxyResultReady(false),
+        m_proxyHasError(false)
     {
         (void)m_mutex.create();
     }
@@ -309,19 +313,9 @@ private:
     static const char* TOPIC_CONFIG;
 
     /**
-     * Routes topic, used to fetch routes for Web UI
+     * Proxy topic: web UI POSTs a CTA API relative path and polls for the response.
      */
-    static const char* TOPIC_ROUTES;
-
-    /**
-     * Directions topic, used to fetch directions for Web UI
-     */
-    static const char* TOPIC_DIRS;
-
-    /**
-     * Stops topic, used to fetch stop names for Web UI
-     */
-    static const char* TOPIC_STOPS;
+    static const char* TOPIC_PROXY;
 
     /**
      * DISPLAY: meant to look like the amber LEDs on a real bus/train display
@@ -354,7 +348,7 @@ private:
     static const uint32_t DURATION_TICK_PERIOD = SIMPLE_TIMER_SECONDS(1U);
 
     /**
-     * Single definition used by all Web UI endpoints (getRoutes, getStops...)
+     * JSON filter document size used by preProcessAsyncWebResponse and preProcessProxyResponse.
      */
     static const size_t FILTER_SIZE            = 192U;
 
@@ -363,20 +357,24 @@ private:
      */
     static String                  apiKey;
 
-    _ChicagoBusTrackerPlugin::View m_view;            /**< View with all widgets. */
-    String                         m_routeInfoText;   /**< Bus route display info text */
-    String                         m_rte;             /**< CTA Bus route ID (e.g. 81, 151, X49)*/
-    String                         m_dir;             /**< CTA-defined route direction (e.g. Southbound) */
-    String                         m_stpid;           /**< CTA-defined stop ID (numeric) */
-    bool                           m_orig;            /**< option to show origin (selected stop name) */
-    bool                           m_dest;            /**< option to show destination (end of line in chosen direction) */
-    uint8_t                        m_count;           /**< how many arrivals to show (1-3) */
-    SimpleTimer                    m_requestTimer;    /**< Timer used for cyclic request of new data. */
-    mutable MutexRecursive         m_mutex;           /**< Mutex to protect against concurrent access. */
-    const ISlotPlugin*             m_slotInterf;      /**< Slot interface */
-    bool                           m_hasTopicChanged; /**< Has the topic content changed? */
-    uint32_t                       m_dynamicRestId;   /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
-    bool                           m_isAllowedToSend; /**< Is allowed to send REST-Api request? */
+    _ChicagoBusTrackerPlugin::View m_view;             /**< View with all widgets. */
+    String                         m_routeInfoText;    /**< Bus route display info text */
+    String                         m_rte;              /**< CTA Bus route ID (e.g. 81, 151, X49)*/
+    String                         m_dir;              /**< CTA-defined route direction (e.g. Southbound) */
+    String                         m_stpid;            /**< CTA-defined stop ID (numeric) */
+    bool                           m_orig;             /**< option to show origin (selected stop name) */
+    bool                           m_dest;             /**< option to show destination (end of line in chosen direction) */
+    uint8_t                        m_count;            /**< how many arrivals to show (1-3) */
+    SimpleTimer                    m_requestTimer;     /**< Timer used for cyclic request of new data. */
+    mutable MutexRecursive         m_mutex;            /**< Mutex to protect against concurrent access. */
+    const ISlotPlugin*             m_slotInterf;       /**< Slot interface */
+    bool                           m_hasTopicChanged;  /**< Has the topic content changed? */
+    uint32_t                       m_dynamicRestId;    /**< Used to identify plugin when interacting with RestService. Id changes with every request. */
+    bool                           m_isAllowedToSend;  /**< Is allowed to send REST-Api request? */
+    uint32_t                       m_proxyRestId;      /**< RestService id for an in-flight proxy request. */
+    mutable PsramJsonDocument      m_proxyResult;      /**< Holds the proxy response until consumed by getTopic. */
+    mutable bool                   m_proxyResultReady; /**< True when a proxy result is available for getTopic. */
+    mutable bool                   m_proxyHasError;    /**< True when the last proxy request failed. */
 
     /**
      * Get configuration in JSON.
@@ -421,25 +419,27 @@ private:
     void handleWebResponse(const DynamicJsonDocument& jsonDoc);
 
     /**
-     * Return a list of CTA bus routes to the Web UI
+     * Queue a proxy request to the CTA API via RestService.
+     * Must be called without m_mutex held, as it may call RestService.
      *
-     * @param[in] jsonRtes  Web resposne as JSON document
+     * @param[in] path  Relative CTA API path, e.g. "/getroutes" or "/getdirections?rt=55".
+     *
+     * @return If successful it will return true otherwise false.
      */
-    void getRoutes(JsonObject& jsonRtes) const;
+    bool startProxyRequest(const String& path);
 
     /**
-     * Return a list of direction IDs for a given CTA bus route to the Web UI
+     * Preprocess the raw CTA API HTTP response for a proxy request.
+     * Applies a JSON filter based on the requested path to keep only needed fields.
      *
-     * @param[in] jsonDirs  Web response as JSON document
-     */
-    void getDirections(JsonObject& jsonDirs) const;
-
-    /**
-     * Return a list of CTA bus stops to the Web UI
+     * @param[in]  path        The relative CTA API path (used to choose filter).
+     * @param[in]  payload     Raw HTTP response payload.
+     * @param[in]  payloadSize Payload length in bytes.
+     * @param[out] jsonDoc     PsramJsonDocument to receive the filtered result.
      *
-     * @param[in] jsonStops Web response as JSON document
+     * @return If successful it will return true otherwise false.
      */
-    void getStops(JsonObject& jsonStops) const;
+    bool preProcessProxyResponse(const String& path, const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 };
 
 /******************************************************************************
