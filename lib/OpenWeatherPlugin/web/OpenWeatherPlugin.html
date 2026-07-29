@@ -43,7 +43,7 @@
                 <p>On a 64x64 layout the weather forecast of a week will be displayed too.</p>
                 <p>An API key is required to access the OpenWeather API. <a href="https://openweathermap.org/appid" target="_blank">Get your API key here.</a></p>
                 <h2>Configuration</h2>
-                <form id="myForm">
+                <form id="myForm" class="needs-validation" novalidate>
                     <div class="form-group mb-3">
                         <label class="form-label" for="pluginUid">Plugin UID:</label>
                         <select class="form-select" id="pluginUid" size="1">
@@ -58,21 +58,35 @@
                     </div>
                     <div class="form-group mb-3">
                         <label class="form-label" for="updatePeriod">Update period in minutes:</label>
-                        <input class="form-control" type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
+                        <input class="form-control" type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" step="1" required aria-describedby="updatePeriodInvalid" />
+                        <div id="updatePeriodInvalid" class="invalid-feedback">
+                            Please enter an integer between 1 and 120 minutes.
+                        </div>
                         <small class="form-text">Please consider your limits, see <a href="https://m.openweathermap.org/price" target="_blank">professional collections price table</a>.</small>
                     </div>
                     <div class="form-group mb-3">
                         <label class="form-label" for="apiKey">API key:</label>
-                        <input class="form-control" type="text" id="apiKey" name="apiKey" value="Your API key" />
+                        <input class="form-control" type="text" id="apiKey" name="apiKey" value="Your API key" placeholder="e.g. 098bb15fe..." required aria-describedby="apiKeyInvalid" />
+                        <div id="apiKeyInvalid" class="invalid-feedback">
+                            Please enter your OpenWeather API key.
+                        </div>
                         <small class="form-text"><a href="https://openweathermap.org/appid" target="_blank">Get your API key here.</a></small>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="form-label" for="latitude">Latitude:</label>
-                        <input class="form-control" type="text" id="latitude" name="latitude" value="The latitude" />
+                        <label class="form-label" for="latitude">Latitude &updownarrow;:</label>
+                        <input class="form-control" type="text" id="latitude" name="latitude" required inputmode="decimal" pattern="^-?(90\.0+|[0-8]?\d\.\d+)$"
+                            placeholder="e.g. 47.557" aria-describedby="latitudeInvalid" />
+                        <div id="latitudeInvalid" class="invalid-feedback">
+                            Please enter a valid latitude in x.y format, between -90.0 and 90.0 (decimal required).
+                        </div>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="form-label" for="longitude">Longitude:</label>
-                        <input class="form-control" type="text" id="longitude" name="longitude" value="The longitude" />
+                        <label class="form-label" for="longitude">Longitude &LeftRightArrow;:</label>
+                        <input class="form-control" type="text" id="longitude" name="longitude" required inputmode="decimal" pattern="^-?(180\.0+|(1[0-7]\d|[0-9]?\d)\.\d+)$"
+                            placeholder="e.g. 10.749" aria-describedby="longitudeInvalid" />
+                        <div id="longitudeInvalid" class="invalid-feedback">
+                            Please enter a valid longitude in x.y format, between -180.0 and 180.0 (decimal required).
+                        </div>
                     </div>
                     <div class="form-group mb-3">
                         <div class="form-check">
@@ -115,7 +129,7 @@
 
         <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
-        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
@@ -259,6 +273,17 @@
 
                 document.getElementById("myForm").addEventListener("submit", (event) => {
                     event.preventDefault();
+                    event.stopPropagation();
+
+                    const form = event.target;
+
+                    // Run Bootstrap-style validation and prevent save on error.
+                    if (!form.checkValidity()) {
+                        form.classList.add('was-validated');
+                        return; // Stop here; do not call setConfig() on validation error.
+                    }
+                    form.classList.add('was-validated');
+
                     setConfig(document.getElementById("pluginUid").value);
                 });
 
