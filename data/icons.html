@@ -196,43 +196,85 @@
                     const rsp = await restClient.readFile("/configuration/fileMgr.json");
                     const jsonRsp = JSON.parse(rsp);
                     const overview = document.getElementById(id);
+                    const iconEntries = jsonRsp.fileTable.filter((entry) => entry.fullPath.length > 0);
+                    let loadedCount = 0;
 
-                    jsonRsp.fileTable.forEach((entry, idx) => {
+                    updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
+
+                    for (const [idx, entry] of jsonRsp.fileTable.entries()) {
                         if (entry.fullPath.length > 0) {
-                            const fileId = document.createElement("p");
-                            fileId.textContent = "[" + idx + "]";
-
-                            const img = document.createElement("img");
-                            img.src = entry.fullPath;
-                            img.alt = "Preview";
-                            img.addEventListener("load", function () {
-                                applyZoom(this);
-                            });
-
-                            const name = document.createElement("p");
-                            name.textContent = entry.fullPath.replace(/^.*[\\/]/, "");
-
-                            const actionRemove = document.createElement("button");
-                            actionRemove.type = "button";
-                            actionRemove.className = "btn btn-secondary";
-                            actionRemove.textContent = "Remove";
-                            actionRemove.addEventListener("click", () => removeFile(idx, entry.fullPath));
-
-                            const div = document.createElement("div");
-                            div.className = "bg-body text-center m-2 p-2 bd-highlight";
-                            div.appendChild(fileId);
-                            div.appendChild(img);
-                            div.appendChild(name);
-                            div.appendChild(actionRemove);
-
-                            overview.appendChild(div);
+                            await appendIconTileSequentially(overview, idx, entry);
+                            ++loadedCount;
+                            updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
                         }
-                    });
+                    }
+
+                    updateOverviewLoadStatus(overview, iconEntries.length, iconEntries.length, true);
                 } catch (rsp) {
                     const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
 
+                    updateOverviewLoadStatus(document.getElementById(id), 0, 0, true);
                     await dialog.showError("<p>" + alertMsg + "</p>");
                 }
+            }
+
+            function updateOverviewLoadStatus(overview, loadedCount, totalCount, isDone = false) {
+                const statusId = "overview-load-status";
+                let status = document.getElementById(statusId);
+
+                if (isDone === true) {
+                    if (status !== null) {
+                        status.remove();
+                    }
+
+                    return;
+                }
+
+                if (status === null) {
+                    status = document.createElement("p");
+                    status.id = statusId;
+                    status.className = "text-secondary";
+                    overview.parentNode.insertBefore(status, overview);
+                }
+
+                status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
+            }
+
+            async function appendIconTileSequentially(overview, idx, entry) {
+                const fileId = document.createElement("p");
+                fileId.textContent = "[" + idx + "]";
+
+                const img = document.createElement("img");
+                img.alt = "Preview";
+
+                const name = document.createElement("p");
+                name.textContent = entry.fullPath.replace(/^.*[\\/]/, "");
+
+                const actionRemove = document.createElement("button");
+                actionRemove.type = "button";
+                actionRemove.className = "btn btn-secondary";
+                actionRemove.textContent = "Remove";
+                actionRemove.addEventListener("click", () => removeFile(idx, entry.fullPath));
+
+                const div = document.createElement("div");
+                div.className = "bg-body text-center m-2 p-2 bd-highlight";
+                div.appendChild(fileId);
+                div.appendChild(img);
+                div.appendChild(name);
+                div.appendChild(actionRemove);
+
+                overview.appendChild(div);
+
+                await new Promise((resolve) => {
+                    img.addEventListener("load", function () {
+                        applyZoom(this);
+                        resolve();
+                    }, { once: true });
+
+                    img.addEventListener("error", () => resolve(), { once: true });
+
+                    img.src = entry.fullPath;
+                });
             }
 
             async function removeFile(fileId, fullPath) {
