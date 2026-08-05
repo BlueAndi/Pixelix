@@ -6,7 +6,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         <!-- Styles -->
-        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+        <script>
+            (function () {
+                const cdnLink = document.getElementById("bootstrap-css");
+                let isLoaded = false;
+
+                if (null === cdnLink) {
+                    return;
+                }
+
+                const useLocalBootstrapCss = function () {
+                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+                };
+
+                cdnLink.addEventListener("load", function () {
+                    isLoaded = true;
+                });
+
+                cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+                window.setTimeout(function () {
+                    if (false === isLoaded) {
+                        useLocalBootstrapCss();
+                    }
+                }, 3000);
+            })();
+        </script>
         <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
 
         <title>PIXELIX</title>
@@ -65,7 +91,7 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/app-menu.js"></script>
