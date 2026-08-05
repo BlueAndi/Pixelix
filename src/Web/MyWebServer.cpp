@@ -167,8 +167,18 @@ static void error(AsyncWebServerRequest* request)
         return;
     }
 
+    const String& url = request->url();
+
+    /* Source maps are optional debug artifacts. Fast-path them to a tiny 404 response to avoid routing through the
+     * heavier error page handling.
+     */
+    if ((true == url.endsWith(".map")) ||
+        (true == url.endsWith(".map.gz")))
+    {
+        request->send(HttpStatus::STATUS_CODE_NOT_FOUND, "text/plain", "Not Found");
+    }
     /* REST request? */
-    if (true == request->url().startsWith(RestApi::BASE_URI))
+    else if (true == url.startsWith(RestApi::BASE_URI))
     {
         RestApi::error(request);
     }
