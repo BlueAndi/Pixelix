@@ -261,12 +261,10 @@
                 try {
                     const result = await restClient.getSettingKeys();
 
-                    /* Fetch all settings concurrently; Promise.all preserves the key order. */
-                    const responses = await Promise.all(
-                        result.data.settings.map((key) => restClient.getSettingByKey(key))
-                    );
-
-                    responses.forEach((response) => data.push(response.data));
+                    for (const key of result.data.settings) {
+                        const response = await restClient.getSettingByKey(key);
+                        data.push(response.data);
+                    }
 
                     const settingsContainer = document.getElementById("settings");
 
