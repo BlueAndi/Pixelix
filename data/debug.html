@@ -78,7 +78,6 @@
                 <h1 class="mt-5">Debug</h1>
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item" role="presentation"><a class="nav-link active" id="logging-tab" data-bs-toggle="tab" role="tab" href="#logging" aria-controls="logging" aria-selected="true">Logging</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="measurement-tab" data-bs-toggle="tab" role="tab" href="#measurement" aria-controls="measurement" aria-selected="false">Measurement</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="coredump-tab" data-bs-toggle="tab" role="tab" href="#coredump" aria-controls="coredump" aria-selected="false">Coredump</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="restart-tab" data-bs-toggle="tab" role="tab" href="#restart" aria-controls="restart" aria-selected="false">Restart</a></li>
                 </ul>
@@ -117,15 +116,6 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-
-                    <div class="tab-pane fade" id="measurement" role="tabpanel" aria-labelledby="measurement-tab">
-                        <br />
-                        <p>Measure the performance with iperf.</p>
-                        <p>Start/Stop the iperf server:</p>
-                        <p>
-                            <button class="btn btn-light" id="btnMeasurement" type="button" disabled>Start</button>
-                        </p>
                     </div>
 
                     <div class="tab-pane fade" id="coredump" role="tabpanel" aria-labelledby="coredump-tab">
@@ -216,7 +206,6 @@
             let isLoggingEnabled = false;
             let isMeasurementEnabled = false;
             const filter = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
-            let isIperfAvailable = false;
             let isCoredumpTabInitialized = false;
 
             function setCoredumpCell(id, value) {
@@ -511,10 +500,6 @@
                 document.querySelectorAll("main button").forEach((button) => {
                     button.disabled = false;
                 });
-
-                if (isIperfAvailable === false) {
-                    document.getElementById("btnMeasurement").disabled = true;
-                }
             }
 
             /* Toggle logging */
@@ -549,29 +534,6 @@
                 }
             }
 
-            /* Toggle measurement */
-            async function toggleMeasurement() {
-                disableUI();
-
-                try {
-                    const rsp = await wsClient.setIperf({
-                        enable: (isMeasurementEnabled === false)
-                    });
-
-                    isMeasurementEnabled = rsp.isEnabled;
-                    document.getElementById("btnMeasurement").textContent = (rsp.isEnabled === false) ? "Start" : "Stop";
-
-                    await dialog.showInfo("<p>Ok.</p>");
-                } catch (err) {
-                    if ("undefined" !== typeof err) {
-                        console.error(err);
-                    }
-                    await dialog.showError("<p>Error.</p>");
-                } finally {
-                    enableUI();
-                }
-            }
-
             /* Execute after page is ready. */
             document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
@@ -588,7 +550,6 @@
 
                 document.getElementById("btnLog").addEventListener("click", toggleLogging);
                 document.getElementById("btnClear").addEventListener("click", clearLog);
-                document.getElementById("btnMeasurement").addEventListener("click", toggleMeasurement);
                 document.getElementById("btnCoredumpRefresh").addEventListener("click", refreshCoredumpInfo);
                 document.getElementById("btnCoredumpDecode").addEventListener("click", showCoredumpDecodedDetails);
                 document.getElementById("btnCoredumpDownload").addEventListener("click", downloadCoredump);
@@ -619,15 +580,6 @@
                     document.getElementById("btnLog").textContent = (logRsp.isEnabled === false) ? "Start" : "Stop";
 
                     /* Enable GUI elements, except measurement button. */
-                    enableUI();
-
-                    /* Get current iperf status. */
-                    const iperfRsp = await wsClient.getIperf();
-                    isMeasurementEnabled = iperfRsp.isEnabled;
-                    document.getElementById("btnMeasurement").textContent = (iperfRsp.isEnabled === false) ? "Start" : "Stop";
-
-                    /* Enable measurement button too. */
-                    isIperfAvailable = true;
                     enableUI();
                 } catch (err) {
                     if ("undefined" !== typeof err) {

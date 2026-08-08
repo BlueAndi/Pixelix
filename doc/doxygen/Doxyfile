@@ -1092,7 +1092,6 @@ RECURSIVE              = YES
 EXCLUDE                = ../../lib/ArduinoNative \
                          ../../lib/HalHub75Esp32 \
                          ../../lib/HalTftDisplay \
-                         ../../lib/Iperf \
                          ../../lib/Fonts/src/TomThumb.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
