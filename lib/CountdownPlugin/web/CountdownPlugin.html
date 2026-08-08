@@ -1,23 +1,53 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         <!-- Styles -->
-        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+        <script>
+            (function () {
+                const cdnLink = document.getElementById("bootstrap-css");
+                let isLoaded = false;
+
+                if (null === cdnLink) {
+                    return;
+                }
+
+                const useLocalBootstrapCss = function () {
+                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+                };
+
+                cdnLink.addEventListener("load", function () {
+                    isLoaded = true;
+                });
+
+                cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+                window.setTimeout(function () {
+                    if (false === isLoaded) {
+                        useLocalBootstrapCss();
+                    }
+                }, 3000);
+            })();
+        </script>
         <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
         <link rel="stylesheet" type="text/css" href="/style/style.css" />
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -38,10 +68,10 @@
                 <h2>Configuration</h2>
                 <h3>Target Date</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <form id="myForm">
                         <div class="form-group mb-3">
                             <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                            <select class="form-select" id="pluginUid" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -56,12 +86,12 @@
                             <label class="form-label" for="targetDaySingular">Target day in singular form:</label>
                             <input class="form-control" type="text" id="targetDaySingular" name="targetDaySingular" value="day" />
                         </div>
-                        <input name="submit" type="submit" value="Update"/>
+                        <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -71,44 +101,39 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
-        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Bootstrap JS bundle -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/menu.js"></script>
-        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
-        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/utils.js"></script>
+        <script type="text/javascript" src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
-        <script type="text/javascript" src="/js/rest.js"></script>
 
         <script>
 
-            var pluginName  = "CountdownPlugin";
-            var restClient  = new pixelix.rest.Client();
-    
+            const pluginName = "CountdownPlugin";
+            const restClient = new pixelix.rest.Client();
+
             function enableUI() {
                 utils.enableForm("myForm", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("myForm", false);
             }
-    
-            function getPluginInstances() {
-                return restClient.getPluginInstances().then(function(rsp) {
-                    var slotIndex   = 0;
-                    var cnt         = 0;
-                    var $option     = null;
-                    var optionText  = ""
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
+
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
+                            let optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -117,86 +142,107 @@
 
                             optionText += ")";
 
-                            $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(optionText);
-                            
-                            $("#pluginUid").append($option);
+                            const option = document.createElement("option");
+                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.textContent = optionText;
+
+                            document.getElementById("pluginUid").append(option);
 
                             ++cnt;
                         }
                     }
 
-                    return Promise.resolve(cnt);
-                }).catch(function(rsp) {
+                    return cnt;
+                } catch (rsp) {
                     alert("Internal error.");
-                    return Promise.resolve(0);
-                });
-            };
-    
-            function getConfig(pluginUid) {
+                    return 0;
+                }
+            }
+
+            async function getConfig(pluginUid) {
                 disableUI();
-                return utils.makeRequest({
-                    method: "GET",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
-                    isJsonResponse: true
-                }).then(function(rsp) {
-                    var targetDateInput = document.getElementById("targetDate");
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
+                        isJsonResponse: true
+                    });
+                    const targetDateInput = document.getElementById("targetDate");
                     targetDateInput.valueAsDate = new Date(rsp.data.year + "-" + rsp.data.month + "-" + rsp.data.day);
-                    $("#targetDayPlural").val(rsp.data.descPlural);
-                    $("#targetDaySingular").val(rsp.data.descSingular);
-                }).catch(function(rsp) {
+                    document.getElementById("targetDayPlural").value = rsp.data.descPlural;
+                    document.getElementById("targetDaySingular").value = rsp.data.descSingular;
+                } catch (rsp) {
                     alert("Internal error.");
-                }).finally(function() {
+                } finally {
                     enableUI();
-                });
+                }
             }
-    
-            function setConfig(pluginUid) {
+
+            async function setConfig(pluginUid) {
                 disableUI();
 
-                var date = new Date($("#targetDate").val());
-    
-                return utils.makeRequest({
-                    method: "POST",
-                    url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
-                    isJsonResponse: true,
-                    parameter: {
-                        day: date.getDate(),
-                        month: date.getMonth() + 1,
-                        year: date.getFullYear(),
-                        descPlural: $("#targetDayPlural").val(),
-                        descSingular: $("#targetDaySingular").val()
-                    }
-                }).then(function(rsp) {
+                const date = new Date(document.getElementById("targetDate").value);
+
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "POST",
+                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/countdown",
+                        isJsonResponse: true,
+                        parameter: {
+                            day: date.getDate(),
+                            month: date.getMonth() + 1,
+                            year: date.getFullYear(),
+                            descPlural: document.getElementById("targetDayPlural").value,
+                            descSingular: document.getElementById("targetDaySingular").value
+                        }
+                    });
                     alert("Ok.");
-                }).catch(function(rsp) {
+                } catch (rsp) {
                     alert("Failed.");
-                }).finally(function() {
+                } finally {
                     enableUI();
-                });
+                }
             }
 
-            $(document).ready(function() {
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
+                document.getElementById("myForm").addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    setConfig(document.getElementById("pluginUid").value);
+                });
+
+                document.getElementById("pluginUid").addEventListener("change", () => {
+                    getConfig(document.getElementById("pluginUid").value);
+                });
+
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
-                    var select = document.getElementById("pluginUid");
-    
-                    if (0 < cnt) {
-    
-                        return getConfig(
-                            select.options[select.selectedIndex].value
-                        );
+                const cnt = await getPluginInstances();
+                const select = document.getElementById("pluginUid");
+
+                if (0 < cnt) {
+                    /* Check if UID was passed in URL and auto-select it */
+                    const uidFromUrl = utils.getURLParameter('uid');
+                    if (uidFromUrl) {
+                        for (let i = 0; i < select.options.length; i++) {
+                            if (select.options[i].value === uidFromUrl) {
+                                select.selectedIndex = i;
+                                break;
+                            }
+                        }
                     }
-                });
+
+                    await getConfig(
+                        select.options[select.selectedIndex].value
+                    );
+                }
             });
         </script>
     </body>
+
 </html>

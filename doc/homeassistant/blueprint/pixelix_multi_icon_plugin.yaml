@@ -1,0 +1,252 @@
+blueprint:
+  # https://www.home-assistant.io/docs/blueprint/schema/
+  # https://www.home-assistant.io/docs/automation/basics/
+  name: Pixelix - MultiIconPlugin
+  description: |
+    # Pixelix Automation Blueprint
+
+    This blueprint allows you show different icons on Pixelix with its MultiIconPlugin.
+  domain: automation
+  author: Pixelix & Friends <https://github.com/BlueAndi/Pixelix>
+  source_url: https://www.blue-andi.de/pixelix/pixelix_multi_icon_plugin.yaml
+  homeassistant:
+    min_version: 2024.10.0
+  # https://www.home-assistant.io/docs/blueprint/selectors/
+  input:
+    section_general:
+      name: General Section
+      description: General configuration independent of using REST or MQTT API.
+      input:
+        uid:
+          name: Plugin UID
+          description: |
+            The plugin UID of the plugin instance. See display page in the Pixelix web interface.
+            0 means invalid UID, like UID not set.
+            If both UID and alias are set, the alias is used.
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 65535
+              mode: box
+        alias:
+          name: Plugin Alias
+          description: |
+            The plugin alias of the plugin instance. See display page in the Pixelix web interface.
+            If both UID and alias are set, the alias is used.
+          default: ""
+          selector:
+            text:
+        icon_slot:
+          name: Icon Slot
+          description: |
+            The icon slot to update. The MultiIconPlugin has a variable number of icon slots (0-...). Each slot can show a different icon.
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 4
+              mode: box
+        user_triggers:
+          name: User Triggers
+          description: Additional triggers defined by the user.
+          default:
+          selector:
+            trigger:
+        user_conditions:
+          name: User Conditions
+          description: User defined conditions for the automation.
+          default: []
+          selector:
+            condition:
+        icon_selector:
+          name: Icon Selector
+          description: "Optional: Keep current icon or change it."
+          default: keep
+          selector:
+            select:
+              options:
+                - label: Keep current icon
+                  value: keep
+                - label: Change icon
+                  value: change
+                - label: Clear icon
+                  value: clear
+        icon_file_id:
+          name: Icon File ID
+          description: |
+            The file ID of the icon to display.
+            See Pixelix icons web page for the available icons.
+            255 means no icon.
+            A icon is only supported by IconText and IconTextLamp plugins.
+          default: 255
+          selector:
+            text:
+    section_protocol:
+      name: Protocol Section
+      description: |
+        # Protocol specific configuration.
+
+        ## MQTT API
+
+        For the communication to Pixelix via MQTT API, you need to install the MQTT integration in Home Assistant and
+        configure it to connect to your MQTT broker.
+
+        Enable MQTT in Pixelix via the settings web page. Pixelix uses the MQTT automatic discovery feature.
+
+        ## REST API
+
+        For the REST API add the following REST command to your configuration.yaml in Home Assistant.
+        It will be called by the automation blueprint.
+
+        ```yaml
+          rest_command:
+            pixelix_plugin_command:
+              url: "http://{{ hostname }}{{ endpoint }}?{{ url_parameter }}"
+              method: POST
+        ```
+      input:
+        protocol:
+          name: Communication Protocol
+          description: The protocol to use for communication.
+          default: mqtt
+          selector:
+            select:
+              options:
+                - label: MQTT API
+                  value: mqtt
+                - label: REST API
+                  value: rest
+        pixelix_device:
+          name: MQTT Pixelix device
+          description: |
+            The Pixelix device to use for MQTT communication.
+            Only used by MQTT API protocol selection.
+          default:
+          selector:
+            device:
+              integration: mqtt
+              manufacturer: BlueAndi & Friends
+              model: Pixelix
+        pixelix_hostname:
+          name: Pixelix Hostname
+          description: |
+            Enter the hostname (e.g. pixelix-FFFFFFFF or 192.168.178.110) of the Pixelix device.
+            Only used by REST API protocol selection.
+          default: ""
+          selector:
+            text:
+
+variables:
+  var_uid: !input uid
+  var_alias: !input alias
+  var_icon_slot: !input icon_slot
+  var_icon_selector: !input icon_selector
+  var_icon_file_id: !input icon_file_id
+  var_protocol: !input protocol
+  var_device: !input pixelix_device
+  var_hostname: !input pixelix_hostname
+  var_plugin_topic: "slot/{{ var_icon_slot }}"
+  var_mqtt_payload: >-
+    {% set icon_selector = var_icon_selector %}
+    {% set icon_file_id = var_icon_file_id %}
+    {% if (icon_selector == 'change') %}
+      {"fileId": {{ icon_file_id }}}
+    {% elif (icon_selector == 'clear') %}
+      {"fileId": 255}
+    {% endif %}
+  var_rest_url_parameter: >-
+    {% set icon_selector = var_icon_selector %}
+    {% set icon_file_id = var_icon_file_id %}
+    {% if (icon_selector == 'change') %}
+      {{ ("fileId=" + icon_file_id) | urlencode() }}
+    {% elif (icon_selector == 'clear') %}
+      {{ ("fileId=255") | urlencode() }}
+    {% endif %}
+
+# https://www.home-assistant.io/docs/automation/trigger/
+triggers:
+  - trigger: homeassistant
+    event: start
+    id: update
+
+  - trigger: event
+    event_type: automation_reloaded
+    id: update
+
+  # Merge user defined triggers
+  - triggers: !input user_triggers
+
+# https://www.home-assistant.io/docs/automation/condition/
+conditions: !input user_conditions
+
+# https://www.home-assistant.io/docs/automation/action/
+actions:
+  - choose:
+      # Use MQTT API with plugin UID
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'mqtt' }}"
+          - condition: template
+            value_template: "{{ var_device and var_hostname == '' }}"
+          - condition: template
+            value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: "{{ device_attr(var_device, 'name') }}/display/uid/{{ var_uid }}/{{ var_plugin_topic }}/set"
+              payload: "{{ var_mqtt_payload }}"
+
+      # Use MQTT API with plugin alias
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'mqtt' }}"
+          - condition: template
+            value_template: "{{ var_device and var_hostname == '' }}"
+          - condition: template
+            value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: "{{ device_attr(var_device, 'name') }}/display/alias/{{ var_alias }}/{{ var_plugin_topic }}/set"
+              payload: "{{ var_mqtt_payload }}"
+
+      # Use REST API with plugin UID
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'rest' }}"
+          - condition: template
+            value_template: "{{ var_device is none and var_hostname != '' }}"
+          - condition: template
+            value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
+        sequence:
+          - action: rest_command.pixelix_plugin_command
+            data:
+              hostname: "{{ var_hostname }}"
+              endpoint: "/rest/api/v1/display/uid/{{ var_uid }}/{{ var_plugin_topic }}"
+              url_parameter: "{{ var_rest_url_parameter }}"
+
+      # Use REST API with plugin alias
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'rest' }}"
+          - condition: template
+            value_template: "{{ var_device is none and var_hostname != '' }}"
+          - condition: template
+            value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
+        sequence:
+          - action: rest_command.pixelix_plugin_command
+            data:
+              hostname: "{{ var_hostname }}"
+              endpoint: "/rest/api/v1/display/alias/{{ var_alias }}/{{ var_plugin_topic }}"
+              url_parameter: "{{ var_rest_url_parameter }}"
+
+    # Default
+    default:
+      - service: persistent_notification.create
+        data:
+          title: "Pixelix Automation Notification"
+          message: "Error: Could not send text to Pixelix device. Please check your configuration."
+
+# https://www.home-assistant.io/docs/automation/modes/
+mode: single

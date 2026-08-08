@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: API Title
+  version: 1.0.0
+  description: |
+    Brief description of your API.
+
+    Key features:
+    - Feature 1
+    - Feature 2
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://{host}/rest/api/v1
+    description: REST API base path
+    variables:
+      host:
+        default: localhost
+        description: Device hostname or IP address
+
+tags:
+  - name: system
+    description: System operations
+  - name: config
+    description: Configuration management
+  - name: data
+    description: Data operations
+
+paths:
+  /status:
+    get:
+      summary: Get system status
+      description: Returns current system status and health information
+      operationId: getStatus
+      tags:
+        - system
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+              example:
+                status: "ok"
+                data:
+                  uptime: 12345
+                  memoryFree: 65536
+
+components:
+  schemas:
+    SuccessResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          description: Response status indicator
+        data:
+          type: object
+          description: Endpoint-specific response data
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - msg
+      properties:
+        status:
+          type: string
+          enum: [error]
+          description: Response status indicator
+        msg:
+          type: string
+          description: Human-readable error message
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: "error"
+            msg: "Invalid parameter value"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: "error"
+            msg: "Resource not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: "error"
+            msg: "Internal server error"
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: HTTP Basic Authentication with username and password

@@ -1,26 +1,111 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         <!-- Styles -->
-        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
-        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
-        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+        <script>
+            (function () {
+                const cdnLink = document.getElementById("bootstrap-css");
+                let isLoaded = false;
+
+                if (null === cdnLink) {
+                    return;
+                }
+
+                const useLocalBootstrapCss = function () {
+                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+                };
+
+                cdnLink.addEventListener("load", function () {
+                    isLoaded = true;
+                });
+
+                cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+                window.setTimeout(function () {
+                    if (false === isLoaded) {
+                        useLocalBootstrapCss();
+                    }
+                }, 3000);
+            })();
+        </script>
+        <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
         <link rel="stylesheet" type="text/css" href="/style/edit.css" />
         <link rel="stylesheet" type="text/css" href="/style/tree.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.43.5/css/ace.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.43.6/css/ace.min.css">
+
+        <style>
+            .editor-page {
+                padding-top: 1rem;
+                padding-bottom: 1.5rem;
+            }
+
+            .editor-shell {
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 0.75rem;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+                overflow: hidden;
+            }
+
+            .editor-toolbar {
+                background-color: rgba(0, 0, 0, 0.2);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .file-sidebar {
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 0.75rem;
+                background-color: rgba(255, 255, 255, 0.02);
+                padding: 0.75rem;
+            }
+
+            .file-tree-scroll {
+                max-height: 65vh;
+                overflow: auto;
+                padding-right: 0.25rem;
+            }
+
+            #fileTree .nav-link {
+                border-radius: 0.4rem;
+            }
+
+            #editor,
+            #preview {
+                min-height: 70vh;
+            }
+
+            #preview {
+                padding: 0.75rem;
+            }
+
+            #preview img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 0.5rem;
+            }
+
+            .upload-card {
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 0.75rem;
+                background-color: rgba(255, 255, 255, 0.02);
+                padding: 0.75rem;
+            }
+        </style>
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark navbar-fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -49,49 +134,67 @@
                 </div>
             </div>
             <!-- Main view -->
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12">
-                        <h1 class="mt-1">File Editor</h1>
+            <div class="container-fluid editor-page">
+                <div class="row g-3 align-items-center mb-1">
+                    <div class="col-lg-7">
+                        <h1 class="mt-1 mb-1">File Editor</h1>
+                        <p class="text-secondary mb-0">Browse, upload, preview and edit files directly on the device.</p>
+                    </div>
+                    <div class="col-lg-5 text-lg-end">
+                        <span class="badge text-bg-secondary">Shortcut: CTRL + S to save</span>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-3">
-                        <p>Use CTRL + s to save a modified file.</p>
-                    </div>
-                    <div class="col-9">
-                        <div class="input-group">
-                            <input type="file" class="form-control" id="uploadFile">
-                            <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
+
+                <div class="upload-card mb-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-lg-8">
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="uploadFile">
+                                <button class="btn btn-light" type="button" id="btnUpload">Upload</button>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <span class="input-group-text">Upload destination directory:</span>
-                            <input type="text" class="form-control" id="directory" value="/configuration" size="40" />
+                        <div class="col-lg-4">
+                            <div class="input-group">
+                                <span class="input-group-text">Destination</span>
+                                <input type="text" class="form-control" id="directory" value="/configuration" size="40" />
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-3">
+
+                <div class="row g-3">
+                    <div class="col-lg-3">
+                        <div class="file-sidebar sticky-top" style="top: 84px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h2 class="h5 mb-0">Files</h2>
+                                <button class="btn btn-sm btn-outline-light" type="button" id="refreshTree">Refresh</button>
+                            </div>
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text">Filter</span>
+                                <input type="text" class="form-control" id="fileFilter" placeholder="Type to filter files" />
+                            </div>
+                            <div class="file-tree-scroll">
+                                <ul class="nav nav-pills flex-column" id="fileTree"></ul>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-9">
-                        <p></p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-3">
-                    </div>
-                    <div class="col-9">
-                        <h4 id="fileName" class="text-secondary"></h4>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-3">
-                        <h2>Files</h2>
-                        <ul class="nav nav-pills flex-column" id="fileTree"></ul>
-                    </div>
-                    <div class="col-9" style="position: relative;">
-                        <div class="collapse show" id="editor"></div>
-                        <div class="collapse" id="preview"></div>
+
+                    <div class="col-lg-9" style="position: relative;">
+                        <div class="editor-shell">
+                            <div class="editor-toolbar px-3 py-2 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <div>
+                                    <div class="small text-secondary">Current file</div>
+                                    <div id="fileName" class="fw-semibold text-light"></div>
+                                </div>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Editor actions">
+                                    <button type="button" class="btn btn-outline-light" id="btnSave">Save</button>
+                                    <button type="button" class="btn btn-outline-light" id="btnUndo">Undo</button>
+                                    <button type="button" class="btn btn-outline-light" id="btnRedo">Redo</button>
+                                </div>
+                            </div>
+                            <div class="collapse show" id="editor"></div>
+                            <div class="collapse" id="preview"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -106,27 +209,23 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
-        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Bootstrap JS bundle -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/menu.js"></script>
-        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
-        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/utils.js"></script>
-        <script type="text/javascript" src="/js/dialog.js"></script>
+        <script type="text/javascript" src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
-        <script type="text/javascript" src="/js/rest.js"></script>
         <!-- The high performance code editor Ace. -->
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ace-builds@1.43.5/src-min-noconflict/ace.min.js" referrerpolicy="origin"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/ace-builds@1.43.6/src-min-noconflict/ace.min.js" referrerpolicy="origin"></script>
 
         <!-- Custom javascript -->
         <script>
-            var editor      = null;
-            var loadedFile  = "";
-            var restClient  = new pixelix.rest.Client();
-            var supportedFileTypes = [{
+            let editor = null;
+            let loadedFile = "";
+            const restClient = new pixelix.rest.Client();
+            const supportedFileTypes = [{
                 name: "bmp",
                 lang: null,
                 type: "image"
@@ -172,256 +271,230 @@
                 type: "text"
             }];
 
+            function setVisible(element, visible) {
+                element.style.display = visible ? "" : "none";
+            }
+
+            function isVisible(element) {
+                return element.offsetParent !== null;
+            }
+
             function createFileInTree(fileInfo, seqNo) {
-                var fileTypeInfo    = getFileTypeInfo(fileInfo.name);
-                var itemId          = "file" + seqNo;
-                var fileName        = fileInfo.name.split('/').pop(); // Extract only the filename without path
-                var $itemFile       = $("<li>");
-                var $actions        = $("<div>")
-                                    .attr("class", "dropdown-menu");
-                var $actionSize     = $("<a>")
-                                    .attr("class", "dropdown-item disabled")
-                                    .attr("href", "#")
-                                    .attr("tabindex", "-1")
-                                    .attr("aria-disabled", "true")
-                                    .text((fileInfo.size / 1024).toFixed(2) + " kByte");
-                var $actionDownload = $("<a>")
-                                    .attr("class", "dropdown-item")
-                                    .attr("href", fileInfo.name)
-                                    .attr("download", true)
-                                    .text("Download");
-                var $actionEdit     = $("<a>")
-                                    .attr("class", "dropdown-item")
-                                    .attr("href", "#")
-                                    .attr("onclick", "editFile(\"" + itemId + "\")")
-                                    .text("Edit");
-                var $actionPreview  = $("<a>")
-                                    .attr("class", "dropdown-item")
-                                    .attr("href", "#")
-                                    .attr("onclick", "previewFile(\"" + itemId + "\")")
-                                    .text("Preview");
-                var $actionRemove   = $("<a>")
-                                    .attr("class", "dropdown-item")
-                                    .attr("href", "#")
-                                    .attr("onclick", "removeFile(\"" + itemId + "\")")
-                                    .text("Remove");
-                var $itemButton     = $("<a>")
-                                    .attr("href", "#")
-                                    .attr("role", "button")
-                                    .attr("class", "nav-link dropdown-toggle")
-                                    .attr("id", itemId)
-                                    .attr("data-full-path", fileInfo.name) // Store full path for operations
-                                    .attr("data-bs-toggle", "dropdown")
-                                    .attr("aria-haspopup", "true")
-                                    .attr("aria-expanded", "false")
-                                    .text(fileName);
+                const fileTypeInfo = getFileTypeInfo(fileInfo.name);
+                const itemId = "file" + seqNo;
+                const fileName = fileInfo.name.split("/").pop(); // Extract only the filename without path
 
-                $($actions).append($actionSize);
-                $($actions).append($actionDownload);
+                const itemButton = document.createElement("a");
+                itemButton.href = "#";
+                itemButton.setAttribute("role", "button");
+                itemButton.className = "nav-link dropdown-toggle";
+                itemButton.id = itemId;
+                itemButton.setAttribute("data-full-path", fileInfo.name); // Store full path for operations
+                itemButton.setAttribute("data-bs-toggle", "dropdown");
+                itemButton.setAttribute("aria-haspopup", "true");
+                itemButton.setAttribute("aria-expanded", "false");
+                itemButton.textContent = fileName;
 
-                if (null !== fileTypeInfo) {
-                    if ("text" === fileTypeInfo.type) {
-                        $($actions).append($actionEdit);
-                    } else if ("image" === fileTypeInfo.type) {
-                        $($actions).append($actionPreview);
+                const actions = document.createElement("div");
+                actions.className = "dropdown-menu";
+
+                const actionSize = document.createElement("a");
+                actionSize.className = "dropdown-item disabled";
+                actionSize.href = "#";
+                actionSize.tabIndex = -1;
+                actionSize.setAttribute("aria-disabled", "true");
+                actionSize.textContent = (fileInfo.size / 1024).toFixed(2) + " kByte";
+
+                const actionDownload = document.createElement("a");
+                actionDownload.className = "dropdown-item";
+                actionDownload.href = fileInfo.name;
+                actionDownload.setAttribute("download", "true");
+                actionDownload.textContent = "Download";
+
+                actions.appendChild(actionSize);
+                actions.appendChild(actionDownload);
+
+                if (fileTypeInfo !== null) {
+                    if (fileTypeInfo.type === "text") {
+                        const actionEdit = document.createElement("a");
+                        actionEdit.className = "dropdown-item";
+                        actionEdit.href = "#";
+                        actionEdit.textContent = "Edit";
+                        actionEdit.addEventListener("click", () => editFile(itemId));
+                        actions.appendChild(actionEdit);
+                    } else if (fileTypeInfo.type === "image") {
+                        const actionPreview = document.createElement("a");
+                        actionPreview.className = "dropdown-item";
+                        actionPreview.href = "#";
+                        actionPreview.textContent = "Preview";
+                        actionPreview.addEventListener("click", () => previewFile(itemId));
+                        actions.appendChild(actionPreview);
                     }
                 }
 
-                $($actions).append($actionRemove);
-                $($itemFile).append($itemButton).append($actions);
+                const actionRemove = document.createElement("a");
+                actionRemove.className = "dropdown-item";
+                actionRemove.href = "#";
+                actionRemove.textContent = "Remove";
+                actionRemove.addEventListener("click", () => removeFile(itemId));
+                actions.appendChild(actionRemove);
 
-                return $itemFile;
+                const itemFile = document.createElement("li");
+                itemFile.appendChild(itemButton);
+                itemFile.appendChild(actions);
+
+                return itemFile;
             }
 
             function createDirectoryInTree(directoryInfo, meta = null) {
-                var idx         = 0;
-                var dirName     = directoryInfo.name.split('/').pop() || directoryInfo.name; // Extract only the directory name without path
-                var $dirName    = $("<li>")
-                                    .attr("data-full-path", directoryInfo.name)
-                                    .attr("data-loaded", "false")
-                                    .text(dirName);
-                var $itemDir    = $("<ul>");
+                const dirName = directoryInfo.name.split("/").pop() || directoryInfo.name; // Extract only the directory name without path
 
-                $($dirName).append($itemDir);
+                const dirItem = document.createElement("li");
+                dirItem.setAttribute("data-full-path", directoryInfo.name);
+                dirItem.setAttribute("data-loaded", "false");
+                dirItem.textContent = dirName;
 
-                if (null === meta) {
-                    meta = {
-                        seqNo: 0
-                    };
+                const subList = document.createElement("ul");
+                dirItem.appendChild(subList);
+
+                if (meta === null) {
+                    meta = { seqNo: 0 };
                 }
 
                 // Only process the listing if it exists (for initially loaded directories)
                 if (directoryInfo.listing && directoryInfo.listing.length > 0) {
-                    for(idx = 0; idx < directoryInfo.listing.length; ++idx) {
-
-                        if (directoryInfo.listing[idx].type === "dir") {
+                    directoryInfo.listing.forEach((entry) => {
+                        if (entry.type === "dir") {
                             // For subdirectories, create placeholder without listing to enable lazy loading
-                            var subDir = {
-                                name: directoryInfo.listing[idx].name,
-                                type: "dir"
-                                // No listing property - this will trigger lazy loading
-                            };
-                            $($itemDir).append(createDirectoryInTree(subDir, meta));
+                            subList.appendChild(createDirectoryInTree({ name: entry.name, type: "dir" }, meta));
                         } else {
-                            $($itemDir).append(createFileInTree(directoryInfo.listing[idx], meta.seqNo));
+                            subList.appendChild(createFileInTree(entry, meta.seqNo));
                             ++meta.seqNo;
                         }
-                    }
-                    $dirName.attr("data-loaded", "true");
+                    });
+                    dirItem.setAttribute("data-loaded", "true");
                 }
 
-                return $dirName;
+                return dirItem;
             }
 
-            function listRootFiles(id) {
-                return restClient.listAllFiles("/").then(function(items) {
-                    var $menu = $("#" + id);
+            async function listRootFiles(id) {
+                try {
+                    const items = await restClient.listAllFiles("/");
+                    const menuEl = document.getElementById(id);
+                    menuEl.replaceChildren();
 
                     // Create root directory structure with only first-level contents
-                    var rootDir = {
-                        name: "/",
-                        type: "dir",
-                        listing: items
-                    };
+                    const rootDir = { name: "/", type: "dir", listing: items };
+                    const rootItem = createDirectoryInTree(rootDir);
 
-                    var $root = createDirectoryInTree(rootDir).children().appendTo($menu);
+                    // Append the root's children (its <ul>) directly into the tree container.
+                    Array.from(rootItem.children).forEach((child) => menuEl.appendChild(child));
 
-                    $("#" + id).treed();
-
-                    return Promise.resolve();
-
-                }).catch(function(rsp) {
-                    var alertMsg = "";
-
-                    if (typeof rsp === "string") {
-                        alertMsg = rsp;
-                    } else {
-                        alertMsg = rsp.error.msg;
-                    }
-
-                    return dialog.showError("<p>" + alertMsg + "</p>").then(function() {
-                        return Promise.reject();
-                    });
-                });
+                    initFileTree(menuEl);
+                } catch (rsp) {
+                    const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                    await dialog.showError("<p>" + alertMsg + "</p>");
+                }
             }
 
-            function loadDirectoryContents(dirPath, $dirElement) {
-                return restClient.listAllFiles(dirPath).then(function(items) {
-                    var $itemDir = $dirElement.children('ul').first();
-                    var meta = {
-                        seqNo: $("#fileTree").find('a[id^="file"]').length // Continue numbering from existing files
+            async function loadDirectoryContents(dirPath, dirElement) {
+                try {
+                    const items = await restClient.listAllFiles(dirPath);
+                    const subList = dirElement.querySelector(":scope > ul");
+                    const meta = {
+                        seqNo: document.querySelectorAll('#fileTree a[id^="file"]').length // Continue numbering from existing files
                     };
 
                     // Clear any existing placeholder content
-                    $itemDir.empty();
+                    subList.replaceChildren();
 
                     // Add the directory contents
-                    for(var idx = 0; idx < items.length; ++idx) {
-                        if (items[idx].type === "dir") {
+                    items.forEach((entry) => {
+                        if (entry.type === "dir") {
                             // For subdirectories, create without listing to enable lazy loading
-                            var subDir = {
-                                name: items[idx].name,
-                                type: "dir"
-                                // No listing property - this will trigger lazy loading
-                            };
-                            $itemDir.append(createDirectoryInTree(subDir, meta));
+                            subList.appendChild(createDirectoryInTree({ name: entry.name, type: "dir" }, meta));
                         } else {
-                            $itemDir.append(createFileInTree(items[idx], meta.seqNo));
+                            subList.appendChild(createFileInTree(entry, meta.seqNo));
                             ++meta.seqNo;
                         }
-                    }
+                    });
 
                     // Mark as loaded and reinitialize tree functionality for new elements
-                    $dirElement.attr("data-loaded", "true");
-                    $("#fileTree").treed();
-
-                    return Promise.resolve();
-
-                }).catch(function(rsp) {
-                    var alertMsg = "";
-
-                    if (typeof rsp === "string") {
-                        alertMsg = rsp;
-                    } else {
-                        alertMsg = rsp.error.msg;
-                    }
-
-                    return dialog.showError("<p>" + alertMsg + "</p>").then(function() {
-                        return Promise.reject();
-                    });
-                });
+                    dirElement.setAttribute("data-loaded", "true");
+                    initFileTree(document.getElementById("fileTree"));
+                } catch (rsp) {
+                    const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                    await dialog.showError("<p>" + alertMsg + "</p>");
+                }
             }
 
-            function editFile(id) {
-                var filename = $("#" + id).attr("data-full-path"); // Use full path from data attribute
+            async function editFile(id) {
+                const filename = document.getElementById(id).getAttribute("data-full-path"); // Use full path from data attribute
 
                 loadedFile = filename;
                 editor.setValue("");
                 setEditorMode(filename);
-                $("#editor").collapse("show");
-                $("#preview").collapse("hide");
-                $("#fileName").text(loadedFile);
+                bootstrap.Collapse.getOrCreateInstance(document.getElementById("editor")).show();
+                bootstrap.Collapse.getOrCreateInstance(document.getElementById("preview")).hide();
+                document.getElementById("fileName").textContent = loadedFile;
 
-                return dialog.show("Loading file", "<p>Please wait, its loading.</p>")
-                .then(function() {
-                    return restClient.readFile(filename);
-                })
-                .then(function(rsp) {
-                    /* Fill content in, remove selection and
-                     * move cursor to the begin.
-                     */
+                try {
+                    await dialog.show("Loading file", "<p>Please wait, its loading.</p>");
+
+                    const rsp = await restClient.readFile(filename);
+
+                    /* Fill content in, remove selection and move cursor to the begin. */
                     editor.setValue(rsp, -1);
 
-                    return dialog.hide();
-                }).catch(function(rsp) {
-                    var errorMsg = rsp.error.msg;
-
-                    return dialog.showError("<p>" + errorMsg + "</p>").then(function() {
-                        return Promise.reject();
-                    });
-                });
+                    await dialog.hide();
+                } catch (rsp) {
+                    await dialog.showError("<p>" + rsp.error.msg + "</p>");
+                }
             }
 
             function previewFile(id) {
-                var filename    = $("#" + id).attr("data-full-path"); // Use full path from data attribute
-                var $image      = $("<img>")
-                                    .attr("src", filename)
-                                    .attr("alt", filename);
+                const filename = document.getElementById(id).getAttribute("data-full-path"); // Use full path from data attribute
 
                 loadedFile = "";
                 editor.setValue("");
 
-                $("#preview").empty();
-                $("#preview").append($image);
-                $("#editor").collapse("hide");
-                $("#preview").collapse("show");
+                const image = document.createElement("img");
+                image.src = filename;
+                image.alt = filename;
+
+                const preview = document.getElementById("preview");
+                preview.replaceChildren(image);
+
+                bootstrap.Collapse.getOrCreateInstance(document.getElementById("editor")).hide();
+                bootstrap.Collapse.getOrCreateInstance(preview).show();
             }
 
-            function removeFile(id) {
-                var filename = $("#" + id).attr("data-full-path"); // Use full path from data attribute
+            async function removeFile(id) {
+                const item = document.getElementById(id);
+                const filename = item.getAttribute("data-full-path"); // Use full path from data attribute
 
-                return restClient.removeFile(filename).then(function(rsp) {
+                try {
+                    await restClient.removeFile(filename);
 
                     if (loadedFile === filename) {
                         loadedFile = "";
                         editor.setValue("");
                     }
-                    $("#" + id).parent().remove();
+                    item.parentElement.remove();
 
-                    return dialog.showInfo("<p>File " + filename + " removed.</p>");
-
-                }).catch(function(rsp) {
-                    return dialog.showError("<p>" + rsp.error.msg + "</p>");
-                });
+                    await dialog.showInfo("<p>File " + filename + " removed.</p>");
+                } catch (rsp) {
+                    await dialog.showError("<p>" + rsp.error.msg + "</p>");
+                }
             }
 
             function getFileTypeInfo(filename) {
-                var info    = null;
-                var index   = 0;
+                let info = null;
+                let index = 0;
 
-                while((supportedFileTypes.length > index) && (null === info)) {
-                    if (true === filename.endsWith("." + supportedFileTypes[index].name))
-                    {
+                while ((supportedFileTypes.length > index) && (null === info)) {
+                    if (true === filename.endsWith("." + supportedFileTypes[index].name)) {
                         info = supportedFileTypes[index];
                     }
                     ++index;
@@ -431,137 +504,235 @@
             }
 
             function setEditorMode(filename) {
-                var prefix          = "ace/mode/";
-                var mode            = prefix + "plain_text";
-                var fileTypeInfo    = getFileTypeInfo(filename);
+                const prefix = "ace/mode/";
+                let mode = prefix + "plain_text";
+                const fileTypeInfo = getFileTypeInfo(filename);
 
                 if ((null !== fileTypeInfo) &&
-                    (null !== fileTypeInfo.lang))
-                {
+                    (null !== fileTypeInfo.lang)) {
                     mode = prefix + fileTypeInfo.lang;
                 }
 
                 editor.getSession().setMode(mode);
             }
 
-            function upload() {
-                var fileCnt             = document.getElementById("uploadFile").files.length;
-                var dstDirectoryName    = $("#directory").val();
-                var file                = null;
-                var fullPath            = "";
+            async function upload() {
+                const fileCnt = document.getElementById("uploadFile").files.length;
+                const dstDirectoryName = document.getElementById("directory").value;
 
-                if (fileCnt === 1)
-                {
-                    file        = document.getElementById("uploadFile").files[0];
-                    fullPath    = dstDirectoryName + "/" + file.name;
+                if (fileCnt !== 1) {
+                    return;
+                }
 
-                    return restClient.writeFile(fullPath, file, "application/octet-stream").then(function(rsp) {
-                        return dialog.showInfo("<p>File " + file.name + " uploaded.</p>")
-                    }).catch(function(rsp) {
-                        return dialog.showError("<p>" + rsp.error.msg + "</p>");
-                    });
+                const file = document.getElementById("uploadFile").files[0];
+                const fullPath = dstDirectoryName + "/" + file.name;
+
+                try {
+                    await restClient.writeFile(fullPath, file, "application/octet-stream");
+                    await dialog.showInfo("<p>File " + file.name + " uploaded.</p>");
+                    await listRootFiles("fileTree");
+                } catch (rsp) {
+                    await dialog.showError("<p>" + rsp.error.msg + "</p>");
                 }
             }
 
-            $(document).ready(function() {
+            async function saveCurrentFile() {
+                if (0 === loadedFile.length) {
+                    await dialog.showInfo("<p>Please select a text file to edit first.</p>");
+                    return;
+                }
+
+                try {
+                    await dialog.show("Saving file", "<p>Please wait, its saving.</p>");
+                    await restClient.writeFile(loadedFile, editor.getValue(), "text/plain");
+                } finally {
+                    dialog.hide();
+                }
+            }
+
+            function undoInEditor() {
+                if (null !== editor) {
+                    editor.getSession().getUndoManager().undo(false);
+                }
+            }
+
+            function redoInEditor() {
+                if (null !== editor) {
+                    editor.getSession().getUndoManager().redo(false);
+                }
+            }
+
+            function filterFileTree() {
+                const query = document.getElementById("fileFilter").value.trim().toLowerCase();
+                const tree = document.getElementById("fileTree");
+
+                if (0 === query.length) {
+                    tree.querySelectorAll("li").forEach((li) => setVisible(li, true));
+                    return;
+                }
+
+                tree.querySelectorAll('a[id^="file"]').forEach((anchor) => {
+                    const fileItem = anchor.closest("li");
+                    const isMatch = anchor.textContent.toLowerCase().includes(query);
+                    setVisible(fileItem, isMatch);
+                });
+
+                Array.from(tree.querySelectorAll("li")).reverse().forEach((dirItem) => {
+                    const childrenList = dirItem.querySelector(":scope > ul");
+
+                    if (childrenList !== null) {
+                        /* Own text = the directory's own text nodes, excluding child elements. */
+                        let ownText = "";
+                        dirItem.childNodes.forEach((node) => {
+                            if (node.nodeType === Node.TEXT_NODE) {
+                                ownText += node.textContent;
+                            }
+                        });
+                        ownText = ownText.trim().toLowerCase();
+
+                        const hasVisibleChildren = Array.from(childrenList.children).some(
+                            (child) => (child.tagName.toLowerCase() === "li") && isVisible(child)
+                        );
+                        const ownMatch = ownText.includes(query);
+
+                        setVisible(dirItem, ownMatch || hasVisibleChildren);
+                    }
+                });
+            }
+
+            async function refreshFileTree() {
+                try {
+                    await dialog.show("Refreshing files", "<p>Please wait, file information is loading.</p>");
+                    await listRootFiles("fileTree");
+                } finally {
+                    dialog.hide();
+                }
+            }
+
+            /* Collect the elements toggled when expanding/collapsing a branch:
+             * the element children of each non-<i> child of the branch (i.e. the
+             * directory entries inside the branch's <ul>). */
+            function branchEntryElements(branch) {
+                const result = [];
+
+                Array.from(branch.children).forEach((child) => {
+                    if (child.tagName.toLowerCase() !== "i") {
+                        Array.from(child.children).forEach((grandChild) => result.push(grandChild));
+                    }
+                });
+
+                return result;
+            }
+
+            function setBranchEntriesVisible(branch, visible) {
+                branchEntryElements(branch).forEach((el) => setVisible(el, visible));
+            }
+
+            function toggleBranchEntries(branch) {
+                branchEntryElements(branch).forEach((el) => setVisible(el, el.style.display === "none"));
+            }
+
+            function toggleBranch(branch) {
+                const icon = branch.querySelector(":scope > i.tree-icon svg");
+                const isCurrentlyCollapsed = icon.classList.contains("rotate270");
+                const dirPath = branch.getAttribute("data-full-path");
+                const isLoaded = branch.getAttribute("data-loaded") === "true";
+
+                // If expanding (currently collapsed) a directory that hasn't been loaded yet, load its contents
+                if (isCurrentlyCollapsed && dirPath && !isLoaded) {
+                    dialog.show("Loading directory", "<p>Please wait, loading directory contents...</p>")
+                        .then(() => loadDirectoryContents(dirPath, branch))
+                        .then(() => {
+                            // After loading, toggle the visual state
+                            icon.classList.remove("rotate270");
+                            setBranchEntriesVisible(branch, true);
+                        })
+                        .finally(() => dialog.hide());
+                } else {
+                    // Normal toggle behavior for already loaded directories
+                    icon.classList.toggle("rotate270");
+                    toggleBranchEntries(branch);
+                }
+            }
+
+            /* Vanilla replacement for the former jQuery "treed" plugin. Idempotent:
+             * safe to call again after new branches are lazily loaded. */
+            function initFileTree(tree) {
+                tree.classList.add("tree");
+
+                // Initialize each branch (an <li> that directly contains a <ul>).
+                tree.querySelectorAll("li").forEach((branch) => {
+                    if (branch.querySelector(":scope > ul") === null) {
+                        return;
+                    }
+
+                    // Only add icon + handler if it doesn't already exist.
+                    if (branch.querySelector(":scope > i.tree-icon") === null) {
+                        const icon = document.createElement("i");
+                        icon.className = "tree-icon";
+                        icon.innerHTML = '<svg class="rotate270 bg-white" xmlns="http://www.w3.org/2000/svg" width="13" height="10" viewBox="0 0 13 10"><polygon points="2 1, 12 1, 7 9"></polygon></svg>';
+                        branch.prepend(icon);
+                        branch.classList.add("branch");
+
+                        branch.addEventListener("click", (e) => {
+                            if (branch === e.target) {
+                                toggleBranch(branch);
+                            }
+                        });
+
+                        // Initially hide children unless already loaded.
+                        if (branch.getAttribute("data-loaded") !== "true") {
+                            setBranchEntriesVisible(branch, false);
+                        }
+                    }
+                });
+
+                // Toggle from the icon (and its SVG); bind once per element.
+                tree.querySelectorAll(".branch > i.tree-icon").forEach((icon) => {
+                    if (icon.dataset.treeBound === "true") {
+                        return;
+                    }
+                    icon.dataset.treeBound = "true";
+
+                    icon.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        toggleBranch(icon.closest("li"));
+                    });
+
+                    const svg = icon.querySelector("svg");
+                    if (svg !== null) {
+                        svg.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            toggleBranch(svg.closest("li"));
+                        });
+                    }
+                });
+
+                // Open the branch if it directly contains an anchor or button.
+                tree.querySelectorAll(".branch > a, .branch > button").forEach((el) => {
+                    if (el.dataset.treeBound === "true") {
+                        return;
+                    }
+                    el.dataset.treeBound = "true";
+
+                    el.addEventListener("click", (e) => {
+                        el.closest("li").click();
+                        e.preventDefault();
+                    });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", async () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                $("#uploadFile").on("change", function() {
-                    var fileName = $(this).val().split("\\").pop();
-                    $(this).next(".custom-file-label").addClass("selected").html(fileName);
-                });
-
-                $.fn.extend({
-                    treed: function (o) {
-
-                        // Helper function to toggle a branch
-                        function toggleBranch(branch) {
-                            var icon = branch.children("i:first").children("svg:first");
-                            var isCurrentlyCollapsed = icon.hasClass("rotate270");
-                            var dirPath = branch.attr("data-full-path");
-                            var isLoaded = branch.attr("data-loaded") === "true";
-
-                            // If expanding (currently collapsed) a directory that hasn't been loaded yet, load its contents
-                            if (isCurrentlyCollapsed && dirPath && !isLoaded) {
-                                dialog.show("Loading directory", "<p>Please wait, loading directory contents...</p>")
-                                .then(function() {
-                                    return loadDirectoryContents(dirPath, branch);
-                                })
-                                .then(function() {
-                                    // After loading, toggle the visual state
-                                    icon.removeClass("rotate270");
-                                    branch.children().not("i").children().show();
-                                })
-                                .finally(function() {
-                                    dialog.hide();
-                                });
-                            } else {
-                                // Normal toggle behavior for already loaded directories
-                                icon.toggleClass("rotate270");
-                                branch.children().not("i").children().toggle();
-                            }
-                        }
-
-                        //initialize each of the top levels
-                        var tree = $(this);
-                        tree.addClass("tree");
-                        tree.find('li').has("ul").each(function () {
-                            var branch = $(this); //li with children ul
-
-                            // Only add icon if it doesn't already exist
-                            if (branch.children("i.tree-icon").length === 0) {
-                                branch.prepend("<i class=\"tree-icon\"><svg class=\"rotate270 bg-white\" xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" height=\"10\" viewBox=\"0 0 13 10\"><polygon points=\"2 1, 12 1, 7 9\"></polygon></svg></i>");
-                                branch.addClass('branch');
-
-                                // Remove old click handlers and add new one
-                                branch.off('click.tree').on('click.tree', function (e) {
-                                    if (this == e.target) {
-                                        toggleBranch($(this));
-                                    }
-                                });
-
-                                // Initially hide children unless it's the root or already loaded
-                                if (branch.attr("data-loaded") !== "true") {
-                                    branch.children().not("i").children().hide();
-                                }
-                            }
-                        });
-
-                        //fire event from the dynamically added icon
-                        tree.find('.branch .tree-icon').each(function(){
-                            $(this).off('click.tree').on('click.tree', function (e) {
-                                e.stopPropagation(); // Prevent event bubbling
-                                toggleBranch($(this).closest('li'));
-                            });
-                        });
-
-                        //fire event from the dynamically added SVG icon
-                        tree.find('.branch .tree-icon svg').each(function(){
-                            $(this).off('click.tree').on('click.tree', function (e) {
-                                e.stopPropagation(); // Prevent event bubbling
-                                toggleBranch($(this).closest('li'));
-                            });
-                        });
-
-                        //fire event to open branch if the li contains an anchor instead of text
-                        tree.find('.branch>a').each(function () {
-                            $(this).off('click.tree').on('click.tree', function (e) {
-                                $(this).closest('li').click();
-                                e.preventDefault();
-                            });
-                        });
-
-                        //fire event to open branch if the li contains a button instead of text
-                        tree.find('.branch>button').each(function () {
-                            $(this).off('click.tree').on('click.tree', function (e) {
-                                $(this).closest('li').click();
-                                e.preventDefault();
-                            });
-                        });
-                    }
-                });
+                document.getElementById("fileFilter").addEventListener("input", filterFileTree);
+                document.getElementById("refreshTree").addEventListener("click", refreshFileTree);
+                document.getElementById("btnUpload").addEventListener("click", upload);
+                document.getElementById("btnSave").addEventListener("click", saveCurrentFile);
+                document.getElementById("btnUndo").addEventListener("click", undoInEditor);
+                document.getElementById("btnRedo").addEventListener("click", redoInEditor);
 
                 ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.43.2");
                 editor = ace.edit("editor");
@@ -571,47 +742,34 @@
                 editor.setShowPrintMargin(false);
                 editor.setHighlightActiveLine(true);
                 editor.setAutoScrollEditorIntoView(true);
-                editor.setOptions({maxLines: Infinity});
+                editor.setOptions({ maxLines: Infinity });
                 editor.commands.addCommand({
                     name: "saveCommand",
-                    bindKey: {
-                        win: "Ctrl-S",
-                        mac: "Command-S"
-                    },
-                    exec: function(editor) {
-                        dialog.show("Saving file", "<p>Please wait, its saving.</p>")
-                        .then(restClient.writeFile(loadedFile, editor.getValue(), "text/plain"))
-                        .finally(function() {
-                            dialog.hide();
-                        });
-                    },
+                    bindKey: { win: "Ctrl-S", mac: "Command-S" },
+                    exec: () => saveCurrentFile(),
                     readOnly: false
                 });
                 editor.commands.addCommand({
                     name: "undoCommand",
-                    bindKey: {win: "Ctrl-Z",  mac: "Command-Z"},
-                    exec: function(editor) {
-                        editor.getSession().getUndoManager().undo(false);
-                    },
+                    bindKey: { win: "Ctrl-Z", mac: "Command-Z" },
+                    exec: () => undoInEditor(),
                     readOnly: false
                 });
                 editor.commands.addCommand({
                     name: "redoCommand",
-                    bindKey: {win: "Ctrl-Shift-Z",  mac: "Command-Shift-Z"},
-                    exec: function(editor) {
-                        editor.getSession().getUndoManager().redo(false);
-                    },
+                    bindKey: { win: "Ctrl-Shift-Z", mac: "Command-Shift-Z" },
+                    exec: () => redoInEditor(),
                     readOnly: false
                 });
 
-                dialog.show("Loading ...", "<p>Please wait, file information is loading.</p>")
-                .then(function() {
-                    return listRootFiles("fileTree");
-                })
-                .finally(function() {
+                try {
+                    await dialog.show("Loading ...", "<p>Please wait, file information is loading.</p>");
+                    await listRootFiles("fileTree");
+                } finally {
                     dialog.hide();
-                });
+                }
             });
         </script>
     </body>
+
 </html>

@@ -7,39 +7,36 @@ assignees: ''
 
 ---
 
-## Description of the Bug
+## Summary
 
-Provide a clear and concise description of the bug encountered.
+What happened?
 
 ## Steps to Reproduce
 
-List the steps to reproduce the issue:
+How can we reproduce it?
 
-1. Navigate to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. Observe the error
+1.
+2.
+3.
 
 ## Expected Behavior
 
-Describe what you expected to happen instead.
+What did you expect to happen?
 
-## Screenshots
+## Hardware and Version
 
-If applicable, include screenshots to illustrate the issue.
+- Board: [e.g. ESP32-DevKit-v1]
+- Pixelix version: [e.g. 6.0.0]
+- OS: [e.g. Windows, macOS, Linux]
 
-## Environment Information
+## Logs (Optional)
 
-Please provide the following details:
+Paste relevant serial logs here.
 
-- Development board: [e.g., ESP32-DevKit-v1]
-- Version: [e.g., 6.0.0]
-- Operating System: [e.g., Windows, macOS, Linux]
+## Screenshot or Video (Optional)
 
-## Additional Context
+Add a screenshot or short video if it helps explain the issue.
 
-Add any other relevant context or information regarding the issue.
+## Extra Notes (Optional)
 
-## Log Output
-
-If applicable, include any serial log output to assist in troubleshooting.
+Anything else we should know.

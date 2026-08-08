@@ -2,24 +2,34 @@
     "name": "AudioService",
     "version": "0.1.0",
     "description": "...",
-    "authors": [{
-        "name": "Andreas Merkle",
-        "email": "web@blue-andi.de",
-        "url": "https://github.com/BlueAndi",
-        "maintainer": true
-    }],
+    "authors": [
+        {
+            "name": "Andreas Merkle",
+            "email": "web@blue-andi.de",
+            "url": "https://github.com/BlueAndi",
+            "maintainer": true
+        }
+    ],
     "license": "MIT",
-    "dependencies": [{
-        "name": "Logging"
-    }, {
-        "name": "Os"
-    }, {
-        "name": "Service"
-    }, {
-        "owner": "kosme",
-        "name": "arduinoFFT",
-        "version": "~2.0.0"
-    }],
+    "dependencies": [
+        {
+            "name": "Allocator"
+        },
+        {
+            "name": "Logging"
+        },
+        {
+            "name": "Os"
+        },
+        {
+            "name": "Service"
+        },
+        {
+            "owner": "kosme",
+            "name": "arduinoFFT",
+            "version": "~2.0.4"
+        }
+    ],
     "frameworks": "*",
     "platforms": "*"
 }

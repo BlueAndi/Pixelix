@@ -304,7 +304,7 @@ void OpenWeatherView32x8::updateWeatherInfoCurrentOnView()
          * Otherwise, the text will be shown with the wrong icon until the icon is
          * updated successfully.
          */
-        if (true == m_weatherIconCurrent.load(FILESYSTEM, iconFullPath))
+        if (true == m_weatherIconCurrent.load(iconFullPath, FILESYSTEM))
         {
             m_isWeatherIconCurrentUpdated = false;
             m_weatherInfoCurrentText.setFormatStr(text);

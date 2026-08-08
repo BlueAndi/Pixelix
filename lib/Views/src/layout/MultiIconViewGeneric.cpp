@@ -33,7 +33,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "MultiIconView32x8.h"
+#include "MultiIconViewGeneric.h"
 #include <FileSystem.h>
 #include <Logging.h>
 
@@ -60,6 +60,68 @@
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+MultiIconViewGeneric::MultiIconViewGeneric() :
+    IMultiIconView(),
+    m_bitmapWidgets{
+        { BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_0_X, BITMAP_Y },
+        { BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_1_X, BITMAP_Y },
+        { BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_2_X, BITMAP_Y }
+    }
+{
+    uint8_t slot = 0U;
+
+    while (MAX_ICON_SLOTS > slot)
+    {
+        m_bitmapWidgets[slot].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+        m_bitmapWidgets[slot].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+
+        ++slot;
+    }
+}
+
+void MultiIconViewGeneric::update(YAGfx& gfx)
+{
+    uint8_t idx = 0U;
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    while (MAX_ICON_SLOTS > idx)
+    {
+        m_bitmapWidgets[idx].update(gfx);
+        ++idx;
+    }
+}
+
+bool MultiIconViewGeneric::loadIcon(uint8_t slotId, const String& filename, FS& fs)
+{
+    if (MAX_ICON_SLOTS <= slotId)
+    {
+        slotId = 0U;
+    }
+
+    return m_bitmapWidgets[slotId].load(filename, fs);
+}
+
+void MultiIconViewGeneric::clearIcon(uint8_t slotId)
+{
+    if (MAX_ICON_SLOTS <= slotId)
+    {
+        slotId = 0U;
+    }
+
+    m_bitmapWidgets[slotId].clear(ColorDef::BLACK);
+}
+
+bool MultiIconViewGeneric::isIconSlotEmpty(uint8_t slotId) const
+{
+    if (MAX_ICON_SLOTS <= slotId)
+    {
+        slotId = 0U;
+    }
+
+    return m_bitmapWidgets[slotId].isEmpty();
+}
 
 /******************************************************************************
  * Protected Methods

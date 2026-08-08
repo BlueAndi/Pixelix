@@ -5,7 +5,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         <!-- Styles -->
-        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+        <script>
+            (function () {
+                const cdnLink = document.getElementById("bootstrap-css");
+                let isLoaded = false;
+
+                if (null === cdnLink) {
+                    return;
+                }
+
+                const useLocalBootstrapCss = function () {
+                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+                };
+
+                cdnLink.addEventListener("load", function () {
+                    isLoaded = true;
+                });
+
+                cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+                window.setTimeout(function () {
+                    if (false === isLoaded) {
+                        useLocalBootstrapCss();
+                    }
+                }, 3000);
+            })();
+        </script>
         <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
         <link rel="stylesheet" type="text/css" href="/style/style.css" />
 
@@ -15,9 +41,11 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -50,16 +78,14 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
-        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Bootstrap JS bundle -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/menu.js"></script>
-        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
-        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
+        <script type="text/javascript" src="/js/app-menu.js"></script>
 
         <script>
-            $(document).ready(function() {
+            document.addEventListener("DOMContentLoaded", () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);

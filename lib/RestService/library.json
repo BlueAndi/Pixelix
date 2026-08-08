@@ -16,7 +16,7 @@
     }, {
         "name": "Utilities"
     },{
-        "name": "AsyncHttpClient"
+        "name": "HttpService"
     }
 ],
     "frameworks": "*",

@@ -1,0 +1,68 @@
+@startuml mqtt_service
+
+title MQTT Service Architecture
+
+start
+
+:InitState starts all services;
+:MqttService::start();
+
+:Read device id via SettingsService;
+
+if (Load /configuration/mqttService.json successful?) then (yes)
+else (no)
+  :Persist default MQTT configuration;
+endif
+
+:connectAllBrokers();
+
+while (Service running?) is (yes)
+
+  :MqttService::process();
+
+  if (Settings topic already registered?) then (yes)
+  else (no)
+    :Register topic "mqttService/mqtt"
+    via TopicHandlerService;
+  endif
+
+  :For each MqttBrokerConnection;
+
+  if (State == DISCONNECTED?) then (yes)
+    if (Reconnect timer expired and WiFi connected?) then (yes)
+      :Try MQTT connect;
+      if (Connected?) then (yes)
+        :Publish birth payload;
+        :Resubscribe stored topics;
+      else (no)
+        :Restart reconnect timer;
+      endif
+    else (no)
+    endif
+  else (no)
+    if (State == CONNECTED?) then (yes)
+      :PubSubClient.loop();
+      if (Connection lost?) then (yes)
+        :Set state DISCONNECTED;
+        :Restart reconnect timer;
+      else (no)
+      endif
+    else (no)
+    endif
+  endif
+
+  if (TopicHandlerService setTopic("mqtt")?) then (yes)
+    :Update settings and save /configuration/mqttService.json;
+    :disconnectAllBrokers();
+    :connectAllBrokers();
+  else (no)
+  endif
+
+endwhile (no)
+
+:MqttService::stop();
+:Unregister topic "mqttService/mqtt";
+:disconnectAllBrokers();
+stop
+
+@enduml

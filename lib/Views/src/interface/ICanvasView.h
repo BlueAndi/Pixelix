@@ -74,28 +74,29 @@ public:
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
-    virtual void init(uint16_t width, uint16_t height) = 0;
+    virtual void init(uint16_t width, uint16_t height)    = 0;
 
     /**
      * Update the underlying canvas.
      *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    virtual void update(YAGfx& gfx)                    = 0;
+    virtual void update(YAGfx& gfx)                       = 0;
 
     /**
      * Load icon image from filesystem.
      *
      * @param[in] filename  Image filename
+     * @param[in] fs        Filesystem instance
      *
      * @return If successul, it will return true otherwise false.
      */
-    virtual bool loadIcon(const String& filename)      = 0;
+    virtual bool loadIcon(const String& filename, FS& fs) = 0;
 
     /**
      * Clear icon.
      */
-    virtual void clearIcon()                           = 0;
+    virtual void clearIcon()                              = 0;
 
 protected:
 

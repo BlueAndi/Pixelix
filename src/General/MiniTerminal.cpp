@@ -207,7 +207,7 @@ void MiniTerminal::executeCommand(const char* cmdLine)
             {
                 ++par;
             }
-            // NOTE: Allow empty parameters to be able to clear settings values.
+            /* NOTE: Allow empty parameters to be able to clear settings values. */
 
             /* Execute the command with its parameters (optional). */
             (this->*entry.handler)(par);

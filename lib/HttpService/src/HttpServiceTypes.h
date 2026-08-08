@@ -42,8 +42,11 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <stddef.h>
+#include <limits>
+#include <utility>
 #include <HTTPClient.h>
 #include <Mutex.hpp>
+#include <PsAllocator.hpp>
 #include "IHttpResponseHandler.h"
 
 /******************************************************************************
@@ -107,6 +110,34 @@ struct WorkerRequest
     }
 
     /**
+     * Allocate payload memory. Uses PSRAM first.
+     *
+     * @param[in] payloadSize   Payload size in byte.
+     *
+     * @return Payload buffer or nullptr on failure.
+     */
+    static uint8_t* allocPayload(size_t payloadSize)
+    {
+        PsAllocator allocator;
+        return static_cast<uint8_t*>(allocator.allocate(payloadSize));
+    }
+
+    /**
+     * Release payload memory.
+     *
+     * @param[in] payloadPtr    Payload pointer.
+     */
+    static void releasePayload(const uint8_t*& payloadPtr)
+    {
+        if (nullptr != payloadPtr)
+        {
+            PsAllocator allocator;
+            allocator.deallocate(const_cast<uint8_t*>(payloadPtr));
+            payloadPtr = nullptr;
+        }
+    }
+
+    /**
      * Copy constructor.
      *
      * @param[in] other   Other HTTP request to copy.
@@ -121,7 +152,7 @@ struct WorkerRequest
     {
         if (nullptr != other.payload)
         {
-            uint8_t* buffer = new (std::nothrow) uint8_t[size];
+            uint8_t* buffer = allocPayload(size);
 
             if (nullptr == buffer)
             {
@@ -150,6 +181,7 @@ struct WorkerRequest
     {
         other.payload = nullptr;
         other.size    = 0U;
+        other.handler = nullptr;
     }
 
     /**
@@ -157,11 +189,7 @@ struct WorkerRequest
      */
     ~WorkerRequest()
     {
-        if (nullptr != payload)
-        {
-            delete[] payload;
-            payload = nullptr;
-        }
+        releasePayload(payload);
     }
 
     /**
@@ -180,18 +208,14 @@ struct WorkerRequest
             method  = other.method;
             handler = other.handler;
 
-            if (nullptr != payload)
-            {
-                delete[] payload;
-                payload = nullptr;
-            }
+            releasePayload(payload);
 
             payload = nullptr;
             size    = other.size;
 
             if (nullptr != other.payload)
             {
-                uint8_t* buffer = new (std::nothrow) uint8_t[size];
+                uint8_t* buffer = allocPayload(size);
 
                 if (nullptr == buffer)
                 {
@@ -207,6 +231,70 @@ struct WorkerRequest
 
         return *this;
     }
+
+    /**
+     * Move assignment operator.
+     *
+     * @param[in] other   Other HTTP request to move from.
+     *
+     * @return Reference to this HTTP request.
+     */
+    WorkerRequest& operator=(WorkerRequest&& other) noexcept
+    {
+        if (this != &other)
+        {
+            releasePayload(payload);
+
+            jobId         = other.jobId;
+            url           = std::move(other.url);
+            method        = other.method;
+            payload       = other.payload;
+            size          = other.size;
+            handler       = other.handler;
+
+            other.payload = nullptr;
+            other.size    = 0U;
+            other.handler = nullptr;
+            other.jobId   = INVALID_HTTP_JOB_ID;
+        }
+
+        return *this;
+    }
+
+    /**
+     * Replace the payload with a private copy.
+     *
+     * @param[in] data      Payload to copy.
+     * @param[in] dataSize  Payload size in byte.
+     *
+     * @return If the payload could be copied, it will return true otherwise false.
+     */
+    bool setPayload(const uint8_t* data, size_t dataSize)
+    {
+        bool isSuccessful = true;
+
+        releasePayload(payload);
+
+        size = dataSize;
+
+        if ((nullptr != data) && (0U < dataSize))
+        {
+            uint8_t* buffer = allocPayload(dataSize);
+
+            if (nullptr == buffer)
+            {
+                size         = 0U;
+                isSuccessful = false;
+            }
+            else
+            {
+                memcpy(buffer, data, dataSize);
+                payload = buffer;
+            }
+        }
+
+        return isSuccessful;
+    }
 };
 
 /**
@@ -221,6 +309,7 @@ struct WorkerResponse
     t_http_codes statusCode; /**< HTTP status code of the response. */
     uint8_t*     payload;    /**< Payload of the HTTP response. */
     size_t       size;       /**< Size of the payload in byte. */
+    size_t       capacity;   /**< Allocated payload capacity in byte. */
 
     /**
      * Constructs the HTTP response.
@@ -229,8 +318,37 @@ struct WorkerResponse
         jobId(INVALID_HTTP_JOB_ID),
         statusCode(HTTP_CODE_OK),
         payload(nullptr),
-        size(0U)
+        size(0U),
+        capacity(0U)
     {
+    }
+
+    /**
+     * Allocate payload memory. Uses PSRAM first.
+     *
+     * @param[in] payloadSize   Payload size in byte.
+     *
+     * @return Payload buffer or nullptr on failure.
+     */
+    static uint8_t* allocPayload(size_t payloadSize)
+    {
+        PsAllocator allocator;
+        return static_cast<uint8_t*>(allocator.allocate(payloadSize));
+    }
+
+    /**
+     * Free payload memory.
+     *
+     * @param[in] payloadPtr    Payload pointer.
+     */
+    static void freePayload(uint8_t*& payloadPtr)
+    {
+        if (nullptr != payloadPtr)
+        {
+            PsAllocator allocator;
+            allocator.deallocate(payloadPtr);
+            payloadPtr = nullptr;
+        }
     }
 
     /**
@@ -242,11 +360,12 @@ struct WorkerResponse
         jobId(other.jobId),
         statusCode(other.statusCode),
         payload(nullptr),
-        size(other.size)
+        size(other.size),
+        capacity(0U)
     {
         if (nullptr != other.payload)
         {
-            uint8_t* buffer = new (std::nothrow) uint8_t[size];
+            uint8_t* buffer = allocPayload(size);
 
             if (nullptr == buffer)
             {
@@ -255,7 +374,8 @@ struct WorkerResponse
             else
             {
                 memcpy(buffer, other.payload, size);
-                payload = buffer;
+                payload  = buffer;
+                capacity = size;
             }
         }
     }
@@ -269,10 +389,12 @@ struct WorkerResponse
         jobId(other.jobId),
         statusCode(other.statusCode),
         payload(other.payload),
-        size(other.size)
+        size(other.size),
+        capacity(other.capacity)
     {
-        other.payload = nullptr;
-        other.size    = 0U;
+        other.payload  = nullptr;
+        other.size     = 0U;
+        other.capacity = 0U;
     }
 
     /**
@@ -282,9 +404,10 @@ struct WorkerResponse
     {
         if (nullptr != payload)
         {
-            delete[] payload;
-            payload = nullptr;
+            freePayload(payload);
         }
+
+        capacity = 0U;
     }
 
     /**
@@ -303,16 +426,16 @@ struct WorkerResponse
 
             if (nullptr != payload)
             {
-                delete[] payload;
-                payload = nullptr;
+                freePayload(payload);
             }
 
-            payload = nullptr;
-            size    = other.size;
+            payload  = nullptr;
+            size     = other.size;
+            capacity = 0U;
 
             if (nullptr != other.payload)
             {
-                uint8_t* buffer = new (std::nothrow) uint8_t[size];
+                uint8_t* buffer = allocPayload(size);
 
                 if (nullptr == buffer)
                 {
@@ -321,9 +444,40 @@ struct WorkerResponse
                 else
                 {
                     memcpy(buffer, other.payload, size);
-                    payload = buffer;
+                    payload  = buffer;
+                    capacity = size;
                 }
             }
+        }
+
+        return *this;
+    }
+
+    /**
+     * Move assignment operator.
+     *
+     * @param[in] other   Other HTTP response to move from.
+     *
+     * @return Reference to this HTTP response.
+     */
+    WorkerResponse& operator=(WorkerResponse&& other) noexcept
+    {
+        if (this != &other)
+        {
+            if (nullptr != payload)
+            {
+                freePayload(payload);
+            }
+
+            jobId          = other.jobId;
+            statusCode     = other.statusCode;
+            payload        = other.payload;
+            size           = other.size;
+            capacity       = other.capacity;
+
+            other.payload  = nullptr;
+            other.size     = 0U;
+            other.capacity = 0U;
         }
 
         return *this;
@@ -335,31 +489,80 @@ struct WorkerResponse
      * @param[in] data      Data to append.
      * @param[in] dataSize  Size of the data in byte.
      */
-    void append(uint8_t* data, size_t dataSize)
+    void append(const uint8_t* data, size_t dataSize)
     {
-        if (nullptr == payload)
+        if ((nullptr == data) ||
+            (0U == dataSize))
         {
-            payload = new (std::nothrow) uint8_t[dataSize];
-            if (nullptr != payload)
-            {
-                memcpy(payload, data, dataSize);
-                size = dataSize;
-            }
+            return;
+        }
+
+        if ((std::numeric_limits<size_t>::max() - size) < dataSize)
+        {
+            return;
+        }
+
+        const size_t requiredSize = size + dataSize;
+
+        if (false == ensureCapacity(requiredSize))
+        {
+            return;
+        }
+
+        memcpy(payload + size, data, dataSize);
+        size += dataSize;
+    }
+
+private:
+
+    /**
+     * Ensure payload capacity.
+     *
+     * @param[in] requiredSize  Required payload size in byte.
+     *
+     * @return If enough capacity is available, it returns true otherwise false.
+     */
+    bool ensureCapacity(size_t requiredSize)
+    {
+        bool isSuccessful = false;
+
+        if (requiredSize <= capacity)
+        {
+            isSuccessful = true;
         }
         else
         {
-            uint8_t* newPayload = new (std::nothrow) uint8_t[this->size + dataSize];
+            size_t targetCapacity = (0U == capacity) ? requiredSize : capacity;
+
+            while (targetCapacity < requiredSize)
+            {
+                if ((std::numeric_limits<size_t>::max() / 2U) < targetCapacity)
+                {
+                    targetCapacity = requiredSize;
+                    break;
+                }
+
+                targetCapacity *= 2U;
+            }
+
+            uint8_t* newPayload = allocPayload(targetCapacity);
 
             if (nullptr != newPayload)
             {
-                memcpy(newPayload, payload, this->size);
-                memcpy(newPayload + this->size, data, dataSize);
+                if ((nullptr != payload) &&
+                    (0U < size))
+                {
+                    memcpy(newPayload, payload, size);
+                }
 
-                delete[] payload;
-                payload  = newPayload;
-                size    += dataSize;
+                freePayload(payload);
+                payload      = newPayload;
+                capacity     = targetCapacity;
+                isSuccessful = true;
             }
         }
+
+        return isSuccessful;
     }
 };
 

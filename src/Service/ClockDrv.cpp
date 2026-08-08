@@ -154,6 +154,15 @@ bool ClockDrv::getTime(struct tm& timeInfo)
     return getLocalTime(&timeInfo, WAIT_TIME_MS);
 }
 
+bool ClockDrv::getTimeUtc(struct tm& timeInfo)
+{
+    time_t now = time(nullptr); /* Get local time. */
+
+    timeInfo   = *gmtime(&now); /* Get UTC from local time. */
+
+    return true;
+}
+
 bool ClockDrv::getTzTime(const char* tz, struct tm& timeInfo)
 {
     const uint32_t WAIT_TIME_MS = 10U;
@@ -198,6 +207,21 @@ bool ClockDrv::getTzTime(const char* tz, struct tm& timeInfo)
     }
 
     return result;
+}
+
+long ClockDrv::getCurrentTimeZoneOffset() const
+{
+    time_t now = time(nullptr);
+    tm     gmTimeInfo;
+    tm     localTimeInfo;
+    long   offsetInSec = 0;
+
+    (void)gmtime_r(&now, &gmTimeInfo);
+    (void)localtime_r(&now, &localTimeInfo);
+
+    offsetInSec = static_cast<long>(mktime(&localTimeInfo)) - static_cast<long>(mktime(&gmTimeInfo));
+
+    return offsetInSec;
 }
 
 /******************************************************************************
@@ -328,6 +352,11 @@ void ClockDrv::syncRtcByTime()
     {
         sync = true;
     }
+    else
+    {
+        /* Nothing to do. */
+        ;
+    }
 
     if (true == sync)
     {
@@ -335,21 +364,6 @@ void ClockDrv::syncRtcByTime()
 
         m_syncRtcByNtpTimer.restart();
     }
-}
-
-long ClockDrv::getCurrentTimeZoneOffset() const
-{
-    time_t now = time(nullptr);
-    tm     gmTimeInfo;
-    tm     localTimeInfo;
-    long   offsetInSec = 0;
-
-    (void)gmtime_r(&now, &gmTimeInfo);
-    (void)localtime_r(&now, &localTimeInfo);
-
-    offsetInSec = static_cast<long>(mktime(&localTimeInfo)) - static_cast<long>(mktime(&gmTimeInfo));
-
-    return offsetInSec;
 }
 
 /******************************************************************************

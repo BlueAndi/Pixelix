@@ -54,6 +54,7 @@
 #include "WebConfig.h"
 #include "FileSystem.h"
 #include "JsonFile.h"
+#include <PsramJsonDocument.hpp>
 #include "Version.h"
 #include "Services.h"
 #include "Topics.h"
@@ -69,6 +70,7 @@
 #include <WiFiUtil.h>
 
 #include <lwip/init.h>
+#include <esp_littlefs.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -146,7 +148,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Mounting the filesystem. */
-    else if (false == mountFilesystem())
+    else if (false == FileSystem::init())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         errorId = ErrorState::ERROR_ID_BAD_FS;
@@ -425,10 +427,15 @@ void InitState::exit(StateMachine& sm)
                      * Of course a error may happened during loading the plugin installation,
                      * in this case show the welcome screen too.
                      */
-                    welcome();
+                    welcome(true);
 
                     /* Save the plugin installation, so the user can configure it by its own in the web page settings. */
                     PluginMgr::getInstance().save();
+                }
+                else
+                {
+                    /* Welcome the user as long as the welcome plugin is available. */
+                    welcome(false);
                 }
             }
 
@@ -455,21 +462,30 @@ void InitState::exit(StateMachine& sm)
 
 void InitState::showStartupInfoOnSerial()
 {
-    String macAddr;
+    const char* littleFsRepo = "https://github.com/joltwallet/esp_littlefs/releases/tag/v" ESP_LITTLEFS_VERSION_NUMBER;
+    String      macAddr;
+    String      chipId;
 
     WiFiUtil::getEFuseMAC(macAddr);
+    WiFiUtil::getChipId(chipId);
 
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO("Target: %s", Version::getTargetName());
-    LOG_INFO("SW version: %s", Version::getSoftwareVersion());
-    delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("SW revision: %s", Version::getSoftwareRevision());
-    LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
-    LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
-    delay(20U); /* To avoid missing log messages on the console */
-    LOG_INFO("Wifi efuse MAC: %s", macAddr.c_str());
-    LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
-    delay(20U); /* To avoid missing log messages on the console */
+    LOG_INFO("Target           : %s", Version::getTargetName());
+    LOG_INFO("SW version       : %s", Version::getSoftwareVersion());
+    LOG_INFO("SW revision      : %s", Version::getSoftwareRevision());
+    LOG_INFO("ESP chip id      : %s", chipId.c_str());
+    LOG_INFO("ESP type         : %s", CONFIG_IDF_TARGET);
+    LOG_INFO("ESP chip rev.    : %u", ESP.getChipRevision());
+    LOG_INFO("ESP cpu freq.    : %u MHz", ESP.getCpuFreqMHz());
+    LOG_INFO("Flash chip mode  : %s", getFlashChipMode());
+    LOG_INFO("Flash chip speed : %u", ESP.getFlashChipSpeed());
+    LOG_INFO("Flash chip size  : 0x%08X byte", ESP.getFlashChipSize());
+    LOG_INFO("Flash freq.      : %u MHz", ESP.getFlashChipSpeed() / (1000U * 1000U));
+    LOG_INFO("ESP SDK version  : %s", ESP.getSdkVersion());
+    LOG_INFO("Wifi efuse MAC   : %s", macAddr.c_str());
+    LOG_INFO("LwIP version     : %s", LWIP_VERSION_STRING);
+    LOG_INFO("LittleFS version : %s", ESP_LITTLEFS_VERSION_NUMBER);
+    LOG_INFO("LittleFS link    : %s", littleFsRepo);
 }
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
@@ -496,31 +512,53 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     }
 }
 
-void InitState::welcome()
+void InitState::welcome(bool isVeryFirstStart)
 {
-    IPluginMaintenance* welcomePlugin         = PluginMgr::getInstance().install(WELCOME_PLUGIN_TYPE);
-    IconTextPlugin*     concreteWelcomePlugin = static_cast<IconTextPlugin*>(welcomePlugin);
+    const String    WELCOME_PLUGIN_ALIAS = "_welcome";
+    IconTextPlugin* welcomePlugin        = nullptr;
 
-    if (nullptr != concreteWelcomePlugin)
+    if (true == isVeryFirstStart)
+    {
+        PluginMgr& pluginMgr = PluginMgr::getInstance();
+
+        welcomePlugin        = static_cast<IconTextPlugin*>(pluginMgr.install(WELCOME_PLUGIN_TYPE));
+
+        if (nullptr != welcomePlugin)
+        {
+            pluginMgr.setPluginAliasName(welcomePlugin, WELCOME_PLUGIN_ALIAS);
+        }
+    }
+    else
+    {
+        /* Try to find the welcome plugin by its alias. */
+        IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginByAlias(WELCOME_PLUGIN_ALIAS);
+
+        if (nullptr != plugin)
+        {
+            welcomePlugin = static_cast<IconTextPlugin*>(plugin);
+        }
+    }
+
+    if (nullptr != welcomePlugin)
     {
         FileMgrService::FileId iconFileId = FileMgrService::getInstance().getFileIdByName("smiley");
 
         if (FileMgrService::FILE_ID_INVALID != iconFileId)
         {
-            (void)concreteWelcomePlugin->loadIcon(iconFileId, true);
+            (void)welcomePlugin->loadIcon(iconFileId, true);
         }
 
-        concreteWelcomePlugin->setText("{hc}Hello World!", true);
-        concreteWelcomePlugin->enable();
+        welcomePlugin->setText("{hc}Hello World!", true);
+        welcomePlugin->enable();
     }
 }
 
 bool InitState::isFsCompatible()
 {
-    bool                isCompatible = false;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    bool              isCompatible = false;
+    JsonFile          jsonFile(FILESYSTEM);
+    const size_t      JSON_DOC_SIZE = 512U;
+    PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
     {
@@ -543,33 +581,6 @@ bool InitState::isFsCompatible()
     }
 
     return isCompatible;
-}
-
-bool InitState::mountFilesystem()
-{
-    bool        isSuccessful                = false;
-    bool        formatOnFail                = false;
-    const char* BASE_PATH                   = "/littlefs";
-    const char* PARTITION_LABEL_DEFAULT     = "spiffs"; /* Default for most of the partitions, defined by Platformio. */
-    const char* PARTITION_LABEL_ALTERNATIVE = "ffat";   /* Sometimes its different, than the default in Platformio. */
-
-    /* Mount filesytem with default partition label. If it fails, use alternative. */
-    if (false == FILESYSTEM.begin(formatOnFail, BASE_PATH, FILESYSTEM_MAX_OPEN_FILES, PARTITION_LABEL_DEFAULT))
-    {
-        /* Try to mount with alternative partition label. */
-        if (true == FILESYSTEM.begin(formatOnFail, BASE_PATH, FILESYSTEM_MAX_OPEN_FILES, PARTITION_LABEL_ALTERNATIVE))
-        {
-            /* Successful mounted with alternative partition label. */
-            isSuccessful = true;
-        }
-    }
-    /* Successful mounted with default partition label. */
-    else
-    {
-        isSuccessful = true;
-    }
-
-    return isSuccessful;
 }
 
 void InitState::getDeviceUniqueId(String& deviceUniqueId)
@@ -646,6 +657,46 @@ void InitState::configureViews()
         /* Default brush is already set in the constructor. */
         ;
     }
+}
+
+const char* InitState::getFlashChipMode()
+{
+    const char* result = "UNKNOWN";
+
+    switch (ESP.getFlashChipMode())
+    {
+    case FM_QIO:
+        result = "QUIO";
+        break;
+
+    case FM_QOUT:
+        result = "QOUT";
+        break;
+
+    case FM_DIO:
+        result = "DIO";
+        break;
+
+    case FM_DOUT:
+        result = "DOUT";
+        break;
+
+    case FM_FAST_READ:
+        result = "FAST_READ";
+        break;
+
+    case FM_SLOW_READ:
+        result = "SLOW_READ";
+        break;
+
+    case FM_UNKNOWN:
+        /* fallthrough */
+
+    default:
+        break;
+    }
+
+    return result;
 }
 
 /******************************************************************************

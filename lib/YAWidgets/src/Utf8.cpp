@@ -78,6 +78,10 @@ void Utf8::toIntern(const String& utf8, String& intern)
     size_t utf8Length = utf8.length();
     size_t utf8Index  = 0U;
 
+    /* Clear and reserve space for the internal string to avoid multiple reallocations. */
+    intern.clear();
+    (void)intern.reserve(utf8Length);
+
     while (utf8Length > utf8Index)
     {
         uint16_t ucs2Char   = 0U;

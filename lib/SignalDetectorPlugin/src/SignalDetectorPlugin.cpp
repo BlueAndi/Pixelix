@@ -109,12 +109,12 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& 
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg     = jsonDoc.to<JsonObject>();
-        JsonArrayConst      jsonTones   = value["tones"];
-        JsonVariantConst    jsonText    = value["text"];
-        JsonVariantConst    jsonPushUrl = value["pushUrl"];
+        const size_t      JSON_DOC_SIZE = 512U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg     = jsonDoc.to<JsonObject>();
+        JsonArrayConst    jsonTones   = value["tones"];
+        JsonVariantConst  jsonText    = value["text"];
+        JsonVariantConst  jsonPushUrl = value["pushUrl"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -258,69 +258,79 @@ void SignalDetectorPlugin::inactive()
 
 void SignalDetectorPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    DynamicJsonDocument        jsonDoc(0U);
-    bool                       isValidResponse;
+    uint32_t dynamicRestId;
 
-    /* Call isSignalDetected() every time although it was already detected in the
-     * previous call. This clears the detection flag in the audio service.
-     */
-    bool isDetected = isSignalDetected();
-
-    if (true == isDetected)
+    /* Acquire mutex for initial state check and update. */
     {
-        LOG_INFO("Signal detected.");
-    }
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                       isRestRequestRequired = false;
 
-    /* Ensure that once the signal is detected, it is shown to the user. */
-    if (false == m_isDetected)
-    {
-        m_isDetected = isDetected;
+        PluginWithConfig::process(isConnected);
 
-        if (true == m_isDetected)
+        /* Call isSignalDetected() every time although it was already detected in the
+         * previous call. This clears the detection flag in the audio service.
+         */
+        bool isDetected = isSignalDetected();
+
+        if (true == isDetected)
         {
-            /* Observe active phase. */
-            if (nullptr != m_slotInterf)
-            {
-                /* Start with 10% greater slot duration. */
-                m_timer.start(m_slotInterf->getDuration() * 110U / 100U);
-            }
+            LOG_INFO("Signal detected.");
+        }
 
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
+        /* Ensure that once the signal is detected, it is shown to the user. */
+        if (false == m_isDetected)
+        {
+            m_isDetected = isDetected;
+
+            if (true == m_isDetected)
             {
-                /* Send notification */
-                if (true == startHttpRequest())
+                /* Observe active phase. */
+                if (nullptr != m_slotInterf)
                 {
-                    m_isAllowedToSend = false;
+                    /* Start with 10% greater slot duration. */
+                    m_timer.start(m_slotInterf->getDuration() * 110U / 100U);
+                }
+
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
+                {
+                    /* Send notification */
+                    if (true == startHttpRequest())
+                    {
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        /* Exception case if plugin is the only one and inactive() won't
-         * be called.
-         */
-        if ((true == m_timer.isTimerRunning()) &&
-            (true == m_timer.isTimeout()))
+        else
         {
-            m_timer.stop();
-            m_isDetected = false;
+            /* Exception case if plugin is the only one and inactive() won't
+             * be called.
+             */
+            if ((true == m_timer.isTimerRunning()) &&
+                (true == m_timer.isTimeout()))
+            {
+                m_timer.stop();
+                m_isDetected = false;
+            }
         }
-    }
 
-    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+        dynamicRestId = m_dynamicRestId;
+    } /* Mutex released here to avoid lock inversion deadlock with RestService. */
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
     {
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
+
         /* Get the response from the REST service. */
-        if (true == RestService::getInstance().getResponse(m_dynamicRestId, isValidResponse, jsonDoc))
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
+            MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
         }
     }
-
-    PluginWithConfig::process(isConnected);
 }
 
 void SignalDetectorPlugin::update(YAGfx& gfx)
@@ -448,7 +458,7 @@ bool SignalDetectorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 bool SignalDetectorPlugin::startHttpRequest()
 {
     bool                            status             = false;
-    RestService::PreProcessCallback preProcessCallback = [](const char* payload, size_t size, DynamicJsonDocument& doc) {
+    RestService::PreProcessCallback preProcessCallback = [](const char* payload, size_t size, PsramJsonDocument& doc) {
         UTIL_NOT_USED(payload);
         UTIL_NOT_USED(size);
         UTIL_NOT_USED(doc);

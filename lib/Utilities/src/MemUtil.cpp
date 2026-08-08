@@ -85,12 +85,17 @@ static const uint32_t MEM_CAPABILITIES = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAUL
  * External Functions
  *****************************************************************************/
 
-extern size_t MemUtil::getTotalHeapSize()
+extern size_t MemUtil::getTotalHeapSize(uint32_t capabilities)
 {
 #ifndef NATIVE
     multi_heap_info_t info;
 
-    heap_caps_get_info(&info, MEM_CAPABILITIES);
+    if (0U == capabilities)
+    {
+        capabilities = MEM_CAPABILITIES;
+    }
+
+    heap_caps_get_info(&info, capabilities);
 
     return info.total_free_bytes + info.total_allocated_bytes;
 #else  /* NATIVE */
@@ -98,28 +103,43 @@ extern size_t MemUtil::getTotalHeapSize()
 #endif /* NATIVE */
 }
 
-extern size_t MemUtil::getFreeHeapSize()
+extern size_t MemUtil::getFreeHeapSize(uint32_t capabilities)
 {
 #ifndef NATIVE
-    return heap_caps_get_free_size(MEM_CAPABILITIES);
+    if (0U == capabilities)
+    {
+        capabilities = MEM_CAPABILITIES;
+    }
+
+    return heap_caps_get_free_size(capabilities);
 #else  /* NATIVE */
     return 0;
 #endif /* NATIVE */
 }
 
-extern size_t MemUtil::getLargestFreeBlockSize()
+extern size_t MemUtil::getLargestFreeBlockSize(uint32_t capabilities)
 {
 #ifndef NATIVE
-    return heap_caps_get_largest_free_block(MEM_CAPABILITIES);
+    if (0U == capabilities)
+    {
+        capabilities = MEM_CAPABILITIES;
+    }
+
+    return heap_caps_get_largest_free_block(capabilities);
 #else  /* NATIVE */
     return 0;
 #endif /* NATIVE */
 }
 
-extern size_t MemUtil::getMinFreeHeapSize()
+extern size_t MemUtil::getMinFreeHeapSize(uint32_t capabilities)
 {
 #ifndef NATIVE
-    return heap_caps_get_minimum_free_size(MEM_CAPABILITIES);
+    if (0U == capabilities)
+    {
+        capabilities = MEM_CAPABILITIES;
+    }
+
+    return heap_caps_get_minimum_free_size(capabilities);
 #else  /* NATIVE */
     return 0;
 #endif /* NATIVE */

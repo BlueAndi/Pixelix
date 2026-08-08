@@ -37,6 +37,9 @@
 
 #include <Logging.h>
 #include <MemUtil.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <string.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -65,12 +68,18 @@
 bool MemMon::start()
 {
     bool                    isSuccessful        = true;
-    esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t caps, const char* functionName) -> void {
+    esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t capabilities, const char* functionName) -> void {
+        TaskHandle_t hCurrentTask       = xTaskGetCurrentTaskHandle();
+        const char*  taskName           = pcTaskGetName(hCurrentTask);
+        UBaseType_t  stackHighWatermark = uxTaskGetStackHighWaterMark(hCurrentTask);
+
         LOG_ERROR("Memory allocation failed.");
         LOG_ERROR("Size          : %u bytes", size);
-        LOG_ERROR("Capability    : 0x%04X", caps);
+        LOG_ERROR("Capabilities  : 0x%04X", capabilities);
         LOG_ERROR("Function      : %s", functionName);
-        LOG_ERROR("Largest avail.: %u bytes", MemUtil::getLargestFreeBlockSize());
+        LOG_ERROR("Task          : %s", (nullptr != taskName) ? taskName : "?");
+        LOG_ERROR("Stack reserve : %u words", static_cast<unsigned>(stackHighWatermark));
+        LOG_ERROR("Largest avail.: %u bytes", MemUtil::getLargestFreeBlockSize(capabilities));
     };
 
     m_timer.start(PROCESSING_CYCLE);
@@ -113,6 +122,10 @@ void MemMon::process()
             LOG_FATAL("----- Heap corrupt! ------");
         }
 
+#if (0 != CONFIG_MEM_MON_STACK_STATS)
+        reportTaskStackStats();
+#endif /* (0 != CONFIG_MEM_MON_STACK_STATS) */
+
         m_timer.restart();
     }
 }
@@ -129,6 +142,63 @@ void MemMon::stop()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+#if (0 != CONFIG_MEM_MON_STACK_STATS)
+
+void MemMon::reportTaskStackStats()
+{
+    /* Names of the tasks whose stack size is worth watching and trimming. The
+     * two framework tasks (loopTask, async_tcp) are the largest and are looked
+     * up by name too. A name that does not exist in the current build (e.g.
+     * AudioDrvTask) is simply skipped.
+     *
+     * uxTaskGetStackHighWaterMark() is used instead of uxTaskGetSystemState(),
+     * because the latter needs configUSE_TRACE_FACILITY, which is disabled in
+     * the Arduino ESP32 framework.
+     */
+    static const char* const taskNames[] = {
+        "loopTask",    /* Arduino main loop */
+        "async_tcp",   /* AsyncTCP, used by the web server */
+        "processTask", /* DisplayMgr */
+        "updateTask",  /* DisplayMgr */
+        "buttonTask",  /* ButtonDrv */
+        "HttpSrvWork", /* HttpService */
+        "AudioDrvTask" /* AudioService (only in some builds) */
+    };
+    size_t idx;
+
+    LOG_INFO("----- Task stack usage (min. free stack since start) -----");
+
+    for (idx = 0U; idx < (sizeof(taskNames) / sizeof(taskNames[0])); ++idx)
+    {
+        TaskHandle_t taskHandle;
+
+        /* xTaskGetHandle() asserts that the queried name is shorter than
+         * configMAX_TASK_NAME_LEN. Skip any name that is too long, otherwise the
+         * firmware would panic instead of just missing one line in the report.
+         */
+        if (configMAX_TASK_NAME_LEN <= strlen(taskNames[idx]))
+        {
+            continue;
+        }
+
+        taskHandle = xTaskGetHandle(taskNames[idx]);
+
+        if (nullptr != taskHandle)
+        {
+            /* The high water mark is the smallest amount of free stack (in bytes
+             * on ESP32) seen since the task started. A value near 0 means the
+             * stack is almost exhausted and must not be reduced; a large value
+             * is the headroom by which the stack size may be trimmed.
+             */
+            LOG_INFO("%-22s: %5u byte free",
+                taskNames[idx],
+                static_cast<unsigned>(uxTaskGetStackHighWaterMark(taskHandle)));
+        }
+    }
+}
+
+#endif /* (0 != CONFIG_MEM_MON_STACK_STATS) */
 
 /******************************************************************************
  * External Functions

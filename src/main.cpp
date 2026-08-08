@@ -46,6 +46,8 @@
 #include "MemMon.h"
 #include "MiniTerminal.h"
 #include "RestartMgr.h"
+#include <SimpleTimer.hpp>
+#include <DisplayMgr.h>
 
 #include "ButtonDrv.h"
 #include "ButtonHandler.hpp"
@@ -56,6 +58,8 @@
 #if (configCHECK_FOR_STACK_OVERFLOW > 0)
 #include "freertos/task.h"
 #endif /* (configCHECK_FOR_STACK_OVERFLOW > 0) */
+
+#include <mbedtls/platform.h>
 
 /******************************************************************************
  * Macros
@@ -142,7 +146,7 @@ static ButtonHandler<BUTTON_CTRL_POLICY> gButtonHandler;
 static const uint32_t SERIAL_BAUDRATE  = 115200U;
 
 /** Task period in ms of the loop() task. */
-static const uint32_t LOOP_TASK_PERIOD = 40U;
+static const uint32_t LOOP_TASK_PERIOD = 20U;
 
 #if ARDUINO_USB_MODE
 #if ARDUINO_USB_CDC_ON_BOOT /* Serial used for USB CDC */
@@ -156,6 +160,11 @@ static const uint32_t HWCDC_TX_TIMEOUT = 4U;
 
 #endif /* ARDUINO_USB_CDC_ON_BOOT */
 #endif /* ARDUINO_USB_MODE */
+
+/**
+ * Timer to output the current frames per second (fps) in the serial console periodically.
+ */
+static SimpleTimer gFpsOutputTimer;
 
 /******************************************************************************
  * External functions
@@ -174,6 +183,13 @@ void setup()
     Serial.setTxTimeoutMs(HWCDC_TX_TIMEOUT);
 #endif /* ARDUINO_USB_CDC_ON_BOOT */
 #endif /* ARDUINO_USB_MODE */
+
+#if ARDUINO_USB_CDC_ON_BOOT
+    /* Wait to ensure the serial interface is ready on PC side.
+     * Otherwise the first log messages may be lost.
+     */
+    delay(500U);
+#endif /* ARDUINO_USB_CDC_ON_BOOT */
 
     /* Ensure a distance between the boot mode message and the first log message.
      * Otherwise the first log message appears in the same line than the last
@@ -232,6 +248,9 @@ void setup()
      * because it is expected that the init state will finish in a short time.
      */
     (void)esp_task_wdt_add(nullptr);
+
+    /* Start FPS output. */
+    gFpsOutputTimer.start(5000U);
 }
 
 /**
@@ -270,6 +289,15 @@ void loop()
         &ErrorState::getInstance() != gSysStateMachine.getState())
     {
         gButtonHandler.process();
+    }
+
+    if (true == gFpsOutputTimer.isTimeout())
+    {
+        uint32_t fps = DisplayMgr::getInstance().getFps();
+
+        LOG_DEBUG("FPS: %u", fps);
+
+        gFpsOutputTimer.restart();
     }
 
     /* Schedule other tasks with same or lower priority. */

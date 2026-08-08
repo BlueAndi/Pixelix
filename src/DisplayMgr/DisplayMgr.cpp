@@ -382,6 +382,13 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
                 }
                 else
                 {
+                    /* If a plugin is uninstalled in a disabled slot, the slot will be
+                     * enabled again. This behaviour is more convenient for the user,
+                     * because otherwise the user would have to enable the slot again
+                     * after uninstalling the plugin.
+                     */
+                    m_slotList.enable(slotId);
+
                     status = true;
                 }
             }
@@ -492,6 +499,52 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
     IPluginMaintenance*        plugin = m_slotList.getPlugin(slotId);
 
     return plugin;
+}
+
+IPluginMaintenance* DisplayMgr::getPluginByAlias(const String& alias)
+{
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+    uint8_t                    slotId = m_slotList.getSlotIdByPluginAlias(alias);
+    IPluginMaintenance*        plugin = m_slotList.getPlugin(slotId);
+
+    return plugin;
+}
+
+bool DisplayMgr::getSlotConfig(uint8_t slotId, SlotConfig& config) const
+{
+    bool                       isSuccessful = false;
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+
+    if (true == m_slotList.isSlotIdValid(slotId))
+    {
+        const IPluginMaintenance* plugin = m_slotList.getPlugin(slotId);
+
+        /* No plugin in slot? */
+        if (nullptr == plugin)
+        {
+            config.name     = "";
+            config.uid      = 0U;
+            config.alias    = "";
+            config.fontType = Fonts::FontType::FONT_TYPE_DEFAULT;
+        }
+        /* Plugin in slot. */
+        else
+        {
+            config.name     = plugin->getName();
+            config.uid      = plugin->getUID();
+            config.alias    = plugin->getAlias();
+            config.fontType = plugin->getFontType();
+        }
+
+        config.duration   = m_slotList.getDuration(slotId);
+        config.isLocked   = m_slotList.isLocked(slotId);
+        config.isSticky   = m_slotList.isSticky(slotId);
+        config.isDisabled = m_slotList.isDisabled(slotId);
+
+        isSuccessful      = true;
+    }
+
+    return isSuccessful;
 }
 
 uint8_t DisplayMgr::getStickySlot() const
@@ -615,10 +668,10 @@ void DisplayMgr::activateNextFadeEffect(FadeEffectController::FadeEffect fadeEff
     m_fadeEffectController.selectFadeEffect(fadeEffect);
 }
 
-FadeEffectController::FadeEffect DisplayMgr::getFadeEffect()
+FadeEffectController::FadeEffect DisplayMgr::getFadeEffect() const
 {
-    FadeEffectController ::FadeEffect currentFadeEffect;
-    MutexGuard<MutexRecursive>        guard(m_mutexInterf);
+    FadeEffectController::FadeEffect currentFadeEffect;
+    MutexGuard<MutexRecursive>       guard(m_mutexInterf);
 
     currentFadeEffect = m_fadeEffectController.getFadeEffect();
 
@@ -711,7 +764,7 @@ bool DisplayMgr::isSlotDisabled(uint8_t slotId)
     return isDisabled;
 }
 
-uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
+uint32_t DisplayMgr::getSlotDuration(uint8_t slotId) const
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
     uint32_t                   duration = m_slotList.getDuration(slotId);
@@ -746,7 +799,7 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
         IDisplay&                  display = Display::getInstance();
         int16_t                    x;
         int16_t                    y;
-        size_t                     index = 0;
+        size_t                     index = 0U;
         MutexGuard<MutexRecursive> guard(m_mutexInterf);
 
         /* Copy framebuffer after it is completely updated. */
@@ -829,6 +882,20 @@ void DisplayMgr::setIndicatorState(uint8_t indicatorId, IIndicatorView::State st
     m_indicatorView.setIndicator(indicatorId, state);
 }
 
+uint32_t DisplayMgr::getFps() const
+{
+    uint32_t                   fps = 0U;
+    MutexGuard<MutexRecursive> guard1(m_mutexInterf);
+    MutexGuard<MutexRecursive> guard2(m_mutexUpdate);
+
+    if (0U != m_updateTaskLastDuration)
+    {
+        fps = 1000U / m_updateTaskLastDuration;
+    }
+
+    return fps;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -842,6 +909,8 @@ DisplayMgr::DisplayMgr() :
     m_mutexUpdate(),
     m_processTask("processTask", processTask, PROCESS_TASK_STACK_SIZE, PROCESS_TASK_PRIORITY, PROCESS_TASK_RUN_CORE),
     m_updateTask("updateTask", updateTask, UPDATE_TASK_STACK_SIZE, UPDATE_TASK_PRIORITY, UPDATE_TASK_RUN_CORE),
+    m_updateTaskPeriod(UPDATE_TASK_PERIOD_MIN),
+    m_updateTaskLastDuration(UPDATE_TASK_PERIOD_MIN),
     m_slotList(),
     m_selectedSlotId(SlotList::SLOT_ID_INVALID),
     m_selectedPlugin(nullptr),
@@ -966,7 +1035,6 @@ uint8_t DisplayMgr::previousSlot(uint8_t slotId)
 
 void DisplayMgr::process()
 {
-    IDisplay&                  display    = Display::getInstance();
     uint8_t                    index      = 0U;
     uint8_t                    stickySlot = SlotList::SLOT_ID_INVALID;
     MutexGuard<MutexRecursive> guardInterf(m_mutexInterf);
@@ -1153,14 +1221,17 @@ void DisplayMgr::process()
     }
 
     /* Process all installed plugins. */
-    for (index = 0U; index < m_slotList.getMaxSlots(); ++index)
     {
         MutexGuard<MutexRecursive> guard(m_mutexUpdate);
-        IPluginMaintenance*        plugin = m_slotList.getPlugin(index);
 
-        if (nullptr != plugin)
+        for (index = 0U; index < m_slotList.getMaxSlots(); ++index)
         {
-            plugin->process(m_isNetworkConnected);
+            IPluginMaintenance* plugin = m_slotList.getPlugin(index);
+
+            if (nullptr != plugin)
+            {
+                plugin->process(m_isNetworkConnected);
+            }
         }
     }
 }
@@ -1207,14 +1278,15 @@ void DisplayMgr::processTask(DisplayMgr* self)
 
 void DisplayMgr::updateTask(DisplayMgr* self)
 {
-    uint32_t timestamp           = millis(); /* ms */
-    uint32_t duration            = 0U;       /* ms */
-    uint32_t timestampPhyUpdate  = 0U;       /* ms */
-    uint32_t durationPhyUpdate   = 0U;       /* ms */
-    bool     abort               = false;
+    uint32_t timestamp = millis(); /* ms */
+    uint32_t duration  = 0U;       /* ms */
 
-    /* Observe the physical display refresh and limit the duration to 70% of refresh period. */
-    const uint32_t MAX_LOOP_TIME = (UPDATE_TASK_PERIOD * 7U) / (10U);
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+
+    uint32_t timestampPhyUpdate = 0U; /* ms */
+    uint32_t durationPhyUpdate  = 0U; /* ms */
+
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
     /* Refresh display content periodically */
     self->update();
@@ -1222,24 +1294,22 @@ void DisplayMgr::updateTask(DisplayMgr* self)
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
     /* Update statistics for active plugin processing time. */
     self->m_statistics.pluginProcessing.update(millis() - timestamp);
+
+    timestampPhyUpdate = millis();
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
     /* Wait until the physical update is ready to avoid flickering
      * and artifacts on the display, because of e.g. webserver flash
      * access.
      */
-    timestampPhyUpdate = millis();
-    while ((false == Display::getInstance().isReady()) && (false == abort))
+    while (false == Display::getInstance().isReady())
     {
-        durationPhyUpdate = millis() - timestampPhyUpdate;
-
-        if (MAX_LOOP_TIME <= durationPhyUpdate)
-        {
-            abort = true;
-        }
+        delay(1U);
     }
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+    durationPhyUpdate = millis() - timestampPhyUpdate;
+
     /* Update statistics for physical display update time. */
     self->m_statistics.displayUpdate.update(durationPhyUpdate);
 
@@ -1279,10 +1349,46 @@ void DisplayMgr::updateTask(DisplayMgr* self)
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
     /* Calculate overall duration */
-    duration = millis() - timestamp;
+    duration                        = millis() - timestamp;
+
+    /* Low pass filter. */
+    self->m_updateTaskLastDuration  = (self->m_updateTaskLastDuration * 75U) / 100U;
+    self->m_updateTaskLastDuration += ((duration + UPDATE_TASK_MIN_DURATION_OTHER) * 25U) / 100U;
+
+    /* Adapt the update task period on demand.
+     * If the processing time is too high, the update task period will be increased to avoid high CPU load and to keep the system responsive.
+     * If the processing time is low, the update task period will be decreased to have a more responsive display.
+     */
+    if (self->m_updateTaskLastDuration > self->m_updateTaskPeriod)
+    {
+        if (self->m_updateTaskPeriod >= (UPDATE_TASK_PERIOD_MAX - UPDATE_TASK_PERIOD_STEP))
+        {
+            self->m_updateTaskPeriod = UPDATE_TASK_PERIOD_MAX;
+        }
+        else
+        {
+            self->m_updateTaskPeriod += UPDATE_TASK_PERIOD_STEP;
+        }
+    }
+    else if ((self->m_updateTaskLastDuration + UPDATE_TASK_PERIOD_STEP) < self->m_updateTaskPeriod)
+    {
+        if (self->m_updateTaskPeriod <= (UPDATE_TASK_PERIOD_MIN + UPDATE_TASK_PERIOD_STEP))
+        {
+            self->m_updateTaskPeriod = UPDATE_TASK_PERIOD_MIN;
+        }
+        else
+        {
+            self->m_updateTaskPeriod -= UPDATE_TASK_PERIOD_STEP;
+        }
+    }
+    /* No adaption required. */
+    else
+    {
+        ;
+    }
 
     /* Updating the display shall take place in aquidistant intervals. */
-    delay(UPDATE_TASK_PERIOD - (duration % UPDATE_TASK_PERIOD));
+    delay(self->m_updateTaskPeriod - (duration % self->m_updateTaskPeriod));
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
     self->m_statistics.refreshPeriod.update(millis() - self->m_timestampLastUpdate);

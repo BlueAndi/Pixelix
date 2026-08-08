@@ -45,6 +45,7 @@
  * Includes
  *****************************************************************************/
 #include "WsCmd.h"
+#include <stddef.h>
 
 /******************************************************************************
  * Macros
@@ -66,7 +67,8 @@ public:
      */
     WsCmdGetDisp() :
         WsCmd("GETDISP"),
-        m_isError(false)
+        m_isError(false),
+        m_framebuffer(nullptr)
     {
     }
 
@@ -75,6 +77,8 @@ public:
      */
     ~WsCmdGetDisp()
     {
+        delete[] m_framebuffer;
+        m_framebuffer = nullptr;
     }
 
     /**
@@ -94,7 +98,20 @@ public:
 
 private:
 
-    bool m_isError; /**< Any error happened during parameter reception? */
+    bool      m_isError;     /**< Any error happened during parameter reception? */
+    uint32_t* m_framebuffer; /**< Persistent framebuffer copy to avoid repeated heap allocations. */
+
+    /**
+     * Required framebuffer copy length.
+     */
+    static const size_t FRAMEBUFFER_LENGTH = CONFIG_LED_MATRIX_WIDTH * CONFIG_LED_MATRIX_HEIGHT;
+
+    /**
+     * Ensure the framebuffer copy buffer is available.
+     *
+     * @return If framebuffer copy buffer is available, it returns true otherwise false.
+     */
+    bool ensureFramebuffer();
 
     /**
      * RGB data calculation states.

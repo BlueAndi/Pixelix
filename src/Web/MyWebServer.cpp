@@ -40,6 +40,10 @@
 #include "RestApi.h"
 #include "WebSocket.h"
 
+#include <MemUtil.h>
+#include <Logging.h>
+#include <HttpStatus.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -57,6 +61,7 @@
  *****************************************************************************/
 
 static void error(AsyncWebServerRequest* request);
+static void rejectIfLowMemory(AsyncWebServerRequest* request, ArMiddlewareNext next);
 
 /******************************************************************************
  * Local Variables
@@ -70,7 +75,16 @@ static void error(AsyncWebServerRequest* request);
 static AsyncWebServer gWebServer(WebConfig::WEBSERVER_PORT);
 
 /** Is captive portal enabled? */
-static bool gIsCaptivePortalEnabled = false;
+static bool gIsCaptivePortalEnabled            = false;
+
+/**
+ * Hard limit for the largest allocatable internal heap block. Below this a web
+ * request is always rejected with HTTP 503 to avoid an out-of-memory situation
+ * on boards without PSRAM.
+ * The largest free block (not the total free heap) is used, because the heap is
+ * fragmented and this is what predicts whether the next allocation succeeds.
+ */
+static const size_t MIN_FREE_BLOCK_FOR_REQUEST = 12U * 1024U;
 
 /******************************************************************************
  * Public Methods
@@ -92,6 +106,9 @@ void MyWebServer::init(bool initCaptivePortal)
 {
     if (false == initCaptivePortal)
     {
+        /* Reject requests with HTTP 503 if the internal heap is too low. */
+        gWebServer.addMiddleware(rejectIfLowMemory);
+
         /* Register all web pages */
         Pages::init(gWebServer);
         RestApi::init(gWebServer);
@@ -150,13 +167,64 @@ static void error(AsyncWebServerRequest* request)
         return;
     }
 
+    const String& url = request->url();
+
+    /* Source maps are optional debug artifacts. Fast-path them to a tiny 404 response to avoid routing through the
+     * heavier error page handling.
+     */
+    if ((true == url.endsWith(".map")) ||
+        (true == url.endsWith(".map.gz")))
+    {
+        request->send(HttpStatus::STATUS_CODE_NOT_FOUND, "text/plain", "Not Found");
+    }
     /* REST request? */
-    if (true == request->url().startsWith(RestApi::BASE_URI))
+    else if (true == url.startsWith(RestApi::BASE_URI))
     {
         RestApi::error(request);
     }
     else
     {
         Pages::error(request);
+    }
+}
+
+/**
+ * Middleware which rejects a request with HTTP 503 if the internal heap is too
+ * low. It runs before any handler allocates memory and asks the client to retry
+ * later instead of risking an out-of-memory crash. The largest free block
+ * naturally drops when an outgoing request (incl. its memory hungry TLS
+ * handshake) is in flight, so this also covers that case without disturbing
+ * concurrent requests while enough heap is available.
+ *
+ * @param[in] request   Web request
+ * @param[in] next      Callback to continue the middleware chain
+ */
+static void rejectIfLowMemory(AsyncWebServerRequest* request, ArMiddlewareNext next)
+{
+    size_t largestFreeBlock = MemUtil::getLargestFreeBlockSize();
+
+    if (MIN_FREE_BLOCK_FOR_REQUEST <= largestFreeBlock)
+    {
+        next();
+    }
+    else
+    {
+        AsyncWebServerResponse* response = request->beginResponse(
+            HttpStatus::STATUS_CODE_SERVICE_UNAVAILABLE,
+            "application/json",
+            "{\"status\":\"error\",\"error\":{\"msg\":\"Service temporarily unavailable, please retry.\"}}");
+
+        if (nullptr == response)
+        {
+            /* Not even a small response could be allocated. */
+            request->send(HttpStatus::STATUS_CODE_SERVICE_UNAVAILABLE);
+        }
+        else
+        {
+            response->addHeader("Retry-After", "2");
+            request->send(response);
+        }
+
+        LOG_WARNING("Request rejected (HTTP 503), largest free heap block: %u byte.", largestFreeBlock);
     }
 }

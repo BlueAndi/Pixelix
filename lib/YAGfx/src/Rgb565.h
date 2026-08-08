@@ -57,9 +57,11 @@
 
 /**
  * Color, which is based on the three base colors red, green and blue.
- * The base colors are internal stored in RGB565 format.
- * Additional one byte is used for color intensity, used for non-destructive
- * fading.
+ * The base colors are internal stored in RGB565 format, so a single pixel needs
+ * only two bytes.
+ *
+ * The color intensity is not stored per pixel. Dimming is applied destructively
+ * via dim().
  */
 class Rgb565
 {
@@ -75,8 +77,7 @@ public:
      * Constructs the color black.
      */
     Rgb565() :
-        m_color565(0U),
-        m_intensity(MAX_BRIGHT)
+        m_color565(0U)
     {
     }
 
@@ -89,42 +90,23 @@ public:
 
     /**
      * Specialized constructor, used in case every base color (RGB) is given.
-     * The color intensity will be set to max. bright.
      *
      * @param[in] red   Red value
      * @param[in] green Green value
      * @param[in] blue  Blue value
      */
     Rgb565(uint8_t red, uint8_t green, uint8_t blue) :
-        m_color565(ColorUtil::to565(red, green, blue)),
-        m_intensity(MAX_BRIGHT)
-    {
-    }
-
-    /**
-     * Specialized constructor, used in case every base color (RGB) and
-     * the intensity is given.
-     *
-     * @param[in] red       Red value
-     * @param[in] green     Green value
-     * @param[in] blue      Blue value
-     * @param[in] intensity Color intensity [0; 255]
-     */
-    Rgb565(uint8_t red, uint8_t green, uint8_t blue, uint8_t intensity) :
-        m_color565(ColorUtil::to565(red, green, blue)),
-        m_intensity(intensity)
+        m_color565(ColorUtil::to565(red, green, blue))
     {
     }
 
     /**
      * Specialized constructor, used in case a color value (RGB) is given as uint32 type.
-     * Color intensity will be set to max. bright.
      *
      * @param[in] value Color value in 24 bit format
      */
     Rgb565(uint32_t value) :
-        m_color565(ColorUtil::to565(value)),
-        m_intensity(MAX_BRIGHT)
+        m_color565(ColorUtil::to565(value))
     {
     }
 
@@ -134,8 +116,7 @@ public:
      * @param[in] color Color, which to copy
      */
     Rgb565(const Rgb565& color) :
-        m_color565(color.m_color565),
-        m_intensity(color.m_intensity)
+        m_color565(color.m_color565)
     {
     }
 
@@ -150,8 +131,7 @@ public:
     {
         if (this != &color)
         {
-            m_color565  = color.m_color565;
-            m_intensity = color.m_intensity;
+            m_color565 = color.m_color565;
         }
 
         return *this;
@@ -166,7 +146,7 @@ public:
      */
     bool operator==(const Rgb565& other) const
     {
-        return (m_color565 == other.m_color565) && (m_intensity == other.m_intensity);
+        return (m_color565 == other.m_color565);
     }
 
     /**
@@ -178,11 +158,11 @@ public:
      */
     bool operator!=(const Rgb565& other) const
     {
-        return (m_color565 != other.m_color565) || (m_intensity != other.m_intensity);
+        return (m_color565 != other.m_color565);
     }
 
     /**
-     * Convert to RGB24 uint32_t value with respect to current intensity.
+     * Convert to RGB24 uint32_t value.
      */
     operator uint32_t() const
     {
@@ -190,7 +170,7 @@ public:
     }
 
     /**
-     * Get base color information with respect to current intensity.
+     * Get base color information.
      *
      * @param[out] red      Red value
      * @param[out] green    Green value
@@ -205,7 +185,6 @@ public:
 
     /**
      * Set base color information.
-     * Intensity is not changed.
      *
      * @param[in] red   Red value
      * @param[in] green Green value
@@ -217,22 +196,7 @@ public:
     }
 
     /**
-     * Set base color information, incl. intensity.
-     *
-     * @param[in] red       Red value
-     * @param[in] green     Green value
-     * @param[in] blue      Blue value
-     * @param[in] intensity Color intensity [0; 255]
-     */
-    void set(uint8_t red, uint8_t green, uint8_t blue, uint8_t intensity)
-    {
-        m_color565  = ColorUtil::to565(red, green, blue);
-        m_intensity = intensity;
-    }
-
-    /**
      * Set new color information by RGB24 value.
-     * The intensity won't change.
      *
      * @param[in] value Color value (RGB) in 24 bit format
      */
@@ -248,7 +212,7 @@ public:
      */
     uint8_t getRed() const
     {
-        return applyIntensity(ColorUtil::rgb565Red(m_color565));
+        return ColorUtil::rgb565Red(m_color565);
     }
 
     /**
@@ -258,7 +222,7 @@ public:
      */
     uint8_t getGreen() const
     {
-        return applyIntensity(ColorUtil::rgb565Green(m_color565));
+        return ColorUtil::rgb565Green(m_color565);
     }
 
     /**
@@ -268,17 +232,7 @@ public:
      */
     uint8_t getBlue() const
     {
-        return applyIntensity(ColorUtil::rgb565Blue(m_color565));
-    }
-
-    /**
-     * Get color intensity.
-     *
-     * @return Color intensity [0; 255] - 0: min. bright / 255: max. bright
-     */
-    uint8_t getIntensity() const
-    {
-        return m_intensity;
+        return ColorUtil::rgb565Blue(m_color565);
     }
 
     /**
@@ -312,13 +266,18 @@ public:
     }
 
     /**
-     * Set color intensity.
+     * Dim the color by the given brightness level. This scales the base colors
+     * in place, so it is a destructive operation.
      *
-     * @param[in] intensity Color intensity [0; 255] - 0: min. bright / 255: max. bright
+     * @param[in] level Brightness level [0; 255] - 0: black / 255: no change.
      */
-    void setIntensity(uint8_t intensity)
+    void dim(uint8_t level)
     {
-        m_intensity = intensity;
+        uint8_t red   = static_cast<uint8_t>((static_cast<uint16_t>(getRed()) * level) / MAX_BRIGHT);
+        uint8_t green = static_cast<uint8_t>((static_cast<uint16_t>(getGreen()) * level) / MAX_BRIGHT);
+        uint8_t blue  = static_cast<uint8_t>((static_cast<uint16_t>(getBlue()) * level) / MAX_BRIGHT);
+
+        m_color565    = ColorUtil::to565(red, green, blue);
     }
 
     /**
@@ -342,7 +301,6 @@ public:
 
     /**
      * Set new color information by RGB565 value.
-     * The intensity won't change.
      *
      * @param[in] value Color value (RGB) in 16 bit format
      */
@@ -353,18 +311,7 @@ public:
 
 private:
 
-    uint16_t m_color565;  /**< Color value in 5-6-5 RGB format */
-    uint8_t  m_intensity; /**< Color intensity [0; 255] - 0: min. bright / 255: max. bright */
-
-    /**
-     * Calculate the base color with respect to the current intensity.
-     *
-     * @return Base color with considered intensity.
-     */
-    inline uint8_t applyIntensity(uint8_t baseColor) const
-    {
-        return (static_cast<uint16_t>(baseColor) * static_cast<uint16_t>(m_intensity)) / MAX_BRIGHT;
-    }
+    uint16_t m_color565; /**< Color value in 5-6-5 RGB format */
 };
 
 /******************************************************************************

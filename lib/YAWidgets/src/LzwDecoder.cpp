@@ -61,7 +61,8 @@
  *****************************************************************************/
 
 LzwDecoder::LzwDecoder() :
-    m_codeAllocator(),
+    m_prefixCodeAllocator(),
+    m_suffixByteAllocator(),
     m_stackAllocator(),
     m_isInitialState(true),
     m_lzwMinCodeWidth(0U),
@@ -75,14 +76,16 @@ LzwDecoder::LzwDecoder() :
     m_firstByte(0U),
     m_inCode(0U),
     m_prevCode(0U),
-    m_codes(nullptr),
+    m_prefixCodes(nullptr),
+    m_suffixBytes(nullptr),
     m_stack(nullptr),
     m_stackPtr(nullptr)
 {
 }
 
 LzwDecoder::LzwDecoder(const LzwDecoder& other) :
-    m_codeAllocator(),
+    m_prefixCodeAllocator(),
+    m_suffixByteAllocator(),
     m_stackAllocator(),
     m_isInitialState(other.m_isInitialState),
     m_lzwMinCodeWidth(other.m_lzwMinCodeWidth),
@@ -96,7 +99,8 @@ LzwDecoder::LzwDecoder(const LzwDecoder& other) :
     m_firstByte(other.m_firstByte),
     m_inCode(other.m_inCode),
     m_prevCode(other.m_prevCode),
-    m_codes(nullptr),
+    m_prefixCodes(nullptr),
+    m_suffixBytes(nullptr),
     m_stack(nullptr),
     m_stackPtr(nullptr)
 {
@@ -118,20 +122,21 @@ LzwDecoder& LzwDecoder::operator=(const LzwDecoder& other)
 {
     if (this != &other)
     {
-        m_codeAllocator   = other.m_codeAllocator;
-        m_stackAllocator  = other.m_stackAllocator;
-        m_isInitialState  = other.m_isInitialState;
-        m_lzwMinCodeWidth = other.m_lzwMinCodeWidth;
-        m_clearCode       = other.m_clearCode;
-        m_endCode         = other.m_endCode;
-        m_nextCode        = other.m_nextCode;
-        m_maxCode         = other.m_maxCode;
-        m_codeWidth       = other.m_codeWidth;
-        m_bitsInBuffer    = other.m_bitsInBuffer;
-        m_codeBuffer      = other.m_codeBuffer;
-        m_firstByte       = other.m_firstByte;
-        m_inCode          = other.m_inCode;
-        m_prevCode        = other.m_prevCode;
+        m_prefixCodeAllocator = other.m_prefixCodeAllocator;
+        m_suffixByteAllocator = other.m_suffixByteAllocator;
+        m_stackAllocator      = other.m_stackAllocator;
+        m_isInitialState      = other.m_isInitialState;
+        m_lzwMinCodeWidth     = other.m_lzwMinCodeWidth;
+        m_clearCode           = other.m_clearCode;
+        m_endCode             = other.m_endCode;
+        m_nextCode            = other.m_nextCode;
+        m_maxCode             = other.m_maxCode;
+        m_codeWidth           = other.m_codeWidth;
+        m_bitsInBuffer        = other.m_bitsInBuffer;
+        m_codeBuffer          = other.m_codeBuffer;
+        m_firstByte           = other.m_firstByte;
+        m_inCode              = other.m_inCode;
+        m_prevCode            = other.m_prevCode;
 
         if (false == copyCode(other))
         {
@@ -150,19 +155,27 @@ LzwDecoder& LzwDecoder::operator=(const LzwDecoder& other)
     return *this;
 }
 
-bool LzwDecoder::init(uint8_t lzwMinCodeWidth)
+bool LzwDecoder::init()
 {
-    bool isSuccessful = true;
+    bool isSuccessful = false;
 
-    if (nullptr == m_codes)
+    if (nullptr == m_prefixCodes)
     {
-        m_codes = m_codeAllocator.allocateArray(CODE_LIMIT);
+        m_prefixCodes = m_prefixCodeAllocator.allocateArray(CODE_LIMIT);
 
-        if (nullptr == m_codes)
+        if (nullptr == m_prefixCodes)
         {
-            LOG_ERROR("Failed to allocate memory for LZW codes, size: %u bytes", CODE_LIMIT * sizeof(uint32_t));
+            LOG_ERROR("Failed to allocate memory for LZW prefix codes, size: %u bytes", CODE_LIMIT * sizeof(uint16_t));
+        }
+    }
 
-            isSuccessful = false;
+    if (nullptr == m_suffixBytes)
+    {
+        m_suffixBytes = m_suffixByteAllocator.allocateArray(CODE_LIMIT);
+
+        if (nullptr == m_suffixBytes)
+        {
+            LOG_ERROR("Failed to allocate memory for LZW suffix bytes, size: %u bytes", CODE_LIMIT * sizeof(uint8_t));
         }
     }
 
@@ -173,24 +186,32 @@ bool LzwDecoder::init(uint8_t lzwMinCodeWidth)
         if (nullptr == m_stack)
         {
             LOG_ERROR("Failed to allocate memory for LZW stack, size: %u bytes", STACK_SIZE);
-
-            isSuccessful = false;
         }
     }
 
+    /* Any error? */
+    if ((nullptr == m_prefixCodes) ||
+        (nullptr == m_suffixBytes) ||
+        (nullptr == m_stack))
+    {
+        deInit();
+    }
+    else
+    {
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+void LzwDecoder::setup(uint8_t lzwMinCodeWidth)
+{
     m_lzwMinCodeWidth = lzwMinCodeWidth;
     m_clearCode       = 1U << m_lzwMinCodeWidth;
     m_endCode         = m_clearCode + 1U;
     m_stackPtr        = m_stack;
     m_bitsInBuffer    = 0U;
     clear();
-
-    if (false == isSuccessful)
-    {
-        deInit();
-    }
-
-    return isSuccessful;
 }
 
 bool LzwDecoder::decode(const ReadFromInStream& readFromInStreamFunc, const WriteToOutStream& writeToOutStreamFunc)
@@ -199,7 +220,8 @@ bool LzwDecoder::decode(const ReadFromInStream& readFromInStreamFunc, const Writ
     bool     isEnd        = false;
     uint32_t code;
 
-    if ((nullptr == m_codes) ||
+    if ((nullptr == m_prefixCodes) ||
+        (nullptr == m_suffixBytes) ||
         (nullptr == m_stack))
     {
         isSuccessful = false;
@@ -242,10 +264,16 @@ bool LzwDecoder::decode(const ReadFromInStream& readFromInStreamFunc, const Writ
 
 void LzwDecoder::deInit()
 {
-    if (nullptr != m_codes)
+    if (nullptr != m_prefixCodes)
     {
-        m_codeAllocator.deallocateArray(m_codes);
-        m_codes = nullptr;
+        m_prefixCodeAllocator.deallocateArray(m_prefixCodes);
+        m_prefixCodes = nullptr;
+    }
+
+    if (nullptr != m_suffixBytes)
+    {
+        m_suffixByteAllocator.deallocateArray(m_suffixBytes);
+        m_suffixBytes = nullptr;
     }
 
     if (nullptr != m_stack)
@@ -268,17 +296,26 @@ bool LzwDecoder::copyCode(const LzwDecoder& other)
 {
     bool isSuccessful = true;
 
-    if (nullptr != m_codes)
+    if (nullptr != m_prefixCodes)
     {
-        m_codeAllocator.deallocateArray(m_codes);
-        m_codes = nullptr;
+        m_prefixCodeAllocator.deallocateArray(m_prefixCodes);
+        m_prefixCodes = nullptr;
     }
 
-    if (nullptr != other.m_codes)
+    if (nullptr != m_suffixBytes)
     {
-        m_codes = m_codeAllocator.allocateArray(CODE_LIMIT);
+        m_suffixByteAllocator.deallocateArray(m_suffixBytes);
+        m_suffixBytes = nullptr;
+    }
 
-        if (nullptr == m_codes)
+    if ((nullptr != other.m_prefixCodes) &&
+        (nullptr != other.m_suffixBytes))
+    {
+        m_prefixCodes = m_prefixCodeAllocator.allocateArray(CODE_LIMIT);
+        m_suffixBytes = m_suffixByteAllocator.allocateArray(CODE_LIMIT);
+
+        if ((nullptr == m_prefixCodes) ||
+            (nullptr == m_suffixBytes))
         {
             isSuccessful = false;
         }
@@ -286,7 +323,8 @@ bool LzwDecoder::copyCode(const LzwDecoder& other)
         {
             for (size_t idx = 0U; idx < CODE_LIMIT; ++idx)
             {
-                m_codes[idx] = other.m_codes[idx];
+                m_prefixCodes[idx] = other.m_prefixCodes[idx];
+                m_suffixBytes[idx] = other.m_suffixBytes[idx];
             }
         }
     }
@@ -431,14 +469,10 @@ bool LzwDecoder::decompress(uint32_t code, const WriteToOutStream& writeToOutStr
             /* "Unwind" code's string to stack. */
             while (code >= m_clearCode)
             {
-                /* Heads are packed to left of tails in codes. */
-
-                /* Tails */
-                *m_stackPtr = m_codes[code] & 0xFFU;
+                *m_stackPtr = m_suffixBytes[code];
                 ++m_stackPtr;
 
-                /* Heads*/
-                code = (m_codes[code] >> 8U) & 0x0FFFU;
+                code = m_prefixCodes[code];
             }
 
             m_firstByte = code;
@@ -461,8 +495,8 @@ bool LzwDecoder::decompress(uint32_t code, const WriteToOutStream& writeToOutStr
         {
             if (m_nextCode < CODE_LIMIT)
             {
-                /* Heads are packed to left of tails in codes. */
-                m_codes[m_nextCode] = (m_prevCode << 8U) | code;
+                m_prefixCodes[m_nextCode] = static_cast<uint16_t>(m_prevCode);
+                m_suffixBytes[m_nextCode] = static_cast<uint8_t>(code & 0xFFU);
                 ++m_nextCode;
 
                 if ((m_nextCode > m_maxCode) && (m_nextCode < CODE_LIMIT))

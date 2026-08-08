@@ -41,11 +41,11 @@
  * Includes
  *****************************************************************************/
 #include <IService.hpp>
-#include <AsyncHttpClient.h>
+#include <HttpService.h>
 #include <Mutex.hpp>
 #include <ArduinoJson.h>
+#include <PsramJsonDocument.hpp>
 #include <map>
-#include <HttpStatus.h>
 #include <Logging.h>
 #include <vector>
 #include <utility>
@@ -72,7 +72,7 @@ public:
     /**
      * Prototype of a preprocessing callback for a successful response.
      */
-    typedef std::function<bool(const char*, size_t, DynamicJsonDocument&)> PreProcessCallback;
+    typedef std::function<bool(const char*, size_t, PsramJsonDocument&)> PreProcessCallback;
 
     /**
      * Get the REST service instance.
@@ -118,7 +118,7 @@ public:
      *
      * @param[in] url                 URL
      * @param[in] preProcessCallback  PreProcessCallback which will be called by the RestService to filter the received date.
-     * @param[in] payload             Payload, which must be kept alive until response is available!
+     * @param[in] payload             Payload, which is copied by the underlying HTTP service.
      * @param[in] size                Payload size in byte
      *
      * @return If request is successful sent, it will return a valid restId otherwise it will return INVALID_REST_ID.
@@ -129,7 +129,7 @@ public:
      * Send POST request to host.
      *
      * @param[in] url                 URL
-     * @param[in] payload             Payload, which must be kept alive until response is available!
+     * @param[in] payload             Payload, which is copied by the underlying HTTP service.
      * @param[in] preProcessCallback  PreProcessCallback which will be called by the RestService to filter the received date.
      *
      * @return If request is successful sent, it will return a valid restId otherwise it will return INVALID_REST_ID.
@@ -145,7 +145,7 @@ public:
      *
      * @return If a response is available, it will return true otherwise false.
      */
-    bool getResponse(uint32_t restId, bool& isValidRsp, DynamicJsonDocument& payload);
+    bool getResponse(uint32_t restId, bool& isValidRsp, PsramJsonDocument& payload);
 
     /**
      * Aborts a pending request. If there is already a response in the response queue it will be deleted as well.
@@ -166,9 +166,9 @@ private:
      */
     struct Response
     {
-        uint32_t            restId;      /**< Used to identify plugin in RestService. */
-        bool                isRsp;       /**< true: successful response, false: request failed */
-        DynamicJsonDocument jsonDocData; /**< Content of the response. Only valid if isRsp == true. */
+        uint32_t          restId;      /**< Used to identify plugin in RestService. */
+        bool              isRsp;       /**< true: successful response, false: request failed */
+        PsramJsonDocument jsonDocData; /**< Content of the response. Only valid if isRsp == true. */
 
         /**
          * Constructs a response.
@@ -176,14 +176,14 @@ private:
         Response() :
             restId(INVALID_REST_ID),
             isRsp(false),
-            jsonDocData(4096U)
+            jsonDocData(0U)
         {
         }
 
         /**
          * Constructs a response.
          *
-         * @param[in] dataSize Size of the DynamicJsonDocument which holds the data.
+         * @param[in] dataSize Size of the PsramJsonDocument which holds the data.
          */
         explicit Response(size_t dataSize) :
             restId(INVALID_REST_ID),
@@ -258,7 +258,7 @@ private:
             :
             id(other.id),
             restId(other.restId),
-            preProcessCallback(other.preProcessCallback),
+            preProcessCallback(std::move(other.preProcessCallback)),
             url(std::move(other.url)),
             data{ other.data.data, other.data.size }
         {
@@ -296,14 +296,13 @@ private:
     /** Response Queue */
     typedef std::vector<Response> ResponseQueue;
 
-    AsyncHttpClient               m_client;                   /**< Asynchronous HTTP client. */
     RequestQueue                  m_requestQueue;             /**< Stores requests for sequential execution. */
     ResponseQueue                 m_responseQueue;            /**< Saves responses to outgoing requests. */
     bool                          m_isRunning;                /**< Signals the status of the service. True means it is running, false means it is stopped. */
     uint32_t                      m_restIdCounter;            /**< Used to generate restIds. */
-    bool                          m_isWaitingForResponse;     /**< Is RestService still waiiting for a response to a request? */
-    uint32_t                      m_activeRestId;             /**< Saves the  restId of a request until the callback triggered by the corresponding response is finished. */
-    PreProcessCallback            m_activePreProcessCallback; /**< Saves the callback sent by a request until it is called when the response arrives. */
+    uint32_t                      m_activeRestId;             /**< Saves the restId of the in-flight request. */
+    HttpJobId                     m_activeHttpJobId;          /**< Saves the HTTP service job id of the in-flight request. */
+    PreProcessCallback            m_activePreProcessCallback; /**< Saves the callback sent by a request until the response arrives. */
     Mutex                         m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
@@ -311,13 +310,12 @@ private:
      */
     RestService() :
         IService(),
-        m_client(),
         m_requestQueue(),
         m_responseQueue(),
         m_isRunning(false),
         m_restIdCounter(INVALID_REST_ID),
-        m_isWaitingForResponse(false),
         m_activeRestId(INVALID_REST_ID),
+        m_activeHttpJobId(INVALID_HTTP_JOB_ID),
         m_activePreProcessCallback(),
         m_mutex()
     {
@@ -336,18 +334,11 @@ private:
     RestService& operator=(const RestService& service);
 
     /**
-     * Handles asynchronous web responses from the server. Filtering is delegated to plugin-callbacks.
-     * This will be called in LwIP context! Don't modify any member here directly!
+     * Handles HTTP responses from the HTTP service.
      *
-     * @param[in] rsp     Web Response
+     * @param[in] httpRsp HTTP response.
      */
-    void handleAsyncWebResponse(const HttpResponse& rsp);
-
-    /**
-     * Handles failed web requests.
-     * This will be called in LwIP context! Don't modify any member here directly!
-     */
-    void handleFailedWebRequest();
+    void handleHttpResponse(const HttpRsp& httpRsp);
 
     /**
      * Generates a valid restId.
@@ -355,6 +346,16 @@ private:
      * @return A valid restId.
      */
     uint32_t getRestId();
+
+    /**
+     * Checks if the service is waiting for a response.
+     *
+     * @return True if waiting for a response, false otherwise.
+     */
+    inline bool isWaitingForResponse() const
+    {
+        return (INVALID_REST_ID != m_activeRestId) && (INVALID_HTTP_JOB_ID != m_activeHttpJobId);
+    }
 };
 
 /******************************************************************************

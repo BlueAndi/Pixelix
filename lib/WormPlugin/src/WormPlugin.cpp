@@ -482,8 +482,7 @@ void WormPlugin::drawWorm(uint8_t wormId, YAGfx& gfx)
         (MAX_WORMS > wormId))
     {
         size_t  wormPos         = wormPosInArray(wormId);
-        size_t  idx             = 1U; /* 0 is the head, body starts at 1. */
-        Color   bodyColor       = m_wormBodyColor[wormId];
+        size_t  idx             = 1U;                                   /* 0 is the head, body starts at 1. */
         uint8_t brightnessDelta = UINT8_MAX / (m_wormLen[wormId] - 1U); /* Consider only the body without head. */
 
         /* Draw worm head */
@@ -492,8 +491,12 @@ void WormPlugin::drawWorm(uint8_t wormId, YAGfx& gfx)
         /* Draw worm body */
         while (m_wormLen[wormId] > idx)
         {
-            /* The body gets darker till the end. */
-            bodyColor.setIntensity(UINT8_MAX - brightnessDelta * (idx - 1U));
+            /* The body gets darker till the end. Start from the base color each
+             * time, because dim() scales the color destructively.
+             */
+            Color bodyColor = m_wormBodyColor[wormId];
+
+            bodyColor.dim(UINT8_MAX - brightnessDelta * (idx - 1U));
 
             gfx.fillRect(m_worms[wormPos + idx].x * WORM_SIZE, m_worms[wormPos + idx].y * WORM_SIZE, WORM_SIZE, WORM_SIZE, bodyColor);
             ++idx;

@@ -15,6 +15,10 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/1.jpg)](https://youtu.be/UCjJCI5JShY "Pixelix - Remote Button")
 
 Click on the preview to see the video.
+
+[![wwha-blue](./doc/images/wwha-blue.svg)](./doc/HOMEASSISTANT.md)\
+[![makapix-bluc](./doc/images/MakapixClub/MakapixClubBadge.png)](https://makapix.club/)
+
 ___
 
 ## Table of Content <!-- omit in toc -->
@@ -66,7 +70,7 @@ It doesn't require any cloud connection, even its not required to have a smartho
 
 ## Features
 
-- Supports 32x8 LED matrix size out of the box. Its possible to cascade another matrix to have a longer display.
+- Supports 32x8, 32x16 and 64x64 LED matrix size out of the box.
 - Supports some small TFT displays to simulate a LED matrix in retro style.
 - Display static or scrolling text, as well as static (BMP and GIF) or animated icons (GIF).
 - Includes a web interface for configuration and control.
@@ -228,7 +232,7 @@ If the display's location is hard to reach, the remote user button feature can b
 ## Details
 
 - [Home Assistant](./doc/HOMEASSISTANT.md)
-- [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.8.0)
+- [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0)
 - [MQTT API](./doc/MQTT.md)
 - More information is in the [documentation](./doc/README.md) folder.
 
@@ -262,7 +266,7 @@ The following keywords are available:
 
 **Notes**:
 
-- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.8.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.
 - Don't add additional spaces, e.g. after a comma. Write them exactly as the format is specified.
 
@@ -370,12 +374,11 @@ build_flags =
 | [PlatformIO](https://platformio.org)                                          | PlatformIO is a cross-platform, cross-architecture, multiple framework, professional tool for embedded systems engineers and for software developers who write applications for embedded products. | Apache-2.0                        |
 | [NeoPixelBus](https://github.com/Makuna/NeoPixelBus)                          | Controlling the LED matrix with hardware support (I2S)                                                                                                                                             | LGPL-3.0                          |
 | [ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer)          | Webserver                                                                                                                                                                                          | LGPL-3.0                          |
-| [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock)                | TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets                                                                                                        | MIT                               |
+| [AsyncTCP](https://github.com/ESP32Async/AsyncTCP)                            | This is a fully asynchronous TCP library, aimed at enabling trouble-free, multi-connection network environment for Espressif's ESP32 MCUs.                                                         | LGPL-3.0                          |
 | [ArduinoJson](https://arduinojson.org/)                                       | JSON handling                                                                                                                                                                                      | MIT                               |
 | [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils)                | Stream utilities                                                                                                                                                                                   | MIT                               |
 | [Bootstrap](https://getbootstrap.com/)                                        | CSS Framework                                                                                                                                                                                      | MIT                               |
 | [POPPER JS](https://popper.js.org/)                                           | POPPER JS                                                                                                                                                                                          | MIT                               |
-| [jQuery](https://jquery.com/)                                                 | Javascript librariy for DOM handling                                                                                                                                                               | MIT                               |
 | [Adafruit Unified Sensor Driver](https://github.com/adafruit/Adafruit_Sensor) | A unified sensor abstraction layer.                                                                                                                                                                | Apache License 2.0                |
 | [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) | An Arduino library for the DHT series of low-cost temperature/humidity sensors.                                                                                                                    | MIT                               |
 | [arduino-sht](https://github.com/Sensirion/arduino-sht)                       | An Arduino library for reading the SHT3x family of temperature and humidity sensors.                                                                                                               | BSD-3-Clause                      |
@@ -386,10 +389,11 @@ build_flags =
 | [JSZipUtils](https://github.com/Stuk/jszip-utils)                             | A collection of cross-browser utilities to go along with JSZip.                                                                                                                                    | MIT                               |
 | [FileSaver.js](https://github.com/eligrey/FileSaver.js)                       | FileSaver.js is the solution to saving files on the client-side.                                                                                                                                   | MIT                               |
 | [Arduino client for MQTT](https://github.com/knolleary/pubsubclient)          | This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT.                                                                                      | MIT                               |
+| [ESP32-PSRamFS](https://github.com/tobozo/ESP32-PsRamFS)                      | ESP32-PsRamFS is a pseudo RamDisk library for Arduino-ESP32, with vfs compliance.                                                                                                                  | MIT                               |
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request. For questions to the community or showing the own Pixelix, the [Discord server](https://discord.gg/D3uYhBQBhf) can be used.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request. For questions to the community or showing the own Pixelix, the [Discord server](https://discord.gg/D3uYhBQBhf) can be used.
 
 ## License
 

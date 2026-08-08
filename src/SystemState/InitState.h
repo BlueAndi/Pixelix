@@ -105,16 +105,11 @@ private:
      * How long shall the logo be shown in ms.
      * As long as it is shown, stay in this state!
      */
-    static const uint32_t SHOW_LOGO_DURATION       = 2000U;
+    static const uint32_t SHOW_LOGO_DURATION = 2000U;
 
-    /**
-     * The max. number of open files in the filesystem.
-     */
-    static const uint8_t FILESYSTEM_MAX_OPEN_FILES = 10U;
-
-    bool                 m_isQuiet;           /**< Is quite mode active? */
-    bool                 m_isApModeRequested; /**< Is wifi AP mode requested? */
-    SimpleTimer          m_timer;             /**< Timer used to stay for a min. time in this state. */
+    bool                  m_isQuiet;           /**< Is quite mode active? */
+    bool                  m_isApModeRequested; /**< Is wifi AP mode requested? */
+    SimpleTimer           m_timer;             /**< Timer used to stay for a min. time in this state. */
 
     /**
      * Constructs the state.
@@ -148,8 +143,10 @@ private:
 
     /**
      * Welcome the user on the very first start.
+     *
+     * @param[in] isVeryFirstStart    Is it the very first start of the device?
      */
-    void welcome();
+    void welcome(bool isVeryFirstStart);
 
     /**
      * Checks whether the filesystem content is compatible to the Pixelix version.
@@ -157,13 +154,6 @@ private:
      * @return If filesystem content is compatible, it will return true otherwise false.
      */
     bool isFsCompatible();
-
-    /**
-     * Mount the filesystem.
-     *
-     * @return If successful mounted, it will return true otherwise false.
-     */
-    bool mountFilesystem();
 
     /**
      * Get device unique ID as string.
@@ -177,6 +167,13 @@ private:
      * Configure the views with general settings.
      */
     void configureViews();
+
+    /**
+     * Get flash chip mode.
+     *
+     * @return Flash chip mode.
+     */
+    const char* getFlashChipMode();
 };
 
 /******************************************************************************

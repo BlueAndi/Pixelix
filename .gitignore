@@ -8,8 +8,10 @@ __pycache__
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/settings.json
-data/js/pluginsSubMenu.js
-data/js/servicesSubMenu.js
+scripts/pluginsSubMenu.js
+scripts/servicesSubMenu.js
+data/js/app-menu.js
+data/js/*SubMenu.js
 data/plugins/
 data/services/
 doc/doxygen/html/

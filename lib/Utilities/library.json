@@ -16,7 +16,11 @@
     }, {
         "owner": "bblanchon",
         "name": "ArduinoJson",
-        "version": "~6.21.5"
+        "version": "~6.21.6"
+    }, {
+        "owner": "tobozo",
+        "name": "ESP32-PSRamFS",
+        "version": "~1.0.9"
     }, {
         "name": "YAGfx"
     }, {

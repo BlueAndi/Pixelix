@@ -34,7 +34,6 @@
  * Includes
  *****************************************************************************/
 #include "IconTextLampView64x64.h"
-#include <FileSystem.h>
 #include <Logging.h>
 
 /******************************************************************************
@@ -61,11 +60,11 @@
  * Public Methods
  *****************************************************************************/
 
-bool IconTextLampView64x64::loadIcon(const String& filename)
+bool IconTextLampView64x64::loadIcon(const String& filename, FS& fs)
 {
     bool isSuccessful = false;
 
-    if (false == m_bitmapWidget.load(FILESYSTEM, filename))
+    if (false == m_bitmapWidget.load(filename, fs))
     {
         LOG_WARNING("Failed to load icon %s.", filename.c_str());
     }

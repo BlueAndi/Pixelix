@@ -82,6 +82,11 @@ bool AudioService::start()
         LOG_ERROR("Couldn't start the audio driver.");
         isSuccessful = false;
     }
+    else if (false == m_spectrumAnalyzer.init())
+    {
+        LOG_ERROR("Couldn't initialize the spectrum analyzer.");
+        isSuccessful = false;
+    }
     else
     {
         if (false == audioDrv.registerObserver(m_spectrumAnalyzer))
@@ -124,6 +129,7 @@ void AudioService::stop()
     uint8_t   idx      = 0U;
 
     audioDrv.unregisterObserver(m_spectrumAnalyzer);
+    m_spectrumAnalyzer.deInit();
 
     while (MAX_TONE_DETECTORS > idx)
     {

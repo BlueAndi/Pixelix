@@ -296,10 +296,12 @@ bool TextWidget::getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
 {
     bool status = false;
 
-    if (false == m_prepareNewText)
+    if ((false == m_prepareNewText) &&
+        (false == m_updateText) &&
+        (FADE_STATE_OUT != m_fadeState))
     {
-        isScrollingEnabled = m_scrollCtrlNew.isEnabled();
-        scrollingCnt       = m_scrollCtrlNew.getScrollingCount();
+        isScrollingEnabled = m_scrollCtrl.isEnabled();
+        scrollingCnt       = m_scrollCtrl.getScrollingCount();
         status             = true;
     }
 
@@ -323,7 +325,7 @@ int16_t TextWidget::alignTextHorizontal(YAGfx& gfx, const String& text, Alignmen
      * - Text scrolling from bottom to top
      */
     if ((false == m_scrollCtrl.isEnabled()) ||
-        ((true == m_scrollCtrl.isEnabled()) && (ScrollController::DIRECTION_VERTICAL == m_scrollCtrl.getDirection())))
+        (ScrollController::DIRECTION_VERTICAL == m_scrollCtrl.getDirection()))
     {
         uint16_t textBoxWidth  = 0U;
         uint16_t textBoxHeight = 0U;
@@ -362,7 +364,7 @@ void TextWidget::alignTextVertical()
      * - Text scrolling from left to right
      */
     if ((false == m_scrollCtrl.isEnabled()) ||
-        ((true == m_scrollCtrl.isEnabled()) && (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection())))
+        (ScrollController::DIRECTION_HORIZONTAL == m_scrollCtrl.getDirection()))
     {
         switch (m_vAlign)
         {
@@ -681,8 +683,33 @@ void TextWidget::getText(String& text, const TWAbstractSyntaxTree& ast) const
 {
     uint32_t length = ast.length();
     uint32_t idx;
+    size_t   textLength = 1U; /* String termination */
 
+    /* Determine the single line length by walking through the AST. */
+    for (idx = 0U; idx < length; ++idx)
+    {
+        const TWToken& token = ast[idx];
+
+        switch (token.getType())
+        {
+        case TWToken::TYPE_KEYWORD:
+            /* Skip keyword token. */
+            break;
+
+        case TWToken::TYPE_TEXT:
+            /* fallthrough */
+        case TWToken::TYPE_LINE_FEED:
+            textLength += token.getStr().length();
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    /* Clear and reserve space for the single line string to avoid multiple reallocations. */
     text.clear();
+    (void)text.reserve(textLength);
 
     for (idx = 0U; idx < length; ++idx)
     {
@@ -708,12 +735,44 @@ void TextWidget::getText(String& text, const TWAbstractSyntaxTree& ast) const
 
 uint32_t TextWidget::getSingleLine(String& singleLine, const TWAbstractSyntaxTree& ast, uint32_t startIdx)
 {
-    uint32_t length     = ast.length();
-    uint32_t idx        = startIdx;
-    bool     isFinished = false;
+    uint32_t length           = ast.length();
+    uint32_t idx              = startIdx;
+    bool     isFinished       = false;
+    size_t   singleLineLength = 1U; /* String termination */
 
+    /* Determine the single line length by walking through the AST. */
+    while ((length > idx) && (false == isFinished))
+    {
+        const TWToken& token = ast[idx];
+
+        switch (token.getType())
+        {
+        case TWToken::TYPE_KEYWORD:
+            /* Skip keyword token. */
+            break;
+
+        case TWToken::TYPE_TEXT:
+            singleLineLength += token.getStr().length();
+            break;
+
+        case TWToken::TYPE_LINE_FEED:
+            isFinished = true;
+            break;
+
+        default:
+            break;
+        }
+
+        ++idx;
+    }
+
+    /* Clear and reserve space for the single line string to avoid multiple reallocations. */
     singleLine.clear();
+    (void)singleLine.reserve(singleLineLength);
 
+    /* Build single line string. */
+    idx        = startIdx;
+    isFinished = false;
     while ((length > idx) && (false == isFinished))
     {
         const TWToken& token = ast[idx];
@@ -942,9 +1001,8 @@ void TextWidget::handleSolidColor(YAGfx& gfx, const String& keyword)
     {
         Color textColor = colorRGB888;
 
-        textColor.setIntensity(m_fadeBrightness);
-
         m_solidBrush.setColor(textColor);
+        m_solidBrush.setIntensity(m_fadeBrightness);
         m_gfxText.setBrush(m_solidBrush);
     }
 }
@@ -984,11 +1042,9 @@ bool TextWidget::handleLinearGradient(YAGfx& gfx, const String& keyword)
             Color startColor = colorRGB888_1;
             Color endColor   = colorRGB888_2;
 
-            startColor.setIntensity(m_fadeBrightness);
-            endColor.setIntensity(m_fadeBrightness);
-
             m_linearGradientBrush.setStartColor(startColor);
             m_linearGradientBrush.setEndColor(endColor);
+            m_linearGradientBrush.setIntensity(m_fadeBrightness);
             m_linearGradientBrush.setOffset(offset);
             m_linearGradientBrush.setLength(gradLength);
 

@@ -68,25 +68,7 @@ public:
     /**
      * Construct the view.
      */
-    MultiIconView32x16() :
-        IMultiIconView(),
-        m_bitmapWidgets{
-            { 0U, 0U, 0, 0 },
-            { 0U, 0U, 0, 0 },
-            { 0U, 0U, 0, 0 },
-            { 0U, 0U, 0, 0 }
-        }
-    {
-        uint8_t slot = 0U;
-
-        while (MAX_ICON_SLOTS > slot)
-        {
-            m_bitmapWidgets[slot].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
-            m_bitmapWidgets[slot].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
-
-            ++slot;
-        }
-    }
+    MultiIconView32x16();
 
     /**
      * Destroy the view.
@@ -112,61 +94,34 @@ public:
      *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    void update(YAGfx& gfx) override
-    {
-        uint8_t idx = 0U;
-
-        gfx.fillScreen(ColorDef::BLACK);
-
-        while (MAX_ICON_SLOTS > idx)
-        {
-            m_bitmapWidgets[idx].update(gfx);
-            ++idx;
-        }
-    }
+    void update(YAGfx& gfx) override;
 
     /**
      * Load icon image from filesystem and show in the slot with the given id.
      *
      * @param[in] slotId    The id of the slot.
      * @param[in] filename  Image filename
+     * @param[in] fs        Filesystem instance (optional, default is standard filesystem)
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadIcon(uint8_t slotId, const String& filename) override
-    {
-        bool isSuccessful = false;
-
-        if (MAX_ICON_SLOTS <= slotId)
-        {
-            slotId = 0U;
-        }
-
-        isSuccessful = m_bitmapWidgets[slotId].load(FILESYSTEM, filename);
-
-        if (true == isSuccessful)
-        {
-            reorder();
-        }
-
-        return isSuccessful;
-    }
+    bool loadIcon(uint8_t slotId, const String& filename, FS& fs = FILESYSTEM) override;
 
     /**
      * Clear icon in the slot with the given id.
      *
      * @param[in] slotId    The id of the slot.
      */
-    void clearIcon(uint8_t slotId) override
-    {
-        if (MAX_ICON_SLOTS <= slotId)
-        {
-            slotId = 0U;
-        }
+    void clearIcon(uint8_t slotId) override;
 
-        m_bitmapWidgets[slotId].clear(ColorDef::BLACK);
-        reorder();
-    }
+    /**
+     * Check if the icon slot with the given id is empty or not.
+     *
+     * @param[in] slotId    The id of the slot.
+     *
+     * @return If the icon slot is empty, it will return true otherwise false.
+     */
+    bool isIconSlotEmpty(uint8_t slotId) const override;
 
     /**
      * Max. number of icons.

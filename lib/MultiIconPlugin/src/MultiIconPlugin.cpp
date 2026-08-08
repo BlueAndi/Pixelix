@@ -72,6 +72,32 @@ const char* MultiIconPlugin::TOPIC_SLOTS                   = "slots";
  * Public Methods
  *****************************************************************************/
 
+bool MultiIconPlugin::isEnabled() const
+{
+    bool isEnabled = m_isEnabled;
+
+    /* The plugin shall only be scheduled if its enabled and at least one icon is set. */
+    if (true == isEnabled)
+    {
+        uint8_t slotId;
+
+        for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+        {
+            if (false == m_view.isIconSlotEmpty(slotId))
+            {
+                break;
+            }
+        }
+
+        if (_MultiIconPlugin::View::MAX_ICON_SLOTS <= slotId)
+        {
+            isEnabled = false;
+        }
+    }
+
+    return isEnabled;
+}
+
 void MultiIconPlugin::getTopics(JsonArray& topics) const
 {
     uint8_t slotId;

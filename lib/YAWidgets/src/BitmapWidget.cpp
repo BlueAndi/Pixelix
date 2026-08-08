@@ -136,7 +136,7 @@ void BitmapWidget::clear(const Color& color)
     m_imgType = IMG_TYPE_NO_IMAGE;
 }
 
-bool BitmapWidget::load(FS& fs, const String& filename)
+bool BitmapWidget::load(const String& filename, FS& fs)
 {
     bool isSuccessful = false;
 

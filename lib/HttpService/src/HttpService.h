@@ -124,10 +124,8 @@ public:
      * worker task when the response streams in. Its not allowed to call any
      * HttpService methods from within the response handler.
      *
-     * Attention, the payload must remain valid until the response is received.
-     *
      * @param[in] url     URL of the HTTP POST request.
-     * @param[in] payload Payload of the HTTP POST request.
+     * @param[in] payload Payload of the HTTP POST request. The payload is copied internally.
      * @param[in] size    Size of the payload in byte.
      * @param[in] handler Optional response handler which will be called when the response is available.
      *

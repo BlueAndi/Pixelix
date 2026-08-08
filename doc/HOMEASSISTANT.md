@@ -25,12 +25,11 @@
 
 ## Communication
 
-Every Pixelix device provides a REST API and some may provide the MQTT API. To see whether MQTT is supported by your Pixelix device, open the *Settings* web page and search
-for *MQTT broker URL*. If its there, MQTT is supported.
+Every Pixelix device provides a REST API, and some also support the MQTT API. To check whether MQTT is available, open the *Settings* page and look for the *MQTT broker URL* field.
 
 ### REST API
 
-With the [RESTful Command integration](https://www.home-assistant.io/integrations/rest_command) PIXELIX can be controlled by REST API and with the [RESTful integration](https://www.home-assistant.io/integrations/rest) sensor entities can be created.
+Use the [RESTful Command integration](https://www.home-assistant.io/integrations/rest_command) to control Pixelix via the REST API, and the [RESTful integration](https://www.home-assistant.io/integrations/rest) to create sensor entities.
 
 #### Installation (REST Command)
 
@@ -45,11 +44,11 @@ rest_command:
     method: POST
 ```
 
-The REST API is desribed in detail on the [SwaggerHub](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.8.0).
+The REST API is described in detail on [SwaggerHub](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0).
 
 #### Automation (REST Command)
 
-Extend the `automations.yaml` manually for using the Pixelix MQTT device, e.g.
+Add an automation to `automations.yaml`, for example to show the garage door state:
 
 ```yaml
 - id: garage_door_state_on_pixelix
@@ -68,15 +67,15 @@ Extend the `automations.yaml` manually for using the Pixelix MQTT device, e.g.
   mode: single
 ```
 
-[Home Assistant automation blueprints](https://www.home-assistant.io/docs/automation/using_blueprints/) are a game changer in sense of simple integration, without the necessity to battle in low level yaml and jinja2 programming. See [Automation Blueprint chapter](#automation-blueprint) how to import it for Pixelix.
+For a simpler approach without writing YAML manually, see the [Automation Blueprint](#automation-blueprint) section.
 
 ### MQTT API
 
-Using the MQTT API requires that a MQTT broker is available in network and Pixelix as well as Home Assistant have access to it.
+Using the MQTT API requires a MQTT broker that is accessible by both Pixelix and Home Assistant.
 
 #### Installation (MQTT)
 
-If not already installed, you will need first to install the MQTT integration to your Home Assistant instance.
+If not already installed, add the MQTT integration to your Home Assistant instance.
 
 [![MQTT Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=mqtt)
 
@@ -104,7 +103,7 @@ Pixelix will be shown as device with its entities. Every installed plugin will b
 
 #### Automation (MQTT)
 
-Extend the `automations.yaml` manually for using the Pixelix MQTT device, e.g.
+Add an automation to `automations.yaml`, for example to show the garage door state:
 
 ```yaml
 - id: garage_door_state_on_pixelix
@@ -126,19 +125,22 @@ Extend the `automations.yaml` manually for using the Pixelix MQTT device, e.g.
   mode: single
 ```
 
-[Home Assistant automation blueprints](https://www.home-assistant.io/docs/automation/using_blueprints/) are a game changer in sense of simple integration, without the necessity to battle in low level yaml and jinja2 programming. See [Automation Blueprint chapter](#automation-blueprint) how to import it for Pixelix.
+For a simpler approach without writing YAML manually, see the [Automation Blueprint](#automation-blueprint) section.
 
 ## Automation Blueprint
 
-Home Assistant Automation Blueprints are reusable templates that simplify the creation of automations by providing a guided, fill-in-the-blanks interface. They help users quickly set up complex automations without needing to write YAML code from scratch, making smart home customization more accessible and efficient.
+[Automation Blueprints](https://www.home-assistant.io/docs/automation/using_blueprints/) let you set up automations through a guided interface without writing YAML from scratch. Pixelix provides blueprints for both REST API and MQTT API communication. Click a button below to import the blueprint directly into your Home Assistant instance.
 
-Pixelix provides with the following link such an automation blueprint to your Home Assistant installation. It supports to communicate with a Pixelix device by REST API and via MQTT API.
+| Supported Plugin                      | Blueprint                                                                                                                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| IconTextPlugin and IconTextLampPlugin | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fwww.blue-andi.de%2Fpixelix%2Fpixelix_send_sensor_data.yaml |
 
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FBlueAndi%2FPixelix%2Fblob%2Fmaster%2Fdoc%2Fhomeassistant%2Fblueprint%2Fpixelix_send_sensor_data.yaml)
+)  |
+| MultiIconPlugin                       | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fwww.blue-andi.de%2Fpixelix%2Fpixelix_multi_icon_plugin.yaml) |
 
-As an alternative copy the [pixelix_send_sensor_data.yaml](./homeassistant/blueprint/pixelix_send_sensor_data.yaml) file to  `/config/blueprints/automation/homeassistant/`.
+Alternatively, copy [pixelix_send_sensor_data.yaml](./homeassistant/blueprint/pixelix_send_sensor_data.yaml) and [pixelix_multi_icon_plugin.yaml](./homeassistant/blueprint/pixelix_multi_icon_plugin.yaml) to `/config/blueprints/automation/homeassistant/`.
 
-Only for communicate via REST API with Pixelix, the following REST command needs to be added to the `configuration.yaml`:
+When using the REST API, also add the following REST command to `configuration.yaml`:
 
 ```yaml
 rest_command:
@@ -149,7 +151,7 @@ rest_command:
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

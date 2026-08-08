@@ -74,31 +74,41 @@ public:
      * @param[in] width     Display width in pixel.
      * @param[in] height    Display height in pixel.
      */
-    virtual void init(uint16_t width, uint16_t height)            = 0;
+    virtual void init(uint16_t width, uint16_t height)                    = 0;
 
     /**
      * Update the underlying canvas.
      *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    virtual void update(YAGfx& gfx)                               = 0;
+    virtual void update(YAGfx& gfx)                                       = 0;
 
     /**
      * Load icon image from filesystem and show in the slot with the given id.
      *
      * @param[in] slotId    The id of the slot.
      * @param[in] filename  Image filename
+     * @param[in] fs        Filesystem instance
      *
      * @return If successul, it will return true otherwise false.
      */
-    virtual bool loadIcon(uint8_t slotId, const String& filename) = 0;
+    virtual bool loadIcon(uint8_t slotId, const String& filename, FS& fs) = 0;
 
     /**
      * Clear icon in the slot with the given id.
      *
      * @param[in] slotId    The id of the slot.
      */
-    virtual void clearIcon(uint8_t slotId)                        = 0;
+    virtual void clearIcon(uint8_t slotId)                                = 0;
+
+    /**
+     * Check if the icon slot with the given id is empty or not.
+     *
+     * @param[in] slotId    The id of the slot.
+     *
+     * @return If the icon slot is empty, it will return true otherwise false.
+     */
+    virtual bool isIconSlotEmpty(uint8_t slotId) const                    = 0;
 
 protected:
 

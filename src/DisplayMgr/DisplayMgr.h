@@ -51,6 +51,7 @@
 #include <Mutex.hpp>
 #include <Task.hpp>
 #include <IndicatorViewBase.hpp>
+#include <Fonts.h>
 
 #include "IPluginMaintenance.hpp"
 #include "SlotList.h"
@@ -77,6 +78,20 @@
 class DisplayMgr
 {
 public:
+
+    /** Slot configuration. */
+    typedef struct
+    {
+        String          name;       /**< Plugin name. */
+        uint16_t        uid;        /**< Plugin UID. */
+        String          alias;      /**< Plugin alias name. */
+        Fonts::FontType fontType;   /**< Font type. */
+        uint32_t        duration;   /**< Duration in ms, how long the plugin will be shown. */
+        bool            isLocked;   /**< Is the slot locked? */
+        bool            isSticky;   /**< Is the slot sticky? */
+        bool            isDisabled; /**< Is the slot disabled? */
+
+    } SlotConfig;
 
     /**
      * Get display manager instance.
@@ -227,6 +242,25 @@ public:
     IPluginMaintenance* getPluginInSlot(uint8_t slotId);
 
     /**
+     * Get plugin by alias name.
+     *
+     * @param[in] alias    Plugin alias name.
+     *
+     * @return Plugin which is installed with the given alias.
+     */
+    IPluginMaintenance* getPluginByAlias(const String& alias);
+
+    /**
+     * Get slot configuration.
+     *
+     * @param[in] slotId    Slot id, where to get configuration.
+     * @param[out] config   Slot configuration
+     *
+     * @return If successful, it will return true otherwise false.
+     */
+    bool getSlotConfig(uint8_t slotId, SlotConfig& config) const;
+
+    /**
      * Get slot which is marked sticky.
      *
      * @return Id of sticky slot. If no slot is sticky, it will return SLOT_ID_INVALID.
@@ -288,7 +322,7 @@ public:
      *
      * @return The currently selected fade effect.
      */
-    FadeEffectController::FadeEffect getFadeEffect();
+    FadeEffectController::FadeEffect getFadeEffect() const;
 
     /**
      * Move plugin to a different slot.
@@ -357,7 +391,7 @@ public:
      *
      * @return Duration in ms
      */
-    uint32_t getSlotDuration(uint8_t slotId);
+    uint32_t getSlotDuration(uint8_t slotId) const;
 
     /**
      * Set slot duration in ms, how long the given plugin will be shown.
@@ -432,6 +466,13 @@ public:
     void setIndicatorState(uint8_t indicatorId, IIndicatorView::State state);
 
     /**
+     * Get current frames per second (fps).
+     *
+     * @return Current frames per second.
+     */
+    uint32_t getFps() const;
+
+    /**
      * Indicator id for all indicators.
      */
     static const uint8_t INDICATOR_ID_ALL     = IndicatorViewBase::INDICATOR_ID_ALL;
@@ -444,28 +485,42 @@ public:
 private:
 
     /** The process task stack size in bytes */
-    static const uint32_t PROCESS_TASK_STACK_SIZE  = 5120U;
+    static const uint32_t PROCESS_TASK_STACK_SIZE        = 5120U;
 
     /** The process task period in ms. */
-    static const uint32_t PROCESS_TASK_PERIOD      = 100U;
+    static const uint32_t PROCESS_TASK_PERIOD            = 100U;
 
     /** The process task shall run on the APP MCU core. */
-    static const BaseType_t PROCESS_TASK_RUN_CORE  = APP_CPU_NUM;
+    static const BaseType_t PROCESS_TASK_RUN_CORE        = APP_CPU_NUM;
 
     /** The process task priority shall be equal than the Arduino loop task priority. */
-    static const UBaseType_t PROCESS_TASK_PRIORITY = 1U;
+    static const UBaseType_t PROCESS_TASK_PRIORITY       = 1U;
 
     /** The update task stack size in bytes */
-    static const uint32_t UPDATE_TASK_STACK_SIZE   = 4096U;
+    static const uint32_t UPDATE_TASK_STACK_SIZE         = 4096U;
 
-    /** The update task period in ms. */
-    static const uint32_t UPDATE_TASK_PERIOD       = 20U;
+    /**
+     * The minimal update task period in ms, which corresponds to 50 fps.
+     * Its the default at start.
+     */
+    static const uint32_t UPDATE_TASK_PERIOD_MIN         = 20U;
+
+    /** The maximal update task period in ms, which corresponds to 5 fps. */
+    static const uint32_t UPDATE_TASK_PERIOD_MAX         = 200U;
+
+    /** The update task period step in ms. */
+    static const uint32_t UPDATE_TASK_PERIOD_STEP        = 5U;
+
+    /**
+     * The minimal duration in ms, which the other tasks shall have at least.
+     */
+    static const uint32_t UPDATE_TASK_MIN_DURATION_OTHER = 10U;
 
     /** The update task shall run on the MCU core with less load. */
-    static const BaseType_t UPDATE_TASK_RUN_CORE   = tskNO_AFFINITY;
+    static const BaseType_t UPDATE_TASK_RUN_CORE         = tskNO_AFFINITY;
 
     /** The update task priority shall be higher than the other application tasks. */
-    static const UBaseType_t UPDATE_TASK_PRIORITY  = 4U;
+    static const UBaseType_t UPDATE_TASK_PRIORITY        = 4U;
 
     /** Mutex to protect concurrent access through the public interface. */
     mutable MutexRecursive m_mutexInterf;
@@ -478,6 +533,18 @@ private:
 
     /** Update task */
     Task<DisplayMgr> m_updateTask;
+
+    /** Update task period in ms. This period is observed and adapted on demand. */
+    uint32_t m_updateTaskPeriod;
+
+    /**
+     * Duration of last update task run in ms.
+     * This is observed to adapt the update task period on demand.
+     * If the duration is too high, the update task period will be increased to reduce
+     * the load. If the duration is low, the update task period will be decreased
+     * to increase the responsiveness.
+     */
+    uint32_t m_updateTaskLastDuration;
 
     /** List of all slots with their connected plugins. */
     SlotList m_slotList;
@@ -498,7 +565,6 @@ private:
     FadeEffectController m_fadeEffectController; /**< Fade effect controller. */
     bool                 m_isNetworkConnected;   /**< Is a network connection established? */
     IndicatorViewBase    m_indicatorView;        /**< Indicator view shown as overlay to indicate user defined states. */
-
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 

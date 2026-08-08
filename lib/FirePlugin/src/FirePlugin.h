@@ -185,6 +185,35 @@ private:
      * spectrum, but it's surprisingly close, and it's fast and small.
      */
     Color heatColor(uint8_t temperature);
+
+    /**
+     * Cool down every cell a little bit.
+     *
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void coolDown(uint16_t width, uint16_t height);
+
+    /**
+     * Heat from each cell drifts 'up' and diffuses a little bit.
+     *
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void heatUpCellDriftAndDiffuse(uint16_t width, uint16_t height);
+
+    /**
+     * Randomly ignite new 'sparks' of heat near the bottom.
+     *
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void randomNewSparks(uint16_t width, uint16_t height);
+
+    /**
+     * Draw the fire effect.
+     */
+    void draw(YAGfx& gfx);
 };
 
 /******************************************************************************

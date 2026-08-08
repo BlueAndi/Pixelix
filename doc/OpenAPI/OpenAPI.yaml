@@ -1,0 +1,4141 @@
+openapi: 3.0.0
+info:
+  description: |
+    # PIXELIX
+
+    Pixelix offers a REST API to control the display.
+
+    ## General
+
+    If a plugin is instantiated, it will get a random and unqiue id (UID). The UID is used to address the plugin specific REST API. The user is able to assign a alias name for every plugin instance, which can be used to address it too.
+    * UID:
+      * ```<server-url>/display/uid/{uid}```
+    * Alias:
+      * ```/display/alias/{alias}```
+
+    The REST API description focus only on the UID for the sake of maintainability.
+  version: 1.9.0
+  title: Pixelix REST API
+  termsOfService: ""
+  license:
+    name: MIT
+    url: "https://github.com/BlueAndi/Pixelix/blob/master/LICENSE"
+servers:
+  - url: "http://{pixelix-hostname}/rest/api/v1"
+    variables:
+      pixelix-hostname:
+        default: "pixelix-FFFFFFFF"
+        description: The Pixelix hostname.
+tags:
+  - name: Common
+    description: Common status and configuration
+  - name: Display
+    description: Display status and functionality
+  - name: FileMgrService
+    description: File upload manager
+  - name: Filesystem
+    description: File system handling
+  - name: Sensor
+    description: Sensor information
+  - name: Service
+    description: Service depended information
+  - name: ChicagoBusTrackerPlugin
+    description: Plugin specific API
+  - name: CountdownPlugin
+    description: Plugin specific API
+  - name: DateTimePlugin
+    description: Plugin specific API
+  - name: GithubPlugin
+    description: Plugin specific API
+  - name: GrabViaRestPlugin
+    description: Plugin specific API
+  - name: GruenbeckPlugin
+    description: Plugin specific API
+  - name: IconTextLampPlugin
+    description: Plugin specific API
+  - name: IconTextPlugin
+    description: Plugin specific API
+  - name: MakapixPlugin
+    description: Plugin specific API
+  - name: MultiIconPlugin
+    description: Plugin specific API
+  - name: OpenMeteoPlugin
+    description: Plugin specific API
+  - name: OpenWeatherPlugin
+    description: Plugin specific API
+  - name: SensorPlugin
+    description: Plugin specific API
+  - name: SignalDetectorPlugin
+    description: Plugin specific API
+  - name: SoundReactivePlugin
+    description: Plugin specific API
+  - name: SunrisePlugin
+    description: Plugin specific API
+  - name: VolumioPlugin
+    description: Plugin specific API
+paths:
+  /button:
+    post:
+      tags:
+        - Common
+      summary: Trigger button
+      description: |
+        Trigger button with the same effet as triggering the hardware pushbutton.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/button
+        ```
+      operationId: triggerButton
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Button"
+      security:
+        - pixelixAuth: []
+  /display/fadeEffect:
+    get:
+      tags:
+        - Display
+      summary: Get fade effect
+      description: |
+        Get current fade effect.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/fadeEffect
+        ```
+      operationId: getFadeEffect
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FadeEffect"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Display
+      summary: Activate next fade effect
+      description: |
+        Activate next fade effect. It will iterate through all fade effects.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/fadeEffect
+        ```
+      operationId: nextFadeEffect
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FadeEffect"
+      security:
+        - pixelixAuth: []
+  /display/power:
+    get:
+      tags:
+        - Display
+      summary: Get display power state.
+      description: |
+        Get current display power state.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/power
+        ```
+      operationId: getDisplayPowerState
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisplayPowerState"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Display
+      summary: Set display power state.
+      description: |
+        Set current display power state.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "state=off" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/power
+        ```
+      operationId: setDisplayPowerState
+      parameters:
+        - in: query
+          name: state
+          schema:
+            type: string
+            enum: [off, on]
+          required: false
+          description: "Power on/off state."
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisplayPowerState"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/channel:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - SensorPlugin
+      summary: Get sensor configuration
+      description: |
+        Get sensor configuration parameters.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/channel
+        ```
+      operationId: getSensorCfg
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Channel"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - SensorPlugin
+      summary: Set sensor configuration
+      description: |
+        Set sensor configuration parameters.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "sensorIndex=0" -d "channelIndex=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/channel
+        ```
+      operationId: setSensorCfg
+      parameters:
+        - in: query
+          name: sensorIndex
+          schema:
+            type: number
+          required: true
+          description: The index of the sensor which to select.
+        - in: query
+          name: channelIndex
+          schema:
+            type: number
+          required: true
+          description: The index of the sensor specific channel which to select.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/chicagobus:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get configuration
+      description: |
+        Get ChicagoBusTracker configuration.
+        Specifies a route, stop, direction, and display options.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/0/chicagobus
+        ```
+      operationId: getChicagoBusConfig
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChicagoBusConfig"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Set configuration
+      description: |
+        Set ChicagoBusTrackerPlugin configuration options.
+        You need to set the apiKey and a route, direction, and stop.
+        You can choose whether or not to show the origin and destination.
+        You can choose the number of upcoming arrivals to show.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -F "apiKey=00000000" -F "rte=55" -F "dir=Eastbound" -F "stpid=10507" -F "orig=false" -F "dest=true" -F "two=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobus
+        ```
+      operationId: setChicagoBusConfig
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ChicagoBusConfig"
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+  /display/uid/{uid}/chicagobusroutes:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get list of bus routes
+      description: |
+        Returns a list of all CTA bus routes with 
+        their ID (55, X49, etc) 
+        and name ("Garfield", "Western Express", etc).
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusroutes
+        ```
+      operationId: getChicagoBusRoutes
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChicagoBusRoutes"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/chicagobusdirections:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+      - in: query
+        name: rte
+        schema:
+          type: string
+        required: true
+        description: CTA Bus route ID (e.g. 55, X49, 111A)
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get list of directions for a given bus route ID
+      description: |
+        Returns a list of valid directions for a given bus route.
+        This is always a pair of strings, either
+        `["Northbound", "Southbound"]` or `["Eastbound", "Westbound"]`
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusdirections?rte=55
+        ```
+      operationId: getChicagoBusDirections
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChicagoBusDirections"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/chicagobusstops:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+      - in: query
+        name: rte
+        schema:
+          type: string
+        required: true
+        description: CTA Bus route ID (e.g. 55, X49, 111A)
+      - in: query
+        name: dir
+        schema:
+          type: string
+          enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+        required: true
+        description: Direction to list stop IDs for
+    get:
+      tags:
+        - ChicagoBusTrackerPlugin
+      summary: Get list of stops for a given bus route ID and direction
+      description: |
+        Returns a list of bus stop IDs for a given route and direction
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusstops?rte=55&dir=Eastbound
+        ```
+      operationId: getChicagoBusStops
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChicagoBusStops"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/config:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - SoundReactivePlugin
+      summary: Get configuration
+      description: |
+        Get sound reactive plugin configuration.
+        You can choose between 8 or 16 frequency bands to show.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/config
+        ```
+      operationId: getConfiguration
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - SoundReactivePlugin
+      summary: Set configuration
+      description: |
+        Set sound reactive plugin configuration parameters.
+        You can choose between 8 or 16 frequency bands to show.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/config
+        ```
+      operationId: setConfiguration
+      parameters:
+        - in: query
+          name: freqBandLen
+          schema:
+            type: number
+            enum: [8, 16]
+          required: true
+          description: Number of frequency bands to show.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/countdown:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - CountdownPlugin
+      summary: Get target date
+      description: |
+        Get target date and target day description.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/countdown
+        ```
+      operationId: getTargetDate
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Countdown"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - CountdownPlugin
+      summary: Set target date
+      description: |
+        Set target date and target day description. Note, every parameter is optional.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "descPlural=DAYS" -d "descSingular=DAY" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/countdown
+        ```
+      operationId: setTargetDate
+      parameters:
+        - in: query
+          name: day
+          schema:
+            type: number
+          required: false
+          description: The day of the countdown date.
+        - in: query
+          name: month
+          schema:
+            type: number
+          required: false
+          description: The month of the countdown date.
+        - in: query
+          name: year
+          schema:
+            type: number
+          required: false
+          description: The year of the countdown date.
+        - in: query
+          name: descPlural
+          schema:
+            type: string
+          required: false
+          description: The plural of day.
+        - in: query
+          name: descSingular
+          schema:
+            type: string
+          required: false
+          description: The singular of day.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/dateTime:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - DateTimePlugin
+      summary: Get configuration
+      description: |
+        Get configuration.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/dateTime
+        ```
+      operationId: getDateTimeCfg
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DateTime"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - DateTimePlugin
+      summary: Set configuration
+      description: |
+        Set configuration.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "mode=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/dateTime
+        ```
+      operationId: setDateTimeCfg
+      parameters:
+        - in: query
+          name: mode
+          schema:
+            type: number
+          required: false
+          description: "0: Show date and time / 1: Show date only / 2: Show time only"
+        - in: query
+          name: timeFormat
+          schema:
+            type: string
+          required: false
+          description: "Time format according to strftime()."
+        - in: query
+          name: dateFormat
+          schema:
+            type: string
+          required: false
+          description: "Date format according to strftime()."
+        - in: query
+          name: timeZone
+          schema:
+            type: string
+          required: false
+          description: "Timezone"
+        - in: query
+          name: dayOnColor
+          schema:
+            type: string
+          required: false
+          description: "Color of the current day."
+        - in: query
+          name: dayOffColor
+          schema:
+            type: string
+          required: false
+          description: "Color of the other days than the current one."
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/grabConfig:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - GrabViaRestPlugin
+      summary: Get configuration
+      description: |
+        Get grab via REST plugin configuration.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/grabConfig
+        ```
+      operationId: getGrabConfiguration
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GrabConfig"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - GrabViaRestPlugin
+      summary: Set configuration
+      description: |
+        Set grab via REST plugin configuration.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/grabConfig
+        ```
+      operationId: setGrabConfiguration
+      parameters:
+        - in: query
+          name: method
+          schema:
+            type: string
+            enum: [GET, POST]
+          required: true
+          description: The HTTP method.
+        - in: query
+          name: url
+          schema:
+            type: string
+          description: REST API URL
+        - in: query
+          name: filter
+          schema:
+            type: string
+          required: true
+          description: Filter to identify the value in the JSON response.
+        - in: query
+          name: iconFileId
+          schema:
+            type: number
+          required: true
+          description: The file id of the icon from FileMgrService.
+        - in: query
+          name: format
+          schema:
+            type: string
+          required: true
+          description: Format specifier, e.g. "%s" for strings or "%f" for numbers.
+        - in: query
+          name: multiplier
+          schema:
+            type: number
+          required: true
+          description: Number which is multiplied with a number value. Not used for string values.
+        - in: query
+          name: offset
+          schema:
+            type: number
+          required: true
+          description: Number which is added to a number value. Not used for string values.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/host:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - VolumioPlugin
+      summary: Get host address
+      description: |
+        Get host address of the VOLUMIO server.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/host
+        ```
+      operationId: getHost
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Host"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - VolumioPlugin
+      summary: Set host address
+      description: |
+        Set host address of the VOLUMIO server.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/host
+        ```
+      operationId: setHost
+      parameters:
+        - in: query
+          name: host
+          schema:
+            type: string
+          required: true
+          description: The host address of the VOLUMIO server.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/ipAddress:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - GruenbeckPlugin
+      summary: Get IP address
+      description: |
+        Get IP address of the system.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/ipAddress
+        ```
+      operationId: getIpAddress
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IPAddress"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - GruenbeckPlugin
+      summary: Set IP address
+      description: |
+        Set IP address of the system.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "ipAddress=192.168.178.10" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/ipAddress
+        ```
+      operationId: setIpAddress
+      parameters:
+        - in: query
+          name: ipAddress
+          schema:
+            type: string
+          required: true
+          description: The IP address of the system.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/github:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - GithubPlugin
+      summary: Get github user and repository name
+      description: |
+        Get github user and repository name.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/github
+        ```
+      operationId: getUserAndRepositoryName
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Github"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - GithubPlugin
+      summary: Set github user and repository name
+      description: |
+        Set github user and repository name.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "user=BlueAndi" -d "repository=Pixelix" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/github
+        ```
+      operationId: setUserAndRepositoryName
+      parameters:
+        - in: query
+          name: user
+          schema:
+            type: string
+          required: true
+          description: The github user name.
+        - in: query
+          name: repository
+          schema:
+            type: string
+          required: true
+          description: The github repository name.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/lamp/{lampId}:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - IconTextLampPlugin
+      summary: Get lamp state
+      description: |
+        Get lamp state.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamp/0
+        ```
+      operationId: getLampState
+      parameters:
+        - in: path
+          name: lampId
+          schema:
+            type: number
+          required: true
+          description: The lamp id.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lamp"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - IconTextLampPlugin
+      summary: Set lamp state
+      description: |
+        Set lamp state.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "state=on" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamp/0
+        ```
+      operationId: setLampState
+      parameters:
+        - in: path
+          name: lampId
+          schema:
+            type: number
+          required: true
+          description: The lamp id.
+        - in: query
+          name: state
+          schema:
+            type: string
+            enum: [off, on]
+          required: true
+          description: The lamp state.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/lamps:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - IconTextLampPlugin
+      summary: Get lamp states
+      description: |
+        Get all lamp states.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamps
+        ```
+      operationId: getLampStates
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lamps"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/location:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - SunrisePlugin
+      summary: Get location
+      description: |
+        Get location on earth.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/location
+        ```
+      operationId: getLocation
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - SunrisePlugin
+      summary: Set location
+      description: |
+        Set location on earth.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/location
+        ```
+      operationId: setLocation
+      parameters:
+        - in: query
+          name: longitude
+          schema:
+            type: string
+          required: true
+          description: The location longitude.
+        - in: query
+          name: latitude
+          schema:
+            type: string
+          required: true
+          description: The location latitude.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/makapixCfg:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MakapixPlugin
+      summary: Get Makapix configuration
+      description: |
+        Get the Makapix player configuration including player key, MQTT instance, channel settings, and last shown artwork.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        ```
+      operationId: getMakapixConfig
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MakapixConfig"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - MakapixPlugin
+      summary: Set Makapix configuration
+      description: |
+        Set the Makapix player configuration. Only playerKey and mqttInstance can be modified via POST.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "playerKey=abc123" -d "mqttInstance=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        ```
+      operationId: setMakapixConfig
+      parameters:
+        - in: query
+          name: playerKey
+          schema:
+            type: string
+          required: false
+          description: The Makapix player key.
+        - in: query
+          name: mqttInstance
+          schema:
+            type: number
+          required: false
+          description: The MQTT instance number.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/makapixPlayCtrl:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MakapixPlugin
+      summary: Get Makapix playback status
+      description: |
+        Get the current Makapix playback status including channel information and play/pause state.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        ```
+      operationId: getMakapixPlaybackStatus
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MakapixPlaybackStatus"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - MakapixPlugin
+      summary: Control Makapix playback
+      description: |
+        Control Makapix playback with actions: next, previous, playChannel, pause, continue.
+
+        Examples:
+        ```bash
+        # Next artwork
+        $ curl -u luke:skywalker -d "action=next" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Previous artwork
+        $ curl -u luke:skywalker -d "action=previous" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Play a channel
+        $ curl -u luke:skywalker -d "action=playChannel" -d "channelName=promoted" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Pause playback
+        $ curl -u luke:skywalker -d "action=pause" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+
+        # Continue playback
+        $ curl -u luke:skywalker -d "action=continue" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        ```
+      operationId: controlMakapixPlayback
+      parameters:
+        - in: query
+          name: action
+          schema:
+            type: string
+            enum: [next, previous, playChannel, pause, continue]
+          required: true
+          description: The playback control action.
+        - in: query
+          name: channelName
+          schema:
+            type: string
+          required: false
+          description: The channel name (required for playChannel action).
+        - in: query
+          name: userSqid
+          schema:
+            type: string
+          required: false
+          description: The user SQID (optional for playChannel action).
+        - in: query
+          name: hashtag
+          schema:
+            type: string
+          required: false
+          description: The hashtag (optional for playChannel action).
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/makapixProvision:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MakapixPlugin
+      summary: Get Makapix provisioning status
+      description: |
+        Get the current Makapix player provisioning status. Returns idle, pending, or completed with registration details.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        ```
+      operationId: getMakapixProvisionStatus
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MakapixProvisionStatus"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - MakapixPlugin
+      summary: Provision Makapix player
+      description: |
+        Start the Makapix player provisioning process. Only allowed if no player key is set.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        ```
+      operationId: provisionMakapixPlayer
+      responses:
+        "200":
+          description: Provisioning started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "400":
+          description: Player already provisioned or provisioning already pending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/omweather:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - OpenMeteoPlugin
+      summary: Get weather configuration data
+      description: |
+        Get weather configuration data, necessary for [https://open-meteo.com](https://open-meteo.com).
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/omweather
+        ```
+      operationId: getOMWeather
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OMWeather"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - OpenMeteoPlugin
+      summary: Set weather configuration data
+      description: |
+        Set weather configuration data, necessary for [https://open-meteo.com](https://open-meteo.com).
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "latitude=48.858" -d "longitude=2.295" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/omweather
+        ```
+      operationId: setOMWeather
+      parameters:
+        - in: query
+          name: updatePeriod
+          schema:
+            type: number
+          required: false
+          description: The weather update period in s.
+        - in: query
+          name: latitude
+          schema:
+            type: string
+          required: false
+          description: The latitude of the weather location.
+        - in: query
+          name: longitude
+          schema:
+            type: string
+          required: false
+          description: The longitude of the weather location.
+        - in: query
+          name: temperatureUnit
+          schema:
+            type: string
+            enum: [celisua, fahrenheit]
+          required: false
+          description: The unit of the temperature.
+        - in: query
+          name: windSpeedUnit
+          schema:
+            type: string
+            enum: [mph, kmh, ms, kn]
+          required: false
+          description: The unit of the wind speed.
+        - in: query
+          name: weatherInfo
+          schema:
+            type: number
+          required: false
+          description: "Combine the bits to select what shall be shown: 0x01 - temperature / 0x02 - humidity / 0x04 - wind speed / 0x08 - uv-index"
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/signalDetector:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - SignalDetectorPlugin
+      summary: Get location
+      description: |
+        Get signal detector configuration.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/signalDetector
+        ```
+      operationId: getSignalDetector
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalDetector"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - SignalDetectorPlugin
+      summary: Set location
+      description: |
+        Set signal detector configuration.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "pushUrl=\"http://notify.me\"" -d "text=\"Detected!\"" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/signalDetector
+        ```
+      operationId: setSignalDetector
+      parameters:
+        - in: query
+          name: pushUrl
+          schema:
+            type: string
+          required: false
+          description: If signal is detected, this URL will be called for notification.
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: false
+          description: If signal is detected, this text will be shown.
+        - in: query
+          name: tones._0_.frequency
+          schema:
+            type: number
+          required: false
+          description: ...
+        - in: query
+          name: tones._0_.minDuration
+          schema:
+            type: number
+          required: false
+          description: ...
+        - in: query
+          name: tones._0_.threshold
+          schema:
+            type: number
+          required: false
+          description: ...
+        - in: query
+          name: tones._1_.frequency
+          schema:
+            type: number
+          required: false
+          description: ...
+        - in: query
+          name: tones._1_.minDuration
+          schema:
+            type: number
+          required: false
+          description: ...
+        - in: query
+          name: tones._1_.threshold
+          schema:
+            type: number
+          required: false
+          description: ...
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/slots:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MultiIconPlugin
+      summary: Get all slot file ids.
+      description: |
+        Get all slot file ids.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        ```
+      operationId: getSlotsFileId
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SlotsFileId"
+    post:
+      tags:
+        - MultiIconPlugin
+      summary: Set all slot file ids.
+      description: |
+        Set all slot file ids.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "fileId=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        ```
+      operationId: setSlotsFileId
+      parameters:
+        - in: query
+          name: slots
+          schema:
+            type: array
+            items:
+              type: number
+          required: false
+          description: The file id of every slot.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/slot/{id}:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - MultiIconPlugin
+      summary: Get slot file id.
+      description: |
+        Get lot file id.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots/1
+        ```
+      operationId: getSlotFileId
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+          description: The slot id.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SlotFileId"
+    post:
+      tags:
+        - MultiIconPlugin
+      summary: Set slot file id.
+      description: |
+        Set file id to slot.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "fileId=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slot/1
+        ```
+      operationId: setSlotFileId
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+          description: The slot id.
+        - in: query
+          name: fileId
+          schema:
+            type: number
+          required: false
+          description: The file id.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/text:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - IconTextLampPlugin
+        - IconTextPlugin
+      summary: Get text
+      description: |
+        Get the shown text and icon file id.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/text
+        ```
+      operationId: getText
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Text"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - IconTextLampPlugin
+        - IconTextPlugin
+      summary: Set text
+      description: |
+        Set text which to show and/or icon file id.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "text=Test" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/text
+        ```
+      operationId: setText
+      parameters:
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: false
+          description: The text, which to show.
+        - in: query
+          name: iconFileId
+          schema:
+            type: number
+          required: false
+          description: The file id of the icon from FileMgrService.
+        - in: query
+          name: storeFlag
+          schema:
+            type: boolean
+          required: false
+          description: Force persistent storage of the configuration (default is false to avoid flash wear).
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/uid/{uid}/weather:
+    parameters:
+      - $ref: "#/components/parameters/uid"
+    get:
+      tags:
+        - OpenWeatherPlugin
+      summary: Get weather configuration data
+      description: |
+        Get weather configuration data, necessary for [https://openweathermap.org](https://openweathermap.org).
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/weather
+        ```
+      operationId: getWeather
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Weather"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - OpenWeatherPlugin
+      summary: Set weather configuration data
+      description: |
+        Set weather configuration data, necessary for [https://openweathermap.org](https://openweathermap.org).
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "apiKey=yourApiKey" -d "lat=48.858" -d "lon=2.295" -d "other=3" -d "units=metric" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/weather
+        ```
+      operationId: setWeather
+      parameters:
+        - in: query
+          name: apiKey
+          schema:
+            type: string
+          required: false
+          description: The OpenWeatherMap API key.
+        - in: query
+          name: latitude
+          schema:
+            type: string
+          required: false
+          description: The latitude of the weather location.
+        - in: query
+          name: longitude
+          schema:
+            type: string
+          required: false
+          description: The longitude of the weather location.
+        - in: query
+          name: other
+          schema:
+            type: number
+          required: false
+          description: Configure additional shown information.
+        - in: query
+          name: units
+          schema:
+            type: string
+            enum: [metric, imperial]
+          required: false
+          description: The units, which to use.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /display/slots:
+    get:
+      tags:
+        - Display
+      summary: Get slot information
+      description: |
+        Slot information:
+        * Max. number of slots.
+        * Per slot:
+          * The current installed plugin.
+          * Whether the slot is locked or not.
+          * Slot duration in ms. The plugins are listed in the ascending order of the slots.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/slots
+        ```
+      operationId: getSlots
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slots"
+      security:
+        - pixelixAuth: []
+  /display/slot/{id}:
+    post:
+      tags:
+        - Display
+      summary: Set slot parameter
+      description: |
+        Set slot parameters.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "sticky=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        ```
+      operationId: setSlot
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: number
+          required: true
+          description: The slot id.
+        - in: query
+          name: sticky
+          schema:
+            type: boolean
+          required: false
+          description: Set/Clear sticky flag.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+      security:
+        - pixelixAuth: []
+  /fileMgrService/files:
+    get:
+      tags:
+        - FileMgrService
+      summary: Get list of managed files
+      description: |
+        Get list of files managed by FileMgrService with their file IDs.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "files": [
+              {"id": 1, "name": "image.bmp", "size": 1024},
+              {"id": 2, "name": "animation.gif", "size": 2048}
+            ]
+          }
+        }
+        ```
+      operationId: getFiles
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /fileMgrService/upload:
+    post:
+      tags:
+        - FileMgrService
+      summary: Upload a bitmap (*.bmp) or gif file.
+      description: |
+        Upload a file to configuration folder.
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/upload
+        ```
+      operationId: uploadFile
+      requestBody:
+        content:
+          image/bmp:
+            schema:
+              type: string
+              format: binary
+          image/gif:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /fileMgrService/remove:
+    post:
+      tags:
+        - FileMgrService
+      summary: Remove a file by file id.
+      description: |
+        Remove file by file id from configuration folder.
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "fileId=1" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/remove
+        ```
+      operationId: removeFile
+      parameters:
+        - in: query
+          name: fileId
+          schema:
+            type: number
+          required: true
+          description: The id of the file which to remove.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+      security:
+        - pixelixAuth: []
+  /fs:
+    get:
+      tags:
+        - Filesystem
+      summary: List files
+      description: |
+        List all files of a directory. This result may be requested over several pages.
+        One page contains a max. of 15 entries.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "dir=/&page=0" -X GET http://pixelix-FFFFFFFF/rest/api/v1/fs
+        ```
+      operationId: listFiles
+      parameters:
+        - in: query
+          name: dir
+          schema:
+            type: string
+          required: true
+          description: The directory where to list the files.
+        - in: query
+          name: page
+          schema:
+            type: number
+          required: false
+          description: The page number, which to retrieve. Default is 0.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fs"
+      security:
+        - pixelixAuth: []
+  /fs/file:
+    get:
+      tags:
+        - Filesystem
+      summary: Read file
+      description: |
+        Read a file from filesystem.
+      operationId: readFile
+      parameters:
+        - in: query
+          name: path
+          schema:
+            type: string
+          required: true
+          description: The full path of the file.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/javascript:
+              schema:
+                type: string
+            application/x-pdf:
+              schema:
+                type: string
+                format: binary
+            application/x-zip:
+              schema:
+                type: string
+                format: binary
+            application/x-gzip:
+              schema:
+                type: string
+                format: binary
+            image/*:
+              schema:
+                type: string
+                format: binary
+            text/*:
+              schema:
+                type: string
+        "404":
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Filesystem
+      summary: Write file
+      description: |
+        Write a file to filesystem.
+      operationId: writeFile
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "400":
+          description: Upload aborted
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Upload aborted.
+      security:
+        - pixelixAuth: []
+    delete:
+      tags:
+        - Filesystem
+      summary: Delete file
+      description: |
+        Delte a file in the filesystem.
+      operationId: deleteFile
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "404":
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /mqttService/mqtt:
+    get:
+      tags:
+        - Service
+      summary: Get MQTT settings.
+      description: |
+        Get MQTT settings.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/mqttService/mqtt
+        ```
+      operationId: getMqttServiceSettings
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MqttServiceSettings"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Service
+      summary: Set MQTT settings.
+      description: |
+        Set MQTT settings.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "mqttSettings._0_.enabled=false" -X POST http://pixelix-FFFFFFFF/rest/api/v1/mqttService/mqtt
+        ```
+      operationId: setMqttServiceSettings
+      parameters:
+        - in: query
+          name: mqttSettings._0_.enabled
+          schema:
+            type: boolean
+          required: true
+          description: Enable/disable MQTT setting 0.
+        - in: query
+          name: mqttSettings._0_.useTls
+          schema:
+            type: boolean
+          required: true
+          description: Enable/disable TLS of setting 0.
+        - in: query
+          name: mqttSettings._0_.broker
+          schema:
+            type: string
+          required: true
+          description: Broker hostname of setting 0.
+        - in: query
+          name: mqttSettings._0_.port
+          schema:
+            type: number
+          required: true
+          description: Broker port of setting 0.
+        - in: query
+          name: mqttSettings._0_.user
+          schema:
+            type: string
+          required: true
+          description: User name of setting 0.
+        - in: query
+          name: mqttSettings._0_.password
+          schema:
+            type: string
+          required: true
+          description: Password of setting 0.
+        - in: query
+          name: mqttSettings._0_.rootCaCert
+          schema:
+            type: string
+          required: true
+          description: Root CA certificate of setting 0.
+        - in: query
+          name: mqttSettings._0_.clientCert
+          schema:
+            type: string
+          required: true
+          description: Client certificate of setting 0.
+        - in: query
+          name: mqttSettings._0_.clientKey
+          schema:
+            type: string
+          required: true
+          description: Client key of setting 0.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MqttServiceSettings"
+      security:
+        - pixelixAuth: []
+  /plugin/install:
+    post:
+      tags:
+        - Common
+      summary: Install plugin
+      description: |
+        Install a plugin by name.
+
+        Example:
+        ```bash
+        curl -u luke:skywalker -d "name=IconTextPlugin" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/install
+        ```
+      operationId: installPlugin
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          required: true
+          description: The plugin name.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginInstall"
+        "404":
+          description: Plugin name is missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "405":
+          description: Plugin name not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /plugin/uninstall:
+    post:
+      tags:
+        - Common
+      summary: Uninstall plugin
+      description: |
+        Uninstall a plugin by name and slot.
+
+        Example:
+        ```bash
+        curl -u luke:skywalker -d "name=IconTextPlugin&slot=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/uninstall
+        ```
+      operationId: uninstallPlugin
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          required: true
+          description: The plugin name.
+        - in: query
+          name: slot
+          schema:
+            type: number
+          required: true
+          description: The slot where the plugin is currently installed.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginUninstall"
+        "404":
+          description: Plugin name or slot id is missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "405":
+          description: Invalid argument
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /plugins:
+    get:
+      tags:
+        - Common
+      summary: List plugins
+      description: |
+        List all available plugins.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/plugins
+        ```
+      operationId: getPlugins
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plugins"
+      security:
+        - pixelixAuth: []
+  /restart:
+    post:
+      tags:
+        - Common
+      summary: Restart the device
+      description: |
+        Restart the device.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/restart
+        ```
+      operationId: restart
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restart"
+      security:
+        - pixelixAuth: []
+  /sensors:
+    get:
+      tags:
+        - Sensor
+      summary: List sensors
+      description: |
+        List all installed sensors and their provided channels.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors
+        ```
+      operationId: getSensors
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sensors"
+      security:
+        - pixelixAuth: []
+  /sensors/0/temperature:
+    get:
+      tags:
+        - Sensor
+      summary: Get temperature sensor value
+      description: |
+        Get current temperature value in °C.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/0/temperature
+        ```
+      operationId: getTemperature
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Temperature"
+      security:
+        - pixelixAuth: []
+  /sensors/1/humidity:
+    get:
+      tags:
+        - Sensor
+      summary: Get humidity sensor value
+      description: |
+        Get current humidity value in %.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/1/humidity
+        ```
+      operationId: getHumidity
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Humidity"
+      security:
+        - pixelixAuth: []
+  /sensors/2/illuminance:
+    get:
+      tags:
+        - Sensor
+      summary: Get illuminance sensor value
+      description: |
+        Get current illuminance value in lux.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/2/illuminance
+        ```
+      operationId: getIlluminance
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Illuminance"
+      security:
+        - pixelixAuth: []
+  /sensors/3/soc:
+    get:
+      tags:
+        - Sensor
+      summary: Get battery state of charge
+      description: |
+        Get current battery state of charge in %.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/3/soc
+        ```
+      operationId: getStateOfCharge
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SOC"
+      security:
+        - pixelixAuth: []
+  /sensors/4/freeHeap:
+    get:
+      tags:
+        - Sensor
+      summary: Get free heap memory
+      description: |
+        Get current available heap memory in bytes.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/4/freeHeap
+        ```
+      operationId: getFreeHeap
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Heap"
+      security:
+        - pixelixAuth: []
+  /sensors/5/minFreeHeap:
+    get:
+      tags:
+        - Sensor
+      summary: Get minimum free heap memory
+      description: |
+        Get lowest level of free heap memory since boot in bytes.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/5/minFreeHeap
+        ```
+      operationId: getMinFreeHeap
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Heap"
+      security:
+        - pixelixAuth: []
+  /sensors/6/maxAllocHeap:
+    get:
+      tags:
+        - Sensor
+      summary: Get maximum allocatable heap block
+      description: |
+        Get largest block of heap memory that can be allocated in bytes.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/6/maxAllocHeap
+        ```
+      operationId: getMaxAllocHeap
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Heap"
+      security:
+        - pixelixAuth: []
+  /sensors/7/signalStrength:
+    get:
+      tags:
+        - Sensor
+      summary: Get WiFi signal strength
+      description: |
+        Get current WiFi signal strength in dBm.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/7/signalStrength
+        ```
+      operationId: getSignalStrength
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalStrength"
+      security:
+        - pixelixAuth: []
+  /sensors/8/uptime:
+    get:
+      tags:
+        - Sensor
+      summary: Get system uptime
+      description: |
+        Get current system uptime in seconds.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/sensors/8/uptime
+        ```
+      operationId: getUptime
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Uptime"
+      security:
+        - pixelixAuth: []
+  /setting:
+    get:
+      tags:
+        - Common
+      summary: Get setting by key
+      description: |
+        Get single settings parameter by key.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "key=hostname" -X GET http://pixelix-FFFFFFFF/rest/api/v1/setting
+        ```
+      operationId: getSetting
+      parameters:
+        - in: query
+          name: key
+          schema:
+            type: string
+          required: true
+          description: The key of the setting, which to get.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Setting"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Common
+      summary: Set setting by key
+      description: |
+        Set single settings value by key.
+
+        Example:
+        ```bash
+        curl -u luke:skywalker -d "key=hostname" -d "value=pixelix" -X POST http://pixelix-FFFFFFFF/rest/api/v1/setting
+        ```
+      operationId: setSetting
+      parameters:
+        - in: query
+          name: key
+          schema:
+            type: string
+          required: true
+          description: The key of the setting, which to set.
+        - in: query
+          name: value
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+              - type: boolean
+              - type: object
+          required: true
+          description: The value of the setting, which to set.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Setting"
+        "400":
+          description: Settings value invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Setting key not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /settings:
+    get:
+      tags:
+        - Common
+      summary: List setting keys
+      description: |
+        List all settings with their key.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/settings
+        ```
+      operationId: getSettings
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+      security:
+        - pixelixAuth: []
+  /status:
+    get:
+      tags:
+        - Common
+      summary: Get status information
+      description: |
+        Status information:
+        * Software version.
+        * ESP SDK version.
+        * ESP chip revision.
+        * ESP cpu frequency in MHz.
+        * Internal RAM heap size and available heap.
+        * Wifi SSID of the network, the display will connect to.
+        * Wifi receive signal strength indicator in dBm.
+        * Wifi signal quality in percent.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/status
+        ```
+      operationId: getStatus
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+      security:
+        - pixelixAuth: []
+  /timerService/timer:
+    get:
+      tags:
+        - Service
+      summary: Get timer status.
+      description: |
+        Get timer status.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/timerService/timer
+        ```
+      operationId: getTimerServiceTimer
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimerServiceTimer"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Service
+      summary: Set timer status.
+      description: |
+        Set timer status.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "state=off" -X POST http://pixelix-FFFFFFFF/rest/api/v1/timerService/timer
+        ```
+      operationId: setTimerServiceTimer
+      parameters:
+        - in: query
+          name: timerSettings._0_.enabled
+          schema:
+            type: boolean
+          required: true
+          description: Enable/disable timer setting 0.
+        - in: query
+          name: timerSettings._0_.hour
+          schema:
+            type: number
+          required: true
+          description: Timer 0 hour [0; 23].
+        - in: query
+          name: timerSettings._0_.minute
+          schema:
+            type: number
+          required: true
+          description: Timer 0 minute [0; 59].
+        - in: query
+          name: timerSettings._0_.sunday
+          schema:
+            type: boolean
+          required: true
+          description: Timer 0 enabled/disabled on Sunday.
+        - in: query
+          name: timerSettings._0_.monday
+          schema:
+            type: boolean
+          required: true
+          description: Timer 0 enabled/disabled on Monday.
+        - in: query
+          name: timerSettings._0_.tuesday
+          schema:
+            type: boolean
+          required: true
+          description: Timer 0 enabled/disabled on Tuesday.
+        - in: query
+          name: timerSettings._0_.wednesday
+          schema:
+            type: boolean
+          required: true
+          description: Timer 0 enabled/disabled on Wednesday.
+        - in: query
+          name: timerSettings._0_.thursday
+          schema:
+            type: boolean
+          required: true
+          description: Timer 0 enabled/disabled on Thursday.
+        - in: query
+          name: timerSettings._0_.friday
+          schema:
+            type: boolean
+          required: true
+          description: Timer 0 enabled/disabled on Friday.
+        - in: query
+          name: timerSettings._0_.saturday
+          schema:
+            type: boolean
+          required: true
+          description: Timer 0 enabled/disabled on Saturday.
+        - in: query
+          name: timerSettings._0_.displayState
+          schema:
+            type: number
+            enum: [0, 1, 2]
+          required: true
+          description: "Timer 0 display state (0: none / 1: on / 2: off)."
+        - in: query
+          name: timerSettings._0_.brightness
+          schema:
+            type: number
+          required: true
+          description: Timer 0 brightnes in %. A -1 means disabled.
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimerServiceTimer"
+      security:
+        - pixelixAuth: []
+  /coredump:
+    get:
+      tags:
+        - Common
+      summary: Get coredump information
+      description: |
+        Retrieve coredump partition information or decoded crash summary.
+
+        **Without decode parameter** - Returns basic partition info:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "hasCoredump": true,
+            "partitionSize": 65536,
+            "partitionOffset": 8323072,
+            "coredumpSize": 12345,
+            "coredumpOffset": 8323072
+          }
+        }
+        ```
+
+        **With decode=true** - Returns decoded crash analysis:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "crashedTask": "IDLE0",
+            "crashedTaskTcb": "0x3fca4f20",
+            "exceptionCause": "LoadProhibited",
+            "exceptionCode": 28,
+            "exceptionAddr": "0x00000000",
+            "exceptionPc": "0x40084659",
+            "coredumpVersion": 2,
+            "appElfSha256": "9f2f6f7f1c74f58f00112233445566778899aabbccddeeff0011223344556677",
+            "registers": {
+              "A0": "0x80090c10",
+              "A1": "0x3ffbf1bc",
+              ...
+            },
+            "epcx": {
+              "EPC1": "0x40081234"
+            },
+            "backtrace": ["0x40084659"],
+            "backtraceDepth": 1,
+            "backtraceCorrupted": false
+          }
+        }
+        ```
+      operationId: getCoredump
+      parameters:
+        - in: query
+          name: decode
+          schema:
+            type: boolean
+          required: false
+          description: If true, decode coredump into human-readable crash summary with registers and backtrace.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "400":
+          description: Bad request - invalid decode parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Coredump partition not found or no coredump data present
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Error reading or decoding coredump
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+    delete:
+      tags:
+        - Common
+      summary: Clear coredump partition
+      description: |
+        Erase the coredump partition to remove stored crash data.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {}
+        }
+        ```
+      operationId: clearCoredump
+      responses:
+        "200":
+          description: Coredump partition cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "404":
+          description: Coredump partition not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Failed to erase coredump partition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /coredump/download:
+    get:
+      tags:
+        - Common
+      summary: Download raw coredump image
+      description: |
+        Download the raw ELF coredump image from flash.
+
+        This endpoint is intended for host-side analysis with ESP-IDF tools,
+        for example `idf.py coredump-info` to inspect all captured tasks and stacks.
+      operationId: downloadCoredump
+      responses:
+        "200":
+          description: Raw coredump image stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Coredump partition not found or no coredump data present
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Failed to validate, read, or stream coredump data
+          content:
+            text/plain:
+              schema:
+                type: string
+      security:
+        - pixelixAuth: []
+  /partitionChange:
+    post:
+      tags:
+        - Common
+      summary: Switch to factory partition and restart
+      description: |
+        Set the factory partition as the next boot partition and restart the device.
+        Used for firmware recovery or switching to factory firmware.
+
+        Response on success:
+        ```json
+        {
+          "status": "ok",
+          "data": {}
+        }
+        ```
+
+        Note: Device will restart after successful execution.
+      operationId: changePartition
+      responses:
+        "200":
+          description: Factory partition set as boot partition, device restarting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "500":
+          description: Failed to set factory partition (not found or set failed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /homeAssistant/automaticDiscovery/disable:
+    post:
+      tags:
+        - Service
+      summary: Disable Home Assistant MQTT automatic discovery
+      description: |
+        Disable the Home Assistant MQTT automatic discovery feature.
+        This prevents the welcome plugin from being discovered during filesystem updates.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {}
+        }
+        ```
+      operationId: disableHomeAssistantDiscovery
+      responses:
+        "200":
+          description: Discovery disabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ok"
+        "500":
+          description: Failed to disable discovery or MqttService not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /homeAssistant/automaticDiscovery/status:
+    get:
+      tags:
+        - Service
+      summary: Get Home Assistant MQTT automatic discovery status
+      description: |
+        Check whether the Home Assistant MQTT automatic discovery is enabled or disabled.
+
+        Response:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "enabled": true
+          }
+        }
+        ```
+      operationId: getHomeAssistantDiscoveryStatus
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - data
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  data:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+                        description: True if discovery is enabled, false if disabled or MqttService not configured
+        "500":
+          description: Unknown error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+externalDocs:
+  description: Find out more about Pixelix
+  url: "https://github.com/BlueAndi/Pixelix"
+components:
+  parameters:
+    bitmapSlotId:
+      in: path
+      name: bitmapSlotId
+      schema:
+        type: number
+      required: true
+      description: The bitmap slot id.
+    uid:
+      in: path
+      name: uid
+      schema:
+        type: number
+      required: true
+      description: The plugin unique id (UID).
+    alias:
+      in: path
+      name: alias
+      schema:
+        type: string
+      required: true
+      description: The plugin alias name.
+  schemas:
+    Button:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Config:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            freqBandLen:
+              type: number
+              enum: [8, 16]
+              description: The number of frequency bands.
+              example: 8
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Error:
+      type: object
+      required:
+        - error
+        - status
+      properties:
+        error:
+          type: object
+          properties:
+            msg:
+              type: string
+              example: ...
+        status:
+          type: string
+          description: The request result.
+          example: error
+    Channel:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            sensorIndex:
+              type: number
+              example: 0
+            channelIndex:
+              type: number
+              example: 0
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    ChicagoBusConfig:
+      type: object
+      required:
+        - apiKey
+        - rte
+        - dir
+        - stpid
+        - orig
+        - dest
+        - count
+      properties:
+        apiKey:
+          type: string
+          description: CTA Bus Tracker API key
+        rte:
+          type: string
+          description: CTA Bus Route ID (e.g. 55, X49, 111A)
+        dir:
+          type: string
+          enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+          description: Direction for the selected route
+        stpid:
+          type: string
+          description: CTA Bus Stop ID
+        orig:
+          type: boolean
+          description: Whether to show the stop name in the route info section
+        dest:
+          type: boolean
+          description: Whether to show the destination for the selected route and direction in the route info section
+        count:
+          type: number
+          enum: [1, 2, 3]
+          description: Max number of upcoming arrivals to show (1-3).
+    ChicagoBusDirections:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            dirs:
+              type: array
+              items:
+                type: string
+                enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+              description: Valid directions for a given route
+    ChicagoBusRoutes:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            routes:
+              type: array
+              items:
+                type: object
+                properties:
+                  rt:
+                    type: string
+                    description: Route ID (e.g. 55, X49, 111A)
+                  rtnm:
+                    type: string
+                    description: Route name (e.g. Garfield, Western Express)
+    ChicagoBusStops:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            stops:
+              type: array
+              items:
+                type: object
+                properties:
+                  stpid:
+                    type: string
+                    description: Stop ID (usually a number up to 6 digits)
+                  stpnm:
+                    type: string
+                    description: Stop name (e.g. 55th Street & St. Louis)
+    Countdown:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            day:
+              type: number
+              example: 2
+            month:
+              type: number
+              example: 9
+            year:
+              type: number
+              example: 2020
+            descPlural:
+              type: string
+              example: DAYS
+            descSingular:
+              type: string
+              example: DAY
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    DateTime:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            mode:
+              type: number
+              example: 0
+            timeFormat:
+              type: string
+              example: "%I:%M %p"
+            dateFormat:
+              type: string
+              example: "%m/%d"
+            dayOnColor:
+              type: string
+              example: "The color of the current day in HTML format, e.g. #112233."
+            dayOffColor:
+              type: string
+              example: "The color of the other days than the current day in HTML format, e.g. #112233."
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    DisplayPowerState:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            state:
+              type: string
+              example: off
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    FadeEffect:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            fadeEffect:
+              type: number
+              example: 1
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Fs:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              size:
+                type: number
+              type:
+                type: string
+                enum: [dir, file]
+          example: |
+            [{
+              "name": "/debug.html",
+              "size": 14849,
+              "type": "file"
+            },
+            {
+              "name": "/plugins/VolumioPlugin.html",
+              "size": 8330,
+              "type": "file"
+            }]
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Github:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              type: string
+            repository:
+              type: string
+          example: |
+            {
+              "user": "BlueAndi",
+              "repository": "Pixelix"
+            }
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    GrabConfig:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            method:
+              type: string
+              description: The HTTP method.
+              enum: [GET, POST]
+              example: GET
+            url:
+              type: string
+              description: REST API URL
+              example: https://api.github.com/repos/BlueAndi/Pixelix
+            filter:
+              type: string
+              description: Filter to identify the value in the JSON response.
+              example: { "stargazers_count": true }
+            iconFileId:
+              type: number
+              description: The file id of the icon from FileMgrService.
+              example: 1234
+            format:
+              type: string
+              description: Format specifier, e.g. "%s" for strings or "%f" for numbers.
+              example: "\\calign%s"
+            multiplier:
+              type: number
+              description: Number which is multiplied with a number value. Not used for string values.
+              example: 1
+            offset:
+              type: number
+              description: Number which is added to a number value. Not used for string values.
+              example: 0
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Heap:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - value
+          properties:
+            value:
+              type: number
+              example: 30000
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Host:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            host:
+              type: string
+              example: volumio.fritz.box
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Humidity:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - value
+          properties:
+            value:
+              type: string
+              example: 32.00
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Illuminance:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - value
+          properties:
+            value:
+              type: string
+              example: 8.32
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    IPAddress:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            ipAddress:
+              type: string
+              example: 192.168.178.10
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Lamp:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: number
+              example: 0
+            state:
+              type: string
+              enum: [off, on]
+              example: on
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Lamps:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            lamps:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  state:
+                    type: string
+                    enum: [off, on]
+              example: |
+                [{
+                  "id": 0,
+                  "state": "off"
+                },
+                {
+                  "id": 1,
+                  "state": "off"
+                },
+                {
+                  "id": 2,
+                  "state": "off"
+                },
+                {
+                  "id": 3,
+                  "state": "off"
+                }
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    MqttServiceSettings:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - timerSettings
+          properties:
+            mqttSettings:
+              type: array
+              items:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                    example: false
+                  useTls:
+                    type: boolean
+                    example: false
+                  broker:
+                    type: string
+                    example: homeassistant.fritz.box
+                  port:
+                    type: number
+                    example: 1883
+                  user:
+                    type: string
+                    example: ""
+                  password:
+                    type: string
+                    example: ""
+                  rootCaCert:
+                    type: string
+                    example: ""
+                  clientCert:
+                    type: string
+                    example: ""
+                  clientKey:
+                    type: string
+                    example: ""
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    SignalDetector:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            pushUrl:
+              type: string
+              example: "http://notify.me"
+            text:
+              type: string
+              example: Detected!
+            tones._0_.frequency:
+              type: number
+              example: 2000
+            tones._0_.minDuration:
+              type: number
+              example: 500
+            tones._0_.threshold:
+              type: number
+              example: 1000
+            tones._1_.frequency:
+              type: number
+              example: 4000
+            tones._1_.minDuration:
+              type: number
+              example: 500
+            tones._1_.threshold:
+              type: number
+              example: 1000
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Location:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            longitude:
+              type: string
+              example: 2.295
+            latitude:
+              type: string
+              example: 48.858
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    MakapixConfig:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            playerKey:
+              type: string
+              example: abc123def456
+            mqttInstance:
+              type: number
+              example: 0
+            channelName:
+              type: string
+              example: promoted
+            userSqid:
+              type: string
+              example: ""
+            hashtag:
+              type: string
+              example: ""
+            postId:
+              type: number
+              example: 0
+            storageKey:
+              type: string
+              example: ""
+            nativeFormat:
+              type: string
+              example: ""
+            dwellTime:
+              type: number
+              example: 0
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    MakapixPlaybackStatus:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            channel:
+              type: string
+              example: promoted
+            userSqid:
+              type: string
+              example: ""
+            hashtag:
+              type: string
+              example: ""
+            status:
+              type: string
+              enum: [playing, paused]
+              example: playing
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    MakapixProvisionStatus:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [idle, pending, completed]
+              example: idle
+            playerKey:
+              type: string
+              description: Present only when status is completed.
+              example: abc123def456
+            registrationCode:
+              type: string
+              description: Present only when status is completed.
+              example: ABCD1234
+            registrationCodeExpiresAt:
+              type: string
+              description: Present only when status is completed. ISO 8601 timestamp.
+              example: "2026-04-17T12:00:00Z"
+            mqttBroker:
+              type: object
+              description: Present only when status is completed.
+              properties:
+                host:
+                  type: string
+                  example: mqtt.makapix.club
+                port:
+                  type: number
+                  example: 1883
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Ok:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    OMWeather:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            updatePeriod:
+              type: number
+              example: 600
+            latitude:
+              type: string
+              example: 48.858
+            longitude:
+              type: string
+              example: 2.295
+            temperatureUnit:
+              type: string
+              enum: [celsius, fahrenheit]
+              example: celsius
+            windSpeedUnit:
+              type: string
+              enum: [mph, kmh, ms, kn]
+              example: kmh
+            weatherInfo:
+              type: number
+              example: 15
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    PluginInstall:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            slotId:
+              type: number
+              example: 1
+            uid:
+              type: number
+              example: 27065
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    PluginUninstall:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Plugins:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            plugins:
+              type: array
+              items:
+                type: string
+                example:
+                  - ChicagoBusTrackerPlugin
+                  - CountdownPlugin
+                  - DateTimePlugin
+                  - FirePlugin
+                  - GameOfLifePlugin
+                  - GruenbeckPlugin
+                  - IconTextLampPlugin
+                  - IconTextPlugin
+                  - MatrixPlugin
+                  - MultiIconPlugin
+                  - OpenMeteoPlugin
+                  - OpenWeatherPlugin
+                  - RainbowPlugin
+                  - SensorPlugin
+                  - SoundReactivePlugin
+                  - SunrisePlugin
+                  - SysMsgPlugin
+                  - TempHumidPlugin
+                  - TestPlugin
+                  - VolumioPlugin
+                  - WifiStatusPlugin
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Restart:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Sensors:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            sensors:
+              type: array
+              items:
+                type: object
+                properties:
+                  index:
+                    type: number
+                  name:
+                    type: string
+                  isAvailable:
+                    type: boolean
+                  channels:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: number
+                        name:
+                          type: string
+              example: |
+                [{
+                  "index": 0,
+                  "name": "GL5528",
+                  "isAvailable": true,
+                  "channels": [{
+                    "index": 0,
+                    "name": "illuminance"
+                  }]
+                }]
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Setting:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            key:
+              type: string
+            name:
+              type: string
+            value:
+              oneOf:
+                - type: string
+                - type: integer
+                - type: boolean
+                - type: object
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Settings:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            settings:
+              type: array
+              items:
+                type: string
+              example: |
+                [
+                  "sta_ssid",
+                  "sta_passphrase",
+                  "ap_ssid",
+                  "ap_passphrase",
+                  "web_login_user",
+                  "web_login_pass",
+                  "hostname",
+                  "a_brightn_ctrl",
+                  "plugin_install",
+                  "timezone",
+                  "ntp_server",
+                  "time_format",
+                  "date_format",
+                  "max_slots",
+                  "slot_cfg",
+                  "scroll_pause"
+                ]
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    SignalStrength:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - value
+          properties:
+            value:
+              type: number
+              example: -80
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Slot:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Slots:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            slots:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: SysMsgPlugin
+                  uid:
+                    type: number
+                    example: 372
+                  isLocked:
+                    type: boolean
+                    example: true
+                  isSticky:
+                    type: boolean
+                    example: false
+                  duration:
+                    type: number
+                    example: 10000
+            maxSlots:
+              type: number
+              example: 1
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    SlotFileId:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            slots:
+              type: number
+              example: 1
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    SlotsFileId:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            slots:
+              type: array
+              items:
+                type: number
+              example: [1, 2, 3]
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    SOC:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - value
+          properties:
+            value:
+              type: string
+              example: 75.00
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Status:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            hardware:
+              type: object
+              properties:
+                chipRev:
+                  type: number
+                  example: 1
+                cpuFreqMhz:
+                  type: number
+                  example: 120
+            software:
+              type: object
+              properties:
+                version:
+                  type: string
+                  example: v3.0.0
+                revision:
+                  type: string
+                  example: 3d50648904d5633facecec278410cc34c8206b18
+                espSdkVersion:
+                  type: string
+                  example: v3.3.5-1-g85c43024c
+                internalRam:
+                  type: object
+                  properties:
+                    heapSize:
+                      type: number
+                      example: 496
+                    availableHeap:
+                      type: number
+                      example: 412
+            wifi:
+              type: object
+              properties:
+                ssid:
+                  type: string
+                  example: DeathStar
+                rssi:
+                  type: number
+                  example: -50
+                quality:
+                  type: number
+                  example: 100
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Temperature:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - value
+          properties:
+            value:
+              type: string
+              example: 24.00
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Text:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              example: Test
+            iconFileId:
+              type: number
+              example: 1234
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    TimerServiceTimer:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - timerSettings
+          properties:
+            timerSettings:
+              type: array
+              items:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                    example: false
+                  hour:
+                    type: number
+                    example: 8
+                  minute:
+                    type: number
+                    example: 0
+                  sunday:
+                    type: boolean
+                    example: false
+                  monday:
+                    type: boolean
+                    example: false
+                  tuesday:
+                    type: boolean
+                    example: false
+                  wednesday:
+                    type: boolean
+                    example: false
+                  thursday:
+                    type: boolean
+                    example: false
+                  friday:
+                    type: boolean
+                    example: false
+                  saturday:
+                    type: boolean
+                    example: false
+                  displayState:
+                    type: number
+                    enum: [0, 1, 2]
+                    example: 0
+                  brightness:
+                    type: number
+                    example: -1
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Uptime:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          required:
+            - value
+          properties:
+            value:
+              type: number
+              example: 123456
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Weather:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            apiKey:
+              type: string
+              example: YourKey
+            latitude:
+              type: string
+              example: 48.858
+            longitude:
+              type: string
+              example: 2.295
+            others:
+              type: number
+              example: 3
+            units:
+              type: string
+              enum: [metric, imperial]
+              example: metric
+        status:
+          type: string
+          description: The request result.
+          example: ok
+  securitySchemes:
+    pixelixAuth:
+      type: http
+      scheme: basic
+security:
+  - pixelixAuth: []

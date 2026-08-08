@@ -42,6 +42,8 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <ArduinoJson.h>
+#include <PsAllocator.hpp>
+#include <TypedAllocator.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -214,6 +216,9 @@ public:
     }
 
 private:
+
+    /** Certificate allocator */
+    typedef TypedAllocator<char, PsAllocator> CertAllocator;
 
     /** MQTT port */
     static const uint16_t MQTT_PORT = 1883U;

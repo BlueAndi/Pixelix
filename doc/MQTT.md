@@ -52,11 +52,11 @@ Examples:
 
 ## Overview Mindmap
 
-![topic-handling-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/topic_handling_mindmap.wsd)
+![topic-handling-mindmap](../doc/architecture/svg/topic_handling_mindmap.svg)
 
 ## MQTT Topics
 
-![mqtt-topic-mindmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/Pixelix/master/doc/architecture/uml/mqtt_mindmap.wsd)
+![mqtt-topic-mindmap](../doc/architecture/svg/mqtt_mindmap.svg)
 
 ### Birth and last will
 
@@ -135,7 +135,7 @@ The sensor topic path is valid if the sensor is available!
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

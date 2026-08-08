@@ -148,6 +148,14 @@ public:
     }
 
     /**
+     * Resume stopped timer.
+     */
+    void resume()
+    {
+        m_isRunning = true;
+    }
+
+    /**
      * Restart timer with the previous specified duration.
      */
     void restart()

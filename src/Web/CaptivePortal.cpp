@@ -55,6 +55,7 @@
  *****************************************************************************/
 
 static void reqRestart();
+static bool isNotSourceMapRequest(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -98,10 +99,14 @@ void CaptivePortal::init(AsyncWebServer& srv)
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesystem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600");
-    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600");
-    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600");
-    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600");
+    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600")
+        .setFilter(isNotSourceMapRequest);
+    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600")
+        .setFilter(isNotSourceMapRequest);
+    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600")
+        .setFilter(isNotSourceMapRequest);
+    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
+        .setFilter(isNotSourceMapRequest);
 
     /* The about dialog is the only additional page, which shall be accessible. */
     (void)srv.serveStatic("/about.html", FILESYSTEM, "/about.html");
@@ -126,4 +131,32 @@ bool CaptivePortal::isRestartRequested()
 static void reqRestart()
 {
     gIsRestartRequested = true;
+}
+
+/**
+ * Check whether the request is not for a source map file.
+ *
+ * The source map files are used for debugging and do not contain any sensitive information.
+ * They are not needed for the normal operation of the web interface and can be excluded from
+ * caching to save memory and improve performance.
+ * @param[in] request   HTTP request
+ *
+ * @return true if request is not a source map request.
+ */
+static bool isNotSourceMapRequest(AsyncWebServerRequest* request)
+{
+    bool result = true;
+
+    if (nullptr != request)
+    {
+        const String& url = request->url();
+
+        if ((true == url.endsWith(".map")) ||
+            (true == url.endsWith(".map.gz")))
+        {
+            result = false;
+        }
+    }
+
+    return result;
 }

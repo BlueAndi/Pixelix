@@ -64,6 +64,7 @@ HttpFileResponseHandler& HttpFileResponseHandler::operator=(const HttpFileRespon
 {
     if (this != &other)
     {
+        m_fs       = other.m_fs;
         m_filePath = other.m_filePath;
         m_isError  = other.m_isError;
         m_file     = File(); /* Do not copy file handle. */
@@ -77,7 +78,7 @@ void HttpFileResponseHandler::onResponse(uint32_t index, bool isFinal, const uin
     if (0U == index)
     {
         m_isError = false;
-        m_file    = FILESYSTEM.open(m_filePath, FILE_WRITE);
+        m_file    = m_fs->open(m_filePath, FILE_WRITE);
 
         if (false == m_file)
         {

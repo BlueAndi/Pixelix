@@ -1,23 +1,91 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
+
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         <!-- Styles -->
-        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
-        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
-        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+        <script>
+            (function () {
+                const cdnLink = document.getElementById("bootstrap-css");
+                let isLoaded = false;
+
+                if (null === cdnLink) {
+                    return;
+                }
+
+                const useLocalBootstrapCss = function () {
+                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+                };
+
+                cdnLink.addEventListener("load", function () {
+                    isLoaded = true;
+                });
+
+                cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+                window.setTimeout(function () {
+                    if (false === isLoaded) {
+                        useLocalBootstrapCss();
+                    }
+                }, 3000);
+            })();
+        </script>
+        <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
+
+        <style>
+            .info-page {
+                padding-top: 1.5rem;
+                padding-bottom: 2rem;
+            }
+
+            .info-card {
+                background: rgba(255, 255, 255, 0.04) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                border-radius: 1rem !important;
+            }
+
+            .info-card .card-title {
+                font-size: 0.72rem;
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+                color: rgba(255, 255, 255, 0.4);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding-bottom: 0.6rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .info-table td {
+                border: none;
+                padding: 0.35rem 0.5rem;
+                font-size: 0.875rem;
+                vertical-align: middle;
+            }
+
+            .info-table tr+tr td {
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .stat-label {
+                font-size: 0.68rem;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                margin-bottom: 0.15rem;
+            }
+        </style>
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     </head>
+
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="Pixelix" />
+                    <img src="/images/LogoSmall.png" alt="Pixelix" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -31,210 +99,213 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
-            <div class="container">
-                <h1 class="mt-5">Info</h1>
-                <h2>Software</h2>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Description</th>
-                                <th scope="col">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light">
-                            <tr>
-                                <td>Version</td>
-                                <td>~SW_VERSION~</td>
-                            </tr>
-                            <tr>
-                                <td>Revision</td>
-                                <td>~SW_REVISION~</td>
-                            </tr>
-                            <tr>
-                                <td>Branch</td>
-                                <td>~SW_BRANCH~</td>
-                            </tr>
-                            <tr>
-                                <td>Target</td>
-                                <td>~TARGET~</td>
-                            </tr>
-                            <tr>
-                                <td>ESP SDK Version</td>
-                                <td>~ESP_SDK_VERSION~</td>
-                            </tr>
-                            <tr>
-                                <td>Arduino using IDF Branch</td>
-                                <td><a href="https://github.com/espressif/esp-idf/tree/~ARDUINO_IDF_BRANCH~">~ARDUINO_IDF_BRANCH~</a></td>
-                            </tr>
-                            <tr>
-                                <td>freeRTOS Version</td>
-                                <td>~FREERTOS_VERSION~</td>
-                            </tr>
-                            <tr>
-                                <td>LwIP Version</td>
-                                <td>~LWIP_VERSION~</td>
-                            </tr>
-                            <tr>
-                                <td>mbed TLS Version</td>
-                                <td><a href="https://github.com/espressif/mbedtls/tree/mbedtls-~MBED_TLS_VERSION~-idf">~MBED_TLS_VERSION~</a></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <h3>Heap</h3>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Description</th>
-                                <th scope="col">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light">
-                            <tr>
-                                <td>Heap size</td>
-                                <td>~HEAP_SIZE~ byte</td>
-                            </tr>
-                            <tr>
-                                <td>Available Heap Size</td>
-                                <td id="availableHeapSize">~HEAP_SIZE_AVAILABLE~ byte</td>
-                            </tr>
-                            <tr>
-                                <td>Used Heap Size</td>
-                                <td id="usedHeapSize"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <canvas id="canvasChartHeap" width="240" height="240"></canvas>
-                <h3>PSRAM</h3>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Description</th>
-                                <th scope="col">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light">
-                            <tr>
-                                <td>PSRAM size</td>
-                                <td>~PSRAM_SIZE~ byte</td>
-                            </tr>
-                            <tr>
-                                <td>Available PSRAM Size</td>
-                                <td id="availablePsramSize">~PSRAM_SIZE_AVAILABLE~ byte</td>
-                            </tr>
-                            <tr>
-                                <td>Used PSRAM Size</td>
-                                <td id="usedPsramSize"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <canvas id="canvasChartPsram" width="240" height="240"></canvas>
-                <h2>MCU</h2>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Description</th>
-                                <th scope="col">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light">
-                            <tr>
-                                <td>MCU Type</td>
-                                <td>~ESP_TYPE~</td>
-                            </tr>
-                            <tr>
-                                <td>MCU Chip ID</td>
-                                <td>~ESP_CHIP_ID~</td>
-                            </tr>
-                            <tr>
-                                <td>MCU Chip Rev.</td>
-                                <td>~ESP_CHIP_REV~</td>
-                            </tr>
-                            <tr>
-                                <td>MCU Frequency</td>
-                                <td>~ESP_CPU_FREQ~ MHz</td>
-                            </tr>
-                            <tr>
-                                <td>Flash Chip Mode</td>
-                                <td>~FLASH_CHIP_MODE~</td>
-                            </tr>
-                            <tr>
-                                <td>Flash Chip Size</td>
-                                <td>~FLASH_CHIP_SIZE~ MByte</td>
-                            </tr>
-                            <tr>
-                                <td>Flash Chip Speed</td>
-                                <td>~FLASH_CHIP_SPEED~ MHz</td>
-                            </tr>
+            <div class="container-fluid info-page">
 
-                        </tbody>
-                    </table>
+                <!-- Page header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h1 class="h2 mb-1">System Info</h1>
+                        <p class="text-secondary small mb-0">Device status, memory usage and runtime details.</p>
+                    </div>
                 </div>
-                <h2>Network</h2>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Description</th>
-                                <th scope="col">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light">
-                            <tr>
-                                <td>SSID</td>
-                                <td>~SSID~</td>
-                            </tr>
-                            <tr>
-                                <td>RSSI</td>
-                                <td>~RSSI~ dBm</td>
-                            </tr>
-                            <tr>
-                                <td>Hostname</td>
-                                <td>~HOSTNAME~</td>
-                            </tr>
-                            <tr>
-                                <td>IPv4</td>
-                                <td>~IPV4~</td>
-                            </tr>
-                            <tr>
-                                <td>MAC</td>
-                                <td>~MAC_ADDR~</td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                <!-- Memory overview -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card info-card h-100">
+                            <div class="card-body text-center">
+                                <div class="card-title">Heap</div>
+                                <div id="canvasChartHeap" class="d-flex justify-content-center my-3"></div>
+                                <div class="d-flex justify-content-around">
+                                    <div>
+                                        <div class="stat-label text-secondary">Total</div>
+                                        <div class="fw-semibold small">~HEAP_SIZE~ B</div>
+                                    </div>
+                                    <div>
+                                        <div class="stat-label" style="color:rgb(25,135,84);">Free</div>
+                                        <div class="fw-semibold small" id="availableHeapSize">~HEAP_SIZE_AVAILABLE~ B</div>
+                                    </div>
+                                    <div>
+                                        <div class="stat-label" style="color:rgb(220,53,69);">Used</div>
+                                        <div class="fw-semibold small" id="usedHeapSize">&mdash;</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card info-card h-100">
+                            <div class="card-body text-center">
+                                <div class="card-title">PSRAM</div>
+                                <div id="canvasChartPsram" class="d-flex justify-content-center my-3"></div>
+                                <div class="d-flex justify-content-around">
+                                    <div>
+                                        <div class="stat-label text-secondary">Total</div>
+                                        <div class="fw-semibold small">~PSRAM_SIZE~ B</div>
+                                    </div>
+                                    <div>
+                                        <div class="stat-label" style="color:rgb(25,135,84);">Free</div>
+                                        <div class="fw-semibold small" id="availablePsramSize">~PSRAM_SIZE_AVAILABLE~ B</div>
+                                    </div>
+                                    <div>
+                                        <div class="stat-label" style="color:rgb(220,53,69);">Used</div>
+                                        <div class="fw-semibold small" id="usedPsramSize">&mdash;</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card info-card h-100">
+                            <div class="card-body text-center">
+                                <div class="card-title">Filesystem</div>
+                                <div id="canvasChartFs" class="d-flex justify-content-center my-3"></div>
+                                <div class="d-flex justify-content-around">
+                                    <div>
+                                        <div class="stat-label text-secondary">Total</div>
+                                        <div class="fw-semibold small">~FS_SIZE~ B</div>
+                                    </div>
+                                    <div>
+                                        <div class="stat-label" style="color:rgb(25,135,84);">Free</div>
+                                        <div class="fw-semibold small" id="availableFsSize">&mdash;</div>
+                                    </div>
+                                    <div>
+                                        <div class="stat-label" style="color:rgb(220,53,69);">Used</div>
+                                        <div class="fw-semibold small" id="usedFsSize">~FS_SIZE_USED~ B</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h2>Filesystem</h2>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col">Description</th>
-                                <th scope="col">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light">
-                            <tr>
-                                <td>Filesystem Size</td>
-                                <td>~FS_SIZE~ byte</td>
-                            </tr>
-                            <tr>
-                                <td>Available Filesystem Size</td>
-                                <td id="availableFsSize"></td>
-                            </tr>
-                            <tr>
-                                <td>Used Filesystem Size</td>
-                                <td id="usedFsSize">~FS_SIZE_USED~ byte</td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                <!-- Software + MCU -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-6">
+                        <div class="card info-card h-100">
+                            <div class="card-body">
+                                <div class="card-title">Software</div>
+                                <table class="table info-table mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-secondary" style="width:45%">Version</td>
+                                            <td>~SW_VERSION~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Revision</td>
+                                            <td>~SW_REVISION~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Branch</td>
+                                            <td>~SW_BRANCH~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Target</td>
+                                            <td>~TARGET~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">ESP SDK Version</td>
+                                            <td>~ESP_SDK_VERSION~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Arduino IDF Branch</td>
+                                            <td><a href="https://github.com/espressif/esp-idf/tree/~ARDUINO_IDF_BRANCH~" class="link-light">~ARDUINO_IDF_BRANCH~</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">freeRTOS Version</td>
+                                            <td>~FREERTOS_VERSION~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">LwIP Version</td>
+                                            <td><a href="https://github.com/espressif/esp-lwip/tree/~LWIP_VERSION~" class="link-light">~LWIP_VERSION~</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">mbed TLS Version</td>
+                                            <td><a href="https://github.com/espressif/mbedtls/tree/mbedtls-~MBED_TLS_VERSION~-idf" class="link-light">~MBED_TLS_VERSION~</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">LittleFS Version</td>
+                                            <td><a href="https://github.com/joltwallet/esp_littlefs/releases/tag/~LITTLEFS_VERSION~" class="link-light">~LITTLEFS_VERSION~</a></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card info-card h-100">
+                            <div class="card-body">
+                                <div class="card-title">MCU</div>
+                                <table class="table info-table mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-secondary" style="width:45%">Type</td>
+                                            <td>~ESP_TYPE~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Chip ID</td>
+                                            <td>~ESP_CHIP_ID~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Chip Revision</td>
+                                            <td>~ESP_CHIP_REV~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Frequency</td>
+                                            <td>~ESP_CPU_FREQ~ MHz</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Flash Mode</td>
+                                            <td>~FLASH_CHIP_MODE~</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Flash Size</td>
+                                            <td>~FLASH_CHIP_SIZE~ MByte</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-secondary">Flash Speed</td>
+                                            <td>~FLASH_CHIP_SPEED~ MHz</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <canvas id="canvasChartFs" width="240" height="240"></canvas>
+
+                <!-- Network -->
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card info-card">
+                            <div class="card-body">
+                                <div class="card-title">Network</div>
+                                <div class="row g-3">
+                                    <div class="col-6 col-sm-4 col-lg-2">
+                                        <div class="stat-label text-secondary">SSID</div>
+                                        <div class="fw-semibold">~SSID~</div>
+                                    </div>
+                                    <div class="col-6 col-sm-4 col-lg-2">
+                                        <div class="stat-label text-secondary">Signal</div>
+                                        <div class="fw-semibold">~RSSI~ dBm</div>
+                                    </div>
+                                    <div class="col-6 col-sm-4 col-lg-2">
+                                        <div class="stat-label text-secondary">Hostname</div>
+                                        <div class="fw-semibold">~HOSTNAME~</div>
+                                    </div>
+                                    <div class="col-6 col-sm-4 col-lg-3">
+                                        <div class="stat-label text-secondary">IPv4</div>
+                                        <div class="fw-semibold">~IPV4~</div>
+                                    </div>
+                                    <div class="col-6 col-sm-4 col-lg-3">
+                                        <div class="stat-label text-secondary">MAC</div>
+                                        <div class="fw-semibold">~MAC_ADDR~</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
 
@@ -247,121 +318,89 @@
             </div>
         </footer>
 
-        <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
-        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Bootstrap JS bundle -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/menu.js"></script>
-        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
-        <script type="text/javascript" src="/js/servicesSubMenu.js"></script>
-        <!-- chart.js -->
-        <script type="text/javascript" src="/js/rpie.js"></script>
-
+        <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Custom javascript -->
         <script>
-            var availableHeapSize   = parseInt("~HEAP_SIZE_AVAILABLE~");
-            var heapSize            = parseInt("~HEAP_SIZE~");
-            var availablePsramSize  = parseInt("~PSRAM_SIZE_AVAILABLE~");
-            var psramSize           = parseInt("~PSRAM_SIZE~");
-            var filesystemSize      = parseInt("~FS_SIZE~");
-            var usedFilesystemSize  = parseInt("~FS_SIZE_USED~");
+            let availableHeapSize = Number.parseInt("~HEAP_SIZE_AVAILABLE~");
+            let heapSize = Number.parseInt("~HEAP_SIZE~");
+            let availablePsramSize = Number.parseInt("~PSRAM_SIZE_AVAILABLE~");
+            let psramSize = Number.parseInt("~PSRAM_SIZE~");
+            let filesystemSize = Number.parseInt("~FS_SIZE~");
+            let usedFilesystemSize = Number.parseInt("~FS_SIZE_USED~");
 
-            if (isNaN(availableHeapSize)) {
-                availableHeapSize = 0
+            if (Number.isNaN(availableHeapSize)) {
+                availableHeapSize = 0;
             }
 
-            if (isNaN(heapSize)) {
-                heapSize = 1
+            if (Number.isNaN(heapSize)) {
+                heapSize = 1;
             }
 
-            if (isNaN(availablePsramSize)) {
-                availablePsramSize = 0
+            if (Number.isNaN(availablePsramSize)) {
+                availablePsramSize = 0;
             }
 
-            if (isNaN(psramSize)) {
-                psramSize = 1
+            if (Number.isNaN(psramSize)) {
+                psramSize = 1;
             }
 
-            if (isNaN(filesystemSize)) {
-                filesystemSize = 1
+            if (Number.isNaN(filesystemSize)) {
+                filesystemSize = 1;
             }
 
-            if (isNaN(usedFilesystemSize)) {
-                usedFilesystemSize = 1
+            if (Number.isNaN(usedFilesystemSize)) {
+                usedFilesystemSize = 1;
             }
 
-            var availableFsSize             = filesystemSize - usedFilesystemSize;
-            var availableHeapSizeInPercent  = Math.round(availableHeapSize * 100 / heapSize);
-            var availablePsramSizeInPercent = Math.round(availablePsramSize * 100 /psramSize);
-            var availableFsSizeInPercent    = Math.round(availableFsSize * 100 / filesystemSize);
-            document.getElementById("availableFsSize").innerHTML = availableFsSize + " byte";
+            const availableFsSize = filesystemSize - usedFilesystemSize;
+            const availableHeapSizeInPercent = Math.round(availableHeapSize * 100 / heapSize);
+            const availablePsramSizeInPercent = Math.round(availablePsramSize * 100 / psramSize);
+            const availableFsSizeInPercent = Math.round(availableFsSize * 100 / filesystemSize);
 
-            window.chartColors = {
-                red: "rgb(255, 99, 132)",
-                orange: "rgb(255, 159, 64)",
-                yellow: "rgb(255, 205, 86)",
-                green: "rgb(75, 192, 192)",
-                blue: "rgb(54, 162, 235)",
-                purple: "rgb(153, 102, 255)",
-                grey: "rgb(201, 203, 207)"
-            };
+            function drawGauge(containerId, usedPercent) {
+                const r = 54;
+                const cx = 70;
+                const cy = 70;
+                const sw = 14;
+                const c = 2 * Math.PI * r;
+                const usedLen = (usedPercent / 100) * c;
+                const freeLen = c - usedLen;
 
-            $(document).ready(function() {
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">`
+                    /* Track circle */
+                    + `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${sw}"/>`
+                    /* Full green circle: free background */
+                    + `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgb(25,135,84)" stroke-width="${sw - 2}" transform="rotate(-90 ${cx} ${cy})"/>`
+                    /* Red arc on top: covers the used portion from 12 o'clock */
+                    + `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgb(220,53,69)" stroke-width="${sw - 2}" stroke-dasharray="${usedLen.toFixed(1)} ${freeLen.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>`
+                    /* Center: percentage */
+                    + `<text x="${cx}" y="${cy - 4}" text-anchor="middle" fill="white" font-size="20" font-weight="700" font-family="system-ui,sans-serif">${usedPercent}%</text>`
+                    + `<text x="${cx}" y="${cy + 14}" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="10" font-family="system-ui,sans-serif">used</text>`
+                    + `</svg>`;
+
+                document.getElementById(containerId).innerHTML = svg;
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                /* Draw the chart, showing the current situation on the heap. */
-                generatePieGraph("canvasChartHeap", {
-                    animation: true,
-                    animationSpeed: 20,
-                    fillTextData: true,
-                    fillTextColor: "#fff",
-                    fillTextPosition: "inner",
-                    doughnutHoleColor: "#000",
-                    doughnutHoleSize: 20,
-                    offset: 1,
-                    values: [100 - availableHeapSizeInPercent, availableHeapSizeInPercent],
-                    colors: [window.chartColors.red, window.chartColors.green]
-                });
+                drawGauge("canvasChartHeap", 100 - availableHeapSizeInPercent);
+                drawGauge("canvasChartPsram", 100 - availablePsramSizeInPercent);
+                drawGauge("canvasChartFs", 100 - availableFsSizeInPercent);
 
-                /* Draw the chart, showing the current situation on the heap. */
-                generatePieGraph("canvasChartPsram", {
-                    animation: true,
-                    animationSpeed: 20,
-                    fillTextData: true,
-                    fillTextColor: "#fff",
-                    fillTextPosition: "inner",
-                    doughnutHoleColor: "#000",
-                    doughnutHoleSize: 20,
-                    offset: 1,
-                    values: [100 - availablePsramSizeInPercent, availablePsramSizeInPercent],
-                    colors: [window.chartColors.red, window.chartColors.green]
-                });
-                $("#availableHeapSize").css("background-color", window.chartColors.green);
-                $("#usedHeapSize").text("" + (heapSize - availableHeapSize) + " byte");
-                $("#usedHeapSize").css("background-color", window.chartColors.red);
-                $("#availablePsramSize").css("background-color", window.chartColors.green);
-                $("#usedPsramSize").text("" + (psramSize - availablePsramSize) + " byte");
-                $("#usedPsramSize").css("background-color", window.chartColors.red);
-
-                /* Draw the chart, showing the current situation on the filesystem. */
-                generatePieGraph("canvasChartFs", {
-                    animation: true,
-                    animationSpeed: 20,
-                    fillTextData: true,
-                    fillTextColor: "#fff",
-                    fillTextPosition: "inner",
-                    doughnutHoleColor: "#000",
-                    doughnutHoleSize: 20,
-                    offset: 1,
-                    values: [100 - availableFsSizeInPercent, availableFsSizeInPercent],
-                    colors: [window.chartColors.red, window.chartColors.green]
-                });
-                $("#availableFsSize").text("" + (filesystemSize - usedFilesystemSize) + " byte");
-                $("#availableFsSize").css("background-color", window.chartColors.green);
-                $("#usedFsSize").css("background-color", window.chartColors.red);
+                document.getElementById("availableHeapSize").textContent = availableHeapSize + " byte";
+                document.getElementById("usedHeapSize").textContent = (heapSize - availableHeapSize) + " byte";
+                document.getElementById("availablePsramSize").textContent = availablePsramSize + " byte";
+                document.getElementById("usedPsramSize").textContent = (psramSize - availablePsramSize) + " byte";
+                document.getElementById("availableFsSize").textContent = availableFsSize + " byte";
             });
         </script>
     </body>
+
 </html>

@@ -100,15 +100,15 @@ bool OpenMeteoPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg             = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonUpdatePeriod    = value["updatePeriod"];
-        JsonVariantConst    jsonLatitude        = value["latitude"];
-        JsonVariantConst    jsonLongitude       = value["longitude"];
-        JsonVariantConst    jsonTemperatureUnit = value["temperatureUnit"];
-        JsonVariantConst    jsonWindSpeedUnit   = value["windSpeedUnit"];
-        JsonVariantConst    jsonWeatherInfo     = value["weatherInfo"];
+        const size_t      JSON_DOC_SIZE = 512U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg             = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonUpdatePeriod    = value["updatePeriod"];
+        JsonVariantConst  jsonLatitude        = value["latitude"];
+        JsonVariantConst  jsonLongitude       = value["longitude"];
+        JsonVariantConst  jsonTemperatureUnit = value["temperatureUnit"];
+        JsonVariantConst  jsonWindSpeedUnit   = value["windSpeedUnit"];
+        JsonVariantConst  jsonWeatherInfo     = value["weatherInfo"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -232,68 +232,76 @@ void OpenMeteoPlugin::inactive()
 
 void OpenMeteoPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    bool                       isRestRequestRequired = false;
-    DynamicJsonDocument        jsonDoc(0U);
-    bool                       isValidResponse;
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
+    /* Acquire mutex for initial state check and update. */
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                       isRestRequestRequired = false;
 
-    /* Only if a network connection is established the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
-    {
-        if (true == isConnected)
-        {
-            isRestRequestRequired = true;
-        }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established the required information
+         * shall be periodically requested via REST API.
          */
-        if (false == isConnected)
+        if (false == m_requestTimer.isTimerRunning())
         {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            isRestRequestRequired = true;
-        }
-    }
-
-    /* Request of new weather information via REST API required? */
-    if (true == isRestRequestRequired)
-    {
-        /* Only one request can be sent at a time. */
-        if (true == m_isAllowedToSend)
-        {
-            if (false == startHttpRequest())
+            if (true == isConnected)
             {
-                m_requestTimer.start(UPDATE_PERIOD_SHORT);
-            }
-            else
-            {
-                m_requestTimer.start(m_updatePeriod);
-                m_isAllowedToSend = false;
+                isRestRequestRequired = true;
             }
         }
-    }
+        else
+        {
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
+            {
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                isRestRequestRequired = true;
+            }
+        }
 
-    if (nullptr != m_slotInterf)
-    {
-        m_view.setViewDuration(m_slotInterf->getDuration());
-    }
+        /* Request of new weather information via REST API required? */
+        if (true == isRestRequestRequired)
+        {
+            /* Only one request can be sent at a time. */
+            if (true == m_isAllowedToSend)
+            {
+                if (false == startHttpRequest())
+                {
+                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                }
+                else
+                {
+                    m_requestTimer.start(m_updatePeriod);
+                    m_isAllowedToSend = false;
+                }
+            }
+        }
 
-    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+        if (nullptr != m_slotInterf)
+        {
+            m_view.setViewDuration(m_slotInterf->getDuration());
+        }
+
+        dynamicRestId = m_dynamicRestId;
+    } /* Mutex released here to avoid lock inversion deadlock with RestService. */
+
+    if (RestService::INVALID_REST_ID != dynamicRestId)
     {
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
+
         /* Get the response from the REST service. */
-        if (true == RestService::getInstance().getResponse(m_dynamicRestId, isValidResponse, jsonDoc))
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
             if (true == isValidResponse)
             {
@@ -302,9 +310,12 @@ void OpenMeteoPlugin::process(bool isConnected)
             else
             {
                 LOG_WARNING("Connection error.");
+
+                MutexGuard<MutexRecursive> guard(m_mutex);
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
 
+            MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
         }
@@ -414,7 +425,7 @@ bool OpenMeteoPlugin::startHttpRequest()
 {
     bool                            status = false;
     RestService::PreProcessCallback preProcessCallback =
-        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+        [this](const char* payload, size_t size, PsramJsonDocument& doc) {
             return this->preProcessAsyncWebResponse(payload, size, doc);
         };
 
@@ -455,11 +466,11 @@ bool OpenMeteoPlugin::startHttpRequest()
     return status;
 }
 
-bool OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
+bool OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool                isSuccessful = false;
-    const size_t        FILTER_SIZE  = 640U;
-    DynamicJsonDocument jsonFilterDoc(FILTER_SIZE);
+    bool              isSuccessful = false;
+    const size_t      FILTER_SIZE  = 640U;
+    PsramJsonDocument jsonFilterDoc(FILTER_SIZE);
 
     /* Example:
         {
@@ -725,7 +736,7 @@ String OpenMeteoPlugin::getIconIdFromWeatherCode(uint8_t weatherCode, bool isDay
     return iconId;
 }
 
-void OpenMeteoPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void OpenMeteoPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
     if (true == jsonDoc.containsKey("current"))
     {

@@ -55,6 +55,7 @@
 
 #include <mbedtls/version.h>
 #include <freertos/task.h>
+#include <esp_littlefs.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -92,6 +93,7 @@ struct HtmlPageRoute
 
 static String tmplPageProcessor(const String& var);
 static void   htmlPage(AsyncWebServerRequest* request);
+static bool   isNotSourceMapRequest(AsyncWebServerRequest* request);
 
 namespace tmpl
 {
@@ -133,14 +135,15 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
     { "HEAP_SIZE", []() -> String { return String(MemUtil::getTotalHeapSize()); } },
     { "HEAP_SIZE_AVAILABLE", []() -> String { return String(MemUtil::getFreeHeapSize()); } },
+    { "HOSTNAME", tmpl::getHostname },
     { "IMAGE_FILE_EXTENSIONS", []() -> String { return tmpl::getImageFileExtensions(); } },
+    { "IPV4", tmpl::getIPAddress },
+    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
+    { "LITTLEFS_VERSION", []() -> String { return String(ESP_LITTLEFS_VERSION_NUMBER); } },
+    { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
     { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
     { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
     { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
-    { "HOSTNAME", tmpl::getHostname },
-    { "IPV4", tmpl::getIPAddress },
-    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
-    { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
     { "RSSI", []() -> String { return String(WiFi.RSSI()); } },
     { "SSID", []() -> String { return WiFi.SSID(); } },
     { "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); } },
@@ -240,6 +243,9 @@ void Pages::init(AsyncWebServer& srv)
     (void)srv.serveStatic("/configuration/", FILESYSTEM, "/configuration/")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
+    (void)srv.serveStatic("/tmp/", FILESYSTEM, "/tmp/")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesystem for 1 hour.
      */
@@ -249,7 +255,8 @@ void Pages::init(AsyncWebServer& srv)
         const char* route = gStaticRoutesWithCache[idx];
 
         (void)srv.serveStatic(route, FILESYSTEM, route, "max-age=3600")
-            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+            .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str())
+            .setFilter(isNotSourceMapRequest);
 
         ++idx;
     }
@@ -375,6 +382,35 @@ static void htmlPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, request->url(), "text/html", false, tmplPageProcessor);
+}
+
+/**
+ * Check whether the request is not for a source map file.
+ *
+ * The source map files are used for debugging and do not contain any sensitive information.
+ * They are not needed for the normal operation of the web interface and can be excluded from
+ * caching to save memory and improve performance.
+ *
+ * @param[in] request   HTTP request
+ *
+ * @return true if request is not a source map request.
+ */
+static bool isNotSourceMapRequest(AsyncWebServerRequest* request)
+{
+    bool result = true;
+
+    if (nullptr != request)
+    {
+        const String& url = request->url();
+
+        if ((true == url.endsWith(".map")) ||
+            (true == url.endsWith(".map.gz")))
+        {
+            result = false;
+        }
+    }
+
+    return result;
 }
 
 /**

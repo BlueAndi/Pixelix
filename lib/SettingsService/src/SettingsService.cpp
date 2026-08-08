@@ -610,7 +610,7 @@ void SettingsService::unregisterSetting(KeyValue* setting)
     {
         if (setting == *it)
         {
-            it = m_keyValueList.erase(it);
+            (void)m_keyValueList.erase(it);
             break;
         }
         else

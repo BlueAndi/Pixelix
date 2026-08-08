@@ -86,7 +86,7 @@ public:
     /**
      * Destroys the function response handler.
      */
-    ~HttpFunctionResponseHandler()
+    ~HttpFunctionResponseHandler() override
     {
     }
 

@@ -59,6 +59,79 @@
  * Public Methods
  *****************************************************************************/
 
+MultiIconView32x8::MultiIconView32x8() :
+    IMultiIconView(),
+    m_bitmapWidgets{
+        { 0U, 0U, 0, 0 },
+        { 0U, 0U, 0, 0 },
+        { 0U, 0U, 0, 0 },
+        { 0U, 0U, 0, 0 }
+    }
+{
+    uint8_t slot = 0U;
+
+    while (MAX_ICON_SLOTS > slot)
+    {
+        m_bitmapWidgets[slot].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+        m_bitmapWidgets[slot].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+
+        ++slot;
+    }
+}
+
+void MultiIconView32x8::update(YAGfx& gfx)
+{
+    uint8_t idx = 0U;
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    while (MAX_ICON_SLOTS > idx)
+    {
+        m_bitmapWidgets[idx].update(gfx);
+        ++idx;
+    }
+}
+
+bool MultiIconView32x8::loadIcon(uint8_t slotId, const String& filename, FS& fs)
+{
+    bool isSuccessful = false;
+
+    if (MAX_ICON_SLOTS <= slotId)
+    {
+        slotId = 0U;
+    }
+
+    isSuccessful = m_bitmapWidgets[slotId].load(filename, fs);
+
+    if (true == isSuccessful)
+    {
+        reorder();
+    }
+
+    return isSuccessful;
+}
+
+void MultiIconView32x8::clearIcon(uint8_t slotId)
+{
+    if (MAX_ICON_SLOTS <= slotId)
+    {
+        slotId = 0U;
+    }
+
+    m_bitmapWidgets[slotId].clear(ColorDef::BLACK);
+    reorder();
+}
+
+bool MultiIconView32x8::isIconSlotEmpty(uint8_t slotId) const
+{
+    if (MAX_ICON_SLOTS <= slotId)
+    {
+        slotId = 0U;
+    }
+
+    return m_bitmapWidgets[slotId].isEmpty();
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

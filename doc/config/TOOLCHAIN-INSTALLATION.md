@@ -36,10 +36,14 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 
 1. ```sudo apt update```
 2. ```sudo apt install git```
+3. ```sudo git lfs install```
 
 ### Windows
 
 If you like to hack on the console/command shell, just [git for windows](https://gitforwindows.org) is necessary to install. Alternative with a graphical user interface install [TortoiseGIT](https://tortoisegit.org/), which includes [git for windows](https://gitforwindows.org).
+
+1. After git installation open a terminal (command line shell or powershell).
+2. ```git lfs install```
 
 ## Installation Of Test Environment
 
@@ -64,7 +68,7 @@ The necessary tools are now installed and ready to use. The [next step](SW-BUILD
 
 ## Issues, Ideas And Bugs
 
-If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/Pixelix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
 
 ## License
 

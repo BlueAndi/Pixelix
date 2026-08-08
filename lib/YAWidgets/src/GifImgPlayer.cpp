@@ -34,9 +34,9 @@
  * Includes
  *****************************************************************************/
 #include "GifImgPlayer.h"
-#include "LzwDecoder.h"
 #include "GifFileLoader.h"
 #include "GifFileToMemLoader.h"
+#include "LzwDecoder.h"
 #include <Logging.h>
 #include <TypedAllocator.hpp>
 
@@ -264,6 +264,7 @@ GifImgPlayer::GifImgPlayer() :
     m_globalColorTableLength(0U),
     m_localColorTable(nullptr),
     m_localColorTableLength(0U),
+    m_isLocalColorTableUsed(false),
     m_disposalMethod(DISPOSAL_METHOD_NO_ACTION),
     m_imageDataBlock(nullptr),
     m_imageDataBlockLength(0U),
@@ -280,7 +281,8 @@ GifImgPlayer::GifImgPlayer() :
     m_delay(0U),
     m_timer(),
     m_isAnimation(false),
-    m_isFinished(false)
+    m_isFinished(false),
+    m_isInfiniteLoop(false)
 {
 }
 
@@ -295,6 +297,7 @@ GifImgPlayer::GifImgPlayer(const GifImgPlayer& player) :
     m_globalColorTableLength(0U),
     m_localColorTable(nullptr),
     m_localColorTableLength(0U),
+    m_isLocalColorTableUsed(player.m_isLocalColorTableUsed),
     m_disposalMethod(player.m_disposalMethod),
     m_imageDataBlock(nullptr),
     m_imageDataBlockLength(0U),
@@ -311,7 +314,8 @@ GifImgPlayer::GifImgPlayer(const GifImgPlayer& player) :
     m_delay(player.m_delay),
     m_timer(),
     m_isAnimation(player.m_isAnimation),
-    m_isFinished(player.m_isFinished)
+    m_isFinished(player.m_isFinished),
+    m_isInfiniteLoop(player.m_isInfiniteLoop)
 {
     /* Copy global color table. */
     if (false == copyGlobalColorTable(player.m_globalColorTable, player.m_globalColorTableLength))
@@ -346,7 +350,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
         m_gifLoader             = player.m_gifLoader;
         m_canvas                = player.m_canvas;
         m_bgColorIndex          = player.m_bgColorIndex;
-
+        m_isLocalColorTableUsed = player.m_isLocalColorTableUsed;
         m_disposalMethod        = player.m_disposalMethod;
 
         m_imageDataBlockIdx     = player.m_imageDataBlockIdx;
@@ -362,6 +366,7 @@ GifImgPlayer& GifImgPlayer::operator=(const GifImgPlayer& player)
         m_delay                 = player.m_delay;
         m_isAnimation           = player.m_isAnimation;
         m_isFinished            = player.m_isFinished;
+        m_isInfiniteLoop        = player.m_isInfiniteLoop;
 
         /* Copy global color table. */
         if (false == copyGlobalColorTable(player.m_globalColorTable, player.m_globalColorTableLength))
@@ -525,8 +530,7 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
     m_isTrailerFound  = false;
 
     /* No GIF image opened? */
-    if ((nullptr == m_gifLoader) ||
-        (false == (*m_gifLoader)))
+    if (nullptr == m_gifLoader)
     {
         isSuccessful = false;
     }
@@ -595,7 +599,8 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
                 if (true == m_isAnimation)
                 {
                     /* Is animation limited to a specific number of repeats? */
-                    if (0U < m_loopCount)
+                    if ((false == m_isInfiniteLoop) &&
+                        (0U < m_loopCount))
                     {
                         --m_loopCount;
 
@@ -641,14 +646,17 @@ bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
         /* Clean-up required because of any error? */
         if (false == isSuccessful)
         {
-            if (nullptr != m_localColorTable)
-            {
-                m_paletteColorAllocator.deallocateArray(m_localColorTable);
-                m_localColorTable       = nullptr;
-                m_localColorTableLength = 0U;
-            }
-
             close();
+        }
+        /* If the GIF image is finished, release resources. */
+        else if (true == m_isFinished)
+        {
+            releaseResources();
+        }
+        else
+        {
+            /* Nothing to do. */
+            ;
         }
     }
 
@@ -760,13 +768,21 @@ bool GifImgPlayer::copyImageDataBlock(const uint8_t* imageDataBlock, size_t imag
 
 void GifImgPlayer::cleanup()
 {
+    releaseResources();
+
+    m_bitmap.release();
+
+    m_gifLoader      = nullptr;
+    m_isTrailerFound = false;
+    m_isAnimation    = false;
+}
+
+void GifImgPlayer::releaseResources()
+{
     if (nullptr != m_gifLoader)
     {
         m_gifLoader->close();
-        m_gifLoader = nullptr;
     }
-
-    m_bitmap.release();
 
     if (nullptr != m_imageDataBlock)
     {
@@ -788,6 +804,7 @@ void GifImgPlayer::cleanup()
 
         m_localColorTable       = nullptr;
         m_localColorTableLength = 0U;
+        m_isLocalColorTableUsed = false;
     }
 }
 
@@ -923,22 +940,27 @@ bool GifImgPlayer::parseImageDescriptor()
         m_canvas.setWidth(imageDescriptor.imageWidth);
         m_canvas.setHeight(imageDescriptor.imageHeight);
 
-        /* Destroy any old local color table. */
-        if (nullptr != m_localColorTable)
-        {
-            m_paletteColorAllocator.deallocateArray(m_localColorTable);
-            m_localColorTable       = nullptr;
-            m_localColorTableLength = 0U;
-        }
+        /* Reset local color table usage flag. */
+        m_isLocalColorTableUsed = false;
 
         /* Local color table available? */
         if (0U != imageDescriptor.packedField.localColorTableFlag)
         {
             size_t localColorTableSize = calcColorTableSize(imageDescriptor.packedField.localColorTableSizeExp);
 
+            /* Allocate local color table with maximum length, because it shall be allocated once
+             * and reused for all images in the GIF. This avoids the overhead of allocating and deallocating the
+             * local color table for each image descriptor, which can be a performance issue if many images are
+             * in the GIF. The actual length of the local color table is stored in m_localColorTableLength,
+             * which is used for reading and accessing the local color table.
+             */
             m_localColorTableLength    = localColorTableSize / sizeof(PaletteColor);
-            m_localColorTable          = m_paletteColorAllocator.allocateArray(m_localColorTableLength);
+            if (nullptr == m_localColorTable)
+            {
+                m_localColorTable = m_paletteColorAllocator.allocateArray(LOCAL_COLOR_TABLE_MAX_LENGTH);
+            }
 
+            /* Allocation failed? */
             if (nullptr == m_localColorTable)
             {
                 LOG_ERROR("Failed to allocate local color table, size: %u bytes", localColorTableSize);
@@ -947,13 +969,15 @@ bool GifImgPlayer::parseImageDescriptor()
 
                 isSuccessful            = false;
             }
+            /* Read local color table. */
             else if (false == m_gifLoader->read(m_localColorTable, localColorTableSize))
             {
                 isSuccessful = false;
             }
+            /* Local color table successfully read. */
             else
             {
-                ;
+                m_isLocalColorTableUsed = true;
             }
         }
 
@@ -994,12 +1018,27 @@ bool GifImgPlayer::parseImageDescriptor()
                 m_isInterlaced          = (0U != imageDescriptor.packedField.interlaceFlag);
                 m_interlacePass         = 0U;
 
-                if (false == lzwDecoder.init(lzwMinCodeSize))
+                /* Decode image data.
+                 *
+                 * Note: The LZW decoder will will allocate about 16 KB of memory. To avoid
+                 * continuously allocating and deallocating this memory for each image in the GIF,
+                 * the LZW decoder should be allocated once as a member variable of the GifImgPlayer
+                 * class and reused for all images in the GIF.
+                 *
+                 * Unfortunately this would result in a significant decrease of the total memory,
+                 * with bad influence on the stability.
+                 *
+                 * Therefore the LZW decoder is allocated locally in this function, which allows to
+                 * release the memory immediately after decoding the image data.
+                 */
+                if (false == lzwDecoder.init())
                 {
                     isSuccessful = false;
                 }
                 else
                 {
+                    lzwDecoder.setup(lzwMinCodeSize);
+
                     if (false == lzwDecoder.decode(readFromCodeStreamFunc, writeToIndexStreamFunc))
                     {
                         isSuccessful = false;
@@ -1008,10 +1047,9 @@ bool GifImgPlayer::parseImageDescriptor()
                     lzwDecoder.deInit();
                 }
 
-                /* Any error? */
                 if (false == isSuccessful)
                 {
-                    ;
+                    /* Nothing to do. */
                 }
                 /* After the image data, the block terminator marks the end. */
                 else if (false == m_gifLoader->read(&blockTerminator, sizeof(blockTerminator)))
@@ -1024,6 +1062,7 @@ bool GifImgPlayer::parseImageDescriptor()
                 }
                 else
                 {
+                    /* Nothing to do. */
                     ;
                 }
             }
@@ -1035,18 +1074,25 @@ bool GifImgPlayer::parseImageDescriptor()
 
 void GifImgPlayer::applyDisposalMethod()
 {
-    switch (m_disposalMethod)
+    /* Disposal method according to GIF 89a specification:
+     * - DISPOSAL_METHOD_NO_ACTION
+     *     - No disposal specified. The decoder is not required to take any action.
+     * - DISPOSAL_METHOD_NO_DISPOSE
+     *     - GIF 89a specification: Do not dispose. The graphic is to be left in place.
+     * - DISPOSAL_METHOD_RESTORE_TO_BACKGROUND
+     *     - GIF 89a specification: Restore to background color. The area used by the graphic must be restored to the background color.
+     * - DISPOSAL_METHOD_RESTORE_TO_PREVIOUS
+     *     - GIF 89a specification: Restore to previous. The decoder is required to restore the area overwritten by the graphic with what was there prior to rendering the graphic.
+     *     - GIF 89a specification: The mode Restore To Previous is intended to be used in small sections of the graphic; the use of this mode imposes
+     *       severe demands on the decoder to store the section of the graphic that needs to be saved. For this reason, this mode should be used
+     *       sparingly. This mode is not intended to save an entire graphic or large areas of a graphic; when this is the case, the encoder should
+     *       make every attempt to make the sections of the graphic to be restored be separate graphics in the data stream. In the case where
+     *       a decoder is not capable of saving an area of a graphic marked as Restore To Previous, it is recommended that a decoder restore to
+     *       the background color.
+     */
+    if ((DISPOSAL_METHOD_RESTORE_TO_BACKGROUND == m_disposalMethod) ||
+        (DISPOSAL_METHOD_RESTORE_TO_PREVIOUS == m_disposalMethod))
     {
-    /* GIF 89a specification: No disposal specified. The decoder is not required to take any action. */
-    case DISPOSAL_METHOD_NO_ACTION:
-        break;
-
-    /* GIF 89a specification: Do not dispose. The graphic is to be left in place. */
-    case DISPOSAL_METHOD_NO_DISPOSE:
-        break;
-
-    /* GIF 89a specification: Restore to background color. The area used by the graphic must be restored to the background color. */
-    case DISPOSAL_METHOD_RESTORE_TO_BACKGROUND:
         /* If no global color table is available, the background color index is invalid and the background will be treated as transparent. */
         if (nullptr == m_globalColorTable)
         {
@@ -1065,28 +1111,6 @@ void GifImgPlayer::applyDisposalMethod()
 
             m_canvas.fillScreen(bgColor);
         }
-        break;
-
-    /* GIF 89a specification: Restore to previous. The decoder is required to restore the area overwritten by the graphic with what was there prior to rendering the graphic. */
-    case DISPOSAL_METHOD_RESTORE_TO_PREVIOUS: {
-        PaletteColor* paletteColor = &m_globalColorTable[m_bgColorIndex];
-        Color         bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
-
-        /* GIF 89a specification:
-         * The mode Restore To Previous is intended to be used in small sections of the graphic; the use of this mode imposes
-         * severe demands on the decoder to store the section of the graphic that needs to be saved. For this reason, this mode should be used
-         * sparingly.  This mode is not intended to save an entire graphic or large areas of a graphic; when this is the case, the encoder should
-         * make every attempt to make the sections of the graphic to be restored be separate graphics in the data stream. In the case where
-         * a decoder is not capable of saving an area of a graphic marked as Restore To Previous, it is recommended that a decoder restore to
-         * the background color.
-         */
-        m_canvas.fillScreen(bgColor);
-    }
-    break;
-
-    default:
-        /* Not defined by GIF 89a specification. */
-        break;
     }
 }
 
@@ -1371,8 +1395,8 @@ bool GifImgPlayer::readFromCodeStream(uint8_t& data)
 bool GifImgPlayer::writeToIndexStream(uint8_t data)
 {
     bool          isSuccessful      = false;
-    PaletteColor* colorTable        = (nullptr != m_localColorTable) ? m_localColorTable : m_globalColorTable;
-    size_t        colorTableLength  = (nullptr != m_localColorTable) ? m_localColorTableLength : m_globalColorTableLength;
+    PaletteColor* colorTable        = ((true == m_isLocalColorTableUsed) && (nullptr != m_localColorTable)) ? m_localColorTable : m_globalColorTable;
+    size_t        colorTableLength  = ((true == m_isLocalColorTableUsed) && (nullptr != m_localColorTable)) ? m_localColorTableLength : m_globalColorTableLength;
     bool          isColorIndexValid = false;
 
     /* No transparency enabled? */
@@ -1432,7 +1456,7 @@ bool GifImgPlayer::writeToIndexStream(uint8_t data)
          * the pixel will be drawn.
          */
         if ((false == m_isTransparencyEnabled) ||
-            ((true == m_isTransparencyEnabled) && (m_transparentColorIndex != data)))
+            (m_transparentColorIndex != data))
         {
             PaletteColor* paletteColor = &colorTable[data];
             Color         color(paletteColor->red, paletteColor->green, paletteColor->blue);

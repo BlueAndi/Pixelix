@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+        <script>
+            (function () {
+                const cdnLink = document.getElementById("bootstrap-css");
+                let isLoaded = false;
+
+                if (null === cdnLink) {
+                    return;
+                }
+
+                const useLocalBootstrapCss = function () {
+                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+                };
+
+                cdnLink.addEventListener("load", function () {
+                    isLoaded = true;
+                });
+
+                cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+                window.setTimeout(function () {
+                    if (false === isLoaded) {
+                        useLocalBootstrapCss();
+                    }
+                }, 3000);
+            })();
+        </script>
+        <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav me-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">ChicagoBusTrackerPlugin</h1>
+                <p><img src="ChicagoBusTrackerPlugin.png" alt="Screenshot" /></p>
+                <p>Shows estimated arrival times for a given route+stop+direction</p>
+                <p>Times are updated at least every 2 minutes</p>
+                <p>First, you must set an API key and click Update. Then, the lists of routes and stops will populate.</p>
+                <p>You cannot fetch route or stop IDs from the REST API without an API key.</p>
+                <p>You can sign up for a CTA Bus Tracker API key <a href="https://www.ctabustracker.com/account">from the CTA Developer Portal website</a></p>
+                <p>The CTA API limits are quite generous; this plugin will never own its own exhaust your API request quota, even running the maximum number of plugin instances.</p>
+                <h2>Configuration</h2>
+                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                    <form id="myForm">
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUid" size="1">
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="apiKey">CTA Bus Tracker API Key:</label>
+                            <input class="form-control" type="text" id="apiKey" name="apiKey" />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="routes">Route:</label>
+                            <select class="form-control" id="routes" name="routes" size="1"></select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="directions">Direction:</label>
+                            <select class="form-control" id="directions" name="directions" size="1"></select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="stops">Stop:</label>
+                            <select class="form-select" id="stops" size="1"></select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="count">Arrivals Count:</label>
+                            <select class="form-select" id="count" size="1">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="origin" name="origin" />
+                                <label class="form-label" for="origin">Show stop name (e.g. "...from 55th Street & St. Louis"):</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="dest" name="dest" />
+                                <label class="form-label" for="dest">Show destination (e.g. "...to Museum of Science and Industry"):</label>
+                            </div>
+                        </div>
+                        <input name="submit" type="submit" value="Update" />
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary">Copyright (c) 2026 Julie Hill (queenkjuul@pm.me)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- Bootstrap JS bundle -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/app-api.js"></script>
+        <!-- Pixelix REST API -->
+
+        <script>
+
+            const pluginName = "ChicagoBusTrackerPlugin";
+            const restClient = new pixelix.rest.Client();
+            let rootPluginId = "";
+            const selected = {
+                routes: "",
+                directions: "",
+                stops: "",
+                count: 2
+            }
+
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+
+            function hasApiKeyConfigured() {
+                return 0 < document.getElementById("apiKey").value.trim().length;
+            }
+
+            function clearSelectOptions(elementId) {
+                const element = document.getElementById(elementId)
+                if (element) {
+                    element.innerHTML = ""
+                }
+            }
+
+            function setSelectEnabled(elementId, isEnabled) {
+                const element = document.getElementById(elementId)
+                if (element) {
+                    element.disabled = !isEnabled
+                }
+            }
+
+            function resetDependentSelections() {
+                selected.routes = ""
+                selected.directions = ""
+                selected.stops = ""
+
+                clearSelectOptions("routes")
+                clearSelectOptions("directions")
+                clearSelectOptions("stops")
+            }
+
+            function updateDependentControlState() {
+                const isApiKeyConfigured = hasApiKeyConfigured()
+                const hasRouteSelection = 0 < selected.routes.length
+                const hasDirectionSelection = 0 < selected.directions.length
+
+                setSelectEnabled("routes", isApiKeyConfigured)
+                setSelectEnabled("directions", isApiKeyConfigured && hasRouteSelection)
+                setSelectEnabled("stops", isApiKeyConfigured && hasRouteSelection && hasDirectionSelection)
+            }
+
+            async function handleChange(elementId) {
+                const elem = document.getElementById(elementId)
+                const value = elem.value
+                selected[elementId] = value
+                try {
+                    switch (elementId) {
+                        case "pluginUid":
+                            await getConfig(value)
+                            if (hasApiKeyConfigured()) {
+                                await getRoutes()
+                                await getDirections()
+                                await getStops()
+                            }
+                            else {
+                                // Keep the configured values visible.
+                                updateDependentControlState();
+                            }
+                            return
+                        case "routes":
+                            await getDirections()
+                            await getStops()
+                            return
+                        case "directions":
+                            await getStops()
+                    }
+                } catch (e) {
+                    console.error("Error fetching data: ", e)
+                }
+            }
+
+            function generateOptions(
+                elementId,
+                values,
+                textproperty = null,
+                valueproperty = null
+            ) {
+                const element = document.getElementById(elementId)
+                if (!element || !values || values.length === 0) {
+                    return element
+                }
+
+                element.innerHTML = ""
+
+                const options = Array.from(element.options).map((o) => o.value)
+
+                values.forEach((value) => {
+                    const optionValue = value[valueproperty] ?? value
+                    const optionText = value[textproperty] ?? value
+                    const option = document.createElement("option")
+                    option.value = optionValue
+                    option.text = optionText
+                    element.appendChild(option)
+                })
+
+                return element
+            }
+
+            function selectSelectedProperty(element, value) {
+                const options = Array.from(element?.options ?? [{ value }]).map((o) => o?.value)
+                let foundIndex = options.findIndex((v) => v == value)
+                if (foundIndex < 0) {
+                    console.warn("Not Found: ", value, options)
+                    foundIndex = 0
+                }
+                element.selectedIndex = foundIndex
+                selected[element.id] = element.value
+            }
+
+            async function getPluginInstances() {
+                try {
+                    const rsp = await restClient.getPluginInstances();
+                    let cnt = 0;
+
+                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            let optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
+                            const option = document.createElement("option");
+                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.text = optionText;
+
+                            document.getElementById("pluginUid").appendChild(option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return cnt;
+                } catch (rsp) {
+                    alert("Internal error.");
+                    return 0;
+                }
+            }
+
+
+            async function getConfig(pluginUid) {
+                disableUI()
+                rootPluginId = pluginUid
+
+                try {
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                        isJsonResponse: true,
+                    })
+
+                    if (!rsp.data) {
+                        return
+                    }
+
+                    const { apiKey, rte, stpid, dir, orig, dest, count } = rsp.data
+
+                    document.getElementById("apiKey").value = apiKey
+
+                    // Always restore the stored configuration.
+                    selected.routes = rte ?? "";
+                    selected.directions = dir ?? "";
+                    selected.stops = stpid ?? "";
+
+                    // Populate the selects with the current values so they survive
+                    // the first Update even before an API key is configured.
+                    const routeElem = generateOptions("routes", selected.routes ? [selected.routes] : []);
+                    if (selected.routes) {
+                        selectSelectedProperty(routeElem, selected.routes);
+                    }
+
+                    const directionElem = generateOptions("directions", selected.directions ? [selected.directions] : []);
+                    if (selected.directions) {
+                        selectSelectedProperty(directionElem, selected.directions);
+                    }
+
+                    const stopElem = generateOptions("stops", selected.stops ? [selected.stops] : []);
+                    if (selected.stops) {
+                        selectSelectedProperty(stopElem, selected.stops);
+                    }
+
+                    selected.count = count
+                    const countelem = document.getElementById("count")
+                    countelem.selectedIndex = count - 1
+
+                    const originelem = document.getElementById("origin")
+                    originelem.checked = orig
+
+                    const destelem = document.getElementById("dest")
+                    destelem.checked = dest
+                } catch (e) {
+                    console.log("Internal error.")
+                    console.log(e)
+                }
+                enableUI()
+                updateDependentControlState()
+            }
+
+            async function setConfig(pluginUid) {
+                disableUI()
+                rootPluginId = pluginUid
+                const parameter = {
+                    apiKey: document.getElementById("apiKey").value,
+                    rte: selected.routes,
+                    dir: selected.directions,
+                    stpid: selected.stops,
+                    orig: document.getElementById("origin").checked,
+                    dest: document.getElementById("dest").checked,
+                    count: document.getElementById("count").value,
+                }
+
+                try {
+                    await utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                        isJsonResponse: true,
+                        parameter,
+                    })
+                    alert("Ok.")
+                    await getConfig(pluginUid)
+                    if (hasApiKeyConfigured()) {
+                        await getRoutes()
+                        await getDirections()
+                        await getStops()
+                    }
+                    else {
+                        updateDependentControlState();
+                    }
+                } catch (rsp) {
+                    alert("Failed.")
+                } finally {
+                    enableUI()
+                    updateDependentControlState()
+                }
+            }
+
+            /**
+             * Submit a relative CTA API path to the device proxy and poll until
+             * the response is ready. Requests are serialized — the caller drives
+             * the next fetch only after awaiting this one.
+             *
+             * @param {string} path - Relative path, e.g. "/getroutes" or
+             *                        "/getdirections?rt=55".
+             * @returns {Promise<object>} Resolved CTA API response object.
+             */
+            async function proxyFetch(path) {
+                const baseUrl = "/rest/api/v1/display/uid/" + rootPluginId + "/chicagobusrequest";
+
+                await utils.makeRequest({
+                    method: "POST",
+                    url: baseUrl,
+                    isJsonResponse: true,
+                    parameter: { path }
+                });
+
+                const maxRetries = 20;
+                for (let i = 0; i < maxRetries; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    const rsp = await utils.makeRequest({ method: "GET", url: baseUrl, isJsonResponse: true });
+                    const data = rsp?.data;
+                    if (data?.error) {
+                            throw new Error("Proxy error for " + path + ": " + data.error);
+                    }
+                    if (data && data.pending !== true) {
+                            return data;
+                    }
+                }
+                throw new Error("Proxy timeout for: " + path);
+            }
+
+            async function getRoutes() {
+                if (!hasApiKeyConfigured()) {
+                    resetDependentSelections()
+                    updateDependentControlState()
+                    return;
+                }
+
+                disableUI();
+                try {
+                    const data = await proxyFetch("/getroutes");
+                    const routes = data?.["bustime-response"]?.routes;
+                    if (!routes) {
+                        resetDependentSelections()
+                        return;
+                    }
+                    const values = routes.map(route => ({ value: route.rt, text: route.rt + " - " + route.rtnm }));
+                    const elem = generateOptions("routes", values, "text", "value");
+                    selectSelectedProperty(elem, selected.routes);
+                } catch (e) {
+                    console.error("Error getting routes:", e);
+                }
+                enableUI();
+                updateDependentControlState()
+            }
+
+            async function getDirections() {
+                if (!hasApiKeyConfigured() || (0 === selected.routes.length)) {
+                    clearSelectOptions("directions")
+                    clearSelectOptions("stops")
+                    selected.directions = ""
+                    selected.stops = ""
+                    updateDependentControlState()
+                    return;
+                }
+
+                disableUI();
+                try {
+                    const data = await proxyFetch("/getdirections?rt=" + encodeURIComponent(selected.routes));
+                    const directions = data?.["bustime-response"]?.directions;
+                    if (!directions) {
+                        clearSelectOptions("directions")
+                        clearSelectOptions("stops")
+                        selected.directions = ""
+                        selected.stops = ""
+                        return;
+                    }
+                    const dirs = directions.map(d => d.id);
+                    const elem = generateOptions("directions", dirs);
+                    selectSelectedProperty(elem, selected.directions);
+                } catch (e) {
+                    console.error("Error getting directions:", e);
+                }
+                enableUI();
+                updateDependentControlState()
+            }
+
+            async function getStops() {
+                if (!hasApiKeyConfigured() || (0 === selected.routes.length) || (0 === selected.directions.length)) {
+                    clearSelectOptions("stops")
+                    selected.stops = ""
+                    updateDependentControlState()
+                    return;
+                }
+
+                disableUI();
+                try {
+                    const data = await proxyFetch("/getstops?rt=" + encodeURIComponent(selected.routes) + "&dir=" + encodeURIComponent(selected.directions));
+                    const stops = data?.["bustime-response"]?.stops;
+                    if (!stops) {
+                        clearSelectOptions("stops")
+                        selected.stops = ""
+                        return;
+                    }
+                    const elem = generateOptions("stops", stops, "stpnm", "stpid");
+                    selectSelectedProperty(elem, selected.stops);
+                } catch (e) {
+                    console.error("Error getting stops:", e);
+                }
+                enableUI();
+                updateDependentControlState()
+            }
+
+            document.addEventListener("DOMContentLoaded", async function () {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+                menu.create("menu", menu.data);
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+                resetDependentSelections();
+                updateDependentControlState();
+
+                /* Wire up event handlers. */
+                document.getElementById("myForm").addEventListener("submit", function (event) {
+                    event.preventDefault();
+                    setConfig(document.getElementById("pluginUid").value);
+                });
+                document.getElementById("pluginUid").addEventListener("change", () => handleChange("pluginUid"));
+                document.getElementById("routes").addEventListener("change", () => handleChange("routes"));
+                document.getElementById("directions").addEventListener("change", () => handleChange("directions"));
+                document.getElementById("stops").addEventListener("change", () => handleChange("stops"));
+                document.getElementById("count").addEventListener("change", () => handleChange("count"));
+
+                /* Load all plugin instances. */
+                const cnt = await getPluginInstances();
+                const select = document.getElementById("pluginUid");
+
+                if (0 < cnt) {
+                    rootPluginId = select.options[select.selectedIndex].value
+                    await getConfig(rootPluginId);
+                }
+
+                if (hasApiKeyConfigured()) {
+                    await getRoutes();
+                    await getDirections();
+                    await getStops();
+                }
+                else {
+                    enableUI();
+                    updateDependentControlState();
+                }
+            });
+        </script>
+    </body>
+
+</html>

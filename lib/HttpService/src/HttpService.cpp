@@ -37,6 +37,8 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <Logging.h>
+#include <MemUtil.h>
+#include <utility>
 
 /******************************************************************************
  * Compiler Switches
@@ -57,6 +59,15 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/**
+ * Hard limit for the largest allocatable internal heap block required to start
+ * a new outgoing HTTP request.
+ *
+ * This keeps background polling (e.g. weather/plugin updates) from adding extra
+ * pressure when web page loads already fragment the internal heap.
+ */
+static const size_t MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST = 20U * 1024U;
 
 /******************************************************************************
  * Public Methods
@@ -101,6 +112,7 @@ bool HttpService::start()
         m_isRunning = true;
         LOG_INFO("HTTP service started.");
     }
+
     return m_isRunning;
 }
 
@@ -133,7 +145,7 @@ void HttpService::process()
             /* Handle received HTTP responses. */
             if (INVALID_HTTP_JOB_ID != m_workerData.response.jobId)
             {
-                m_responseList.emplace_back(m_workerData.response);
+                m_responseList.emplace_back(std::move(m_workerData.response));
 
                 /* Clear worker response. */
                 m_workerData.response = WorkerResponse();
@@ -148,7 +160,7 @@ void HttpService::process()
                 /* Check for new requests to process. */
                 if (false == m_requestList.empty())
                 {
-                    m_workerData.request = m_requestList.front();
+                    m_workerData.request = std::move(m_requestList.front());
                     m_activeJobId        = m_workerData.request.jobId;
 
                     /* Remove the request from the list. */
@@ -168,18 +180,28 @@ HttpJobId HttpService::get(const char* url, IHttpResponseHandler* handler)
 
     if ((true == m_isRunning) && (nullptr != url))
     {
-        WorkerRequest request;
+        size_t largestFreeBlock = MemUtil::getLargestFreeBlockSize();
 
-        request.jobId   = generateJobId();
-        request.url     = url;
-        request.method  = HTTP_METHOD_GET;
-        request.payload = nullptr;
-        request.size    = 0U;
-        request.handler = handler;
+        if (MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST <= largestFreeBlock)
+        {
+            WorkerRequest request;
 
-        m_requestList.emplace_back(request);
+            request.jobId   = generateJobId();
+            request.url     = url;
+            request.method  = HTTP_METHOD_GET;
+            request.payload = nullptr;
+            request.size    = 0U;
+            request.handler = handler;
 
-        jobId = request.jobId;
+            m_requestList.emplace_back(std::move(request));
+            jobId = m_requestList.back().jobId;
+        }
+        else
+        {
+            LOG_WARNING("Outgoing HTTP GET skipped, largest free block too low (%u byte, min %u byte)",
+                largestFreeBlock,
+                MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST);
+        }
     }
 
     return jobId;
@@ -192,18 +214,29 @@ HttpJobId HttpService::post(const char* url, const uint8_t* payload, size_t size
 
     if ((true == m_isRunning) && (nullptr != url))
     {
-        WorkerRequest request;
+        size_t largestFreeBlock = MemUtil::getLargestFreeBlockSize();
 
-        request.jobId   = generateJobId();
-        request.url     = url;
-        request.method  = HTTP_METHOD_POST;
-        request.payload = payload;
-        request.size    = size;
-        request.handler = handler;
+        if (MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST <= largestFreeBlock)
+        {
+            WorkerRequest request;
 
-        m_requestList.emplace_back(request);
+            request.jobId   = generateJobId();
+            request.url     = url;
+            request.method  = HTTP_METHOD_POST;
+            request.handler = handler;
 
-        jobId = request.jobId;
+            if (true == request.setPayload(payload, size))
+            {
+                m_requestList.emplace_back(std::move(request));
+                jobId = m_requestList.back().jobId;
+            }
+        }
+        else
+        {
+            LOG_WARNING("Outgoing HTTP POST skipped, largest free block too low (%u byte, min %u byte)",
+                largestFreeBlock,
+                MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST);
+        }
     }
 
     return jobId;
@@ -214,7 +247,8 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
     bool              isAvailable = false;
     MutexGuard<Mutex> guard(m_mutex);
 
-    if (true == m_isRunning)
+    if ((true == m_isRunning) &&
+        (INVALID_HTTP_JOB_ID != jobId))
     {
         WorkerResponse workerRsp;
 
@@ -223,7 +257,7 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
         {
             if (jobId == it->jobId)
             {
-                workerRsp = *it;
+                workerRsp = std::move(*it);
 
                 /* Remove the response from the list. */
                 (void)m_responseList.erase(it);
@@ -234,6 +268,9 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
 
         if (true == isAvailable)
         {
+            /* Ensure that no memory is leaked. */
+            response.releasePayload();
+
             response.statusCode = workerRsp.statusCode;
 
             /* Move memory ownership from worker response to HTTP response. */
@@ -251,7 +288,8 @@ void HttpService::abortJob(HttpJobId jobId)
 {
     MutexGuard<Mutex> guard(m_mutex);
 
-    if (true == m_isRunning)
+    if ((true == m_isRunning) &&
+        (INVALID_HTTP_JOB_ID != jobId))
     {
         bool isAborted = false;
 
@@ -291,6 +329,20 @@ void HttpService::abortJob(HttpJobId jobId)
                             (void)m_workerData.mutex.give();
                             break;
                         }
+
+                        /* The worker already finished the job and is idle, so it will never consume jobToAbort. Discard the pending
+                         * response and treat the job as aborted, otherwise this loop would wait forever and block the calling task.
+                         */
+                        if (jobId == m_workerData.response.jobId)
+                        {
+                            m_workerData.response   = WorkerResponse();
+                            m_workerData.jobToAbort = INVALID_HTTP_JOB_ID;
+                            m_activeJobId           = INVALID_HTTP_JOB_ID;
+                            isAborted               = true;
+                            (void)m_workerData.mutex.give();
+                            break;
+                        }
+
                         /* No pending job anymore? */
                         if (INVALID_HTTP_JOB_ID == m_workerData.jobToAbort)
                         {

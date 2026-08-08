@@ -163,7 +163,14 @@ void AudioDrv::stop()
 
 void AudioDrv::processTask(AudioDrv* self)
 {
-    self->process();
+    if (nullptr != self)
+    {
+        self->process();
+    }
+    else
+    {
+        LOG_ERROR("Audio driver task instance is invalid.");
+    }
 }
 
 void AudioDrv::process()
@@ -171,7 +178,8 @@ void AudioDrv::process()
     i2s_event_t i2sEvt;
 
     /* Handle all ready DMA blocks. */
-    while (pdPASS == xQueueReceive(m_i2sEventQueueHandle, &i2sEvt, DMA_BLOCK_TIMEOUT * portTICK_PERIOD_MS))
+    while ((nullptr != m_i2sEventQueueHandle) &&
+           (pdPASS == xQueueReceive(m_i2sEventQueueHandle, &i2sEvt, DMA_BLOCK_TIMEOUT * portTICK_PERIOD_MS)))
     {
         /* Any DMA error? */
         if (I2S_EVENT_DMA_ERROR == i2sEvt.type)
@@ -187,17 +195,22 @@ void AudioDrv::process()
             /* Read the whole DMA block. */
             for (sampleIdx = 0U; sampleIdx < SAMPLES_PER_DMA_BLOCK; ++sampleIdx)
             {
-                int32_t sample    = 0U; /* Attention, this datatype must correlate to the configuration, see bits per sample! */
-                size_t  bytesRead = 0;
+                int32_t   sample    = 0U; /* Attention, this datatype must correlate to the configuration, see bits per sample! */
+                size_t    bytesRead = 0;
+                esp_err_t i2sRet    = i2s_read(I2S_PORT, &sample, sizeof(sample), &bytesRead, portMAX_DELAY);
 
-                (void)i2s_read(I2S_PORT, &sample, sizeof(sample), &bytesRead, portMAX_DELAY);
-
-                if (sizeof(sample) == bytesRead)
+                if ((ESP_OK == i2sRet) && (sizeof(sample) == bytesRead))
                 {
                     /* Down shift to get the real value. */
-                    sample                             >>= I2S_SAMPLE_SHIFT;
+                    sample >>= I2S_SAMPLE_SHIFT;
 
-                    m_sampleBuffer[m_sampleWriteIndex]   = sample;
+                    if (SAMPLES <= m_sampleWriteIndex)
+                    {
+                        LOG_WARNING("Audio sample index out of range (%u), resetting.", m_sampleWriteIndex);
+                        m_sampleWriteIndex = 0U;
+                    }
+
+                    m_sampleBuffer[m_sampleWriteIndex] = sample;
                     ++m_sampleWriteIndex;
 
                     /* Check for ext. microphone */
@@ -228,6 +241,10 @@ void AudioDrv::process()
                             ++observerIndex;
                         }
                     }
+                }
+                else
+                {
+                    LOG_WARNING("Failed to read I2S sample: err=%d bytesRead=%u", i2sRet, static_cast<unsigned int>(bytesRead));
                 }
             }
         }

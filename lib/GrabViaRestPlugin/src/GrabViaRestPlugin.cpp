@@ -105,16 +105,16 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 1024U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonMethod     = value["method"];
-        JsonVariantConst    jsonUrl        = value["url"];
-        JsonVariantConst    jsonFilter     = value["filter"];
-        JsonVariantConst    jsonIconFileId = value["iconFileId"];
-        JsonVariantConst    jsonFormat     = value["format"];
-        JsonVariantConst    jsonMultiplier = value["multiplier"];
-        JsonVariantConst    jsonOffset     = value["offset"];
+        const size_t      JSON_DOC_SIZE = 1024U;
+        PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonMethod     = value["method"];
+        JsonVariantConst  jsonUrl        = value["url"];
+        JsonVariantConst  jsonFilter     = value["filter"];
+        JsonVariantConst  jsonIconFileId = value["iconFileId"];
+        JsonVariantConst  jsonFormat     = value["format"];
+        JsonVariantConst  jsonMultiplier = value["multiplier"];
+        JsonVariantConst  jsonOffset     = value["offset"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -154,7 +154,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             else if (true == jsonFilter.is<String>())
             {
                 const size_t         JSON_DOC_FILTER_SIZE = 256U;
-                DynamicJsonDocument  jsonDocFilter(JSON_DOC_FILTER_SIZE);
+                PsramJsonDocument    jsonDocFilter(JSON_DOC_FILTER_SIZE);
                 DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<const char*>());
 
                 if (DeserializationError::Ok == result)
@@ -279,74 +279,82 @@ void GrabViaRestPlugin::stop()
 
 void GrabViaRestPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    DynamicJsonDocument        jsonDoc(0U);
-    bool                       isValidResponse;
+    uint32_t dynamicRestId;
 
-    PluginWithConfig::process(isConnected);
-
-    /* Only if a network connection is established, the required information
-     * shall be periodically requested via REST API.
-     */
-    if (false == m_requestTimer.isTimerRunning())
+    /* Acquire mutex for initial state check and update. */
     {
-        if (true == isConnected)
-        {
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
-            {
-                if (false == startHttpRequest())
-                {
-                    /* If a request fails, a '?' will be shown. */
-                    m_view.setFormatText("{hc}?");
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
-                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-                }
-                else
+        PluginWithConfig::process(isConnected);
+
+        /* Only if a network connection is established, the required information
+         * shall be periodically requested via REST API.
+         */
+        if (false == m_requestTimer.isTimerRunning())
+        {
+            if (true == isConnected)
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
                 {
-                    m_requestTimer.start(UPDATE_PERIOD);
-                    m_isAllowedToSend = false;
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, a '?' will be shown. */
+                        m_view.setFormatText("{hc}?");
+
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        /* If the connection is lost, stop periodically requesting information
-         * via REST API.
-         */
-        if (false == isConnected)
+        else
         {
-            m_requestTimer.stop();
-        }
-        /* Network connection is available and next request may be necessary for
-         * information update.
-         */
-        else if (true == m_requestTimer.isTimeout())
-        {
-            /* Only one request can be sent at a time. */
-            if (true == m_isAllowedToSend)
+            /* If the connection is lost, stop periodically requesting information
+             * via REST API.
+             */
+            if (false == isConnected)
             {
-                if (false == startHttpRequest())
+                m_requestTimer.stop();
+            }
+            /* Network connection is available and next request may be necessary for
+             * information update.
+             */
+            else if (true == m_requestTimer.isTimeout())
+            {
+                /* Only one request can be sent at a time. */
+                if (true == m_isAllowedToSend)
                 {
-                    /* If a request fails, a '?' will be shown. */
-                    m_view.setFormatText("{hc}?");
+                    if (false == startHttpRequest())
+                    {
+                        /* If a request fails, a '?' will be shown. */
+                        m_view.setFormatText("{hc}?");
 
-                    m_requestTimer.start(UPDATE_PERIOD_SHORT);
-                }
-                else
-                {
-                    m_requestTimer.start(UPDATE_PERIOD);
-                    m_isAllowedToSend = false;
+                        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                    }
+                    else
+                    {
+                        m_requestTimer.start(UPDATE_PERIOD);
+                        m_isAllowedToSend = false;
+                    }
                 }
             }
         }
+
+        dynamicRestId = m_dynamicRestId;
     }
 
-    if (RestService::INVALID_REST_ID != m_dynamicRestId)
+    if (RestService::INVALID_REST_ID != dynamicRestId)
     {
+        PsramJsonDocument jsonDoc(0U);
+        bool              isValidResponse;
+
         /* Get the response from the REST service. */
-        if (true == RestService::getInstance().getResponse(m_dynamicRestId, isValidResponse, jsonDoc))
+        if (true == RestService::getInstance().getResponse(dynamicRestId, isValidResponse, jsonDoc))
         {
             if (true == isValidResponse)
             {
@@ -356,12 +364,15 @@ void GrabViaRestPlugin::process(bool isConnected)
             {
                 LOG_WARNING("Connection error.");
 
+                MutexGuard<MutexRecursive> guard(m_mutex);
+
                 /* If a request fails, show standard icon and a '?' */
                 m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
 
+            MutexGuard<MutexRecursive> guard(m_mutex);
             m_dynamicRestId   = RestService::INVALID_REST_ID;
             m_isAllowedToSend = true;
         }
@@ -490,7 +501,7 @@ bool GrabViaRestPlugin::startHttpRequest()
 {
     bool                            status = false;
     RestService::PreProcessCallback preProcessCallback =
-        [this](const char* payload, size_t size, DynamicJsonDocument& doc) {
+        [this](const char* payload, size_t size, PsramJsonDocument& doc) {
             return this->preProcessAsyncWebResponse(payload, size, doc);
         };
 
@@ -531,12 +542,17 @@ bool GrabViaRestPlugin::startHttpRequest()
     return status;
 }
 
-bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, DynamicJsonDocument& jsonDoc)
+bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (true == m_filter.overflowed())
+    if ((nullptr == payload) ||
+        (0U == payloadSize))
+    {
+        LOG_WARNING("Empty response received.");
+    }
+    else if (true == m_filter.overflowed())
     {
         LOG_ERROR("JSON document size exceeded.");
     }
@@ -615,14 +631,15 @@ void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantCo
     }
 }
 
-void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void GrabViaRestPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
-    const size_t        JSON_DOC_SIZE = 1024U;
-    DynamicJsonDocument jsonDocValues(JSON_DOC_SIZE);
-    JsonArray           jsonValuesArray = jsonDocValues.to<JsonArray>();
-    size_t              index           = 0U;
-    String              outputStr;
-    size_t              valueCount = 0U;
+    const size_t      BUFFER_SIZE   = 128U;
+    const size_t      JSON_DOC_SIZE = 1024U;
+    PsramJsonDocument jsonDocValues(JSON_DOC_SIZE);
+    JsonArray         jsonValuesArray = jsonDocValues.to<JsonArray>();
+    size_t            index           = 0U;
+    String            outputStr;
+    size_t            valueCount = 0U;
 
     /* Protect against concurrent access. */
     {
@@ -644,6 +661,12 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         }
     }
 
+    /* Reserve capacity upfront to avoid repeated heap reallocations inside the loop. */
+    if (0U < valueCount)
+    {
+        (void)outputStr.reserve(valueCount * (BUFFER_SIZE + m_delimiter.length()));
+    }
+
     for (index = 0U; index < valueCount; ++index)
     {
         JsonVariantConst jsonValue = jsonValuesArray[index];
@@ -657,9 +680,8 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         if ((true == jsonValue.is<float>()) &&
             (false == Util::isFormatSpecifierInStr(m_format, 's'))) /* Prevent mistake which may cause a LoadProhibited core panic by snprintf. */
         {
-            const size_t BUFFER_SIZE = 128U;
-            char         buffer[BUFFER_SIZE];
-            float        value = jsonValue.as<float>();
+            char  buffer[BUFFER_SIZE];
+            float value = jsonValue.as<float>();
 
             /* Is it not a number? */
             if (true == std::isnan(value))
@@ -680,9 +702,8 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         else if ((true == jsonValue.is<String>()) &&
                  (true == Util::isFormatSpecifierInStr(m_format, 'f')))
         {
-            const size_t BUFFER_SIZE = 128U;
-            char         buffer[BUFFER_SIZE];
-            float        value = jsonValue.as<String>().toFloat();
+            char  buffer[BUFFER_SIZE];
+            float value = jsonValue.as<String>().toFloat();
 
             /* Is it not a number? */
             if (true == std::isnan(value))
@@ -702,8 +723,7 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         /* Is it a string? */
         else if (true == jsonValue.is<String>())
         {
-            const size_t BUFFER_SIZE = 128U;
-            char         buffer[BUFFER_SIZE];
+            char buffer[BUFFER_SIZE];
 
             (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<const char*>());
 

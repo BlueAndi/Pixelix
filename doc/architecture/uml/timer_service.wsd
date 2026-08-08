@@ -1,0 +1,63 @@
+@startuml timer_service
+
+title Timer Service Architecture
+
+start
+
+:InitState starts all services;
+:TimerService::start();
+
+:Read device id via SettingsService;
+
+if (Load /configuration/timerService.json successful?) then (yes)
+else (no)
+  :Persist default timer configuration;
+endif
+
+:Register topic "timerService/timer"
+via TopicHandlerService;
+:Start process timer (100 ms);
+
+while (Service running?) is (yes)
+
+  :TimerService::process();
+
+  if (Process timer timeout?) then (yes)
+    :Read current time via ClockDrv;
+    :Evaluate TimerSetting[0..7];
+
+    if (Any enabled timer is signalling?) then (yes)
+      if (Display state ON?) then (yes)
+        :DisplayMgr::displayOn();
+      else (no)
+      endif
+
+      if (Display state OFF?) then (yes)
+        :DisplayMgr::displayOff();
+      else (no)
+      endif
+
+      if (Brightness in [0..255]?) then (yes)
+        :DisplayMgr::setBrightness();
+      else (no)
+      endif
+    else (no)
+    endif
+
+    :Restart process timer;
+  else (no)
+  endif
+
+  if (TopicHandlerService setTopic("timer")?) then (yes)
+    :Update in-memory timer settings;
+    :Save /configuration/timerService.json;
+  else (no)
+  endif
+
+endwhile (no)
+
+:TimerService::stop();
+:Unregister topic "timerService/timer";
+stop
+
+@enduml
