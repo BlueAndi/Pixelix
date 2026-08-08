@@ -43,6 +43,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <HTTPClient.h>
+#include <PsAllocator.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -76,17 +77,70 @@ struct HttpRsp
     }
 
     /**
+     * Move constructor.
+     *
+     * @param[in] other Source HTTP response.
+     */
+    HttpRsp(HttpRsp&& other) noexcept :
+        statusCode(other.statusCode),
+        payload(other.payload),
+        size(other.size)
+    {
+        other.payload = nullptr;
+        other.size    = 0U;
+    }
+
+    /**
+     * Move assignment operator.
+     *
+     * @param[in] other Source HTTP response.
+     *
+     * @return Reference to this response.
+     */
+    HttpRsp& operator=(HttpRsp&& other) noexcept
+    {
+        if (this != &other)
+        {
+            releasePayload();
+
+            statusCode    = other.statusCode;
+            payload       = other.payload;
+            size          = other.size;
+            other.payload = nullptr;
+            other.size    = 0U;
+        }
+
+        return *this;
+    }
+
+    /**
      * Destroys the HTTP response object.
      */
     ~HttpRsp()
     {
+        releasePayload();
+    }
+
+    /**
+     * Release the payload memory.
+     *
+     * Note, the payload ownership was taken over from the HTTP service worker thread.
+     */
+    void releasePayload()
+    {
         if (nullptr != payload)
         {
-            free(payload);
+            PsAllocator allocator;
+            allocator.deallocate(payload);
+
             payload = nullptr;
             size    = 0U;
         }
     }
+
+    /* Disable copy constructor and copy assignment operator */
+    HttpRsp(const HttpRsp&)            = delete;
+    HttpRsp& operator=(const HttpRsp&) = delete;
 };
 
 /******************************************************************************

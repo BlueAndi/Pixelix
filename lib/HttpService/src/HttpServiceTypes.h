@@ -123,11 +123,11 @@ struct WorkerRequest
     }
 
     /**
-     * Free payload memory.
+     * Release payload memory.
      *
      * @param[in] payloadPtr    Payload pointer.
      */
-    static void freePayload(const uint8_t*& payloadPtr)
+    static void releasePayload(const uint8_t*& payloadPtr)
     {
         if (nullptr != payloadPtr)
         {
@@ -189,10 +189,7 @@ struct WorkerRequest
      */
     ~WorkerRequest()
     {
-        if (nullptr != payload)
-        {
-            freePayload(payload);
-        }
+        releasePayload(payload);
     }
 
     /**
@@ -211,10 +208,7 @@ struct WorkerRequest
             method  = other.method;
             handler = other.handler;
 
-            if (nullptr != payload)
-            {
-                freePayload(payload);
-            }
+            releasePayload(payload);
 
             payload = nullptr;
             size    = other.size;
@@ -249,10 +243,7 @@ struct WorkerRequest
     {
         if (this != &other)
         {
-            if (nullptr != payload)
-            {
-                freePayload(payload);
-            }
+            releasePayload(payload);
 
             jobId         = other.jobId;
             url           = std::move(other.url);
@@ -282,10 +273,7 @@ struct WorkerRequest
     {
         bool isSuccessful = true;
 
-        if (nullptr != payload)
-        {
-            freePayload(payload);
-        }
+        releasePayload(payload);
 
         size = dataSize;
 

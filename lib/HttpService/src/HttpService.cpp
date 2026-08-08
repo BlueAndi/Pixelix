@@ -37,6 +37,7 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <Logging.h>
+#include <MemUtil.h>
 #include <utility>
 
 /******************************************************************************
@@ -58,6 +59,15 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/**
+ * Hard limit for the largest allocatable internal heap block required to start
+ * a new outgoing HTTP request.
+ *
+ * This keeps background polling (e.g. weather/plugin updates) from adding extra
+ * pressure when web page loads already fragment the internal heap.
+ */
+static const size_t MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST = 20U * 1024U;
 
 /******************************************************************************
  * Public Methods
@@ -170,18 +180,28 @@ HttpJobId HttpService::get(const char* url, IHttpResponseHandler* handler)
 
     if ((true == m_isRunning) && (nullptr != url))
     {
-        WorkerRequest request;
+        size_t largestFreeBlock = MemUtil::getLargestFreeBlockSize();
 
-        request.jobId   = generateJobId();
-        request.url     = url;
-        request.method  = HTTP_METHOD_GET;
-        request.payload = nullptr;
-        request.size    = 0U;
-        request.handler = handler;
+        if (MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST <= largestFreeBlock)
+        {
+            WorkerRequest request;
 
-        m_requestList.emplace_back(request);
+            request.jobId   = generateJobId();
+            request.url     = url;
+            request.method  = HTTP_METHOD_GET;
+            request.payload = nullptr;
+            request.size    = 0U;
+            request.handler = handler;
 
-        jobId = request.jobId;
+            m_requestList.emplace_back(std::move(request));
+            jobId = m_requestList.back().jobId;
+        }
+        else
+        {
+            LOG_WARNING("Outgoing HTTP GET skipped, largest free block too low (%u byte, min %u byte)",
+                largestFreeBlock,
+                MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST);
+        }
     }
 
     return jobId;
@@ -194,17 +214,28 @@ HttpJobId HttpService::post(const char* url, const uint8_t* payload, size_t size
 
     if ((true == m_isRunning) && (nullptr != url))
     {
-        WorkerRequest request;
+        size_t largestFreeBlock = MemUtil::getLargestFreeBlockSize();
 
-        request.jobId   = generateJobId();
-        request.url     = url;
-        request.method  = HTTP_METHOD_POST;
-        request.handler = handler;
-
-        if (true == request.setPayload(payload, size))
+        if (MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST <= largestFreeBlock)
         {
-            m_requestList.emplace_back(std::move(request));
-            jobId = m_requestList.back().jobId;
+            WorkerRequest request;
+
+            request.jobId   = generateJobId();
+            request.url     = url;
+            request.method  = HTTP_METHOD_POST;
+            request.handler = handler;
+
+            if (true == request.setPayload(payload, size))
+            {
+                m_requestList.emplace_back(std::move(request));
+                jobId = m_requestList.back().jobId;
+            }
+        }
+        else
+        {
+            LOG_WARNING("Outgoing HTTP POST skipped, largest free block too low (%u byte, min %u byte)",
+                largestFreeBlock,
+                MIN_FREE_BLOCK_FOR_OUTGOING_HTTP_REQUEST);
         }
     }
 
@@ -237,6 +268,9 @@ bool HttpService::getResponse(HttpJobId jobId, HttpRsp& response)
 
         if (true == isAvailable)
         {
+            /* Ensure that no memory is leaked. */
+            response.releasePayload();
+
             response.statusCode = workerRsp.statusCode;
 
             /* Move memory ownership from worker response to HTTP response. */
