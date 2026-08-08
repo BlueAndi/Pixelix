@@ -238,6 +238,10 @@
                 lang: null,
                 type: "image"
             }, {
+                name: "gz",
+                lang: "plain_text",
+                type: "text"
+            }, {
                 name: "htm",
                 lang: "html",
                 type: "text"
@@ -429,6 +433,43 @@
                 }
             }
 
+            async function decompressGzip(data) {
+                if (typeof DecompressionStream === "undefined") {
+                    throw new Error("GZIP decompression is not supported by this browser.");
+                }
+
+                const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("gzip"));
+                const buffer = await new Response(stream).arrayBuffer();
+
+                return new TextDecoder("utf-8").decode(buffer);
+            }
+
+            async function compressGzip(text) {
+                if (typeof CompressionStream === "undefined") {
+                    throw new Error("GZIP compression is not supported by this browser.");
+                }
+
+                const stream = new Blob([
+                    new TextEncoder().encode(text)
+                ]).stream().pipeThrough(new CompressionStream("gzip"));
+                const buffer = await new Response(stream).arrayBuffer();
+
+                return new Blob([buffer], { type: "application/gzip" });
+            }
+
+            async function readGzipFile(filename) {
+                const response = await fetch(filename, {
+                    cache: "no-store"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load " + filename + " (HTTP " + response.status + ").");
+                }
+
+                const data = await response.arrayBuffer();
+                return await decompressGzip(data);
+            }
+
             async function editFile(id) {
                 const filename = document.getElementById(id).getAttribute("data-full-path"); // Use full path from data attribute
                 const editorElement = document.getElementById("editor");
@@ -442,7 +483,15 @@
                 try {
                     await dialog.show("Loading file", "<p>Please wait, its loading.</p>");
 
-                    const rsp = await restClient.readFile(filename);
+                    let rsp;
+
+                    if (filename.toLowerCase().endsWith(".gz")) {
+                        // GZIP is binary data. Read the raw bytes and decompress them
+                        // in the browser before putting the UTF-8 text into Ace.
+                        rsp = await readGzipFile(filename);
+                    } else {
+                        rsp = await restClient.readFile(filename);
+                    }
 
                     /*
                      * Ace must be resized after its container is visible. Bootstrap's
@@ -464,7 +513,8 @@
 
                     await dialog.hide();
                 } catch (rsp) {
-                    await dialog.showError("<p>" + rsp.error.msg + "</p>");
+                    const errorMsg = (rsp && rsp.error && rsp.error.msg) ? rsp.error.msg : rsp.message;
+                    await dialog.showError("<p>" + errorMsg + "</p>");
                 }
             }
 
@@ -505,14 +555,38 @@
             }
 
             function getFileTypeInfo(filename) {
+                const normalizedFilename = filename.toLowerCase();
                 let info = null;
                 let index = 0;
 
+                /*
+                 * A gzip file contains the original file type inside its name.
+                 * For example, "config.json.gz" must use the JSON Ace mode,
+                 * while "config.gz" falls back to plain text.
+                 */
+                let filenameForType = normalizedFilename;
+                if (filenameForType.endsWith(".gz")) {
+                    filenameForType = filenameForType.substring(0, filenameForType.length - 3);
+                }
+
+                /* First resolve the type of the uncompressed file. */
                 while ((supportedFileTypes.length > index) && (null === info)) {
-                    if (true === filename.endsWith("." + supportedFileTypes[index].name)) {
+                    if (true === filenameForType.endsWith("." + supportedFileTypes[index].name) &&
+                        supportedFileTypes[index].name !== "gz") {
                         info = supportedFileTypes[index];
                     }
                     ++index;
+                }
+
+                /* Unknown *.gz content is still editable as plain text. */
+                if (null === info && normalizedFilename.endsWith(".gz")) {
+                    index = 0;
+                    while ((supportedFileTypes.length > index) && (null === info)) {
+                        if (supportedFileTypes[index].name === "gz") {
+                            info = supportedFileTypes[index];
+                        }
+                        ++index;
+                    }
                 }
 
                 return info;
@@ -559,7 +633,14 @@
 
                 try {
                     await dialog.show("Saving file", "<p>Please wait, its saving.</p>");
-                    await restClient.writeFile(loadedFile, editor.getValue(), "text/plain");
+
+                    if (loadedFile.toLowerCase().endsWith(".gz")) {
+                        // Compress the edited UTF-8 text again before writing it.
+                        const compressed = await compressGzip(editor.getValue());
+                        await restClient.writeFile(loadedFile, compressed, "application/gzip");
+                    } else {
+                        await restClient.writeFile(loadedFile, editor.getValue(), "text/plain");
+                    }
                 } finally {
                     dialog.hide();
                 }
