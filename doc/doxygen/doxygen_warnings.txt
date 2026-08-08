@@ -1,0 +1,20 @@
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:98: error: Compound FragmentationCandidate is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:492: error: Member getCallerAddress() (function) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:497: error: Member getTrackedBlockTotalSize(const MemTrackInfo *info) (function) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:507: error: Member getTrackedBlockStart(const MemTrackInfo *info) (function) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:517: error: Member getTrackedBlockEnd(const MemTrackInfo *info) (function) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:522: error: Member insertCandidateByMergePotential(FragmentationCandidate *candidates, size_t capacity, const FragmentationCandidate &candidate) (function) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:84: error: Member MEM_TRACK_USER_ALIGNMENT (variable) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:85: error: Member MEM_TRACK_USER_PADDING (variable) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:87: error: Member MEM_TRACK_USER_OFFSET (variable) of file MemTracker.cpp is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.h:252: error: argument 'file' of command @param is not found in the argument list of operator new(size_t size, const std::nothrow_t &)
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.h:252: error: argument 'line' of command @param is not found in the argument list of operator new(size_t size, const std::nothrow_t &)
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.h:263: error: argument 'file' of command @param is not found in the argument list of operator new[](size_t size, const std::nothrow_t &)
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.h:263: error: argument 'line' of command @param is not found in the argument list of operator new[](size_t size, const std::nothrow_t &)
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:100: error: Member block (variable) of struct FragmentationCandidate is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:101: error: Member leftGap (variable) of struct FragmentationCandidate is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:102: error: Member rightGap (variable) of struct FragmentationCandidate is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:103: error: Member mergePotential (variable) of struct FragmentationCandidate is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.cpp:104: error: Member ageMs (variable) of struct FragmentationCandidate is not documented.
+D:/Daten/github/Pixelix/lib/MemTracker/src/MemTracker.h:162: error: The following parameter of MemTracker::printFragmentationAnalysis(size_t requestedSize, size_t maxCandidates=16U) const is not documented:
+  parameter 'maxCandidates'
