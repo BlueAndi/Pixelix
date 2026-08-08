@@ -431,11 +431,11 @@
 
             async function editFile(id) {
                 const filename = document.getElementById(id).getAttribute("data-full-path"); // Use full path from data attribute
+                const editorElement = document.getElementById("editor");
+                const editorCollapse = bootstrap.Collapse.getOrCreateInstance(editorElement);
 
                 loadedFile = filename;
-                editor.setValue("");
                 setEditorMode(filename);
-                bootstrap.Collapse.getOrCreateInstance(document.getElementById("editor")).show();
                 bootstrap.Collapse.getOrCreateInstance(document.getElementById("preview")).hide();
                 document.getElementById("fileName").textContent = loadedFile;
 
@@ -444,8 +444,23 @@
 
                     const rsp = await restClient.readFile(filename);
 
-                    /* Fill content in, remove selection and move cursor to the begin. */
+                    /*
+                     * Ace must be resized after its container is visible. Bootstrap's
+                     * collapse.show() is asynchronous, so setting the value and
+                     * resizing immediately can leave the editor with a zero/stale
+                     * size on the first opening.
+                     */
+                    if (!isVisible(editorElement)) {
+                        await new Promise((resolve) => {
+                            editorElement.addEventListener("shown.bs.collapse", resolve, { once: true });
+                            editorCollapse.show();
+                        });
+                    } else {
+                        editorCollapse.show();
+                    }
+
                     editor.setValue(rsp, -1);
+                    editor.resize(true);
 
                     await dialog.hide();
                 } catch (rsp) {
