@@ -55,7 +55,7 @@
  * Prototypes
  *****************************************************************************/
 
-static void IRAM_ATTR isrButton(void* arg);
+static void isrButton(void* arg);
 
 /******************************************************************************
  * Local Variables

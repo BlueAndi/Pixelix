@@ -73,12 +73,13 @@ public:
         DateTimeViewGeneric(),
         m_mode(ViewMode::DIGITAL_AND_ANALOG),
         m_secondsMode(SECOND_DISP_RING),
-        m_analogColors(
-            { ColorDef::WHITE,
-                ColorDef::GRAY,
-                ColorDef::YELLOW,
-                ColorDef::BLUE,
-                ColorDef::RED }),
+        m_analogColors{
+            ColorDef::WHITE,
+            ColorDef::GRAY,
+            ColorDef::YELLOW,
+            ColorDef::BLUE,
+            ColorDef::RED
+        },
         m_lastUpdateSecondVal(-1)
     {
         /* Disable fade effect in case the user required to show seconds,

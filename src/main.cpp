@@ -166,6 +166,15 @@ static const uint32_t HWCDC_TX_TIMEOUT = 4U;
  */
 static SimpleTimer gFpsOutputTimer;
 
+/**
+ * Task watchdog configuration.
+ */
+static const esp_task_wdt_config_t gTaskWdtConfig = {
+    TASK_WDT_TIMEOUT_S * 1000U,
+    (1 << APP_CPU_NUM), /* Observe the idle task of the APP core. */
+    true                /* Panic */
+};
+
 /******************************************************************************
  * External functions
  *****************************************************************************/
@@ -199,6 +208,11 @@ void setup()
 
     /* Set severity for esp logging system. */
     esp_log_level_set("*", CONFIG_ESP_LOG_SEVERITY);
+
+    /* Because of the log flushing disable all logs from RMT driver.
+     * E (1164) rmt: rmt_tx_wait_all_done(593): flush timeout
+     */
+    esp_log_level_set("rmt", ESP_LOG_NONE);
 
     /* Register serial log sink and select it per default. */
     if (true == Logging::getInstance().registerSink(&gLogSinkSerial))
@@ -238,7 +252,7 @@ void setup()
     ButtonDrv::getInstance().registerObserver(gButtonHandler);
 
     /* Initialize task watchdog. */
-    (void)esp_task_wdt_init(TASK_WDT_TIMEOUT_S, true);
+    (void)esp_task_wdt_init(&gTaskWdtConfig);
 
     /* Enable task watchdog for the loop task.
      *
