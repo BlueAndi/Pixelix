@@ -37,6 +37,8 @@
 #include "HttpResponseSink.h"
 #include <Logging.h>
 #include <new>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 
 /******************************************************************************
  * Compiler Switches
