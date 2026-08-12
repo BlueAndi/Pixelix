@@ -4,10 +4,10 @@ name: Main CI/CD Pipeline
 # This workflow is triggered only on pull requests to the master or main branch.
 on:
   pull_request:
-    branches: [ master, main ]
+    branches: [master, main]
   release:
     # A release, pre-release, or draft of a release is published.
-    types: [ published ]
+    types: [published]
   # Allows you to run this workflow manually from the Actions tab.
   workflow_dispatch:
 
@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
-    - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
 
   # Build all targets
   build:
@@ -29,72 +29,75 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_feather_esp32_v2-LED-32x8",
+            "adafruit_matrixportal_s3-HUB75-64x64",
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "az-delivery-devkit-v4-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "esp32-nodemcu-LED-32x8",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-    
-    - name: Create release artifcats folder
-      if: startsWith(github.ref_type, 'refs/tags/v')
-      run: |
-        mkdir ${{ github.workspace }}/artifacts
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Compile ${{ matrix.environment }} firmware
-      run: platformio run --environment ${{ matrix.environment }}
-    
-    - name: Build ${{ matrix.environment }} filesystem image
-      run: platformio run --environment ${{ matrix.environment }} --target buildfs
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
 
-    - name: Deploy ${{ matrix.environment }}
-      if: startsWith(github.ref_type, 'refs/tags/v')
-      uses: actions/upload-artifact@v6
-      with:
-        name: ${{ matrix.environment }}
-        path: |
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
-        retention-days: 5
+      - name: Create release artifcats folder
+        if: startsWith(github.ref_type, 'refs/tags/v')
+        run: |
+          mkdir ${{ github.workspace }}/artifacts
+
+      - name: Compile ${{ matrix.environment }} firmware
+        run: platformio run --environment ${{ matrix.environment }}
+
+      - name: Build ${{ matrix.environment }} filesystem image
+        run: platformio run --environment ${{ matrix.environment }} --target buildfs
+
+      - name: Deploy ${{ matrix.environment }}
+        if: startsWith(github.ref_type, 'refs/tags/v')
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.environment }}
+          path: |
+            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
+            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
+            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
+          retention-days: 5
 
   # Perform static checks
   check:
@@ -103,52 +106,55 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_feather_esp32_v2-LED-32x8",
+            "adafruit_matrixportal_s3-HUB75-64x64",
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "az-delivery-devkit-v4-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "esp32-nodemcu-LED-32x8",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Perform static checks on ${{ matrix.environment }}
-      run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Perform static checks on ${{ matrix.environment }}
+        run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
 
   # Perform tests
   test:
@@ -157,35 +163,35 @@ jobs:
     needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Run tests on native environment
-      run: platformio test --environment test
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Run tests on native environment
+        run: platformio test --environment test
 
   # Build documentation
   doc:
@@ -193,45 +199,45 @@ jobs:
     runs-on: ubuntu-latest
     needs: intro
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-  
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Set up graphviz
-      uses: ts-graphviz/setup-graphviz@v2
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
 
-    - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1
-      with:
-        working-directory: './doc/doxygen'
-        doxyfile-path: './Doxyfile'
+      - name: Set up graphviz
+        uses: ts-graphviz/setup-graphviz@v2
 
-    - name: Print doxygen warnings
-      if: ${{ failure() }}
-      run: cat ./doc/doxygen/doxygen_warnings.txt
+      - name: Set up doxygen and generate documentation
+        uses: mattnotmitt/doxygen-action@v1
+        with:
+          working-directory: "./doc/doxygen"
+          doxyfile-path: "./Doxyfile"
+
+      - name: Print doxygen warnings
+        if: ${{ failure() }}
+        run: cat ./doc/doxygen/doxygen_warnings.txt
 
   # Deploy release artifacts
   deploy:
@@ -240,22 +246,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, check, doc]
     steps:
-    - name: Deploy release artifacts
-      uses: actions/download-artifact@v7
-      with:
-        path: ${{ github.workspace }}/artifacts
+      - name: Deploy release artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ github.workspace }}/artifacts
 
-    - name: Display structure of release artifacts
-      run: ls -R
-      working-directory: ${{ github.workspace }}/artifacts
+      - name: Display structure of release artifacts
+        run: ls -R
+        working-directory: ${{ github.workspace }}/artifacts
 
-    - name: Zip release artifacts folder
-      run: zip -rj ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip .
-      working-directory: ${{ github.workspace }}/artifacts
+      - name: Zip release artifacts folder
+        run: zip -rj ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip .
+        working-directory: ${{ github.workspace }}/artifacts
 
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

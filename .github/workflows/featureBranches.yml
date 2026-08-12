@@ -4,14 +4,14 @@ name: Feature Branches CI
 on:
   push:
     branches:
-      - '**'
-      - '!master'
-      - '!main'
+      - "**"
+      - "!master"
+      - "!main"
   pull_request:
     branches:
-      - '**'
-      - '!master'
-      - '!main'
+      - "**"
+      - "!master"
+      - "!main"
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
-    - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
 
   # Build all targets
   build:
@@ -32,56 +32,59 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_feather_esp32_v2-LED-32x8",
+            "adafruit_matrixportal_s3-HUB75-64x64",
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "az-delivery-devkit-v4-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "esp32-nodemcu-LED-32x8",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-    
-    - name: Compile ${{ matrix.environment }} firmware
-      run: platformio run --environment ${{ matrix.environment }}
-    
-    - name: Build ${{ matrix.environment }} filesystem image
-      run: platformio run --environment ${{ matrix.environment }} --target buildfs
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Compile ${{ matrix.environment }} firmware
+        run: platformio run --environment ${{ matrix.environment }}
+
+      - name: Build ${{ matrix.environment }} filesystem image
+        run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
   # Perform static checks
   check:
@@ -90,52 +93,55 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_feather_esp32_v2-LED-32x8",
+            "adafruit_matrixportal_s3-HUB75-64x64",
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "az-delivery-devkit-v4-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "esp32-nodemcu-LED-32x8",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Perform static checks on ${{ matrix.environment }}
-      run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Perform static checks on ${{ matrix.environment }}
+        run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
 
   # Perform tests
   test:
@@ -144,35 +150,35 @@ jobs:
     needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Run tests on native environment
-      run: platformio test --environment test -vvv
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Run tests on native environment
+        run: platformio test --environment test -vvv
 
   # Perform clang-format check
   check_format:
@@ -181,35 +187,35 @@ jobs:
     needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Run clang-format check
-      run: find src lib -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' | xargs clang-format -i --dry-run -Werror
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Run clang-format check
+        run: find src lib -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' | xargs clang-format -i --dry-run -Werror
 
   # Build documentation
   doc:
@@ -217,42 +223,42 @@ jobs:
     runs-on: ubuntu-latest
     needs: intro
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
 
-    - name: Set up graphviz
-      uses: ts-graphviz/setup-graphviz@v2
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
 
-    - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1
-      with:
-        working-directory: './doc/doxygen'
-        doxyfile-path: './Doxyfile'
+      - name: Set up graphviz
+        uses: ts-graphviz/setup-graphviz@v2
 
-    - name: Print doxygen warnings
-      if: ${{ failure() }}
-      run: cat ./doc/doxygen/doxygen_warnings.txt
+      - name: Set up doxygen and generate documentation
+        uses: mattnotmitt/doxygen-action@v1
+        with:
+          working-directory: "./doc/doxygen"
+          doxyfile-path: "./Doxyfile"
+
+      - name: Print doxygen warnings
+        if: ${{ failure() }}
+        run: cat ./doc/doxygen/doxygen_warnings.txt
