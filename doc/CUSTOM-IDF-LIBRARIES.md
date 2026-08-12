@@ -73,7 +73,10 @@ If only the `esp32` libraries are required, the compilation can be reduced by us
 ./build.sh -t esp32
 ```
 
-5. Replace the libraries in the PlatformIO package folder `.../.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32` with the `./out/tools/sdk/esp32` output folder.
+5. Replace the libraries in the PlatformIO package folder `.../.platformio/packages/framework-arduinoespressif32-libs/esp32` with the `./out/tools/esp32-arduino-libs/esp32` output folder.
+
+Note:
+Since ESP32 Arduino framework v3.x.x the pre-compiled ESP-IDF libraries are no longer part of the `framework-arduinoespressif32` package, but are provided by the separate `framework-arduinoespressif32-libs` package. It contains one folder per target SoC, e.g. `esp32`, `esp32s2`, `esp32s3`, etc.
 
 ## Issues, Ideas And Bugs
 
