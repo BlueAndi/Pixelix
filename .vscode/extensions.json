@@ -1,14 +1,13 @@
 {
-    // See http://go.microsoft.com/fwlink/?LinkId=827846
-    // for the documentation about the extensions.json format
     "recommendations": [
         "42crunch.vscode-openapi",
+        "Jason2866.esp-decoder",
+        "davidanson.vscode-markdownlint",
         "jebbs.plantuml",
         "ms-vscode.cpptools",
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cpptools-themes",
-        "platformio.platformio-ide",
-        "davidanson.vscode-markdownlint",
+        "pioarduino.pioarduino-ide",
         "yzhang.markdown-all-in-one"
     ]
 }
