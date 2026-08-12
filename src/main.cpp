@@ -251,8 +251,11 @@ void setup()
      */
     ButtonDrv::getInstance().registerObserver(gButtonHandler);
 
-    /* Initialize task watchdog. */
-    (void)esp_task_wdt_init(&gTaskWdtConfig);
+    /* Reconfigure task watchdog. The initialization is done earlier by pioarduino framework. */
+    if (ESP_OK != esp_task_wdt_reconfigure(&gTaskWdtConfig))
+    {
+        LOG_WARNING("Failed to reconfigure task watchdog.");
+    }
 
     /* Enable task watchdog for the loop task.
      *
