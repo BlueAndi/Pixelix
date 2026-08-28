@@ -3,21 +3,21 @@
     "version": "0.1.0",
     "description": "HAL for WS2812 (NeoPixel) LED matrix.",
     "authors": [{
-        "name": "Andreas Merkle",
-        "email": "web@blue-andi.de",
-        "url": "https://github.com/BlueAndi",
-        "maintainer": true
+            "name": "Andreas Merkle",
+            "email": "web@blue-andi.de",
+            "url": "https://github.com/BlueAndi",
+            "maintainer": true
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "Common"
+            "name": "Common"
     }, {
-        "name": "YAGfx"
+            "name": "YAGfx"
     }, {
-        "name": "NeoPixelBus",
-        "version": "https://github.com/Makuna/NeoPixelBus#76afe832f74b0738a3fa1bba0caf389ade9e7693"
+            "name": "NeoPixelBus",
+        "version": "https://github.com/sblantipodi/NeoPixelBus#CORE3"
     }, {
-        "name": "Utilities"
+            "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"
