@@ -129,6 +129,11 @@ void HttpServiceWorker::process(WorkerData* data)
             (void)data->mutex.give();
         }
     }
+
+    /* This task polls the worker data for a new HTTP request, therefore it must sleep periodically. Otherwise the idle task of
+     * this core never gets scheduled and the task watchdog will trigger a reset.
+     */
+    delay(POLL_PERIOD);
 }
 
 void HttpServiceWorker::performHttpRequest(const WorkerRequest& request, WorkerResponse& response, Mutex& mutex, const HttpJobId& jobToAbort)
