@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Board.h
- * @brief  Board abstraction
+ * @file   LedDrv.h
+ * @brief  LED driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,22 +34,18 @@
  * @{
  */
 
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef LEDDRV_H
+#define LEDDRV_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IBoard.h>
-#include <ButtonDrv.h>
-#include <BuzzerDrv.h>
-#include <LedDrv.h>
-#include <SystemDrv.h>
-#include "Pin.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <ILedDrv.h>
+#include <Io.hpp>
 
 /******************************************************************************
  * Macros
@@ -60,117 +56,67 @@
  *****************************************************************************/
 
 /**
- * The board abstraction provides access to the hardware of the electronic board.
+ * LED driver.
  */
-class Board : public IBoard
+class LedDrv : public ILedDrv
 {
 public:
 
     /**
-     * Get the singleton instance of the board abstraction.
-     *
-     * @return Board instance
+     * Construct LedDrv.
      */
-    static Board& getInstance()
+    LedDrv() :
+        m_ledOut(nullptr)
     {
-        static Board instance; /* idiom */
-
-        return instance;
     }
 
     /**
-     * Initialize the board.
-     *
-     * @return If successful initialized it will return true otherwise false.
+     * Destroys LedDrv.
      */
-    bool init() override;
-
-    /**
-     * Get the button driver.
-     *
-     * @return Button driver
-     */
-    IButtonDrv& getButtonDrv() override
+    virtual ~LedDrv()
     {
-        return m_buttonDrv;
     }
 
     /**
-     * Get the buzzer driver.
+     * Initialize the driver.
      *
-     * @return Buzzer driver
+     * @param[in] ledOut  Digital output for LED.
      */
-    IBuzzerDrv& getBuzzerDrv() override
+    void init(const DOutPin& ledOut) override
     {
-        return m_buzzerDrv;
+        m_ledOut = &ledOut;
     }
 
     /**
-     * Get the onboard LED driver.
-     *
-     * @return LED driver
+     * Switch LED off.
      */
-    ILedDrv& getLedDrv() override
-    {
-        return m_ledDrv;
-    }
+    void off() override;
 
     /**
-     * Get the system driver.
-     *
-     * @return System driver
+     * Switch LED on.
      */
-    ISystemDrv& getSystemDrv() override
-    {
-        return m_systemDrv;
-    }
+    void on() override;
 
-    /** ADC resolution in digits */
-    static constexpr uint16_t ADC_RESOLUTION     = 4096U;
-
-    /** ADC reference voltage in mV */
-    static constexpr uint16_t ADC_REF_VOLTAGE    = 3300U;
-
-    /** Pixelix supply voltage in volt */
-    static constexpr uint8_t SUPPLY_VOLTAGE      = 5U;
-
-    /** Pixelix max. supply current in mA */
-    static constexpr uint32_t SUPPLY_CURRENT_MAX = CONFIG_SUPPLY_CURRENT;
+    /**
+     * Is the LED on?
+     *
+     * @return If LED is on, it will return true otherwise false.
+     */
+    bool isOn() override;
 
 private:
 
-    ButtonDrv m_buttonDrv; /**< Button driver */
-    BuzzerDrv m_buzzerDrv; /**< Buzzer driver */
-    LedDrv    m_ledDrv;    /**< Onboard LED driver */
-    SystemDrv m_systemDrv; /**< System driver */
+    const DOutPin* m_ledOut; /**< Digital output for LED */
 
-    /**
-     * Constructs the board interface.
-     */
-    Board() :
-        m_buttonDrv(),
-        m_buzzerDrv(),
-        m_ledDrv(),
-        m_systemDrv()
-    {
-    }
-
-    /**
-     * Destroys the board interface.
-     */
-    virtual ~Board()
-    {
-    }
+    /* Prevent copying */
+    LedDrv(const LedDrv&);
+    LedDrv& operator=(const LedDrv&);
 };
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* BOARD_H */
+#endif /* LEDDRV_H */
 
 /** @} */

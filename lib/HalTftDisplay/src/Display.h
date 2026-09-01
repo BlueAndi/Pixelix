@@ -45,7 +45,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IDisplay.hpp>
+#include <IDisplay.h>
 #include <ColorDef.hpp>
 #include <TFT_eSPI.h>
 #include <YAGfxBitmap.h>

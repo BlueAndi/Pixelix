@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Board.h
- * @brief  Board abstraction
+ * @file   SystemDrv.h
+ * @brief  System driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,22 +34,17 @@
  * @{
  */
 
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef SYSTEMDRV_H
+#define SYSTEMDRV_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IBoard.h>
-#include <ButtonDrv.h>
-#include <BuzzerDrv.h>
-#include <LedDrv.h>
-#include <SystemDrv.h>
-#include "Pin.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <ISystemDrv.h>
 
 /******************************************************************************
  * Macros
@@ -60,117 +55,56 @@
  *****************************************************************************/
 
 /**
- * The board abstraction provides access to the hardware of the electronic board.
+ * System driver.
  */
-class Board : public IBoard
+class SystemDrv : public ISystemDrv
 {
 public:
 
     /**
-     * Get the singleton instance of the board abstraction.
-     *
-     * @return Board instance
+     * Constructs the system driver instance.
      */
-    static Board& getInstance()
+    SystemDrv()
     {
-        static Board instance; /* idiom */
-
-        return instance;
     }
 
     /**
-     * Initialize the board.
-     *
-     * @return If successful initialized it will return true otherwise false.
+     * Destroys the system driver instance.
      */
-    bool init() override;
-
-    /**
-     * Get the button driver.
-     *
-     * @return Button driver
-     */
-    IButtonDrv& getButtonDrv() override
+    virtual ~SystemDrv()
     {
-        return m_buttonDrv;
     }
 
     /**
-     * Get the buzzer driver.
-     *
-     * @return Buzzer driver
+     * Initialize the driver.
      */
-    IBuzzerDrv& getBuzzerDrv() override
+    void init() override
     {
-        return m_buzzerDrv;
-    }
+        /* Nothing to do */
+    };
 
     /**
-     * Get the onboard LED driver.
-     *
-     * @return LED driver
+     * Reset the system.
      */
-    ILedDrv& getLedDrv() override
+    void reset() override
     {
-        return m_ledDrv;
-    }
-
-    /**
-     * Get the system driver.
-     *
-     * @return System driver
-     */
-    ISystemDrv& getSystemDrv() override
-    {
-        return m_systemDrv;
-    }
-
-    /** ADC resolution in digits */
-    static constexpr uint16_t ADC_RESOLUTION     = 4096U;
-
-    /** ADC reference voltage in mV */
-    static constexpr uint16_t ADC_REF_VOLTAGE    = 3300U;
-
-    /** Pixelix supply voltage in volt */
-    static constexpr uint8_t SUPPLY_VOLTAGE      = 5U;
-
-    /** Pixelix max. supply current in mA */
-    static constexpr uint32_t SUPPLY_CURRENT_MAX = CONFIG_SUPPLY_CURRENT;
+        /* Reset the system */
+        ESP.restart();
+    };
 
 private:
 
-    ButtonDrv m_buttonDrv; /**< Button driver */
-    BuzzerDrv m_buzzerDrv; /**< Buzzer driver */
-    LedDrv    m_ledDrv;    /**< Onboard LED driver */
-    SystemDrv m_systemDrv; /**< System driver */
+    /* An instance shall not be copied. */
+    SystemDrv(const SystemDrv& systemDrv);
 
-    /**
-     * Constructs the board interface.
-     */
-    Board() :
-        m_buttonDrv(),
-        m_buzzerDrv(),
-        m_ledDrv(),
-        m_systemDrv()
-    {
-    }
-
-    /**
-     * Destroys the board interface.
-     */
-    virtual ~Board()
-    {
-    }
+    /* An instance shall not be copied. */
+    SystemDrv& operator=(const SystemDrv& systemDrv);
 };
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* BOARD_H */
+#endif /* SYSTEMDRV_H */
 
 /** @} */

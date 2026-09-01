@@ -25,20 +25,23 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   BuzzerDrv.cpp
- * @brief  Buzzer driver
+ * @file   Pin.cpp
+ * @brief  Pin definitions
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "BuzzerDrv.h"
-#include <Board.h>
+#include "Pin.h"
+
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
+
+using namespace PinNo;
 
 /******************************************************************************
  * Macros
@@ -53,80 +56,64 @@
  *****************************************************************************/
 
 /******************************************************************************
+ * Global Variables
+ *****************************************************************************/
+
+/** Digital output pin: Onboard LED */
+const DOutPinT<onBoardLedPinNo> Pin::onBoardLedOut;
+
+/** Digital input pin: Button "ok" (input with pull-up) */
+const DInPinT<buttonOkPinNo, INPUT_PULLUP> Pin::buttonOkIn;
+
+/** Digital input pin: Button "left" (input with pull-up) */
+const DInPinT<buttonLeftPinNo, INPUT_PULLUP> Pin::buttonLeftIn;
+
+/** Digital input pin: Button "right" (input with pull-up) */
+const DInPinT<buttonRightPinNo, INPUT_PULLUP> Pin::buttonRightIn;
+
+/** Digital input pin: Button "reset" (input with pull-up) */
+const DInPinT<buttonResetPinNo, INPUT_PULLUP> Pin::buttonResetIn;
+
+/** Digital output pin: Test pin (only for debug purposes) */
+const DOutPinT<testPinNo> Pin::testPinOut;
+
+/** Analog input pin: LDR in */
+const AnalogPinT<ldrInPinNo> Pin::ldrIn;
+
+/** Digital input pin: DHT Sensor (input with pull-up) */
+const DInPinT<dhtInPinNo, INPUT_PULLUP> Pin::dhtIn;
+
+/** Analog input pin: battery voltage in */
+const AnalogPinT<batteryInPinNo> Pin::batteryVoltageIn;
+
+/** Digital output pin: Buzzer */
+const DOutPinT<buzzerOutPinNo> Pin::buzzerOut;
+
+/** Digital output pin: TFT display backlight switch */
+const DOutPinT<tftBackLightPinNo> Pin::tftBackLightOut;
+
+/******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** A list of all used i/o pins, used for initialization. */
+static const IoPin* ioPinList[] = {
+    &Pin::onBoardLedOut,
+    &Pin::buttonOkIn,
+    &Pin::buttonLeftIn,
+    &Pin::buttonRightIn,
+    &Pin::buttonResetIn,
+    &Pin::testPinOut,
+    &Pin::ldrIn,
+    &Pin::dhtIn,
+    &Pin::batteryVoltageIn,
+    &Pin::buzzerOut,
+    &Pin::tftBackLightOut
+};
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
-
-void BuzzerDrv::stop()
-{
-    if (IoPin::NC != Board::buzzerOut.getPinNo())
-    {
-        if (true == m_isInit)
-        {
-            (void)ledcWriteTone(TONE_PWM_CHANNEL, 0U); /* Off */
-            ledcDetachPin(Board::buzzerOut.getPinNo());
-
-            m_isInit = false;
-        }
-    }
-}
-
-void BuzzerDrv::play(uint32_t freq)
-{
-    if (IoPin::NC != Board::buzzerOut.getPinNo())
-    {
-        if (false == m_isInit)
-        {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(Board::buzzerOut.getPinNo(), TONE_PWM_CHANNEL);
-
-            m_isInit = true;
-        }
-
-        (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);    /* Change duty cycle immediately. */
-    }
-}
-
-void BuzzerDrv::play(uint32_t freq, uint16_t dc)
-{
-    if (IoPin::NC != Board::buzzerOut.getPinNo())
-    {
-        m_dutyCycle = dc;
-
-        if (false == m_isInit)
-        {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(Board::buzzerOut.getPinNo(), TONE_PWM_CHANNEL);
-
-            m_isInit = true;
-        }
-
-        (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);    /* Change duty cycle immediately. */
-    }
-}
-
-void BuzzerDrv::changeDutyCycle(uint16_t dc)
-{
-    if (IoPin::NC != Board::buzzerOut.getPinNo())
-    {
-        m_dutyCycle = dc;
-
-        if (false == m_isInit)
-        {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(Board::buzzerOut.getPinNo(), TONE_PWM_CHANNEL);
-
-            m_isInit = true;
-        }
-
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);
-    }
-}
 
 /******************************************************************************
  * Protected Methods
@@ -139,6 +126,23 @@ void BuzzerDrv::changeDutyCycle(uint16_t dc)
 /******************************************************************************
  * External Functions
  *****************************************************************************/
+
+void Pin::init()
+{
+    uint8_t index = 0U;
+
+    /* Initialize all i/o pins */
+    for (index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
+    {
+        if (nullptr != ioPinList[index])
+        {
+            ioPinList[index]->init();
+        }
+    }
+
+    /* Disable buzzer */
+    buzzerOut.write(LOW);
+}
 
 /******************************************************************************
  * Local Functions

@@ -35,6 +35,7 @@
  *****************************************************************************/
 #include "SensorLdr.h"
 
+#include <Pin.h>
 #include <Board.h>
 
 /******************************************************************************
@@ -163,7 +164,7 @@ ISensorChannel* SensorLdr::getChannel(uint8_t index)
 
 float SensorLdr::getIlluminance()
 {
-    const uint16_t ADC_UINT16    = Board::ldrIn.read();
+    const uint16_t ADC_UINT16    = Pin::ldrIn.read();
     float          illuminance   = 0.0F;
     const float    MULTIPLICATOR = LDR_CONSTANTS[m_ldrType].multiplicator;
     const float    EXPONENT      = LDR_CONSTANTS[m_ldrType].exponent;
@@ -192,7 +193,7 @@ float SensorLdr::getIlluminance()
      * I = 5179474.6792312 * R_LDR ^ -1.42857142857143
      * I = 5179474.6792312 * [ ( ADC_max * R - ADC * R ) / ADC ] ^ -1.42857142857143
      */
-    const float ADC_MAX          = static_cast<float>(Board::adcResolution - 1U);
+    const float ADC_MAX          = static_cast<float>(Board::ADC_RESOLUTION - 1U);
     const float ADC_FLOAT        = static_cast<float>(ADC_UINT16);
 
     illuminance                  = MULTIPLICATOR * powf((ADC_MAX * m_resistance - ADC_FLOAT * m_resistance) / ADC_FLOAT, EXPONENT);

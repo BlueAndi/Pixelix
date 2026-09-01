@@ -36,7 +36,7 @@
 #include "AudioDrv.h"
 
 #include <Logging.h>
-#include <Board.h>
+#include <Pin.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -277,10 +277,10 @@ bool AudioDrv::initI2S()
     };
     i2s_pin_config_t pinConfig = {
         .mck_io_num   = I2S_PIN_NO_CHANGE,
-        .bck_io_num   = Board::Pin::i2sSerialClock,
-        .ws_io_num    = Board::Pin::i2sWordSelect,
+        .bck_io_num   = PinNo::i2sSerialClockPinNo,
+        .ws_io_num    = PinNo::i2sWordSelectPinNo,
         .data_out_num = I2S_PIN_NO_CHANGE,
-        .data_in_num  = Board::Pin::i2sSerialDataIn
+        .data_in_num  = PinNo::i2sSerialDataInPinNo
     };
 
     i2sRet = i2s_driver_install(I2S_PORT, &i2sConfig, I2S_EVENT_QUEUE_SIZE, &m_i2sEventQueueHandle);

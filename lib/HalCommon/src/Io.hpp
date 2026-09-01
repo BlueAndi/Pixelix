@@ -82,7 +82,7 @@ public:
     /**
      * Destroys the i/o pin instance.
      */
-    ~IoPin()
+    virtual ~IoPin()
     {
     }
 
@@ -130,23 +130,59 @@ private:
 /**
  * Digital output pin.
  */
-template < uint8_t pinNo >
 class DOutPin : public IoPin
 {
 public:
 
     /**
-     * Constructs an digital output pin instance.
+     * Destroys the digital output pin interface.
      */
-    DOutPin() :
+    virtual ~DOutPin()
+    {
+    }
+
+    /**
+     * Read from digital output pin.
+     *
+     * @return Digital output pin value.
+     */
+    virtual int read() const                = 0;
+
+    /**
+     * Write to digital output pin.
+     *
+     * @param[in] value Digital output pin value (LOW, HIGH).
+     */
+    virtual void write(uint8_t value) const = 0;
+
+protected:
+
+    /**
+     * Constructs the digital output pin interface.
+     */
+    DOutPin(uint8_t pinNo) :
         IoPin(pinNo, OUTPUT)
+    {
+    }
+};
+
+/**
+ * Digital output pin with a compile-time pin number.
+ */
+template < uint8_t pinNo >
+class DOutPinT : public DOutPin
+{
+public:
+
+    DOutPinT() :
+        DOutPin(pinNo)
     {
     }
 
     /**
      * Destroys the digital output pin instance.
      */
-    ~DOutPin()
+    ~DOutPinT()
     {
     }
 
@@ -155,7 +191,7 @@ public:
      *
      * @return Digital output pin value or LOW for unconnected pins.
      */
-    int read() const
+    int read() const override
     {
         return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
@@ -165,7 +201,7 @@ public:
      *
      * @param[in] value Digital output pin value (LOW, HIGH).
      */
-    void write(uint8_t value) const
+    void write(uint8_t value) const override
     {
         if (NC != pinNo)
         {
@@ -176,59 +212,62 @@ public:
 private:
 
     /* An instance shall not be copied. */
-    DOutPin(const DOutPin& dOutPin);
-    DOutPin& operator=(const DOutPin& dOutPin);
+    DOutPinT(const DOutPinT& dOutPin);
+    DOutPinT& operator=(const DOutPinT& dOutPin);
 };
 
 /**
  * Digital input pin with not supported pin mode.
  */
-template < uint8_t pinNo, uint8_t pinMode >
 class DInPin : public IoPin
 {
 public:
-private:
+
+    virtual ~DInPin()
+    {
+    }
 
     /**
-     * Constructs an digital output pin instance.
+     * Read from digital input pin.
+     *
+     * @return Digital input pin value.
      */
-    DInPin() :
+    virtual int read() const = 0;
+
+protected:
+
+    /**
+     * Constructs the digital input pin interface.
+     */
+    DInPin(uint8_t pinNo, uint8_t pinMode) :
         IoPin(pinNo, pinMode)
     {
     }
-
-    /**
-     * Destroys the digital output pin instance.
-     */
-    ~DInPin()
-    {
-    }
-
-    /* An instance shall not be copied. */
-    DInPin(const DInPin& dInPin);
-    DInPin& operator=(const DInPin& dInPin);
 };
+
+template < uint8_t pinNo, uint8_t pinMode >
+class DInPinT;
 
 /**
  * Digital input pin without pull-up or pull-down.
  */
 template < uint8_t pinNo >
-class DInPin<pinNo, INPUT> : public IoPin
+class DInPinT<pinNo, INPUT> : public DInPin
 {
 public:
 
     /**
      * Constructs an digital output pin instance.
      */
-    DInPin() :
-        IoPin(pinNo, INPUT)
+    DInPinT() :
+        DInPin(pinNo, INPUT)
     {
     }
 
     /**
      * Destroys the digital output pin instance.
      */
-    ~DInPin()
+    ~DInPinT()
     {
     }
 
@@ -237,7 +276,7 @@ public:
      *
      * @return Digital input pin value or LOW for unconnected ones.
      */
-    int read() const
+    int read() const override
     {
         return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
@@ -245,30 +284,30 @@ public:
 private:
 
     /* An instance shall not be copied. */
-    DInPin(const DInPin& dInPin);
-    DInPin& operator=(const DInPin& dInPin);
+    DInPinT(const DInPinT& dInPin);
+    DInPinT& operator=(const DInPinT& dInPin);
 };
 
 /**
  * Digital input pin with pull-up.
  */
 template < uint8_t pinNo >
-class DInPin<pinNo, INPUT_PULLUP> : public IoPin
+class DInPinT<pinNo, INPUT_PULLUP> : public DInPin
 {
 public:
 
     /**
      * Constructs an digital output pin instance.
      */
-    DInPin() :
-        IoPin(pinNo, INPUT_PULLUP)
+    DInPinT() :
+        DInPin(pinNo, INPUT_PULLUP)
     {
     }
 
     /**
      * Destroys the digital output pin instance.
      */
-    ~DInPin()
+    ~DInPinT()
     {
     }
 
@@ -277,7 +316,7 @@ public:
      *
      * @return Digital input pin value or LOW for unconnected pins.
      */
-    int read() const
+    int read() const override
     {
         return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
@@ -285,30 +324,30 @@ public:
 private:
 
     /* An instance shall not be copied. */
-    DInPin(const DInPin& dInPin);
-    DInPin& operator=(const DInPin& dInPin);
+    DInPinT(const DInPinT& dInPin);
+    DInPinT& operator=(const DInPinT& dInPin);
 };
 
 /**
  * Digital input pin with pull-down.
  */
 template < uint8_t pinNo >
-class DInPin<pinNo, INPUT_PULLDOWN> : public IoPin
+class DInPinT<pinNo, INPUT_PULLDOWN> : public DInPin
 {
 public:
 
     /**
      * Constructs an digital output pin instance.
      */
-    DInPin() :
-        IoPin(pinNo, INPUT_PULLDOWN)
+    DInPinT() :
+        DInPin(pinNo, INPUT_PULLDOWN)
     {
     }
 
     /**
      * Destroys the digital output pin instance.
      */
-    ~DInPin()
+    ~DInPinT()
     {
     }
 
@@ -317,7 +356,7 @@ public:
      *
      * @return Digital input pin value or LOW for unconnected pins.
      */
-    int read() const
+    int read() const override
     {
         return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
@@ -325,30 +364,56 @@ public:
 private:
 
     /* An instance shall not be copied. */
-    DInPin(const DInPin& dInPin);
-    DInPin& operator=(const DInPin& dInPin);
+    DInPinT(const DInPinT& dInPin);
+    DInPinT& operator=(const DInPinT& dInPin);
 };
 
 /**
  * Analog pin.
  */
-template < uint8_t pinNo >
 class AnalogPin : public IoPin
 {
 public:
 
+    virtual ~AnalogPin()
+    {
+    }
+
     /**
-     * Constructs an analog input pin instance.
+     * Read from analog input pin.
+     *
+     * @return Value in ADC digits.
      */
-    AnalogPin() :
+    virtual uint16_t read() const = 0;
+
+protected:
+
+    /**
+     * Constructs the analog pin interface.
+     */
+    AnalogPin(uint8_t pinNo) :
         IoPin(pinNo, ANALOG)
+    {
+    }
+};
+
+/**
+ * Analog pin with a compile-time pin number.
+ */
+template < uint8_t pinNo >
+class AnalogPinT : public AnalogPin
+{
+public:
+
+    AnalogPinT() :
+        AnalogPin(pinNo)
     {
     }
 
     /**
      * Destroys the analog input pin instance.
      */
-    ~AnalogPin()
+    ~AnalogPinT()
     {
     }
 
@@ -357,7 +422,7 @@ public:
      *
      * @return Value in ADC digits or LOW for unconnected pins.
      */
-    uint16_t read() const
+    uint16_t read() const override
     {
         return (NC != pinNo) ? analogRead(pinNo) : LOW;
     }
@@ -365,8 +430,8 @@ public:
 private:
 
     /* An instance shall not be copied. */
-    AnalogPin(const AnalogPin& analogPin);
-    AnalogPin& operator=(const AnalogPin& analogPin);
+    AnalogPinT(const AnalogPinT& analogPin);
+    AnalogPinT& operator=(const AnalogPinT& analogPin);
 };
 
 /******************************************************************************

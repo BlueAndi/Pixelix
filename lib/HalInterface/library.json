@@ -1,7 +1,7 @@
 {
-    "name": "HalLedMatrix",
+    "name": "HalInterface",
     "version": "0.1.0",
-    "description": "HAL for WS2812 (NeoPixel) LED matrix.",
+    "description": "Public HAL interface realized by different implementations for different platforms.",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -10,17 +10,7 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "HalCommon"
-    }, {
-        "name": "HalInterface"
-    }, {
         "name": "YAGfx"
-    }, {
-        "owner": "makuna",
-        "name": "NeoPixelBus",
-        "version": "~2.8.4"
-    }, {
-        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   BuzzerDrv.h
- * @brief  Buzzer driver
+ * @file   IDisplay.h
+ * @brief  Display interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef BUZZERDRV_H
-#define BUZZERDRV_H
+#ifndef IDISPLAY_H
+#define IDISPLAY_H
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Arduino.h"
+#include <YAGfx.h>
 
 /******************************************************************************
  * Macros
@@ -55,102 +55,87 @@
  *****************************************************************************/
 
 /**
- * Buzzer driver.
+ * The display interface combines the graphic interfaces and the additional
+ * interfaces to control the underlying physical display.
  */
-class BuzzerDrv
+class IDisplay : public YAGfx
 {
 public:
 
     /**
-     *  Get the BuzzerDrv instance.
-     *
-     * @return BuzzerDrv instance.
+     * Destroys the display interface.
      */
-    static BuzzerDrv& getInstance()
+    virtual ~IDisplay()
     {
-        static BuzzerDrv instance; /* singleton idiom to force initialization in the first usage. */
-
-        return instance;
     }
 
     /**
-     * Stop playing.
+     * Initialize base driver for the display.
+     *
+     * @return If successful, returns true otherwise false.
      */
-    void stop();
+    virtual bool begin()                           = 0;
 
     /**
-     * Play a tone by frequency. Last duty cycle is used.
-     *
-     * @param[in] freq  Frequency in Hz
+     * Show framebuffer on physical display. This may be synchronous
+     * or asynchronous.
      */
-    void play(uint32_t freq);
+    virtual void show()                            = 0;
 
     /**
-     * Play a tone by frequency and duty cycle.
+     * The display is ready, when the last physical pixel update is finished.
+     * A asynchronous display update, triggered by show() can be observed this way.
      *
-     * @param[in] freq  Frequency in Hz
-     * @param[in] dc    Duty cycle in digits [0; 1023]
+     * @return If ready for another update via show(), it will return true otherwise false.
      */
-    void play(uint32_t freq, uint16_t dc);
+    virtual bool isReady() const                   = 0;
 
     /**
-     * Change duty cycle.
+     * Set brightness from 0 to 255.
      *
-     * @param[in] dc    Duty cycle in digits [0; 1023]
+     * @param[in] brightness    Brightness value [0; 255]
      */
-    void changeDutyCycle(uint16_t dc);
+    virtual void setBrightness(uint8_t brightness) = 0;
+
+    /**
+     * Clear display.
+     */
+    virtual void clear()                           = 0;
+
+    /**
+     * Power display off.
+     */
+    virtual void off()                             = 0;
+
+    /**
+     * Power display on.
+     */
+    virtual void on()                              = 0;
+
+    /**
+     * Is display powered on?
+     *
+     * @return If display is powered on, it will return true otherwise false.
+     */
+    virtual bool isOn() const                      = 0;
+
+protected:
+
+    /**
+     * Constructs the display interface.
+     */
+    IDisplay() :
+        YAGfx()
+    {
+    }
 
 private:
-
-    /**
-     * The PWM channel which to use for the tone generation.
-     */
-    static const uint8_t TONE_PWM_CHANNEL           = 0U;
-
-    /**
-     * Frequency in Hz used to initialize the PWM. Has no influence on a tone.
-     * Its just required for initialization.
-     */
-    static const uint32_t INIT_FREQUENCY            = 1000U;
-
-    /**
-     * Number of bits used for the duty cycle.
-     */
-    static const uint8_t DUTY_CYCLE_RESOLUTION_BITS = 10U;
-
-    /**
-     * Default duty cycle in digits [0; 1023] set to 25 %.
-     */
-    static const uint32_t DEFAULT_DUTY_CYCLE        = 0x00FF;
-
-    uint8_t               m_isInit;    /**< Is initialized or not? */
-    uint32_t              m_dutyCycle; /**< Duty cycle in digits [0; 1023] */
-
-    /**
-     * Construct BuzzerDrv.
-     */
-    BuzzerDrv() :
-        m_isInit(false),
-        m_dutyCycle(DEFAULT_DUTY_CYCLE)
-    {
-    }
-
-    /**
-     * Destroys BuzzerDrv.
-     */
-    ~BuzzerDrv()
-    {
-    }
-
-    /* Prevent copying */
-    BuzzerDrv(const BuzzerDrv&);
-    BuzzerDrv& operator=(const BuzzerDrv&);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* BUZZERDRV_H */
+#endif /* IDISPLAY_H */
 
 /** @} */

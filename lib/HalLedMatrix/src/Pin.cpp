@@ -25,19 +25,23 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Display.cpp
- * @brief  HUB75 matrix display
- * @author Mariano Dupont <marianomd@gmail.com>
+ * @file   Pin.cpp
+ * @brief  Pin definitions
+ * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Display.h"
+#include "Pin.h"
+
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
+
+using namespace PinNo;
 
 /******************************************************************************
  * Macros
@@ -52,39 +56,59 @@
  *****************************************************************************/
 
 /******************************************************************************
+ * Global Variables
+ *****************************************************************************/
+
+/** Digital output pin: Onboard LED */
+const DOutPinT<onBoardLedPinNo> Pin::onBoardLedOut;
+
+/** Digital input pin: Button "ok" (input with pull-up) */
+const DInPinT<buttonOkPinNo, INPUT_PULLUP> Pin::buttonOkIn;
+
+/** Digital input pin: Button "left" (input with pull-up) */
+const DInPinT<buttonLeftPinNo, INPUT_PULLUP> Pin::buttonLeftIn;
+
+/** Digital input pin: Button "right" (input with pull-up) */
+const DInPinT<buttonRightPinNo, INPUT_PULLUP> Pin::buttonRightIn;
+
+/** Digital input pin: Button "reset" (input with pull-up) */
+const DInPinT<buttonResetPinNo, INPUT_PULLUP> Pin::buttonResetIn;
+
+/** Digital output pin: Test pin (only for debug purposes) */
+const DOutPinT<testPinNo> Pin::testPinOut;
+
+/** Digital output pin: LED matrix data out */
+const DOutPinT<ledMatrixDataOutPinNo> Pin::ledMatrixDataOut;
+
+/** Analog input pin: LDR in */
+const AnalogPinT<ldrInPinNo> Pin::ldrIn;
+
+/** Digital input pin: DHT Sensor (input with pull-up) */
+const DInPinT<dhtInPinNo, INPUT_PULLUP> Pin::dhtIn;
+
+/** Analog input pin: battery voltage in */
+const AnalogPinT<batteryInPinNo> Pin::batteryVoltageIn;
+
+/** Digital output pin: Buzzer */
+const DOutPinT<buzzerOutPinNo> Pin::buzzerOut;
+
+/******************************************************************************
  * Local Variables
  *****************************************************************************/
 
-const HUB75_I2S_CFG::i2s_pins Display::I2S_PINS = {
-    CONFIG_HUB75_R1_PIN,
-    CONFIG_HUB75_G1_PIN,
-    CONFIG_HUB75_B1_PIN,
-    CONFIG_HUB75_R2_PIN,
-    CONFIG_HUB75_G2_PIN,
-    CONFIG_HUB75_B2_PIN,
-    CONFIG_HUB75_A_PIN,
-    CONFIG_HUB75_B_PIN,
-    CONFIG_HUB75_C_PIN,
-    CONFIG_HUB75_D_PIN,
-    CONFIG_HUB75_E_PIN,
-    CONFIG_HUB75_LAT_PIN,
-    CONFIG_HUB75_OE_PIN,
-    CONFIG_HUB75_CLK_PIN
-};
-
-const HUB75_I2S_CFG Display::MATRIX_CFG = {
-    CONFIG_LED_MATRIX_WIDTH,            /* Panel width */
-    CONFIG_LED_MATRIX_HEIGHT,           /* Panel height */
-    CONFIG_HUB75_CHAIN_LENGTH,          /* Chain length */
-    I2S_PINS,                           /* Pin mapping */
-    CONFIG_HUB75_DRIVER,                /* Driver */
-    CONFIG_HUB75_LINE_DRIVER,           /* Line driver */
-    false,                              /* Use DMA double buffer */
-    HUB75_I2S_CFG::HZ_15M,              /* I2S clock speed */
-    DEFAULT_LAT_BLANKING,               /* How many clock cycles to blank OE before/after LAT signal change. */
-    CONFIG_HUB75_CLOCK_PHASE,           /* Clock phase */
-    72U,                                /* Min. refresh/scan rate */
-    CONFIG_HUB75_PIXEL_COLOR_DEPTH_BITS /* Pixel color depth bits, e.g. 8 bits means 8 bit per color, therefore 24 bit for RGB. */
+/** A list of all used i/o pins, used for initialization. */
+static const IoPin* ioPinList[] = {
+    &Pin::onBoardLedOut,
+    &Pin::buttonOkIn,
+    &Pin::buttonLeftIn,
+    &Pin::buttonRightIn,
+    &Pin::buttonResetIn,
+    &Pin::testPinOut,
+    &Pin::ledMatrixDataOut,
+    &Pin::ldrIn,
+    &Pin::dhtIn,
+    &Pin::batteryVoltageIn,
+    &Pin::buzzerOut
 };
 
 /******************************************************************************
@@ -99,67 +123,26 @@ const HUB75_I2S_CFG Display::MATRIX_CFG = {
  * Private Methods
  *****************************************************************************/
 
-Display::Display() :
-    IDisplay(),
-    m_panel(MATRIX_CFG),
-    m_ledMatrix(),
-    m_isOn(true)
-{
-}
-
-Display::~Display()
-{
-}
-
-void Display::show()
-{
-    if (true == m_isOn)
-    {
-        int16_t y;
-        int16_t x;
-
-        for (y = 0; y < LED_MATRIX_HEIGHT; ++y)
-        {
-            for (x = 0; x < LED_MATRIX_WIDTH; ++x)
-            {
-                Color& color = m_ledMatrix.getColor(x, y);
-
-#if CONFIG_DISPLAY_ROTATE180 != 0
-                m_panel.drawPixelRGB888(
-                    LED_MATRIX_WIDTH - x - 1,
-                    LED_MATRIX_HEIGHT - y - 1,
-                    color.getRed(),
-                    color.getGreen(),
-                    color.getBlue());
-#else
-                m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
-#endif
-            }
-        }
-    }
-}
-
-void Display::off()
-{
-    m_isOn = false;
-
-    /* Simulate powered off display. */
-    m_panel.fillScreen(ColorDef::BLACK);
-}
-
-void Display::on()
-{
-    m_isOn = true;
-}
-
-bool Display::isOn() const
-{
-    return m_isOn;
-}
-
 /******************************************************************************
  * External Functions
  *****************************************************************************/
+
+void Pin::init()
+{
+    uint8_t index = 0U;
+
+    /* Initialize all i/o pins */
+    for (index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
+    {
+        if (nullptr != ioPinList[index])
+        {
+            ioPinList[index]->init();
+        }
+    }
+
+    /* Disable buzzer */
+    buzzerOut.write(LOW);
+}
 
 /******************************************************************************
  * Local Functions

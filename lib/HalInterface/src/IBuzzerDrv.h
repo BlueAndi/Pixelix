@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Board.h
- * @brief  Board abstraction
+ * @file   IBuzzerDrv.h
+ * @brief  Abstract buzzer driver interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,22 +34,17 @@
  * @{
  */
 
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef IBUZZERDRV_H
+#define IBUZZERDRV_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IBoard.h>
-#include <ButtonDrv.h>
-#include <BuzzerDrv.h>
-#include <LedDrv.h>
-#include <SystemDrv.h>
-#include "Pin.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include "Io.hpp"
 
 /******************************************************************************
  * Macros
@@ -60,117 +55,67 @@
  *****************************************************************************/
 
 /**
- * The board abstraction provides access to the hardware of the electronic board.
+ * Abstract buzzer driver interface.
  */
-class Board : public IBoard
+class IBuzzerDrv
 {
 public:
 
     /**
-     * Get the singleton instance of the board abstraction.
-     *
-     * @return Board instance
+     * Destroys BuzzerDrv.
      */
-    static Board& getInstance()
-    {
-        static Board instance; /* idiom */
-
-        return instance;
-    }
-
-    /**
-     * Initialize the board.
-     *
-     * @return If successful initialized it will return true otherwise false.
-     */
-    bool init() override;
-
-    /**
-     * Get the button driver.
-     *
-     * @return Button driver
-     */
-    IButtonDrv& getButtonDrv() override
-    {
-        return m_buttonDrv;
-    }
-
-    /**
-     * Get the buzzer driver.
-     *
-     * @return Buzzer driver
-     */
-    IBuzzerDrv& getBuzzerDrv() override
-    {
-        return m_buzzerDrv;
-    }
-
-    /**
-     * Get the onboard LED driver.
-     *
-     * @return LED driver
-     */
-    ILedDrv& getLedDrv() override
-    {
-        return m_ledDrv;
-    }
-
-    /**
-     * Get the system driver.
-     *
-     * @return System driver
-     */
-    ISystemDrv& getSystemDrv() override
-    {
-        return m_systemDrv;
-    }
-
-    /** ADC resolution in digits */
-    static constexpr uint16_t ADC_RESOLUTION     = 4096U;
-
-    /** ADC reference voltage in mV */
-    static constexpr uint16_t ADC_REF_VOLTAGE    = 3300U;
-
-    /** Pixelix supply voltage in volt */
-    static constexpr uint8_t SUPPLY_VOLTAGE      = 5U;
-
-    /** Pixelix max. supply current in mA */
-    static constexpr uint32_t SUPPLY_CURRENT_MAX = CONFIG_SUPPLY_CURRENT;
-
-private:
-
-    ButtonDrv m_buttonDrv; /**< Button driver */
-    BuzzerDrv m_buzzerDrv; /**< Buzzer driver */
-    LedDrv    m_ledDrv;    /**< Onboard LED driver */
-    SystemDrv m_systemDrv; /**< System driver */
-
-    /**
-     * Constructs the board interface.
-     */
-    Board() :
-        m_buttonDrv(),
-        m_buzzerDrv(),
-        m_ledDrv(),
-        m_systemDrv()
+    virtual ~IBuzzerDrv()
     {
     }
 
     /**
-     * Destroys the board interface.
+     * Initialize the driver.
+     * 
+     * @param[in] buzzerOut  Digital output for buzzer.
      */
-    virtual ~Board()
+    virtual void init(const DOutPin& buzzerOut) = 0;
+
+    /**
+     * Stop playing.
+     */
+    virtual void stop() = 0;
+
+    /**
+     * Play a tone by frequency. Last duty cycle is used.
+     *
+     * @param[in] freq  Frequency in Hz
+     */
+    virtual void play(uint32_t freq) = 0;
+
+    /**
+     * Play a tone by frequency and duty cycle.
+     *
+     * @param[in] freq  Frequency in Hz
+     * @param[in] dc    Duty cycle in digits [0; 1023]
+     */
+    virtual void play(uint32_t freq, uint16_t dc) = 0;
+
+    /**
+     * Change duty cycle.
+     *
+     * @param[in] dc    Duty cycle in digits [0; 1023]
+     */
+    virtual void changeDutyCycle(uint16_t dc) = 0;
+
+protected:
+
+    /**
+     * Construct BuzzerDrv.
+     */
+    IBuzzerDrv()
     {
     }
 };
 
 /******************************************************************************
- * Variables
- *****************************************************************************/
-
-/******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* BOARD_H */
+#endif /* IBUZZERDRV_H */
 
 /** @} */

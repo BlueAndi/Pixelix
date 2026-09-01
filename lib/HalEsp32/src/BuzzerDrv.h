@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   IDisplay.hpp
- * @brief  Display interface
+ * @file   BuzzerDrv.h
+ * @brief  Buzzer driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef DISPLAY_HPP
-#define DISPLAY_HPP
+#ifndef BUZZERDRV_H
+#define BUZZERDRV_H
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <YAGfx.h>
+#include <IBuzzerDrv.h>
+#include <Io.hpp>
 
 /******************************************************************************
  * Macros
@@ -55,87 +56,102 @@
  *****************************************************************************/
 
 /**
- * The display interface combines the graphic interfaces and the additional
- * interfaces to control the underlying physical display.
+ * Buzzer driver.
  */
-class IDisplay : public YAGfx
+class BuzzerDrv : public IBuzzerDrv
 {
 public:
 
     /**
-     * Destroys the display interface.
+     * Construct BuzzerDrv.
      */
-    virtual ~IDisplay()
+    BuzzerDrv() :
+        m_isInit(false),
+        m_dutyCycle(DEFAULT_DUTY_CYCLE),
+        m_buzzerOut(nullptr)
     {
     }
 
     /**
-     * Initialize base driver for the display.
-     *
-     * @return If successful, returns true otherwise false.
+     * Destroys BuzzerDrv.
      */
-    virtual bool begin()                           = 0;
-
-    /**
-     * Show framebuffer on physical display. This may be synchronous
-     * or asynchronous.
-     */
-    virtual void show()                            = 0;
-
-    /**
-     * The display is ready, when the last physical pixel update is finished.
-     * A asynchronous display update, triggered by show() can be observed this way.
-     *
-     * @return If ready for another update via show(), it will return true otherwise false.
-     */
-    virtual bool isReady() const                   = 0;
-
-    /**
-     * Set brightness from 0 to 255.
-     *
-     * @param[in] brightness    Brightness value [0; 255]
-     */
-    virtual void setBrightness(uint8_t brightness) = 0;
-
-    /**
-     * Clear display.
-     */
-    virtual void clear()                           = 0;
-
-    /**
-     * Power display off.
-     */
-    virtual void off()                             = 0;
-
-    /**
-     * Power display on.
-     */
-    virtual void on()                              = 0;
-
-    /**
-     * Is display powered on?
-     *
-     * @return If display is powered on, it will return true otherwise false.
-     */
-    virtual bool isOn() const                      = 0;
-
-protected:
-
-    /**
-     * Constructs the display interface.
-     */
-    IDisplay() :
-        YAGfx()
+    virtual ~BuzzerDrv()
     {
     }
+
+    /**
+     * Initialize the driver.
+     *
+     * @param[in] buzzerOut  Digital output for buzzer.
+     */
+    void init(const DOutPin& buzzerOut) override
+    {
+        m_buzzerOut = &buzzerOut;
+    }
+
+    /**
+     * Stop playing.
+     */
+    void stop() override;
+
+    /**
+     * Play a tone by frequency. Last duty cycle is used.
+     *
+     * @param[in] freq  Frequency in Hz
+     */
+    void play(uint32_t freq) override;
+
+    /**
+     * Play a tone by frequency and duty cycle.
+     *
+     * @param[in] freq  Frequency in Hz
+     * @param[in] dc    Duty cycle in digits [0; 1023]
+     */
+    void play(uint32_t freq, uint16_t dc) override;
+
+    /**
+     * Change duty cycle.
+     *
+     * @param[in] dc    Duty cycle in digits [0; 1023]
+     */
+    void changeDutyCycle(uint16_t dc) override;
 
 private:
+
+    /**
+     * The PWM channel which to use for the tone generation.
+     */
+    static const uint8_t TONE_PWM_CHANNEL           = 0U;
+
+    /**
+     * Frequency in Hz used to initialize the PWM. Has no influence on a tone.
+     * Its just required for initialization.
+     */
+    static const uint32_t INIT_FREQUENCY            = 1000U;
+
+    /**
+     * Number of bits used for the duty cycle.
+     */
+    static const uint8_t DUTY_CYCLE_RESOLUTION_BITS = 10U;
+
+    /**
+     * Default duty cycle in digits [0; 1023] set to 25 %.
+     */
+    static const uint32_t DEFAULT_DUTY_CYCLE        = 0x00FF;
+
+    uint8_t               m_isInit;    /**< Is initialized or not? */
+    uint32_t              m_dutyCycle; /**< Duty cycle in digits [0; 1023] */
+    const DOutPin*        m_buzzerOut; /**< Digital output for buzzer */
+
+    /* Prevent copying */
+    BuzzerDrv(const BuzzerDrv&);
+    BuzzerDrv& operator=(const BuzzerDrv&);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* DISPLAY_HPP */
+#endif /* BUZZERDRV_H */
 
 /** @} */

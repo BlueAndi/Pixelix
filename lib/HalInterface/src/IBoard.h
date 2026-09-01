@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Board.h
- * @brief  Board abstraction
+ * @file   IBoard.h
+ * @brief  Abstract board interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,18 +34,16 @@
  * @{
  */
 
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef IBOARD_H
+#define IBOARD_H
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IBoard.h>
-#include <ButtonDrv.h>
-#include <BuzzerDrv.h>
-#include <LedDrv.h>
-#include <SystemDrv.h>
-#include "Pin.h"
+#include "IButtonDrv.h"
+#include "IBuzzerDrv.h"
+#include "ILedDrv.h"
+#include "ISystemDrv.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -60,112 +58,60 @@
  *****************************************************************************/
 
 /**
- * The board abstraction provides access to the hardware of the electronic board.
+ * Abstract board interface.
  */
-class Board : public IBoard
+class IBoard
 {
 public:
 
     /**
-     * Get the singleton instance of the board abstraction.
-     *
-     * @return Board instance
+     * Destroys the board interface.
      */
-    static Board& getInstance()
+    virtual ~IBoard()
     {
-        static Board instance; /* idiom */
-
-        return instance;
     }
 
     /**
      * Initialize the board.
-     *
+     * 
      * @return If successful initialized it will return true otherwise false.
      */
-    bool init() override;
+    virtual bool init()                = 0;
 
     /**
      * Get the button driver.
      *
      * @return Button driver
      */
-    IButtonDrv& getButtonDrv() override
-    {
-        return m_buttonDrv;
-    }
+    virtual IButtonDrv& getButtonDrv() = 0;
 
     /**
      * Get the buzzer driver.
      *
      * @return Buzzer driver
      */
-    IBuzzerDrv& getBuzzerDrv() override
-    {
-        return m_buzzerDrv;
-    }
+    virtual IBuzzerDrv& getBuzzerDrv() = 0;
 
     /**
      * Get the onboard LED driver.
      *
      * @return LED driver
      */
-    ILedDrv& getLedDrv() override
-    {
-        return m_ledDrv;
-    }
+    virtual ILedDrv& getLedDrv()       = 0;
 
     /**
      * Get the system driver.
      *
      * @return System driver
      */
-    ISystemDrv& getSystemDrv() override
-    {
-        return m_systemDrv;
-    }
+    virtual ISystemDrv& getSystemDrv() = 0;
 
-    /**
-     * Get the TFT backlight control pin.
-     *
-     * @return TFT backlight control pin
-     */
-    const DOutPinT<PinNo::tftBackLightPinNo>& getTftBackLightOut() const
-    {
-        return Pin::tftBackLightOut;
-    }
-
-    /** ADC resolution in digits */
-    static constexpr uint16_t ADC_RESOLUTION     = 4096U;
-
-    /** ADC reference voltage in mV */
-    static constexpr uint16_t ADC_REF_VOLTAGE    = 3300U;
-
-    /** Pixelix supply voltage in volt */
-    static constexpr uint8_t SUPPLY_VOLTAGE      = 5U;
-
-private:
-
-    ButtonDrv m_buttonDrv; /**< Button driver */
-    BuzzerDrv m_buzzerDrv; /**< Buzzer driver */
-    LedDrv    m_ledDrv;    /**< Onboard LED driver */
-    SystemDrv m_systemDrv; /**< System driver */
+protected:
 
     /**
      * Constructs the board interface.
      */
-    Board() :
-        m_buttonDrv(),
-        m_buzzerDrv(),
-        m_ledDrv(),
-        m_systemDrv()
-    {
-    }
-
-    /**
-     * Destroys the board interface.
-     */
-    virtual ~Board()
+    IBoard()
     {
     }
 };
@@ -178,6 +124,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif /* BOARD_H */
+#endif /* IBOARD_H */
 
 /** @} */

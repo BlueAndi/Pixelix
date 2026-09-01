@@ -38,6 +38,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Board.h>
+#include <Pin.h>
 #include <Display.h>
 #include <SensorDataProvider.h>
 #include <Wire.h>
@@ -110,13 +111,12 @@ static const char WELCOME_PLUGIN_TYPE[] = "IconTextPlugin";
 
 void InitState::entry(StateMachine& sm)
 {
-    bool                isError  = false;
-    ErrorState::ErrorId errorId  = ErrorState::ERROR_ID_UNKNOWN;
-    SettingsService&    settings = SettingsService::getInstance();
+    bool                isError   = false;
+    Board&              board     = Board::getInstance();
+    IButtonDrv&         buttonDrv = board.getButtonDrv();
+    ErrorState::ErrorId errorId   = ErrorState::ERROR_ID_UNKNOWN;
+    SettingsService&    settings  = SettingsService::getInstance();
     String              uniqueId;
-
-    /* Initialize hardware */
-    Board::init();
 
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
@@ -126,8 +126,15 @@ void InitState::entry(StateMachine& sm)
     settings.getWifiApSSID().setUniqueId(uniqueId);
     settings.getHostname().setUniqueId(uniqueId);
 
+    /* Initialize hardware */
+    if (false == Board::getInstance().init())
+    {
+        LOG_FATAL("Couldn't initialize board.");
+        errorId = ErrorState::ERROR_ID_BOARD;
+        isError = true;
+    }
     /* Set two-wire (I2C) pins, before calling begin(). */
-    if (false == Wire.setPins(Board::Pin::i2cSdaPinNo, Board::Pin::i2cSclPinNo))
+    else if (false == Wire.setPins(PinNo::i2cSdaPinNo, PinNo::i2cSclPinNo))
     {
         LOG_FATAL("Couldn't set two-wire pins.");
         errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
@@ -138,13 +145,6 @@ void InitState::entry(StateMachine& sm)
     {
         LOG_FATAL("Couldn't initialize two-wire.");
         errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
-        isError = true;
-    }
-    /* Initialize button driver */
-    else if (false == ButtonDrv::getInstance().init())
-    {
-        LOG_FATAL("Couldn't initialize button driver.");
-        errorId = ErrorState::ERROR_ID_NO_USER_BUTTON;
         isError = true;
     }
     /* Mounting the filesystem. */
@@ -289,12 +289,14 @@ void InitState::entry(StateMachine& sm)
 
 void InitState::process(StateMachine& sm)
 {
+    Board&      board       = Board::getInstance();
+    IButtonDrv& buttonDrv   = board.getButtonDrv();
     ButtonState buttonState = BUTTON_STATE_RELEASED;
 
     /* Check all buttons to detect a user AP mode request during startup. */
     for (uint8_t btnId = BUTTON_ID_OK; btnId < BUTTON_ID_CNT; ++btnId)
     {
-        if (BUTTON_STATE_PRESSED == ButtonDrv::getInstance().getState(static_cast<ButtonId>(btnId)))
+        if (BUTTON_STATE_PRESSED == buttonDrv.getState(static_cast<ButtonId>(btnId)))
         {
             buttonState = BUTTON_STATE_PRESSED;
             break;

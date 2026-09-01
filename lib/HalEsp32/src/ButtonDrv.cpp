@@ -35,7 +35,6 @@
  *****************************************************************************/
 #include "ButtonDrv.h"
 
-#include <Board.h>
 #include <Logging.h>
 #include <esp_sleep.h>
 
@@ -60,12 +59,6 @@ static void IRAM_ATTR isrButton(void* arg);
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-const IoPin* ButtonDrv::BUTTON_PIN[BUTTON_ID_CNT] = {
-    &Board::buttonOkIn,
-    &Board::buttonLeftIn,
-    &Board::buttonRightIn
-};
 
 /**
  * If a button is triggered, the ISR will set it to true.
@@ -92,14 +85,65 @@ static QueueHandle_t gxQueue     = nullptr;
  * Public Methods
  *****************************************************************************/
 
-bool ButtonDrv::init()
+/**
+ * Constructs the button driver instance.
+ */
+ButtonDrv::ButtonDrv() :
+    m_buttonTask("buttonTask", buttonTask, BUTTON_TASK_STACKE_SIZE, BUTTON_TASK_PRIORITY, BUTTON_TASK_RUN_CORE),
+    m_xSemaphore(nullptr),
+    m_state(),
+    m_timer(),
+    m_observer(nullptr),
+    m_buttonPin{ nullptr, nullptr, nullptr }
 {
-    bool isSuccessful = true;
+}
+
+/**
+ * Destroys the button driver instance.
+ */
+ButtonDrv::~ButtonDrv()
+{
+    if (nullptr != m_xSemaphore)
+    {
+        vSemaphoreDelete(m_xSemaphore);
+        m_xSemaphore = nullptr;
+    }
+}
+
+bool ButtonDrv::init(const DInPin& buttonOkIn, const DInPin& buttonLeftIn, const DInPin& buttonRightIn)
+{
+    bool    isSuccessful         = true;
+    uint8_t buttonIdx            = 0U;
+
+    m_buttonPin[BUTTON_ID_OK]    = &buttonOkIn;
+    m_buttonPin[BUTTON_ID_LEFT]  = &buttonLeftIn;
+    m_buttonPin[BUTTON_ID_RIGHT] = &buttonRightIn;
+
+    while (BUTTON_ID_CNT > buttonIdx)
+    {
+        /* No pin connected? */
+        if (IoPin::NC == m_buttonPin[buttonIdx]->getPinNo())
+        {
+            m_state[buttonIdx] = BUTTON_STATE_NC;
+        }
+        /* Interrupt can not be attached to pin? */
+        else if (NOT_AN_INTERRUPT == digitalPinToInterrupt(m_buttonPin[buttonIdx]->getPinNo()))
+        {
+            m_state[buttonIdx] = BUTTON_STATE_NC;
+        }
+        /* Configured pin is ok. */
+        else
+        {
+            m_state[buttonIdx] = BUTTON_STATE_UNKNOWN;
+        }
+
+        ++buttonIdx;
+    }
 
     /* Create semaphore to protect the button trigger array, which is accessed
      * by the task and the ISR.
      */
-    gxQueue           = xQueueCreate(QUEUE_SIZE, sizeof(ButtonId));
+    gxQueue = xQueueCreate(QUEUE_SIZE, sizeof(ButtonId));
 
     if (nullptr == gxQueue)
     {
@@ -208,9 +252,9 @@ bool ButtonDrv::enableWakeUpSources()
     bool    allButtonsReleased = true;
 
     /* Ensure that no button is pressed anymore. */
-    while (BUTTON_ID_CNT > buttonIdx)
+    while ((BUTTON_ID_CNT > buttonIdx) && (nullptr != m_buttonPin[buttonIdx]))
     {
-        uint8_t pinNo = BUTTON_PIN[buttonIdx]->getPinNo();
+        uint8_t pinNo = m_buttonPin[buttonIdx]->getPinNo();
 
         if (IoPin::NC != pinNo)
         {
@@ -229,9 +273,9 @@ bool ButtonDrv::enableWakeUpSources()
     if (true == allButtonsReleased)
     {
         /* Use all available buttons as wakeup sources. */
-        while (BUTTON_ID_CNT > buttonIdx)
+        while ((BUTTON_ID_CNT > buttonIdx) && (nullptr != m_buttonPin[buttonIdx]))
         {
-            uint8_t pinNo = BUTTON_PIN[buttonIdx]->getPinNo();
+            uint8_t pinNo = m_buttonPin[buttonIdx]->getPinNo();
 
             if (IoPin::NC != pinNo)
             {
@@ -271,11 +315,11 @@ void ButtonDrv::attachButtonsToInterrupt()
      */
     while (BUTTON_ID_CNT > buttonIdx)
     {
-        if (IoPin::NC != BUTTON_PIN[buttonIdx]->getPinNo())
+        if (IoPin::NC != m_buttonPin[buttonIdx]->getPinNo())
         {
-            attachInterruptArg(BUTTON_PIN[buttonIdx]->getPinNo(),
+            attachInterruptArg(m_buttonPin[buttonIdx]->getPinNo(),
                 isrButton,
-                &gButtonId[buttonIdx],
+                &m_buttonPin[buttonIdx],
                 CHANGE);
 
             /* Start the debouncing to get a stable initial button state. */
@@ -335,15 +379,15 @@ void ButtonDrv::buttonTaskMainLoop()
             switch (buttonIdx)
             {
             case BUTTON_ID_OK:
-                buttonValue = Board::buttonOkIn.read();
+                buttonValue = m_buttonPin[buttonIdx]->read();
                 break;
 
             case BUTTON_ID_LEFT:
-                buttonValue = Board::buttonLeftIn.read();
+                buttonValue = m_buttonPin[buttonIdx]->read();
                 break;
 
             case BUTTON_ID_RIGHT:
-                buttonValue = Board::buttonRightIn.read();
+                buttonValue = m_buttonPin[buttonIdx]->read();
                 break;
 
             default:

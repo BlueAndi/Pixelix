@@ -119,12 +119,12 @@ void Display::off()
 #if (LOW == TFT_BACKLIGHT_ON)
 
     /* Turn off the back-light LED */
-    Board::tftBackLightOut.write(HIGH);
+    Board::getInstance().getTftBackLightOut().write(HIGH);
 
 #else /* (LOW == TFT_BACKLIGHT_ON) */
 
     /* Turn off the back-light LED */
-    Board::tftBackLightOut.write(LOW);
+    Board::getInstance().getTftBackLightOut().write(LOW);
 
 #endif /* (LOW == TFT_BACKLIGHT_ON) */
 
@@ -140,7 +140,7 @@ void Display::on()
 #if defined(TFT_BL) && defined(TFT_BACKLIGHT_ON)
 
     /* Turn off the back-light LED */
-    Board::tftBackLightOut.write(TFT_BACKLIGHT_ON);
+    Board::getInstance().getTftBackLightOut().write(TFT_BACKLIGHT_ON);
 
 #endif /* defined (TFT_BL) && defined (TFT_BACKLIGHT_ON) */
 

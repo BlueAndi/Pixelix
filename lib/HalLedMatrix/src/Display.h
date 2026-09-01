@@ -45,11 +45,10 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IDisplay.hpp>
+#include <IDisplay.h>
 #include <NeoPixelBusLg.h>
 #include <ColorDef.hpp>
 #include <YAGfxBitmap.h>
-
 #include "Board.h"
 
 /******************************************************************************
@@ -120,8 +119,8 @@ public:
          * according to the max. supply current.
          */
         const uint8_t SAFE_LUMINANCE =
-            (Board::LedMatrix::supplyCurrentMax * brightness) /
-            (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width * Board::LedMatrix::height);
+            (Board::SUPPLY_CURRENT_MAX * brightness) /
+            (MAX_CURRENT_PER_LED * LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT);
 
         m_strip.SetLuminance(SAFE_LUMINANCE);
     }
@@ -276,6 +275,15 @@ public:
 
 private:
 
+    /** LED matrix width in pixels */
+    static constexpr uint8_t LED_MATRIX_WIDTH     = CONFIG_LED_MATRIX_WIDTH;
+
+    /** LED matrix height in pixels */
+    static constexpr uint8_t LED_MATRIX_HEIGHT    = CONFIG_LED_MATRIX_HEIGHT;
+
+    /** Max. current in mA per LED */
+    static constexpr uint32_t MAX_CURRENT_PER_LED = 60U;
+
     /**
      * Pixel representation of the LED matrix. Gamma correction disabled.
      */
@@ -288,7 +296,7 @@ private:
      * The LED matrix framebuffer.
      * This is the drawback for the direct color manipulation via getColor().
      */
-    YAGfxStaticBitmap<Board::LedMatrix::width, Board::LedMatrix::height> m_ledMatrix;
+    YAGfxStaticBitmap<LED_MATRIX_WIDTH, LED_MATRIX_HEIGHT> m_ledMatrix;
 
     /**
      * Is display on?

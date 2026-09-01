@@ -36,7 +36,6 @@
 #include "ErrorState.h"
 #include "Services.h"
 #include "DisplayMgr.h"
-#include "ButtonDrv.h"
 #include "RestartMgr.h"
 
 #include <Logging.h>
@@ -80,7 +79,7 @@ void ErrorState::entry(StateMachine& sm)
     LOG_INFO("Going in error state.");
 
     m_timer.start(BLINK_ON_PERIOD);
-    Board::ledOn();
+    Board::getInstance().getLedDrv().on();
     m_cnt = 0U;
 
     /* Disconnect wifi connection to avoid any further external request. */
@@ -143,10 +142,14 @@ void ErrorState::entry(StateMachine& sm)
 
 void ErrorState::process(StateMachine& sm)
 {
+    Board&      board     = Board::getInstance();
+    IButtonDrv& buttonDrv = board.getButtonDrv();
+    ILedDrv&    ledDrv    = board.getLedDrv();
+
     /* If any button is pressed, jump to the PixelixUpdater. */
     for (uint8_t btnId = BUTTON_ID_OK; btnId < BUTTON_ID_CNT; ++btnId)
     {
-        if (BUTTON_STATE_PRESSED == ButtonDrv::getInstance().getState(static_cast<ButtonId>(btnId)))
+        if (BUTTON_STATE_PRESSED == buttonDrv.getState(static_cast<ButtonId>(btnId)))
         {
             (void)RestartMgr::getInstance().reqRestart(0U, true);
             break;
@@ -159,14 +162,14 @@ void ErrorState::process(StateMachine& sm)
      */
     if (true == m_timer.isTimeout())
     {
-        if (false == Board::isLedOn())
+        if (false == ledDrv.isOn())
         {
-            Board::ledOn();
+            ledDrv.on();
             m_timer.start(BLINK_ON_PERIOD);
         }
         else
         {
-            Board::ledOff();
+            ledDrv.off();
 
             if (ERROR_ID_NO_ERROR == m_errorId)
             {

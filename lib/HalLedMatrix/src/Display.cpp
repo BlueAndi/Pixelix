@@ -34,6 +34,7 @@
  * Includes
  *****************************************************************************/
 #include "Display.h"
+#include "Pin.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -69,8 +70,8 @@
 
 Display::Display() :
     IDisplay(),
-    m_strip(Board::LedMatrix::width * Board::LedMatrix::height, Board::Pin::ledMatrixDataOutPinNo),
-    m_topo(Board::LedMatrix::width, Board::LedMatrix::height),
+    m_strip(LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT, PinNo::ledMatrixDataOutPinNo),
+    m_topo(LED_MATRIX_WIDTH, LED_MATRIX_HEIGHT),
     m_ledMatrix(),
     m_isOn(true)
 {

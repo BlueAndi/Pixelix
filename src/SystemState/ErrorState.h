@@ -106,8 +106,8 @@ public:
     {
         ERROR_ID_NO_ERROR = 0,   /**< No error */
         ERROR_ID_UNKNOWN,        /**< Unknown error */
+        ERROR_ID_BOARD,          /**< Board initialization error */
         ERROR_ID_TWO_WIRE_ERROR, /**< Two-wire (I2C) error */
-        ERROR_ID_NO_USER_BUTTON, /**< User button is not available */
         ERROR_ID_BAD_FS,         /**< Bad filesystem */
         ERROR_ID_DISP_MGR,       /**< Display manager error */
         ERROR_ID_SYS_MSG,        /**< System message handler error */

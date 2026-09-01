@@ -49,7 +49,6 @@
 #include <SimpleTimer.hpp>
 #include <DisplayMgr.h>
 
-#include "ButtonDrv.h"
 #include "ButtonHandler.hpp"
 #include "OneButtonCtrl.hpp"
 #include "TwoButtonCtrl.hpp"
@@ -235,7 +234,7 @@ void setup()
     /* Observe button state changes and derrive actions.
      * Do this after init state!
      */
-    ButtonDrv::getInstance().registerObserver(gButtonHandler);
+    Board::getInstance().getButtonDrv().registerObserver(gButtonHandler);
 
     /* Initialize task watchdog. */
     (void)esp_task_wdt_init(TASK_WDT_TIMEOUT_S, true);

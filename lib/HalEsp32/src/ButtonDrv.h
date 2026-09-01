@@ -40,7 +40,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Arduino.h"
+#include <IButtonDrv.h>
 #include <SimpleTimer.hpp>
 #include <Io.hpp>
 #include <Task.hpp>
@@ -58,86 +58,32 @@
  *****************************************************************************/
 
 /**
- * Button id
- */
-typedef enum
-{
-    BUTTON_ID_OK = 0, /**< Button "ok" */
-    BUTTON_ID_LEFT,   /**< Button "left "*/
-    BUTTON_ID_RIGHT,  /**< Button "right" */
-    BUTTON_ID_CNT     /**< Number of buttons */
-
-} ButtonId;
-
-/**
- * Button states
- */
-typedef enum
-{
-    BUTTON_STATE_NC = 0,   /**< Button is not connected. */
-    BUTTON_STATE_UNKNOWN,  /**< Button state is unknown yet. */
-    BUTTON_STATE_RELEASED, /**< Button is released. */
-    BUTTON_STATE_PRESSED   /**< Button is pressed. */
-
-} ButtonState;
-
-/**
- * Abstract interface for a button observer.
- */
-class IButtonObserver
-{
-public:
-
-    /**
-     * Destroys the button observer interface.
-     */
-    virtual ~IButtonObserver()
-    {
-    }
-
-    /**
-     * Notify the observer about the new button state.
-     *
-     * @param[in] buttonId  The id of the related button.
-     * @param[in] state     New button state of the button.
-     */
-    virtual void notify(ButtonId buttonId, ButtonState state) = 0;
-
-protected:
-
-    /**
-     * Creates the button observer interface.
-     */
-    IButtonObserver()
-    {
-    }
-};
-
-/**
  * Button driver.
  */
-class ButtonDrv
+class ButtonDrv : public IButtonDrv
 {
 public:
 
     /**
-     * Get the button driver instance.
-     *
-     * @return Button driver instance.
+     * Constructs the button driver instance.
      */
-    static ButtonDrv& getInstance()
-    {
-        static ButtonDrv instance; /* singleton idiom to force initialization in the first usage. */
+    ButtonDrv();
 
-        return instance;
-    }
+    /**
+     * Destroys the button driver instance.
+     */
+    virtual ~ButtonDrv();
 
     /**
      * Initialize the driver.
      *
+     * @param[in] buttonOkIn    Digital input for button "ok".
+     * @param[in] buttonLeftIn  Digital input for button "left".
+     * @param[in] buttonRightIn Digital input for button "right".
+     *
      * @return If successful initialized it will return true otherwise false.
      */
-    bool init();
+    bool init(const DInPin& buttonOkIn, const DInPin& buttonLeftIn, const DInPin& buttonRightIn) override;
 
     /**
      * Get button state.
@@ -146,7 +92,7 @@ public:
      *
      * @return Button state
      */
-    ButtonState getState(ButtonId buttonId);
+    ButtonState getState(ButtonId buttonId) override;
 
     /**
      * Register an observer to get notifyed about button
@@ -154,12 +100,12 @@ public:
      *
      * @param[in] observer  The button observer
      */
-    void registerObserver(IButtonObserver& observer);
+    void registerObserver(IButtonObserver& observer) override;
 
     /**
      * Unregister the current observer.
      */
-    void unregisterObserver();
+    void unregisterObserver() override;
 
     /**
      * Enable all buttons as wakeup sources.
@@ -171,25 +117,21 @@ public:
      *          wakeup sources are not enabled. Otherwise it will return true
      *          and the wakeup sources are enabled.
      */
-    bool enableWakeUpSources();
+    bool enableWakeUpSources() override;
 
 private:
-
-    /**
-     * The digital input buttons.
-     */
-    static const IoPin* BUTTON_PIN[BUTTON_ID_CNT];
 
     /**
      * Debouncing time in ms.
      */
     static const uint32_t DEBOUNCING_TIME = 100U;
 
-    Task<ButtonDrv>       m_buttonTask;           /**< Button task. */
-    SemaphoreHandle_t     m_xSemaphore;           /**< Semaphore to protect button state member. */
-    ButtonState           m_state[BUTTON_ID_CNT]; /**< Current button states */
-    SimpleTimer           m_timer[BUTTON_ID_CNT]; /**< Timer used for debouncing */
-    IButtonObserver*      m_observer;             /**< Observer for button state changes */
+    Task<ButtonDrv>       m_buttonTask;               /**< Button task. */
+    SemaphoreHandle_t     m_xSemaphore;               /**< Semaphore to protect button state member. */
+    ButtonState           m_state[BUTTON_ID_CNT];     /**< Current button states */
+    SimpleTimer           m_timer[BUTTON_ID_CNT];     /**< Timer used for debouncing */
+    IButtonObserver*      m_observer;                 /**< Observer for button state changes */
+    const DInPin*         m_buttonPin[BUTTON_ID_CNT]; /**< Digital input buttons */
 
     /** Button task stack size in bytes. */
     static const uint32_t BUTTON_TASK_STACKE_SIZE = 1536U;
@@ -206,49 +148,7 @@ private:
     /** Button debouncing time in ms. */
     static const uint32_t BUTTON_DEBOUNCE_TIME    = 100U;
 
-    /**
-     * Constructs the button driver instance.
-     */
-    ButtonDrv() :
-        m_buttonTask("buttonTask", buttonTask, BUTTON_TASK_STACKE_SIZE, BUTTON_TASK_PRIORITY, BUTTON_TASK_RUN_CORE),
-        m_xSemaphore(nullptr),
-        m_state(),
-        m_timer(),
-        m_observer(nullptr)
-    {
-        uint8_t buttonIdx = 0U;
-
-        while (BUTTON_ID_CNT > buttonIdx)
-        {
-            /* No pin connected? */
-            if (IoPin::NC == BUTTON_PIN[buttonIdx]->getPinNo())
-            {
-                m_state[buttonIdx] = BUTTON_STATE_NC;
-            }
-            /* Interrupt can not be attached to pin? */
-            else if (NOT_AN_INTERRUPT == digitalPinToInterrupt(BUTTON_PIN[buttonIdx]->getPinNo()))
-            {
-                m_state[buttonIdx] = BUTTON_STATE_NC;
-            }
-            /* Configured pin is ok. */
-            else
-            {
-                m_state[buttonIdx] = BUTTON_STATE_UNKNOWN;
-            }
-
-            ++buttonIdx;
-        }
-    }
-
-    /**
-     * Destroys the button driver instance.
-     */
-    ~ButtonDrv()
-    {
-        /* Never called. */
-    }
-
-    /* Singleton */
+    /* Not allowed to be copied. */
     ButtonDrv(const ButtonDrv& drv);
     ButtonDrv& operator=(const ButtonDrv& drv);
 

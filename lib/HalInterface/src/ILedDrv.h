@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Board.h
- * @brief  Board abstraction
+ * @file   ILedDrv.h
+ * @brief  Abstract LED driver interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,18 +34,13 @@
  * @{
  */
 
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef ILEDDRIVER_H
+#define ILEDDRIVER_H
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IBoard.h>
-#include <ButtonDrv.h>
-#include <BuzzerDrv.h>
-#include <LedDrv.h>
-#include <SystemDrv.h>
-#include "Pin.h"
+#include <Io.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,113 +54,47 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * The board abstraction provides access to the hardware of the electronic board.
- */
-class Board : public IBoard
+class ILedDrv
 {
 public:
 
     /**
-     * Get the singleton instance of the board abstraction.
-     *
-     * @return Board instance
+     * Destroys the LED driver interface.
      */
-    static Board& getInstance()
-    {
-        static Board instance; /* idiom */
-
-        return instance;
-    }
-
-    /**
-     * Initialize the board.
-     *
-     * @return If successful initialized it will return true otherwise false.
-     */
-    bool init() override;
-
-    /**
-     * Get the button driver.
-     *
-     * @return Button driver
-     */
-    IButtonDrv& getButtonDrv() override
-    {
-        return m_buttonDrv;
-    }
-
-    /**
-     * Get the buzzer driver.
-     *
-     * @return Buzzer driver
-     */
-    IBuzzerDrv& getBuzzerDrv() override
-    {
-        return m_buzzerDrv;
-    }
-
-    /**
-     * Get the onboard LED driver.
-     *
-     * @return LED driver
-     */
-    ILedDrv& getLedDrv() override
-    {
-        return m_ledDrv;
-    }
-
-    /**
-     * Get the system driver.
-     *
-     * @return System driver
-     */
-    ISystemDrv& getSystemDrv() override
-    {
-        return m_systemDrv;
-    }
-
-    /**
-     * Get the TFT backlight control pin.
-     *
-     * @return TFT backlight control pin
-     */
-    const DOutPinT<PinNo::tftBackLightPinNo>& getTftBackLightOut() const
-    {
-        return Pin::tftBackLightOut;
-    }
-
-    /** ADC resolution in digits */
-    static constexpr uint16_t ADC_RESOLUTION     = 4096U;
-
-    /** ADC reference voltage in mV */
-    static constexpr uint16_t ADC_REF_VOLTAGE    = 3300U;
-
-    /** Pixelix supply voltage in volt */
-    static constexpr uint8_t SUPPLY_VOLTAGE      = 5U;
-
-private:
-
-    ButtonDrv m_buttonDrv; /**< Button driver */
-    BuzzerDrv m_buzzerDrv; /**< Buzzer driver */
-    LedDrv    m_ledDrv;    /**< Onboard LED driver */
-    SystemDrv m_systemDrv; /**< System driver */
-
-    /**
-     * Constructs the board interface.
-     */
-    Board() :
-        m_buttonDrv(),
-        m_buzzerDrv(),
-        m_ledDrv(),
-        m_systemDrv()
+    virtual ~ILedDrv()
     {
     }
 
     /**
-     * Destroys the board interface.
+     * Initialize the driver.
+     * 
+     * @param[in] pin Digital output pin to switch the LED on/off.
      */
-    virtual ~Board()
+    virtual void init(const DOutPin& pin) = 0;
+
+    /**
+     * Switch LED on.
+     */
+    virtual void on() = 0;
+
+    /**
+     * Switch LED off.
+     */
+    virtual void off() = 0;
+
+    /**
+     * Is the LED on?
+     *
+     * @return If LED is on, it will return true otherwise false.
+     */
+    virtual bool isOn() = 0;
+
+protected:
+
+    /**
+     * Constructs the LED driver interface.
+     */
+    ILedDrv()
     {
     }
 };
@@ -178,6 +107,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif /* BOARD_H */
+#endif /* ILEDDRIVER_H */
 
 /** @} */

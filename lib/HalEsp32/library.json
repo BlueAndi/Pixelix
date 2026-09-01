@@ -1,7 +1,7 @@
 {
-    "name": "HalLedMatrix",
+    "name": "HalEsp32",
     "version": "0.1.0",
-    "description": "HAL for WS2812 (NeoPixel) LED matrix.",
+    "description": "HAL for ESP32 platform specific drivers.",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -14,11 +14,9 @@
     }, {
         "name": "HalInterface"
     }, {
-        "name": "YAGfx"
+        "name": "Logging"
     }, {
-        "owner": "makuna",
-        "name": "NeoPixelBus",
-        "version": "~2.8.4"
+        "name": "Os"
     }, {
         "name": "Utilities"
     }],

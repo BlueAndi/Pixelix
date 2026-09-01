@@ -34,7 +34,7 @@
  * Includes
  *****************************************************************************/
 #include "RTTTL.h"
-#include <BuzzerDrv.h>
+#include <Board.h>
 #include <cctype>
 
 /******************************************************************************
@@ -126,7 +126,9 @@ void RTTTL::loadMelody(const char* melody, uint8_t volume)
 {
     if (nullptr != melody)
     {
-        uint32_t number;
+        Board&      board     = Board::getInstance();
+        IBuzzerDrv& buzzerDrv = board.getBuzzerDrv();
+        uint32_t    number;
 
         m_melody          = melody;
         m_defaultDuration = DEFAULT_DURATION;
@@ -137,7 +139,7 @@ void RTTTL::loadMelody(const char* melody, uint8_t volume)
         m_isPlaying       = true;
 
         /* Stop current note. */
-        BuzzerDrv::getInstance().stop();
+        buzzerDrv.stop();
 
         /* Format: d=N,o=N,b=NNN: */
 
@@ -234,7 +236,10 @@ void RTTTL::stop()
 {
     if (true == m_isPlaying)
     {
-        BuzzerDrv::getInstance().stop();
+        Board&      board     = Board::getInstance();
+        IBuzzerDrv& buzzerDrv = board.getBuzzerDrv();
+
+        buzzerDrv.stop();
 
         m_melody    = nullptr;
         m_isPlaying = false;
@@ -282,13 +287,15 @@ uint32_t RTTTL::getNumber(const char* str, const char** remaining)
 
 void RTTTL::nextNote()
 {
-    uint32_t duration;
-    uint8_t  noteOffset;
-    uint32_t scale;
-    uint32_t number;
+    Board&      board     = Board::getInstance();
+    IBuzzerDrv& buzzerDrv = board.getBuzzerDrv();
+    uint32_t    duration;
+    uint8_t     noteOffset;
+    uint32_t    scale;
+    uint32_t    number;
 
     /* Stop current note */
-    BuzzerDrv::getInstance().stop();
+    buzzerDrv.stop();
 
     /* First, get note duration, if available. */
     number = getNumber(m_melody, &m_melody);
@@ -351,7 +358,7 @@ void RTTTL::nextNote()
         uint32_t freq         = NOTES[octaveOffset + noteOffset];                       /* [Hz] */
         uint16_t dc           = MAX_DUTY_CYCLE * static_cast<uint16_t>(m_volume) / 10U; /* [digits] */
 
-        BuzzerDrv::getInstance().play(freq, dc);
+        buzzerDrv.play(freq, dc);
 
         m_noteDelay = millis() + duration + 1U;
     }

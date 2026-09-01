@@ -26,7 +26,7 @@
 *******************************************************************************/
 /**
  * @file   Board.cpp
- * @brief  Board Abstraction
+ * @brief  Board abstraction
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
@@ -35,14 +35,9 @@
  *****************************************************************************/
 #include "Board.h"
 
-#include <Util.h>
-#include <Esp.h>
-
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
-
-using namespace Board;
 
 /******************************************************************************
  * Macros
@@ -60,61 +55,25 @@ using namespace Board;
  * Global Variables
  *****************************************************************************/
 
-/** Digital output pin: Onboard LED */
-const DOutPin<Pin::onBoardLedPinNo> Board::onBoardLedOut;
-
-/** Digital input pin: Button "ok" (input with pull-up) */
-const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP> Board::buttonOkIn;
-
-/** Digital input pin: Button "left" (input with pull-up) */
-const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP> Board::buttonLeftIn;
-
-/** Digital input pin: Button "right" (input with pull-up) */
-const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP> Board::buttonRightIn;
-
-/** Digital input pin: Button "reset" (input with pull-up) */
-const DInPin<Pin::buttonResetPinNo, INPUT_PULLUP> Board::buttonResetIn;
-
-/** Digital output pin: Test pin (only for debug purposes) */
-const DOutPin<Pin::testPinNo> Board::testPinOut;
-
-/** Digital output pin: LED matrix data out */
-const DOutPin<Pin::ledMatrixDataOutPinNo> Board::ledMatrixDataOut;
-
-/** Analog input pin: LDR in */
-const AnalogPin<Pin::ldrInPinNo> Board::ldrIn;
-
-/** Digital input pin: DHT Sensor (input with pull-up) */
-const DInPin<Pin::dhtInPinNo, INPUT_PULLUP> Board::dhtIn;
-
-/** Analog input pin: battery voltage in */
-const AnalogPin<Pin::batteryInPinNo> Board::batteryVoltageIn;
-
-/** Digital output pin: Buzzer */
-const DOutPin<Pin::buzzerOutPinNo> Board::buzzerOut;
-
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
 
-/** A list of all used i/o pins, used for initialization. */
-static const IoPin* ioPinList[] = {
-    &onBoardLedOut,
-    &buttonOkIn,
-    &buttonLeftIn,
-    &buttonRightIn,
-    &buttonResetIn,
-    &testPinOut,
-    &ledMatrixDataOut,
-    &ldrIn,
-    &dhtIn,
-    &batteryVoltageIn,
-    &buzzerOut
-};
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+bool Board::init()
+{
+    bool isSuccess = true;
+
+    Pin::init();
+    isSuccess = m_buttonDrv.init(Pin::buttonOkIn, Pin::buttonLeftIn, Pin::buttonRightIn);
+    m_buzzerDrv.init(Pin::buzzerOut);
+    m_ledDrv.init(Pin::onBoardLedOut);
+
+    return isSuccess;
+}
 
 /******************************************************************************
  * Protected Methods
@@ -127,47 +86,6 @@ static const IoPin* ioPinList[] = {
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-extern void Board::init()
-{
-    uint8_t index = 0U;
-
-    /* Initialize all i/o pins */
-    for (index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
-    {
-        if (nullptr != ioPinList[index])
-        {
-            ioPinList[index]->init();
-        }
-    }
-
-    /* Disable buzzer */
-    buzzerOut.write(LOW);
-}
-
-extern void Board::reset()
-{
-    ESP.restart();
-
-    /* Will never be reached. */
-}
-
-extern void Board::ledOn()
-{
-    /* High active */
-    onBoardLedOut.write(HIGH);
-}
-
-extern void Board::ledOff()
-{
-    /* High active */
-    onBoardLedOut.write(LOW);
-}
-
-extern bool Board::isLedOn()
-{
-    return (HIGH == onBoardLedOut.read()) ? true : false;
-}
 
 /******************************************************************************
  * Local Functions
