@@ -49,7 +49,7 @@
 #include <Util.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
-#include <Esp.h>
+#include <Board.h>
 #include <Logging.h>
 #include <SensorDataProvider.h>
 #include <SettingsService.h>
@@ -1304,6 +1304,7 @@ static void handleStatus(AsyncWebServerRequest* request)
         JsonObject       internalRamObj = swObj.createNestedObject("internalRam");
         JsonObject       wifiObj        = dataObj.createNestedObject("wifi");
         SettingsService& settings       = SettingsService::getInstance();
+        ISystemDrv&      systemDrv      = Board::getInstance().getSystemDrv();
 
         /* Only in station mode it makes sense to retrieve the RSSI.
          * Otherwise keep it -100 dbm.
@@ -1320,12 +1321,12 @@ static void handleStatus(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        hwObj["chipRev"]                       = ESP.getChipRevision();
-        hwObj["cpuFreqMhz"]                    = ESP.getCpuFreqMHz();
+        hwObj["chipRev"]                       = systemDrv.getChipRevision();
+        hwObj["cpuFreqMhz"]                    = systemDrv.getCpuFreqMHz();
 
         swObj["version"]                       = Version::getSoftwareVersion();
         swObj["revision"]                      = Version::getSoftwareRevision();
-        swObj["espSdkVersion"]                 = ESP.getSdkVersion();
+        swObj["espSdkVersion"]                 = systemDrv.getSdkVersion();
 
         internalRamObj["heapSize"]             = MemUtil::getTotalHeapSize();        /* [byte] */
         internalRamObj["availableHeapSize"]    = MemUtil::getFreeHeapSize();         /* [byte] */

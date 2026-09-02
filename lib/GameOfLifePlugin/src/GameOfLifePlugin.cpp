@@ -302,8 +302,6 @@ void GameOfLifePlugin::generateInitialPattern(uint8_t gridId)
 {
     uint32_t gridDataIndex = 0U;
 
-    randomSeed(ESP.getCycleCount());
-
     while (m_gridSize > gridDataIndex)
     {
         m_grids[gridId][gridDataIndex]  = random(INT32_MAX);

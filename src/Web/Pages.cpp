@@ -43,19 +43,16 @@
 #include "WiFiUtil.h"
 
 #include <WiFi.h>
-#include <Esp.h>
+#include <Board.h>
 #include <Logging.h>
 #include <MemUtil.h>
 #include <Util.h>
 #include <ArduinoJson.h>
-#include <lwip/init.h>
 #include <SettingsService.h>
 #include <FileSystem.h>
 #include <BitmapWidget.h>
 
-#include <mbedtls/version.h>
 #include <freertos/task.h>
-#include <esp_littlefs.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -98,7 +95,6 @@ static bool   isNotSourceMapRequest(AsyncWebServerRequest* request);
 namespace tmpl
 {
 static String getEspChipId();
-static String getFlashChipMode();
 static String getHostname();
 static String getIPAddress();
 static String getImageFileExtensions();
@@ -123,13 +119,13 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "DISPLAY_WIDTH", []() -> String { return String(CONFIG_LED_MATRIX_WIDTH); } },
     { "ARDUINO_IDF_BRANCH", []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; } },
     { "ESP_CHIP_ID", tmpl::getEspChipId },
-    { "ESP_CHIP_REV", []() -> String { return String(ESP.getChipRevision()); } },
-    { "ESP_CPU_FREQ", []() -> String { return String(ESP.getCpuFreqMHz()); } },
-    { "ESP_SDK_VERSION", []() -> String { return ESP.getSdkVersion(); } },
+    { "ESP_CHIP_REV", []() -> String { return String(Board::getInstance().getSystemDrv().getChipRevision()); } },
+    { "ESP_CPU_FREQ", []() -> String { return String(Board::getInstance().getSystemDrv().getCpuFreqMHz()); } },
+    { "ESP_SDK_VERSION", []() -> String { return Board::getInstance().getSystemDrv().getSdkVersion(); } },
     { "ESP_TYPE", []() -> String { return String(CONFIG_IDF_TARGET); } },
-    { "FLASH_CHIP_MODE", tmpl::getFlashChipMode },
-    { "FLASH_CHIP_SIZE", []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); } },
-    { "FLASH_CHIP_SPEED", []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); } },
+    { "FLASH_CHIP_MODE", []() -> String { return Board::getInstance().getSystemDrv().getFlashChipModeStr(); } },
+    { "FLASH_CHIP_SIZE", []() -> String { return String(Board::getInstance().getSystemDrv().getFlashChipSize() / (1024U * 1024U)); } },
+    { "FLASH_CHIP_SPEED", []() -> String { return String(Board::getInstance().getSystemDrv().getFlashChipSpeed() / (1000U * 1000U)); } },
     { "FREERTOS_VERSION", []() -> String { return tskKERNEL_VERSION_NUMBER; } },
     { "FS_SIZE", []() -> String { return String(FILESYSTEM.totalBytes()); } },
     { "FS_SIZE_USED", []() -> String { return String(FILESYSTEM.usedBytes()); } },
@@ -138,12 +134,12 @@ static const TmplKeyWordFunc gTmplKeyWordToFunc[] = {
     { "HOSTNAME", tmpl::getHostname },
     { "IMAGE_FILE_EXTENSIONS", []() -> String { return tmpl::getImageFileExtensions(); } },
     { "IPV4", tmpl::getIPAddress },
-    { "LWIP_VERSION", []() -> String { return LWIP_VERSION_STRING; } },
-    { "LITTLEFS_VERSION", []() -> String { return String(ESP_LITTLEFS_VERSION_NUMBER); } },
+    { "LWIP_VERSION", []() -> String { return Board::getInstance().getSystemDrv().getLwIPVersion(); } },
+    { "LITTLEFS_VERSION", []() -> String { return Board::getInstance().getSystemDrv().getLittleFSVersion(); } },
     { "MAC_ADDR", []() -> String { return WiFi.macAddress(); } },
-    { "MBED_TLS_VERSION", []() -> String { return String(MBEDTLS_VERSION_STRING); } },
-    { "PSRAM_SIZE", []() -> String { return String(ESP.getPsramSize()); } },
-    { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); } },
+    { "MBED_TLS_VERSION", []() -> String { return Board::getInstance().getSystemDrv().getMbedTlsVersion(); } },
+    { "PSRAM_SIZE", []() -> String { return String(Board::getInstance().getSystemDrv().getPsramSize()); } },
+    { "PSRAM_SIZE_AVAILABLE", []() -> String { return String(Board::getInstance().getSystemDrv().getFreePsram()); } },
     { "RSSI", []() -> String { return String(WiFi.RSSI()); } },
     { "SSID", []() -> String { return WiFi.SSID(); } },
     { "SW_BRANCH", []() -> String { return Version::getSoftwareBranchName(); } },
@@ -428,55 +424,9 @@ static String getEspChipId()
     String chipId;
 
     /* Chip id is the same as the factory programmed wifi MAC address. */
-    WiFiUtil::getChipId(chipId);
+    Board::getInstance().getSystemDrv().getChipId(chipId);
 
     return chipId;
-}
-
-/**
- * Get flash chip mode.
- *
- * @return Flash chip mode.
- */
-static String getFlashChipMode()
-{
-    String result;
-
-    switch (ESP.getFlashChipMode())
-    {
-    case FM_QIO:
-        result = "QUIO";
-        break;
-
-    case FM_QOUT:
-        result = "QOUT";
-        break;
-
-    case FM_DIO:
-        result = "DIO";
-        break;
-
-    case FM_DOUT:
-        result = "DOUT";
-        break;
-
-    case FM_FAST_READ:
-        result = "FAST_READ";
-        break;
-
-    case FM_SLOW_READ:
-        result = "SLOW_READ";
-        break;
-
-    case FM_UNKNOWN:
-        /* fallthrough */
-
-    default:
-        result = "UNKNOWN";
-        break;
-    }
-
-    return result;
 }
 
 /**

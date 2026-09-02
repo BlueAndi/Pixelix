@@ -45,6 +45,7 @@
  * Includes
  *****************************************************************************/
 #include <ISystemDrv.h>
+#include <Esp.h>
 
 /******************************************************************************
  * Macros
@@ -80,7 +81,7 @@ public:
      */
     void init() override
     {
-        /* Nothing to do */
+        randomSeed(ESP.getCycleCount());
     };
 
     /**
@@ -91,6 +92,118 @@ public:
         /* Reset the system */
         ESP.restart();
     };
+
+    /**
+     * Get the chip revision.
+     *
+     * @return Chip revision
+     */
+    uint8_t getChipRevision() const override
+    {
+        return ESP.getChipRevision();
+    }
+
+    /**
+     * Get the CPU frequency.
+     *
+     * @return CPU frequency in MHz
+     */
+    uint32_t getCpuFreqMHz() const override
+    {
+        return ESP.getCpuFreqMHz();
+    }
+
+    /**
+     * Get the flash chip read mode as a string.
+     *
+     * @return Flash chip read mode string
+     */
+    const char* getFlashChipModeStr() const override;
+
+    /**
+     * Get the flash chip speed.
+     *
+     * @return Flash chip speed in Hz
+     */
+    uint32_t getFlashChipSpeed() const override
+    {
+        return ESP.getFlashChipSpeed();
+    }
+
+    /**
+     * Get the flash chip size.
+     *
+     * @return Flash chip size in byte
+     */
+    uint32_t getFlashChipSize() const override
+    {
+        return ESP.getFlashChipSize();
+    }
+
+    /**
+     * Get the SDK version.
+     *
+     * @return SDK version string
+     */
+    const char* getSdkVersion() const override
+    {
+        return ESP.getSdkVersion();
+    }
+
+    /**
+     * Get the LwIP version.
+     *
+     * @return LwIP version string
+     */
+    const char* getLwIPVersion() const override;
+
+    /**
+     * Get the LittleFS version.
+     *
+     * @return LittleFS version string
+     */
+    const char* getLittleFSVersion() const override;
+
+    /**
+     * Get the mbedTLS version.
+     *
+     * @return mbedTLS version string
+     */
+    const char* getMbedTlsVersion() const override;
+
+    /**
+     * Get the factory programmed wifi MAC address.
+     *
+     * @param[out] macAddr  MAC address in "00:00:00:00:00:00" syntax.
+     */
+    void getEFuseMAC(String& macAddr) const override;
+
+    /**
+     * Get the unique chip id.
+     *
+     * @param[out] chipId   Chip id
+     */
+    void getChipId(String& chipId) const override;
+
+    /**
+     * Get the PSRAM size.
+     *
+     * @return PSRAM size in byte
+     */
+    uint32_t getPsramSize() const override
+    {
+        return ESP.getPsramSize();
+    }
+
+    /**
+     * Get the currently free PSRAM.
+     *
+     * @return Free PSRAM in byte
+     */
+    uint32_t getFreePsram() const override
+    {
+        return ESP.getFreePsram();
+    }
 
 private:
 

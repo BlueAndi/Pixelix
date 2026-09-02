@@ -70,9 +70,6 @@
 #include <SettingsService.h>
 #include <WiFiUtil.h>
 
-#include <lwip/init.h>
-#include <esp_littlefs.h>
-
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -464,12 +461,15 @@ void InitState::exit(StateMachine& sm)
 
 void InitState::showStartupInfoOnSerial()
 {
-    const char* littleFsRepo = "https://github.com/joltwallet/esp_littlefs/releases/tag/v" ESP_LITTLEFS_VERSION_NUMBER;
     String      macAddr;
     String      chipId;
+    ISystemDrv& systemDrv = Board::getInstance().getSystemDrv();
+    String      littleFsRepo = "https://github.com/joltwallet/esp_littlefs/releases/tag/v";
 
-    WiFiUtil::getEFuseMAC(macAddr);
-    WiFiUtil::getChipId(chipId);
+    littleFsRepo += systemDrv.getLittleFSVersion();
+
+    systemDrv.getEFuseMAC(macAddr);
+    systemDrv.getChipId(chipId);
 
     LOG_INFO("PIXELIX starts up ...");
     LOG_INFO("Target           : %s", Version::getTargetName());
@@ -477,17 +477,17 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO("SW revision      : %s", Version::getSoftwareRevision());
     LOG_INFO("ESP chip id      : %s", chipId.c_str());
     LOG_INFO("ESP type         : %s", CONFIG_IDF_TARGET);
-    LOG_INFO("ESP chip rev.    : %u", ESP.getChipRevision());
-    LOG_INFO("ESP cpu freq.    : %u MHz", ESP.getCpuFreqMHz());
-    LOG_INFO("Flash chip mode  : %s", getFlashChipMode());
-    LOG_INFO("Flash chip speed : %u", ESP.getFlashChipSpeed());
-    LOG_INFO("Flash chip size  : 0x%08X byte", ESP.getFlashChipSize());
-    LOG_INFO("Flash freq.      : %u MHz", ESP.getFlashChipSpeed() / (1000U * 1000U));
-    LOG_INFO("ESP SDK version  : %s", ESP.getSdkVersion());
+    LOG_INFO("ESP chip rev.    : %u", systemDrv.getChipRevision());
+    LOG_INFO("ESP cpu freq.    : %u MHz", systemDrv.getCpuFreqMHz());
+    LOG_INFO("Flash chip mode  : %s", systemDrv.getFlashChipModeStr());
+    LOG_INFO("Flash chip speed : %u", systemDrv.getFlashChipSpeed());
+    LOG_INFO("Flash chip size  : 0x%08X byte", systemDrv.getFlashChipSize());
+    LOG_INFO("Flash freq.      : %u MHz", systemDrv.getFlashChipSpeed() / (1000U * 1000U));
+    LOG_INFO("ESP SDK version  : %s", systemDrv.getSdkVersion());
     LOG_INFO("Wifi efuse MAC   : %s", macAddr.c_str());
-    LOG_INFO("LwIP version     : %s", LWIP_VERSION_STRING);
-    LOG_INFO("LittleFS version : %s", ESP_LITTLEFS_VERSION_NUMBER);
-    LOG_INFO("LittleFS link    : %s", littleFsRepo);
+    LOG_INFO("LwIP version     : %s", systemDrv.getLwIPVersion());
+    LOG_INFO("LittleFS version : %s", systemDrv.getLittleFSVersion());
+    LOG_INFO("LittleFS link    : %s", littleFsRepo.c_str());
 }
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
@@ -590,7 +590,7 @@ void InitState::getDeviceUniqueId(String& deviceUniqueId)
     /* Use the last 4 bytes of the factory programmed wifi MAC address to generate a unique id. */
     String chipId;
 
-    WiFiUtil::getChipId(chipId);
+    Board::getInstance().getSystemDrv().getChipId(chipId);
 
     deviceUniqueId += "-";
     deviceUniqueId += chipId.substring(4U);
@@ -659,46 +659,6 @@ void InitState::configureViews()
         /* Default brush is already set in the constructor. */
         ;
     }
-}
-
-const char* InitState::getFlashChipMode()
-{
-    const char* result = "UNKNOWN";
-
-    switch (ESP.getFlashChipMode())
-    {
-    case FM_QIO:
-        result = "QUIO";
-        break;
-
-    case FM_QOUT:
-        result = "QOUT";
-        break;
-
-    case FM_DIO:
-        result = "DIO";
-        break;
-
-    case FM_DOUT:
-        result = "DOUT";
-        break;
-
-    case FM_FAST_READ:
-        result = "FAST_READ";
-        break;
-
-    case FM_SLOW_READ:
-        result = "SLOW_READ";
-        break;
-
-    case FM_UNKNOWN:
-        /* fallthrough */
-
-    default:
-        break;
-    }
-
-    return result;
 }
 
 /******************************************************************************

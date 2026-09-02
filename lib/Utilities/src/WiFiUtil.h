@@ -75,27 +75,13 @@ namespace WiFiUtil
 extern uint8_t getSignalQuality(int8_t rssi);
 
 /**
- * Get the factory programmed wifi MAC address.
- *
- * @param[out] macAddr  MAC address in "00:00:00:00:00:00" syntax.
- */
-extern void getEFuseMAC(String& macAddr);
-
-/**
- * Get the unique chip id.
- *
- * @param[out] chipId   Chip id
- */
-extern void getChipId(String& chipId);
-
-/**
  * Get wifi RSSI.
  *
  * @return WiFi station SSID
  */
 extern String getRSSI();
 
-} // namespace WiFiUtil
+} /* namespace WiFiUtil */
 
 #endif /* WIFI_UTIL_H */
 
