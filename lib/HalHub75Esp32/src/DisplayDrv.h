@@ -25,32 +25,31 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Board.h
- * @brief  Board abstraction
- * @author Andreas Merkle <web@blue-andi.de>
+ * @file   DisplayDrv.h
+ * @brief  HUB75 matrix display driver
+ * @author Mariano Dupont <marianomd@gmail.com>
  *
  * @addtogroup HAL
  *
  * @{
  */
 
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef DISPLAY_DRV_H
+#define DISPLAY_DRV_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IBoard.h>
-#include <ButtonDrv.h>
-#include <BuzzerDrv.h>
-#include <LedDrv.h>
-#include <SystemDrv.h>
-#include <DisplayDrv.h>
-#include "Pin.h"
+#include <stdint.h>
+#include <IDisplayDrv.h>
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <ColorDef.hpp>
+#include <BoardConstant.h>
 
 /******************************************************************************
  * Macros
@@ -61,117 +60,115 @@
  *****************************************************************************/
 
 /**
- * The board abstraction provides access to the hardware of the electronic board.
+ * This display driver controls a HUB75 matrix.
  */
-class Board : public IBoard
+class DisplayDrv : public IDisplayDrv
 {
 public:
 
     /**
-     * Get the singleton instance of the board abstraction.
-     *
-     * @return Board instance
+     * Construct display driver.
      */
-    static Board& getInstance()
-    {
-        static Board instance; /* idiom */
+    DisplayDrv();
 
-        return instance;
+    /**
+     * Destroys display driver.
+     */
+    virtual ~DisplayDrv();
+
+    /**
+     * Initialize base driver for the display.
+     *
+     * @return If successful, returns true otherwise false.
+     */
+    bool begin() final
+    {
+        return m_panel.begin();
     }
 
     /**
-     * Initialize the board.
+     * Show framebuffer on physical display. This may be synchronous
+     * or asynchronous.
      *
-     * @return If successful initialized it will return true otherwise false.
+     * @param[in] bitmap    Framebuffer to show on physical display.
      */
-    bool init() override;
+    void show(const YAGfxBitmap& bitmap) final;
 
     /**
-     * Get the button driver.
+     * The display is ready, when the last physical pixel update is finished.
+     * A asynchronous display update, triggered by show() can be observed this way.
      *
-     * @return Button driver
+     * @return If ready for another update via show(), it will return true otherwise false.
      */
-    IButtonDrv& getButtonDrv() override
+    bool isReady() const final
     {
-        return m_buttonDrv;
+        return true;
     }
 
     /**
-     * Get the buzzer driver.
+     * Set brightness from 0 to 255.
      *
-     * @return Buzzer driver
+     * @param[in] brightness    Brightness value [0; 255]
      */
-    IBuzzerDrv& getBuzzerDrv() override
+    void setBrightness(uint8_t brightness) final
     {
-        return m_buzzerDrv;
+        /* To protect the electronic parts, the luminance will be scaled down
+         * according to the max. supply current.
+         */
+        const uint8_t SAFE_LUMINANCE =
+            (BoardConstant::SUPPLY_CURRENT_MAX * brightness) /
+            (BoardConstant::MAX_CURRENT_PER_LED * CONFIG_LED_MATRIX_WIDTH * CONFIG_LED_MATRIX_HEIGHT);
+
+        m_panel.setBrightness(SAFE_LUMINANCE);
     }
 
     /**
-     * Get the onboard LED driver.
-     *
-     * @return LED driver
+     * Clear display.
      */
-    ILedDrv& getLedDrv() override
+    void clear() final
     {
-        return m_ledDrv;
+        m_panel.fillScreen(ColorDef::BLACK);
     }
 
     /**
-     * Get the system driver.
-     *
-     * @return System driver
+     * Power display off.
      */
-    ISystemDrv& getSystemDrv() override
-    {
-        return m_systemDrv;
-    }
+    void off() final;
 
     /**
-     * Get the display driver.
-     *
-     * @return Display driver
+     * Power display on.
      */
-    IDisplayDrv& getDisplayDrv() override
-    {
-        return m_displayDrv;
-    }
+    void on() final;
+
+    /**
+     * Is display powered on?
+     *
+     * @return If display is powered on, it will return true otherwise false.
+     */
+    bool isOn() const final;
 
 private:
 
-    ButtonDrv  m_buttonDrv;  /**< Button driver */
-    BuzzerDrv  m_buzzerDrv;  /**< Buzzer driver */
-    LedDrv     m_ledDrv;     /**< Onboard LED driver */
-    SystemDrv  m_systemDrv;  /**< System driver */
-    DisplayDrv m_displayDrv; /**< Display driver */
+    /** HUB75 I2S pin configuration. */
+    static const HUB75_I2S_CFG::i2s_pins I2S_PINS;
 
-    /**
-     * Constructs the board interface.
-     */
-    Board() :
-        m_buttonDrv(),
-        m_buzzerDrv(),
-        m_ledDrv(),
-        m_systemDrv(),
-        m_displayDrv()
-    {
-    }
+    /** HUB75 matrix configuration. */
+    static const HUB75_I2S_CFG MATRIX_CFG;
 
-    /**
-     * Destroys the board interface.
-     */
-    virtual ~Board()
-    {
-    }
+    /** HUB75 panel driver. */
+    MatrixPanel_I2S_DMA m_panel;
+
+    /** Is display on? */
+    bool m_isOn;
+
+    DisplayDrv(const DisplayDrv& display);
+    DisplayDrv& operator=(const DisplayDrv& display);
 };
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* BOARD_H */
+#endif /* DISPLAY_DRV_H */
 
 /** @} */

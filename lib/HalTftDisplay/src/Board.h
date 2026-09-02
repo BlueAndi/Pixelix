@@ -45,6 +45,7 @@
 #include <BuzzerDrv.h>
 #include <LedDrv.h>
 #include <SystemDrv.h>
+#include <DisplayDrv.h>
 #include "Pin.h"
 
 /******************************************************************************
@@ -126,30 +127,22 @@ public:
     }
 
     /**
-     * Get the TFT backlight control pin.
+     * Get the display driver.
      *
-     * @return TFT backlight control pin
+     * @return Display driver
      */
-    const DOutPinT<PinNo::tftBackLightPinNo>& getTftBackLightOut() const
+    IDisplayDrv& getDisplayDrv() override
     {
-        return Pin::tftBackLightOut;
+        return m_displayDrv;
     }
-
-    /** ADC resolution in digits */
-    static constexpr uint16_t ADC_RESOLUTION     = 4096U;
-
-    /** ADC reference voltage in mV */
-    static constexpr uint16_t ADC_REF_VOLTAGE    = 3300U;
-
-    /** Pixelix supply voltage in volt */
-    static constexpr uint8_t SUPPLY_VOLTAGE      = 5U;
 
 private:
 
-    ButtonDrv m_buttonDrv; /**< Button driver */
-    BuzzerDrv m_buzzerDrv; /**< Buzzer driver */
-    LedDrv    m_ledDrv;    /**< Onboard LED driver */
-    SystemDrv m_systemDrv; /**< System driver */
+    ButtonDrv  m_buttonDrv;  /**< Button driver */
+    BuzzerDrv  m_buzzerDrv;  /**< Buzzer driver */
+    LedDrv     m_ledDrv;     /**< Onboard LED driver */
+    SystemDrv  m_systemDrv;  /**< System driver */
+    DisplayDrv m_displayDrv; /**< Display driver */
 
     /**
      * Constructs the board interface.
@@ -158,7 +151,8 @@ private:
         m_buttonDrv(),
         m_buzzerDrv(),
         m_ledDrv(),
-        m_systemDrv()
+        m_systemDrv(),
+        m_displayDrv()
     {
     }
 

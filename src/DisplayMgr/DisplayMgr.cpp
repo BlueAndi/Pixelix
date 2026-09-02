@@ -36,8 +36,8 @@
 #include "DisplayMgr.h"
 #include "BrightnessCtrl.h"
 #include "PluginMgr.h"
+#include "Display.h"
 
-#include <Display.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>

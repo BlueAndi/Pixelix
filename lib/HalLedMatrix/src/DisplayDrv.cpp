@@ -25,15 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Display.cpp
- * @brief  Graphic TFT display
+ * @file   DisplayDrv.cpp
+ * @brief  LED matrix display driver
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Display.h"
+#include "DisplayDrv.h"
+#include "Pin.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -59,6 +60,61 @@
  * Public Methods
  *****************************************************************************/
 
+DisplayDrv::DisplayDrv() :
+    IDisplayDrv(),
+    m_strip(CONFIG_LED_MATRIX_WIDTH * CONFIG_LED_MATRIX_HEIGHT, PinNo::ledMatrixDataOutPinNo),
+    m_topo(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
+    m_isOn(true)
+{
+}
+
+DisplayDrv::~DisplayDrv()
+{
+}
+
+void DisplayDrv::show(const YAGfxBitmap& bitmap)
+{
+    if (true == m_isOn)
+    {
+        const int16_t height = bitmap.getHeight();
+        const int16_t width  = bitmap.getWidth();
+
+        for (int16_t y = 0; y < height; ++y)
+        {
+            for (int16_t x = 0; x < width; ++x)
+            {
+                HtmlColor htmlColor = static_cast<uint32_t>(bitmap.getColor(x, y));
+#if CONFIG_DISPLAY_ROTATE180 != 0
+                m_strip.SetPixelColor(m_topo.Map(width - x - 1, height - y - 1), htmlColor);
+#else
+                m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
+#endif
+            }
+        }
+
+        m_strip.Show();
+    }
+}
+
+void DisplayDrv::off()
+{
+    m_isOn = false;
+
+    /* Simulate powered off display. */
+    m_strip.ClearTo(ColorDef::BLACK);
+    m_strip.Show();
+}
+
+void DisplayDrv::on()
+{
+    m_isOn = true;
+}
+
+bool DisplayDrv::isOn() const
+{
+    return m_isOn;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -66,91 +122,6 @@
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-Display::Display() :
-    IDisplay(),
-    m_tft(),
-    m_ledMatrix(),
-    m_brightness(DEFAULT_BRIGHTNESS),
-    m_isOn(false)
-{
-}
-
-Display::~Display()
-{
-}
-
-void Display::show()
-{
-    int32_t x;
-    int32_t y;
-
-    for (y = 0; y < MATRIX_HEIGHT; ++y)
-    {
-        for (x = 0; x < MATRIX_WIDTH; ++x)
-        {
-#if CONFIG_DISPLAY_ROTATE180 != 0
-            Color brightnessAdjustedColor = m_ledMatrix.getColor(MATRIX_WIDTH - x - 1, MATRIX_HEIGHT - y - 1);
-#else
-            Color brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
-#endif
-            int32_t xNative = y * (PIXEL_HEIGHT + PiXEL_DISTANCE) + BORDER_Y;
-            int32_t yNative = TFT_HEIGHT - (x * (PIXEL_WIDTH + PiXEL_DISTANCE) + BORDER_X) - 1;
-
-            /* Apply the display brightness on the base color, as it is no longer stored as a per-pixel intensity. */
-            brightnessAdjustedColor.dim(m_brightness);
-
-            m_tft.fillRect(
-                xNative,
-                yNative,
-                PIXEL_HEIGHT,
-                PIXEL_WIDTH,
-                brightnessAdjustedColor.toRgb565());
-        }
-    }
-}
-
-void Display::off()
-{
-    m_tft.writecommand(TFT_DISPOFF);
-
-#if defined(TFT_BL) && defined(TFT_BACKLIGHT_ON)
-
-#if (LOW == TFT_BACKLIGHT_ON)
-
-    /* Turn off the back-light LED */
-    Board::getInstance().getTftBackLightOut().write(HIGH);
-
-#else /* (LOW == TFT_BACKLIGHT_ON) */
-
-    /* Turn off the back-light LED */
-    Board::getInstance().getTftBackLightOut().write(LOW);
-
-#endif /* (LOW == TFT_BACKLIGHT_ON) */
-
-#endif /* defined (TFT_BL) && defined (TFT_BACKLIGHT_ON) */
-
-    m_isOn = false;
-}
-
-void Display::on()
-{
-    m_tft.writecommand(TFT_DISPON);
-
-#if defined(TFT_BL) && defined(TFT_BACKLIGHT_ON)
-
-    /* Turn off the back-light LED */
-    Board::getInstance().getTftBackLightOut().write(TFT_BACKLIGHT_ON);
-
-#endif /* defined (TFT_BL) && defined (TFT_BACKLIGHT_ON) */
-
-    m_isOn = true;
-}
-
-bool Display::isOn() const
-{
-    return m_isOn;
-}
 
 /******************************************************************************
  * External Functions

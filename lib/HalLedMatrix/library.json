@@ -14,8 +14,6 @@
     }, {
         "name": "HalInterface"
     }, {
-        "name": "YAGfx"
-    }, {
         "owner": "makuna",
         "name": "NeoPixelBus",
         "version": "~2.8.4"

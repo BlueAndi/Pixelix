@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   IBoard.h
- * @brief  Abstract board interface
+ * @file   BoardConstant.h
+ * @brief  Board constants
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,17 +34,13 @@
  * @{
  */
 
-#ifndef IBOARD_H
-#define IBOARD_H
+#ifndef BOARD_CONSTANT_H
+#define BOARD_CONSTANT_H
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "IButtonDrv.h"
-#include "IBuzzerDrv.h"
-#include "ILedDrv.h"
-#include "ISystemDrv.h"
-#include "IDisplayDrv.h"
+#include <stdint.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,80 +54,28 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * Abstract board interface.
- */
-class IBoard
-{
-public:
-
-    /**
-     * Destroys the board interface.
-     */
-    virtual ~IBoard()
-    {
-    }
-
-    /**
-     * Initialize the board.
-     * 
-     * @return If successful initialized it will return true otherwise false.
-     */
-    virtual bool init()                = 0;
-
-    /**
-     * Get the button driver.
-     *
-     * @return Button driver
-     */
-    virtual IButtonDrv& getButtonDrv() = 0;
-
-    /**
-     * Get the buzzer driver.
-     *
-     * @return Buzzer driver
-     */
-    virtual IBuzzerDrv& getBuzzerDrv() = 0;
-
-    /**
-     * Get the onboard LED driver.
-     *
-     * @return LED driver
-     */
-    virtual ILedDrv& getLedDrv()       = 0;
-
-    /**
-     * Get the system driver.
-     *
-     * @return System driver
-     */
-    virtual ISystemDrv& getSystemDrv() = 0;
-
-    /**
-     * Get the display driver.
-     *
-     * @return Display driver
-     */
-    virtual IDisplayDrv& getDisplayDrv() = 0;
-
-protected:
-
-    /**
-     * Constructs the board interface.
-     */
-    IBoard()
-    {
-    }
-};
-
 /******************************************************************************
  * Variables
  *****************************************************************************/
+
+/** Board constants. */
+namespace BoardConstant
+{
+/** ADC resolution in digits */
+constexpr uint16_t ADC_RESOLUTION  = 4096U;
+
+/** ADC reference voltage in mV */
+constexpr uint16_t ADC_REF_VOLTAGE = 3300U;
+
+/** Pixelix supply voltage in volt */
+constexpr uint8_t SUPPLY_VOLTAGE   = 5U;
+
+} /* namespace BoardConstant */
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* IBOARD_H */
+#endif /* BOARD_CONSTANT_H */
 
 /** @} */

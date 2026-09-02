@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Board.h
- * @brief  Board abstraction
+ * @file   IDisplay.h
+ * @brief  Abstract display interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,23 +34,19 @@
  * @{
  */
 
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef IDISPLAY_H
+#define IDISPLAY_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IBoard.h>
-#include <ButtonDrv.h>
-#include <BuzzerDrv.h>
-#include <LedDrv.h>
-#include <SystemDrv.h>
-#include <DisplayDrv.h>
-#include "Pin.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <stdint.h>
+#include <YAGfx.h>
+#include <YAGfxBitmap.h>
 
 /******************************************************************************
  * Macros
@@ -61,117 +57,87 @@
  *****************************************************************************/
 
 /**
- * The board abstraction provides access to the hardware of the electronic board.
+ * This is the abstract display interface.
  */
-class Board : public IBoard
+class IDisplay : public YAGfx
 {
 public:
 
     /**
-     * Get the singleton instance of the board abstraction.
+     * Destroys display.
+     */
+    virtual ~IDisplay()
+    {
+    };
+
+    /**
+     * Initialize base driver for the display.
      *
-     * @return Board instance
+     * @return If successful, returns true otherwise false.
      */
-    static Board& getInstance()
-    {
-        static Board instance; /* idiom */
-
-        return instance;
-    }
+    virtual bool begin() = 0;
 
     /**
-     * Initialize the board.
+     * Show framebuffer on physical display. This may be synchronous
+     * or asynchronous.
+     */
+    virtual void show() = 0;
+
+    /**
+     * The display is ready, when the last physical pixel update is finished.
+     * A asynchronous display update, triggered by show() can be observed this way.
      *
-     * @return If successful initialized it will return true otherwise false.
+     * @return If ready for another update via show(), it will return true otherwise false.
      */
-    bool init() override;
+    virtual bool isReady() const = 0;
 
     /**
-     * Get the button driver.
+     * Set brightness from 0 to 255.
      *
-     * @return Button driver
+     * @param[in] brightness    Brightness value [0; 255]
      */
-    IButtonDrv& getButtonDrv() override
-    {
-        return m_buttonDrv;
-    }
+    virtual void setBrightness(uint8_t brightness) = 0;
 
     /**
-     * Get the buzzer driver.
+     * Clear display.
+     */
+    virtual void clear() = 0;
+
+    /**
+     * Power display off.
+     */
+    virtual void off() = 0;
+
+    /**
+     * Power display on.
+     */
+    virtual void on() = 0;
+
+    /**
+     * Is display powered on?
      *
-     * @return Buzzer driver
+     * @return If display is powered on, it will return true otherwise false.
      */
-    IBuzzerDrv& getBuzzerDrv() override
-    {
-        return m_buzzerDrv;
-    }
+    virtual bool isOn() const = 0;
+
+protected:
 
     /**
-     * Get the onboard LED driver.
-     *
-     * @return LED driver
+     * Construct display.
      */
-    ILedDrv& getLedDrv() override
-    {
-        return m_ledDrv;
-    }
-
-    /**
-     * Get the system driver.
-     *
-     * @return System driver
-     */
-    ISystemDrv& getSystemDrv() override
-    {
-        return m_systemDrv;
-    }
-
-    /**
-     * Get the display driver.
-     *
-     * @return Display driver
-     */
-    IDisplayDrv& getDisplayDrv() override
-    {
-        return m_displayDrv;
-    }
-
-private:
-
-    ButtonDrv  m_buttonDrv;  /**< Button driver */
-    BuzzerDrv  m_buzzerDrv;  /**< Buzzer driver */
-    LedDrv     m_ledDrv;     /**< Onboard LED driver */
-    SystemDrv  m_systemDrv;  /**< System driver */
-    DisplayDrv m_displayDrv; /**< Display driver */
-
-    /**
-     * Constructs the board interface.
-     */
-    Board() :
-        m_buttonDrv(),
-        m_buzzerDrv(),
-        m_ledDrv(),
-        m_systemDrv(),
-        m_displayDrv()
+    IDisplay(YAGfxBitmap& bitmap) :
+        YAGfx(bitmap)
     {
     }
 
-    /**
-     * Destroys the board interface.
-     */
-    virtual ~Board()
-    {
-    }
+    /* Default constructor not allowed. */
+    IDisplay();
 };
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* BOARD_H */
+#endif /* IDISPLAY_H */
 
 /** @} */

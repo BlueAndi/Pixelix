@@ -25,8 +25,8 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   IDisplay.h
- * @brief  Display interface
+ * @file   IDisplayDrv.h
+ * @brief  Display driver interface
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef IDISPLAY_H
-#define IDISPLAY_H
+#ifndef IDISPLAYDRV_H
+#define IDISPLAYDRV_H
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <YAGfx.h>
+#include <stdint.h>
+#include <YAGfxBitmap.h>
 
 /******************************************************************************
  * Macros
@@ -55,17 +56,17 @@
  *****************************************************************************/
 
 /**
- * The display interface combines the graphic interfaces and the additional
- * interfaces to control the underlying physical display.
+ * The display driver interface abstracts the hardware specific display driver.
+ * It is used by the display interface to access the physical display.
  */
-class IDisplay : public YAGfx
+class IDisplayDrv
 {
 public:
 
     /**
-     * Destroys the display interface.
+     * Destroys the display driver interface.
      */
-    virtual ~IDisplay()
+    virtual ~IDisplayDrv()
     {
     }
 
@@ -79,8 +80,10 @@ public:
     /**
      * Show framebuffer on physical display. This may be synchronous
      * or asynchronous.
+     *
+     * @param[in] bitmap    Framebuffer to show on physical display.
      */
-    virtual void show()                            = 0;
+    virtual void show(const YAGfxBitmap& bitmap)   = 0;
 
     /**
      * The display is ready, when the last physical pixel update is finished.
@@ -122,10 +125,9 @@ public:
 protected:
 
     /**
-     * Constructs the display interface.
+     * Constructs the display driver interface.
      */
-    IDisplay() :
-        YAGfx()
+    IDisplayDrv()
     {
     }
 
@@ -136,6 +138,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif /* IDISPLAY_H */
+#endif /* IDISPLAYDRV_H */
 
 /** @} */

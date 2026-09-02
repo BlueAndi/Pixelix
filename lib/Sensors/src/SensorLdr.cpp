@@ -36,7 +36,7 @@
 #include "SensorLdr.h"
 
 #include <Pin.h>
-#include <Board.h>
+#include <BoardConstant.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -193,7 +193,7 @@ float SensorLdr::getIlluminance()
      * I = 5179474.6792312 * R_LDR ^ -1.42857142857143
      * I = 5179474.6792312 * [ ( ADC_max * R - ADC * R ) / ADC ] ^ -1.42857142857143
      */
-    const float ADC_MAX          = static_cast<float>(Board::ADC_RESOLUTION - 1U);
+    const float ADC_MAX          = static_cast<float>(BoardConstant::ADC_RESOLUTION - 1U);
     const float ADC_FLOAT        = static_cast<float>(ADC_UINT16);
 
     illuminance                  = MULTIPLICATOR * powf((ADC_MAX * m_resistance - ADC_FLOAT * m_resistance) / ADC_FLOAT, EXPONENT);

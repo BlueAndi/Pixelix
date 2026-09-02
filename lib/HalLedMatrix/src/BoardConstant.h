@@ -25,16 +25,22 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Display.cpp
- * @brief  LED matrix display
+ * @file   BoardConstant.h
+ * @brief  Board constants
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup HAL
+ *
+ * @{
  */
+
+#ifndef BOARD_CONSTANT_H
+#define BOARD_CONSTANT_H
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Display.h"
-#include "Pin.h"
+#include <stdint.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -45,89 +51,37 @@
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
 /******************************************************************************
- * Prototypes
+ * Variables
  *****************************************************************************/
 
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-Display::Display() :
-    IDisplay(),
-    m_strip(LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT, PinNo::ledMatrixDataOutPinNo),
-    m_topo(LED_MATRIX_WIDTH, LED_MATRIX_HEIGHT),
-    m_ledMatrix(),
-    m_isOn(true)
+/** Board constants. */
+namespace BoardConstant
 {
-}
+/** ADC resolution in digits */
+constexpr uint16_t ADC_RESOLUTION      = 4096U;
 
-Display::~Display()
-{
-}
+/** ADC reference voltage in mV */
+constexpr uint16_t ADC_REF_VOLTAGE     = 3300U;
 
-void Display::show()
-{
-    if (true == m_isOn)
-    {
-        const int16_t height = m_ledMatrix.getHeight();
-        const int16_t width  = m_ledMatrix.getWidth();
+/** Pixelix supply voltage in volt */
+constexpr uint8_t SUPPLY_VOLTAGE       = 5U;
 
-        for (int16_t y = 0; y < height; ++y)
-        {
-            for (int16_t x = 0; x < width; ++x)
-            {
-                HtmlColor htmlColor = static_cast<uint32_t>(m_ledMatrix.getColor(x, y));
-#if CONFIG_DISPLAY_ROTATE180 != 0
-                m_strip.SetPixelColor(m_topo.Map(width - x - 1, height - y - 1), htmlColor);
-#else
-                m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
-#endif
-            }
-        }
+/** Pixelix max. supply current in mA. */
+constexpr uint32_t SUPPLY_CURRENT_MAX  = CONFIG_SUPPLY_CURRENT;
 
-        m_strip.Show();
-    }
-}
+/** Max. current in mA per LED. */
+constexpr uint32_t MAX_CURRENT_PER_LED = 60U;
 
-void Display::off()
-{
-    m_isOn = false;
-
-    /* Simulate powered off display. */
-    m_strip.ClearTo(ColorDef::BLACK);
-    m_strip.Show();
-}
-
-void Display::on()
-{
-    m_isOn = true;
-}
-
-bool Display::isOn() const
-{
-    return m_isOn;
-}
+} /* namespace BoardConstant */
 
 /******************************************************************************
- * External Functions
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+#endif /* BOARD_CONSTANT_H */
+
+/** @} */

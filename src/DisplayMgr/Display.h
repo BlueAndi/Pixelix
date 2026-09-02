@@ -26,8 +26,8 @@
 *******************************************************************************/
 /**
  * @file   Display.h
- * @brief  HUB75 matrix display
- * @author Mariano Dupont <marianomd@gmail.com>
+ * @brief  Display interface
+ * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup HAL
  *
@@ -45,13 +45,10 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IDisplay.h>
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-
-#include <ColorDef.hpp>
+#include "IDisplay.h"
+#include <IDisplayDrv.h>
+#include <YAGfx.h>
 #include <YAGfxBitmap.h>
-
-#include "Board.h"
 
 /******************************************************************************
  * Macros
@@ -62,7 +59,7 @@
  *****************************************************************************/
 
 /**
- * This display represents a HUB75 matrix.
+ * This display represents a LED matrix of 32x8 NeoPixels (WS2812B).
  */
 class Display : public IDisplay
 {
@@ -85,16 +82,19 @@ public:
      *
      * @return If successful, returns true otherwise false.
      */
-    bool begin() final
+    bool begin()
     {
-        return m_panel.begin();
+        return m_displayDrv.begin();
     }
 
     /**
      * Show framebuffer on physical display. This may be synchronous
      * or asynchronous.
      */
-    void show() final;
+    void show()
+    {
+        m_displayDrv.show(m_bitmap);
+    }
 
     /**
      * The display is ready, when the last physical pixel update is finished.
@@ -102,10 +102,9 @@ public:
      *
      * @return If ready for another update via show(), it will return true otherwise false.
      */
-    bool isReady() const final
+    bool isReady() const
     {
-        /* Nothing to do. */
-        return true;
+        return m_displayDrv.isReady();
     }
 
     /**
@@ -113,24 +112,18 @@ public:
      *
      * @param[in] brightness    Brightness value [0; 255]
      */
-    void setBrightness(uint8_t brightness) final
+    void setBrightness(uint8_t brightness)
     {
-        /* To protect the electronic parts, the luminance will be scaled down
-         * according to the max. supply current.
-         */
-        const uint8_t SAFE_LUMINANCE =
-            (Board::SUPPLY_CURRENT_MAX * brightness) /
-            (MAX_CURRENT_PER_LED * LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT);
-
-        m_panel.setBrightness(SAFE_LUMINANCE);
+        m_displayDrv.setBrightness(brightness);
     }
 
     /**
      * Clear display.
      */
-    void clear() final
+    void clear()
     {
-        m_ledMatrix.fillScreen(ColorDef::BLACK);
+        m_displayDrv.clear();
+        m_bitmap.fillScreen(ColorDef::BLACK);
     }
 
     /**
@@ -140,7 +133,7 @@ public:
      */
     uint16_t getWidth() const final
     {
-        return LED_MATRIX_WIDTH;
+        return m_bitmap.getWidth();
     }
 
     /**
@@ -150,7 +143,7 @@ public:
      */
     uint16_t getHeight() const final
     {
-        return LED_MATRIX_HEIGHT;
+        return m_bitmap.getHeight();
     }
 
     /**
@@ -163,7 +156,7 @@ public:
      */
     Color& getColor(int16_t x, int16_t y) final
     {
-        return m_ledMatrix.getColor(x, y);
+        return m_bitmap.getColor(x, y);
     }
 
     /**
@@ -176,7 +169,7 @@ public:
      */
     const Color& getColor(int16_t x, int16_t y) const final
     {
-        return m_ledMatrix.getColor(x, y);
+        return m_bitmap.getColor(x, y);
     }
 
     /**
@@ -195,7 +188,7 @@ public:
      */
     Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
     {
-        return m_ledMatrix.getFrameBufferXAddr(x, y, length, offset);
+        return m_bitmap.getFrameBufferXAddr(x, y, length, offset);
     }
 
     /**
@@ -214,7 +207,7 @@ public:
      */
     const Color* getFrameBufferXAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
     {
-        return m_ledMatrix.getFrameBufferXAddr(x, y, length, offset);
+        return m_bitmap.getFrameBufferXAddr(x, y, length, offset);
     }
 
     /**
@@ -233,7 +226,7 @@ public:
      */
     Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) final
     {
-        return m_ledMatrix.getFrameBufferYAddr(x, y, length, offset);
+        return m_bitmap.getFrameBufferYAddr(x, y, length, offset);
     }
 
     /**
@@ -252,62 +245,47 @@ public:
      */
     const Color* getFrameBufferYAddr(int16_t x, int16_t y, uint16_t length, uint16_t& offset) const final
     {
-        return m_ledMatrix.getFrameBufferYAddr(x, y, length, offset);
+        return m_bitmap.getFrameBufferYAddr(x, y, length, offset);
     }
 
     /**
      * Power display off.
      */
-    void off() final;
+    void off()
+    {
+        m_displayDrv.off();
+    }
 
     /**
      * Power display on.
      */
-    void on() final;
+    void on()
+    {
+        m_displayDrv.on();
+    }
 
     /**
      * Is display powered on?
      *
      * @return If display is powered on, it will return true otherwise false.
      */
-    bool isOn() const final;
+    bool isOn() const
+    {
+        return m_displayDrv.isOn();
+    }
 
 private:
-
-    /** LED matrix width in pixels */
-    static constexpr uint8_t LED_MATRIX_WIDTH     = CONFIG_LED_MATRIX_WIDTH;
-
-    /** LED matrix height in pixels */
-    static constexpr uint8_t LED_MATRIX_HEIGHT    = CONFIG_LED_MATRIX_HEIGHT;
-
-    /** Max. current in mA per LED */
-    static constexpr uint32_t MAX_CURRENT_PER_LED = 1U;
-
-    /**
-     * HUB75 I2S pin configuration.
-     */
-    static const HUB75_I2S_CFG::i2s_pins I2S_PINS;
-
-    /**
-     * HUB75 matrix configuration.
-     */
-    static const HUB75_I2S_CFG MATRIX_CFG;
-
-    /**
-     * HUB75 panel driver.
-     */
-    MatrixPanel_I2S_DMA m_panel;
 
     /**
      * The LED matrix framebuffer.
      * This is the drawback for the direct color manipulation via getColor().
      */
-    YAGfxStaticBitmap<LED_MATRIX_WIDTH, LED_MATRIX_HEIGHT> m_ledMatrix;
+    YAGfxStaticBitmap<CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT> m_bitmap;
 
     /**
-     * Is display on?
+     * Display driver
      */
-    bool m_isOn;
+    IDisplayDrv& m_displayDrv;
 
     /**
      * Construct display.
@@ -331,7 +309,7 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, const Color& color) final
     {
-        m_ledMatrix.drawPixel(x, y, color);
+        m_bitmap.drawPixel(x, y, color);
     }
 };
 
