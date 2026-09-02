@@ -68,7 +68,7 @@ public:
      */
     virtual ~IDisplay()
     {
-    };
+    }
 
     /**
      * Initialize base driver for the display.
