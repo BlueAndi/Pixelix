@@ -463,10 +463,10 @@ void InitState::showStartupInfoOnSerial()
 {
     String      macAddr;
     String      chipId;
-    ISystemDrv& systemDrv = Board::getInstance().getSystemDrv();
-    String      littleFsRepo = "https://github.com/joltwallet/esp_littlefs/releases/tag/v";
+    ISystemDrv& systemDrv     = Board::getInstance().getSystemDrv();
+    String      littleFsRepo  = "https://github.com/joltwallet/esp_littlefs/releases/tag/v";
 
-    littleFsRepo += systemDrv.getLittleFSVersion();
+    littleFsRepo             += systemDrv.getLittleFSVersion();
 
     systemDrv.getEFuseMAC(macAddr);
     systemDrv.getChipId(chipId);

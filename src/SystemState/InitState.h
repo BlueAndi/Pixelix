@@ -167,7 +167,6 @@ private:
      * Configure the views with general settings.
      */
     void configureViews();
-
 };
 
 /******************************************************************************
