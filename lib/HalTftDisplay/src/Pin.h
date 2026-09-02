@@ -62,52 +62,52 @@
 namespace PinNo
 {
 /** Pin number of onboard LED */
-constexpr uint8_t onBoardLedPinNo       = CONFIG_PIN_ONBOARD_LED;
+constexpr uint8_t onBoardLedPinNo      = CONFIG_PIN_ONBOARD_LED;
 
 /** Pin number of button "ok" (former user button) */
-constexpr uint8_t buttonOkPinNo         = CONFIG_PIN_BUTTON_OK;
+constexpr uint8_t buttonOkPinNo        = CONFIG_PIN_BUTTON_OK;
 
 /** Pin number of button "left" */
-constexpr uint8_t buttonLeftPinNo       = CONFIG_PIN_BUTTON_LEFT;
+constexpr uint8_t buttonLeftPinNo      = CONFIG_PIN_BUTTON_LEFT;
 
 /** Pin number of button "right" */
-constexpr uint8_t buttonRightPinNo      = CONFIG_PIN_BUTTON_RIGHT;
+constexpr uint8_t buttonRightPinNo     = CONFIG_PIN_BUTTON_RIGHT;
 
 /** Pin number of button "reset" */
-constexpr uint8_t buttonResetPinNo      = CONFIG_PIN_BUTTON_RESET;
+constexpr uint8_t buttonResetPinNo     = CONFIG_PIN_BUTTON_RESET;
 
 /** Pin number of dht sensor in */
-constexpr uint8_t dhtInPinNo            = CONFIG_PIN_DHT_IN;
+constexpr uint8_t dhtInPinNo           = CONFIG_PIN_DHT_IN;
 
 /** Pin number of I2C SDA */
-constexpr uint8_t i2cSdaPinNo           = CONFIG_PIN_I2C_SDA;
+constexpr uint8_t i2cSdaPinNo          = CONFIG_PIN_I2C_SDA;
 
 /** Pin number of I2C SCL */
-constexpr uint8_t i2cSclPinNo           = CONFIG_PIN_I2C_SCL;
+constexpr uint8_t i2cSclPinNo          = CONFIG_PIN_I2C_SCL;
 
 /** Pin number of test pin */
-constexpr uint8_t testPinNo             = CONFIG_PIN_TEST;
+constexpr uint8_t testPinNo            = CONFIG_PIN_TEST;
 
 /** Pin number of I2S word select (chooses between left and right channel) */
-constexpr uint8_t i2sWordSelectPinNo    = CONFIG_PIN_I2S_WS;
+constexpr uint8_t i2sWordSelectPinNo   = CONFIG_PIN_I2S_WS;
 
 /** Pin number of I2S serial clock (bit clock line BCLK) */
-constexpr uint8_t i2sSerialClockPinNo   = CONFIG_PIN_I2S_SC;
+constexpr uint8_t i2sSerialClockPinNo  = CONFIG_PIN_I2S_SC;
 
 /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
-constexpr uint8_t i2sSerialDataInPinNo  = CONFIG_PIN_I2S_DI;
+constexpr uint8_t i2sSerialDataInPinNo = CONFIG_PIN_I2S_DI;
 
 /** Pin number of LDR in */
-constexpr uint8_t ldrInPinNo            = CONFIG_PIN_LDR_IN;
+constexpr uint8_t ldrInPinNo           = CONFIG_PIN_LDR_IN;
 
 /** Pin number of battery voltage in */
-constexpr uint8_t batteryInPinNo        = CONFIG_PIN_BATTERY_IN;
+constexpr uint8_t batteryInPinNo       = CONFIG_PIN_BATTERY_IN;
 
 /** Pin number of buzzer out */
-constexpr uint8_t buzzerOutPinNo        = CONFIG_PIN_BUZZER_OUT;
+constexpr uint8_t buzzerOutPinNo       = CONFIG_PIN_BUZZER_OUT;
 
 /** Pin number of TFT display backlight LED switch. */
-constexpr uint8_t tftBackLightPinNo      = TFT_BL;
+constexpr uint8_t tftBackLightPinNo    = TFT_BL;
 }; /* namespace PinNo */
 
 /** Pin abstractions */

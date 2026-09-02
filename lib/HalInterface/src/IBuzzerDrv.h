@@ -70,22 +70,22 @@ public:
 
     /**
      * Initialize the driver.
-     * 
+     *
      * @param[in] buzzerOut  Digital output for buzzer.
      */
-    virtual void init(const DOutPin& buzzerOut) = 0;
+    virtual void init(const DOutPin& buzzerOut)   = 0;
 
     /**
      * Stop playing.
      */
-    virtual void stop() = 0;
+    virtual void stop()                           = 0;
 
     /**
      * Play a tone by frequency. Last duty cycle is used.
      *
      * @param[in] freq  Frequency in Hz
      */
-    virtual void play(uint32_t freq) = 0;
+    virtual void play(uint32_t freq)              = 0;
 
     /**
      * Play a tone by frequency and duty cycle.
@@ -100,7 +100,7 @@ public:
      *
      * @param[in] dc    Duty cycle in digits [0; 1023]
      */
-    virtual void changeDutyCycle(uint16_t dc) = 0;
+    virtual void changeDutyCycle(uint16_t dc)     = 0;
 
 protected:
 

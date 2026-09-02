@@ -126,7 +126,7 @@ public:
 
     /**
      * Initialize the driver.
-     * 
+     *
      * @param[in] buttonOkIn    Digital input for button "ok".
      * @param[in] buttonLeftIn  Digital input for button "left".
      * @param[in] buttonRightIn Digital input for button "right".
@@ -142,7 +142,7 @@ public:
      *
      * @return Button state
      */
-    virtual ButtonState getState(ButtonId buttonId) = 0;
+    virtual ButtonState getState(ButtonId buttonId)                                                      = 0;
 
     /**
      * Register an observer to get notifyed about button
@@ -150,12 +150,12 @@ public:
      *
      * @param[in] observer  The button observer
      */
-    virtual void registerObserver(IButtonObserver& observer) = 0;
+    virtual void registerObserver(IButtonObserver& observer)                                             = 0;
 
     /**
      * Unregister the current observer.
      */
-    virtual void unregisterObserver() = 0;
+    virtual void unregisterObserver()                                                                    = 0;
 
     /**
      * Enable all buttons as wakeup sources.
@@ -167,7 +167,7 @@ public:
      *          wakeup sources are not enabled. Otherwise it will return true
      *          and the wakeup sources are enabled.
      */
-    virtual bool enableWakeUpSources() = 0;
+    virtual bool enableWakeUpSources()                                                                   = 0;
 
 protected:
 

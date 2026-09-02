@@ -66,8 +66,7 @@ public:
     /**
      * Destroys display.
      */
-    virtual ~IDisplay()
-    {
+    virtual ~IDisplay() {
     };
 
     /**
@@ -75,13 +74,13 @@ public:
      *
      * @return If successful, returns true otherwise false.
      */
-    virtual bool begin() = 0;
+    virtual bool begin()                           = 0;
 
     /**
      * Show framebuffer on physical display. This may be synchronous
      * or asynchronous.
      */
-    virtual void show() = 0;
+    virtual void show()                            = 0;
 
     /**
      * The display is ready, when the last physical pixel update is finished.
@@ -89,7 +88,7 @@ public:
      *
      * @return If ready for another update via show(), it will return true otherwise false.
      */
-    virtual bool isReady() const = 0;
+    virtual bool isReady() const                   = 0;
 
     /**
      * Set brightness from 0 to 255.
@@ -101,24 +100,24 @@ public:
     /**
      * Clear display.
      */
-    virtual void clear() = 0;
+    virtual void clear()                           = 0;
 
     /**
      * Power display off.
      */
-    virtual void off() = 0;
+    virtual void off()                             = 0;
 
     /**
      * Power display on.
      */
-    virtual void on() = 0;
+    virtual void on()                              = 0;
 
     /**
      * Is display powered on?
      *
      * @return If display is powered on, it will return true otherwise false.
      */
-    virtual bool isOn() const = 0;
+    virtual bool isOn() const                      = 0;
 
 protected:
 

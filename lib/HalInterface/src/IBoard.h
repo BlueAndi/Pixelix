@@ -74,38 +74,38 @@ public:
 
     /**
      * Initialize the board.
-     * 
+     *
      * @return If successful initialized it will return true otherwise false.
      */
-    virtual bool init()                = 0;
+    virtual bool init()                  = 0;
 
     /**
      * Get the button driver.
      *
      * @return Button driver
      */
-    virtual IButtonDrv& getButtonDrv() = 0;
+    virtual IButtonDrv& getButtonDrv()   = 0;
 
     /**
      * Get the buzzer driver.
      *
      * @return Buzzer driver
      */
-    virtual IBuzzerDrv& getBuzzerDrv() = 0;
+    virtual IBuzzerDrv& getBuzzerDrv()   = 0;
 
     /**
      * Get the onboard LED driver.
      *
      * @return LED driver
      */
-    virtual ILedDrv& getLedDrv()       = 0;
+    virtual ILedDrv& getLedDrv()         = 0;
 
     /**
      * Get the system driver.
      *
      * @return System driver
      */
-    virtual ISystemDrv& getSystemDrv() = 0;
+    virtual ISystemDrv& getSystemDrv()   = 0;
 
     /**
      * Get the display driver.

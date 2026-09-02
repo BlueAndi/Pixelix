@@ -67,7 +67,7 @@ public:
 
     /**
      * Initialize the driver.
-     * 
+     *
      * @param[in] pin Digital output pin to switch the LED on/off.
      */
     virtual void init(const DOutPin& pin) = 0;
@@ -75,19 +75,19 @@ public:
     /**
      * Switch LED on.
      */
-    virtual void on() = 0;
+    virtual void on()                     = 0;
 
     /**
      * Switch LED off.
      */
-    virtual void off() = 0;
+    virtual void off()                    = 0;
 
     /**
      * Is the LED on?
      *
      * @return If LED is on, it will return true otherwise false.
      */
-    virtual bool isOn() = 0;
+    virtual bool isOn()                   = 0;
 
 protected:
 

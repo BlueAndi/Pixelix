@@ -72,26 +72,26 @@ public:
     /**
      * Initialize the driver.
      */
-    virtual void init() = 0;
+    virtual void init()                             = 0;
 
     /**
      * Reset the system.
      */
-    virtual void reset() = 0;
+    virtual void reset()                            = 0;
 
     /**
      * Get the chip revision.
      *
      * @return Chip revision
      */
-    virtual uint8_t getChipRevision() const = 0;
+    virtual uint8_t getChipRevision() const         = 0;
 
     /**
      * Get the CPU frequency.
      *
      * @return CPU frequency in MHz
      */
-    virtual uint32_t getCpuFreqMHz() const = 0;
+    virtual uint32_t getCpuFreqMHz() const          = 0;
 
     /**
      * Get the flash chip read mode as a string.
@@ -105,42 +105,42 @@ public:
      *
      * @return Flash chip speed in Hz
      */
-    virtual uint32_t getFlashChipSpeed() const = 0;
+    virtual uint32_t getFlashChipSpeed() const      = 0;
 
     /**
      * Get the flash chip size.
      *
      * @return Flash chip size in byte
      */
-    virtual uint32_t getFlashChipSize() const = 0;
+    virtual uint32_t getFlashChipSize() const       = 0;
 
     /**
      * Get the SDK version.
      *
      * @return SDK version string
      */
-    virtual const char* getSdkVersion() const = 0;
+    virtual const char* getSdkVersion() const       = 0;
 
     /**
      * Get the LwIP version.
      *
      * @return LwIP version string
      */
-    virtual const char* getLwIPVersion() const = 0;
+    virtual const char* getLwIPVersion() const      = 0;
 
     /**
      * Get the LittleFS version.
      *
      * @return LittleFS version string
      */
-    virtual const char* getLittleFSVersion() const = 0;
+    virtual const char* getLittleFSVersion() const  = 0;
 
     /**
      * Get the mbedTLS version.
      *
      * @return mbedTLS version string
      */
-    virtual const char* getMbedTlsVersion() const = 0;
+    virtual const char* getMbedTlsVersion() const   = 0;
 
     /**
      * Get the factory programmed wifi MAC address.
@@ -154,21 +154,21 @@ public:
      *
      * @param[out] chipId   Chip id
      */
-    virtual void getChipId(String& chipId) const = 0;
+    virtual void getChipId(String& chipId) const    = 0;
 
     /**
      * Get the PSRAM size.
      *
      * @return PSRAM size in byte
      */
-    virtual uint32_t getPsramSize() const = 0;
+    virtual uint32_t getPsramSize() const           = 0;
 
     /**
      * Get the currently free PSRAM.
      *
      * @return Free PSRAM in byte
      */
-    virtual uint32_t getFreePsram() const = 0;
+    virtual uint32_t getFreePsram() const           = 0;
 
 protected:
 

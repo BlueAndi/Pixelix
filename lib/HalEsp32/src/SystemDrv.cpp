@@ -120,13 +120,13 @@ const char* SystemDrv::getMbedTlsVersion() const
 
 void SystemDrv::getEFuseMAC(String& macAddr) const
 {
-    const uint64_t efuseMac = ESP.getEfuseMac();
-    const uint8_t  byte1    = (efuseMac >> 40U) & 0xffU;
-    const uint8_t  byte2    = (efuseMac >> 32U) & 0xffU;
-    const uint8_t  byte3    = (efuseMac >> 24U) & 0xffU;
-    const uint8_t  byte4    = (efuseMac >> 16U) & 0xffU;
-    const uint8_t  byte5    = (efuseMac >> 8U) & 0xffU;
-    const uint8_t  byte6    = (efuseMac >> 0U) & 0xffU;
+    const uint64_t efuseMac   = ESP.getEfuseMac();
+    const uint8_t  byte1      = (efuseMac >> 40U) & 0xffU;
+    const uint8_t  byte2      = (efuseMac >> 32U) & 0xffU;
+    const uint8_t  byte3      = (efuseMac >> 24U) & 0xffU;
+    const uint8_t  byte4      = (efuseMac >> 16U) & 0xffU;
+    const uint8_t  byte5      = (efuseMac >> 8U) & 0xffU;
+    const uint8_t  byte6      = (efuseMac >> 0U) & 0xffU;
     const size_t   bufferSize = 18U;
     char           buffer[bufferSize];
 
@@ -137,9 +137,9 @@ void SystemDrv::getEFuseMAC(String& macAddr) const
 
 void SystemDrv::getChipId(String& chipId) const
 {
-    const uint64_t efuseMac = ESP.getEfuseMac();
-    const int32_t  highPart = (efuseMac >> 8U) & 0x0000ffffU;
-    const int32_t  lowPart  = (efuseMac >> 0U) & 0xffffffffU;
+    const uint64_t efuseMac   = ESP.getEfuseMac();
+    const int32_t  highPart   = (efuseMac >> 8U) & 0x0000ffffU;
+    const int32_t  lowPart    = (efuseMac >> 0U) & 0xffffffffU;
     const size_t   bufferSize = 13U;
     char           buffer[bufferSize];
 
