@@ -66,7 +66,8 @@ public:
     /**
      * Destroys display.
      */
-    virtual ~IDisplay() {
+    virtual ~IDisplay()
+    {
     };
 
     /**
