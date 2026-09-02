@@ -54,6 +54,9 @@
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Abstract LED driver interface.
+ */
 class ILedDrv
 {
 public:

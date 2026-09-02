@@ -123,6 +123,8 @@ protected:
 
     /**
      * Construct display.
+     *
+     * @param[in] bitmap Display framebuffer.
      */
     IDisplay(YAGfxBitmap& bitmap) :
         YAGfx(bitmap)

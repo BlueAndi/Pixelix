@@ -159,6 +159,8 @@ protected:
 
     /**
      * Constructs the digital output pin interface.
+     *
+     * @param[in] pinNo Arduino pin number.
      */
     DOutPin(uint8_t pinNo) :
         IoPin(pinNo, OUTPUT)
@@ -238,6 +240,9 @@ protected:
 
     /**
      * Constructs the digital input pin interface.
+     *
+     * @param[in] pinNo   Arduino pin number.
+     * @param[in] pinMode Arduino pin mode.
      */
     DInPin(uint8_t pinNo, uint8_t pinMode) :
         IoPin(pinNo, pinMode)
@@ -390,6 +395,8 @@ protected:
 
     /**
      * Constructs the analog pin interface.
+     *
+     * @param[in] pinNo Arduino pin number.
      */
     AnalogPin(uint8_t pinNo) :
         IoPin(pinNo, ANALOG)
