@@ -82,6 +82,7 @@ Build configuration is split across `config/`:
 - **Headers**: Every file starts with the MIT license block, `@file`, `@brief`, `@author` doxygen tags
 - **Naming**: Plugins must end with `Plugin` suffix; services follow the `IService` interface
 - **Python scripts**: max line length 140 (`.pylintrc`)
+- **Skill**: For writing/refactoring/reviewing embedded C/C++14 code (MISRA-oriented rules, defensive programming, Yoda conditions, single-exit "pathfinder" rule, Doxygen, section-banner layout, clang-format), use the [embedded-cpp-reference](.claude/skills/embedded-cpp-reference/SKILL.md) skill, which includes `.h`/`.hpp`/`.cpp` templates.
 
 ## Testing
 
