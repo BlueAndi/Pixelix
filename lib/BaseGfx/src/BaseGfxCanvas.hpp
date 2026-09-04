@@ -232,6 +232,49 @@ public:
     }
 
     /**
+     * Get the visible area in canvas coordinates. Every graphic operation
+     * outside of the visible area has no effect.
+     *
+     * The canvas is a window inside its parent canvas. Therefore it is visible
+     * only as long as it is inside the visible area of the parent canvas.
+     *
+     * @param[out] x        x-coordinate of the upper left corner of the visible area.
+     * @param[out] y        y-coordinate of the upper left corner of the visible area.
+     * @param[out] width    Width of the visible area in pixel.
+     * @param[out] height   Height of the visible area in pixel.
+     */
+    void getVisibleArea(int16_t& x, int16_t& y, uint16_t& width, uint16_t& height) const final
+    {
+        x = 0;
+        y = 0;
+
+        /* Without parent canvas nothing is visible. */
+        if (nullptr == m_parentGfx)
+        {
+            width  = 0U;
+            height = 0U;
+        }
+        else
+        {
+            int16_t  parentX      = 0;
+            int16_t  parentY      = 0;
+            uint16_t parentWidth  = 0U;
+            uint16_t parentHeight = 0U;
+
+            width  = m_width;
+            height = m_height;
+
+            m_parentGfx->getVisibleArea(parentX, parentY, parentWidth, parentHeight);
+
+            /* Consider the visible area of the parent canvas, mapped to the
+             * own coordinate system.
+             */
+            BaseGfx<TColor>::intersectRange(x, width, static_cast<int16_t>(parentX - m_offsX), parentWidth);
+            BaseGfx<TColor>::intersectRange(y, height, static_cast<int16_t>(parentY - m_offsY), parentHeight);
+        }
+    }
+
+    /**
      * Get pixel color at given position.
      * This is used for color manipulation in higher layers.
      *
