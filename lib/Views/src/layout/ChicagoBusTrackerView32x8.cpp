@@ -95,7 +95,7 @@ static const int16_t RTE_SECTION_Y       = 0;
 /**
  * Text width in pixels.
  */
-static const uint16_t ARR_SECTION_WIDTH  = CONFIG_LED_MATRIX_WIDTH - RTE_SECTION_WIDTH;
+static const uint16_t ARR_SECTION_WIDTH  = CONFIG_LED_MATRIX_WIDTH - RTE_SECTION_WIDTH - 1U;
 
 /**
  * Text height in pixels.
