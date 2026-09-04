@@ -84,14 +84,14 @@ public:
      *
      * @return Canvas width in pixel.
      */
-    virtual uint16_t getWidth() const                                                                        = 0;
+    virtual uint16_t getWidth() const  = 0;
 
     /**
      * Get canvas height in pixel.
      *
      * @return Canvas height in pixel.
      */
-    virtual uint16_t getHeight() const                                                                       = 0;
+    virtual uint16_t getHeight() const = 0;
 
     /**
      * Get the visible area in canvas coordinates. Every graphic operation

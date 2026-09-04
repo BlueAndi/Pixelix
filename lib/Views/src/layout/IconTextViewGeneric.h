@@ -248,9 +248,9 @@ protected:
      */
     static const int16_t TEXT_Y           = 0;
 
-    Fonts::FontType      m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
-    BitmapWidget         m_bitmapWidget;      /**< Bitmap widget used to show a icon. */
-    TextWidget           m_textWidget;        /**< Text widget used to show some text. */
+    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
+    BitmapWidget         m_bitmapWidget; /**< Bitmap widget used to show a icon. */
+    TextWidget           m_textWidget;   /**< Text widget used to show some text. */
 
 private:
 

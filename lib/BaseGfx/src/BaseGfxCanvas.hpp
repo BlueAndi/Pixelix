@@ -261,8 +261,8 @@ public:
             uint16_t parentWidth  = 0U;
             uint16_t parentHeight = 0U;
 
-            width  = m_width;
-            height = m_height;
+            width                 = m_width;
+            height                = m_height;
 
             m_parentGfx->getVisibleArea(parentX, parentY, parentWidth, parentHeight);
 
