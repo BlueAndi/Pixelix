@@ -47,6 +47,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.hpp>
 #include <ProgressBar.h>
 #include <Util.h>
 #include <FileSystem.h>
@@ -65,7 +66,7 @@
 /**
  * View for 32x16 LED matrix with icon, text and progress bar.
  */
-class PlayerView32x16 : public IPlayerView
+class PlayerView32x16 : public IPlayerView, public ScrollableView
 {
 public:
 
@@ -74,11 +75,14 @@ public:
      */
     PlayerView32x16() :
         IPlayerView(),
+        ScrollableView(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
-        m_progressBar(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT, PROGRESS_BAR_X, PROGRESS_BAR_Y)
+        m_progressBar(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT, PROGRESS_BAR_X, PROGRESS_BAR_Y),
+        m_isIconScrolling(false)
     {
+        applyScrollLayout();
     }
 
     /**
@@ -131,8 +135,47 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_bitmapWidget.update(gfx);
-        m_textWidget.update(gfx);
+
+        /* If only the text scrolls, the icon is not part of the scrolling
+         * content and therefore it is drawn by the view itself.
+         */
+        if (false == m_isIconScrolling)
+        {
+            m_bitmapWidget.update(gfx);
+        }
+
+        ScrollableView::update(gfx, m_textWidget);
+
+        /* The progress bar is not part of the scrolling content, it stays at
+         * its position.
+         */
+        m_progressBar.update(gfx);
+    }
+
+    /**
+     * Does the icon scroll together with the text?
+     *
+     * @return If the icon scrolls together with the text, it will return true otherwise false.
+     */
+    bool isIconScrolling() const override
+    {
+        return m_isIconScrolling;
+    }
+
+    /**
+     * Set whether the icon scrolls together with the text or whether only the
+     * text scrolls inside its own area.
+     *
+     * @param[in] isScrolling   Scroll the icon together with the text (true) or not (false).
+     */
+    void setIconScrolling(bool isScrolling) override
+    {
+        if (m_isIconScrolling != isScrolling)
+        {
+            m_isIconScrolling = isScrolling;
+
+            applyScrollLayout();
+        }
     }
 
     /**
@@ -258,10 +301,44 @@ protected:
      */
     static const int16_t PROGRESS_BAR_Y       = CONFIG_LED_MATRIX_HEIGHT - 1;
 
-    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    BitmapWidget         m_bitmapWidget; /**< Bitmap widget used to show a icon. */
-    TextWidget           m_textWidget;   /**< Text widget used to show some text. */
-    ProgressBar          m_progressBar;  /**< Progress bar for the music. */
+    Fonts::FontType      m_fontType;        /**< Font type which shall be used if there is no conflict with the layout. */
+    BitmapWidget         m_bitmapWidget;    /**< Bitmap widget used to show a icon. */
+    TextWidget           m_textWidget;      /**< Text widget used to show some text. */
+    ProgressBar          m_progressBar;     /**< Progress bar for the music. */
+    bool                 m_isIconScrolling; /**< Shall the icon scroll together with the text? */
+
+    /**
+     * Apply the layout of the scrolling content. It depends on whether the
+     * icon shall scroll together with the text.
+     */
+    void applyScrollLayout()
+    {
+        m_bitmapWidget.move(BITMAP_X, BITMAP_Y);
+
+        if (true == m_isIconScrolling)
+        {
+            /* Icon and text scroll together, therefore both are part of the
+             * scrolling content, which spans the whole view.
+             */
+            ScrollableView::beginScrollLayout(0, 0, CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT);
+
+            m_textWidget.move(TEXT_X, TEXT_Y);
+
+            addScrollableWidget(m_bitmapWidget);
+            addScrollableWidget(m_textWidget);
+        }
+        else
+        {
+            /* Only the text scrolls, therefore the scrolling content is limited
+             * to the text area. This keeps the text away from the icon.
+             */
+            ScrollableView::beginScrollLayout(TEXT_X, TEXT_Y, TEXT_WIDTH, TEXT_HEIGHT);
+
+            m_textWidget.move(0, 0);
+
+            addScrollableWidget(m_textWidget);
+        }
+    }
 
 private:
 

@@ -53,7 +53,6 @@
 #include <YAGfxBrush.h>
 #include "Alignment.h"
 #include "TWAbstractSyntaxTree.h"
-#include "ScrollController.h"
 
 /******************************************************************************
  * Macros
@@ -181,6 +180,25 @@ public:
     String getStr() const;
 
     /**
+     * Get the bounding box of the current text.
+     *
+     * @param[out] width  Text width in pixels.
+     * @param[out] height Text height in pixels.
+     * @param[in]  limitWidth  If true, use the widget width for wrapping.
+     * @return True if the text could be measured, otherwise false.
+     */
+    bool getTextSize(uint16_t& width, uint16_t& height, bool limitWidth = true);
+
+    /**
+     * Get the number of text lines, which fit into the text widget.
+     * A multi-line text widget wraps the text around, a single line text
+     * widget doesn't.
+     *
+     * @return Number of text lines
+     */
+    uint16_t getLineCount() const;
+
+    /**
      * Get brush used to draw text.
      *
      * @return Brush used to draw text.
@@ -266,29 +284,6 @@ public:
     {
         return m_gfxText.getFont();
     }
-
-    /**
-     * Change scroll speed of all text widgets by changing the pause between each movement.
-     *
-     * @param[in] pause Scroll pause in ms
-     *
-     * @return If successful set, it will return true otherwise false.
-     */
-    static bool setScrollPause(uint32_t pause)
-    {
-        return ScrollController::setScrollPause(pause);
-    }
-
-    /**
-     * Get scrolling informations of latest set text.
-     * If a text is just set, it needs one cycle to have the scroll information ready.
-     *
-     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
-     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
-     *
-     * @return If scroll information is ready, it will return true otherwise false.
-     */
-    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt);
 
     /**
      * Set the horizontal alignment.
@@ -400,8 +395,6 @@ private:
     FadeState                m_fadeState;           /**< The current fade state. Used to switch from old to new text. */
     uint8_t                  m_fadeBrightness;      /**< Brightness value used for fading. */
     bool                     m_isFadeEffectEnabled; /**< Is fade effect enabled? */
-    ScrollController         m_scrollCtrl;          /**< Scroll controller for current text */
-    ScrollController         m_scrollCtrlNew;       /**< Scroll controller for new text */
     uint16_t                 m_textHeight;          /**< Text height in pixel */
     uint16_t                 m_textHeightNew;       /**< Text height in pixel for new text */
     bool                     m_prepareNewText;      /**< User set new text, which shall be prepared. */
@@ -439,12 +432,6 @@ private:
      * Align the current text horizontal by calculating the x-coordinate of the
      * current text box.
      *
-     * Horizontal alignment will only be done for
-     * - Static text
-     * - Text scrolling from bottom to top
-     *
-     * Otherwise the x-coordinate will be set to 0.
-     *
      * @param[in] gfx       Graphic functionality, used for bound box calculation.
      * @param[in] text      Text for which the alignment is calculated.
      * @param[in] hAlign    Horizontal alignment.
@@ -466,37 +453,9 @@ private:
     void alignTextVertical();
 
     /**
-     * Get the number of lines, which can be used by the text widget.
-     *
-     * @return Number of lines
-     */
-    uint16_t getLineCount() const;
-
-    /**
-     * Can text be shown static or is scrolling required?
-     *
-     * @param[in] gfx           Graphics interface
-     * @param[in] textBoxWidth  Text box width in pixel
-     * @param[in] textBoxHeight Text box height in pixel
-     *
-     * @return If text can be shown static, it will return true otherwise false.
-     */
-    bool isStaticText(YAGfx& gfx, uint16_t textBoxWidth, uint16_t textBoxHeight) const;
-
-    /**
      * Checks new text and prepares the scroll information.
-     *
-     * @param[in] gfx   The graphics functionality, necessary to determine text width and etc.
      */
-    void prepareNewText(YAGfx& gfx);
-
-    /**
-     * Calculate the cursor start position depended on the scrolling direction.
-     *
-     * @param[out] curX Cursor x-coordindate
-     * @param[out] curY Cursor y-coordinate
-     */
-    void calculateCursorPos(int16_t& curX, int16_t& curY) const;
+    void prepareNewText();
 
     /**
      * Handle the fade effect.
@@ -555,9 +514,8 @@ private:
      *
      * @param[in] gfx           Graphics, used to draw the characters.
      * @param[in] ast           The abstract syntax tree.
-     * @param[in] isScrolling   Is text scrolling or not.
      */
-    void show(YAGfx& gfx, const TWAbstractSyntaxTree& ast, bool isScrolling);
+    void show(YAGfx& gfx, const TWAbstractSyntaxTree& ast);
 
     /**
      * Compares two keywords.

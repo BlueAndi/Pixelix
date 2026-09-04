@@ -155,6 +155,7 @@ OpenWeatherView32x16::OpenWeatherView32x16() :
     m_imagePath(nullptr),
     m_weatherIconCurrent(WEATHER_ICON_CURRENT_WIDTH, WEATHER_ICON_CURRENT_HEIGHT, WEATHER_ICON_CURRENT_X, WEATHER_ICON_CURRENT_Y),
     m_weatherInfoCurrentText(WEATHER_INFO_TEXT_CURRENT_WIDTH, WEATHER_INFO_TEXT_CURRENT_HEIGHT, WEATHER_INFO_TEXT_CURRENT_X, WEATHER_INFO_TEXT_CURRENT_Y),
+    m_weatherInfoCurrentScroll(m_weatherInfoCurrentText),
     m_viewDurationTimer(),
     m_viewDuration(0U),
     m_temperatureUnit(),
@@ -178,7 +179,7 @@ void OpenWeatherView32x16::update(YAGfx& gfx)
 
     gfx.fillScreen(ColorDef::BLACK);
     m_weatherIconCurrent.update(gfx);
-    m_weatherInfoCurrentText.update(gfx);
+    m_weatherInfoCurrentScroll.update(gfx, m_weatherInfoCurrentText);
 }
 
 void OpenWeatherView32x16::setWeatherInfoCurrent(const WeatherInfoCurrent& info)

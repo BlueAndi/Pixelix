@@ -70,7 +70,12 @@ bool IconTextViewGeneric::loadIcon(const String& filename, FS& fs)
     }
     else
     {
-        setTextWidgetReducedWidth();
+        if (false == m_isIconVisible)
+        {
+            m_isIconVisible = true;
+
+            applyScrollLayout();
+        }
 
         isSuccessful = true;
     }

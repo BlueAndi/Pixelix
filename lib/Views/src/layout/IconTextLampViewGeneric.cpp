@@ -70,7 +70,12 @@ bool IconTextLampViewGeneric::loadIcon(const String& filename, FS& fs)
     }
     else
     {
-        setTextWidgetFullWidth();
+        if (false == m_isIconVisible)
+        {
+            m_isIconVisible = true;
+
+            applyScrollLayout();
+        }
 
         isSuccessful = true;
     }

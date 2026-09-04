@@ -176,6 +176,10 @@
                             <input class="form-control" type="number" id="offset" name="offset" value="0" />
                             <small class="form-text">Number which is added to a number value. Not used for string values.</small>
                         </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false).</label>
+                        </div>
                         <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
@@ -367,6 +371,7 @@
                     document.getElementById("format").value = rsp.data.format;
                     document.getElementById("multiplier").value = rsp.data.multiplier;
                     document.getElementById("offset").value = rsp.data.offset;
+                    document.getElementById("scrollIcon").checked = rsp.data.scrollIcon;
                 } catch (rsp) {
                     alert("Internal error.");
                 } finally {
@@ -388,7 +393,8 @@
                             iconFileId: document.getElementById("iconFileId").value,
                             format: document.getElementById("format").value,
                             multiplier: document.getElementById("multiplier").value,
-                            offset: document.getElementById("offset").value
+                            offset: document.getElementById("offset").value,
+                            scrollIcon: document.getElementById("scrollIcon").checked
                         }
                     });
                     alert("Ok.");

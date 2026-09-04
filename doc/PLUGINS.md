@@ -53,16 +53,22 @@ The generic plugins allow the user to control the different UI elements describe
 The plugin can grab information in JSON format via MQTT and shows it on the display.
 [Configuration examples](./grabConfigs/mqtt/) may help to configure.
 
+Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
+
 ### GrabViaRestPlugin
 
 The plugin can grab information in JSON format via REST API and shows it on the display.
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/GrabViaRestPlugin).
 [Configuration examples](./grabConfigs/rest/) may help to configure.
 
+Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
+
 ### IconTextPlugin
 
 The IconTextPlugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.\
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/IconTextPlugin).
+
+A too long text will scroll. Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`). By default only the text scrolls.
 
 If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
 
@@ -70,6 +76,8 @@ If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
 
 The IconTextLampPlugin shows an icon on left side, text on right side and lamps at the bottom.\
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/IconTextLampPlugin).
+
+A too long text will scroll. Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`). By default only the text scrolls.
 
 If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
 
@@ -108,6 +116,8 @@ All configuration can also be set via the REST API, and route information can be
 
 The CountdownPlugin shows the remaining days until a configured target date.\
 Target date and the description of the target day (plural/singular form) can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/CountdownPlugin).
+
+Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
 
 ### DateTimePlugin
 
@@ -168,6 +178,8 @@ The GameOfLifePlugin shows the game of life game on the display.
 The GruenbeckPlugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.\
 The IP address of the Gruenbeck webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/GruenbeckPlugin).
 
+Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
+
 ### MakapixPlugin
 
 This plugin is a Makapix player ([https://makapix.club](https://makapix.club)) that plays pixel artwork.
@@ -221,6 +233,8 @@ Powered by sunrise-sunset.org
 
 Configure the time format in the plugin configuration JSON file. The format itself is according to strftime(). For colorization text properties can be added.
 
+Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
+
 ### SysMsgPlugin
 
 The SysMsgPlugin is a system plugin, which is used to splash important information's to the user. Note, it can not be uninstalled.
@@ -238,6 +252,8 @@ The TestPlugin can be used to check whether the LED matrix topology (layout) is 
 The VolumioPlugin shows the current VOLUMIO state as icon and the played artist/title.\
 If the VOLUMIO server is offline, the plugin gets automatically disabled, otherwise enabled.\
 The host address of the Volumio webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/VolumioPlugin).
+
+Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
 
 ### WifiStatusPlugin
 

@@ -44,6 +44,7 @@
 #include <Wire.h>
 #include <IconTextPlugin.h>
 #include <ViewConfig.h>
+#include <ScrollContainer.h>
 
 #include "ButtonDrv.h"
 #include "ClockDrv.h"
@@ -224,7 +225,7 @@ void InitState::entry(StateMachine& sm)
         {
             /* Set text scroll pause for all text widgets. */
             uint32_t scrollPause = settings.getScrollPause().getValue();
-            if (false == TextWidget::setScrollPause(scrollPause))
+            if (false == ScrollContainer::setScrollPause(scrollPause))
             {
                 LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
             }

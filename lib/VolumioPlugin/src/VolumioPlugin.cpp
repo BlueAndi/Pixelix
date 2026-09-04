@@ -92,8 +92,9 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
     {
         const size_t      JSON_DOC_SIZE = 512U;
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject        jsonCfg  = jsonDoc.to<JsonObject>();
-        JsonVariantConst  jsonHost = value["host"];
+        JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonHost       = value["host"];
+        JsonVariantConst  jsonScrollIcon = value["scrollIcon"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -110,6 +111,27 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         {
             jsonCfg["host"] = jsonHost.as<const char*>();
             isSuccessful    = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
@@ -303,13 +325,15 @@ void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["host"] = m_volumioHost;
+    jsonCfg["host"]       = m_volumioHost;
+    jsonCfg["scrollIcon"] = m_view.isIconScrolling();
 }
 
 bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status   = false;
-    JsonVariantConst jsonHost = jsonCfg["host"];
+    bool             status         = false;
+    JsonVariantConst jsonHost       = jsonCfg["host"];
+    JsonVariantConst jsonScrollIcon = jsonCfg["scrollIcon"];
 
     if (false == jsonHost.is<String>())
     {
@@ -326,7 +350,15 @@ bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_hasTopicChanged = true;
 
-        status            = true;
+        /* The scroll behaviour is optional to stay compatible with a
+         * configuration, which was stored before it was introduced.
+         */
+        if (true == jsonScrollIcon.is<bool>())
+        {
+            m_view.setIconScrolling(jsonScrollIcon.as<bool>());
+        }
+
+        status = true;
     }
 
     return status;

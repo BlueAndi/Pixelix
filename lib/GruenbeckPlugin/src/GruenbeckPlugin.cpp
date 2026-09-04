@@ -94,7 +94,8 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg = jsonDoc.to<JsonObject>();
         String            ipAddress;
-        JsonVariantConst  jsonIpAddress = value["ipAddress"];
+        JsonVariantConst  jsonIpAddress  = value["ipAddress"];
+        JsonVariantConst  jsonScrollIcon = value["scrollIcon"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -111,6 +112,27 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value
         {
             jsonCfg["ipAddress"] = jsonIpAddress.as<const char*>();
             isSuccessful         = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
@@ -290,13 +312,15 @@ void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["ipAddress"] = m_ipAddress;
+    jsonCfg["ipAddress"]  = m_ipAddress;
+    jsonCfg["scrollIcon"] = m_view.isIconScrolling();
 }
 
 bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status        = false;
-    JsonVariantConst jsonIpAddress = jsonCfg["ipAddress"];
+    bool             status         = false;
+    JsonVariantConst jsonIpAddress  = jsonCfg["ipAddress"];
+    JsonVariantConst jsonScrollIcon = jsonCfg["scrollIcon"];
 
     if (false == jsonIpAddress.is<String>())
     {
@@ -313,7 +337,15 @@ bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_hasTopicChanged = true;
 
-        status            = true;
+        /* The scroll behaviour is optional to stay compatible with a
+         * configuration, which was stored before it was introduced.
+         */
+        if (true == jsonScrollIcon.is<bool>())
+        {
+            m_view.setIconScrolling(jsonScrollIcon.as<bool>());
+        }
+
+        status = true;
     }
 
     return status;

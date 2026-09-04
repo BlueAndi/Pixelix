@@ -151,6 +151,10 @@
                             </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
                         </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false). This setting is always stored persistent.</label>
+                        </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="storeFlag" name="storeFlag" value="0" />
                             <label class="form-label" for="storeFlag">Store the icon file id and the text persistent (true) or not (false). It will be used after restart.</label>
@@ -364,7 +368,7 @@
                 }
             }
 
-            async function getText(pluginUid, justTextId, iconFileId, storeFlagId) {
+            async function getText(pluginUid, justTextId, iconFileId, scrollIconId, storeFlagId) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
@@ -374,10 +378,12 @@
                     });
                     const justTextInput = document.getElementById(justTextId);
                     const iconFileIdInput = document.getElementById(iconFileId);
+                    const scrollIconInput = document.getElementById(scrollIconId);
                     const storeFlagIdInput = document.getElementById(storeFlagId);
 
                     justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
                     iconFileIdInput.value = rsp.data.iconFileId;
+                    scrollIconInput.checked = rsp.data.scrollIcon;
                     storeFlagIdInput.checked = false;
 
                 } catch (rsp) {
@@ -387,7 +393,7 @@
                 }
             }
 
-            async function setText(pluginUid, justText, iconFileId, storeFlag) {
+            async function setText(pluginUid, justText, iconFileId, scrollIcon, storeFlag) {
                 disableUI();
 
                 justText = justText.replaceAll("\\n", "\n");
@@ -401,6 +407,7 @@
                         parameter: {
                             text: justText,
                             iconFileId: Number.parseInt(iconFileId),
+                            scrollIcon: scrollIcon,
                             storeFlag: storeFlag
                         }
                     });
@@ -464,6 +471,7 @@
                         selectText.options[selectText.selectedIndex].value,
                         "justText",
                         "iconFileId",
+                        "scrollIcon",
                         "storeFlag"
                     );
                 }
@@ -489,7 +497,7 @@
 
                 const pluginUidText = document.getElementById("pluginUidText");
                 pluginUidText.addEventListener("change", () => {
-                    getText(pluginUidText.options[pluginUidText.selectedIndex].value, "justText", "iconFileId", "storeFlag");
+                    getText(pluginUidText.options[pluginUidText.selectedIndex].value, "justText", "iconFileId", "scrollIcon", "storeFlag");
                 });
 
                 const lampIdSelect = document.getElementById("lampId");
@@ -499,7 +507,7 @@
 
                 document.getElementById("myFormText").addEventListener("submit", (event) => {
                     event.preventDefault();
-                    setText(pluginUidText.options[pluginUidText.selectedIndex].value, document.getElementById("justText").value, document.getElementById("iconFileId").value, document.getElementById("storeFlag").checked);
+                    setText(pluginUidText.options[pluginUidText.selectedIndex].value, document.getElementById("justText").value, document.getElementById("iconFileId").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
                 });
 
                 document.getElementById("myFormLamp").addEventListener("submit", (event) => {

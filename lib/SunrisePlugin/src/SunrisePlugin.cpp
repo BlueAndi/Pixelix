@@ -106,6 +106,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         JsonVariantConst  jsonLongitude  = value["longitude"];
         JsonVariantConst  jsonLatitude   = value["latitude"];
         JsonVariantConst  jsonTimeFormat = value["timeFormat"];
+        JsonVariantConst  jsonScrollIcon = value["scrollIcon"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -134,6 +135,27 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         {
             jsonCfg["timeFormat"] = jsonTimeFormat.as<const char*>();
             isSuccessful          = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
@@ -306,6 +328,7 @@ void SunrisePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["longitude"]  = m_longitude;
     jsonCfg["latitude"]   = m_latitude;
     jsonCfg["timeFormat"] = m_timeFormat;
+    jsonCfg["scrollIcon"] = m_view.isIconScrolling();
 }
 
 bool SunrisePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -314,6 +337,7 @@ bool SunrisePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     JsonVariantConst jsonLon        = jsonCfg["longitude"];
     JsonVariantConst jsonLat        = jsonCfg["latitude"];
     JsonVariantConst jsonTimeFormat = jsonCfg["timeFormat"];
+    JsonVariantConst jsonScrollIcon = jsonCfg["scrollIcon"];
 
     if (false == jsonLon.is<String>())
     {
@@ -340,7 +364,15 @@ bool SunrisePlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_hasTopicChanged = true;
 
-        status            = true;
+        /* The scroll behaviour is optional to stay compatible with a
+         * configuration, which was stored before it was introduced.
+         */
+        if (true == jsonScrollIcon.is<bool>())
+        {
+            m_view.setIconScrolling(jsonScrollIcon.as<bool>());
+        }
+
+        status = true;
     }
 
     return status;

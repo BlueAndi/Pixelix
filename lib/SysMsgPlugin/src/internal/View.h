@@ -87,19 +87,7 @@ public:
     void clear()
     {
         m_textWidget.clear();
-    }
-
-    /**
-     * Get scrolling informations.
-     *
-     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
-     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
-     *
-     * @return If scroll information is ready, it will return true otherwise false.
-     */
-    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
-    {
-        return m_textWidget.getScrollInfo(isScrollingEnabled, scrollingCnt);
+        disableScrolling();
     }
 
 private:

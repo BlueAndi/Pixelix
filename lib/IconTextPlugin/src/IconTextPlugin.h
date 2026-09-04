@@ -63,6 +63,10 @@
 /**
  * Shows an icon on the left side in 8 x 8 and text on the right side.
  * If the text is too long for the display width, it automatically scrolls.
+ *
+ * Whether the icon scrolls together with the text or whether the icon stands
+ * still and only the text scrolls next to it, is configurable per plugin
+ * instance.
  */
 class IconTextPlugin : public PluginWithConfig
 {

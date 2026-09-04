@@ -120,6 +120,21 @@ public:
     virtual void setFormatText(const String& formatText)  = 0;
 
     /**
+     * Does the icon scroll together with the text?
+     *
+     * @return If the icon scrolls together with the text, it will return true otherwise false.
+     */
+    virtual bool isIconScrolling() const                  = 0;
+
+    /**
+     * Set whether the icon scrolls together with the text or whether only the
+     * text scrolls inside its own area.
+     *
+     * @param[in] isScrolling   Scroll the icon together with the text (true) or not (false).
+     */
+    virtual void setIconScrolling(bool isScrolling)       = 0;
+
+    /**
      * Load icon image from filesystem.
      *
      * @param[in] filename  Image filename

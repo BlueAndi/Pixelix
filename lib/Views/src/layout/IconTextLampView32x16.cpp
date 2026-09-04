@@ -70,7 +70,12 @@ bool IconTextLampView32x16::loadIcon(const String& filename, FS& fs)
     }
     else
     {
-        setTextWidgetFullWidth();
+        if (false == m_isIconVisible)
+        {
+            m_isIconVisible = true;
+
+            applyScrollLayout();
+        }
 
         isSuccessful = true;
     }

@@ -99,6 +99,7 @@
                 <p><img src="IconTextPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.</p>
                 <p>Each part can be set separately via the REST API.</p>
+                <p>If the text is too long, it will scroll. Per plugin instance it can be selected whether the icon scrolls together with the text or whether the icon stands still and only the text scrolls next to it.</p>
                 <p>Show icon in the specified slot. Supported are GIF files and bitmap files (.bmp) with:</p>
                 <ul>
                     <li>24 or 32 bits per pixel.</li>
@@ -150,6 +151,10 @@
                                 <button class="btn btn-outline-secondary" type="button" id="btnClearIcon">Clear</button>
                             </div>
                             <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false). This setting is always stored persistent.</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="storeFlag" name="storeFlag" value="0" />
@@ -332,7 +337,7 @@
                 }
             }
 
-            async function getText(pluginUid, justTextId, iconFileId, storeFlagId) {
+            async function getText(pluginUid, justTextId, iconFileId, scrollIconId, storeFlagId) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
@@ -342,10 +347,12 @@
                     });
                     const justTextInput = document.getElementById(justTextId);
                     const iconFileIdInput = document.getElementById(iconFileId);
+                    const scrollIconInput = document.getElementById(scrollIconId);
                     const storeFlagIdInput = document.getElementById(storeFlagId);
 
                     justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
                     iconFileIdInput.value = rsp.data.iconFileId;
+                    scrollIconInput.checked = rsp.data.scrollIcon;
                     storeFlagIdInput.checked = false;
 
                 } catch (rsp) {
@@ -355,7 +362,7 @@
                 }
             }
 
-            async function setText(pluginUid, justText, iconFileId, storeFlag) {
+            async function setText(pluginUid, justText, iconFileId, scrollIcon, storeFlag) {
                 disableUI();
 
                 justText = justText.replaceAll("\\n", "\n");
@@ -369,6 +376,7 @@
                         parameter: {
                             text: justText,
                             iconFileId: Number.parseInt(iconFileId),
+                            scrollIcon: scrollIcon,
                             storeFlag: storeFlag
                         }
                     });
@@ -389,6 +397,7 @@
                         selectText.options[selectText.selectedIndex].value,
                         "justText",
                         "iconFileId",
+                        "scrollIcon",
                         "storeFlag"
                     );
                 }
@@ -413,12 +422,12 @@
                 });
 
                 document.getElementById("pluginUidText").addEventListener("change", function () {
-                    getText(document.getElementById("pluginUidText").value, "justText", "iconFileId", "storeFlag");
+                    getText(document.getElementById("pluginUidText").value, "justText", "iconFileId", "scrollIcon", "storeFlag");
                 });
 
                 document.getElementById("myFormText").addEventListener("submit", function (event) {
                     event.preventDefault();
-                    setText(document.getElementById("pluginUidText").value, document.getElementById("justText").value, document.getElementById("iconFileId").value, document.getElementById("storeFlag").checked);
+                    setText(document.getElementById("pluginUidText").value, document.getElementById("justText").value, document.getElementById("iconFileId").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */

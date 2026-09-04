@@ -113,6 +113,7 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
         JsonVariantConst    jsonFormat     = value["format"];
         JsonVariantConst    jsonMultiplier = value["multiplier"];
         JsonVariantConst    jsonOffset     = value["offset"];
+        JsonVariantConst    jsonScrollIcon = value["scrollIcon"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -195,6 +196,27 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
         {
             jsonCfg["offset"] = jsonOffset.as<float>();
             isSuccessful      = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
@@ -296,6 +318,7 @@ void GrabViaMqttPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["format"]     = m_format;
     jsonCfg["multiplier"] = m_multiplier;
     jsonCfg["offset"]     = m_offset;
+    jsonCfg["scrollIcon"] = m_view.isIconScrolling();
 }
 
 bool GrabViaMqttPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -307,6 +330,7 @@ bool GrabViaMqttPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     JsonVariantConst jsonFormat     = jsonCfg["format"];
     JsonVariantConst jsonMultiplier = jsonCfg["multiplier"];
     JsonVariantConst jsonOffset     = jsonCfg["offset"];
+    JsonVariantConst jsonScrollIcon = jsonCfg["scrollIcon"];
 
     if (false == jsonPath.is<String>())
     {
@@ -385,7 +409,15 @@ bool GrabViaMqttPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_hasTopicChanged = true;
 
-        status            = true;
+        /* The scroll behaviour is optional to stay compatible with a
+         * configuration, which was stored before it was introduced.
+         */
+        if (true == jsonScrollIcon.is<bool>())
+        {
+            m_view.setIconScrolling(jsonScrollIcon.as<bool>());
+        }
+
+        status = true;
     }
 
     return status;
