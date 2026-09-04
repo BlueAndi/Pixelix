@@ -47,6 +47,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <ProgressBar.h>
 #include <Util.h>
 #include <FileSystem.h>
@@ -65,7 +66,7 @@
 /**
  * View for 32x16 LED matrix with icon, text and progress bar.
  */
-class PlayerView32x16 : public IPlayerView
+class PlayerView32x16 : public IPlayerView, public ScrollableView
 {
 public:
 
@@ -74,11 +75,14 @@ public:
      */
     PlayerView32x16() :
         IPlayerView(),
+        ScrollableView(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
         m_progressBar(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT, PROGRESS_BAR_X, PROGRESS_BAR_Y)
     {
+        addScrollableWidget(m_bitmapWidget);
+        addScrollableWidget(m_textWidget);
     }
 
     /**
@@ -131,8 +135,7 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_bitmapWidget.update(gfx);
-        m_textWidget.update(gfx);
+        ScrollableView::update(gfx, m_textWidget, TEXT_X);
     }
 
     /**

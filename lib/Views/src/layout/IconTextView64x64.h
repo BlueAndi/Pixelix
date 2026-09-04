@@ -47,6 +47,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <Util.h>
 #include <FileSystem.h>
 
@@ -85,7 +86,7 @@
  * |                                                                 |
  * +-----------------------------------------------------------------+
  */
-class IconTextView64x64 : public IIconTextView
+class IconTextView64x64 : public IIconTextView, public ScrollableView
 {
 public:
 
@@ -94,10 +95,13 @@ public:
      */
     IconTextView64x64() :
         IIconTextView(),
+        ScrollableView(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT_FULL, TEXT_X, TEXT_Y_FULL) /* Use full height. */
     {
+        addScrollableWidget(m_bitmapWidget);
+        addScrollableWidget(m_textWidget);
         m_bitmapWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
         m_bitmapWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     }
@@ -152,8 +156,7 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_bitmapWidget.update(gfx);
-        m_textWidget.update(gfx);
+        ScrollableView::update(gfx, m_textWidget, TEXT_X);
     }
 
     /**

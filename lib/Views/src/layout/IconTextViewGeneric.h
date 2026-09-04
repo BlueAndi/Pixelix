@@ -48,6 +48,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <Util.h>
+#include <ScrollableView.h>
 #include <FileSystem.h>
 
 #include "../interface/IIconTextView.h"
@@ -65,7 +66,7 @@
  * Generic view for LED matrix with icon and text.
  * If no icon is displayed, the text uses the full width of the display.
  */
-class IconTextViewGeneric : public IIconTextView
+class IconTextViewGeneric : public IIconTextView, public ScrollableView
 {
 public:
 
@@ -74,10 +75,13 @@ public:
      */
     IconTextViewGeneric() :
         IIconTextView(),
+        ScrollableView(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_textWidget(TEXT_WIDTH_FULL, TEXT_HEIGHT, TEXT_X_FULL, TEXT_Y) /* Use full width. */
     {
+        addScrollableWidget(m_bitmapWidget);
+        addScrollableWidget(m_textWidget);
     }
 
     /**
@@ -130,8 +134,7 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_bitmapWidget.update(gfx);
-        m_textWidget.update(gfx);
+        ScrollableView::update(gfx, m_textWidget, TEXT_X_FULL);
     }
 
     /**
@@ -163,6 +166,8 @@ public:
     {
         m_textWidget.setFormatStr(formatText);
     }
+
+public:
 
     /**
      * Load icon image from filesystem.
@@ -243,9 +248,9 @@ protected:
      */
     static const int16_t TEXT_Y           = 0;
 
-    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    BitmapWidget         m_bitmapWidget; /**< Bitmap widget used to show a icon. */
-    TextWidget           m_textWidget;   /**< Text widget used to show some text. */
+    Fonts::FontType      m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
+    BitmapWidget         m_bitmapWidget;      /**< Bitmap widget used to show a icon. */
+    TextWidget           m_textWidget;        /**< Text widget used to show some text. */
 
 private:
 

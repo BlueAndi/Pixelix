@@ -48,6 +48,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <Util.h>
 
 #include "../interface/IChicagoBusTrackerView.h"
@@ -223,8 +224,11 @@ protected:
 
     Fonts::FontType              m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget                   m_routeNumberWidget; /**< Route number widget */
+    ScrollableView               m_routeNumberScroll; /**< Scroll helper for route number. */
     TextWidget                   m_topInfoWidget;     /**< Top-right widget, next to route number */
+    ScrollableView               m_topInfoScroll;     /**< Scroll helper for top information. */
     TextWidget                   m_bottomInfoWidget;  /**< Lower full-width widget */
+    ScrollableView               m_bottomInfoScroll;  /**< Scroll helper for bottom information. */
     String                       m_routeNumberText;   /**< Route number text to display */
     String                       m_routeInfoText;     /**< Route details text (stop name, destination) */
     String                       m_arrivalsInfoText;  /**< String containing the concatenated arrivals info */

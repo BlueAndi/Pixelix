@@ -47,6 +47,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <LampWidget.h>
 #include <Util.h>
 #include <FileSystem.h>
@@ -77,7 +78,7 @@
  * |                |                  Lamps 24x1                    |
  * +----------------+------------------------------------------------+
  */
-class IconTextLampView32x8 : public IIconTextLampView
+class IconTextLampView32x8 : public IIconTextLampView, public ScrollableView
 {
 public:
 
@@ -86,6 +87,7 @@ public:
      */
     IconTextLampView32x8() :
         IIconTextLampView(),
+        ScrollableView(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_textWidget(TEXT_WIDTH_FULL, TEXT_HEIGHT, TEXT_X_FULL, TEXT_Y), /* Use full width. */
@@ -94,6 +96,8 @@ public:
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_2_X, LAMP_Y },
             { LAMP_WIDTH, LAMP_HEIGHT, LAMP_3_X, LAMP_Y } }
     {
+        addScrollableWidget(m_bitmapWidget);
+        addScrollableWidget(m_textWidget);
         m_bitmapWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
         m_bitmapWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
     }
@@ -148,8 +152,7 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_bitmapWidget.update(gfx);
-        m_textWidget.update(gfx);
+        ScrollableView::update(gfx, m_textWidget, TEXT_X_FULL);
 
         for (uint8_t idx = 0U; idx < MAX_LAMPS; ++idx)
         {

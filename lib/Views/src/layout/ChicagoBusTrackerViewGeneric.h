@@ -47,6 +47,7 @@
 #include <YAGfx.h>
 #include <Fonts.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <Util.h>
 #include <FileSystem.h>
 #include <Logging.h>
@@ -77,7 +78,9 @@ public:
         IChicagoBusTrackerView(),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_routeWidget(RTE_SECTION_WIDTH, RTE_SECTION_HEIGHT, RTE_SECTION_X, RTE_SECTION_Y),
+        m_routeScroll(m_routeWidget),
         m_arrivalsWidget(ARR_SECTION_WIDTH, ARR_SECTION_HEIGHT, ARR_SECTION_X, ARR_SECTION_Y),
+        m_arrivalsScroll(m_arrivalsWidget),
         m_routeNumberText(" - "),
         m_routeInfoText(""),
         m_firstArrivalText(" NO DATA "),
@@ -138,8 +141,8 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_routeWidget.update(gfx);
-        m_arrivalsWidget.update(gfx);
+        m_routeScroll.update(gfx, m_routeWidget);
+        m_arrivalsScroll.update(gfx, m_arrivalsWidget);
     }
 
     /**
@@ -272,7 +275,9 @@ protected:
 
     Fonts::FontType              m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget                   m_routeWidget;       /**< Route information widget */
+    ScrollableView               m_routeScroll;       /**< Scroll helper for route information. */
     TextWidget                   m_arrivalsWidget;    /**< Arrivals information widget */
+    ScrollableView               m_arrivalsScroll;    /**< Scroll helper for arrivals information. */
     String                       m_routeNumberText;   /**< Route number text (formatted) */
     String                       m_routeInfoText;     /**< Route info text (stop name, destination) */
     String                       m_arrivalsInfoText;  /**< String containing the concatenated arrivals info */

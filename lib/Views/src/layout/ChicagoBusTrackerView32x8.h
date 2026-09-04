@@ -48,6 +48,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <Util.h>
 #include <Logging.h>
 
@@ -211,7 +212,9 @@ protected:
 
     Fonts::FontType              m_fontType;          /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget                   m_routeWidget;       /**< Route information widget */
+    ScrollableView               m_routeScroll;       /**< Scroll helper for route information. */
     TextWidget                   m_arrivalsWidget;    /**< Arrivals information widget */
+    ScrollableView               m_arrivalsScroll;    /**< Scroll helper for arrivals information. */
     String                       m_routeNumberText;   /**< Route number text (formatted) */
     String                       m_routeInfoText;     /**< Route info text (stop name, destination) */
     String                       m_arrivalsInfoText;  /**< String containing the concatenated arrivals info */

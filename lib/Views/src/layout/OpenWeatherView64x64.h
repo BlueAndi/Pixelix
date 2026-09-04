@@ -47,6 +47,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <Util.h>
 
 #include "../interface/IOpenWeatherView.h"
@@ -285,6 +286,7 @@ protected:
     const char*           m_imagePath;                                   /**< Image path within the filesystem to weather condition icons. */
     BitmapWidget          m_weatherIconCurrent;                          /**< Current weather icon. */
     TextWidget            m_weatherInfoCurrentText;                      /**< Current weather info text. */
+    ScrollableView        m_weatherInfoCurrentScroll;                    /**< Scroll helper for current weather text. */
     TextWidget            m_forecastDayNames[FORECAST_DAYS];             /**< Forecast day names */
     BitmapWidget          m_forecastIcons[FORECAST_DAYS];                /**< Forecast weather icons. */
     TextWidget            m_forecastTemperatures[FORECAST_DAYS];         /**< Forecast temperature (min. and max.) */

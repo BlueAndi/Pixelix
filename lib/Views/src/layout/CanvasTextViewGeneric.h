@@ -47,6 +47,7 @@
 #include <Fonts.h>
 #include <CanvasWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <Util.h>
 
 #include "../interface/ICanvasTextView.h"
@@ -63,7 +64,7 @@
 /**
  * Generic view for LED matrix with canvas and text.
  */
-class CanvasTextViewGeneric : public ICanvasTextView
+class CanvasTextViewGeneric : public ICanvasTextView, public ScrollableView
 {
 public:
 
@@ -72,10 +73,13 @@ public:
      */
     CanvasTextViewGeneric() :
         ICanvasTextView(),
+        ScrollableView(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_canvasWidget(CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_X, CANVAS_Y),
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y)
     {
+        addScrollableWidget(m_canvasWidget);
+        addScrollableWidget(m_textWidget);
         m_textWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     }
 
@@ -129,8 +133,7 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_canvasWidget.update(gfx);
-        m_textWidget.update(gfx);
+        ScrollableView::update(gfx, m_textWidget, TEXT_X);
     }
 
     /**
@@ -162,6 +165,8 @@ public:
     {
         m_textWidget.setFormatStr(formatText);
     }
+
+public:
 
     /**
      * Get canvas for drawing.
@@ -218,7 +223,7 @@ protected:
      */
     static const int16_t TEXT_Y         = 0;
 
-    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
+    Fonts::FontType      m_fontType;        /**< Font type which shall be used if there is no conflict with the layout. */
     CanvasWidget         m_canvasWidget; /**< Canvas widget used to draw. */
     TextWidget           m_textWidget;   /**< Text widget used to show some text. */
 

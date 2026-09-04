@@ -47,6 +47,7 @@
 #include <Fonts.h>
 #include <LampWidget.h>
 #include <TextWidget.h>
+#include <ScrollableView.h>
 #include <Util.h>
 #include <Logging.h>
 
@@ -64,7 +65,7 @@
 /**
  * View for 32x8 LED matrix with date and time.
  */
-class DateTimeView32x8 : public IDateTimeView
+class DateTimeView32x8 : public IDateTimeView, public ScrollableView
 {
 public:
 
@@ -73,6 +74,7 @@ public:
      */
     DateTimeView32x8() :
         IDateTimeView(),
+        ScrollableView(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_MAX), /* Invalid font type to ensure the first setFontType() call will set the font. */
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
         m_lampWidgets{ { LAMP_WIDTH, LAMP_HEIGHT, LAMP_0_X, LAMP_Y },
@@ -86,6 +88,7 @@ public:
         m_dayOnColor(DAY_ON_COLOR),
         m_dayOffColor(DAY_OFF_COLOR)
     {
+        addScrollableWidget(m_textWidget);
         /* Disable fade effect in case the user required to show seconds,
          * which will continuously trigger the fading effect.
          */
@@ -153,7 +156,7 @@ public:
         uint8_t idx = 0U;
 
         gfx.fillScreen(ColorDef::BLACK);
-        m_textWidget.update(gfx);
+        ScrollableView::update(gfx, m_textWidget);
 
         while (MAX_LAMPS > idx)
         {
