@@ -44,7 +44,6 @@
  * Includes
  *****************************************************************************/
 #include <TextViewBase.hpp>
-#include <ScrollContainer.h>
 
 /******************************************************************************
  * Macros
@@ -71,7 +70,6 @@ public:
     View() :
         TextViewBase()
     {
-        m_scrollContainer.add(m_textWidget);
         m_textWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
         m_textWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     }
@@ -89,51 +87,10 @@ public:
     void clear()
     {
         m_textWidget.clear();
-        m_scrollContainer.disableScrolling();
-    }
-
-    /**
-     * Update the view and its scroll container.
-     *
-     * @param[in] gfx Graphics interface.
-     */
-    void update(YAGfx& gfx) override
-    {
-        uint16_t textWidth  = 0U;
-        uint16_t textHeight = 0U;
-
-        gfx.fillScreen(ColorDef::BLACK);
-
-        if (true == m_textWidget.getTextSize(textWidth, textHeight))
-        {
-            (void)textHeight;
-            m_scrollContainer.setContentSize(textWidth);
-            m_scrollContainer.enableScrolling(ScrollController::DIRECTION_HORIZONTAL);
-        }
-        else
-        {
-            m_scrollContainer.disableScrolling();
-        }
-
-        m_scrollContainer.update(gfx);
-    }
-
-    /**
-     * Get scrolling informations.
-     *
-     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
-     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
-     *
-     * @return If scroll information is ready, it will return true otherwise false.
-     */
-    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
-    {
-        return m_scrollContainer.getScrollInfo(isScrollingEnabled, scrollingCnt);
+        disableScrolling();
     }
 
 private:
-
-    ScrollContainer m_scrollContainer{TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y}; /**< Container for the text widget. */
 
     View(const View& other);
     View& operator=(const View& other);
