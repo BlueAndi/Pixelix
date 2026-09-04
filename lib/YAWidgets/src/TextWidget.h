@@ -180,7 +180,8 @@ public:
     String getStr() const;
 
     /**
-     * Get the bounding box of the current text.
+     * Get the bounding box of the text which is currently shown. A pending new
+     * text is not considered, because it is shown after the transition only.
      *
      * @param[out] width  Text width in pixels.
      * @param[out] height Text height in pixels.
@@ -188,6 +189,24 @@ public:
      * @return True if the text could be measured, otherwise false.
      */
     bool getTextSize(uint16_t& width, uint16_t& height, bool limitWidth = true);
+
+    /**
+     * Is a text transition in progress? A transition takes place if a new text
+     * was set: the current text is faded out, replaced by the new one and this
+     * is faded in.
+     *
+     * As long as a transition is in progress, every information which depends
+     * on the text, e.g. its size or the scrolling state, still belongs to the
+     * text which is currently shown and not to the new one.
+     *
+     * @return If a text transition is in progress, it will return true otherwise false.
+     */
+    bool isTransitionActive() const
+    {
+        return (true == m_prepareNewText) ||
+               (true == m_updateText) ||
+               (FADE_STATE_OUT == m_fadeState);
+    }
 
     /**
      * Get the number of text lines, which fit into the text widget.

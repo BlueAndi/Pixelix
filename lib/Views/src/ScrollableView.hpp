@@ -232,6 +232,30 @@ public:
         return m_scrollContainer.getScrollInfo(isScrollingEnabled, scrollingCnt);
     }
 
+    /**
+     * Gets scroll information of a scrolled text widget.
+     *
+     * As long as the text widget replaces its text, the scroll information
+     * still belongs to the text which is currently shown. Therefore no
+     * information is provided until the text transition is finished.
+     *
+     * @param[in] textWidget            Text widget which is scrolled.
+     * @param[out] isScrollingEnabled   True if scrolling is enabled.
+     * @param[out] scrollingCnt         Number of completed cycles.
+     * @return True when information is available.
+     */
+    bool getScrollInfo(const TextWidget& textWidget, bool& isScrollingEnabled, uint32_t& scrollingCnt) const
+    {
+        bool isAvailable = false;
+
+        if (false == textWidget.isTransitionActive())
+        {
+            isAvailable = m_scrollContainer.getScrollInfo(isScrollingEnabled, scrollingCnt);
+        }
+
+        return isAvailable;
+    }
+
 protected:
 
     ScrollContainer m_scrollContainer; /**< Shared scroll container. */

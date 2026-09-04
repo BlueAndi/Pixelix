@@ -133,6 +133,19 @@ public:
         ScrollableView::update(gfx, m_textWidget);
     }
 
+    /**
+     * Get scrolling informations of the shown text.
+     *
+     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
+     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
+     *
+     * @return If scroll information is ready, it will return true otherwise false.
+     */
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt) const
+    {
+        return ScrollableView::getScrollInfo(m_textWidget, isScrollingEnabled, scrollingCnt);
+    }
+
 public:
 
     /**

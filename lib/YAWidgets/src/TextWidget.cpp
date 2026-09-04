@@ -284,10 +284,16 @@ String TextWidget::getStr() const
 
 bool TextWidget::getTextSize(uint16_t& width, uint16_t& height, bool limitWidth)
 {
-    const String text              = getStr();
-    uint16_t     maxLineWidth      = getWidth();
-    const bool   isTextWrapEnabled = m_gfxText.isTextWrapEnabled();
-    bool         status            = false;
+    String     text;
+    uint16_t   maxLineWidth      = getWidth();
+    const bool isTextWrapEnabled = m_gfxText.isTextWrapEnabled();
+    bool       status            = false;
+
+    /* The size of the text which is currently shown is determined and not the
+     * size of a pending new text. Otherwise the layout would be adapted to the
+     * new text, while the old one is still shown and faded out.
+     */
+    getText(text, m_ast);
 
     if (false == limitWidth)
     {
