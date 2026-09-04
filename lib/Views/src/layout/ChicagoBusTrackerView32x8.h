@@ -48,7 +48,7 @@
 #include <Fonts.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
-#include <ScrollableView.h>
+#include <ScrollableView.hpp>
 #include <Util.h>
 #include <Logging.h>
 

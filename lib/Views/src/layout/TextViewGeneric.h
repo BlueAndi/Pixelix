@@ -46,7 +46,7 @@
 #include <YAGfx.h>
 #include <Fonts.h>
 #include <TextWidget.h>
-#include <ScrollableView.h>
+#include <ScrollableView.hpp>
 #include <Util.h>
 
 #include "../interface/ITextView.h"

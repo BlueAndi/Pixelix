@@ -47,7 +47,7 @@
 #include <Fonts.h>
 #include <CanvasWidget.h>
 #include <TextWidget.h>
-#include <ScrollableView.h>
+#include <ScrollableView.hpp>
 #include <Util.h>
 
 #include "../interface/ICanvasTextView.h"

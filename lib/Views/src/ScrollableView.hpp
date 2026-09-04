@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   ScrollableView.h
+ * @file   ScrollableView.hpp
  * @brief  Scrollable view helper
  * @author Andreas Merkle <web@blue-andi.de>
  *

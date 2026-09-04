@@ -47,7 +47,7 @@
 #include <Fonts.h>
 #include <CanvasWidget.h>
 #include <TextWidget.h>
-#include <ScrollableView.h>
+#include <ScrollableView.hpp>
 #include <Util.h>
 
 #include "../interface/ICanvasTextView.h"
@@ -223,7 +223,7 @@ protected:
      */
     static const int16_t TEXT_Y         = 0;
 
-    Fonts::FontType      m_fontType;        /**< Font type which shall be used if there is no conflict with the layout. */
+    Fonts::FontType      m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
     CanvasWidget         m_canvasWidget; /**< Canvas widget used to draw. */
     TextWidget           m_textWidget;   /**< Text widget used to show some text. */
 

@@ -48,7 +48,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <Util.h>
-#include <ScrollableView.h>
+#include <ScrollableView.hpp>
 #include <FileSystem.h>
 
 #include "../interface/IIconTextView.h"
