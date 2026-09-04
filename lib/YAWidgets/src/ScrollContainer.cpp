@@ -138,16 +138,43 @@ bool ScrollContainer::setScrollPause(uint32_t pause)
 
 void ScrollContainer::paint(YAGfx& gfx)
 {
-    const ScrollController::Direction direction  = m_scrollController.getDirection();
-    const uint16_t                    canvasSize = (ScrollController::DIRECTION_HORIZONTAL == direction) ? getWidth() : getHeight();
+    const bool     isHorizontal  = (ScrollController::DIRECTION_HORIZONTAL == m_scrollController.getDirection());
+    const uint16_t canvasSize    = (true == isHorizontal) ? getWidth() : getHeight();
+    uint16_t       contentWidth  = getWidth();
+    uint16_t       contentHeight = getHeight();
+    int16_t        offsetX       = 0;
+    int16_t        offsetY       = 0;
+    uint8_t        idx;
 
     (void)m_scrollController.update(canvasSize);
 
-    const int16_t offsetX = (ScrollController::DIRECTION_HORIZONTAL == direction) ? m_scrollController.getOffset() : 0;
-    const int16_t offsetY = (ScrollController::DIRECTION_VERTICAL == direction) ? m_scrollController.getOffset() : 0;
-    YAGfxCanvas   scrolledCanvas(&gfx, offsetX, offsetY, getWidth(), getHeight());
+    /* The scrolled canvas must span the whole content and not only the visible
+     * area. Otherwise the part of the content which is outside the visible area
+     * would be clipped and therefore never scrolled in.
+     * The clipping to the visible area is done by the container canvas itself.
+     */
+    if (true == isHorizontal)
+    {
+        offsetX = m_scrollController.getOffset();
 
-    for (uint8_t idx = 0U; idx < m_childCount; ++idx)
+        if (contentWidth < m_contentSize)
+        {
+            contentWidth = m_contentSize;
+        }
+    }
+    else
+    {
+        offsetY = m_scrollController.getOffset();
+
+        if (contentHeight < m_contentSize)
+        {
+            contentHeight = m_contentSize;
+        }
+    }
+
+    YAGfxCanvas scrolledCanvas(&gfx, offsetX, offsetY, contentWidth, contentHeight);
+
+    for (idx = 0U; idx < m_childCount; ++idx)
     {
         if (nullptr != m_children[idx])
         {

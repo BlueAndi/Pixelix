@@ -115,22 +115,32 @@ public:
      */
     void update(YAGfx& gfx, TextWidget& textWidget, uint16_t contentX = 0U)
     {
-        uint16_t textWidth             = 0U;
-        uint16_t textHeight            = 0U;
-        int16_t  textOffsetX           = 0;
-        int16_t  textOffsetY           = 0;
-        uint16_t textWidgetWidth       = textWidget.getWidth();
-        bool     isHorizontalScrolling = false;
+        uint16_t textWidth            = 0U;
+        uint16_t textHeight           = 0U;
+        int16_t  textOffsetX          = 0;
+        int16_t  textOffsetY          = 0;
+        uint16_t textWidgetWidth      = textWidget.getWidth();
+        uint16_t textWidgetHeight     = textWidget.getHeight();
+        bool     isTextWidgetEnlarged = false;
 
         textWidget.getPos(textOffsetX, textOffsetY);
-        (void)textOffsetY;
 
         if (true == textWidget.getTextSize(textWidth, textHeight))
         {
             if (m_height < textHeight)
             {
-                m_scrollContainer.setContentSize(textHeight);
+                const uint16_t widgetOffsetY = (0 < textOffsetY) ? static_cast<uint16_t>(textOffsetY) : 0U;
+                const uint16_t contentHeight = widgetOffsetY + textHeight;
+
+                m_scrollContainer.setContentSize(contentHeight);
                 m_scrollContainer.enableScrolling(ScrollController::DIRECTION_VERTICAL);
+
+                /* The text widget must span the whole text, otherwise the text
+                 * outside of the widget canvas would be clipped and therefore
+                 * never scrolled in.
+                 */
+                textWidget.setHeight(textHeight);
+                isTextWidgetEnlarged = true;
             }
             else
             {
@@ -141,11 +151,12 @@ public:
 
                 m_scrollContainer.setContentSize(contentWidth);
                 m_scrollContainer.enableScrolling(ScrollController::DIRECTION_HORIZONTAL);
-                isHorizontalScrolling = (m_width < contentWidth);
 
-                if (true == isHorizontalScrolling)
+                if (m_width < contentWidth)
                 {
+                    /* See above, but for the horizontal direction. */
                     textWidget.setWidth(textWidth);
+                    isTextWidgetEnlarged = true;
                 }
             }
         }
@@ -156,9 +167,13 @@ public:
 
         m_scrollContainer.update(gfx);
 
-        if (true == isHorizontalScrolling)
+        /* Restore the original text widget size, because the enlarged size is
+         * only required for painting the scrolled content.
+         */
+        if (true == isTextWidgetEnlarged)
         {
             textWidget.setWidth(textWidgetWidth);
+            textWidget.setHeight(textWidgetHeight);
         }
     }
 
