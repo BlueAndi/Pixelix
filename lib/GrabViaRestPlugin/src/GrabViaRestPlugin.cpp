@@ -523,7 +523,7 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
             m_view.setIconScrolling(jsonScrollIcon.as<bool>());
         }
 
-        status            = true;
+        status = true;
     }
 
     return status;

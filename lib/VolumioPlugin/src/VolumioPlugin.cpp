@@ -92,7 +92,7 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
     {
         const size_t      JSON_DOC_SIZE = 512U;
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject        jsonCfg  = jsonDoc.to<JsonObject>();
+        JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonHost       = value["host"];
         JsonVariantConst  jsonScrollIcon = value["scrollIcon"];
 
@@ -331,7 +331,7 @@ void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status   = false;
+    bool             status         = false;
     JsonVariantConst jsonHost       = jsonCfg["host"];
     JsonVariantConst jsonScrollIcon = jsonCfg["scrollIcon"];
 
@@ -358,7 +358,7 @@ bool VolumioPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
             m_view.setIconScrolling(jsonScrollIcon.as<bool>());
         }
 
-        status            = true;
+        status = true;
     }
 
     return status;

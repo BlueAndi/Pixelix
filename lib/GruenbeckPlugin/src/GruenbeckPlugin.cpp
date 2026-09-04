@@ -318,7 +318,7 @@ void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status        = false;
+    bool             status         = false;
     JsonVariantConst jsonIpAddress  = jsonCfg["ipAddress"];
     JsonVariantConst jsonScrollIcon = jsonCfg["scrollIcon"];
 
@@ -345,7 +345,7 @@ bool GruenbeckPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
             m_view.setIconScrolling(jsonScrollIcon.as<bool>());
         }
 
-        status            = true;
+        status = true;
     }
 
     return status;

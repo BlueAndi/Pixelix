@@ -118,11 +118,11 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         bool                isScrollIconSet = false;
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg         = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonIconFileId  = value["iconFileId"];
-        JsonVariantConst    jsonText        = value["text"];
-        JsonVariantConst    jsonScrollIcon  = value["scrollIcon"];
-        JsonVariantConst    jsonStoreFlag   = value["storeFlag"];
+        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonIconFileId = value["iconFileId"];
+        JsonVariantConst    jsonText       = value["text"];
+        JsonVariantConst    jsonScrollIcon = value["scrollIcon"];
+        JsonVariantConst    jsonStoreFlag  = value["storeFlag"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
