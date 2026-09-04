@@ -86,6 +86,12 @@ public:
     bool add(Widget& widget);
 
     /**
+     * Removes all child widgets. Required to rebuild the scrolling content,
+     * e.g. if the layout changed.
+     */
+    void clear();
+
+    /**
      * Sets the content size used to determine the scroll requirement.
      *
      * @param[in] contentSize Content width or height in pixels.
@@ -141,6 +147,7 @@ private:
     Widget*          m_children[MAX_CHILDREN]; /**< Child widgets, not owned. */
     uint8_t          m_childCount;             /**< Number of child widgets. */
     uint16_t         m_contentSize;            /**< Width or height of content. */
+    uint16_t         m_canvasSize;             /**< Visible width or height, used to enable scrolling. */
     ScrollController m_scrollController;       /**< Shared scroll state. */
 
     /** Paints all child widgets through the scrolled canvas. */

@@ -114,13 +114,15 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_TEXT))
     {
-        bool                storeFlag     = false;
-        const size_t        JSON_DOC_SIZE = 512U;
+        bool                storeFlag       = false;
+        bool                isScrollIconSet = false;
+        const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonIconFileId = value["iconFileId"];
-        JsonVariantConst    jsonText       = value["text"];
-        JsonVariantConst    jsonStoreFlag  = value["storeFlag"];
+        JsonObject          jsonCfg         = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonIconFileId  = value["iconFileId"];
+        JsonVariantConst    jsonText        = value["text"];
+        JsonVariantConst    jsonScrollIcon  = value["scrollIcon"];
+        JsonVariantConst    jsonStoreFlag   = value["storeFlag"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -143,6 +145,29 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         {
             jsonCfg["text"] = jsonText.as<const char*>();
             isSuccessful    = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isScrollIconSet       = true;
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isScrollIconSet       = true;
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         /* Note: The store flag is not part of the stored configuration, its just
@@ -174,6 +199,15 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
             if (false == storeFlag)
             {
                 isSuccessful = setActualConfiguration(jsonCfgConst);
+
+                /* The scroll behaviour is not volatile like the text or the
+                 * icon, it is a layout setting which is always stored.
+                 */
+                if ((true == isSuccessful) &&
+                    (true == isScrollIconSet))
+                {
+                    requestStoreToPersistentMemory();
+                }
             }
             else
             {
@@ -340,6 +374,7 @@ void IconTextPlugin::getActualConfiguration(JsonObject& jsonCfg) const
 
     jsonCfg["iconFileId"] = m_iconFileId;
     jsonCfg["text"]       = m_view.getFormatText();
+    jsonCfg["scrollIcon"] = m_view.isIconScrolling();
 }
 
 bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
@@ -347,6 +382,7 @@ bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
     bool             status         = false;
     JsonVariantConst jsonIconFileId = jsonCfg["iconFileId"];
     JsonVariantConst jsonText       = jsonCfg["text"];
+    JsonVariantConst jsonScrollIcon = jsonCfg["scrollIcon"];
 
     if (false == jsonIconFileId.is<FileMgrService::FileId>())
     {
@@ -398,6 +434,21 @@ bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
             m_hasTopicChanged = true;
         }
 
+        /* The scroll behaviour is optional to stay compatible with a
+         * configuration, which was stored before it was introduced.
+         */
+        if (true == jsonScrollIcon.is<bool>())
+        {
+            bool isIconScrolling = jsonScrollIcon.as<bool>();
+
+            if (m_view.isIconScrolling() != isIconScrolling)
+            {
+                m_view.setIconScrolling(isIconScrolling);
+
+                m_hasTopicChanged = true;
+            }
+        }
+
         status = true;
     }
 
@@ -410,6 +461,11 @@ void IconTextPlugin::getConfiguration(JsonObject& jsonCfg) const
 
     jsonCfg["iconFileId"] = m_iconFileIdStored;
     jsonCfg["text"]       = m_formatTextStored;
+
+    /* The scroll behaviour is always stored, therefore the actual value is
+     * used and no separate stored value is necessary.
+     */
+    jsonCfg["scrollIcon"] = m_view.isIconScrolling();
 }
 
 bool IconTextPlugin::setConfiguration(const JsonObjectConst& jsonCfg)

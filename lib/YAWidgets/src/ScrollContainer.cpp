@@ -66,6 +66,7 @@ ScrollContainer::ScrollContainer(uint16_t width, uint16_t height, int16_t x, int
     m_children{ nullptr, nullptr, nullptr, nullptr },
     m_childCount(0U),
     m_contentSize(0U),
+    m_canvasSize(0U),
     m_scrollController()
 {
 }
@@ -84,6 +85,18 @@ bool ScrollContainer::add(Widget& widget)
     return isAdded;
 }
 
+void ScrollContainer::clear()
+{
+    uint8_t idx;
+
+    for (idx = 0U; idx < MAX_CHILDREN; ++idx)
+    {
+        m_children[idx] = nullptr;
+    }
+
+    m_childCount = 0U;
+}
+
 void ScrollContainer::setContentSize(uint16_t contentSize)
 {
     m_contentSize = contentSize;
@@ -95,10 +108,15 @@ void ScrollContainer::enableScrolling(ScrollController::Direction direction)
 
     if (canvasSize < m_contentSize)
     {
+        /* The visible size is considered too, because the layout of the
+         * container may change during runtime.
+         */
         if ((false == m_scrollController.isEnabled()) ||
             (direction != m_scrollController.getDirection()) ||
+            (canvasSize != m_canvasSize) ||
             (m_contentSize != m_scrollController.getContentSize()))
         {
+            m_canvasSize = canvasSize;
             m_scrollController.enable(direction, canvasSize, m_contentSize);
         }
     }

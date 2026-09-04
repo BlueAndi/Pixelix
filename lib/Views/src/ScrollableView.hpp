@@ -97,6 +97,32 @@ public:
     }
 
     /**
+     * Begins a new scrolling content layout. All widgets are removed from the
+     * scrolling content and the scroll area is set, which is the visible part
+     * of the scrolling content.
+     *
+     * Every widget which shall scroll must be added again afterwards. A widget
+     * outside of the scroll area is not scrolled and must be drawn by the view
+     * itself.
+     *
+     * @param[in] x         x-coordinate of the scroll area in the view.
+     * @param[in] y         y-coordinate of the scroll area in the view.
+     * @param[in] width     Width of the scroll area in pixels.
+     * @param[in] height    Height of the scroll area in pixels.
+     */
+    void beginScrollLayout(int16_t x, int16_t y, uint16_t width, uint16_t height)
+    {
+        m_scrollContainer.clear();
+        m_scrollContainer.disableScrolling();
+        m_scrollContainer.move(x, y);
+        m_scrollContainer.setWidth(width);
+        m_scrollContainer.setHeight(height);
+
+        m_width  = width;
+        m_height = height;
+    }
+
+    /**
      * Adds a non-owned widget to the scrolling content.
      *
      * @param[in] widget Widget which shall be added.
