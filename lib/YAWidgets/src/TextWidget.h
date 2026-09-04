@@ -190,6 +190,15 @@ public:
     bool getTextSize(uint16_t& width, uint16_t& height, bool limitWidth = true);
 
     /**
+     * Get the number of text lines, which fit into the text widget.
+     * A multi-line text widget wraps the text around, a single line text
+     * widget doesn't.
+     *
+     * @return Number of text lines
+     */
+    uint16_t getLineCount() const;
+
+    /**
      * Get brush used to draw text.
      *
      * @return Brush used to draw text.
@@ -442,13 +451,6 @@ private:
      * Otherwise the y-coordinate will be set to 0.
      */
     void alignTextVertical();
-
-    /**
-     * Get the number of lines, which can be used by the text widget.
-     *
-     * @return Number of lines
-     */
-    uint16_t getLineCount() const;
 
     /**
      * Checks new text and prepares the scroll information.

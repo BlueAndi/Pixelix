@@ -121,20 +121,31 @@ public:
         int16_t  textOffsetY          = 0;
         uint16_t textWidgetWidth      = textWidget.getWidth();
         uint16_t textWidgetHeight     = textWidget.getHeight();
+        bool     isMultiLine          = (1U < textWidget.getLineCount());
         bool     isTextWidgetEnlarged = false;
 
         textWidget.getPos(textOffsetX, textOffsetY);
 
-        if (true == textWidget.getTextSize(textWidth, textHeight))
+        /* Only a multi-line text widget wraps the text around. Therefore its
+         * text size must be determined with the widget width as limit.
+         */
+        if (false == textWidget.getTextSize(textWidth, textHeight, isMultiLine))
         {
-            if (m_height < textHeight)
+            m_scrollContainer.disableScrolling();
+        }
+        /* A multi-line text widget shows the text wrapped around and can only
+         * be scrolled from bottom to top.
+         */
+        else if (true == isMultiLine)
+        {
+            const uint16_t widgetOffsetY = (0 < textOffsetY) ? static_cast<uint16_t>(textOffsetY) : 0U;
+            const uint16_t contentHeight = widgetOffsetY + textHeight;
+
+            m_scrollContainer.setContentSize(contentHeight);
+            m_scrollContainer.enableScrolling(ScrollController::DIRECTION_VERTICAL);
+
+            if (m_height < contentHeight)
             {
-                const uint16_t widgetOffsetY = (0 < textOffsetY) ? static_cast<uint16_t>(textOffsetY) : 0U;
-                const uint16_t contentHeight = widgetOffsetY + textHeight;
-
-                m_scrollContainer.setContentSize(contentHeight);
-                m_scrollContainer.enableScrolling(ScrollController::DIRECTION_VERTICAL);
-
                 /* The text widget must span the whole text, otherwise the text
                  * outside of the widget canvas would be clipped and therefore
                  * never scrolled in.
@@ -142,27 +153,25 @@ public:
                 textWidget.setHeight(textHeight);
                 isTextWidgetEnlarged = true;
             }
-            else
-            {
-                (void)textWidget.getTextSize(textWidth, textHeight, false);
-                const uint16_t widgetOffsetX  = (0 < textOffsetX) ? static_cast<uint16_t>(textOffsetX) : 0U;
-                const uint16_t contentOffsetX = (contentX > widgetOffsetX) ? contentX : widgetOffsetX;
-                const uint16_t contentWidth   = contentOffsetX + textWidth;
-
-                m_scrollContainer.setContentSize(contentWidth);
-                m_scrollContainer.enableScrolling(ScrollController::DIRECTION_HORIZONTAL);
-
-                if (m_width < contentWidth)
-                {
-                    /* See above, but for the horizontal direction. */
-                    textWidget.setWidth(textWidth);
-                    isTextWidgetEnlarged = true;
-                }
-            }
         }
+        /* A single line text widget shows the text in one line and can only be
+         * scrolled from right to left.
+         */
         else
         {
-            m_scrollContainer.disableScrolling();
+            const uint16_t widgetOffsetX  = (0 < textOffsetX) ? static_cast<uint16_t>(textOffsetX) : 0U;
+            const uint16_t contentOffsetX = (contentX > widgetOffsetX) ? contentX : widgetOffsetX;
+            const uint16_t contentWidth   = contentOffsetX + textWidth;
+
+            m_scrollContainer.setContentSize(contentWidth);
+            m_scrollContainer.enableScrolling(ScrollController::DIRECTION_HORIZONTAL);
+
+            if (m_width < contentWidth)
+            {
+                /* See above, but for the horizontal direction. */
+                textWidget.setWidth(textWidth);
+                isTextWidgetEnlarged = true;
+            }
         }
 
         m_scrollContainer.update(gfx);
