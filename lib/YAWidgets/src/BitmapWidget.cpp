@@ -227,6 +227,15 @@ void BitmapWidget::alignWidget()
         break;
     }
 
+    /* The alignment is calculated signed on purpose. If the image is larger
+     * than the widget, the position gets negative and the image will be
+     * cropped instead of being moved out of the visible area.
+     */
+    const int32_t canvasWidth  = static_cast<int32_t>(m_canvas.getWidth());
+    const int32_t canvasHeight = static_cast<int32_t>(m_canvas.getHeight());
+    const int32_t imgWidth     = static_cast<int32_t>(imageWidth);
+    const int32_t imgHeight    = static_cast<int32_t>(imageHeight);
+
     switch (m_hAlign)
     {
     case Alignment::Horizontal::HORIZONTAL_LEFT:
@@ -234,11 +243,11 @@ void BitmapWidget::alignWidget()
         break;
 
     case Alignment::Horizontal::HORIZONTAL_CENTER:
-        m_hAlignPosX = (m_canvas.getWidth() - imageWidth) / 2;
+        m_hAlignPosX = static_cast<int16_t>((canvasWidth - imgWidth) / 2);
         break;
 
     case Alignment::Horizontal::HORIZONTAL_RIGHT:
-        m_hAlignPosX = m_canvas.getWidth() - imageWidth;
+        m_hAlignPosX = static_cast<int16_t>(canvasWidth - imgWidth);
         break;
 
     default:
@@ -252,11 +261,11 @@ void BitmapWidget::alignWidget()
         break;
 
     case Alignment::Vertical::VERTICAL_CENTER:
-        m_vAlignPosY = (m_canvas.getHeight() - imageHeight) / 2;
+        m_vAlignPosY = static_cast<int16_t>((canvasHeight - imgHeight) / 2);
         break;
 
     case Alignment::Vertical::VERTICAL_BOTTOM:
-        m_vAlignPosY = m_canvas.getHeight() - imageHeight;
+        m_vAlignPosY = static_cast<int16_t>(canvasHeight - imgHeight);
         break;
 
     default:

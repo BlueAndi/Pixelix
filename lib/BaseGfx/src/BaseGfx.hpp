@@ -572,35 +572,36 @@ public:
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap)
     {
-        uint16_t minWidth  = std::min(bitmap.getWidth(), getWidth());
-        uint16_t minHeight = std::min(bitmap.getHeight(), getHeight());
+        const uint16_t bitmapWidth  = bitmap.getWidth();
+        const uint16_t bitmapHeight = bitmap.getHeight();
 
-        adaptCoordAndLength(x, minWidth, getWidth());
-        adaptCoordAndLength(y, minHeight, getHeight());
-
-        /* Anything to draw? */
-        if ((0U < minWidth) &&
-            (0U < minHeight))
+        /* Anything to draw? The clipping to the visible area takes place during
+         * the copy operation, which considers the source coordinates as well.
+         * This way a bitmap, which is larger than the destination or partly
+         * outside of it, will be cropped and not moved.
+         */
+        if ((0U < bitmapWidth) &&
+            (0U < bitmapHeight))
         {
             /* For better performance choose larger side for the internal
              * copy operation.
              */
-            if (minWidth >= minHeight)
+            if (bitmapWidth >= bitmapHeight)
             {
-                int16_t yIndex;
+                uint16_t yIndex;
 
-                for (yIndex = 0; yIndex < minHeight; ++yIndex)
+                for (yIndex = 0U; yIndex < bitmapHeight; ++yIndex)
                 {
-                    internalCopyX(x, y + yIndex, minWidth, bitmap, 0, yIndex);
+                    internalCopyX(x, static_cast<int16_t>(y + yIndex), bitmapWidth, bitmap, 0, static_cast<int16_t>(yIndex));
                 }
             }
             else
             {
-                int16_t xIndex;
+                uint16_t xIndex;
 
-                for (xIndex = 0; xIndex < minWidth; ++xIndex)
+                for (xIndex = 0U; xIndex < bitmapWidth; ++xIndex)
                 {
-                    internalCopyY(x + xIndex, y, minHeight, bitmap, xIndex, 0);
+                    internalCopyY(static_cast<int16_t>(x + xIndex), y, bitmapHeight, bitmap, static_cast<int16_t>(xIndex), 0);
                 }
             }
         }
@@ -622,35 +623,32 @@ public:
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap, const TColor& transparentColor)
     {
-        uint16_t minWidth  = std::min(bitmap.getWidth(), getWidth());
-        uint16_t minHeight = std::min(bitmap.getHeight(), getHeight());
+        const uint16_t bitmapWidth  = bitmap.getWidth();
+        const uint16_t bitmapHeight = bitmap.getHeight();
 
-        adaptCoordAndLength(x, minWidth, getWidth());
-        adaptCoordAndLength(y, minHeight, getHeight());
-
-        /* Anything to draw? */
-        if ((0U < minWidth) &&
-            (0U < minHeight))
+        /* See drawBitmap() without transparent color. */
+        if ((0U < bitmapWidth) &&
+            (0U < bitmapHeight))
         {
             /* For better performance choose larger side for the internal
              * copy operation.
              */
-            if (minWidth >= minHeight)
+            if (bitmapWidth >= bitmapHeight)
             {
-                int16_t yIndex;
+                uint16_t yIndex;
 
-                for (yIndex = 0; yIndex < minHeight; ++yIndex)
+                for (yIndex = 0U; yIndex < bitmapHeight; ++yIndex)
                 {
-                    internalCopyX(x, y + yIndex, minWidth, bitmap, 0, yIndex, transparentColor);
+                    internalCopyX(x, static_cast<int16_t>(y + yIndex), bitmapWidth, bitmap, 0, static_cast<int16_t>(yIndex), transparentColor);
                 }
             }
             else
             {
-                int16_t xIndex;
+                uint16_t xIndex;
 
-                for (xIndex = 0; xIndex < minWidth; ++xIndex)
+                for (xIndex = 0U; xIndex < bitmapWidth; ++xIndex)
                 {
-                    internalCopyY(x + xIndex, y, minHeight, bitmap, xIndex, 0, transparentColor);
+                    internalCopyY(static_cast<int16_t>(x + xIndex), y, bitmapHeight, bitmap, static_cast<int16_t>(xIndex), 0, transparentColor);
                 }
             }
         }
