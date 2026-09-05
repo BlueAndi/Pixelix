@@ -38,7 +38,6 @@
 
 #include <sys/time.h>
 #include <Logging.h>
-#include <SettingsService.h>
 #include <esp_sntp.h>
 
 /******************************************************************************
@@ -67,11 +66,9 @@ extern void sntpCallback(struct timeval* tv);
  * Public Methods
  *****************************************************************************/
 
-void ClockDrv::init()
+void ClockDrv::init(const String& timeZone, const String& ntpServerAddress)
 {
-    SettingsService& settings = SettingsService::getInstance();
-    char             tzBuffer[TZ_MIN_SIZE];
-    String           ntpServerAddress;
+    char tzBuffer[TZ_MIN_SIZE];
 
     /* Check whether RTC is available and initialize it. */
     if (false == m_rtc.begin())
@@ -86,30 +83,17 @@ void ClockDrv::init()
         syncTimeByRtc();
     }
 
-    /* Get the GMT offset, daylight saving enabled/disabled and NTP server address from persistent memory. */
-    if (false == settings.open(true))
-    {
-        LOG_WARNING("Use default values for NTP request.");
-
-        m_timeZone       = settings.getTimeZone().getDefault();
-        ntpServerAddress = settings.getNTPServerAddress().getDefault();
-    }
-    else
-    {
-        m_timeZone       = settings.getTimeZone().getValue();
-        ntpServerAddress = settings.getNTPServerAddress().getValue();
-        settings.close();
-    }
+    m_timeZone = timeZone;
 
     if (true == m_timeZone.isEmpty())
     {
-        m_timeZone = settings.getTimeZone().getDefault();
+        LOG_WARNING("No time zone given, use %s.", DEFAULT_TIME_ZONE);
+        m_timeZone = DEFAULT_TIME_ZONE;
     }
 
     if (sizeof(m_ntpServerAddress) <= ntpServerAddress.length())
     {
-        LOG_WARNING("NTP server address is too long. Use default value.");
-        ntpServerAddress = settings.getNTPServerAddress().getDefault();
+        LOG_WARNING("NTP server address is too long, it will be truncated.");
     }
 
     strncpy(m_ntpServerAddress, ntpServerAddress.c_str(), sizeof(m_ntpServerAddress) - 1U);

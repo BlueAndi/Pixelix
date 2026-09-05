@@ -29,7 +29,7 @@
  * @brief  Clock driver
  * @author Yann Le Glaz <yann_le@web.de>
  *
- * @addtogroup SERVICE_LAYER
+ * @addtogroup HAL
  *
  * @{
  */
@@ -59,7 +59,7 @@
 /**
  * Clock driver.
  *
- * The time zone configured in the settings is used for local time operations.
+ * The time zone provided with init() is used for local time operations.
  * The utc time is stored in the RTC if available.
  */
 class ClockDrv
@@ -80,8 +80,14 @@ public:
 
     /**
      * Initialize the ClockDrv.
+     *
+     * The configuration is provided by the caller, therefore the driver is
+     * independent from the settings service.
+     *
+     * @param[in] timeZone          Time zone string in POSIX format. If empty, UTC is used.
+     * @param[in] ntpServerAddress  Address of the NTP server, used for the time synchronization.
      */
-    void init();
+    void init(const String& timeZone, const String& ntpServerAddress);
 
     /**
      * Get the local time.
@@ -123,22 +129,27 @@ private:
     /**
      * The minimum time zone string size (incl. string termination).
      */
-    static const size_t TZ_MIN_SIZE               = 60U;
+    static const size_t TZ_MIN_SIZE                = 60U;
+
+    /**
+     * Time zone in POSIX format, used if the caller provides none.
+     */
+    static constexpr const char* DEFAULT_TIME_ZONE = "UTC0";
 
     /**
      * Period for time synchronization by NTP in ms.
      */
-    static const uint32_t SYNC_TIME_BY_NTP_PERIOD = SIMPLE_TIMER_HOURS(12U);
+    static const uint32_t SYNC_TIME_BY_NTP_PERIOD  = SIMPLE_TIMER_HOURS(12U);
 
     /**
      * Period for time synchronization by RTC in ms.
      */
-    static const int32_t SYNC_TIME_BY_RTC_PERIOD  = SIMPLE_TIMER_HOURS(1U);
+    static const int32_t SYNC_TIME_BY_RTC_PERIOD   = SIMPLE_TIMER_HOURS(1U);
 
     /**
      * Period for RTC synchronization by time in ms.
      */
-    static const uint32_t SYNC_RTC_BY_TIME_PERIOD = SIMPLE_TIMER_DAYS(2U);
+    static const uint32_t SYNC_RTC_BY_TIME_PERIOD  = SIMPLE_TIMER_DAYS(2U);
 
     /** Flag indicating a initialized clock driver. */
     bool m_isClockDrvInitialized;

@@ -167,6 +167,12 @@ private:
      * Configure the views with general settings.
      */
     void configureViews();
+
+    /**
+     * Initialize the clock driver with the time zone and the NTP server address
+     * from the persistent memory.
+     */
+    void initClockDrv();
 };
 
 /******************************************************************************

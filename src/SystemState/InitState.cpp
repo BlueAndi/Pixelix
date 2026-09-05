@@ -171,7 +171,7 @@ void InitState::entry(StateMachine& sm)
     else
     {
         /* Initialize clock driver */
-        ClockDrv::getInstance().init();
+        initClockDrv();
 
         /* Initialize sensors */
         SensorDataProvider::getInstance().begin();
@@ -660,6 +660,36 @@ void InitState::configureViews()
         /* Default brush is already set in the constructor. */
         ;
     }
+}
+
+void InitState::initClockDrv()
+{
+    SettingsService& settings = SettingsService::getInstance();
+    String           timeZone;
+    String           ntpServerAddress;
+
+    /* Get the time zone and the NTP server address from persistent memory. */
+    if (false == settings.open(true))
+    {
+        LOG_WARNING("Use default values for NTP request.");
+
+        timeZone         = settings.getTimeZone().getDefault();
+        ntpServerAddress = settings.getNTPServerAddress().getDefault();
+    }
+    else
+    {
+        timeZone         = settings.getTimeZone().getValue();
+        ntpServerAddress = settings.getNTPServerAddress().getValue();
+
+        settings.close();
+    }
+
+    if (true == timeZone.isEmpty())
+    {
+        timeZone = settings.getTimeZone().getDefault();
+    }
+
+    ClockDrv::getInstance().init(timeZone, ntpServerAddress);
 }
 
 /******************************************************************************
