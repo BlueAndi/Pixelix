@@ -1090,6 +1090,7 @@ RECURSIVE              = YES
 # run.
 
 EXCLUDE                = ../../lib/ArduinoNative \
+                         ../../lib/Os/src/native \
                          ../../lib/HalHub75Esp32 \
                          ../../lib/HalTftDisplay \
                          ../../lib/Fonts/src/TomThumb.h

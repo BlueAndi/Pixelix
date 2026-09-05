@@ -1,7 +1,7 @@
 {
     "name": "Os",
     "version": "0.1.0",
-    "description": "....",
+    "description": "Operating system abstraction. The implementation is selected by the platform, see select_platform.py.",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -10,6 +10,9 @@
     }],
     "license": "MIT",
     "dependencies": [],
+    "build": {
+        "extraScript": "select_platform.py"
+    },
     "frameworks": "*",
     "platforms": "*"
 }
