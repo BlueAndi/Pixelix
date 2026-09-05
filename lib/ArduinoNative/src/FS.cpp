@@ -81,6 +81,134 @@ size_t File::size() const
     return fileSize;
 }
 
+size_t File::write(uint8_t data)
+{
+    return write(&data, sizeof(data));
+}
+
+size_t File::write(const uint8_t* buf, size_t size)
+{
+    size_t written = 0U;
+
+    if ((nullptr != m_fd) &&
+        (nullptr != buf))
+    {
+        written = fwrite(buf, 1U, size, m_fd);
+    }
+
+    return written;
+}
+
+int File::available()
+{
+    int    remaining = 0;
+    size_t currPos   = position();
+    size_t fileSize  = size();
+
+    if (currPos < fileSize)
+    {
+        remaining = static_cast<int>(fileSize - currPos);
+    }
+
+    return remaining;
+}
+
+int File::peek()
+{
+    int data = -1;
+
+    if (nullptr != m_fd)
+    {
+        data = fgetc(m_fd);
+
+        if (EOF != data)
+        {
+            (void)ungetc(data, m_fd);
+        }
+        else
+        {
+            data = -1;
+        }
+    }
+
+    return data;
+}
+
+void File::flush()
+{
+    if (nullptr != m_fd)
+    {
+        (void)fflush(m_fd);
+    }
+}
+
+time_t File::getLastWrite()
+{
+    std::string fullPath = toHostPath(m_path);
+    struct stat info;
+    time_t      lastWrite = 0;
+
+    if (0 == stat(fullPath.c_str(), &info))
+    {
+        lastWrite = info.st_mtime;
+    }
+
+    return lastWrite;
+}
+
+File File::openNextFile(const char* mode)
+{
+    File file;
+
+    if (nullptr != m_dir)
+    {
+        struct dirent* entry = readdir(m_dir);
+
+        /* Skip the current and the parent directory. */
+        while ((nullptr != entry) &&
+               ((0 == strcmp(".", entry->d_name)) ||
+                   (0 == strcmp("..", entry->d_name))))
+        {
+            entry = readdir(m_dir);
+        }
+
+        if (nullptr != entry)
+        {
+            std::string entryPath = m_path;
+
+            if ((false == entryPath.empty()) &&
+                ('/' != entryPath[entryPath.length() - 1U]))
+            {
+                entryPath += "/";
+            }
+
+            entryPath            += entry->d_name;
+
+            std::string fullPath  = toHostPath(entryPath);
+            struct stat info;
+
+            if ((0 == stat(fullPath.c_str(), &info)) &&
+                (0 != (info.st_mode & S_IFDIR)))
+            {
+                DIR* dir = opendir(fullPath.c_str());
+
+                file     = File(nullptr, dir, entryPath, m_rootPath);
+            }
+            else
+            {
+                FILE* fd = fopen(fullPath.c_str(), mode);
+
+                if (nullptr != fd)
+                {
+                    file = File(fd, nullptr, entryPath, m_rootPath);
+                }
+            }
+        }
+    }
+
+    return file;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

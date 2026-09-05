@@ -232,10 +232,266 @@ public:
         return *this;
     }
 
+    /**
+     * Append a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return String
+     */
+    String& operator+=(unsigned int number)
+    {
+        m_stdStr += std::to_string(number);
+
+        return *this;
+    }
+
+    /**
+     * Append a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return String
+     */
+    String& operator+=(long number)
+    {
+        m_stdStr += std::to_string(number);
+
+        return *this;
+    }
+
+    /**
+     * Append a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return String
+     */
+    String& operator+=(unsigned long number)
+    {
+        m_stdStr += std::to_string(number);
+
+        return *this;
+    }
+
+    /**
+     * Append a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return String
+     */
+    String& operator+=(long long number)
+    {
+        m_stdStr += std::to_string(number);
+
+        return *this;
+    }
+
+    /**
+     * Append a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return String
+     */
+    String& operator+=(unsigned long long number)
+    {
+        m_stdStr += std::to_string(number);
+
+        return *this;
+    }
+
+    /**
+     * Append a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return String
+     */
+    String& operator+=(float number)
+    {
+        m_stdStr += std::to_string(number);
+
+        return *this;
+    }
+
+    /**
+     * Append a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return String
+     */
+    String& operator+=(double number)
+    {
+        m_stdStr += std::to_string(number);
+
+        return *this;
+    }
+
     String operator+(const String& other) const
     {
         String tmp  = *this;
         tmp        += other;
+
+        return tmp;
+    }
+
+    /* The following operator+() overloads mirror the Arduino String. Every
+     * integral type must have its own overload, otherwise e.g. a uint16_t
+     * argument is ambiguous, because it can be converted to more than one of
+     * the String constructors. Note that adding constructors would not help,
+     * because two user-defined conversion sequences via different constructors
+     * are not comparable.
+     */
+
+    /**
+     * Concatenate with a string literal.
+     *
+     * @param[in] other String literal to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(const char* other) const
+    {
+        String tmp  = *this;
+        tmp        += other;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a single character.
+     *
+     * @param[in] c Character to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(char c) const
+    {
+        String tmp  = *this;
+        tmp        += c;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(int number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(unsigned int number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(long number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(unsigned long number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(long long number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(unsigned long long number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(float number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
+
+        return tmp;
+    }
+
+    /**
+     * Concatenate with a number.
+     *
+     * @param[in] number Number to append.
+     *
+     * @return Concatenated string
+     */
+    String operator+(double number) const
+    {
+        String tmp  = *this;
+        tmp        += number;
 
         return tmp;
     }
@@ -366,6 +622,138 @@ public:
         }
 
         return index;
+    }
+
+    /**
+     * Get index of given character.
+     *
+     * @param[in] ch    Character to search for.
+     *
+     * @return If found, it will return the index otherwise -1.
+     */
+    int indexOf(char ch) const
+    {
+        return indexOf(ch, 0U);
+    }
+
+    /**
+     * Get index of given string.
+     *
+     * @param[in] other     String to search for.
+     * @param[in] fromIndex Start index for search.
+     *
+     * @return If found, it will return the index otherwise -1.
+     */
+    int indexOf(const String& other, unsigned int fromIndex) const
+    {
+        int    index = -1;
+        size_t pos   = m_stdStr.find(other.m_stdStr, fromIndex);
+
+        if (std::string::npos != pos)
+        {
+            index = pos;
+        }
+
+        return index;
+    }
+
+    /**
+     * Get index of given string.
+     *
+     * @param[in] other String to search for.
+     *
+     * @return If found, it will return the index otherwise -1.
+     */
+    int indexOf(const String& other) const
+    {
+        return indexOf(other, 0U);
+    }
+
+    /**
+     * Compare string.
+     *
+     * @param[in] other String to compare with.
+     *
+     * @return If equal, it will return true otherwise false.
+     */
+    bool equals(const String& other) const
+    {
+        return m_stdStr == other.m_stdStr;
+    }
+
+    /**
+     * Compare string.
+     *
+     * @param[in] other String to compare with. May be nullptr.
+     *
+     * @return If equal, it will return true otherwise false.
+     */
+    bool equals(const char* other) const
+    {
+        bool isEqual = false;
+
+        if (nullptr == other)
+        {
+            /* Guard: a nullptr never equals a string. */
+        }
+        else
+        {
+            isEqual = (m_stdStr == other);
+        }
+
+        return isEqual;
+    }
+
+    /**
+     * Append a string.
+     *
+     * @param[in] other String to append.
+     *
+     * @return If successful appended, it will return true otherwise false.
+     */
+    bool concat(const String& other)
+    {
+        m_stdStr += other.m_stdStr;
+
+        return true;
+    }
+
+    /**
+     * Append a string.
+     *
+     * @param[in] other String to append. May be nullptr.
+     *
+     * @return If successful appended, it will return true otherwise false.
+     */
+    bool concat(const char* other)
+    {
+        bool isSuccessful = false;
+
+        if (nullptr == other)
+        {
+            /* Guard: nothing to append. */
+        }
+        else
+        {
+            m_stdStr     += other;
+            isSuccessful  = true;
+        }
+
+        return isSuccessful;
+    }
+
+    /**
+     * Append a single character.
+     *
+     * @param[in] c Character to append.
+     *
+     * @return If successful appended, it will return true otherwise false.
+     */
+    bool concat(char c)
+    {
+        m_stdStr += c;
+
+        return true;
     }
 
     /**

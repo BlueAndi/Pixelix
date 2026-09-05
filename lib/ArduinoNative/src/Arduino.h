@@ -53,6 +53,8 @@
 #include <string.h>
 #include <inttypes.h>
 #include <time.h>
+#include <math.h>
+#include <cmath>
 
 #include "WString.h"
 #include "Print.h"
