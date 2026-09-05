@@ -48,7 +48,6 @@
 #include <IRtc.h>
 
 #include <RTClib.h>
-#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
