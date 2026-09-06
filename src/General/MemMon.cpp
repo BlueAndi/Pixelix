@@ -37,9 +37,12 @@
 
 #include <Logging.h>
 #include <MemUtil.h>
+#include <string.h>
+
+#ifndef NATIVE
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <string.h>
+#endif /* NATIVE */
 
 /******************************************************************************
  * Compiler Switches
@@ -67,7 +70,10 @@
 
 bool MemMon::start()
 {
-    bool                    isSuccessful        = true;
+    bool isSuccessful = true;
+
+#ifndef NATIVE
+
     esp_alloc_failed_hook_t failedAllocCallback = [](size_t size, uint32_t capabilities, const char* functionName) -> void {
         TaskHandle_t hCurrentTask       = xTaskGetCurrentTaskHandle();
         const char*  taskName           = pcTaskGetName(hCurrentTask);
@@ -82,13 +88,19 @@ bool MemMon::start()
         LOG_ERROR("Largest avail.: %u bytes", MemUtil::getLargestFreeBlockSize(capabilities));
     };
 
+#endif /* NATIVE */
+
     m_timer.start(PROCESSING_CYCLE);
+
+#ifndef NATIVE
 
     if (ESP_OK != heap_caps_register_failed_alloc_callback(failedAllocCallback))
     {
         stop();
         isSuccessful = false;
     }
+
+#endif /* NATIVE */
 
     return isSuccessful;
 }
@@ -116,11 +128,16 @@ void MemMon::process()
             LOG_WARNING("Largest heap block which can be allocated: %u byte.", largestHeapBlock);
         }
 
+#ifndef NATIVE
+
         /* Any heap corrupt? */
         if (false == heap_caps_check_integrity_all(true))
         {
             LOG_FATAL("----- Heap corrupt! ------");
         }
+
+#endif /* NATIVE */
+
 
 #if (0 != CONFIG_MEM_MON_STACK_STATS)
         reportTaskStackStats();

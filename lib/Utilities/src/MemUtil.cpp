@@ -65,7 +65,22 @@
 /**
  * Memory capabilities used for heap operations.
  */
-static const uint32_t MEM_CAPABILITIES = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
+static const uint32_t MEM_CAPABILITIES  = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
+
+#else /* NATIVE */
+
+/**
+ * Heap size reported on the host. The host heap is limited by the operating
+ * system and can not be determined in a portable way. Therefore a fixed value
+ * is reported, which is large enough to keep the memory guards in the
+ * application from rejecting requests.
+ */
+static const size_t   NATIVE_HEAP_SIZE  = 4U * 1024U * 1024U;
+
+/**
+ * Amount of the reported heap, which is considered to be in use on the host.
+ */
+static const size_t   NATIVE_HEAP_USAGE = NATIVE_HEAP_SIZE / 4U;
 
 #endif /* NATIVE */
 
@@ -99,7 +114,9 @@ extern size_t MemUtil::getTotalHeapSize(uint32_t capabilities)
 
     return info.total_free_bytes + info.total_allocated_bytes;
 #else  /* NATIVE */
-    return 0;
+    (void)capabilities;
+
+    return NATIVE_HEAP_SIZE;
 #endif /* NATIVE */
 }
 
@@ -113,7 +130,9 @@ extern size_t MemUtil::getFreeHeapSize(uint32_t capabilities)
 
     return heap_caps_get_free_size(capabilities);
 #else  /* NATIVE */
-    return 0;
+    (void)capabilities;
+
+    return NATIVE_HEAP_SIZE - NATIVE_HEAP_USAGE;
 #endif /* NATIVE */
 }
 
@@ -127,7 +146,9 @@ extern size_t MemUtil::getLargestFreeBlockSize(uint32_t capabilities)
 
     return heap_caps_get_largest_free_block(capabilities);
 #else  /* NATIVE */
-    return 0;
+    (void)capabilities;
+
+    return NATIVE_HEAP_SIZE - NATIVE_HEAP_USAGE;
 #endif /* NATIVE */
 }
 
@@ -141,7 +162,9 @@ extern size_t MemUtil::getMinFreeHeapSize(uint32_t capabilities)
 
     return heap_caps_get_minimum_free_size(capabilities);
 #else  /* NATIVE */
-    return 0;
+    (void)capabilities;
+
+    return NATIVE_HEAP_SIZE - NATIVE_HEAP_USAGE;
 #endif /* NATIVE */
 }
 
