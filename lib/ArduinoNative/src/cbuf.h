@@ -88,11 +88,15 @@ public:
     /**
      * Get the buffer size.
      *
+     * Note, this is the capacity and not the number of available bytes, like
+     * the Arduino counterpart does it. The webserver derives from it, whether
+     * the allocation was successful.
+     *
      * @return Buffer size in byte
      */
     size_t size() const
     {
-        return m_writeIndex - m_readIndex;
+        return m_buffer.size();
     }
 
     /**
