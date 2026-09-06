@@ -25,18 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Arduino.cpp
- * @brief  Arduino stuff for test
+ * @file   HardwareSerial.cpp
+ * @brief  Serial interface for test purposes only
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Arduino.h"
+#include "HardwareSerial.h"
 
-#include <chrono>
-#include <thread>
+#include <stdio.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,18 +57,66 @@
  * Local Variables
  *****************************************************************************/
 
-/** Max. number of supported pins. */
-static const uint8_t MAX_PINS       = 64U;
-
-/** Mode of every pin. There is no GPIO on the host, its just remembered. */
-static uint8_t gPinModes[MAX_PINS]  = { 0U };
-
-/** Level of every pin. There is no GPIO on the host, its just remembered. */
-static uint8_t gPinLevels[MAX_PINS] = { 0U };
+HardwareSerial Serial;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+HardwareSerial::HardwareSerial() :
+    Stream()
+{
+}
+
+HardwareSerial::~HardwareSerial()
+{
+}
+
+void HardwareSerial::begin(unsigned long baudrate)
+{
+    /* There is no baudrate on the host. */
+    (void)baudrate;
+
+    /* A serial console shows every character immediately. The standard output
+     * of the host is fully buffered as soon as it is redirected to a file or a
+     * pipe, which would delay the log output. Therefore the buffering is
+     * disabled.
+     */
+    (void)setvbuf(stdout, nullptr, _IONBF, 0U);
+}
+
+void HardwareSerial::end()
+{
+    flush();
+}
+
+void HardwareSerial::setTxTimeoutMs(uint32_t timeout)
+{
+    /* Not used on the host. */
+    (void)timeout;
+}
+
+size_t HardwareSerial::write(uint8_t data)
+{
+    return write(&data, sizeof(data));
+}
+
+size_t HardwareSerial::write(const uint8_t* buffer, size_t size)
+{
+    size_t written = 0U;
+
+    if (nullptr != buffer)
+    {
+        written = fwrite(buffer, 1U, size, stdout);
+    }
+
+    return written;
+}
+
+void HardwareSerial::flush()
+{
+    (void)fflush(stdout);
+}
 
 /******************************************************************************
  * Protected Methods
@@ -82,88 +129,6 @@ static uint8_t gPinLevels[MAX_PINS] = { 0U };
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-extern unsigned long millis()
-{
-    clock_t now = clock();
-
-    return (now * 1000UL) / CLOCKS_PER_SEC;
-}
-
-extern unsigned long micros()
-{
-    clock_t now = clock();
-
-    return (now * 1000000UL) / CLOCKS_PER_SEC;
-}
-
-extern void delay(unsigned long ms)
-{
-    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-}
-
-extern void pinMode(uint8_t pinNo, uint8_t mode)
-{
-    if (MAX_PINS > pinNo)
-    {
-        gPinModes[pinNo] = mode;
-    }
-}
-
-extern void digitalWrite(uint8_t pinNo, uint8_t level)
-{
-    if (MAX_PINS > pinNo)
-    {
-        gPinLevels[pinNo] = level;
-    }
-}
-
-extern int digitalRead(uint8_t pinNo)
-{
-    int level = LOW;
-
-    if (MAX_PINS > pinNo)
-    {
-        level = gPinLevels[pinNo];
-    }
-
-    return level;
-}
-
-extern uint16_t analogRead(uint8_t pinNo)
-{
-    /* There is no ADC on the host. */
-    (void)pinNo;
-
-    return 0U;
-}
-
-extern long random(long max)
-{
-    return random(0, max);
-}
-
-extern long random(long min, long max)
-{
-    long result = min;
-
-    if (min < max)
-    {
-        result = min + (rand() % (max - min));
-    }
-
-    return result;
-}
-
-extern void randomSeed(unsigned long seed)
-{
-    srand(static_cast<unsigned int>(seed));
-}
-
-extern uint32_t esp_log_timestamp(void)
-{
-    return millis();
-}
 
 /******************************************************************************
  * Local Functions

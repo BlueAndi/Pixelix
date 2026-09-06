@@ -55,51 +55,51 @@
  * Local Variables
  *****************************************************************************/
 
-FS NativeFS;
+fs::FS NativeFS;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-size_t File::size() const
+size_t fs::File::size() const
 {
     size_t fileSize = 0U;
-    size_t currPos  = ftell(m_fd);
+    size_t currPos  = ftell(m_fd.get());
 
-    if (0 == fseek(m_fd, 0, SEEK_END))
+    if (0 == fseek(m_fd.get(), 0, SEEK_END))
     {
-        long pos = ftell(m_fd);
+        long pos = ftell(m_fd.get());
 
         if (0 <= pos)
         {
             fileSize = pos;
         }
 
-        (void)fseek(m_fd, currPos, SEEK_SET);
+        (void)fseek(m_fd.get(), currPos, SEEK_SET);
     }
 
     return fileSize;
 }
 
-size_t File::write(uint8_t data)
+size_t fs::File::write(uint8_t data)
 {
     return write(&data, sizeof(data));
 }
 
-size_t File::write(const uint8_t* buf, size_t size)
+size_t fs::File::write(const uint8_t* buf, size_t size)
 {
     size_t written = 0U;
 
     if ((nullptr != m_fd) &&
         (nullptr != buf))
     {
-        written = fwrite(buf, 1U, size, m_fd);
+        written = fwrite(buf, 1U, size, m_fd.get());
     }
 
     return written;
 }
 
-int File::available()
+int fs::File::available()
 {
     int    remaining = 0;
     size_t currPos   = position();
@@ -113,17 +113,17 @@ int File::available()
     return remaining;
 }
 
-int File::peek()
+int fs::File::peek()
 {
     int data = -1;
 
     if (nullptr != m_fd)
     {
-        data = fgetc(m_fd);
+        data = fgetc(m_fd.get());
 
         if (EOF != data)
         {
-            (void)ungetc(data, m_fd);
+            (void)ungetc(data, m_fd.get());
         }
         else
         {
@@ -134,15 +134,15 @@ int File::peek()
     return data;
 }
 
-void File::flush()
+void fs::File::flush()
 {
     if (nullptr != m_fd)
     {
-        (void)fflush(m_fd);
+        (void)fflush(m_fd.get());
     }
 }
 
-time_t File::getLastWrite()
+time_t fs::File::getLastWrite()
 {
     std::string fullPath = toHostPath(m_path);
     struct stat info;
@@ -156,20 +156,20 @@ time_t File::getLastWrite()
     return lastWrite;
 }
 
-File File::openNextFile(const char* mode)
+fs::File fs::File::openNextFile(const char* mode)
 {
     File file;
 
     if (nullptr != m_dir)
     {
-        struct dirent* entry = readdir(m_dir);
+        struct dirent* entry = readdir(m_dir.get());
 
         /* Skip the current and the parent directory. */
         while ((nullptr != entry) &&
                ((0 == strcmp(".", entry->d_name)) ||
                    (0 == strcmp("..", entry->d_name))))
         {
-            entry = readdir(m_dir);
+            entry = readdir(m_dir.get());
         }
 
         if (nullptr != entry)
@@ -196,7 +196,8 @@ File File::openNextFile(const char* mode)
             }
             else
             {
-                FILE* fd = fopen(fullPath.c_str(), mode);
+                std::string binaryMode = toBinaryMode(mode);
+                FILE*       fd         = fopen(fullPath.c_str(), binaryMode.c_str());
 
                 if (nullptr != fd)
                 {
@@ -220,6 +221,41 @@ File File::openNextFile(const char* mode)
 /******************************************************************************
  * External Functions
  *****************************************************************************/
+
+std::string fs::toBinaryMode(const char* mode)
+{
+    std::string result;
+
+    if (nullptr != mode)
+    {
+        size_t index = 0U;
+
+        /* The mode may contain a 'b' or a 't' at any position after the first
+         * character. Both are removed and the binary mode is appended, which
+         * keeps the rest of the mode untouched.
+         */
+        while ('\0' != mode[index])
+        {
+            if (('b' != mode[index]) &&
+                ('t' != mode[index]))
+            {
+                result += mode[index];
+            }
+
+            ++index;
+        }
+    }
+
+    if (true == result.empty())
+    {
+        /* Guard: without a mode the file can not be opened at all. */
+        result = "r";
+    }
+
+    result += 'b';
+
+    return result;
+}
 
 /******************************************************************************
  * Local Functions

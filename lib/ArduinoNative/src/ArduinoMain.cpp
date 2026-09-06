@@ -25,18 +25,24 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Arduino.cpp
- * @brief  Arduino stuff for test
+ * @file   ArduinoMain.cpp
+ * @brief  Arduino entry point for the native environment
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * The Arduino framework provides the main() which calls setup() once and loop()
+ * periodically. On the host it is provided here.
+ *
+ * Important: This file contains nothing else than the main(). A unit test
+ * brings its own main() and is linked directly, therefore this object is never
+ * pulled out of the library archive in the test environment. Adding anything
+ * else here would break that, because the linker would pull the object in for
+ * the other symbol and then report a duplicated main().
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
 #include "Arduino.h"
-
-#include <chrono>
-#include <thread>
 
 /******************************************************************************
  * Compiler Switches
@@ -54,18 +60,12 @@
  * Prototypes
  *****************************************************************************/
 
+extern void setup();
+extern void loop();
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/** Max. number of supported pins. */
-static const uint8_t MAX_PINS       = 64U;
-
-/** Mode of every pin. There is no GPIO on the host, its just remembered. */
-static uint8_t gPinModes[MAX_PINS]  = { 0U };
-
-/** Level of every pin. There is no GPIO on the host, its just remembered. */
-static uint8_t gPinLevels[MAX_PINS] = { 0U };
 
 /******************************************************************************
  * Public Methods
@@ -83,86 +83,27 @@ static uint8_t gPinLevels[MAX_PINS] = { 0U };
  * External Functions
  *****************************************************************************/
 
-extern unsigned long millis()
+/**
+ * Main entry point.
+ *
+ * @param[in] argc  Number of command line arguments
+ * @param[in] argv  Command line arguments
+ *
+ * @return Program exit code
+ */
+extern int main(int argc, char** argv)
 {
-    clock_t now = clock();
+    (void)argc;
+    (void)argv;
 
-    return (now * 1000UL) / CLOCKS_PER_SEC;
-}
+    setup();
 
-extern unsigned long micros()
-{
-    clock_t now = clock();
-
-    return (now * 1000000UL) / CLOCKS_PER_SEC;
-}
-
-extern void delay(unsigned long ms)
-{
-    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-}
-
-extern void pinMode(uint8_t pinNo, uint8_t mode)
-{
-    if (MAX_PINS > pinNo)
+    for (;;)
     {
-        gPinModes[pinNo] = mode;
-    }
-}
-
-extern void digitalWrite(uint8_t pinNo, uint8_t level)
-{
-    if (MAX_PINS > pinNo)
-    {
-        gPinLevels[pinNo] = level;
-    }
-}
-
-extern int digitalRead(uint8_t pinNo)
-{
-    int level = LOW;
-
-    if (MAX_PINS > pinNo)
-    {
-        level = gPinLevels[pinNo];
+        loop();
     }
 
-    return level;
-}
-
-extern uint16_t analogRead(uint8_t pinNo)
-{
-    /* There is no ADC on the host. */
-    (void)pinNo;
-
-    return 0U;
-}
-
-extern long random(long max)
-{
-    return random(0, max);
-}
-
-extern long random(long min, long max)
-{
-    long result = min;
-
-    if (min < max)
-    {
-        result = min + (rand() % (max - min));
-    }
-
-    return result;
-}
-
-extern void randomSeed(unsigned long seed)
-{
-    srand(static_cast<unsigned int>(seed));
-}
-
-extern uint32_t esp_log_timestamp(void)
-{
-    return millis();
+    return 0;
 }
 
 /******************************************************************************

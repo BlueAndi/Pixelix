@@ -71,6 +71,12 @@
  * Types and Classes
  *****************************************************************************/
 
+/* Like the Arduino, the filesystem types live in the fs namespace and are
+ * pulled into the global namespace afterwards.
+ */
+namespace fs
+{
+
 enum SeekMode
 {
     SeekSet = 0,
@@ -78,13 +84,28 @@ enum SeekMode
     SeekEnd = 2
 };
 
+/**
+ * Force the binary mode in the given file open mode.
+ *
+ * The filesystem on the target knows binary files only. On the host a file
+ * which is opened in text mode gets its line endings translated and a 0x1a is
+ * interpreted as end of file. That would corrupt every file which is not pure
+ * text, e.g. the images served by the webserver. The webserver opens its files
+ * with "r", therefore the mode is adapted here and not at the caller.
+ *
+ * @param[in] mode  File open mode, like the C library uses it. May be nullptr.
+ *
+ * @return File open mode, which opens the file in binary mode.
+ */
+std::string toBinaryMode(const char* mode);
+
 class File
 {
 public:
 
     File(FILE* fd = nullptr) :
-        m_fd(fd),
-        m_dir(nullptr),
+        m_fd(fd, fileDeleter),
+        m_dir(nullptr, dirDeleter),
         m_path(),
         m_name(),
         m_rootPath()
@@ -100,8 +121,8 @@ public:
      * @param[in] rootPath  Root path of the filesystem on the host.
      */
     File(FILE* fd, DIR* dir, const std::string& path, const std::string& rootPath) :
-        m_fd(fd),
-        m_dir(dir),
+        m_fd(fd, fileDeleter),
+        m_dir(dir, dirDeleter),
         m_path(path),
         m_name(),
         m_rootPath(rootPath)
@@ -134,7 +155,7 @@ public:
         {
             uint8_t byte = 0U;
 
-            if (1U == fread(&byte, 1U, 1U, m_fd))
+            if (1U == fread(&byte, 1U, 1U, m_fd.get()))
             {
                 data = byte;
             }
@@ -148,7 +169,7 @@ public:
 
     size_t read(uint8_t* buf, size_t size)
     {
-        return fread(buf, 1, size, m_fd);
+        return fread(buf, 1, size, m_fd.get());
     }
 
     size_t readBytes(char* buffer, size_t length)
@@ -158,7 +179,7 @@ public:
 
     bool seek(uint32_t pos, SeekMode mode)
     {
-        return (0 == fseek(m_fd, pos, mode));
+        return (0 == fseek(m_fd.get(), pos, mode));
     }
 
     bool seek(uint32_t pos)
@@ -168,24 +189,15 @@ public:
 
     size_t position() const
     {
-        return ftell(m_fd);
+        return ftell(m_fd.get());
     }
 
     size_t size() const;
 
     void   close()
     {
-        if (nullptr != m_fd)
-        {
-            fclose(m_fd);
-            m_fd = nullptr;
-        }
-
-        if (nullptr != m_dir)
-        {
-            closedir(m_dir);
-            m_dir = nullptr;
-        }
+        m_fd.reset();
+        m_dir.reset();
     }
 
     operator bool() const
@@ -241,14 +253,45 @@ public:
     {
         if (nullptr != m_dir)
         {
-            rewinddir(m_dir);
+            rewinddir(m_dir.get());
         }
     }
 
 private:
 
-    FILE*       m_fd;       /**< File descriptor, nullptr in case of a directory. */
-    DIR*        m_dir;      /**< Directory descriptor, nullptr in case of a file. */
+    /* The handle is shared, because a File is copied around by value, e.g. by
+     * the webserver. Every copy would close the handle on its own, which is a
+     * double free. The Arduino counterpart shares it the same way.
+     */
+    std::shared_ptr<FILE> m_fd;  /**< File handle, nullptr in case of a directory. */
+    std::shared_ptr<DIR>  m_dir; /**< Directory handle, nullptr in case of a file. */
+
+    /**
+     * Close a file handle. Used as deleter of the shared pointer.
+     *
+     * @param[in] fd    File handle. May be nullptr.
+     */
+    static void fileDeleter(FILE* fd)
+    {
+        if (nullptr != fd)
+        {
+            (void)fclose(fd);
+        }
+    }
+
+    /**
+     * Close a directory handle. Used as deleter of the shared pointer.
+     *
+     * @param[in] dir   Directory handle. May be nullptr.
+     */
+    static void dirDeleter(DIR* dir)
+    {
+        if (nullptr != dir)
+        {
+            (void)closedir(dir);
+        }
+    }
+
     std::string m_path;     /**< Path of the file, like the target uses it. */
     std::string m_name;     /**< Name of the file, without any path. */
     std::string m_rootPath; /**< Root path of the filesystem on the host. */
@@ -341,7 +384,8 @@ public:
         }
         else
         {
-            FILE* fd = fopen(fullPath.c_str(), mode);
+            std::string binaryMode = toBinaryMode(mode);
+            FILE*       fd         = fopen(fullPath.c_str(), binaryMode.c_str());
 
             if (nullptr != fd)
             {
@@ -440,9 +484,36 @@ public:
         return rmdir(path.c_str());
     }
 
+    /**
+     * Get the total size of the filesystem.
+     * The host filesystem has no fixed size, therefore a virtual size is
+     * reported, like a typical LittleFS partition has.
+     *
+     * @return Total size in byte
+     */
+    size_t totalBytes() const
+    {
+        return VIRTUAL_TOTAL_BYTES;
+    }
+
+    /**
+     * Get the used size of the filesystem.
+     * The host filesystem has no fixed size, therefore nothing is used.
+     *
+     * @return Used size in byte
+     */
+    size_t usedBytes() const
+    {
+        return 0U;
+    }
+
 private:
 
-    std::string m_rootPath; /**< Root path, which every path is relative to. */
+    /** Virtual filesystem size in byte, reported to the user. */
+    static const size_t VIRTUAL_TOTAL_BYTES = 1024U * 1024U;
+
+
+    std::string         m_rootPath; /**< Root path, which every path is relative to. */
 
     /**
      * Build the full path by considering the root path.
@@ -474,7 +545,20 @@ private:
     }
 };
 
-extern FS NativeFS;
+} /* namespace fs */
+
+using fs::File;
+using fs::FS;
+using fs::SeekMode;
+
+/* The enumerators of a unscoped enum belong to the enclosing namespace, so they
+ * are pulled in separately. The application uses them unqualified.
+ */
+using fs::SeekCur;
+using fs::SeekEnd;
+using fs::SeekSet;
+
+extern fs::FS NativeFS;
 
 /******************************************************************************
  * Functions

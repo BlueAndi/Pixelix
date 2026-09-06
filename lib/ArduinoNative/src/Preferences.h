@@ -30,8 +30,9 @@
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * Counterpart of the ESP32 Arduino Preferences, which stores the key/value
- * pairs in the non-volatile storage. On the host they are kept in memory,
- * therefore they are lost after the program ended.
+ * pairs in the non-volatile storage. On the host they are kept in a file in
+ * the working directory, so the configuration survives a restart like on the
+ * target. Every modification is written through.
  *
  * @addtogroup TEST
  *

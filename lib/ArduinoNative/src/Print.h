@@ -108,6 +108,17 @@ public:
     virtual size_t write(const uint8_t* buffer, size_t size);
 
     /**
+     * Wait until everything is written out.
+     *
+     * Like the Arduino counterpart it does nothing by default, a derived class
+     * may override it.
+     */
+    virtual void flush()
+    {
+        /* Nothing to do. */
+    }
+
+    /**
      * Write a single character to the output stream.
      *
      * @param[in] str   Character
@@ -156,6 +167,62 @@ public:
      * @return Number of written characters.
      */
     size_t print(long n, int base = DEC);
+
+    /* Every integral type needs its own overload, otherwise e.g. a int argument
+     * is ambiguous, because it can be converted to char as well as to long.
+     */
+
+    /**
+     * Print a number.
+     *
+     * @param[in] n     Number to print.
+     * @param[in] base  Number base.
+     *
+     * @return Number of written characters.
+     */
+    size_t print(unsigned char n, int base = DEC)
+    {
+        return print(static_cast<long>(n), base);
+    }
+
+    /**
+     * Print a number.
+     *
+     * @param[in] n     Number to print.
+     * @param[in] base  Number base.
+     *
+     * @return Number of written characters.
+     */
+    size_t print(int n, int base = DEC)
+    {
+        return print(static_cast<long>(n), base);
+    }
+
+    /**
+     * Print a number.
+     *
+     * @param[in] n     Number to print.
+     * @param[in] base  Number base.
+     *
+     * @return Number of written characters.
+     */
+    size_t print(unsigned int n, int base = DEC)
+    {
+        return print(static_cast<long>(n), base);
+    }
+
+    /**
+     * Print a number.
+     *
+     * @param[in] n     Number to print.
+     * @param[in] base  Number base.
+     *
+     * @return Number of written characters.
+     */
+    size_t print(unsigned long n, int base = DEC)
+    {
+        return print(static_cast<long>(n), base);
+    }
 
     /**
      * Print a cariage return and new line.

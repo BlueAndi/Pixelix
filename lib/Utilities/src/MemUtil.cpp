@@ -65,7 +65,7 @@
 /**
  * Memory capabilities used for heap operations.
  */
-static const uint32_t MEM_CAPABILITIES  = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
+static const uint32_t MEM_CAPABILITIES = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAULT;
 
 #else /* NATIVE */
 
@@ -75,12 +75,12 @@ static const uint32_t MEM_CAPABILITIES  = MALLOC_CAP_INTERNAL | MALLOC_CAP_DEFAU
  * is reported, which is large enough to keep the memory guards in the
  * application from rejecting requests.
  */
-static const size_t   NATIVE_HEAP_SIZE  = 4U * 1024U * 1024U;
+static const size_t NATIVE_HEAP_SIZE  = 4U * 1024U * 1024U;
 
 /**
  * Amount of the reported heap, which is considered to be in use on the host.
  */
-static const size_t   NATIVE_HEAP_USAGE = NATIVE_HEAP_SIZE / 4U;
+static const size_t NATIVE_HEAP_USAGE = NATIVE_HEAP_SIZE / 4U;
 
 #endif /* NATIVE */
 

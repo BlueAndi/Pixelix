@@ -36,7 +36,9 @@
 #include "Preferences.h"
 
 #include <cstdlib>
+#include <cstdio>
 #include <map>
+#include <string>
 
 /******************************************************************************
  * Compiler Switches
@@ -61,10 +63,24 @@ typedef std::map<std::string, KeyValueMap> NamespaceMap;
  *****************************************************************************/
 
 static NamespaceMap& getStorage();
+static void          loadStorage(NamespaceMap& storage);
+static void          saveStorage();
+static std::string   escape(const std::string& raw);
+static std::string   unescape(const std::string& escaped);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/**
+ * Name of the file which keeps the key/value pairs. It is located in the
+ * working directory of the program, like the non-volatile storage is located
+ * on the target.
+ */
+static const char* STORAGE_FILE_NAME = "preferences.txt";
+
+/** Separator between the namespace, the key and the value. */
+static const char SEPARATOR          = '\t';
 
 /******************************************************************************
  * Public Methods
@@ -123,6 +139,7 @@ bool Preferences::clear()
     else
     {
         getStorage().erase(m_namespace);
+        saveStorage();
         isSuccessful = true;
     }
 
@@ -144,6 +161,11 @@ bool Preferences::remove(const char* key)
     else
     {
         isSuccessful = (0U < getStorage()[m_namespace].erase(key));
+
+        if (true == isSuccessful)
+        {
+            saveStorage();
+        }
     }
 
     return isSuccessful;
@@ -291,6 +313,8 @@ size_t Preferences::putValue(const char* key, const std::string& value)
     {
         getStorage()[m_namespace][key] = value;
         stored                         = value.length();
+
+        saveStorage();
     }
 
     return stored;
@@ -317,6 +341,198 @@ size_t Preferences::putValue(const char* key, const std::string& value)
 static NamespaceMap& getStorage()
 {
     static NamespaceMap storage;
+    static bool         isLoaded = false;
+
+    if (false == isLoaded)
+    {
+        /* Set before loading, otherwise the load would recurse. */
+        isLoaded = true;
+
+        loadStorage(storage);
+    }
 
     return storage;
+}
+
+/**
+ * Load all key/value pairs from the storage file.
+ *
+ * A missing file is not an error, it just means that nothing was stored yet.
+ *
+ * @param[out] storage  Storage which to fill.
+ */
+static void loadStorage(NamespaceMap& storage)
+{
+    FILE* fd = fopen(STORAGE_FILE_NAME, "rb");
+
+    if (nullptr != fd)
+    {
+        std::string line;
+        int         character   = fgetc(fd);
+        bool        isEndOfFile = false;
+
+        while (false == isEndOfFile)
+        {
+            if ((EOF == character) ||
+                ('\n' == character) ||
+                ('\r' == character))
+            {
+                size_t keyPos = line.find(SEPARATOR);
+
+                if (std::string::npos != keyPos)
+                {
+                    size_t valuePos = line.find(SEPARATOR, keyPos + 1U);
+
+                    if (std::string::npos != valuePos)
+                    {
+                        std::string nameSpace   = line.substr(0U, keyPos);
+                        std::string key         = line.substr(keyPos + 1U, valuePos - keyPos - 1U);
+
+                        storage[nameSpace][key] = unescape(line.substr(valuePos + 1U));
+                    }
+                }
+
+                line.clear();
+
+                if (EOF == character)
+                {
+                    isEndOfFile = true;
+                }
+            }
+            else
+            {
+                line += static_cast<char>(character);
+            }
+
+            if (false == isEndOfFile)
+            {
+                character = fgetc(fd);
+            }
+        }
+
+        (void)fclose(fd);
+    }
+}
+
+/**
+ * Save all key/value pairs to the storage file.
+ *
+ * Every modification is written through, because the program may be terminated
+ * at any time. This is the closest to the non-volatile storage of the target,
+ * which commits every write as well.
+ */
+static void saveStorage()
+{
+    FILE* fd = fopen(STORAGE_FILE_NAME, "wb");
+
+    if (nullptr != fd)
+    {
+        const NamespaceMap& storage = getStorage();
+
+        for (NamespaceMap::const_iterator nsIt = storage.begin(); storage.end() != nsIt; ++nsIt)
+        {
+            for (KeyValueMap::const_iterator kvIt = nsIt->second.begin(); nsIt->second.end() != kvIt; ++kvIt)
+            {
+                (void)fprintf(fd, "%s%c%s%c%s\n", nsIt->first.c_str(), SEPARATOR, kvIt->first.c_str(), SEPARATOR, escape(kvIt->second).c_str());
+            }
+        }
+
+        (void)fclose(fd);
+    }
+}
+
+/**
+ * Escape a value, so it fits into a single line of the storage file.
+ *
+ * @param[in] raw   Value which to escape.
+ *
+ * @return Escaped value
+ */
+static std::string escape(const std::string& raw)
+{
+    std::string result;
+    size_t      index = 0U;
+
+    while (raw.length() > index)
+    {
+        char character = raw[index];
+
+        switch (character)
+        {
+        case '\\':
+            result += "\\\\";
+            break;
+
+        case '\n':
+            result += "\\n";
+            break;
+
+        case '\r':
+            result += "\\r";
+            break;
+
+        case '\t':
+            result += "\\t";
+            break;
+
+        default:
+            result += character;
+            break;
+        }
+
+        ++index;
+    }
+
+    return result;
+}
+
+/**
+ * Revert the escaping of a value, read from the storage file.
+ *
+ * @param[in] escaped   Escaped value.
+ *
+ * @return Original value
+ */
+static std::string unescape(const std::string& escaped)
+{
+    std::string result;
+    size_t      index = 0U;
+
+    while (escaped.length() > index)
+    {
+        char character = escaped[index];
+
+        if (('\\' == character) &&
+            ((index + 1U) < escaped.length()))
+        {
+            ++index;
+
+            switch (escaped[index])
+            {
+            case 'n':
+                result += '\n';
+                break;
+
+            case 'r':
+                result += '\r';
+                break;
+
+            case 't':
+                result += '\t';
+                break;
+
+            default:
+                result += escaped[index];
+                break;
+            }
+        }
+        else
+        {
+            result += character;
+        }
+
+        ++index;
+    }
+
+    return result;
 }
