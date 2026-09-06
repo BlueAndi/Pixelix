@@ -72,6 +72,9 @@ typedef uint32_t UBaseType_t;
 /** Tick rate in Hz, compatible to the freeRTOS configTICK_RATE_HZ. */
 static const uint32_t configTICK_RATE_HZ = 1000U;
 
+/** Duration of one tick in ms, compatible to the freeRTOS portTICK_PERIOD_MS. */
+static const uint32_t portTICK_PERIOD_MS = 1U;
+
 /** Block infinite, compatible to the freeRTOS portMAX_DELAY. */
 static const TickType_t portMAX_DELAY    = UINT32_MAX;
 
