@@ -40,6 +40,7 @@
 #include <StateMachine.hpp>
 #include <Board.h>
 #include <esp_task_wdt.h>
+#include <esp_log.h>
 #include "InitState.h"
 #include "RestartState.h"
 #include "ErrorState.h"
