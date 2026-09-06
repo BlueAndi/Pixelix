@@ -17,6 +17,8 @@
         "name": "LittleFS"
     }, {
         "name": "MqttService"
+    }, {
+        "name": "SettingsService"
     }],
     "frameworks": "*",
     "platforms": "*"
