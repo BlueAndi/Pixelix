@@ -2,10 +2,10 @@
     "method": "GET",
     "url": "http://192.168.1.123/meter/0/",
     "filter": {
-        "power": true
+      "power": true
     },
-    "iconFileId": 5,
+    "iconFileName": "plug.bmp",
     "format": "{hc}%0.1f W",
     "multiplier": 1,
     "offset": 0
-}
+  }

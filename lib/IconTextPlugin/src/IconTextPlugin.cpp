@@ -36,6 +36,7 @@
 #include "IconTextPlugin.h"
 
 #include <FileSystem.h>
+#include <FileUtil.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
 
@@ -253,7 +254,7 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
         iconFullPath += "/";
         iconFullPath += m_iconFileName;
 
-        if (false == m_view.loadIcon(m_iconFileName))
+        if (false == m_view.loadIcon(iconFullPath))
         {
             LOG_ERROR("Icon not found: %s", m_iconFileName.c_str());
         }
@@ -304,10 +305,11 @@ bool IconTextPlugin::loadIcon(const String& iconFileName, bool storeFlag)
 {
     bool                       isSuccessful = false;
     MutexGuard<MutexRecursive> guard(m_mutex);
+    const String               normalizedFileName = FileUtil::getFileName(iconFileName);
 
-    if (m_iconFileName != iconFileName)
+    if (m_iconFileName != normalizedFileName)
     {
-        m_iconFileName    = iconFileName;
+        m_iconFileName    = normalizedFileName;
         m_hasTopicChanged = true;
 
         if (true == storeFlag)
@@ -325,13 +327,13 @@ bool IconTextPlugin::loadIcon(const String& iconFileName, bool storeFlag)
     {
         String iconFullPath;
 
-        iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + m_iconFileName.length() + 1U);
+        iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + m_iconFileName.length());
 
         iconFullPath  = CONFIG_PATH;
         iconFullPath += "/";
         iconFullPath += m_iconFileName;
 
-        if (false == m_view.loadIcon(m_iconFileName))
+        if (false == m_view.loadIcon(iconFullPath))
         {
             LOG_ERROR("Icon not found: %s", m_iconFileName.c_str());
         }
@@ -395,7 +397,7 @@ bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
-        const char*                newIconFileName = jsonIconFileName.as<const char*>();
+        const String               newIconFileName = FileUtil::getFileName(jsonIconFileName.as<const char*>());
         String                     newFormatText   = jsonText.as<const char*>();
 
         if (m_iconFileName != newIconFileName)
@@ -408,7 +410,13 @@ bool IconTextPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
             }
             else
             {
-                if (false == m_view.loadIcon(m_iconFileName))
+                String iconFullPath;
+
+                iconFullPath  = CONFIG_PATH;
+                iconFullPath += "/";
+                iconFullPath += m_iconFileName;
+
+                if (false == m_view.loadIcon(iconFullPath))
                 {
                     LOG_WARNING("Couldn't load icon: %s", m_iconFileName.c_str());
                 }

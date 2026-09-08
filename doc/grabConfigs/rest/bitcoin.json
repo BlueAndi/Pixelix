@@ -6,7 +6,7 @@
             "amount": true
         }
     },
-    "iconFileId": 255,
+    "iconFileName": "",
     "format": "%s $/BTC",
     "multiplier": 1,
     "offset": 0

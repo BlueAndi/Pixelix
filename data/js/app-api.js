@@ -327,7 +327,7 @@ pixelix.rest.Client = class {
         const files = [];
         let page = 0;
 
-        for (;;) {
+        for (; ;) {
             const rsp = await this.listFiles(path, page);
 
             if (rsp.data.length === 0) {
@@ -490,8 +490,8 @@ pixelix.rest.Client = class {
         });
     }
 
-    fileMgrRemoveFile(fileId) {
-        if (typeof fileId !== "number") {
+    fileMgrRemoveFile(fileName) {
+        if (typeof fileName !== "string") {
             return Promise.reject();
         }
 
@@ -500,7 +500,7 @@ pixelix.rest.Client = class {
             url: this._hostname + this._baseUri + "/fileMgrService/remove",
             isJsonResponse: true,
             parameter: {
-                fileId: fileId
+                fileName: fileName
             }
         });
     }

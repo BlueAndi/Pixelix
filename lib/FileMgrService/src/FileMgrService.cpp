@@ -37,6 +37,7 @@
 
 #include <Logging.h>
 #include <FileSystem.h>
+#include <FileUtil.h>
 #include <Util.h>
 #include <SettingsService.h>
 #include <TopicHandlerService.h>
@@ -177,7 +178,14 @@ bool FileMgrService::getTopic(const String& topic, JsonObject& jsonValue)
     {
         if (false == fd.isDirectory())
         {
-            jsonFileTable.add(fd.name());
+            const String fileName = fd.name();
+
+            if (true == BitmapWidget::isImageTypeSupported(fileName))
+            {
+                String fullPath = fd.path();
+
+                (void)jsonFileTable.add(fullPath);
+            }
         }
 
         fd.close();
@@ -202,6 +210,7 @@ bool FileMgrService::uploadTopic(const String& topic, const JsonObjectConst& val
             if (false == fullPath.isEmpty())
             {
                 LOG_INFO("File \"%s\" uploaded.", fullPath.c_str());
+                isSuccessful = true;
             }
         }
     }
@@ -257,15 +266,18 @@ bool FileMgrService::removeTopic(const String& topic, const JsonObjectConst& val
         }
         else
         {
-            const char* fileName = jsonFileName.as<const char*>();
+            String fullPath  = WORKING_DIRECTORY;
 
-            if (false == FILESYSTEM.remove(fileName))
+            fullPath        += "/";
+            fullPath        += FileUtil::getFileName(jsonFileName.as<const char*>());
+
+            if (false == FILESYSTEM.remove(fullPath))
             {
-                LOG_WARNING("Remove file \"%s\" failed.", fileName);
+                LOG_WARNING("Remove file \"%s\" failed.", fullPath.c_str());
             }
             else
             {
-                LOG_INFO("Remove file \"%s\" successful.", fileName);
+                LOG_INFO("Remove file \"%s\" successful.", fullPath.c_str());
                 isSuccessful = true;
             }
         }

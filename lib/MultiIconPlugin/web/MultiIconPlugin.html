@@ -107,31 +107,31 @@
                             </select>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="icon0FileId">Icon 0 file id:</label>
+                            <label class="form-label" for="icon0FileName">Icon 0 file name:</label>
                             <div class="input-group">
-                                <input class="form-control" type="number" id="icon0FileId" name="icon0FileId" min="0" max="255" />
+                                <input class="form-control" type="text" id="icon0FileName" name="icon0FileName" value="" />
                                 <button class="btn btn-outline-primary" type="button">Select...</button>
                                 <button class="btn btn-outline-secondary" type="button">Clear</button>
                             </div>
-                            <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
+                            <small class="form-text">The file name of the icon to show. Select it from the icons page or enter a name manually. Empty means no icon.</small>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="icon1FileId">Icon 1 file id:</label>
+                            <label class="form-label" for="icon1FileName">Icon 1 file name:</label>
                             <div class="input-group">
-                                <input class="form-control" type="number" id="icon1FileId" name="icon1FileId" min="0" max="255" />
+                                <input class="form-control" type="text" id="icon1FileName" name="icon1FileName" value="" />
                                 <button class="btn btn-outline-primary" type="button">Select...</button>
                                 <button class="btn btn-outline-secondary" type="button">Clear</button>
                             </div>
-                            <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
+                            <small class="form-text">The file name of the icon to show. Select it from the icons page or enter a name manually. Empty means no icon.</small>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="icon2FileId">Icon 2 file id:</label>
+                            <label class="form-label" for="icon2FileName">Icon 2 file name:</label>
                             <div class="input-group">
-                                <input class="form-control" type="number" id="icon2FileId" name="icon2FileId" min="0" max="255" />
+                                <input class="form-control" type="text" id="icon2FileName" name="icon2FileName" value="" />
                                 <button class="btn btn-outline-primary" type="button">Select...</button>
                                 <button class="btn btn-outline-secondary" type="button">Clear</button>
                             </div>
-                            <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
+                            <small class="form-text">The file name of the icon to show. Select it from the icons page or enter a name manually. Empty means no icon.</small>
                         </div>
                         <input name="submit" type="submit" value="Update" />
                     </form>
@@ -188,9 +188,9 @@
                 });
             }
 
-            function selectIconFileId(fileId) {
+            function selectIconFileName(fileName) {
                 if ("" !== iconPickerTargetInputId) {
-                    document.getElementById(iconPickerTargetInputId).value = fileId;
+                    document.getElementById(iconPickerTargetInputId).value = fileName;
                 }
 
                 if (null !== iconPickerModal) {
@@ -198,8 +198,8 @@
                 }
             }
 
-            function clearIconFileId(targetInputId) {
-                document.getElementById(targetInputId).value = 255;
+            function clearIconFileName(targetInputId) {
+                document.getElementById(targetInputId).value = "";
             }
 
             function serializeFormAll(formId) {
@@ -250,7 +250,7 @@
                 button.setAttribute("class", "btn btn-primary btn-sm");
                 button.textContent = "Use";
                 button.addEventListener("click", () => {
-                    selectIconFileId(fileId);
+                    selectIconFileName(fullPath.replace(/^.*[\\\/]/, ""));
                 });
 
                 const card = document.createElement("div");
@@ -274,23 +274,23 @@
                 });
             }
 
-            async function fillIconPicker(fileTable) {
+            async function fillIconPicker(files) {
                 const overview = document.getElementById("iconPickerOverview");
-                const validEntries = fileTable.filter((entry) => 0 < entry.fullPath.length);
+                const validFiles = files.filter((fileName) => 0 < fileName.length);
                 let loadedCount = 0;
 
                 overview.replaceChildren();
-                updateIconPickerLoadStatus(overview, loadedCount, validEntries.length);
+                updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
 
-                for (let idx = 0; idx < fileTable.length; ++idx) {
-                    if (0 < fileTable[idx].fullPath.length) {
-                        await appendIconTileSequentially(overview, idx, fileTable[idx].fullPath);
+                for (let idx = 0; idx < files.length; ++idx) {
+                    if (0 < files[idx].length) {
+                        await appendIconTileSequentially(overview, idx, files[idx]);
                         ++loadedCount;
-                        updateIconPickerLoadStatus(overview, loadedCount, validEntries.length);
+                        updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
                     }
                 }
 
-                updateIconPickerLoadStatus(overview, validEntries.length, validEntries.length, true);
+                updateIconPickerLoadStatus(overview, validFiles.length, validFiles.length, true);
             }
 
             async function openIconPickerDialog(targetInputId) {
@@ -303,10 +303,13 @@
 
                     iconPickerModal.show();
 
-                    const rsp = await restClient.readFile("/configuration/fileMgr.json");
-                    const jsonRsp = JSON.parse(rsp);
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/fileMgrService/files",
+                        isJsonResponse: true
+                    });
 
-                    await fillIconPicker(jsonRsp.fileTable);
+                    await fillIconPicker(rsp.data.files);
                 } catch (e) {
                     alert("Failed to load icon list. Open the icons page once to initialize it.");
                 }
@@ -363,28 +366,28 @@
             function getSlotsByForm(formId) {
                 const values = serializeFormAll(formId);
                 let pluginUid = 0;
-                let icon0FileId = 0xff;
-                let icon1FileId = 0xff;
-                let icon2FileId = 0xff;
+                let icon0FileName = "";
+                let icon1FileName = "";
+                let icon2FileName = "";
 
                 values.forEach((field) => {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "icon0FileId") {
-                        icon0FileId = field.value;
-                    } else if (field.name === "icon1FileId") {
-                        icon1FileId = field.value;
-                    } else if (field.name === "icon2FileId") {
-                        icon2FileId = field.value;
+                    } else if (field.name === "icon0FileName") {
+                        icon0FileName = field.value;
+                    } else if (field.name === "icon1FileName") {
+                        icon1FileName = field.value;
+                    } else if (field.name === "icon2FileName") {
+                        icon2FileName = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                return getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId);
+                return getSlots(pluginUid, icon0FileName, icon1FileName, icon2FileName);
             }
 
-            async function getSlots(pluginUid, icon0FileId, icon1FileId, icon2FileId) {
+            async function getSlots(pluginUid, icon0FileName, icon1FileName, icon2FileName) {
                 disableUI();
 
                 try {
@@ -394,13 +397,13 @@
                         isJsonResponse: true
                     });
 
-                    const icon0FileIdInput = document.getElementById("icon0FileId");
-                    const icon1FileIdInput = document.getElementById("icon1FileId");
-                    const icon2FileIdInput = document.getElementById("icon2FileId");
+                    const icon0FileNameInput = document.getElementById("icon0FileName");
+                    const icon1FileNameInput = document.getElementById("icon1FileName");
+                    const icon2FileNameInput = document.getElementById("icon2FileName");
 
-                    icon0FileIdInput.value = rsp.data.slots[0];
-                    icon1FileIdInput.value = rsp.data.slots[1];
-                    icon2FileIdInput.value = rsp.data.slots[2];
+                    icon0FileNameInput.value = rsp.data.slots[0] ?? "";
+                    icon1FileNameInput.value = rsp.data.slots[1] ?? "";
+                    icon2FileNameInput.value = rsp.data.slots[2] ?? "";
                 } catch (rsp) {
                     alert("Internal error.");
                 } finally {
@@ -411,16 +414,16 @@
             function setSlotsByForm(formId) {
                 const values = serializeFormAll(formId);
                 let pluginUid = 0;
-                const slots = [255, 255, 255];
+                const slots = ["", "", ""];
 
                 values.forEach((field) => {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "icon0FileId") {
+                    } else if (field.name === "icon0FileName") {
                         slots[0] = field.value;
-                    } else if (field.name === "icon1FileId") {
+                    } else if (field.name === "icon1FileName") {
                         slots[1] = field.value;
-                    } else if (field.name === "icon2FileId") {
+                    } else if (field.name === "icon2FileName") {
                         slots[2] = field.value;
                     } else {
                         /* Skip. */
@@ -480,12 +483,12 @@
                 });
 
                 /* Wire up the icon picker and clear buttons. */
-                ["icon0FileId", "icon1FileId", "icon2FileId"].forEach((inputId) => {
+                ["icon0FileName", "icon1FileName", "icon2FileName"].forEach((inputId) => {
                     const inputGroup = document.getElementById(inputId).parentElement;
                     const buttons = inputGroup.querySelectorAll("button");
 
                     buttons[0].addEventListener("click", () => openIconPickerDialog(inputId));
-                    buttons[1].addEventListener("click", () => clearIconFileId(inputId));
+                    buttons[1].addEventListener("click", () => clearIconFileName(inputId));
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */
