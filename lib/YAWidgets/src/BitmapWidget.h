@@ -48,6 +48,7 @@
 #include <FS.h>
 
 #include "Widget.hpp"
+#include "GifFileLoader.h"
 #include "GifFileToMemLoader.h"
 #include "GifImgPlayer.h"
 #include "Alignment.h"
@@ -82,12 +83,12 @@ public:
         Widget(WIDGET_TYPE, width, height, x, y),
         m_imgType(IMG_TYPE_NO_IMAGE),
         m_bitmap(),
-        m_gifFileLoader(),
         m_gifPlayer(),
         m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
         m_vAlign(Alignment::Vertical::VERTICAL_TOP),
         m_hAlignPosX(0),
-        m_vAlignPosY(0)
+        m_vAlignPosY(0),
+        m_gifFileLoader()
     {
         /* Animated GIF images shall run infinite by default. */
         m_gifPlayer.setInfiniteAnimation(true);
@@ -102,12 +103,12 @@ public:
         Widget(widget),
         m_imgType(widget.m_imgType),
         m_bitmap(widget.m_bitmap),
-        m_gifFileLoader(widget.m_gifFileLoader),
         m_gifPlayer(widget.m_gifPlayer),
         m_hAlign(widget.m_hAlign),
         m_vAlign(widget.m_vAlign),
         m_hAlignPosX(widget.m_hAlignPosX),
-        m_vAlignPosY(widget.m_vAlignPosY)
+        m_vAlignPosY(widget.m_vAlignPosY),
+        m_gifFileLoader(widget.m_gifFileLoader)
     {
     }
 
@@ -265,14 +266,19 @@ private:
         IMG_TYPE_GIF           /**< GIF image */
     };
 
-    ImgType               m_imgType;       /**< Current image type. */
-    YAGfxDynamicBitmap    m_bitmap;        /**< Bitmap image. */
-    GifFileToMemLoader    m_gifFileLoader; /**< GIF file loader used to read the file from memory. */
-    GifImgPlayer          m_gifPlayer;     /**< GIF image player. */
-    Alignment::Horizontal m_hAlign;        /**< Horizontal alignment. */
-    Alignment::Vertical   m_vAlign;        /**< Vertical alignment. */
-    int16_t               m_hAlignPosX;    /**< x-coordinate derived from horizontal alignment. */
-    int16_t               m_vAlignPosY;    /**< y-coordinate derived from vertical alignment. */
+    ImgType               m_imgType;    /**< Current image type. */
+    YAGfxDynamicBitmap    m_bitmap;     /**< Bitmap image. */
+    GifImgPlayer          m_gifPlayer;  /**< GIF image player. */
+    Alignment::Horizontal m_hAlign;     /**< Horizontal alignment. */
+    Alignment::Vertical   m_vAlign;     /**< Vertical alignment. */
+    int16_t               m_hAlignPosX; /**< x-coordinate derived from horizontal alignment. */
+    int16_t               m_vAlignPosY; /**< y-coordinate derived from vertical alignment. */
+
+#ifdef CONFIG_ENABLE_FILE_TO_MEM_LOADER
+    GifFileToMemLoader m_gifFileLoader; /**< GIF file loader used to read the file from memory. */
+#else                                   /* CONFIG_ENABLE_FILE_TO_MEM_LOADER */
+    GifFileLoader m_gifFileLoader; /**< GIF file loader used to read the file from filesystem. */
+#endif                                  /* CONFIG_ENABLE_FILE_TO_MEM_LOADER */
 
     /**
      * Paint the widget with the given graphics interface.

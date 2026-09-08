@@ -90,12 +90,12 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 
         m_imgType       = widget.m_imgType;
         m_bitmap        = widget.m_bitmap;
-        m_gifFileLoader = widget.m_gifFileLoader;
         m_gifPlayer     = widget.m_gifPlayer;
         m_hAlign        = widget.m_hAlign;
         m_vAlign        = widget.m_vAlign;
         m_hAlignPosX    = widget.m_hAlignPosX;
         m_vAlignPosY    = widget.m_vAlignPosY;
+        m_gifFileLoader = widget.m_gifFileLoader;
     }
 
     return *this;
@@ -324,11 +324,7 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
     /* A already opened GIF image shall be closed first. */
     m_gifPlayer.close();
 
-    /* Open GIF image and keep it opened as long its shown.
-     *
-     * Note: The file is kept in memory, because the application will be able
-     *       to remove or replace the file in the filesystem.
-     */
+    /* Open GIF image and keep it opened as long its shown. */
     ret = m_gifPlayer.open(fs, filename, m_gifFileLoader);
 
     if (GifImgPlayer::RET_OK != ret)

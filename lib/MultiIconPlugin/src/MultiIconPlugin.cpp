@@ -126,9 +126,9 @@ bool MultiIconPlugin::getTopic(const String& topic, JsonObject& value) const
         if ((true == status) &&
             (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
-            value["fileId"] = getIconFileId(slotId);
+            value["fileName"] = getIconFileName(slotId);
 
-            isSuccessful    = true;
+            isSuccessful      = true;
         }
     }
     /* All slots requested? */
@@ -159,8 +159,8 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
         {
             const size_t        JSON_DOC_SIZE = 512U;
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-            JsonObject          jsonCfg    = jsonDoc.to<JsonObject>();
-            JsonVariantConst    jsonFileId = value["fileId"];
+            JsonObject          jsonCfg      = jsonDoc.to<JsonObject>();
+            JsonVariantConst    jsonFileName = value["fileName"];
 
             /* The received configuration may not contain all single key/value pair.
              * Therefore read first the complete internal configuration and
@@ -168,9 +168,9 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
              */
             getConfiguration(jsonCfg);
 
-            if (false == jsonFileId.isNull())
+            if (false == jsonFileName.isNull())
             {
-                jsonCfg["slots"][slotId] = jsonFileId.as<FileMgrService::FileId>();
+                jsonCfg["slots"][slotId] = jsonFileName.as<const char*>();
                 isSuccessful             = true;
             }
 
@@ -211,9 +211,9 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
             for (JsonVariantConst slot : jsonSlots.as<JsonArrayConst>())
             {
-                FileMgrService::FileId fileId = slot.as<String>().toInt();
+                const char* fileName = slot.as<const char*>();
 
-                (void)jsonCfgSlots.add(fileId);
+                (void)jsonCfgSlots.add(fileName);
             }
 
             isSuccessful = true;
@@ -285,15 +285,17 @@ void MultiIconPlugin::start(uint16_t width, uint16_t height)
     {
         IconSlot& iconSlot = m_slots[slotId];
 
-        if (FileMgrService::FILE_ID_INVALID != iconSlot.fileId)
+        if (false == iconSlot.fileName.isEmpty())
         {
             String iconFullPath;
 
-            if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, iconSlot.fileId))
-            {
-                LOG_WARNING("Unknown file id %u.", iconSlot.fileId);
-            }
-            else if (false == m_view.loadIcon(slotId, iconFullPath))
+            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length() + 1U);
+
+            iconFullPath  = CONFIG_PATH;
+            iconFullPath += "/";
+            iconFullPath += iconSlot.fileName;
+
+            if (false == m_view.loadIcon(slotId, iconFullPath))
             {
                 LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
             }
@@ -319,20 +321,20 @@ void MultiIconPlugin::update(YAGfx& gfx)
     m_view.update(gfx);
 }
 
-uint8_t MultiIconPlugin::getIconFileId(uint8_t slotId) const
+String MultiIconPlugin::getIconFileName(uint8_t slotId) const
 {
-    FileMgrService::FileId     fileId = FileMgrService::FILE_ID_INVALID;
+    String                     fileName;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId)
     {
-        fileId = m_slots[slotId].fileId;
+        fileName = m_slots[slotId].fileName;
     }
 
-    return fileId;
+    return fileName;
 }
 
-bool MultiIconPlugin::loadIcon(uint8_t slotId, FileMgrService::FileId fileId)
+bool MultiIconPlugin::loadIcon(uint8_t slotId, const String& fileName)
 {
     bool isSuccessful = false;
 
@@ -340,28 +342,29 @@ bool MultiIconPlugin::loadIcon(uint8_t slotId, FileMgrService::FileId fileId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
         IconSlot&                  iconSlot = m_slots[slotId];
-        String                     iconFullPath;
 
-        iconSlot.fileId         = fileId;
-        iconSlot.hasSlotChanged = true;
-        m_hasTopicSlotsChanged  = true;
+        iconSlot.fileName                   = fileName;
+        iconSlot.hasSlotChanged             = true;
+        m_hasTopicSlotsChanged              = true;
 
-        if (FileMgrService::FILE_ID_INVALID == iconSlot.fileId)
+        if (true == iconSlot.fileName.isEmpty())
         {
             m_view.clearIcon(slotId);
-        }
-        else if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, iconSlot.fileId))
-        {
-            LOG_WARNING("Unknown file id %u.", iconSlot.fileId);
-            m_view.clearIcon(slotId);
-        }
-        else if (false == m_view.loadIcon(slotId, iconFullPath))
-        {
-            LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
         }
         else
         {
-            ;
+            String iconFullPath;
+
+            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length() + 1U);
+
+            iconFullPath  = CONFIG_PATH;
+            iconFullPath += "/";
+            iconFullPath += iconSlot.fileName;
+
+            if (false == m_view.loadIcon(slotId, iconFullPath))
+            {
+                LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+            }
         }
 
         isSuccessful = true;
@@ -377,9 +380,9 @@ void MultiIconPlugin::clearIcon(uint8_t slotId)
         MutexGuard<MutexRecursive> guard(m_mutex);
         IconSlot&                  iconSlot = m_slots[slotId];
 
-        iconSlot.fileId                     = FileMgrService::FILE_ID_INVALID;
-        iconSlot.hasSlotChanged             = true;
-        m_hasTopicSlotsChanged              = true;
+        iconSlot.fileName.clear();
+        iconSlot.hasSlotChanged = true;
+        m_hasTopicSlotsChanged  = true;
 
         m_view.clearIcon(slotId);
     }
@@ -401,7 +404,7 @@ void MultiIconPlugin::getConfiguration(JsonObject& jsonCfg) const
 
     for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     {
-        (void)jsonSlots.add(m_slots[slotId].fileId);
+        (void)jsonSlots.add(m_slots[slotId].fileName);
     }
 }
 
@@ -421,13 +424,13 @@ bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         for (JsonVariantConst jsonSlot : jsonSlots.as<JsonArrayConst>())
         {
-            if (true == jsonSlot.is<FileMgrService::FileId>())
+            if (true == jsonSlot.is<String>())
             {
-                FileMgrService::FileId fileId = jsonSlot.as<FileMgrService::FileId>();
+                const char* iconFileName = jsonSlot.as<const char*>();
 
-                if (fileId != m_slots[slotId].fileId)
+                if (m_slots[slotId].fileName != iconFileName)
                 {
-                    (void)loadIcon(slotId, fileId);
+                    (void)loadIcon(slotId, iconFileName);
                 }
 
                 ++slotId;

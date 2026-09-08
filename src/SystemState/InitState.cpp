@@ -544,11 +544,9 @@ void InitState::welcome(bool isVeryFirstStart)
 
     if (nullptr != welcomePlugin)
     {
-        FileMgrService::FileId iconFileId = FileMgrService::getInstance().getFileIdByName("smiley");
-
-        if (FileMgrService::FILE_ID_INVALID != iconFileId)
+        if (false == welcomePlugin->loadIcon("smiley.bmp", true))
         {
-            (void)welcomePlugin->loadIcon(iconFileId, true);
+            LOG_WARNING("Welcome plugin icon couldn't be loaded.");
         }
 
         welcomePlugin->setText("{hc}Hello World!", true);

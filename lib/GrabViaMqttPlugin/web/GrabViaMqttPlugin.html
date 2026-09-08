@@ -45,9 +45,7 @@
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX"
-                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                        title="~TARGET~ | ~HOSTNAME~" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -197,7 +195,7 @@
 
         <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
-        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
@@ -250,62 +248,100 @@
                 document.getElementById(targetInputId).value = 255;
             }
 
-            function fillIconPicker(fileTable) {
+            function updateIconPickerLoadStatus(overview, loadedCount, totalCount, isDone = false) {
+                const statusId = "icon-picker-load-status";
+                let status = document.getElementById(statusId);
+
+                if (isDone === true) {
+                    if (status !== null) {
+                        status.remove();
+                    }
+
+                    return;
+                }
+
+                if (status === null) {
+                    status = document.createElement("p");
+                    status.id = statusId;
+                    status.className = "text-secondary";
+                    overview.parentNode.insertBefore(status, overview);
+                }
+
+                status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
+            }
+
+            async function appendIconTileSequentially(overview, fileId, fullPath) {
+                const fileIdEl = document.createElement("p");
+                fileIdEl.textContent = "[" + fileId + "]";
+
+                const img = document.createElement("img");
+                img.setAttribute("alt", "Icon " + fileId);
+
+                const name = document.createElement("p");
+                name.textContent = fullPath.replace(/^.*[\\\/]/, "");
+
+                const button = document.createElement("button");
+                button.setAttribute("type", "button");
+                button.setAttribute("class", "btn btn-primary btn-sm");
+                button.textContent = "Use";
+                button.addEventListener("click", () => {
+                    selectIconFileId(fileId);
+                });
+
+                const card = document.createElement("div");
+                card.setAttribute("class", "bg-body text-center m-2 p-2 bd-highlight border rounded");
+                card.append(fileIdEl);
+                card.append(img);
+                card.append(name);
+                card.append(button);
+
+                overview.append(card);
+
+                await new Promise((resolve) => {
+                    img.addEventListener("load", function () {
+                        applyZoomToImage(this);
+                        resolve();
+                    }, { once: true });
+
+                    img.addEventListener("error", () => resolve(), { once: true });
+
+                    img.src = fullPath;
+                });
+            }
+
+            async function fillIconPicker(fileTable) {
                 const overview = document.getElementById("iconPickerOverview");
+                const validEntries = fileTable.filter((entry) => 0 < entry.fullPath.length);
+                let loadedCount = 0;
 
                 overview.replaceChildren();
+                updateIconPickerLoadStatus(overview, loadedCount, validEntries.length);
 
                 for (let idx = 0; idx < fileTable.length; ++idx) {
                     if (0 < fileTable[idx].fullPath.length) {
-                        ((fileId, fullPath) => {
-                            const fileIdEl = document.createElement("p");
-                            fileIdEl.textContent = "[" + fileId + "]";
-
-                            const img = document.createElement("img");
-                            img.setAttribute("src", fullPath);
-                            img.setAttribute("alt", "Icon " + fileId);
-                            img.addEventListener("load", function () {
-                                applyZoomToImage(this);
-                            });
-
-                            const name = document.createElement("p");
-                            name.textContent = fullPath.replace(/^.*[\\\/]/, "");
-
-                            const button = document.createElement("button");
-                            button.setAttribute("type", "button");
-                            button.setAttribute("class", "btn btn-primary btn-sm");
-                            button.textContent = "Use";
-                            button.addEventListener("click", () => {
-                                selectIconFileId(fileId);
-                            });
-
-                            const card = document.createElement("div");
-                            card.setAttribute("class", "bg-body text-center m-2 p-2 bd-highlight border rounded");
-                            card.append(fileIdEl);
-                            card.append(img);
-                            card.append(name);
-                            card.append(button);
-
-                            overview.append(card);
-                        })(idx, fileTable[idx].fullPath);
+                        await appendIconTileSequentially(overview, idx, fileTable[idx].fullPath);
+                        ++loadedCount;
+                        updateIconPickerLoadStatus(overview, loadedCount, validEntries.length);
                     }
                 }
+
+                updateIconPickerLoadStatus(overview, validEntries.length, validEntries.length, true);
             }
 
             async function openIconPickerDialog(targetInputId) {
                 iconPickerTargetInputId = targetInputId;
 
                 try {
-                    const rsp = await restClient.readFile("/configuration/fileMgr.json");
-                    const jsonRsp = JSON.parse(rsp);
-
-                    fillIconPicker(jsonRsp.fileTable);
-
                     if (null === iconPickerModal) {
                         iconPickerModal = new bootstrap.Modal(document.getElementById("iconPickerDialog"));
                     }
 
                     iconPickerModal.show();
+
+                    const rsp = await restClient.readFile("/configuration/fileMgr.json");
+                    const jsonRsp = JSON.parse(rsp);
+
+                    await fillIconPicker(jsonRsp.fileTable);
                 } catch (e) {
                     alert("Failed to load icon list. Open the icons page once to initialize it.");
                 }

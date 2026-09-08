@@ -345,29 +345,6 @@ requestBody:
 
 ## Common Pitfalls & Lessons Learned
 
-### File Paths vs Numeric IDs
-
-**Issue**: APIs may use numeric IDs internally instead of file paths.
-
-**Example:**
-```yaml
-# WRONG - assumes API uses file paths
-parameters:
-  - name: iconPath
-    schema:
-      type: string
-    example: "/images/icon.bmp"
-
-# CORRECT - API uses numeric file IDs
-parameters:
-  - name: iconFileId
-    schema:
-      type: number
-    example: 1234
-```
-
-**How to identify**: Check the actual implementation - look for `FileId` types, ID resolution methods like `getFileFullPathById()`, or file manager services that map IDs to paths.
-
 ### Missing Dynamic Endpoints
 
 **Issue**: Forgetting to document endpoints that are registered dynamically via plugin/service systems.
