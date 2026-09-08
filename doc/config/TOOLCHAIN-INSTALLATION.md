@@ -55,12 +55,14 @@ The test environment is only necessary if you want to modify the sourcecode and 
 1. ```sudo apt update```
 2. ```sudo apt install build-essential```
 3. ```sudo apt-get install manpages-dev```
+4. ```sudo apt-get install clang-format```
 
 ### Windows
 
 1. For the test environment on windows platform, install [MSYS2](https://www.msys2.org/) by following its instructions
 2. Open MSYS2 UCRT64 terminal.
 3. Install the gcc compiler package: ```pacman -S mingw-w64-ucrt-x86_64-gcc```
+4. Install clang-format to be used by AI: ```pacman -S mingw-w64-ucrt-x86_64-clang```
 
 ## Next Step
 
