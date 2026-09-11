@@ -10,11 +10,10 @@
         "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cpptools-themes",
         "pioarduino.pioarduino-ide",
-        "platformio.platformio-ide",
         "yzhang.markdown-all-in-one"
     ],
     "unwantedRecommendations": [
         "ms-vscode.cpptools-extension-pack",
-        "pioarduino.pioarduino-ide"
+        "platformio.platformio-ide",
     ]
 }
