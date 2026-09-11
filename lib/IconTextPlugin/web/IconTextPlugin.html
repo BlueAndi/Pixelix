@@ -83,7 +83,7 @@
                                     <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
                                 </div>
                             </div>
-                            <p class="text-secondary">Click an icon to use its file id.</p>
+                            <p class="text-secondary">Click an icon to use its file path.</p>
                             <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="iconPickerOverview"></div>
                         </div>
                         <div class="modal-footer">
@@ -148,7 +148,7 @@
                                 <button class="btn btn-outline-primary" type="button" id="btnSelectIcon">Select...</button>
                                 <button class="btn btn-outline-secondary" type="button" id="btnClearIcon">Clear</button>
                             </div>
-                            <small class="form-text">The file name of the icon to show. Select it from the icons page or enter a name manually. Empty means no icon.</small>
+                            <small class="form-text">The full path of the icon to show, e.g. /configuration/smiley.bmp. Select it from the icons page or enter a path manually. Empty means no icon.</small>
                         </div>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
@@ -254,14 +254,14 @@
                 img.setAttribute("alt", "Icon " + fileId);
 
                 const name = document.createElement("p");
-                name.textContent = fullPath.replace(/^.*[\\\/]/, "");
+                name.textContent = fullPath;
 
                 const button = document.createElement("button");
                 button.setAttribute("type", "button");
                 button.setAttribute("class", "btn btn-primary btn-sm");
                 button.textContent = "Use";
                 button.addEventListener("click", function () {
-                    selectIconFileName(fullPath.replace(/^.*[\\\/]/, ""));
+                    selectIconFileName(fullPath);
                 });
 
                 const card = document.createElement("div");

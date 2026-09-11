@@ -155,7 +155,12 @@ void FileMgrService::process()
 
 bool FileMgrService::hasTopicChanged(const String& topic)
 {
-    bool hasChanged       = m_hasFileTableChanged;
+    bool hasChanged = m_hasFileTableChanged;
+
+    /* The callback is dedicated to a topic, therefore the
+     * topic parameter is not used.
+     */
+    UTIL_NOT_USED(topic);
 
     m_hasFileTableChanged = false;
 
@@ -210,7 +215,10 @@ bool FileMgrService::uploadTopic(const String& topic, const JsonObjectConst& val
             if (false == fullPath.isEmpty())
             {
                 LOG_INFO("File \"%s\" uploaded.", fullPath.c_str());
-                isSuccessful = true;
+
+                /* Notify the clients about the changed file table. */
+                m_hasFileTableChanged = true;
+                isSuccessful          = true;
             }
         }
     }
@@ -266,19 +274,34 @@ bool FileMgrService::removeTopic(const String& topic, const JsonObjectConst& val
         }
         else
         {
-            String fullPath  = WORKING_DIRECTORY;
+            const String fileName = FileUtil::getFileName(jsonFileName.as<const char*>());
 
-            fullPath        += "/";
-            fullPath        += FileUtil::getFileName(jsonFileName.as<const char*>());
-
-            if (false == FILESYSTEM.remove(fullPath))
+            /* Accept only supported image files. Otherwise any other file in the
+             * working directory, e.g. a plugin configuration, could be removed.
+             */
+            if (false == BitmapWidget::isImageTypeSupported(fileName))
             {
-                LOG_WARNING("Remove file \"%s\" failed.", fullPath.c_str());
+                LOG_WARNING("File \"%s\" not supported.", fileName.c_str());
             }
             else
             {
-                LOG_INFO("Remove file \"%s\" successful.", fullPath.c_str());
-                isSuccessful = true;
+                String fullPath  = WORKING_DIRECTORY;
+
+                fullPath        += "/";
+                fullPath        += fileName;
+
+                if (false == FILESYSTEM.remove(fullPath))
+                {
+                    LOG_WARNING("Remove file \"%s\" failed.", fullPath.c_str());
+                }
+                else
+                {
+                    LOG_INFO("Remove file \"%s\" successful.", fullPath.c_str());
+
+                    /* Notify the clients about the changed file table. */
+                    m_hasFileTableChanged = true;
+                    isSuccessful          = true;
+                }
             }
         }
     }

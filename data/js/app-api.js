@@ -327,7 +327,7 @@ pixelix.rest.Client = class {
         const files = [];
         let page = 0;
 
-        for (; ;) {
+        for (;;) {
             const rsp = await this.listFiles(path, page);
 
             if (rsp.data.length === 0) {

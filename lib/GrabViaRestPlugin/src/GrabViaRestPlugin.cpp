@@ -37,7 +37,6 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <FileUtil.h>
 #include <HttpStatus.h>
 #include <Util.h>
 #include <PsramJsonDocument.hpp>
@@ -268,15 +267,7 @@ void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
 
     if (false == m_iconFileName.isEmpty())
     {
-        String iconFullPath;
-
-        iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + m_iconFileName.length());
-
-        iconFullPath  = CONFIG_PATH;
-        iconFullPath += "/";
-        iconFullPath += m_iconFileName;
-
-        if (false == m_view.loadIcon(iconFullPath))
+        if (false == m_view.loadIcon(m_iconFileName))
         {
             LOG_ERROR("Icon not found: %s", m_iconFileName.c_str());
         }
@@ -475,7 +466,7 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
-        const String               newIconFileName = FileUtil::getFileName(jsonIconFileName.as<const char*>());
+        const String               newIconFileName = jsonIconFileName.as<const char*>();
 
         m_method                                   = jsonMethod.as<const char*>();
         m_url                                      = jsonUrl.as<const char*>();
@@ -492,15 +483,9 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
             if (false == m_iconFileName.isEmpty())
             {
-                String iconFullPath;
-
-                iconFullPath  = CONFIG_PATH;
-                iconFullPath += "/";
-                iconFullPath += m_iconFileName;
-
-                if (false == m_view.loadIcon(iconFullPath))
+                if (false == m_view.loadIcon(m_iconFileName))
                 {
-                    LOG_WARNING("Couldn't load icon: %s", iconFullPath.c_str());
+                    LOG_WARNING("Couldn't load icon: %s", m_iconFileName.c_str());
                 }
             }
         }

@@ -37,7 +37,6 @@
 #include "MultiIconPlugin.h"
 
 #include <Logging.h>
-#include <FileUtil.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -288,21 +287,9 @@ void MultiIconPlugin::start(uint16_t width, uint16_t height)
 
         if (false == iconSlot.fileName.isEmpty())
         {
-            String iconFullPath;
-
-            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length());
-
-            iconFullPath  = CONFIG_PATH;
-            iconFullPath += "/";
-            iconFullPath += iconSlot.fileName;
-
-            if (false == m_view.loadIcon(slotId, iconFullPath))
+            if (false == m_view.loadIcon(slotId, iconSlot.fileName))
             {
-                LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-            }
-            else
-            {
-                ;
+                LOG_ERROR("Icon not found: %s", iconSlot.fileName.c_str());
             }
         }
     }
@@ -342,34 +329,27 @@ bool MultiIconPlugin::loadIcon(uint8_t slotId, const String& fileName)
     if (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
-        IconSlot&                  iconSlot           = m_slots[slotId];
-        const String               normalizedFileName = FileUtil::getFileName(fileName);
+        IconSlot&                  iconSlot = m_slots[slotId];
 
-        iconSlot.fileName                             = normalizedFileName;
-        iconSlot.hasSlotChanged                       = true;
-        m_hasTopicSlotsChanged                        = true;
+        iconSlot.fileName                   = fileName;
+        iconSlot.hasSlotChanged             = true;
+        m_hasTopicSlotsChanged              = true;
 
         if (true == iconSlot.fileName.isEmpty())
         {
             m_view.clearIcon(slotId);
+
+            isSuccessful = true;
         }
         else
         {
-            String iconFullPath;
+            isSuccessful = m_view.loadIcon(slotId, iconSlot.fileName);
 
-            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length());
-
-            iconFullPath  = CONFIG_PATH;
-            iconFullPath += "/";
-            iconFullPath += iconSlot.fileName;
-
-            if (false == m_view.loadIcon(slotId, iconFullPath))
+            if (false == isSuccessful)
             {
-                LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
+                LOG_ERROR("Icon not found: %s", iconSlot.fileName.c_str());
             }
         }
-
-        isSuccessful = true;
     }
 
     return isSuccessful;
@@ -428,7 +408,7 @@ bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         {
             if (true == jsonSlot.is<String>())
             {
-                const String iconFileName = FileUtil::getFileName(jsonSlot.as<const char*>());
+                const String iconFileName = jsonSlot.as<const char*>();
 
                 if (m_slots[slotId].fileName != iconFileName)
                 {

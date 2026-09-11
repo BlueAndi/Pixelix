@@ -668,7 +668,7 @@ paths:
           schema:
             type: string
           required: true
-          description: The file name of the icon in the configuration folder.
+          description: The full path of the icon, e.g. /configuration/smiley.bmp. The icon is loaded exactly from this path.
         - in: query
           name: format
           schema:
@@ -1408,7 +1408,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "slots[]=icon.png" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        $ curl -u luke:skywalker -d "slots[]=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
         ```
       operationId: setSlotsFileName
       parameters:
@@ -1419,7 +1419,7 @@ paths:
             items:
               type: string
           required: false
-          description: The file names of every slot.
+          description: The full path of the icon of every slot, e.g. /configuration/smiley.bmp.
       responses:
         "200":
           description: Ok
@@ -1467,7 +1467,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileName=icon.png" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slot/1
+        $ curl -u luke:skywalker -d "fileName=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slot/1
         ```
       operationId: setSlotFileName
       parameters:
@@ -1542,7 +1542,7 @@ paths:
           schema:
             type: string
           required: false
-          description: The file name of the icon from FileMgrService.
+          description: The full path of the icon, e.g. /configuration/smiley.bmp. The icon is loaded exactly from this path.
         - in: query
           name: storeFlag
           schema:
@@ -1767,7 +1767,7 @@ paths:
         Remove a file by name from the configuration folder.
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileName=foo.png" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/remove
+        $ curl -u luke:skywalker -d "fileName=foo.bmp" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/remove
         ```
       operationId: removeFile
       parameters:
@@ -1776,7 +1776,7 @@ paths:
           schema:
             type: string
           required: true
-          description: The name of the file which to remove.
+          description: The name of the file which to remove. A path may be given, but only the file name is used. Only supported image files in the configuration folder can be removed.
       responses:
         "200":
           description: Ok
@@ -3892,9 +3892,9 @@ components:
         data:
           type: object
           properties:
-            slots:
+            fileName:
               type: string
-              example: icon.png
+              example: /configuration/smiley.bmp
         status:
           type: string
           description: The request result.
@@ -3912,7 +3912,7 @@ components:
               type: array
               items:
                 type: string
-              example: [icon0.png, icon1.gif, ""]
+              example: ["/configuration/smiley.bmp", "/configuration/github.bmp", ""]
         status:
           type: string
           description: The request result.
@@ -4024,7 +4024,7 @@ components:
               example: Test
             iconFileName:
               type: string
-              example: test.png
+              example: /configuration/smiley.bmp
         status:
           type: string
           description: The request result.

@@ -272,13 +272,12 @@
             async function appendIconTileSequentially(overview, idx, fileName) {
                 const fileId = document.createElement("p");
                 fileId.textContent = "[" + idx + "]";
-                const displayName = fileName.replace(/^.*[\\\/]/, "");
 
                 const img = document.createElement("img");
                 img.alt = "Preview";
 
                 const name = document.createElement("p");
-                name.textContent = displayName;
+                name.textContent = fileName;
 
                 const actionRemove = document.createElement("button");
                 actionRemove.type = "button";
@@ -309,8 +308,8 @@
 
             async function removeFile(fileId, fullPath) {
                 try {
-                    await restClient.fileMgrRemoveFile(fullPath.replace(/^.*[\\\/]/, ""));
-                    await dialog.showInfo("<p>File " + fullPath.replace(/^.*[\\\/]/, "") + " removed.</p>");
+                    await restClient.fileMgrRemoveFile(fullPath);
+                    await dialog.showInfo("<p>File " + fullPath + " removed.</p>");
 
                     document.getElementById("overview").textContent = "";
                     await downloadFileList("overview");

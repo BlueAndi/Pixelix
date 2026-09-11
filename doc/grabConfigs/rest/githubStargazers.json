@@ -4,7 +4,7 @@
     "filter": {
         "stargazers_count": true
     },
-    "iconFileName": "github.bmp",
+    "iconFileName": "/configuration/github.bmp",
     "format": "%.0f stars",
     "multiplier": 1,
     "offset": 0

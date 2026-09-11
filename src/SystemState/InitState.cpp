@@ -70,7 +70,6 @@
 #include <ESPmDNS.h>
 #include <SettingsService.h>
 #include <WiFiUtil.h>
-#include <PluginWithConfig.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -95,14 +94,20 @@
 /**
  * The filename of the version information file.
  */
-static const char VERSION_FILE_NAME[]   = "/version.json";
+static const char VERSION_FILE_NAME[]      = "/version.json";
 
 /**
  * Plugin type of the welcome plugin. This is used to install it in the very
  * first startup. In further startups it is used in addition to the plugin
  * alias whether to show the welcome icon and message.
  */
-static const char WELCOME_PLUGIN_TYPE[] = "IconTextPlugin";
+static const char WELCOME_PLUGIN_TYPE[]    = "IconTextPlugin";
+
+/**
+ * Icon of the welcome plugin, incl. the full path. The plugins load the icon
+ * exactly from the given path, therefore it must be complete.
+ */
+static const char WELCOME_ICON_FILE_NAME[] = "/configuration/smiley.bmp";
 
 /******************************************************************************
  * Public Methods
@@ -545,16 +550,7 @@ void InitState::welcome(bool isVeryFirstStart)
 
     if (nullptr != welcomePlugin)
     {
-        const char* WELCOME_ICON_FILE_NAME = "smiley.bmp";
-        String      iconFullPath;
-
-        iconFullPath.reserve(strlen(PluginWithConfig::CONFIG_PATH) + 1U + strlen(WELCOME_ICON_FILE_NAME));
-
-        iconFullPath  = PluginWithConfig::CONFIG_PATH;
-        iconFullPath += "/";
-        iconFullPath += WELCOME_ICON_FILE_NAME;
-
-        if (false == welcomePlugin->loadIcon(iconFullPath, true))
+        if (false == welcomePlugin->loadIcon(WELCOME_ICON_FILE_NAME, true))
         {
             LOG_WARNING("Welcome plugin icon couldn't be loaded.");
         }

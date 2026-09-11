@@ -72,14 +72,14 @@ blueprint:
                   value: change
                 - label: Clear icon
                   value: clear
-        icon_file_id:
-          name: Icon File ID
+        icon_file_name:
+          name: Icon File Name
           description: |
-            The file ID of the icon to display.
-            See Pixelix icons web page for the available icons.
-            255 means no icon.
-            A icon is only supported by IconText and IconTextLamp plugins.
-          default: 255
+            The full path of the icon to display, e.g. /configuration/smiley.bmp.
+            See Pixelix icons web page for the available icons and their paths.
+            The icon is loaded exactly from the given path.
+            An empty file name means no icon.
+          default: ""
           selector:
             text:
     section_protocol:
@@ -142,24 +142,24 @@ variables:
   var_alias: !input alias
   var_icon_slot: !input icon_slot
   var_icon_selector: !input icon_selector
-  var_icon_file_id: !input icon_file_id
+  var_icon_file_name: !input icon_file_name
   var_protocol: !input protocol
   var_device: !input pixelix_device
   var_hostname: !input pixelix_hostname
   var_plugin_topic: "slot/{{ var_icon_slot }}"
   var_mqtt_payload: >-
     {% set icon_selector = var_icon_selector %}
-    {% set icon_file_id = var_icon_file_id %}
+    {% set icon_file_name = var_icon_file_name %}
     {% if (icon_selector == 'change') %}
-      {"fileName": "{{ icon_file_id }}"}
+      {"fileName": "{{ icon_file_name }}"}
     {% elif (icon_selector == 'clear') %}
       {"fileName": ""}
     {% endif %}
   var_rest_url_parameter: >-
     {% set icon_selector = var_icon_selector %}
-    {% set icon_file_id = var_icon_file_id %}
+    {% set icon_file_name = var_icon_file_name %}
     {% if (icon_selector == 'change') %}
-      {{ ("fileName=" + icon_file_id) | urlencode() }}
+      {{ ("fileName=" + icon_file_name) | urlencode() }}
     {% elif (icon_selector == 'clear') %}
       {{ ("fileName=") | urlencode() }}
     {% endif %}

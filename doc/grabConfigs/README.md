@@ -59,11 +59,11 @@ The filter is used to identify the value of interest.
   }
 ```
 
-The bumblebee icon is chosen. Icon file names are used directly. An empty file name means no icon.
+The bumblebee icon is chosen. The icon is loaded exactly from the given path, therefore the full path is required. An empty file name means no icon.
 
 ```json
 {
-    "iconFileName": "bumblebee.bmp"
+    "iconFileName": "/configuration/bumblebee.bmp"
 }
 ```
 
@@ -286,7 +286,7 @@ The github icon is chosen and will appear on the left side.
 
 ```json
 {
-    "iconFileName": "github.bmp"
+    "iconFileName": "/configuration/github.bmp"
 }
 ```
 
@@ -430,7 +430,7 @@ The plug icon is chosen.
 
 ```json
 {
-    "iconFileName": "plug.bmp"
+    "iconFileName": "/configuration/plug.bmp"
 }
 ```
 

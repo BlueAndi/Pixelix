@@ -81,14 +81,15 @@ blueprint:
                   value: change
                 - label: Clear icon
                   value: clear
-        icon_file_id:
-          name: Icon File ID
+        icon_file_name:
+          name: Icon File Name
           description: |
-            The file ID of the icon to display.
-            See Pixelix icons web page for the available icons.
-            255 means no icon.
+            The full path of the icon to display, e.g. /configuration/smiley.bmp.
+            See Pixelix icons web page for the available icons and their paths.
+            The icon is loaded exactly from the given path.
+            An empty file name means no icon.
             A icon is only supported by IconText and IconTextLamp plugins.
-          default: 255
+          default: ""
           selector:
             text:
         horizontal_alignment:
@@ -267,7 +268,7 @@ variables:
   var_alias: !input alias
   var_sensors: !input sensors
   var_icon_selector: !input icon_selector
-  var_icon_file_id: !input icon_file_id
+  var_icon_file_name: !input icon_file_name
   var_horizontal_alignment: !input horizontal_alignment
   var_vertical_alignment: !input vertical_alignment
   var_color_selector: !input color_selector
@@ -367,10 +368,10 @@ variables:
     {{ ns.tags | map('regex_replace', '^(.*)$', '{\\1}') | join() }}{{ ns.texts | join(' ') }}
   var_mqtt_payload: >-
     {% set icon_selector = var_icon_selector %}
-    {% set icon_file_id = var_icon_file_id %}
+    {% set icon_file_name = var_icon_file_name %}
     {% set text = var_text %}
     {% if (icon_selector == 'change') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
-      {"iconFileName": "{{ icon_file_id }}", "text": "{{ text }}"}
+      {"iconFileName": "{{ icon_file_name }}", "text": "{{ text }}"}
     {% elif (icon_selector == 'clear') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
       {"iconFileName": "", "text": "{{ text }}"}
     {% else %}
@@ -378,10 +379,10 @@ variables:
     {% endif %}
   var_rest_url_parameter: >-
     {% set icon_selector = var_icon_selector %}
-    {% set icon_file_id = var_icon_file_id %}
+    {% set icon_file_name = var_icon_file_name %}
     {% set text = var_text %}
     {% if (icon_selector == 'change') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
-      {{ ("iconFileName=" + icon_file_id + "&text=" + text) | urlencode() }}
+      {{ ("iconFileName=" + icon_file_name + "&text=" + text) | urlencode() }}
     {% elif (icon_selector == 'clear') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
       {{ ("iconFileName=&text=" + text) | urlencode() }}
     {% else %}

@@ -4,7 +4,7 @@
     "filter": {
       "power": true
     },
-    "iconFileName": "plug.bmp",
+    "iconFileName": "/configuration/plug.bmp",
     "format": "{hc}%0.1f W",
     "multiplier": 1,
     "offset": 0
