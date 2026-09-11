@@ -185,7 +185,7 @@ bool BitmapWidget::isImageTypeSupported(const String& path)
     {
         const char* ext = IMAGE_FILE_EXTENSIONS[idx];
 
-        if (true == path.endsWith(ext))
+        if (true == FileUtil::getFileExtension(path).equalsIgnoreCase(ext))
         {
             isSupported = true;
             break;

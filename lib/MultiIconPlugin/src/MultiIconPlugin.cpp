@@ -37,6 +37,7 @@
 #include "MultiIconPlugin.h"
 
 #include <Logging.h>
+#include <FileUtil.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -289,7 +290,7 @@ void MultiIconPlugin::start(uint16_t width, uint16_t height)
         {
             String iconFullPath;
 
-            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length() + 1U);
+            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length());
 
             iconFullPath  = CONFIG_PATH;
             iconFullPath += "/";
@@ -341,11 +342,12 @@ bool MultiIconPlugin::loadIcon(uint8_t slotId, const String& fileName)
     if (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
-        IconSlot&                  iconSlot = m_slots[slotId];
+        IconSlot&                  iconSlot           = m_slots[slotId];
+        const String               normalizedFileName = FileUtil::getFileName(fileName);
 
-        iconSlot.fileName                   = fileName;
-        iconSlot.hasSlotChanged             = true;
-        m_hasTopicSlotsChanged              = true;
+        iconSlot.fileName                             = normalizedFileName;
+        iconSlot.hasSlotChanged                       = true;
+        m_hasTopicSlotsChanged                        = true;
 
         if (true == iconSlot.fileName.isEmpty())
         {
@@ -355,7 +357,7 @@ bool MultiIconPlugin::loadIcon(uint8_t slotId, const String& fileName)
         {
             String iconFullPath;
 
-            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length() + 1U);
+            iconFullPath.reserve(strlen(CONFIG_PATH) + 1U + iconSlot.fileName.length());
 
             iconFullPath  = CONFIG_PATH;
             iconFullPath += "/";
@@ -426,7 +428,7 @@ bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         {
             if (true == jsonSlot.is<String>())
             {
-                const char* iconFileName = jsonSlot.as<const char*>();
+                const String iconFileName = FileUtil::getFileName(jsonSlot.as<const char*>());
 
                 if (m_slots[slotId].fileName != iconFileName)
                 {

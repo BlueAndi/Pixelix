@@ -151,17 +151,17 @@ variables:
     {% set icon_selector = var_icon_selector %}
     {% set icon_file_id = var_icon_file_id %}
     {% if (icon_selector == 'change') %}
-      {"fileId": {{ icon_file_id }}}
+      {"fileName": "{{ icon_file_id }}"}
     {% elif (icon_selector == 'clear') %}
-      {"fileId": 255}
+      {"fileName": ""}
     {% endif %}
   var_rest_url_parameter: >-
     {% set icon_selector = var_icon_selector %}
     {% set icon_file_id = var_icon_file_id %}
     {% if (icon_selector == 'change') %}
-      {{ ("fileId=" + icon_file_id) | urlencode() }}
+      {{ ("fileName=" + icon_file_id) | urlencode() }}
     {% elif (icon_selector == 'clear') %}
-      {{ ("fileId=255") | urlencode() }}
+      {{ ("fileName=") | urlencode() }}
     {% endif %}
 
 # https://www.home-assistant.io/docs/automation/trigger/

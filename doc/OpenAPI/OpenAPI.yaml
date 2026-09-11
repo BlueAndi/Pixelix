@@ -664,11 +664,11 @@ paths:
           required: true
           description: Filter to identify the value in the JSON response.
         - in: query
-          name: iconFileId
+          name: iconFileName
           schema:
-            type: number
+            type: string
           required: true
-          description: The file id of the icon from FileMgrService.
+          description: The file name of the icon in the configuration folder.
         - in: query
           name: format
           schema:
@@ -1383,43 +1383,43 @@ paths:
     get:
       tags:
         - MultiIconPlugin
-      summary: Get all slot file ids.
+      summary: Get all slot file names.
       description: |
-        Get all slot file ids.
+        Get all slot file names.
 
         Example:
         ```bash
         $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
         ```
-      operationId: getSlotsFileId
+      operationId: getSlotsFileName
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SlotsFileId"
+                $ref: "#/components/schemas/SlotsFileName"
     post:
       tags:
         - MultiIconPlugin
-      summary: Set all slot file ids.
+      summary: Set all slot file names.
       description: |
-        Set all slot file ids.
+        Set all slot file names.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileId=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        $ curl -u luke:skywalker -d "slots[]=icon.png" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
         ```
-      operationId: setSlotsFileId
+      operationId: setSlotsFileName
       parameters:
         - in: query
           name: slots
           schema:
             type: array
             items:
-              type: number
+              type: string
           required: false
-          description: The file id of every slot.
+          description: The file names of every slot.
       responses:
         "200":
           description: Ok
@@ -1435,15 +1435,15 @@ paths:
     get:
       tags:
         - MultiIconPlugin
-      summary: Get slot file id.
+      summary: Get slot file name.
       description: |
-        Get lot file id.
+        Get slot file name.
 
         Example:
         ```bash
         $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots/1
         ```
-      operationId: getSlotFileId
+      operationId: getSlotFileName
       parameters:
         - in: path
           name: id
@@ -1457,19 +1457,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SlotFileId"
+                $ref: "#/components/schemas/SlotFileName"
     post:
       tags:
         - MultiIconPlugin
-      summary: Set slot file id.
+      summary: Set slot file name.
       description: |
-        Set file id to slot.
+        Set file name for slot.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileId=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slot/1
+        $ curl -u luke:skywalker -d "fileName=icon.png" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slot/1
         ```
-      operationId: setSlotFileId
+      operationId: setSlotFileName
       parameters:
         - in: path
           name: id
@@ -1478,11 +1478,11 @@ paths:
           required: true
           description: The slot id.
         - in: query
-          name: fileId
+          name: fileName
           schema:
-            type: number
+            type: string
           required: false
-          description: The file id.
+          description: The file name.
       responses:
         "200":
           description: Ok
@@ -1501,7 +1501,7 @@ paths:
         - IconTextPlugin
       summary: Get text
       description: |
-        Get the shown text and icon file id.
+        Get the shown text and icon file name.
 
         Example:
         ```bash
@@ -1523,7 +1523,7 @@ paths:
         - IconTextPlugin
       summary: Set text
       description: |
-        Set text which to show and/or icon file id.
+        Set text which to show and/or icon file name.
 
         Example:
         ```bash
@@ -1538,11 +1538,11 @@ paths:
           required: false
           description: The text, which to show.
         - in: query
-          name: iconFileId
+          name: iconFileName
           schema:
-            type: number
+            type: string
           required: false
-          description: The file id of the icon from FileMgrService.
+          description: The file name of the icon from FileMgrService.
         - in: query
           name: storeFlag
           schema:
@@ -1703,7 +1703,7 @@ paths:
         - FileMgrService
       summary: Get list of managed files
       description: |
-        Get list of files managed by FileMgrService with their file IDs.
+        Get list of supported image files managed by FileMgrService.
 
         Response:
         ```json
@@ -1711,8 +1711,8 @@ paths:
           "status": "ok",
           "data": {
             "files": [
-              {"id": 1, "name": "image.bmp", "size": 1024},
-              {"id": 2, "name": "animation.gif", "size": 2048}
+              "/configuration/image.bmp",
+              "/configuration/animation.gif"
             ]
           }
         }
@@ -1762,21 +1762,21 @@ paths:
     post:
       tags:
         - FileMgrService
-      summary: Remove a file by file id.
+      summary: Remove a file by name.
       description: |
-        Remove file by file id from configuration folder.
+        Remove a file by name from the configuration folder.
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileId=1" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/remove
+        $ curl -u luke:skywalker -d "fileName=foo.png" http://pixelix-FFFFFFFF/rest/api/v1/fileMgrService/remove
         ```
       operationId: removeFile
       parameters:
         - in: query
-          name: fileId
+          name: fileName
           schema:
-            type: number
+            type: string
           required: true
-          description: The id of the file which to remove.
+          description: The name of the file which to remove.
       responses:
         "200":
           description: Ok
@@ -3883,7 +3883,7 @@ components:
           type: string
           description: The request result.
           example: ok
-    SlotFileId:
+    SlotFileName:
       type: object
       required:
         - data
@@ -3893,13 +3893,13 @@ components:
           type: object
           properties:
             slots:
-              type: number
-              example: 1
+              type: string
+              example: icon.png
         status:
           type: string
           description: The request result.
           example: ok
-    SlotsFileId:
+    SlotsFileName:
       type: object
       required:
         - data
@@ -3911,8 +3911,8 @@ components:
             slots:
               type: array
               items:
-                type: number
-              example: [1, 2, 3]
+                type: string
+              example: [icon0.png, icon1.gif, ""]
         status:
           type: string
           description: The request result.
@@ -4022,9 +4022,9 @@ components:
             text:
               type: string
               example: Test
-            iconFileId:
-              type: number
-              example: 1234
+            iconFileName:
+              type: string
+              example: test.png
         status:
           type: string
           description: The request result.

@@ -151,13 +151,13 @@
                                     right</a> chapter.</small>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="iconFileId">Icon file id:</label>
+                            <label class="form-label" for="iconFileName">Icon file name:</label>
                             <div class="input-group">
-                                <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
-                                <button class="btn btn-outline-primary" type="button" id="btnIconFileIdSelect">Select...</button>
-                                <button class="btn btn-outline-secondary" type="button" id="btnIconFileIdClear">Clear</button>
+                                <input class="form-control" type="text" id="iconFileName" name="iconFileName" value="" />
+                                <button class="btn btn-outline-primary" type="button" id="btnIconFileNameSelect">Select...</button>
+                                <button class="btn btn-outline-secondary" type="button" id="btnIconFileNameClear">Clear</button>
                             </div>
-                            <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
+                            <small class="form-text">The file name of the icon to show. Select it from the icons page or enter a name manually. Empty means no icon.</small>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="format">Format:</label>
@@ -234,9 +234,9 @@
                 });
             }
 
-            function selectIconFileId(fileId) {
+            function selectIconFileName(fileName) {
                 if ("" !== iconPickerTargetInputId) {
-                    document.getElementById(iconPickerTargetInputId).value = fileId;
+                    document.getElementById(iconPickerTargetInputId).value = fileName;
                 }
 
                 if (null !== iconPickerModal) {
@@ -244,8 +244,8 @@
                 }
             }
 
-            function clearIconFileId(targetInputId) {
-                document.getElementById(targetInputId).value = 255;
+            function clearIconFileName(targetInputId) {
+                document.getElementById(targetInputId).value = "";
             }
 
             function updateIconPickerLoadStatus(overview, loadedCount, totalCount, isDone = false) {
@@ -285,7 +285,7 @@
                 button.setAttribute("class", "btn btn-primary btn-sm");
                 button.textContent = "Use";
                 button.addEventListener("click", () => {
-                    selectIconFileId(fileId);
+                    selectIconFileName(fullPath.replace(/^.*[\\\/]/, ""));
                 });
 
                 const card = document.createElement("div");
@@ -309,23 +309,23 @@
                 });
             }
 
-            async function fillIconPicker(fileTable) {
+            async function fillIconPicker(files) {
                 const overview = document.getElementById("iconPickerOverview");
-                const validEntries = fileTable.filter((entry) => 0 < entry.fullPath.length);
+                const validFiles = files.filter((fileName) => 0 < fileName.length);
                 let loadedCount = 0;
 
                 overview.replaceChildren();
-                updateIconPickerLoadStatus(overview, loadedCount, validEntries.length);
+                updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
 
-                for (let idx = 0; idx < fileTable.length; ++idx) {
-                    if (0 < fileTable[idx].fullPath.length) {
-                        await appendIconTileSequentially(overview, idx, fileTable[idx].fullPath);
+                for (let idx = 0; idx < files.length; ++idx) {
+                    if (0 < files[idx].length) {
+                        await appendIconTileSequentially(overview, idx, files[idx]);
                         ++loadedCount;
-                        updateIconPickerLoadStatus(overview, loadedCount, validEntries.length);
+                        updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
                     }
                 }
 
-                updateIconPickerLoadStatus(overview, validEntries.length, validEntries.length, true);
+                updateIconPickerLoadStatus(overview, validFiles.length, validFiles.length, true);
             }
 
             async function openIconPickerDialog(targetInputId) {
@@ -338,10 +338,13 @@
 
                     iconPickerModal.show();
 
-                    const rsp = await restClient.readFile("/configuration/fileMgr.json");
-                    const jsonRsp = JSON.parse(rsp);
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/fileMgrService/files",
+                        isJsonResponse: true
+                    });
 
-                    await fillIconPicker(jsonRsp.fileTable);
+                    await fillIconPicker(rsp.data.files);
                 } catch (e) {
                     alert("Failed to load icon list. Open the icons page once to initialize it.");
                 }
@@ -403,7 +406,7 @@
                     });
                     document.getElementById("path").value = rsp.data.path;
                     document.getElementById("filter").value = JSON.stringify(rsp.data.filter);
-                    document.getElementById("iconFileId").value = rsp.data.iconFileId;
+                    document.getElementById("iconFileName").value = rsp.data.iconFileName ?? "";
                     document.getElementById("format").value = rsp.data.format;
                     document.getElementById("multiplier").value = rsp.data.multiplier;
                     document.getElementById("offset").value = rsp.data.offset;
@@ -426,7 +429,7 @@
                         parameter: {
                             path: document.getElementById("path").value,
                             filter: document.getElementById("filter").value,
-                            iconFileId: document.getElementById("iconFileId").value,
+                            iconFileName: document.getElementById("iconFileName").value,
                             format: document.getElementById("format").value,
                             multiplier: document.getElementById("multiplier").value,
                             offset: document.getElementById("offset").value,
@@ -452,12 +455,12 @@
                     });
                 });
 
-                document.getElementById("btnIconFileIdSelect").addEventListener("click", () => {
-                    openIconPickerDialog("iconFileId");
+                document.getElementById("btnIconFileNameSelect").addEventListener("click", () => {
+                    openIconPickerDialog("iconFileName");
                 });
 
-                document.getElementById("btnIconFileIdClear").addEventListener("click", () => {
-                    clearIconFileId("iconFileId");
+                document.getElementById("btnIconFileNameClear").addEventListener("click", () => {
+                    clearIconFileName("iconFileName");
                 });
 
                 document.getElementById("pluginUid").addEventListener("change", () => {

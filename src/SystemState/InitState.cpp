@@ -70,6 +70,7 @@
 #include <ESPmDNS.h>
 #include <SettingsService.h>
 #include <WiFiUtil.h>
+#include <PluginWithConfig.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -544,7 +545,16 @@ void InitState::welcome(bool isVeryFirstStart)
 
     if (nullptr != welcomePlugin)
     {
-        if (false == welcomePlugin->loadIcon("smiley.bmp", true))
+        const char* WELCOME_ICON_FILE_NAME = "smiley.bmp";
+        String      iconFullPath;
+
+        iconFullPath.reserve(strlen(PluginWithConfig::CONFIG_PATH) + 1U + strlen(WELCOME_ICON_FILE_NAME));
+
+        iconFullPath  = PluginWithConfig::CONFIG_PATH;
+        iconFullPath += "/";
+        iconFullPath += WELCOME_ICON_FILE_NAME;
+
+        if (false == welcomePlugin->loadIcon(iconFullPath, true))
         {
             LOG_WARNING("Welcome plugin icon couldn't be loaded.");
         }

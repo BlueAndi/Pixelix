@@ -370,9 +370,9 @@ variables:
     {% set icon_file_id = var_icon_file_id %}
     {% set text = var_text %}
     {% if (icon_selector == 'change') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
-      {"iconFileId": {{ icon_file_id }}, "text": "{{ text }}"}
+      {"iconFileName": "{{ icon_file_id }}", "text": "{{ text }}"}
     {% elif (icon_selector == 'clear') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
-      {"iconFileId": 255, "text": "{{ text }}"}
+      {"iconFileName": "", "text": "{{ text }}"}
     {% else %}
       {"text": "{{ text }}"}
     {% endif %}
@@ -381,9 +381,9 @@ variables:
     {% set icon_file_id = var_icon_file_id %}
     {% set text = var_text %}
     {% if (icon_selector == 'change') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
-      {{ ("iconFileId=" + icon_file_id + "&text=" + text) | urlencode() }}
+      {{ ("iconFileName=" + icon_file_id + "&text=" + text) | urlencode() }}
     {% elif (icon_selector == 'clear') and ((var_plugin_type == 'icontext') or (var_plugin_type == 'icontextlamp')) %}
-      {{ ("iconFileId=255&text=" + text) | urlencode() }}
+      {{ ("iconFileName=&text=" + text) | urlencode() }}
     {% else %}
       {{ ("text=" + text) | urlencode() }}
     {% endif %}

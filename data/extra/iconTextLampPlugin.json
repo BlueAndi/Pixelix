@@ -7,16 +7,14 @@
             "cmd_tpl": "{\"text\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.text }}"
         }
-    }, {
-        "component": "number",
+    },
+    {
+        "component": "text",
         "discovery": {
             "name": "IconTextLampPlugin Icon",
             "ic": "mdi:image-outline",
-            "cmd_tpl": "{\"iconFileId\": \"{{ value }}\" }",
-            "val_tpl": "{{ value_json.iconFileId }}",
-            "min": 0,
-            "max": 255,
-            "mode": "box"
+            "cmd_tpl": "{\"iconFileName\": \"{{ value }}\" }",
+            "val_tpl": "{{ value_json.iconFileName }}"
         }
     }
 ]

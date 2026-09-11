@@ -219,17 +219,20 @@
 
             async function downloadFileList(id) {
                 try {
-                    const rsp = await restClient.readFile("/configuration/fileMgr.json");
-                    const jsonRsp = JSON.parse(rsp);
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/fileMgrService/files",
+                        isJsonResponse: true
+                    });
                     const overview = document.getElementById(id);
-                    const iconEntries = jsonRsp.fileTable.filter((entry) => entry.fullPath.length > 0);
+                    const iconEntries = rsp.data.files.filter((fileName) => fileName.length > 0);
                     let loadedCount = 0;
 
                     updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
 
-                    for (const [idx, entry] of jsonRsp.fileTable.entries()) {
-                        if (entry.fullPath.length > 0) {
-                            await appendIconTileSequentially(overview, idx, entry);
+                    for (const [idx, fileName] of rsp.data.files.entries()) {
+                        if (fileName.length > 0) {
+                            await appendIconTileSequentially(overview, idx, fileName);
                             ++loadedCount;
                             updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
                         }
@@ -266,21 +269,22 @@
                 status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
             }
 
-            async function appendIconTileSequentially(overview, idx, entry) {
+            async function appendIconTileSequentially(overview, idx, fileName) {
                 const fileId = document.createElement("p");
                 fileId.textContent = "[" + idx + "]";
+                const displayName = fileName.replace(/^.*[\\\/]/, "");
 
                 const img = document.createElement("img");
                 img.alt = "Preview";
 
                 const name = document.createElement("p");
-                name.textContent = entry.fullPath.replace(/^.*[\\/]/, "");
+                name.textContent = displayName;
 
                 const actionRemove = document.createElement("button");
                 actionRemove.type = "button";
                 actionRemove.className = "btn btn-secondary";
                 actionRemove.textContent = "Remove";
-                actionRemove.addEventListener("click", () => removeFile(idx, entry.fullPath));
+                actionRemove.addEventListener("click", () => removeFile(idx, fileName));
 
                 const div = document.createElement("div");
                 div.className = "bg-body text-center m-2 p-2 bd-highlight";
@@ -299,14 +303,14 @@
 
                     img.addEventListener("error", () => resolve(), { once: true });
 
-                    img.src = entry.fullPath;
+                    img.src = fileName;
                 });
             }
 
             async function removeFile(fileId, fullPath) {
                 try {
-                    await restClient.fileMgrRemoveFile(fileId);
-                    await dialog.showInfo("<p>File " + fullPath + " removed.</p>");
+                    await restClient.fileMgrRemoveFile(fullPath.replace(/^.*[\\\/]/, ""));
+                    await dialog.showInfo("<p>File " + fullPath.replace(/^.*[\\\/]/, "") + " removed.</p>");
 
                     document.getElementById("overview").textContent = "";
                     await downloadFileList("overview");

@@ -59,11 +59,11 @@ The filter is used to identify the value of interest.
   }
 ```
 
-The bumblebee icon is chosen.
+The bumblebee icon is chosen. Icon file names are used directly. An empty file name means no icon.
 
 ```json
 {
-    "iconFileId": 0
+    "iconFileName": "bumblebee.bmp"
 }
 ```
 
@@ -92,7 +92,7 @@ Find the complete plugin configuration in [grodansparadisOutdoorTemperature.json
 
 ### Bitcoin price in US$
 
-The bitcoin price is get from https://api.coinbase.com/v2/prices/BTC-USD/buy which returns a JSON object. 
+The bitcoin price is get from https://api.coinbase.com/v2/prices/BTC-USD/buy which returns a JSON object.
 
 ```json
 {
@@ -118,7 +118,7 @@ No icon is chosen to use the whole display just for the text.
 
 ```json
 {
-    "iconFileId": 255
+    "iconFileName": ""
 }
 ```
 
@@ -145,7 +145,7 @@ Find the complete plugin configuration in [bitcoin.json](./rest/bitcoin.json).
 
 ### Github repository stargazers
 
-The github repositiry stargazers is get for this repository from https://api.github.com/repos/BlueAndi/Pixelix which returns a JSON object. 
+The github repositiry stargazers is get for this repository from https://api.github.com/repos/BlueAndi/Pixelix which returns a JSON object.
 
 ```json
 {
@@ -286,7 +286,7 @@ The github icon is chosen and will appear on the left side.
 
 ```json
 {
-    "iconFileId": 2
+    "iconFileName": "github.bmp"
 }
 ```
 
@@ -378,7 +378,7 @@ No icon is chosen to use the whole display just for the text.
 
 ```json
 {
-    "iconFileId": 255
+    "iconFileName": ""
 }
 ```
 
@@ -426,11 +426,11 @@ The filter is used to identify the value of interest.
     }
 ```
 
-The lightning icon is chosen.
+The plug icon is chosen.
 
 ```json
 {
-    "iconFileId": 5
+    "iconFileName": "plug.bmp"
 }
 ```
 
