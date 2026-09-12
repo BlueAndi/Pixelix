@@ -1,0 +1,19 @@
+{
+    "name": "SensorsNative",
+    "version": "0.1.0",
+    "description": "Sensor adapters for the native platform. Counterpart of the Sensors library, without any sensor.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Common"
+    }, {
+        "name": "Utilities"
+    }],
+    "frameworks": "*",
+    "platforms": "native"
+}

@@ -25,30 +25,19 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   HardwareSerial.cpp
- * @brief  Serial interface for test purposes only
+ * @file   DisplayDrv.cpp
+ * @brief  Display driver for the native environment
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "HardwareSerial.h"
-#include "ConsoleCompat.h"
-
-#include <stdio.h>
+#include "DisplayDrv.h"
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
-
-/** Serve the terminal input, which switches the terminal to the raw mode.
- * Disable it in case the raw mode disturbs e.g. a debugger or the terminal of
- * an IDE.
- */
-#ifndef CONFIG_NATIVE_SERIAL_INPUT
-#define CONFIG_NATIVE_SERIAL_INPUT (1)
-#endif /* CONFIG_NATIVE_SERIAL_INPUT */
 
 /******************************************************************************
  * Macros
@@ -66,127 +55,65 @@
  * Local Variables
  *****************************************************************************/
 
-HardwareSerial Serial;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-HardwareSerial::HardwareSerial() :
-    Stream(),
-    m_isInputEnabled(false),
-    m_inputBuffer(),
-    m_readIndex(0U),
-    m_writeIndex(0U),
-    m_inputCount(0U)
+DisplayDrv::DisplayDrv() :
+    IDisplayDrv(),
+    m_framebuffer(),
+    m_brightness(UINT8_MAX),
+    m_isOn(false)
 {
 }
 
-HardwareSerial::~HardwareSerial()
+DisplayDrv::~DisplayDrv()
 {
 }
 
-void HardwareSerial::begin(unsigned long baudrate)
+bool DisplayDrv::begin()
 {
-    /* There is no baudrate on the host. */
-    (void)baudrate;
+    clear();
 
-    /* A serial console shows every character immediately. The standard output
-     * of the host is fully buffered as soon as it is redirected to a file or a
-     * pipe, which would delay the log output. Therefore the buffering is
-     * disabled.
-     */
-    (void)setvbuf(stdout, nullptr, _IONBF, 0U);
+    m_isOn = true;
 
-#if (0 != CONFIG_NATIVE_SERIAL_INPUT)
+    return true;
+}
 
-    /* The mini terminal echoes every character and handles the backspace on
-     * its own, because the serial interface of the target does neither. The
-     * terminal of the host is switched to the raw mode, so it behaves the same.
-     */
-    if ((false == m_isInputEnabled) &&
-        (true == ConsoleCompat::isInteractive()))
+void DisplayDrv::show(const YAGfxBitmap& bitmap)
+{
+    uint16_t x      = 0U;
+    uint16_t y      = 0U;
+    uint16_t width  = bitmap.getWidth();
+    uint16_t height = bitmap.getHeight();
+
+    if (CONFIG_LED_MATRIX_WIDTH < width)
     {
-        m_isInputEnabled = ConsoleCompat::enterRawMode();
+        width = CONFIG_LED_MATRIX_WIDTH;
     }
 
-#endif /* (0 != CONFIG_NATIVE_SERIAL_INPUT) */
-}
-
-void HardwareSerial::end()
-{
-    flush();
-
-    if (true == m_isInputEnabled)
+    if (CONFIG_LED_MATRIX_HEIGHT < height)
     {
-        m_isInputEnabled = false;
-        ConsoleCompat::restoreMode();
+        height = CONFIG_LED_MATRIX_HEIGHT;
+    }
+
+    for (y = 0U; y < height; ++y)
+    {
+        for (x = 0U; x < width; ++x)
+        {
+            m_framebuffer[x + (y * CONFIG_LED_MATRIX_WIDTH)] = bitmap.getColor(x, y);
+        }
     }
 }
 
-void HardwareSerial::setTxTimeoutMs(uint32_t timeout)
+void DisplayDrv::clear()
 {
-    /* Not used on the host. */
-    (void)timeout;
-}
+    size_t index = 0U;
 
-size_t HardwareSerial::write(uint8_t data)
-{
-    return write(&data, sizeof(data));
-}
-
-size_t HardwareSerial::write(const uint8_t* buffer, size_t size)
-{
-    size_t written = 0U;
-
-    if (nullptr != buffer)
+    for (index = 0U; index < PIXEL_COUNT; ++index)
     {
-        written = fwrite(buffer, 1U, size, stdout);
+        m_framebuffer[index] = ColorDef::BLACK;
     }
-
-    return written;
-}
-
-void HardwareSerial::flush()
-{
-    (void)fflush(stdout);
-}
-
-int HardwareSerial::available()
-{
-    drainInput();
-
-    return static_cast<int>(m_inputCount);
-}
-
-int HardwareSerial::read()
-{
-    int data = -1;
-
-    drainInput();
-
-    if (0U < m_inputCount)
-    {
-        data        = static_cast<int>(m_inputBuffer[m_readIndex]);
-        m_readIndex = (m_readIndex + 1U) % INPUT_BUFFER_SIZE;
-        --m_inputCount;
-    }
-
-    return data;
-}
-
-int HardwareSerial::peek()
-{
-    int data = -1;
-
-    drainInput();
-
-    if (0U < m_inputCount)
-    {
-        data = static_cast<int>(m_inputBuffer[m_readIndex]);
-    }
-
-    return data;
 }
 
 /******************************************************************************
@@ -196,26 +123,6 @@ int HardwareSerial::peek()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void HardwareSerial::drainInput()
-{
-    if (true == m_isInputEnabled)
-    {
-        while (INPUT_BUFFER_SIZE > m_inputCount)
-        {
-            int data = ConsoleCompat::readByte();
-
-            if (0 > data)
-            {
-                break;
-            }
-
-            m_inputBuffer[m_writeIndex] = static_cast<uint8_t>(data);
-            m_writeIndex                = (m_writeIndex + 1U) % INPUT_BUFFER_SIZE;
-            ++m_inputCount;
-        }
-    }
-}
 
 /******************************************************************************
  * External Functions

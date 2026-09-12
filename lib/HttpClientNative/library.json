@@ -1,0 +1,21 @@
+{
+    "name": "HttpClientNative",
+    "version": "0.1.0",
+    "description": "HTTP client for the native platform. Counterpart of the Arduino HTTPClient library, based on the WiFiClient of HalNative.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "ArduinoNative"
+    }, {
+        "name": "HalNative"
+    }, {
+        "name": "Logging"
+    }],
+    "frameworks": "*",
+    "platforms": "native"
+}

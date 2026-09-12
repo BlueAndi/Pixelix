@@ -61,13 +61,13 @@
 
 /**
  * Allocate memory from PSRAM.
- * 
+ *
  * @param[in] size Size of memory block in bytes.
- * 
+ *
  * @return Pointer to allocated memory block or nullptr on error.
  */
 extern void* ps_malloc(size_t size);
 
-#endif  /* ESP32_HAL_PSRAM_H */
+#endif /* ESP32_HAL_PSRAM_H */
 
 /** @} */

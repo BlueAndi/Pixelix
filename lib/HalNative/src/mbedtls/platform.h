@@ -25,59 +25,66 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   esp32-hal-psram.cpp
- * @brief  Stub for the esp32-hal-psram.h file
+ * @file   platform.h
+ * @brief  Stub for the mbedTLS platform abstraction
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * The application redirects the mbedTLS memory allocation to the PSRAM. There
+ * is no PSRAM on the host, therefore the standard heap is used.
+ *
+ * @addtogroup TEST
+ *
+ * @{
  */
+
+#ifndef MBEDTLS_PLATFORM_H
+#define MBEDTLS_PLATFORM_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "esp32-hal-psram.h"
+#include <stddef.h>
 #include <stdlib.h>
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
+/** Memory allocation, which mbedTLS uses. */
+#define mbedtls_calloc calloc
+
+/** Memory deallocation, which mbedTLS uses. */
+#define mbedtls_free free
+
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
 /******************************************************************************
- * Prototypes
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-void* ps_malloc(size_t size)
+/**
+ * Set the memory allocation functions, which mbedTLS shall use.
+ * On the host the standard heap is always used.
+ *
+ * @param[in] callocFunc    Memory allocation function.
+ * @param[in] freeFunc      Memory deallocation function.
+ *
+ * @return Always 0, which means successful.
+ */
+static inline int mbedtls_platform_set_calloc_free(void* (*callocFunc)(size_t, size_t), void (*freeFunc)(void*))
 {
-    /* Stub implementation: just use standard malloc for testing purposes. */
-    return malloc(size);
+    (void)callocFunc;
+    (void)freeFunc;
+
+    return 0;
 }
 
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+#endif /* MBEDTLS_PLATFORM_H */
+
+/** @} */

@@ -1,0 +1,28 @@
+{
+    "name": "HalNative",
+    "version": "0.1.0",
+    "description": "HAL for the native platform. It provides the target specific parts, which are not available on the host.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "build": {
+        "extraScript": "link_sockets.py"
+    },
+    "dependencies": [{
+        "name": "ArduinoNative"
+    }, {
+        "name": "Logging"
+    }, {
+        "name": "HalCommon"
+    }, {
+        "name": "HalInterface"
+    }, {
+        "name": "TopicHandlerService"
+    }],
+    "frameworks": "*",
+    "platforms": "native"
+}

@@ -25,16 +25,19 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   esp32-hal-psram.cpp
- * @brief  Stub for the esp32-hal-psram.h file
+ * @file   HalNativeGlobals.cpp
+ * @brief  Global instances of the native hardware abstraction
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * The Arduino framework provides some global instances, which are expected by
+ * the application. They are defined here.
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "esp32-hal-psram.h"
-#include <stdlib.h>
+#include "ESPmDNS.h"
+#include "Wire.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -72,11 +75,9 @@
  * External Functions
  *****************************************************************************/
 
-void* ps_malloc(size_t size)
-{
-    /* Stub implementation: just use standard malloc for testing purposes. */
-    return malloc(size);
-}
+MDNSResponder MDNS;
+
+TwoWire       Wire;
 
 /******************************************************************************
  * Local Functions

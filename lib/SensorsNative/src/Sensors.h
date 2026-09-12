@@ -25,59 +25,82 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   esp32-hal-psram.cpp
- * @brief  Stub for the esp32-hal-psram.h file
+ * @file   Sensors.h
+ * @brief  Sensors
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * Counterpart of the Sensors library for the native platform.
+ *
+ * Note, this header must be found before the sensors.h of the Windows SDK. The
+ * filesystem of the host is case insensitive, therefore both are the same to
+ * the compiler. As long as this library is part of the build, its include path
+ * is searched before the system include paths and everything is fine.
+ *
+ * @addtogroup SENSORS
+ *
+ * @{
  */
+
+#ifndef SENSORS_H
+#define SENSORS_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "esp32-hal-psram.h"
-#include <stdlib.h>
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <stdint.h>
+#include <SensorDataProviderImpl.h>
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-void* ps_malloc(size_t size)
+/**
+ * Sensor channel default value configuration.
+ */
+typedef struct
 {
-    /* Stub implementation: just use standard malloc for testing purposes. */
-    return malloc(size);
-}
+    uint8_t     sensorId;     /**< Sensor id */
+    uint8_t     channelId;    /**< Channel id */
+    const char* jsonStrValue; /**< Default value as JSON string. */
+
+} SensorChannelDefaultValue;
 
 /******************************************************************************
- * Local Functions
+ * Functions
  *****************************************************************************/
+
+/**
+ * Available sensors.
+ */
+namespace Sensors
+{
+
+/**
+ * Get the concrete sensor data provider, which contains all available sensors.
+ *
+ * @return Sensor data provider implementation instance
+ */
+extern SensorDataProviderImpl* getSensorDataProviderImpl();
+
+/**
+ * Get the sensor channel default values.
+ *
+ * @param[in] values    Number of values in the list.
+ *
+ * @return List of default values
+ */
+extern const SensorChannelDefaultValue* getSensorChannelDefaultValues(uint8_t& values);
+
+} // namespace Sensors
+
+#endif /* SENSORS_H */
+
+/** @} */

@@ -1,0 +1,23 @@
+{
+    "name": "HalLedMatrixNative",
+    "version": "0.1.0",
+    "description": "HAL for the native platform. Counterpart of HalLedMatrix, but without any physical display.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "HalCommon"
+    }, {
+        "name": "HalInterface"
+    }, {
+        "name": "HalNative"
+    }, {
+        "name": "Utilities"
+    }],
+    "frameworks": "*",
+    "platforms": "native"
+}

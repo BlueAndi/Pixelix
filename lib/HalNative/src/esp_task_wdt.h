@@ -25,59 +25,99 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   esp32-hal-psram.cpp
- * @brief  Stub for the esp32-hal-psram.h file
+ * @file   esp_task_wdt.h
+ * @brief  Stub for the ESP-IDF task watchdog
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * There is no watchdog on the host. A deadlock of the main loop is not detected
+ * and will not cause a restart.
+ *
+ * @addtogroup TEST
+ *
+ * @{
  */
+
+#ifndef ESP_TASK_WDT_H
+#define ESP_TASK_WDT_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "esp32-hal-psram.h"
-#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include "esp_err.h"
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
 /******************************************************************************
- * Prototypes
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-void* ps_malloc(size_t size)
+/**
+ * Initialize the task watchdog.
+ *
+ * @param[in] timeout   Timeout in s.
+ * @param[in] panic     Restart on timeout or not.
+ *
+ * @return Always ESP_OK, there is no watchdog on the host.
+ */
+static inline esp_err_t esp_task_wdt_init(uint32_t timeout, bool panic)
 {
-    /* Stub implementation: just use standard malloc for testing purposes. */
-    return malloc(size);
+    (void)timeout;
+    (void)panic;
+
+    return ESP_OK;
 }
 
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+/**
+ * Add the given task to the task watchdog.
+ *
+ * @param[in] taskHandle    Task handle, nullptr for the current task.
+ *
+ * @return Always ESP_OK, there is no watchdog on the host.
+ */
+static inline esp_err_t esp_task_wdt_add(void* taskHandle)
+{
+    (void)taskHandle;
+
+    return ESP_OK;
+}
+
+/**
+ * Reset the task watchdog of the current task.
+ *
+ * @return Always ESP_OK, there is no watchdog on the host.
+ */
+static inline esp_err_t esp_task_wdt_reset(void)
+{
+    return ESP_OK;
+}
+
+/**
+ * Remove the given task from the task watchdog.
+ *
+ * @param[in] taskHandle    Task handle, nullptr for the current task.
+ *
+ * @return Always ESP_OK, there is no watchdog on the host.
+ */
+static inline esp_err_t esp_task_wdt_delete(void* taskHandle)
+{
+    (void)taskHandle;
+
+    return ESP_OK;
+}
+
+#endif /* ESP_TASK_WDT_H */
+
+/** @} */

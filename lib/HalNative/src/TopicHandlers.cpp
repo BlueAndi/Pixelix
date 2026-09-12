@@ -25,16 +25,20 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   esp32-hal-psram.cpp
- * @brief  Stub for the esp32-hal-psram.h file
+ * @file   TopicHandlers.cpp
+ * @brief  Topic handler list for test purposes only
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * Counterpart of the generated src/Generated/TopicHandlers.cpp, which is not
+ * built in the native environment. No topic handler is available on the host,
+ * therefore the list is empty. A plugin can still be tested, because the topic
+ * handler service just has nothing to forward the topics to.
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "esp32-hal-psram.h"
-#include <stdlib.h>
+#include <TopicHandlers.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -72,11 +76,18 @@
  * External Functions
  *****************************************************************************/
 
-void* ps_malloc(size_t size)
+/* List of all topic handlers. */
+namespace TopicHandlers
 {
-    /* Stub implementation: just use standard malloc for testing purposes. */
-    return malloc(size);
+
+ITopicHandler** getList(uint8_t& count)
+{
+    count = 0U;
+
+    return nullptr;
 }
+
+} /* namespace TopicHandlers */
 
 /******************************************************************************
  * Local Functions

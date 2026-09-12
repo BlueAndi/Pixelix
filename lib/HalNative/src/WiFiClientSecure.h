@@ -25,17 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   Esp.h
- * @brief  Stub for the ESP.h
+ * @file   WiFiClientSecure.h
+ * @brief  TCP client with TLS for the native environment
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup TEST
+ * Counterpart of the Arduino WiFiClientSecure. The host has no TLS stack
+ * available, therefore a connection attempt fails. Everything which uses plain
+ * HTTP works, only HTTPS does not. See the note in connect().
+ *
+ * @addtogroup HAL_NATIVE
  *
  * @{
  */
 
-#ifndef ESP_H
-#define ESP_H
+#ifndef WIFICLIENTSECURE_H
+#define WIFICLIENTSECURE_H
 
 /******************************************************************************
  * Compile Switches
@@ -45,6 +49,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include "WiFiClient.h"
 
 /******************************************************************************
  * Macros
@@ -55,27 +60,72 @@
  *****************************************************************************/
 
 /**
- * ESP specific methods used for testing purposes.
+ * TCP client with TLS, which is not supported on the host.
  */
-class EspClass
+class WiFiClientSecure : public WiFiClient
 {
 public:
 
     /**
-     * Get the eFuse MAC address.
-     * 
-     * @return eFuse MAC address
+     * Constructs a client, which is not connected yet.
      */
-    uint64_t getEfuseMac();
+    WiFiClientSecure() :
+        WiFiClient()
+    {
+    }
 
+    /**
+     * Destroys the client and closes the connection.
+     */
+    ~WiFiClientSecure()
+    {
+    }
+
+    /**
+     * Connect to the given host.
+     *
+     * The host has no TLS stack, therefore it always fails. The reason is
+     * logged once, so the user knows why a HTTPS request doesn't work.
+     *
+     * @param[in] host  Host name or address.
+     * @param[in] port  Port of the host.
+     *
+     * @return Always 0, the connection can not be established.
+     */
+    int connect(const char* host, uint16_t port) final;
+
+    /**
+     * Don't verify the certificate of the server.
+     *
+     * There is no TLS at all, therefore there is nothing to configure.
+     */
+    void setInsecure()
+    {
+        /* Nothing to do. */
+    }
+
+    /**
+     * Set the certificate of the certificate authority.
+     *
+     * There is no TLS at all, therefore there is nothing to configure.
+     *
+     * @param[in] rootCA    Certificate in PEM format.
+     */
+    void setCACert(const char* rootCA)
+    {
+        (void)rootCA;
+    }
+
+private:
+
+    WiFiClientSecure(const WiFiClientSecure& client);
+    WiFiClientSecure& operator=(const WiFiClientSecure& client);
 };
-
-extern EspClass ESP;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ESP_H */
+#endif /* WIFICLIENTSECURE_H */
 
 /** @} */

@@ -1,0 +1,21 @@
+{
+    "name": "AsyncTcpNative",
+    "version": "0.1.0",
+    "description": "Asynchronous TCP for the native platform. Counterpart of the AsyncTCP library, based on sockets.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "ArduinoNative"
+    }, {
+        "name": "HalNative"
+    }, {
+        "name": "Logging"
+    }],
+    "frameworks": "*",
+    "platforms": "native"
+}

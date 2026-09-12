@@ -20,3 +20,6 @@ doc/doxygen/doxygen_warnings.txt
 firmware.map
 out
 src/Generated/
+
+# Non-volatile storage of the native environment, see ArduinoNative Preferences.
+preferences.txt
