@@ -119,7 +119,9 @@ size_t AsyncClient::add(const char* data, size_t size, uint8_t apiFlags)
     if ((nullptr != data) &&
         (-1 != m_socket))
     {
-        accepted = space();
+        std::lock_guard<std::mutex> guard(m_txMutex);
+
+        accepted = getSpace();
 
         if (size < accepted)
         {
@@ -136,9 +138,11 @@ size_t AsyncClient::add(const char* data, size_t size, uint8_t apiFlags)
     return accepted;
 }
 
-bool AsyncClient::send()
+bool AsyncClient::sendLocked(bool& isPeerLost)
 {
     bool isSuccessful = false;
+
+    isPeerLost        = false;
 
     if ((-1 != m_socket) &&
         (0U < m_txBufferLength))
@@ -148,6 +152,14 @@ bool AsyncClient::send()
         if (0 < written)
         {
             size_t sent = static_cast<size_t>(written);
+
+            /* Never consume more than the transmit buffer contains. A partial
+             * send is the normal case, see the non-blocking socket.
+             */
+            if (m_txBufferLength < sent)
+            {
+                sent = m_txBufferLength;
+            }
 
             /* Keep the rest, the event loop sends it as soon as the socket is
              * writable again.
@@ -175,7 +187,7 @@ bool AsyncClient::send()
         }
         else
         {
-            handleDisconnect();
+            isPeerLost = true;
         }
     }
     else if (-1 != m_socket)
@@ -186,6 +198,28 @@ bool AsyncClient::send()
     else
     {
         /* Guard: no connection. */
+    }
+
+    return isSuccessful;
+}
+
+bool AsyncClient::send()
+{
+    bool isSuccessful = false;
+    bool isPeerLost   = false;
+
+    {
+        std::lock_guard<std::mutex> guard(m_txMutex);
+
+        isSuccessful = sendLocked(isPeerLost);
+    }
+
+    /* The disconnect handler must never run with the transmit buffer locked,
+     * because it may destroy this client.
+     */
+    if (true == isPeerLost)
+    {
+        handleDisconnect();
     }
 
     return isSuccessful;
@@ -215,9 +249,16 @@ size_t AsyncClient::write(const char* data)
     return written;
 }
 
-size_t AsyncClient::space() const
+size_t AsyncClient::getSpace() const
 {
     return TX_BUFFER_SIZE - m_txBufferLength;
+}
+
+size_t AsyncClient::space() const
+{
+    std::lock_guard<std::mutex> guard(m_txMutex);
+
+    return getSpace();
 }
 
 bool AsyncClient::canSend() const
@@ -459,15 +500,23 @@ void AsyncClient::notifyPoll()
 
 void AsyncClient::notifyAck()
 {
-    if (0U < m_pendingAck)
+    size_t acked = 0U;
+
     {
-        size_t acked = m_pendingAck;
+        std::lock_guard<std::mutex> guard(m_txMutex);
 
         /* Cleared before the notification, because the handler may write again
          * and therefore cause the next pending acknowledge.
          */
+        acked        = m_pendingAck;
         m_pendingAck = 0U;
+    }
 
+    /* The ack handler writes to this client, therefore it must never run with
+     * the transmit buffer locked.
+     */
+    if (0U < acked)
+    {
         if ((-1 != m_socket) &&
             (nullptr != m_ackHandler))
         {
@@ -478,11 +527,15 @@ void AsyncClient::notifyAck()
 
 bool AsyncClient::hasPendingAck() const
 {
+    std::lock_guard<std::mutex> guard(m_txMutex);
+
     return (0U < m_pendingAck);
 }
 
 bool AsyncClient::hasPendingTxData() const
 {
+    std::lock_guard<std::mutex> guard(m_txMutex);
+
     return (0U < m_txBufferLength);
 }
 
@@ -648,14 +701,29 @@ void AsyncServer::acceptClient()
 
 void AsyncClient::handleDisconnect()
 {
-    if (-1 != m_socket)
+    int sock = -1;
+
+    {
+        std::lock_guard<std::mutex> guard(m_txMutex);
+
+        /* Claim the socket, so a concurrent disconnect notifies the handler
+         * only once. Otherwise the client would be destroyed twice.
+         */
+        sock             = m_socket;
+        m_socket         = -1;
+        m_txBufferLength = 0U;
+        m_pendingAck     = 0U;
+    }
+
+    if (-1 != sock)
     {
         AsyncTcpLoop::getInstance().unregisterClient(this);
 
-        SocketCompat::closeSocket(static_cast<SocketCompat::Socket>(m_socket));
-        m_socket         = -1;
-        m_txBufferLength = 0U;
+        SocketCompat::closeSocket(static_cast<SocketCompat::Socket>(sock));
 
+        /* The disconnect handler may destroy this client, therefore it is the
+         * very last action and never called with the transmit buffer locked.
+         */
         if (nullptr != m_disconnectHandler)
         {
             m_disconnectHandler(m_disconnectArg, this);

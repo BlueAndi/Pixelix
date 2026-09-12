@@ -36,6 +36,11 @@
  * webserver is written for that guarantee and would corrupt its internal state
  * if the callbacks of different clients would run concurrently.
  *
+ * The transmit path is the exception. Beside the event loop thread, the
+ * application thread writes to a client as well, e.g. a websocket response is
+ * sent from the application task. Therefore the transmit buffer and everything
+ * derived from it is protected by a mutex, see AsyncClient::m_txMutex.
+ *
  * @addtogroup TEST
  *
  * @{
@@ -54,6 +59,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <functional>
+#include <mutex>
 
 /* Note, Arduino.h is deliberately not included here. It defines the F() macro
  * and a boolean type, which collide with the Windows SDK headers that winsock
@@ -422,9 +428,10 @@ private:
     bool                m_isAckPending;             /**< Shall the received data be acknowledged later? */
     uint32_t            m_rxTimeout;                /**< Timeout for receiving data in s. */
     uint32_t            m_lastRxTime;               /**< Timestamp of the last received data in ms. */
-    char                m_txBuffer[TX_BUFFER_SIZE]; /**< Transmit buffer. */
-    size_t              m_txBufferLength;           /**< Number of bytes in the transmit buffer. */
-    size_t              m_pendingAck;               /**< Number of sent bytes, which are not notified to the ack handler yet. */
+    mutable std::mutex  m_txMutex;                  /**< Protects the transmit buffer and its state. Never call a handler while it is locked, otherwise the application may deadlock. */
+    char                m_txBuffer[TX_BUFFER_SIZE]; /**< Transmit buffer. Protected by m_txMutex. */
+    size_t              m_txBufferLength;           /**< Number of bytes in the transmit buffer. Protected by m_txMutex. */
+    size_t              m_pendingAck;               /**< Number of sent bytes, which are not notified to the ack handler yet. Protected by m_txMutex. */
 
     AcConnectHandler    m_connectHandler;    /**< Handler for a established connection. */
     void*               m_connectArg;        /**< User argument of the connect handler. */
@@ -443,6 +450,25 @@ private:
 
     AsyncClient(const AsyncClient& client);
     AsyncClient& operator=(const AsyncClient& client);
+
+    /**
+     * Get the free space of the transmit buffer.
+     * The caller must own m_txMutex.
+     *
+     * @return Free space in byte
+     */
+    size_t getSpace() const;
+
+    /**
+     * Send the data in the transmit buffer.
+     * The caller must own m_txMutex.
+     *
+     * @param[out] isPeerLost   Set to true, if the connection is broken and the
+     *                          caller shall disconnect after unlocking.
+     *
+     * @return If successful send, it will return true otherwise false.
+     */
+    bool sendLocked(bool& isPeerLost);
 
     /**
      * Close the socket and notify the disconnect handler.
