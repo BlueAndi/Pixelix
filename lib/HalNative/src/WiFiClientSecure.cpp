@@ -63,8 +63,6 @@
 
 int WiFiClientSecure::connect(const char* host, uint16_t port)
 {
-    (void)port;
-
     /* Logged once, otherwise a service which retries would flood the log. */
     static bool isReported = false;
 
@@ -72,11 +70,11 @@ int WiFiClientSecure::connect(const char* host, uint16_t port)
     {
         isReported = true;
 
-        LOG_WARNING("No TLS support on the host, every HTTPS request will fail.");
-        LOG_WARNING("Use a plain HTTP url instead.");
+        LOG_WARNING("No TLS support on the host, every secured connection will fail.");
+        LOG_WARNING("Use a plain HTTP url resp. a plain MQTT broker instead.");
     }
 
-    LOG_WARNING("HTTPS connection to %s rejected.", (nullptr == host) ? "?" : host);
+    LOG_WARNING("TLS connection to %s:%u rejected.", (nullptr == host) ? "?" : host, port);
 
     return 0;
 }

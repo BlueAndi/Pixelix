@@ -50,6 +50,8 @@ Examples:
   - client certificate: ...
   - client key: ...
 
+MQTT is available in the native environment too, which runs Pixelix on the host. Note, the host has no TLS stack, therefore only a plain broker can be reached. Enabling "use TLS" there will let every connection attempt fail with a corresponding warning in the log.
+
 ## Overview Mindmap
 
 ![topic-handling-mindmap](../doc/architecture/svg/topic_handling_mindmap.svg)

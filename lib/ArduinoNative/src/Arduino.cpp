@@ -102,6 +102,11 @@ extern void delay(unsigned long ms)
     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
+extern void yield()
+{
+    std::this_thread::yield();
+}
+
 extern void pinMode(uint8_t pinNo, uint8_t mode)
 {
     if (MAX_PINS > pinNo)

@@ -35,7 +35,6 @@ clang-format --dry-run --Werror <file>
 
 Available environments are defined in [platformio.ini](platformio.ini) (15+ boards). Key ones:
 - `esp32doit-devkit-v1-LED-32x8` — 32×8 LED matrix, ESP32 DevKit
-- `esp32-4MB-LED-32x8` — 4 MB flash variant
 - `ulanzi-TC001` — Ulanzi TC001 smart pixel clock
 - `lilygo-t-display-s3-LED-32x8` — LILYGO T-Display S3
 
@@ -82,7 +81,7 @@ Build configuration is split across `config/`:
 - **Headers**: Every file starts with the MIT license block, `@file`, `@brief`, `@author` doxygen tags
 - **Naming**: Plugins must end with `Plugin` suffix; services follow the `IService` interface
 - **Python scripts**: max line length 140 (`.pylintrc`)
-- **Skill**: For writing/refactoring/reviewing embedded C/C++14 code (MISRA-oriented rules, defensive programming, Yoda conditions, single-exit "pathfinder" rule, Doxygen, section-banner layout, clang-format), use the [embedded-cpp-reference](.claude/skills/embedded-cpp-reference/SKILL.md) skill, which includes `.h`/`.hpp`/`.cpp` templates.
+- **Skill**: For writing/refactoring/reviewing embedded C/C++14 code (MISRA-oriented rules, defensive programming, Yoda conditions, single-exit "pathfinder" rule, Doxygen, section-banner layout, clang-format), use the [embedded-cpp-reference](.claude/skills/embedded-cpp144-misra/SKILL.md) skill, which includes `.h`/`.hpp`/`.cpp` templates.
 
 ## Testing
 

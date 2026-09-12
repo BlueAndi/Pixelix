@@ -25,20 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   WiFiClient.h
- * @brief  TCP client for the native environment
+ * @file   Client.h
+ * @brief  Network client interface for the native environment
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * Counterpart of the Arduino WiFiClient. In difference to the AsyncTCP of the
- * webserver, this one is blocking. The HTTPClient uses it that way.
+ * Counterpart of the Arduino Client. It is the abstraction every protocol
+ * library expects, e.g. the MQTT client gets a Client reference and doesn't
+ * care whether there is a plain socket or TLS behind it.
  *
- * @addtogroup HAL_NATIVE
+ * @addtogroup TEST
  *
  * @{
  */
 
-#ifndef WIFICLIENT_H
-#define WIFICLIENT_H
+#ifndef CLIENT_H
+#define CLIENT_H
 
 /******************************************************************************
  * Compile Switches
@@ -49,9 +50,9 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <stddef.h>
-#include <Client.h>
-#include <IPAddress.h>
-#include <WString.h>
+
+#include "IPAddress.h"
+#include "Stream.h"
 
 /******************************************************************************
  * Macros
@@ -62,31 +63,26 @@
  *****************************************************************************/
 
 /**
- * TCP client, which uses the sockets of the host.
+ * A client is a stream, which is connected to a remote peer.
  */
-class WiFiClient : public Client
+class Client : public Stream
 {
 public:
 
     /**
-     * Constructs a client, which is not connected yet.
+     * Constructs a client.
      */
-    WiFiClient();
+    Client() :
+        Stream()
+    {
+    }
 
     /**
-     * Destroys the client and closes the connection.
+     * Destroys a client.
      */
-    virtual ~WiFiClient();
-
-    /**
-     * Connect to the given host.
-     *
-     * @param[in] host  Host name or address.
-     * @param[in] port  Port of the host.
-     *
-     * @return If successful connected, it will return 1 otherwise 0.
-     */
-    virtual int connect(const char* host, uint16_t port);
+    virtual ~Client()
+    {
+    }
 
     /**
      * Connect to the given host.
@@ -96,10 +92,7 @@ public:
      *
      * @return If successful connected, it will return 1 otherwise 0.
      */
-    int connect(IPAddress ip, uint16_t port) final
-    {
-        return connect(ip.toString().c_str(), port);
-    }
+    virtual int connect(IPAddress ip, uint16_t port)         = 0;
 
     /**
      * Connect to the given host.
@@ -109,53 +102,7 @@ public:
      *
      * @return If successful connected, it will return 1 otherwise 0.
      */
-    int connect(const String& host, uint16_t port)
-    {
-        return connect(host.c_str(), port);
-    }
-
-    /**
-     * Is the client connected?
-     *
-     * @return If connected, it will return 1 otherwise 0.
-     */
-    virtual uint8_t connected();
-
-    /**
-     * Close the connection.
-     */
-    virtual void stop();
-
-    /**
-     * Get the number of bytes, which can be read without blocking.
-     *
-     * @return Number of available bytes.
-     */
-    int available() final;
-
-    /**
-     * Read a single byte.
-     *
-     * @return Byte or -1 if nothing is available.
-     */
-    int read() final;
-
-    /**
-     * Read the given number of bytes.
-     *
-     * @param[out] buffer   Data buffer
-     * @param[in]  size     Data buffer size in byte
-     *
-     * @return Number of read bytes or -1 in case of an error.
-     */
-    virtual int read(uint8_t* buffer, size_t size);
-
-    /**
-     * Get the next byte without removing it from the receive buffer.
-     *
-     * @return Byte or -1 if nothing is available.
-     */
-    int peek() final;
+    virtual int connect(const char* host, uint16_t port)     = 0;
 
     /**
      * Write a single byte.
@@ -164,7 +111,7 @@ public:
      *
      * @return Number of written bytes.
      */
-    size_t write(uint8_t data) final;
+    virtual size_t write(uint8_t data)                       = 0;
 
     /**
      * Write the given number of bytes.
@@ -174,66 +121,68 @@ public:
      *
      * @return Number of written bytes.
      */
-    size_t write(const uint8_t* buffer, size_t size) final;
+    virtual size_t write(const uint8_t* buffer, size_t size) = 0;
 
     /**
-     * Wait until all data is sent. The socket sends it on its own, therefore
-     * there is nothing to do.
-     */
-    void flush() final
-    {
-        /* Nothing to do. */
-    }
-
-    /**
-     * Set the max. time to wait for data resp. for a connection.
+     * Get the number of bytes, which can be read without blocking.
      *
-     * @param[in] timeout   Timeout in ms.
+     * @return Number of available bytes.
      */
-    void setTimeout(uint32_t timeout)
-    {
-        m_timeout = timeout;
-    }
+    virtual int available()                                  = 0;
 
     /**
-     * Get the max. time to wait for data resp. for a connection.
+     * Read a single byte.
      *
-     * @return Timeout in ms.
+     * @return Byte or -1 if nothing is available.
      */
-    uint32_t getTimeout() const
-    {
-        return m_timeout;
-    }
+    virtual int read()                                       = 0;
+
+    /**
+     * Read the given number of bytes.
+     *
+     * @param[out] buffer   Data buffer
+     * @param[in]  size     Data buffer size in byte
+     *
+     * @return Number of read bytes or -1 in case of an error.
+     */
+    virtual int read(uint8_t* buffer, size_t size)           = 0;
+
+    /**
+     * Get the next byte without removing it from the receive buffer.
+     *
+     * @return Byte or -1 if nothing is available.
+     */
+    virtual int peek()                                       = 0;
+
+    /**
+     * Wait until all data is sent.
+     */
+    virtual void flush()                                     = 0;
+
+    /**
+     * Close the connection.
+     */
+    virtual void stop()                                      = 0;
+
+    /**
+     * Is the client connected?
+     *
+     * @return If connected, it will return 1 otherwise 0.
+     */
+    virtual uint8_t connected()                              = 0;
 
     /**
      * Is the client connected?
      *
      * @return If connected, it will return true otherwise false.
      */
-    operator bool() final
-    {
-        return (0U != connected());
-    }
-
-protected:
-
-    /** Max. time to wait for data resp. for a connection in ms. */
-    static const uint32_t DEFAULT_TIMEOUT = 5000U;
-
-    int                   m_socket;  /**< Socket of the connection, -1 if not connected. */
-    uint32_t              m_timeout; /**< Max. time to wait for data resp. for a connection in ms. */
-    int                   m_peeked;  /**< Byte which was read by peek(), -1 if there is none. */
-
-private:
-
-    WiFiClient(const WiFiClient& client);
-    WiFiClient& operator=(const WiFiClient& client);
+    virtual operator bool()                                  = 0;
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif /* WIFICLIENT_H */
+#endif /* CLIENT_H */
 
 /** @} */

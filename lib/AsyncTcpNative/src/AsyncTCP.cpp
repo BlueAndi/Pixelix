@@ -496,7 +496,7 @@ AsyncServer::AsyncServer(uint16_t port) :
 {
 }
 
-AsyncServer::AsyncServer(IPAddress addr, uint16_t port) :
+AsyncServer::AsyncServer(const IPAddress& addr, uint16_t port) :
     m_port(port),
     m_addr(addr),
     m_socket(-1),

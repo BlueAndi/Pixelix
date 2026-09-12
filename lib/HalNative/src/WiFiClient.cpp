@@ -63,7 +63,7 @@
  *****************************************************************************/
 
 WiFiClient::WiFiClient() :
-    Stream(),
+    Client(),
     m_socket(-1),
     m_timeout(DEFAULT_TIMEOUT),
     m_peeked(-1)

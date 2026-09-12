@@ -114,6 +114,9 @@
 /** Read a byte from the program memory. */
 #define pgm_read_byte(addr) (*reinterpret_cast<const uint8_t*>(addr))
 
+/** Read a byte from the near program memory. */
+#define pgm_read_byte_near(addr) (*reinterpret_cast<const uint8_t*>(addr))
+
 /** Read a word from the program memory. */
 #define pgm_read_word(addr) (*reinterpret_cast<const uint16_t*>(addr))
 
@@ -128,6 +131,9 @@
 
 /** Get the length of a string in the program memory. */
 #define strlen_P strlen
+
+/** Get the length of a string in the program memory, limited to a max. length. */
+#define strnlen_P strnlen
 
 /** Copy a string from the program memory. */
 #define strcpy_P strcpy
@@ -203,6 +209,14 @@ extern uint32_t esp_log_timestamp(void);
  * @param[in] ms    Time in ms
  */
 extern void delay(unsigned long ms);
+
+/**
+ * Give the other threads a chance to run.
+ *
+ * On the target it lets the scheduler switch the task and feeds the watchdog.
+ * Libraries call it in their blocking wait loops, e.g. the MQTT client.
+ */
+extern void yield();
 
 /**
  * Get timestamp in us since the program is running.

@@ -30,8 +30,9 @@
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * Counterpart of the Arduino WiFiClientSecure. The host has no TLS stack
- * available, therefore a connection attempt fails. Everything which uses plain
- * HTTP works, only HTTPS does not. See the note in connect().
+ * available, therefore a connection attempt fails. Everything which uses a
+ * plain connection works, e.g. HTTP and MQTT, only the TLS secured variants
+ * HTTPS and MQTTS do not. See the note in connect().
  *
  * @addtogroup HAL_NATIVE
  *
@@ -85,7 +86,7 @@ public:
      * Connect to the given host.
      *
      * The host has no TLS stack, therefore it always fails. The reason is
-     * logged once, so the user knows why a HTTPS request doesn't work.
+     * logged once, so the user knows why a secured connection doesn't work.
      *
      * @param[in] host  Host name or address.
      * @param[in] port  Port of the host.
@@ -93,6 +94,35 @@ public:
      * @return Always 0, the connection can not be established.
      */
     int connect(const char* host, uint16_t port) final;
+
+    /* The overloads of the base class shall not be hidden by the one above. */
+    using WiFiClient::connect;
+
+    /**
+     * Set the max. time to wait for data resp. for a connection.
+     *
+     * Note, the Arduino WiFiClientSecure takes seconds here, in difference to
+     * the WiFiClient which takes ms. The unit is kept, so a caller which is
+     * written for the target behaves on the host in the same way.
+     *
+     * @param[in] timeout   Timeout in s.
+     */
+    void setTimeout(uint32_t timeout)
+    {
+        WiFiClient::setTimeout(timeout * 1000U);
+    }
+
+    /**
+     * Set the max. time to wait for the TLS handshake.
+     *
+     * There is no TLS at all, therefore there is nothing to configure.
+     *
+     * @param[in] timeout   Timeout in s.
+     */
+    void setHandshakeTimeout(uint32_t timeout)
+    {
+        (void)timeout;
+    }
 
     /**
      * Don't verify the certificate of the server.
@@ -114,6 +144,30 @@ public:
     void setCACert(const char* rootCA)
     {
         (void)rootCA;
+    }
+
+    /**
+     * Set the client certificate.
+     *
+     * There is no TLS at all, therefore there is nothing to configure.
+     *
+     * @param[in] clientCa  Certificate in PEM format.
+     */
+    void setCertificate(const char* clientCa)
+    {
+        (void)clientCa;
+    }
+
+    /**
+     * Set the private key of the client certificate.
+     *
+     * There is no TLS at all, therefore there is nothing to configure.
+     *
+     * @param[in] privateKey    Private key in PEM format.
+     */
+    void setPrivateKey(const char* privateKey)
+    {
+        (void)privateKey;
     }
 
 private:

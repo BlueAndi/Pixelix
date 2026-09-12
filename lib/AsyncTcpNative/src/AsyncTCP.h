@@ -470,7 +470,7 @@ public:
      * @param[in] addr  IP address, the server binds to.
      * @param[in] port  Port number, the server listens on.
      */
-    AsyncServer(IPAddress addr, uint16_t port);
+    AsyncServer(const IPAddress& addr, uint16_t port);
 
     /**
      * Destroys the server.

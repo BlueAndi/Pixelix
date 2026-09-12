@@ -59,6 +59,16 @@
  *****************************************************************************/
 
 /**
+ * Type of a string literal in the program memory.
+ *
+ * Counterpart of the Arduino one, which is a incomplete type as well. It is
+ * only used to select the overload, which reads the string from the program
+ * memory. On the host there is no program memory, therefore F() and PSTR()
+ * provide a plain const char* and the overload is never selected.
+ */
+class __FlashStringHelper;
+
+/**
  * String class for test purposes only.
  */
 class String
@@ -1073,6 +1083,38 @@ public:
         if (m_stdStr.length() > index)
         {
             m_stdStr.erase(index, count);
+        }
+    }
+
+    /**
+     * Replace every occurence of the given character.
+     *
+     * @param[in] find          Character to search for.
+     * @param[in] replacement   Character which replaces it.
+     */
+    void replace(char find, char replacement)
+    {
+        std::replace(m_stdStr.begin(), m_stdStr.end(), find, replacement);
+    }
+
+    /**
+     * Replace every occurence of the given string.
+     *
+     * @param[in] find          String to search for.
+     * @param[in] replacement   String which replaces it.
+     */
+    void replace(const String& find, const String& replacement)
+    {
+        if (false == find.m_stdStr.empty())
+        {
+            size_t pos = m_stdStr.find(find.m_stdStr);
+
+            while (std::string::npos != pos)
+            {
+                m_stdStr.replace(pos, find.m_stdStr.length(), replacement.m_stdStr);
+
+                pos = m_stdStr.find(find.m_stdStr, pos + replacement.m_stdStr.length());
+            }
         }
     }
 
