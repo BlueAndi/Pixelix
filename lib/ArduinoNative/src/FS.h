@@ -169,7 +169,15 @@ public:
 
     size_t read(uint8_t* buf, size_t size)
     {
-        return fread(buf, 1, size, m_fd.get());
+        size_t readBytesCount = 0U;
+
+        if ((nullptr != m_fd) &&
+            (nullptr != buf))
+        {
+            readBytesCount = fread(buf, 1, size, m_fd.get());
+        }
+
+        return readBytesCount;
     }
 
     size_t readBytes(char* buffer, size_t length)
@@ -179,7 +187,14 @@ public:
 
     bool seek(uint32_t pos, SeekMode mode)
     {
-        return (0 == fseek(m_fd.get(), pos, mode));
+        bool isSuccessful = false;
+
+        if (nullptr != m_fd)
+        {
+            isSuccessful = (0 == fseek(m_fd.get(), pos, mode));
+        }
+
+        return isSuccessful;
     }
 
     bool seek(uint32_t pos)
@@ -189,7 +204,20 @@ public:
 
     size_t position() const
     {
-        return ftell(m_fd.get());
+        size_t currPos = 0U;
+
+        /* A directory has no file handle, therefore the position is always 0. */
+        if (nullptr != m_fd)
+        {
+            long pos = ftell(m_fd.get());
+
+            if (0 <= pos)
+            {
+                currPos = static_cast<size_t>(pos);
+            }
+        }
+
+        return currPos;
     }
 
     size_t size() const;

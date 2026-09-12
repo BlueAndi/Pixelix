@@ -273,6 +273,9 @@ jobs:
     # application or modify the filesystem/settings are excluded, because they
     # would break the test run itself.
     #
+    # The sensor endpoints are excluded as well, because the native environment
+    # has no sensors at all and therefore they can not be verified here.
+    #
     # Only valid data is generated (positive mode). Remove the mode option to
     # let schemathesis fuzz the API with invalid data as well.
     - name: Verify the REST API against the OpenAPI specification
@@ -292,7 +295,16 @@ jobs:
           --exclude-operation-id writeFile \
           --exclude-operation-id deleteFile \
           --exclude-operation-id setSetting \
-          --exclude-operation-id clearCoredump
+          --exclude-operation-id clearCoredump \
+          --exclude-operation-id getTemperature \
+          --exclude-operation-id getHumidity \
+          --exclude-operation-id getIlluminance \
+          --exclude-operation-id getStateOfCharge \
+          --exclude-operation-id getFreeHeap \
+          --exclude-operation-id getMinFreeHeap \
+          --exclude-operation-id getMaxAllocHeap \
+          --exclude-operation-id getSignalStrength \
+          --exclude-operation-id getUptime
 
     - name: Stop the native application
       if: always()

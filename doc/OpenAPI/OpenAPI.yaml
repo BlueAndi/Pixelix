@@ -188,6 +188,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DisplayPowerState"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/channel:
@@ -212,6 +218,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Channel"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -246,6 +258,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/chicagobus:
@@ -271,6 +289,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChicagoBusConfig"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -300,6 +324,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /display/uid/{uid}/chicagobusroutes:
     parameters:
       - $ref: "#/components/parameters/uid"
@@ -324,6 +354,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChicagoBusRoutes"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/chicagobusdirections:
@@ -356,6 +392,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChicagoBusDirections"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/chicagobusstops:
@@ -393,6 +435,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ChicagoBusStops"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/config:
@@ -418,6 +466,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Config"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -448,6 +502,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/countdown:
@@ -472,6 +532,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Countdown"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -524,6 +590,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/dateTime:
@@ -548,6 +620,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DateTime"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -606,6 +684,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/grabConfig:
@@ -630,6 +714,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GrabConfig"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -694,6 +784,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/host:
@@ -718,6 +814,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Host"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -746,6 +848,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/ipAddress:
@@ -770,6 +878,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IPAddress"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -798,6 +912,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/github:
@@ -822,6 +942,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Github"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -856,6 +982,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/lamp/{lampId}:
@@ -887,6 +1019,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Lamp"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -922,6 +1060,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/lamps:
@@ -946,6 +1090,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Lamps"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/location:
@@ -970,6 +1120,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Location"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1004,6 +1160,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/makapixCfg:
@@ -1028,6 +1190,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MakapixConfig"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1062,6 +1230,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/makapixPlayCtrl:
@@ -1086,6 +1260,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MakapixPlaybackStatus"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1146,6 +1326,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/makapixProvision:
@@ -1170,6 +1356,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MakapixProvisionStatus"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1193,6 +1385,12 @@ paths:
                 $ref: "#/components/schemas/Ok"
         "400":
           description: Player already provisioned or provisioning already pending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Plugin UID or topic is unknown
           content:
             application/json:
               schema:
@@ -1221,6 +1419,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OMWeather"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1281,6 +1485,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/signalDetector:
@@ -1305,6 +1515,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SignalDetector"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1375,6 +1591,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/slots:
@@ -1399,6 +1621,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SlotsFileName"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
       tags:
         - MultiIconPlugin
@@ -1427,6 +1655,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/slot/{id}:
@@ -1458,6 +1692,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SlotFileName"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
       tags:
         - MultiIconPlugin
@@ -1490,6 +1730,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/text:
@@ -1515,6 +1761,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Text"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1556,6 +1808,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/uid/{uid}/weather:
@@ -1580,6 +1838,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Weather"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -1633,6 +1897,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "404":
+          description: Plugin UID or topic is unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /display/slots:
@@ -1695,6 +1965,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Slot"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /fileMgrService/files:
@@ -2011,7 +2287,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MqttServiceSettings"
+                $ref: "#/components/schemas/Ok"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /plugin/install:
@@ -2393,6 +2675,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Setting"
+        "400":
+          description: Key not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
     post:
@@ -2609,7 +2897,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TimerServiceTimer"
+                $ref: "#/components/schemas/Ok"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
   /coredump:
@@ -3389,7 +3683,7 @@ components:
         data:
           type: object
           required:
-            - timerSettings
+            - mqttSettings
           properties:
             mqttSettings:
               type: array

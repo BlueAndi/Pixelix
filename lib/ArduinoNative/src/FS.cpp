@@ -64,18 +64,23 @@ fs::FS NativeFS;
 size_t fs::File::size() const
 {
     size_t fileSize = 0U;
-    size_t currPos  = ftell(m_fd.get());
 
-    if (0 == fseek(m_fd.get(), 0, SEEK_END))
+    /* A directory has no file handle, therefore its size is always 0. */
+    if (nullptr != m_fd)
     {
-        long pos = ftell(m_fd.get());
+        size_t currPos = position();
 
-        if (0 <= pos)
+        if (0 == fseek(m_fd.get(), 0, SEEK_END))
         {
-            fileSize = pos;
-        }
+            long pos = ftell(m_fd.get());
 
-        (void)fseek(m_fd.get(), currPos, SEEK_SET);
+            if (0 <= pos)
+            {
+                fileSize = pos;
+            }
+
+            (void)fseek(m_fd.get(), currPos, SEEK_SET);
+        }
     }
 
     return fileSize;

@@ -908,82 +908,91 @@ static void handleSetting(AsyncWebServerRequest* request)
         }
         else
         {
-            JsonVariant   dataObj = RestUtil::prepareRspSuccess(jsonDoc);
             const String& key     = request->arg("key");
             KeyValue*     setting = settings.getSettingByKey(key.c_str());
 
-            dataObj["key"]        = setting->getKey();
-            dataObj["name"]       = setting->getName();
-
-            switch (setting->getValueType())
+            if (nullptr == setting)
             {
-            case KeyValue::TYPE_STRING: {
-                KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
-
-                dataObj["value"]      = kvStr->getValue();
-                dataObj["minlength"]  = kvStr->getMinLength();
-                dataObj["maxlength"]  = kvStr->getMaxLength();
-                dataObj["isSecret"]   = kvStr->isSecret();
+                RestUtil::prepareRspError(jsonDoc, "Key not found.");
+                httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
             }
-            break;
+            else
+            {
+                JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
-            case KeyValue::TYPE_BOOL: {
-                KeyValueBool* kvBool = static_cast<KeyValueBool*>(setting);
+                dataObj["key"]      = setting->getKey();
+                dataObj["name"]     = setting->getName();
 
-                dataObj["value"]     = kvBool->getValue();
-            }
-            break;
-
-            case KeyValue::TYPE_UINT8: {
-                KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(setting);
-
-                dataObj["value"]       = kvUInt8->getValue();
-                dataObj["min"]         = kvUInt8->getMin();
-                dataObj["max"]         = kvUInt8->getMax();
-            }
-            break;
-
-            case KeyValue::TYPE_INT32: {
-                KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(setting);
-
-                dataObj["value"]       = kvInt32->getValue();
-                dataObj["min"]         = kvInt32->getMin();
-                dataObj["max"]         = kvInt32->getMax();
-            }
-            break;
-
-            case KeyValue::TYPE_JSON: {
-                KeyValueJson*        kvJson   = static_cast<KeyValueJson*>(setting);
-                JsonObject           valueObj = dataObj.createNestedObject("value");
-                PsramJsonDocument    jsonBuffer(JSON_DOC_SIZE);
-                DeserializationError error = deserializeJson(jsonBuffer, kvJson->getValue());
-
-                if (DeserializationError::Ok != error.code())
+                switch (setting->getValueType())
                 {
-                    LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+                case KeyValue::TYPE_STRING: {
+                    KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
+
+                    dataObj["value"]      = kvStr->getValue();
+                    dataObj["minlength"]  = kvStr->getMinLength();
+                    dataObj["maxlength"]  = kvStr->getMaxLength();
+                    dataObj["isSecret"]   = kvStr->isSecret();
                 }
-                else
-                {
-                    /* Copy deserialized JSON object. */
-                    valueObj.set(jsonBuffer.as<JsonObject>());
-                }
-
-                dataObj["minlength"] = kvJson->getMinLength();
-                dataObj["maxlength"] = kvJson->getMaxLength();
-            }
-            break;
-
-            case KeyValue::TYPE_UINT32: {
-                KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(setting);
-
-                dataObj["value"]         = kvUInt32->getValue();
-                dataObj["min"]           = kvUInt32->getMin();
-                dataObj["max"]           = kvUInt32->getMax();
-            }
-            break;
-
-            default:
                 break;
+
+                case KeyValue::TYPE_BOOL: {
+                    KeyValueBool* kvBool = static_cast<KeyValueBool*>(setting);
+
+                    dataObj["value"]     = kvBool->getValue();
+                }
+                break;
+
+                case KeyValue::TYPE_UINT8: {
+                    KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(setting);
+
+                    dataObj["value"]       = kvUInt8->getValue();
+                    dataObj["min"]         = kvUInt8->getMin();
+                    dataObj["max"]         = kvUInt8->getMax();
+                }
+                break;
+
+                case KeyValue::TYPE_INT32: {
+                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(setting);
+
+                    dataObj["value"]       = kvInt32->getValue();
+                    dataObj["min"]         = kvInt32->getMin();
+                    dataObj["max"]         = kvInt32->getMax();
+                }
+                break;
+
+                case KeyValue::TYPE_JSON: {
+                    KeyValueJson*        kvJson   = static_cast<KeyValueJson*>(setting);
+                    JsonObject           valueObj = dataObj.createNestedObject("value");
+                    PsramJsonDocument    jsonBuffer(JSON_DOC_SIZE);
+                    DeserializationError error = deserializeJson(jsonBuffer, kvJson->getValue());
+
+                    if (DeserializationError::Ok != error.code())
+                    {
+                        LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+                    }
+                    else
+                    {
+                        /* Copy deserialized JSON object. */
+                        valueObj.set(jsonBuffer.as<JsonObject>());
+                    }
+
+                    dataObj["minlength"] = kvJson->getMinLength();
+                    dataObj["maxlength"] = kvJson->getMaxLength();
+                }
+                break;
+
+                case KeyValue::TYPE_UINT32: {
+                    KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(setting);
+
+                    dataObj["value"]         = kvUInt32->getValue();
+                    dataObj["min"]           = kvUInt32->getMin();
+                    dataObj["max"]           = kvUInt32->getMax();
+                }
+                break;
+
+                default:
+                    break;
+                }
             }
 
             settings.close();
@@ -1423,9 +1432,12 @@ static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& 
  */
 static void handleFilesystem(AsyncWebServerRequest* request)
 {
+    /* A whole page of files must fit into the JSON document, otherwise the
+     * response will be incomplete.
+     */
     String            content;
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 2048U;
+    const size_t      JSON_DOC_SIZE  = 4096U;
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1508,16 +1520,27 @@ static void handleFileGet(AsyncWebServerRequest* request)
     }
     else
     {
-        const String& path = request->arg("path");
+        /* Only a file can be sent. An empty path addresses the root directory,
+         * which would be handled like a file otherwise.
+         */
+        const String& path            = request->arg("path");
+        File          fd              = FILESYSTEM.open(path, "r");
+        bool          isFileAvailable = (true == fd) && (false == fd.isDirectory());
 
         LOG_INFO("File \"%s\" requested.", path.c_str());
 
-        if (false == FILESYSTEM.exists(path))
+        if (true == fd)
         {
-            String errorMsg  = "Invalid path ";
-            errorMsg        += path;
+            fd.close();
+        }
 
-            RestUtil::prepareRspError(jsonDoc, errorMsg.c_str());
+        if (false == isFileAvailable)
+        {
+            /* The requested path is not part of the error message on purpose.
+             * It may contain control characters, which would break the JSON
+             * response.
+             */
+            RestUtil::prepareRspError(jsonDoc, "Invalid path requested.");
 
             RestUtil::sendJsonRsp(request, jsonDoc, HttpStatus::STATUS_CODE_NOT_FOUND);
         }
