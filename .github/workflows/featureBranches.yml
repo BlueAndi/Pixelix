@@ -258,6 +258,35 @@ jobs:
           exit 1
         fi
 
+    # Every plugin which the OpenAPI specification describes shall be installed
+    # for the test, which needs more display slots than the default. The number
+    # of slots is evaluated during startup only, therefore the application is
+    # restarted afterwards.
+    - name: Increase the number of display slots
+      run: |
+        curl --silent --show-error --fail --user luke:skywalker \
+          --request POST --output /dev/null \
+          "http://localhost:8080/rest/api/v1/setting?key=max_slots&value=16"
+
+    - name: Restart the native application
+      run: |
+        kill "$(cat pixelix.pid)"
+        # Wait until the webserver is down.
+        for _ in $(seq 1 30); do
+          if ! curl --silent --output /dev/null http://localhost:8080/; then
+            break
+          fi
+          sleep 1
+        done
+        ./.pio/build/native/program >> pixelix.log 2>&1 &
+        echo $! > pixelix.pid
+        for _ in $(seq 1 30); do
+          if curl --silent --output /dev/null http://localhost:8080/; then
+            break
+          fi
+          sleep 1
+        done
+
     # Schemathesis requires Python 3.10 or higher, PlatformIO is not used
     # anymore from here on.
     - name: Set up Python for the REST API test
@@ -268,19 +297,29 @@ jobs:
     - name: Install schemathesis
       run: pip install schemathesis==4.27.0
 
+    # A plugin instance gets its unique id (UID) at runtime, therefore the UID
+    # can not be part of the OpenAPI specification. The plugins are installed
+    # first and their UIDs are written into the schemathesis configuration.
+    - name: Prepare the plugin UIDs for the REST API test
+      run: |
+        python ./scripts/prepare_api_test.py \
+          --spec ./doc/OpenAPI/OpenAPI.yaml \
+          --url http://localhost:8080/rest/api/v1 \
+          --user luke \
+          --password skywalker \
+          --output ./schemathesis.toml
+
     # Every REST API endpoint is called with generated data and the response is
     # verified against the OpenAPI specification. Endpoints which would stop the
     # application or modify the filesystem/settings are excluded, because they
     # would break the test run itself.
     #
-    # The sensor endpoints are excluded as well, because the native environment
-    # has no sensors at all and therefore they can not be verified here.
-    #
     # Only valid data is generated (positive mode). Remove the mode option to
     # let schemathesis fuzz the API with invalid data as well.
     - name: Verify the REST API against the OpenAPI specification
       run: |
-        schemathesis run ./doc/OpenAPI/OpenAPI.yaml \
+        schemathesis --config-file ./schemathesis.toml \
+          run ./doc/OpenAPI/OpenAPI.yaml \
           --url http://localhost:8080/rest/api/v1 \
           --auth luke:skywalker \
           --mode positive \
@@ -295,16 +334,7 @@ jobs:
           --exclude-operation-id writeFile \
           --exclude-operation-id deleteFile \
           --exclude-operation-id setSetting \
-          --exclude-operation-id clearCoredump \
-          --exclude-operation-id getTemperature \
-          --exclude-operation-id getHumidity \
-          --exclude-operation-id getIlluminance \
-          --exclude-operation-id getStateOfCharge \
-          --exclude-operation-id getFreeHeap \
-          --exclude-operation-id getMinFreeHeap \
-          --exclude-operation-id getMaxAllocHeap \
-          --exclude-operation-id getSignalStrength \
-          --exclude-operation-id getUptime
+          --exclude-operation-id clearCoredump
 
     - name: Stop the native application
       if: always()

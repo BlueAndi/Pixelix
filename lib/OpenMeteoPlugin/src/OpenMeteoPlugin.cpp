@@ -39,6 +39,7 @@
 #include <ArduinoJson.h>
 #include <Util.h>
 #include <math.h>
+#include <string.h>
 #include <HttpStatus.h>
 
 /******************************************************************************
@@ -57,9 +58,25 @@
  * Prototypes
  *****************************************************************************/
 
+static bool isUnitSupported(const char* unit, const char* const* supportedUnits, size_t supportedUnitCnt);
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** Supported temperature units. */
+static const char* TEMPERATURE_UNITS[] = {
+    "celsius",
+    "fahrenheit"
+};
+
+/** Supported wind speed units. */
+static const char* WIND_SPEED_UNITS[] = {
+    "mph",
+    "kmh",
+    "ms",
+    "kn"
+};
 
 /* Initialize Open-Meteo base URI.
  * Use http:// instead of https:// for less required heap memory for SSL connection.
@@ -378,9 +395,17 @@ bool OpenMeteoPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("Temperature unit not found or invalid type.");
     }
+    else if (false == isUnitSupported(jsonTemperatureUnit.as<const char*>(), TEMPERATURE_UNITS, UTIL_ARRAY_NUM(TEMPERATURE_UNITS)))
+    {
+        LOG_WARNING("Temperature unit is not supported.");
+    }
     else if (false == jsonWindSpeedUnit.is<String>())
     {
         LOG_WARNING("Wind unit not found or invalid type.");
+    }
+    else if (false == isUnitSupported(jsonWindSpeedUnit.as<const char*>(), WIND_SPEED_UNITS, UTIL_ARRAY_NUM(WIND_SPEED_UNITS)))
+    {
+        LOG_WARNING("Wind unit is not supported.");
     }
     else if (false == jsonWeatherInfo.is<uint32_t>())
     {
@@ -790,3 +815,33 @@ void OpenMeteoPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Is the given unit supported?
+ *
+ * @param[in] unit              The unit to check. May be nullptr.
+ * @param[in] supportedUnits    List of supported units.
+ * @param[in] supportedUnitCnt  Number of supported units in the list.
+ *
+ * @return If the unit is supported, it will return true otherwise false.
+ */
+static bool isUnitSupported(const char* unit, const char* const* supportedUnits, size_t supportedUnitCnt)
+{
+    bool   isSupported = false;
+    size_t idx         = 0U;
+
+    if (nullptr != unit)
+    {
+        while ((supportedUnitCnt > idx) && (false == isSupported))
+        {
+            if (0 == strcmp(supportedUnits[idx], unit))
+            {
+                isSupported = true;
+            }
+
+            ++idx;
+        }
+    }
+
+    return isSupported;
+}

@@ -328,6 +328,17 @@ private:
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
 
     /**
+     * Set the filter from the given JSON value.
+     *
+     * The filter is a JSON document by itself. It is accepted as string, as
+     * object and as array. A string which contains no valid JSON document will
+     * clear the filter.
+     *
+     * @param[in] jsonFilter    The filter as string, object or array.
+     */
+    void setFilter(const JsonVariantConst& jsonFilter);
+
+    /**
      * Request new data.
      *
      * @return If successful it will return true otherwise false.

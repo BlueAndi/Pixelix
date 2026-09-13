@@ -346,6 +346,9 @@ static void getSlotInfo(JsonObject& slot, uint16_t slotId)
     slot["isDisabled"] = config.isDisabled;
 }
 
+/** Required JSON document size for the information of a single slot in byte. */
+static const size_t SLOT_INFO_DOC_SIZE = 256U;
+
 /**
  * Get number of slots and which plugin is installed.
  * GET \c "/api/v1/display/slots"
@@ -354,8 +357,13 @@ static void getSlotInfo(JsonObject& slot, uint16_t slotId)
  */
 static void handleSlots(AsyncWebServerRequest* request)
 {
-    uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 4096U;
+    uint32_t      httpStatusCode    = HttpStatus::STATUS_CODE_OK;
+    DisplayMgr&   displayMgr        = DisplayMgr::getInstance();
+    const uint8_t maxSlots          = displayMgr.getMaxSlots();
+    /* Every slot is part of the response, therefore the required document size
+     * depends on the number of slots.
+     */
+    const size_t      JSON_DOC_SIZE = 512U + (static_cast<size_t>(maxSlots) * SLOT_INFO_DOC_SIZE);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -370,16 +378,15 @@ static void handleSlots(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant dataObj    = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray   slotArray  = dataObj.createNestedArray("slots");
-        uint8_t     slotId     = 0U;
-        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        JsonVariant dataObj   = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray   slotArray = dataObj.createNestedArray("slots");
+        uint8_t     slotId    = 0U;
 
         /* Add max. number of slots */
-        dataObj["maxSlots"]    = displayMgr.getMaxSlots();
+        dataObj["maxSlots"]   = maxSlots;
 
         /* Add which plugin's are installed. */
-        for (slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
+        for (slotId = 0U; slotId < maxSlots; ++slotId)
         {
             JsonObject slot = slotArray.createNestedObject();
 
@@ -725,7 +732,12 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
  */
 static void handlePlugins(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    uint8_t                    pluginTypeListLength = 0U;
+    const PluginList::Element* pluginTypeList       = PluginList::getList(pluginTypeListLength);
+    /* The name of every plugin type is part of the response, therefore the
+     * required document size depends on the number of plugin types.
+     */
+    const size_t      JSON_DOC_SIZE                 = 512U + JSON_ARRAY_SIZE(pluginTypeListLength);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -741,11 +753,9 @@ static void handlePlugins(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant                dataObj              = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray                  pluginArray          = dataObj.createNestedArray("plugins");
-        uint8_t                    pluginTypeListLength = 0U;
-        const PluginList::Element* pluginTypeList       = PluginList::getList(pluginTypeListLength);
-        uint8_t                    idx                  = 0U;
+        JsonVariant dataObj     = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray   pluginArray = dataObj.createNestedArray("plugins");
+        uint8_t     idx         = 0U;
 
         while (pluginTypeListLength > idx)
         {

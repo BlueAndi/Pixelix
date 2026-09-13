@@ -19,6 +19,8 @@
         "name": "MqttService"
     }, {
         "name": "SettingsService"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

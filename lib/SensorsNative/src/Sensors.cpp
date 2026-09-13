@@ -34,6 +34,9 @@
  * Includes
  *****************************************************************************/
 #include "Sensors.h"
+#include "SensorSim.h"
+
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -55,8 +58,16 @@
  * Local Variables
  *****************************************************************************/
 
-/** The host has no sensor at all, therefore the list is empty. */
-static SensorDataProviderImpl gSensorDataProviderImpl(nullptr, 0U);
+/** The host has no physical sensor at all, therefore it is simulated. */
+static SensorSim gSensorSim;
+
+/** A list of all sensors. */
+static ISensor* gSensors[] = {
+    &gSensorSim
+};
+
+/** The sensor data provider with all simulated sensors. */
+static SensorDataProviderImpl gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors));
 
 /******************************************************************************
  * Public Methods
@@ -81,7 +92,7 @@ extern SensorDataProviderImpl* Sensors::getSensorDataProviderImpl()
 
 extern const SensorChannelDefaultValue* Sensors::getSensorChannelDefaultValues(uint8_t& values)
 {
-    /* Without a sensor there is no channel, which could be adjusted. */
+    /* The simulated sensor needs no tolerance compensation. */
     values = 0U;
 
     return nullptr;

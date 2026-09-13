@@ -411,10 +411,19 @@ void GrabViaRestPlugin::update(YAGfx& gfx)
 void GrabViaRestPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
+    /* The filter is a JSON document by itself, which is provided as string.
+     * A not configured filter is provided as empty string.
+     */
+    String filter;
+
+    if (false == m_filter.isNull())
+    {
+        (void)serializeJson(m_filter, filter);
+    }
 
     jsonCfg["method"]       = m_method;
     jsonCfg["url"]          = m_url;
-    jsonCfg["filter"]       = m_filter;
+    jsonCfg["filter"]       = filter;
     jsonCfg["iconFileName"] = m_iconFileName;
     jsonCfg["format"]       = m_format;
     jsonCfg["multiplier"]   = m_multiplier;
@@ -442,7 +451,8 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON URL not found or invalid type.");
     }
-    else if ((false == jsonFilter.is<JsonObjectConst>()) &&
+    else if ((false == jsonFilter.is<String>()) &&
+             (false == jsonFilter.is<JsonObjectConst>()) &&
              (false == jsonFilter.is<JsonArrayConst>()))
     {
         LOG_WARNING("JSON filter not found or invalid type.");
@@ -470,10 +480,11 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_method                                   = jsonMethod.as<const char*>();
         m_url                                      = jsonUrl.as<const char*>();
-        m_filter                                   = jsonFilter;
         m_format                                   = jsonFormat.as<const char*>();
         m_multiplier                               = jsonMultiplier.as<float>();
         m_offset                                   = jsonOffset.as<float>();
+
+        setFilter(jsonFilter);
 
         if (m_iconFileName != newIconFileName)
         {
@@ -507,6 +518,25 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     }
 
     return status;
+}
+
+void GrabViaRestPlugin::setFilter(const JsonVariantConst& jsonFilter)
+{
+    if (false == jsonFilter.is<String>())
+    {
+        m_filter = jsonFilter;
+    }
+    else
+    {
+        DeserializationError error = deserializeJson(m_filter, jsonFilter.as<const char*>());
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("Filter is no valid JSON document.");
+
+            m_filter.clear();
+        }
+    }
 }
 
 bool GrabViaRestPlugin::startHttpRequest()

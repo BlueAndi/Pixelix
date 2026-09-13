@@ -302,9 +302,18 @@ void GrabViaMqttPlugin::update(YAGfx& gfx)
 void GrabViaMqttPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
+    /* The filter is a JSON document by itself, which is provided as string.
+     * A not configured filter is provided as empty string.
+     */
+    String filter;
+
+    if (false == m_filter.isNull())
+    {
+        (void)serializeJson(m_filter, filter);
+    }
 
     jsonCfg["path"]         = m_path;
-    jsonCfg["filter"]       = m_filter;
+    jsonCfg["filter"]       = filter;
     jsonCfg["iconFileName"] = m_iconFileName;
     jsonCfg["format"]       = m_format;
     jsonCfg["multiplier"]   = m_multiplier;
@@ -327,7 +336,8 @@ bool GrabViaMqttPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON path not found or invalid type.");
     }
-    else if ((false == jsonFilter.is<JsonObjectConst>()) &&
+    else if ((false == jsonFilter.is<String>()) &&
+             (false == jsonFilter.is<JsonObjectConst>()) &&
              (false == jsonFilter.is<JsonArrayConst>()))
     {
         LOG_WARNING("JSON filter not found or invalid type.");
@@ -361,10 +371,11 @@ bool GrabViaMqttPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         }
 
         m_path       = jsonPath.as<const char*>();
-        m_filter     = jsonFilter;
         m_format     = jsonFormat.as<const char*>();
         m_multiplier = jsonMultiplier.as<float>();
         m_offset     = jsonOffset.as<float>();
+
+        setFilter(jsonFilter);
 
         if (m_iconFileName != newIconFileName)
         {
@@ -400,6 +411,25 @@ bool GrabViaMqttPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     }
 
     return status;
+}
+
+void GrabViaMqttPlugin::setFilter(const JsonVariantConst& jsonFilter)
+{
+    if (false == jsonFilter.is<String>())
+    {
+        m_filter = jsonFilter;
+    }
+    else
+    {
+        DeserializationError error = deserializeJson(m_filter, jsonFilter.as<const char*>());
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("Filter is no valid JSON document.");
+
+            m_filter.clear();
+        }
+    }
 }
 
 void GrabViaMqttPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantConst filter, JsonArray& values)
