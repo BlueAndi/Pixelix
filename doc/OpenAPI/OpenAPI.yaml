@@ -14,7 +14,7 @@ info:
       * ```/display/alias/{alias}```
 
     The REST API description focus only on the UID for the sake of maintainability.
-  version: 1.9.0
+  version: 1.10.0
   title: Pixelix REST API
   termsOfService: ""
   license:

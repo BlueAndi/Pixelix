@@ -30,9 +30,9 @@
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * ArduinoJson escapes only the control characters which have a short escape
- * sequence (\" \\ \b \f \n \r \t). Every other control character is part of the
- * output as raw byte, which is not allowed by RFC 8259 and destroys the JSON
- * format for the receiver.
+ * sequence: backspace, form feed, line feed, carriage return and horizontal
+ * tab. Every other control character is part of the output as raw byte, which
+ * is not allowed by RFC 8259 and destroys the JSON format for the receiver.
  *
  * A string value may contain such a character, because it is received from the
  * REST API, the MQTT API or the webinterface. Escaping during serialization
