@@ -46,7 +46,7 @@ Each plugin is identified by its unique UID.
 
 ## Generic plugins
 
-The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0).
+The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0).
 
 ### GrabViaMqttPlugin
 
@@ -58,7 +58,7 @@ Whether the icon scrolls together with the text or whether it stands still and o
 ### GrabViaRestPlugin
 
 The plugin can grab information in JSON format via REST API and shows it on the display.
-Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/GrabViaRestPlugin).
+Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/GrabViaRestPlugin).
 [Configuration examples](./grabConfigs/rest/) may help to configure.
 
 Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
@@ -66,7 +66,7 @@ Whether the icon scrolls together with the text or whether it stands still and o
 ### IconTextPlugin
 
 The IconTextPlugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.\
-Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/IconTextPlugin).
+Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/IconTextPlugin).
 
 A too long text will scroll. Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`). By default only the text scrolls.
 
@@ -75,7 +75,7 @@ If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
 ### IconTextLampPlugin
 
 The IconTextLampPlugin shows an icon on left side, text on right side and lamps at the bottom.\
-Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/IconTextLampPlugin).
+Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/IconTextLampPlugin).
 
 A too long text will scroll. Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`). By default only the text scrolls.
 
@@ -84,7 +84,7 @@ If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
 ### MultiIconPlugin
 
 The MultiIconPlugin shows multiple icons on the display.\
-Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/MultiIconPlugin).
+Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/MultiIconPlugin).
 
 ## Dedicated plugins
 
@@ -115,7 +115,7 @@ All configuration can also be set via the REST API, and route information can be
 ### CountdownPlugin
 
 The CountdownPlugin shows the remaining days until a configured target date.\
-Target date and the description of the target day (plural/singular form) can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/CountdownPlugin).
+Target date and the description of the target day (plural/singular form) can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/CountdownPlugin).
 
 Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
 
@@ -131,7 +131,7 @@ Configure the date and time format in the plugin configuration JSON file. The fo
 
 By default the local time (see time zone in the settings) is used. It can be overwritten by the plugin configuration.
 
-It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/DateTimePlugin).
+It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/DateTimePlugin).
 
 ### DDPPlugin
 
@@ -176,7 +176,7 @@ The GameOfLifePlugin shows the game of life game on the display.
 ### GruenbeckPlugin
 
 The GruenbeckPlugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.\
-The IP address of the Gruenbeck webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/GruenbeckPlugin).
+The IP address of the Gruenbeck webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/GruenbeckPlugin).
 
 Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
 
@@ -193,14 +193,14 @@ The plugin shows the effect from the film "Matrix" over the whole display.
 The OpenMeteoPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
 Information provided by [Open-Meteo](https://open-meteo.com/).\
 Its free for non-commerical use and there is no registration necessary, no API key required, neither credit card information!
-The coordinates (latitude & longitude) of your location and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/OpenMeteoPlugin).
+The coordinates (latitude & longitude) of your location and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/OpenMeteoPlugin).
 
 ### OpenWeatherPlugin
 
 The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
 Information provided by [OpenWeather](https://openweathermap.org/).\
 In order to use the plugin an API key is necessary, see [https://openweathermap.org/appid](https://openweathermap.org/appid) for further information.\
-The coordinates (latitude & longitude) of your location, your API key and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/OpenWeatherPlugin).
+The coordinates (latitude & longitude) of your location, your API key and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/OpenWeatherPlugin).
 
 ### RainbowPlugin
 
@@ -217,18 +217,18 @@ Each frequency must be detected for a specific configureable time.\
 As long as nothing is detected, the plugin will disable itself.\
 If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection. \
 Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."
-Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/SignalDetectorPlugin).
+Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SignalDetectorPlugin).
 
 ### SoundReactivePlugin
 
 The plugin shows octave frequency bands, depended on the environment sound.
 Required: A digital microphone (INMP441) is required, connected to the I2S port.
-The number of shown frequency bands can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/SoundReactivePlugin).
+The number of shown frequency bands can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SoundReactivePlugin).
 
 ### SunrisePlugin
 
 The SunrisePlugin shows the current sunrise / sunset times for a configured location.\
-The coordinates (latitude & longitude) of your location can be set via the [REST API]([REST.md#endpoint-base-uridisplayuidplugin-uidlocation](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/SunrisePlugin)).\
+The coordinates (latitude & longitude) of your location can be set via the [REST API]([REST.md#endpoint-base-uridisplayuidplugin-uidlocation](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SunrisePlugin)).\
 Powered by sunrise-sunset.org
 
 Configure the time format in the plugin configuration JSON file. The format itself is according to strftime(). For colorization text properties can be added.
@@ -251,7 +251,7 @@ The TestPlugin can be used to check whether the LED matrix topology (layout) is 
 
 The VolumioPlugin shows the current VOLUMIO state as icon and the played artist/title.\
 If the VOLUMIO server is offline, the plugin gets automatically disabled, otherwise enabled.\
-The host address of the Volumio webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.9.0#/VolumioPlugin).
+The host address of the Volumio webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/VolumioPlugin).
 
 Whether the icon scrolls together with the text or whether it stands still and only the text scrolls next to it, can be configured per plugin instance (`scrollIcon`), see [IconTextPlugin](#icontextplugin).
 
