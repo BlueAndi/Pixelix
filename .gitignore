@@ -1,5 +1,7 @@
 *.code-workspace
 .claude/settings.local.json
+.claude/worktrees/
+.superpowers/
 __pycache__
 .DS_Store
 .pio
