@@ -1,0 +1,124 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @file   SDLInterface.h
+ * @brief  SDL Interface for native LCD Simulation
+ * @author Norbert Schulz <github@schulznorbert.de>
+ *
+ * @addtogroup LED Grid Simulator
+ * @{
+ */
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+#include <SDL3/SDL.h>
+
+/******************************************************************************
+ * Macros
+ *****************************************************************************/
+
+/******************************************************************************
+ * Types and Classes
+ *****************************************************************************/
+
+/**
+ * @brief Manages the SDL video subsystem
+ * @details Initializes SDL resources on request and releases them during
+ *          shutdown or destruction. This class cannot be copied or copy-assigned.
+ */
+class SDLInterface
+{
+public:
+
+    /**
+     * @brief Constructs an SDL interface without initializing SDL.
+     */
+    SDLInterface()                               = default;
+
+    /** @brief Copy construction is disabled because this class owns SDL resources. */
+    SDLInterface(const SDLInterface&)            = delete;
+
+    /** @brief Copy assignment is disabled because this class owns SDL resources. */
+    SDLInterface& operator=(const SDLInterface&) = delete;
+
+    /**
+     * @brief Shuts down the interface and releases its SDL resources.
+     */
+    virtual ~SDLInterface();
+
+    /**
+     * @brief Initializes SDL and creates the window and renderer.
+     * @param width The width of the Led Matrix in leds  .
+     * @param height The height of the Led Matrix in pixels.
+     * @return true if initialization succeeds; leds, false.
+     */
+    bool initialize(int width, int height);
+
+    /**
+     * @brief Releases the renderer, window, and SDL resources.
+     * @details Safe to call more than once or after a failed initialization.
+     */
+    void shutdown();
+
+    /**
+     * @brief Begins the SDL UI update cycle.
+     */
+    void beginUpdate();
+
+    /**
+     * @brief Finishes the SDL UI update cycle.
+     */
+    void finishUpdate();
+
+    /**
+     * @brief Gets the SDL window managed by this interface.
+     * @return A non-owning pointer to the window, or nullptr if unavailable.
+     */
+    SDL_Window* getWindow() const
+    {
+        return m_window;
+    }
+
+    /**
+     * @brief Gets the SDL renderer managed by this interface.
+     * @return A non-owning pointer to the renderer, or nullptr if unavailable.
+     */
+    SDL_Renderer* getRenderer() const
+    {
+        return m_renderer;
+    }
+
+private:
+
+    SDL_Window*   m_window          = nullptr;
+    SDL_Renderer* m_renderer        = nullptr;
+
+    bool          m_sdl_initialized = false;
+};
+
+/** @} */

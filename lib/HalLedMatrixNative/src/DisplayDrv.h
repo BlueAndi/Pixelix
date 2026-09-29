@@ -60,6 +60,7 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+class LedGridSim;
 
 /**
  * Display driver for the native environment.
@@ -149,6 +150,7 @@ public:
 
 private:
 
+    LedGridSim* m_simulationInterface; /**< Simulation interface to show the framebuffer on the host. */
     /** Number of pixels of the display. */
     static const size_t PIXEL_COUNT = static_cast<size_t>(CONFIG_LED_MATRIX_WIDTH) * static_cast<size_t>(CONFIG_LED_MATRIX_HEIGHT);
 

@@ -25,22 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @file   DisplayDrv.cpp
- * @brief  Display driver for the native environment
- * @author Andreas Merkle <web@blue-andi.de>
+ * @file   SDLInterface.cpp
+ * @brief  SDL Interface for native LCD Simulation
+ * @author Norbert Schulz <github@schulznorbert.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "DisplayDrv.h"
-
+#include <SDL3/SDL.h>
 #include "SDLInterface.h"
-#include "LedGridSim.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Macros
@@ -53,7 +47,6 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
-static LedGridSim theLedGridSim; /**< Simulation pixel interface  */
 
 /******************************************************************************
  * Local Variables
@@ -63,81 +56,89 @@ static LedGridSim theLedGridSim; /**< Simulation pixel interface  */
  * Public Methods
  *****************************************************************************/
 
-DisplayDrv::DisplayDrv() :
-    IDisplayDrv(),
-    m_framebuffer(),
-    m_brightness(UINT8_MAX),
-    m_isOn(false),
-    m_simulationInterface(&theLedGridSim)
+SDLInterface::~SDLInterface()
 {
+    shutdown();
 }
 
-DisplayDrv::~DisplayDrv()
+bool SDLInterface::initialize(int width, int height)
 {
-    delete m_simulationInterface;
-}
+    if (m_sdl_initialized)
+    {
+        return m_window != nullptr && m_renderer != nullptr;
+    }
 
-bool DisplayDrv::begin()
-{
-    clear();
+    if (!SDL_Init(SDL_INIT_VIDEO))
+    {
+        SDL_Log("SDL_Init failed: %s", SDL_GetError());
+        return false;
+    }
+    m_sdl_initialized = true;
 
-    m_isOn = true;
+    m_window          = SDL_CreateWindow(
+        "Pixelix LED Grid Simulation",
+        900,
+        400,
+        SDL_WINDOW_RESIZABLE);
+    if (m_window == nullptr)
+    {
+        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
+        shutdown();
+        return false;
+    }
 
+    m_renderer = SDL_CreateRenderer(m_window, nullptr);
+    if (m_renderer == nullptr)
+    {
+        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
+        shutdown();
+        return false;
+    }
+
+    SDL_SetRenderVSync(m_renderer, 1);
     return true;
 }
 
-void DisplayDrv::show(const YAGfxBitmap& bitmap)
+void SDLInterface::shutdown()
 {
-    uint16_t x      = 0U;
-    uint16_t y      = 0U;
-    uint16_t width  = bitmap.getWidth();
-    uint16_t height = bitmap.getHeight();
-
-    if (CONFIG_LED_MATRIX_WIDTH < width)
+    if (m_renderer != nullptr)
     {
-        width = CONFIG_LED_MATRIX_WIDTH;
+        SDL_DestroyRenderer(m_renderer);
+        m_renderer = nullptr;
     }
 
-    if (CONFIG_LED_MATRIX_HEIGHT < height)
+    if (m_window != nullptr)
     {
-        height = CONFIG_LED_MATRIX_HEIGHT;
+        SDL_DestroyWindow(m_window);
+        m_window = nullptr;
     }
 
-    uint32_t buffer[CONFIG_LED_MATRIX_HEIGHT * CONFIG_LED_MATRIX_WIDTH];
-
-    int      I = 0;
-    for (y = 0U; y < height; ++y)
+    if (m_sdl_initialized)
     {
-        for (x = 0U; x < width; ++x)
-        {
-            buffer[x + (y * CONFIG_LED_MATRIX_WIDTH)] = bitmap.getColor(x, y);
-        }
-    }
-
-    if (!m_simulationInterface->isInitialized())
-    {
-        /* Initialize the simulation interface. */
-        m_simulationInterface->initialize(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT);
-    }
-
-    if (m_simulationInterface->dispatchEvents())
-    {
-        m_simulationInterface->update(buffer);
-    }
-    else
-    {
-        exit(0); /* Window Close event received, exit the application. */
+        SDL_Quit();
+        m_sdl_initialized = false;
     }
 }
 
-void DisplayDrv::clear()
+void SDLInterface::beginUpdate()
 {
-    size_t index = 0U;
-
-    for (index = 0U; index < PIXEL_COUNT; ++index)
+    if (!m_sdl_initialized)
     {
-        m_framebuffer[index] = ColorDef::BLACK;
+        return;
     }
+
+    SDL_SetRenderDrawColor(m_renderer, 30, 30, 30, 255);
+    SDL_RenderClear(m_renderer);
+}
+
+void SDLInterface::finishUpdate()
+{
+    if (!m_sdl_initialized)
+    {
+        return;
+    }
+
+    SDL_RenderPresent(m_renderer);
 }
 
 /******************************************************************************
