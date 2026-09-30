@@ -11,7 +11,7 @@
 - [Installation Of git](#installation-of-git)
   - [Linux (Debian, Ubuntu)](#linux-debian-ubuntu)
   - [Windows](#windows)
-- [Installation Of Test Environment](#installation-of-test-environment)
+- [Installation of Native and Test Environment](#installation-of-native-and-test-environment)
   - [Linux (Debian, Ubuntu)](#linux-debian-ubuntu-1)
   - [Windows](#windows-1)
 - [Next Step](#next-step)
@@ -45,9 +45,11 @@ If you like to hack on the console/command shell, just [git for windows](https:/
 1. After git installation open a terminal (command line shell or powershell).
 2. ```git lfs install```
 
-## Installation Of Test Environment
+## Installation of Native and Test Environment
 
-The test environment is only necessary if you want to modify the sourcecode and test it afterwards.
+The test environment is only necessary if you want ro run Pixelix as a PC application or want
+to modify the sourcecode and test it afterwards.
+
 :raising_hand: If your only interesting in getting PIXELIX running on your target, skip this installation.
 
 ### Linux (Debian, Ubuntu)
@@ -56,6 +58,7 @@ The test environment is only necessary if you want to modify the sourcecode and 
 2. ```sudo apt install build-essential```
 3. ```sudo apt-get install manpages-dev```
 4. ```sudo apt-get install clang-format```
+5. ```sudo apt-get install libsdl3-dev```
 
 ### Windows
 
@@ -63,6 +66,7 @@ The test environment is only necessary if you want to modify the sourcecode and 
 2. Open MSYS2 UCRT64 terminal.
 3. Install the gcc compiler package: ```pacman -S mingw-w64-ucrt-x86_64-gcc```
 4. Install clang-format to be used by AI: ```pacman -S mingw-w64-ucrt-x86_64-clang```
+5. Install [SDL3](https://wiki.libsdl.org/SDL3/FrontPage) needed for LED Grid simulation:  ```pacman -S mingw-w64-ucrt-x86_64-sdl3```
 
 ## Next Step
 
