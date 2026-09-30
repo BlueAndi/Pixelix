@@ -67,6 +67,9 @@ static uint8_t gPinModes[MAX_PINS]  = { 0U };
 /** Level of every pin. There is no GPIO on the host, its just remembered. */
 static uint8_t gPinLevels[MAX_PINS] = { 0U };
 
+/** Start time for timing functions. */
+static const auto gTimerStartTime   = std::chrono::steady_clock::now();
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -85,16 +88,16 @@ static uint8_t gPinLevels[MAX_PINS] = { 0U };
 
 extern unsigned long millis()
 {
-    clock_t now = clock();
+    using namespace std::chrono;
 
-    return (now * 1000UL) / CLOCKS_PER_SEC;
+    return duration_cast<milliseconds>(steady_clock::now() - gTimerStartTime).count();
 }
 
 extern unsigned long micros()
 {
-    clock_t now = clock();
+    using namespace std::chrono;
 
-    return (now * 1000000UL) / CLOCKS_PER_SEC;
+    return duration_cast<microseconds>(steady_clock::now() - gTimerStartTime).count();
 }
 
 extern void delay(unsigned long ms)
