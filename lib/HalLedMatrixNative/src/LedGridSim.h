@@ -39,6 +39,8 @@
  * Includes
  *****************************************************************************/
 
+#include <YAGfxBitmap.h>
+
 #include <stdint.h>
 
 class SDLInterface;
@@ -80,7 +82,7 @@ public:
     /**
      * @brief Updates the ImGui UI.
      */
-    void update(const void* frameBuffer);
+    void update(const YAGfxBitmap& bitmap);
 
     /**
      * @brief Sets the power state of the simulated display.
@@ -124,7 +126,7 @@ protected:
     /**
      * @brief Renders the main display area of the ImGui window.
      */
-    void renderDisplay(const void* framebuffer);
+    void renderDisplay(const YAGfxBitmap& bitmap);
 
     /**
      * @brief Renders the menu bar at the top of the ImGui window.

@@ -174,7 +174,7 @@ bool LedGridSim::dispatchEvents()
     return continueRunning;
 }
 
-void LedGridSim::update(const void* frameBuffer)
+void LedGridSim::update(const YAGfxBitmap& bitmap)
 {
     if (!isInitialized())
     {
@@ -191,7 +191,7 @@ void LedGridSim::update(const void* frameBuffer)
     this->beginFullscreenWindow();
 
     this->renderMenuBar();
-    this->renderDisplay(frameBuffer);
+    this->renderDisplay(bitmap);
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -275,7 +275,7 @@ void LedGridSim::renderButtonBar()
         }
     }
 }
-void LedGridSim::renderDisplay(const void* framebuffer)
+void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
 {
     ImVec2 avail          = ImGui::GetContentRegionAvail();
 
@@ -316,18 +316,28 @@ void LedGridSim::renderDisplay(const void* framebuffer)
 
     if (m_power)
     {
-        for (int y = 0; y < 8; ++y)
-        {
-            for (int x = 0; x < 32; ++x)
-            {
-                const ImVec2   cellMin(displayPos.x + x * cellWidth, displayPos.y + y * cellHeight);
-                const ImVec2   cellMax(cellMin.x + cellWidth, cellMin.y + cellHeight);
+        uint16_t bitmap_width  = bitmap.getWidth();
+        uint16_t bitmap_height = bitmap.getHeight();
 
-                const uint32_t pixel = reinterpret_cast<const uint32_t*>(framebuffer)[y * 32 + x];
-                const uint8_t  red   = (pixel >> 16) & 0xFF;
-                const uint8_t  green = (pixel >> 8) & 0xFF;
-                const uint8_t  blue  = pixel & 0xFF;
-                const ImU32    color = IM_COL32(red, green, blue, 255);
+        if (CONFIG_LED_MATRIX_WIDTH < bitmap_width)
+        {
+            bitmap_width = CONFIG_LED_MATRIX_WIDTH;
+        }
+
+        if (CONFIG_LED_MATRIX_HEIGHT < bitmap_height)
+        {
+            bitmap_height = CONFIG_LED_MATRIX_HEIGHT;
+        }
+
+        for (int y = 0; y < bitmap_height; ++y)
+        {
+            for (int x = 0; x < bitmap_width; ++x)
+            {
+                const ImVec2 cellMin(displayPos.x + x * cellWidth, displayPos.y + y * cellHeight);
+                const ImVec2 cellMax(cellMin.x + cellWidth, cellMin.y + cellHeight);
+
+                const Color  pixel = bitmap.getColor(x, y);
+                const ImU32  color = IM_COL32(pixel.getRed(), pixel.getGreen(), pixel.getBlue(), 255);
 
                 drawList->AddRectFilled(
                     ImVec2(cellMin.x + cellInset, cellMin.y + cellInset),

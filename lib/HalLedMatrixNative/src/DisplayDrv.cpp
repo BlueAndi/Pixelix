@@ -65,7 +65,6 @@ static LedGridSim theLedGridSim; /**< Simulation pixel interface  */
 
 DisplayDrv::DisplayDrv() :
     IDisplayDrv(),
-    m_framebuffer(),
     m_brightness(UINT8_MAX),
     m_simulationInterface(&theLedGridSim)
 {
@@ -95,7 +94,7 @@ void DisplayDrv::off()
 /**
  * Power the display on.
  */
-void DisplayDrv::DisplayDrv::on()
+void DisplayDrv::on()
 {
     m_simulationInterface->setPower(true);
 }
@@ -112,32 +111,6 @@ bool DisplayDrv::isOn() const
 
 void DisplayDrv::show(const YAGfxBitmap& bitmap)
 {
-    uint16_t x      = 0U;
-    uint16_t y      = 0U;
-    uint16_t width  = bitmap.getWidth();
-    uint16_t height = bitmap.getHeight();
-
-    if (CONFIG_LED_MATRIX_WIDTH < width)
-    {
-        width = CONFIG_LED_MATRIX_WIDTH;
-    }
-
-    if (CONFIG_LED_MATRIX_HEIGHT < height)
-    {
-        height = CONFIG_LED_MATRIX_HEIGHT;
-    }
-
-    uint32_t buffer[CONFIG_LED_MATRIX_HEIGHT * CONFIG_LED_MATRIX_WIDTH];
-
-    int      I = 0;
-    for (y = 0U; y < height; ++y)
-    {
-        for (x = 0U; x < width; ++x)
-        {
-            buffer[x + (y * CONFIG_LED_MATRIX_WIDTH)] = bitmap.getColor(x, y);
-        }
-    }
-
     if (!m_simulationInterface->isInitialized())
     {
         /* Initialize the simulation interface. */
@@ -146,7 +119,7 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
 
     if (m_simulationInterface->dispatchEvents())
     {
-        m_simulationInterface->update(buffer);
+        m_simulationInterface->update(bitmap);
     }
     else
     {
@@ -156,12 +129,6 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
 
 void DisplayDrv::clear()
 {
-    size_t index = 0U;
-
-    for (index = 0U; index < PIXEL_COUNT; ++index)
-    {
-        m_framebuffer[index] = ColorDef::BLACK;
-    }
 }
 
 /******************************************************************************

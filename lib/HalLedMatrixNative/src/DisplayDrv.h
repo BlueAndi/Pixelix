@@ -142,11 +142,7 @@ public:
 private:
 
     LedGridSim* m_simulationInterface; /**< Simulation interface to show the framebuffer on the host. */
-    /** Number of pixels of the display. */
-    static const size_t PIXEL_COUNT = static_cast<size_t>(CONFIG_LED_MATRIX_WIDTH) * static_cast<size_t>(CONFIG_LED_MATRIX_HEIGHT);
-
-    Color               m_framebuffer[PIXEL_COUNT]; /**< The last shown framebuffer. */
-    uint8_t             m_brightness;               /**< Brightness value [0; 255] */
+    uint8_t     m_brightness;          /**< Brightness value [0; 255] */
 
     DisplayDrv(const DisplayDrv& drv);
     DisplayDrv& operator=(const DisplayDrv& drv);
