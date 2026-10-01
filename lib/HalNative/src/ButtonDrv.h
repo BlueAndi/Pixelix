@@ -158,7 +158,6 @@ public:
             m_state[buttonId] = state;
             if (nullptr != m_observer)
             {
-                printf("Button '%d' state changed to '%d'\n", buttonId, state);
                 m_observer->notify(buttonId, state);
             }
         }

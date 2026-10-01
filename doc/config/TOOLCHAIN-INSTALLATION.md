@@ -58,7 +58,7 @@ to modify the sourcecode and test it afterwards.
 2. ```sudo apt install build-essential```
 3. ```sudo apt-get install manpages-dev```
 4. ```sudo apt-get install clang-format```
-5. ```sudo apt-get install libsdl3-dev```
+5. ```sudo apt-get install pkg-config libsdl3-dev```
 
 ### Windows
 

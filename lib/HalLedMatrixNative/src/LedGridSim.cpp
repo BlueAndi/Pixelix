@@ -46,6 +46,7 @@
 #include "Version.h"
 
 #include <array>
+#include <string>
 
 /******************************************************************************
  * Macros
@@ -266,12 +267,10 @@ void LedGridSim::renderButtonBar()
         if (ImGui::IsItemActivated())
         {
             buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
-            printf("Button '%s' pressed\n", button.label);
         }
         if ((ImGui::IsItemDeactivated()))
         {
             buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
-            printf("Button '%s' released\n", button.label);
         }
     }
 }
@@ -357,20 +356,24 @@ void LedGridSim::renderMenuBar()
 
     if (ImGui::BeginMenuBar())
     {
-        ImGui::Text("FPS: %.1f", this->getPower() ? ImGui::GetIO().Framerate : 0.0f);
-
-        /* Reserve space and push "Help" to the right edge */
-        float helpWidth = ImGui::CalcTextSize("Help").x + ImGui::GetStyle().FramePadding.x * 2.0f;
-        ImGui::SameLine(ImGui::GetWindowWidth() - helpWidth - 10.0f);
-
-        if (ImGui::BeginMenu("Help"))
+        if (ImGui::BeginMenu("About"))
         {
-            if (ImGui::MenuItem("About"))
-            {
-                showAboutDialog = true;
-            }
+            showAboutDialog = true;
             ImGui::EndMenu();
         }
+
+        ImGui::SameLine();
+        std::string webpageUrl("http://localhost:");
+        webpageUrl += std::to_string(CONFIG_WEBSERVER_PORT);
+
+        ImGui::TextLinkOpenURL("Open Web Page", webpageUrl.c_str());
+
+        /* Reserve space and push "Help" to the right edge */
+        float helpWidth = ImGui::CalcTextSize("FPS: 100.00").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+        ImGui::SameLine(ImGui::GetWindowWidth() - helpWidth - 10.0f);
+
+        ImGui::Text("FPS: %.1f", this->getPower() ? ImGui::GetIO().Framerate : 0.0f);
+
         ImGui::EndMenuBar();
     }
 
@@ -388,9 +391,16 @@ void LedGridSim::renderMenuBar()
     {
         ImGui::Text("Pixelix Simulation");
         ImGui::Separator();
-        ImGui::Text("Version %s", Version::getSoftwareVersion());
-        ImGui::Text("Branch: %s", Version::getSoftwareBranchName());
+
+        ImGui::Text("Project:  ");
+        ImGui::SameLine();
+        ImGui::TextLinkOpenURL("https://github.com/BlueAndi/Pixelix");
+
+        ImGui::Text("Version:  %s", Version::getSoftwareVersion());
+        ImGui::Text("Branch:   %s", Version::getSoftwareBranchName());
         ImGui::Text("Revision: %s", Version::getSoftwareRevisionShort());
+        ImGui::Separator();
+        ImGui::Text("Copyright (c) 2019 - 2026 Andreas Merkle");
 
         ImGui::Spacing();
 
