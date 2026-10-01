@@ -26,7 +26,7 @@
 *******************************************************************************/
 /**
  * @file   LedGridSim.h
- * @brief  ImGui Interface for native LED Grid Simulation
+ * @brief  ImGui/SDL3 Interface for native LED Grid Simulation
  * @author Norbert Schulz <github@schulznorbert.de>
  *
  * @addtogroup LED Grid Simulator

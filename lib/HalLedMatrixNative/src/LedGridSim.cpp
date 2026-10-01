@@ -1,12 +1,33 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2026 Norbert Schulz <github@schulznorbert.de>
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 
 /*******************************************************************************
     DESCRIPTION
 *******************************************************************************/
 /**
  * @file   LedGridSim.cpp
- * @brief  ImGui Interface for native LED Grid Simulation
+ * @brief  ImGui/SDL3 Interface for native LED Grid Simulation
  * @author Norbert Schulz <github@schulznorbert.de>
  */
 
@@ -20,7 +41,11 @@
 #include "imgui_impl_sdlrenderer3.h"
 
 #include "SDLInterface.h"
+
+#include "Board.h"
 #include "Version.h"
+
+#include <array>
 
 /******************************************************************************
  * Macros
@@ -30,6 +55,16 @@
  * Types and classes
  *****************************************************************************/
 
+/**
+ * Describes a single button in the simulator button bar.
+ */
+struct SimulatedButton
+{
+    const char* label;    /**< Label shown on the button. */
+    ButtonId    id;       /**< Pixelix Id of the related button. */
+    bool        sameLine; /**< Put this button on same line if true. "*/
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -37,6 +72,13 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** Simulated Hardware buttons shown in the button bar, from left to right. */
+static const std::array<SimulatedButton, 3U> gSimButtons = {
+    { { "Left", BUTTON_ID_LEFT, false },
+        { "Ok", BUTTON_ID_OK, true },
+        { "Right", BUTTON_ID_RIGHT, true } }
+};
 
 /******************************************************************************
  * Public Methods
@@ -201,29 +243,38 @@ void LedGridSim::renderButtonBar()
     const float buttonHeight = 30.0f;
     const float spacing      = ImGui::GetStyle().ItemSpacing.x;
 
-    float       totalWidth   = (buttonWidth * 3) + (spacing * 2);
+    const float buttonCount  = static_cast<float>(gSimButtons.size());
+
+    float       totalWidth   = (buttonWidth * buttonCount) + (spacing * (buttonCount - 1.0f));
     float       availWidth   = ImGui::GetContentRegionAvail().x;
     float       offsetX      = (availWidth - totalWidth) * 0.5f;
+
+    ButtonDrv*  buttonDrv    = dynamic_cast<ButtonDrv*>(&Board::getInstance().getButtonDrv());
 
     if (offsetX > 0.0f)
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
 
-    if (ImGui::Button("Left", ImVec2(buttonWidth, buttonHeight)))
+    for (const SimulatedButton& button : gSimButtons)
     {
-        // handle left button press
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Ok", ImVec2(buttonWidth, buttonHeight)))
-    {
-        // handle middle button press
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Right", ImVec2(buttonWidth, buttonHeight)))
-    {
-        // handle right button press
+        if (button.sameLine)
+        {
+            ImGui::SameLine();
+        }
+
+        ImGui::Button(button.label, ImVec2(buttonWidth, buttonHeight));
+
+        if (ImGui::IsItemActivated())
+        {
+            buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
+            printf("Button '%s' pressed\n", button.label);
+        }
+        if ((ImGui::IsItemDeactivated()))
+        {
+            buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
+            printf("Button '%s' released\n", button.label);
+        }
     }
 }
-
 void LedGridSim::renderDisplay(const void* framebuffer)
 {
     ImVec2 avail          = ImGui::GetContentRegionAvail();
