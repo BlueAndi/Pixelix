@@ -82,14 +82,32 @@ public:
      */
     void update(const void* frameBuffer);
 
-    LedGridSim(const LedGridSim&)            = delete;
-    LedGridSim& operator=(const LedGridSim&) = delete;
+    /**
+     * @brief Sets the power state of the simulated display.
+     * @param powerOn true to power on the display; false to power it off.
+     */
+    void setPower(bool powerOn)
+    {
+        m_power = powerOn;
+    }
+
+    /**
+     * @brief Gets the power state of the simulated display.
+     * @return true if the display is powered on; otherwise, false.
+     */
+    bool getPower() const
+    {
+        return m_power;
+    }
 
     /**
      * @brief Reports whether the context and both SDL3 backends initialized successfully.
      * @return true if this interface is ready for ImGui use; otherwise, false.
      */
     bool isInitialized() const;
+
+    LedGridSim(const LedGridSim&)            = delete;
+    LedGridSim& operator=(const LedGridSim&) = delete;
 
 protected:
 
@@ -115,10 +133,12 @@ protected:
 
 private:
 
-    SDLInterface* m_sdl_interface;                        /**<Underlying SDL interface. */
-    bool          m_context_created              = false; /**< Tracks whether this object created an ImGui context. */
-    bool          m_platform_backend_initialized = false; /**< Tracks whether the SDL3 platform backend initialized. */
-    bool          m_renderer_backend_initialized = false; /**< Tracks whether the SDL3 renderer backend initialized. */
+    SDLInterface* m_sdl_interface                = nullptr; /**<Underlying SDL interface. */
+    bool          m_context_created              = false;   /**< Tracks whether this object created an ImGui context. */
+    bool          m_platform_backend_initialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
+    bool          m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
+
+    bool          m_power                        = true; /**< Tracks the power state of the display. */
 
     int16_t       m_framebuffer[32 * 8]; /**< Framebuffer for the LCD display. */
 };

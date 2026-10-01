@@ -67,7 +67,6 @@ DisplayDrv::DisplayDrv() :
     IDisplayDrv(),
     m_framebuffer(),
     m_brightness(UINT8_MAX),
-    m_isOn(false),
     m_simulationInterface(&theLedGridSim)
 {
 }
@@ -79,11 +78,36 @@ DisplayDrv::~DisplayDrv()
 
 bool DisplayDrv::begin()
 {
-    clear();
-
-    m_isOn = true;
+    this->clear();
+    this->on();
 
     return true;
+}
+
+/**
+ * Power the display off.
+ */
+void DisplayDrv::off()
+{
+    m_simulationInterface->setPower(false);
+}
+
+/**
+ * Power the display on.
+ */
+void DisplayDrv::DisplayDrv::on()
+{
+    m_simulationInterface->setPower(true);
+}
+
+/**
+ * Is the display powered on?
+ *
+ * @return If the display is powered on, it will return true otherwise false.
+ */
+bool DisplayDrv::isOn() const
+{
+    return m_simulationInterface->getPower();
 }
 
 void DisplayDrv::show(const YAGfxBitmap& bitmap)

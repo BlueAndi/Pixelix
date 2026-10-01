@@ -78,7 +78,7 @@ bool SDLInterface::initialize(int width, int height)
     m_window          = SDL_CreateWindow(
         "Pixelix LED Grid Simulation",
         900,
-        400,
+        340,
         SDL_WINDOW_RESIZABLE);
     if (m_window == nullptr)
     {

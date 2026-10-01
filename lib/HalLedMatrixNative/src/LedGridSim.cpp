@@ -314,27 +314,29 @@ void LedGridSim::renderDisplay(const void* framebuffer)
         ImVec2(displayPos.x + targetWidth, displayPos.y + targetHeight),
         IM_COL32(24, 27, 26, 255));
 
-    for (int y = 0; y < 8; ++y)
+    if (m_power)
     {
-        for (int x = 0; x < 32; ++x)
+        for (int y = 0; y < 8; ++y)
         {
-            const ImVec2   cellMin(displayPos.x + x * cellWidth, displayPos.y + y * cellHeight);
-            const ImVec2   cellMax(cellMin.x + cellWidth, cellMin.y + cellHeight);
+            for (int x = 0; x < 32; ++x)
+            {
+                const ImVec2   cellMin(displayPos.x + x * cellWidth, displayPos.y + y * cellHeight);
+                const ImVec2   cellMax(cellMin.x + cellWidth, cellMin.y + cellHeight);
 
-            const uint32_t pixel = reinterpret_cast<const uint32_t*>(framebuffer)[y * 32 + x];
-            const uint8_t  red   = (pixel >> 16) & 0xFF;
-            const uint8_t  green = (pixel >> 8) & 0xFF;
-            const uint8_t  blue  = pixel & 0xFF;
-            const ImU32    color = IM_COL32(red, green, blue, 255);
+                const uint32_t pixel = reinterpret_cast<const uint32_t*>(framebuffer)[y * 32 + x];
+                const uint8_t  red   = (pixel >> 16) & 0xFF;
+                const uint8_t  green = (pixel >> 8) & 0xFF;
+                const uint8_t  blue  = pixel & 0xFF;
+                const ImU32    color = IM_COL32(red, green, blue, 255);
 
-            drawList->AddRectFilled(
-                ImVec2(cellMin.x + cellInset, cellMin.y + cellInset),
-                ImVec2(cellMax.x - cellInset, cellMax.y - cellInset),
-                color,
-                5.0f);
+                drawList->AddRectFilled(
+                    ImVec2(cellMin.x + cellInset, cellMin.y + cellInset),
+                    ImVec2(cellMax.x - cellInset, cellMax.y - cellInset),
+                    color,
+                    5.0f);
+            }
         }
     }
-
     /* Save the space of the pixel area from placing other widgets */
     ImGui::Dummy(ImVec2(targetWidth, targetHeight));
 }
@@ -345,7 +347,7 @@ void LedGridSim::renderMenuBar()
 
     if (ImGui::BeginMenuBar())
     {
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::Text("FPS: %.1f", this->getPower() ? ImGui::GetIO().Framerate : 0.0f);
 
         /* Reserve space and push "Help" to the right edge */
         float helpWidth = ImGui::CalcTextSize("Help").x + ImGui::GetStyle().FramePadding.x * 2.0f;

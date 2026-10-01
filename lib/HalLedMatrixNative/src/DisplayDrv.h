@@ -125,28 +125,19 @@ public:
     /**
      * Power the display off.
      */
-    void off() final
-    {
-        m_isOn = false;
-    }
+    void off() final;
 
     /**
      * Power the display on.
      */
-    void on() final
-    {
-        m_isOn = true;
-    }
+    void on() final;
 
     /**
      * Is the display powered on?
      *
      * @return If the display is powered on, it will return true otherwise false.
      */
-    bool isOn() const final
-    {
-        return m_isOn;
-    }
+    bool isOn() const final;
 
 private:
 
@@ -156,7 +147,6 @@ private:
 
     Color               m_framebuffer[PIXEL_COUNT]; /**< The last shown framebuffer. */
     uint8_t             m_brightness;               /**< Brightness value [0; 255] */
-    bool                m_isOn;                     /**< Is the display powered on? */
 
     DisplayDrv(const DisplayDrv& drv);
     DisplayDrv& operator=(const DisplayDrv& drv);
