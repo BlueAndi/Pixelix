@@ -36,6 +36,7 @@
 #include <SDL3/SDL.h>
 #include "SDLInterface.h"
 
+#include <array>
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -43,7 +44,12 @@
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
-
+/** Image entry for the SDL interface. */
+struct ImageEntry
+{
+    SDLInterface::ImageId id;             /**< Image identifier. */
+    const char*           path = nullptr; /**< Path to the image file. */
+};
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -51,6 +57,12 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+/**
+ * @brief   Image entry for the SDL interface.
+ * @details Contains the path and surface of a registered image.
+ */
+std::array<ImageEntry, static_cast<std::size_t>(SDLInterface::ImageId::IMG_ID_COUNT)> gImages = { { { SDLInterface::ImageId::IMG_ID_WINDOW_ICON, "data/favicon.png" },
+    { SDLInterface::ImageId::IMG_ID_ABOUT_LOGO, "data/images/LogoSmall.png" } } };
 
 /******************************************************************************
  * Public Methods
@@ -87,6 +99,26 @@ bool SDLInterface::initialize(int width, int height)
         return false;
     }
 
+    /* Load all images from registry to SDL surfaces.*/
+    for (auto imgEntry : gImages)
+    {
+        auto surface = SDL_LoadPNG(imgEntry.path);
+        if (surface == nullptr)
+        {
+            SDL_Log("SDL_LoadPNG failed for %s: %s", imgEntry.path, SDL_GetError());
+        }
+        else
+        {
+            m_images[imgEntry.id] = surface;
+
+            if (imgEntry.id == SDLInterface::ImageId::IMG_ID_WINDOW_ICON)
+            {
+                /* Favicon is used as the window icon. */
+                SDL_SetWindowIcon(m_window, surface);
+            }
+        }
+    }
+
     m_renderer = SDL_CreateRenderer(m_window, nullptr);
     if (m_renderer == nullptr)
     {
@@ -101,6 +133,15 @@ bool SDLInterface::initialize(int width, int height)
 
 void SDLInterface::shutdown()
 {
+    for (auto image : m_images)
+    {
+        if (image.second != nullptr)
+        {
+            SDL_DestroySurface(image.second);
+        }
+    }
+    m_images.clear();
+
     if (m_renderer != nullptr)
     {
         SDL_DestroyRenderer(m_renderer);
@@ -118,6 +159,19 @@ void SDLInterface::shutdown()
         SDL_Quit();
         m_sdl_initialized = false;
     }
+}
+
+SDL_Surface* SDLInterface::getImageSurface(ImageId id) const
+{
+    SDL_Surface* surface = nullptr;
+
+    auto         it      = m_images.find(id);
+    if (it != m_images.end())
+    {
+        surface = it->second;
+    }
+
+    return surface;
 }
 
 void SDLInterface::beginUpdate()

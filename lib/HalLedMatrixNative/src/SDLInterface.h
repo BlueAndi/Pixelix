@@ -38,6 +38,8 @@
  *****************************************************************************/
 #include <SDL3/SDL.h>
 
+#include <map>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -54,6 +56,14 @@
 class SDLInterface
 {
 public:
+
+    /** Identifies an image loaded and owned by this interface. */
+    enum class ImageId
+    {
+        IMG_ID_WINDOW_ICON, /**< Window icon image. */
+        IMG_ID_ABOUT_LOGO,  /**< About dialog logo image. */
+        IMG_ID_COUNT
+    };
 
     /**
      * @brief Constructs an SDL interface without initializing SDL.
@@ -113,12 +123,21 @@ public:
         return m_renderer;
     }
 
+    /**
+     * @brief Gets a registered image surface.
+     * @param id Image identifier.
+     * @return A non-owning pointer to the image surface, or nullptr if unavailable.
+     */
+    SDL_Surface* getImageSurface(ImageId id) const;
+
 private:
 
-    SDL_Window*   m_window          = nullptr;
-    SDL_Renderer* m_renderer        = nullptr;
+    SDL_Window*                     m_window          = nullptr;
+    SDL_Renderer*                   m_renderer        = nullptr;
 
-    bool          m_sdl_initialized = false;
+    bool                            m_sdl_initialized = false;
+
+    std::map<ImageId, SDL_Surface*> m_images; /**< Map of registered images. */
 };
 
 /** @} */

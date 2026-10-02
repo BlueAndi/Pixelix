@@ -44,6 +44,7 @@
 #include <stdint.h>
 
 class SDLInterface;
+struct SDL_Texture;
 
 /**
  * @brief Initializes and manages the Dear ImGui SDL3 backends.
@@ -135,7 +136,8 @@ protected:
 
 private:
 
-    SDLInterface* m_sdl_interface                = nullptr; /**<Underlying SDL interface. */
+    SDLInterface* m_sdl_interface                = nullptr; /**< Underlying SDL interface. */
+    SDL_Texture*  m_logo_texture                 = nullptr; /**< SDL texture for the About dialog logo. */
     bool          m_context_created              = false;   /**< Tracks whether this object created an ImGui context. */
     bool          m_platform_backend_initialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
     bool          m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */

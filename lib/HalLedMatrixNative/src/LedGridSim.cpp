@@ -46,6 +46,7 @@
 #include "Version.h"
 
 #include <array>
+#include <stdint.h>
 #include <string>
 
 /******************************************************************************
@@ -124,11 +125,27 @@ bool LedGridSim::initialize(int width, int height)
     }
     m_renderer_backend_initialized = true;
 
+    SDL_Surface* logoSurface       = m_sdl_interface->getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
+    if (logoSurface != nullptr)
+    {
+        m_logo_texture = SDL_CreateTextureFromSurface(renderer, logoSurface);
+        if (m_logo_texture == nullptr)
+        {
+            SDL_Log("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
+        }
+    }
+
     return m_renderer_backend_initialized;
 }
 
 LedGridSim::~LedGridSim()
 {
+    if (m_logo_texture != nullptr)
+    {
+        SDL_DestroyTexture(m_logo_texture);
+        m_logo_texture = nullptr;
+    }
+
     if (m_renderer_backend_initialized)
     {
         ImGui_ImplSDLRenderer3_Shutdown();
@@ -389,10 +406,25 @@ void LedGridSim::renderMenuBar()
 
     if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::Text("Pixelix Simulation");
+        if (m_logo_texture != nullptr)
+        {
+            const ImTextureID textureId   = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(m_logo_texture));
+            const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logo_texture->w) * 0.5f;
+            /* Center the logo horizontally */
+            if (logoOffsetX > 0.0f)
+            {
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + logoOffsetX);
+            }
+            ImGui::Image(ImTextureRef(textureId), ImVec2(m_logo_texture->w, m_logo_texture->h));
+        }
+        else
+        {
+            ImGui::Text(".:PIXELIX:.");
+        }
         ImGui::Separator();
 
-        ImGui::Text("Project:  ");
+
+        ImGui::Text("Home:    ");
         ImGui::SameLine();
         ImGui::TextLinkOpenURL("https://github.com/BlueAndi/Pixelix");
 
@@ -404,7 +436,14 @@ void LedGridSim::renderMenuBar()
 
         ImGui::Spacing();
 
-        if (ImGui::Button("Close", ImVec2(120, 0)))
+        const float closeButtonWidth   = 120.0f;
+        const float closeButtonOffsetX = (ImGui::GetContentRegionAvail().x - closeButtonWidth) * 0.5f;
+        if (closeButtonOffsetX > 0.0f)
+        {
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + closeButtonOffsetX);
+        }
+
+        if (ImGui::Button("Close", ImVec2(closeButtonWidth, 0)))
         {
             ImGui::CloseCurrentPopup();
         }
