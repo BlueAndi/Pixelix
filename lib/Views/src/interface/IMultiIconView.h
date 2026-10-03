@@ -64,7 +64,7 @@ public:
     /**
      * Destroy the view.
      */
-    ~IMultiIconView()
+    virtual ~IMultiIconView()
     {
     }
 
