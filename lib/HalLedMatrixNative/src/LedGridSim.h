@@ -109,6 +109,15 @@ public:
      */
     bool isInitialized() const;
 
+    /**
+     * @brief Sets the brightness of the simulated display.
+     * @param brightness Brightness value [0; 255]
+     */
+    void setBrightness(uint8_t brightness)
+    {
+        m_brightness = brightness;
+    }
+
     LedGridSim(const LedGridSim&)            = delete;
     LedGridSim& operator=(const LedGridSim&) = delete;
 
@@ -143,6 +152,7 @@ private:
     bool          m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
 
     bool          m_power                        = true; /**< Tracks the power state of the display. */
+    uint8_t       m_brightness                   = 255U; /**< Brightness value [0; 255] */
 
     int16_t       m_framebuffer[32 * 8]; /**< Framebuffer for the LCD display. */
 };

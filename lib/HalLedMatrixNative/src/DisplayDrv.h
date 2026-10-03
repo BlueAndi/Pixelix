@@ -112,10 +112,7 @@ public:
      *
      * @param[in] brightness    Brightness value [0; 255]
      */
-    void setBrightness(uint8_t brightness) final
-    {
-        m_brightness = brightness;
-    }
+    void setBrightness(uint8_t brightness) final;
 
     /**
      * Clear the display.
@@ -142,7 +139,6 @@ public:
 private:
 
     LedGridSim* m_simulationInterface; /**< Simulation interface to show the framebuffer on the host. */
-    uint8_t     m_brightness;          /**< Brightness value [0; 255] */
 
     DisplayDrv(const DisplayDrv& drv);
     DisplayDrv& operator=(const DisplayDrv& drv);

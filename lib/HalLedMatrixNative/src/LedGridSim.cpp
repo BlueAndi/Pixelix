@@ -71,6 +71,19 @@ struct SimulatedButton
  * Prototypes
  *****************************************************************************/
 
+/**
+ * @brief Adjusts a RGB channel value based on the specified brightness.
+ *
+ * The brightness is affecting the upper 50% of the channel value range.
+ * A brightness of 0 means 50%, while a brightness of 255 means the 100%.
+ * The simulated display is otherwise getting too dark at low brightness values.
+ *
+ * @param channel The original RGB channel value [0; 255].
+ * @param brightness The brightness value [0; 255].
+ * @return The adjusted RGB channel value [0; 255].
+ */
+static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness);
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -353,7 +366,11 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
                 const ImVec2 cellMax(cellMin.x + cellWidth, cellMin.y + cellHeight);
 
                 const Color  pixel = bitmap.getColor(x, y);
-                const ImU32  color = IM_COL32(pixel.getRed(), pixel.getGreen(), pixel.getBlue(), 255);
+                const ImU32  color = IM_COL32(
+                    adjustRgbChannel(pixel.getRed(), m_brightness),
+                    adjustRgbChannel(pixel.getGreen(), m_brightness),
+                    adjustRgbChannel(pixel.getBlue(), m_brightness),
+                    SDL_ALPHA_OPAQUE);
 
                 drawList->AddRectFilled(
                     ImVec2(cellMin.x + cellInset, cellMin.y + cellInset),
@@ -461,3 +478,12 @@ void LedGridSim::renderMenuBar()
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness)
+{
+    const uint32_t MAX_CHANNEL_VALUE = 255U;
+    const uint32_t scaling           = MAX_CHANNEL_VALUE + static_cast<uint32_t>(brightness);
+
+    return static_cast<uint8_t>(
+        (static_cast<uint32_t>(channel) * scaling + MAX_CHANNEL_VALUE) / (2 * MAX_CHANNEL_VALUE));
+};

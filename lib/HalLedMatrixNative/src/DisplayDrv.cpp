@@ -65,7 +65,6 @@ static LedGridSim theLedGridSim; /**< Simulation pixel interface  */
 
 DisplayDrv::DisplayDrv() :
     IDisplayDrv(),
-    m_brightness(UINT8_MAX),
     m_simulationInterface(&theLedGridSim)
 {
 }
@@ -83,20 +82,19 @@ bool DisplayDrv::begin()
     return true;
 }
 
-/**
- * Power the display off.
- */
 void DisplayDrv::off()
 {
     m_simulationInterface->setPower(false);
 }
 
-/**
- * Power the display on.
- */
 void DisplayDrv::on()
 {
     m_simulationInterface->setPower(true);
+}
+
+void DisplayDrv::setBrightness(uint8_t brightness)
+{
+    m_simulationInterface->setBrightness(brightness);
 }
 
 /**
@@ -129,6 +127,7 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
 
 void DisplayDrv::clear()
 {
+    /* No local framebuffer to clear, because the simulation interface is drawing directly to the window. */
 }
 
 /******************************************************************************
