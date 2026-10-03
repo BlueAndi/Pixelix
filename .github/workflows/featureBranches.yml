@@ -4,14 +4,14 @@ name: Feature Branches CI
 on:
   push:
     branches:
-      - '**'
-      - '!master'
-      - '!main'
+      - "**"
+      - "!master"
+      - "!main"
   pull_request:
     branches:
-      - '**'
-      - '!master'
-      - '!main'
+      - "**"
+      - "!master"
+      - "!main"
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
-    - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
 
   # Build all targets
   build:
@@ -32,56 +32,150 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_feather_esp32_v2-LED-32x8",
+            "adafruit_matrixportal_s3-HUB75-64x64",
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "az-delivery-devkit-v4-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "esp32-nodemcu-LED-32x8",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-    
-    - name: Compile ${{ matrix.environment }} firmware
-      run: platformio run --environment ${{ matrix.environment }}
-    
-    - name: Build ${{ matrix.environment }} filesystem image
-      run: platformio run --environment ${{ matrix.environment }} --target buildfs
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Compile ${{ matrix.environment }} firmware
+        run: platformio run --environment ${{ matrix.environment }} 2>&1 | tee firmware-build.log
+
+      - name: Build ${{ matrix.environment }} filesystem image
+        run: platformio run --environment ${{ matrix.environment }} --target buildfs
+
+      - name: Collect size metrics for ${{ matrix.environment }}
+        run: |
+          python scripts/ci_size_report.py collect \
+            --environment "${{ matrix.environment }}" \
+            --build-log firmware-build.log \
+            --build-dir ".pio/build/${{ matrix.environment }}" \
+            --output-dir size-metrics
+
+      - name: Save size metrics for ${{ matrix.environment }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: size-metrics-${{ matrix.environment }}
+          path: size-metrics/${{ matrix.environment }}.json
+
+  # Show firmware and filesystem size changes against prior builds.
+  size_report:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Download current size metrics
+        uses: actions/download-artifact@v7
+        with:
+          pattern: size-metrics-*
+          path: current-metrics
+          merge-multiple: true
+
+      - name: Find previous successful builds
+        id: baselines
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          BASE_BRANCH: ${{ github.base_ref }}
+        run: |
+          python scripts/ci_size_report.py find-runs \
+            --workflow-file featureBranches.yml \
+            --event "$EVENT_NAME" \
+            --ref-name "$REF_NAME" \
+            --head-branch "$HEAD_BRANCH" \
+            --base-branch "$BASE_BRANCH" \
+            --current-sha "$GITHUB_SHA" \
+            --output "$GITHUB_OUTPUT"
+
+      - name: Download previous branch metrics
+        if: steps.baselines.outputs.branch_run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@v7
+        with:
+          pattern: size-metrics-*
+          path: branch-baseline
+          merge-multiple: true
+          run-id: ${{ steps.baselines.outputs.branch_run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Download target branch metrics
+        if: steps.baselines.outputs.target_run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@v7
+        with:
+          pattern: size-metrics-*
+          path: target-baseline
+          merge-multiple: true
+          run-id: ${{ steps.baselines.outputs.target_run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Write size trend to workflow summary
+        env:
+          BRANCH_LABEL: previous successful run on ${{ github.head_ref || github.ref_name }}
+          TARGET_LABEL: ${{ github.base_ref && format('target branch {0}', github.base_ref) || 'not applicable' }}
+        run: |
+          python scripts/ci_size_report.py report \
+            --current-dir current-metrics \
+            --branch-dir branch-baseline \
+            --target-dir target-baseline \
+            --branch-label "$BRANCH_LABEL" \
+            --target-label "$TARGET_LABEL"
 
   # Perform static checks
   check:
@@ -90,52 +184,55 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_feather_esp32_v2-LED-32x8",
+            "adafruit_matrixportal_s3-HUB75-64x64",
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "az-delivery-devkit-v4-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "esp32-nodemcu-LED-32x8",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Perform static checks on ${{ matrix.environment }}
-      run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Perform static checks on ${{ matrix.environment }}
+        run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
 
   # Perform tests
   test:
@@ -144,35 +241,35 @@ jobs:
     needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Run tests on native environment
-      run: platformio test --environment test -vvv
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Run tests on native environment
+        run: platformio test --environment test -vvv
 
   # Validate the OpenAPI specification of the REST API.
   openapi_lint:
@@ -181,21 +278,21 @@ jobs:
     needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Install openapi-spec-validator
-      run: |
-        python -m pip install --upgrade pip
-        pip install openapi-spec-validator==0.9.0
+      - name: Install openapi-spec-validator
+        run: |
+          python -m pip install --upgrade pip
+          pip install openapi-spec-validator==0.9.0
 
-    - name: Validate the OpenAPI specification
-      run: openapi-spec-validator ./doc/OpenAPI/OpenAPI.yaml
+      - name: Validate the OpenAPI specification
+        run: openapi-spec-validator ./doc/OpenAPI/OpenAPI.yaml
 
   # Build the application for the host, check that its webserver answers and
   # verify the REST API against the OpenAPI specification.
@@ -207,142 +304,142 @@ jobs:
     needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
 
-    - name: Compile native application
-      run: platformio run --environment native
+      - name: Compile native application
+        run: platformio run --environment native
 
-    - name: Start the native application
-      run: |
-        ./.pio/build/native/program > pixelix.log 2>&1 &
-        echo $! > pixelix.pid
-        # The webserver is started by the init state, which takes a moment.
-        for _ in $(seq 1 30); do
-          if curl --silent --output /dev/null http://localhost:8080/; then
-            break
+      - name: Start the native application
+        run: |
+          ./.pio/build/native/program > pixelix.log 2>&1 &
+          echo $! > pixelix.pid
+          # The webserver is started by the init state, which takes a moment.
+          for _ in $(seq 1 30); do
+            if curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Check that the webserver answers
+        run: |
+          STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8080/)
+          # The root page redirects to the index page.
+          if [ "${STATUS}" != "302" ]; then
+            echo "The webserver answered with ${STATUS} instead of 302."
+            exit 1
           fi
-          sleep 1
-        done
 
-    - name: Check that the webserver answers
-      run: |
-        STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8080/)
-        # The root page redirects to the index page.
-        if [ "${STATUS}" != "302" ]; then
-          echo "The webserver answered with ${STATUS} instead of 302."
-          exit 1
-        fi
+      # Every plugin which the OpenAPI specification describes shall be installed
+      # for the test, which needs more display slots than the default. The number
+      # of slots is evaluated during startup only, therefore the application is
+      # restarted afterwards.
+      - name: Increase the number of display slots
+        run: |
+          curl --silent --show-error --fail --user luke:skywalker \
+            --request POST --output /dev/null \
+            "http://localhost:8080/rest/api/v1/setting?key=max_slots&value=16"
 
-    # Every plugin which the OpenAPI specification describes shall be installed
-    # for the test, which needs more display slots than the default. The number
-    # of slots is evaluated during startup only, therefore the application is
-    # restarted afterwards.
-    - name: Increase the number of display slots
-      run: |
-        curl --silent --show-error --fail --user luke:skywalker \
-          --request POST --output /dev/null \
-          "http://localhost:8080/rest/api/v1/setting?key=max_slots&value=16"
+      - name: Restart the native application
+        run: |
+          kill "$(cat pixelix.pid)"
+          # Wait until the webserver is down.
+          for _ in $(seq 1 30); do
+            if ! curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
+          ./.pio/build/native/program >> pixelix.log 2>&1 &
+          echo $! > pixelix.pid
+          for _ in $(seq 1 30); do
+            if curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
 
-    - name: Restart the native application
-      run: |
-        kill "$(cat pixelix.pid)"
-        # Wait until the webserver is down.
-        for _ in $(seq 1 30); do
-          if ! curl --silent --output /dev/null http://localhost:8080/; then
-            break
+      # Schemathesis requires Python 3.10 or higher, PlatformIO is not used
+      # anymore from here on.
+      - name: Set up Python for the REST API test
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install schemathesis
+        run: pip install schemathesis==4.27.0
+
+      # A plugin instance gets its unique id (UID) at runtime, therefore the UID
+      # can not be part of the OpenAPI specification. The plugins are installed
+      # first and their UIDs are written into the schemathesis configuration.
+      - name: Prepare the plugin UIDs for the REST API test
+        run: |
+          python ./scripts/prepare_api_test.py \
+            --spec ./doc/OpenAPI/OpenAPI.yaml \
+            --url http://localhost:8080/rest/api/v1 \
+            --user luke \
+            --password skywalker \
+            --output ./schemathesis.toml
+
+      # Every REST API endpoint is called with generated data and the response is
+      # verified against the OpenAPI specification. Endpoints which would stop the
+      # application or modify the filesystem/settings are excluded, because they
+      # would break the test run itself.
+      #
+      # Only valid data is generated (positive mode). Remove the mode option to
+      # let schemathesis fuzz the API with invalid data as well.
+      - name: Verify the REST API against the OpenAPI specification
+        run: |
+          schemathesis --config-file ./schemathesis.toml \
+            run ./doc/OpenAPI/OpenAPI.yaml \
+            --url http://localhost:8080/rest/api/v1 \
+            --auth luke:skywalker \
+            --mode positive \
+            --checks status_code_conformance,response_schema_conformance \
+            --max-examples 20 \
+            --exclude-operation-id restart \
+            --exclude-operation-id changePartition \
+            --exclude-operation-id installPlugin \
+            --exclude-operation-id uninstallPlugin \
+            --exclude-operation-id uploadFile \
+            --exclude-operation-id removeFile \
+            --exclude-operation-id writeFile \
+            --exclude-operation-id deleteFile \
+            --exclude-operation-id setSetting \
+            --exclude-operation-id clearCoredump
+
+      - name: Stop the native application
+        if: always()
+        run: |
+          if [ -f pixelix.pid ]; then
+            kill "$(cat pixelix.pid)" || true
           fi
-          sleep 1
-        done
-        ./.pio/build/native/program >> pixelix.log 2>&1 &
-        echo $! > pixelix.pid
-        for _ in $(seq 1 30); do
-          if curl --silent --output /dev/null http://localhost:8080/; then
-            break
-          fi
-          sleep 1
-        done
-
-    # Schemathesis requires Python 3.10 or higher, PlatformIO is not used
-    # anymore from here on.
-    - name: Set up Python for the REST API test
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.12'
-
-    - name: Install schemathesis
-      run: pip install schemathesis==4.27.0
-
-    # A plugin instance gets its unique id (UID) at runtime, therefore the UID
-    # can not be part of the OpenAPI specification. The plugins are installed
-    # first and their UIDs are written into the schemathesis configuration.
-    - name: Prepare the plugin UIDs for the REST API test
-      run: |
-        python ./scripts/prepare_api_test.py \
-          --spec ./doc/OpenAPI/OpenAPI.yaml \
-          --url http://localhost:8080/rest/api/v1 \
-          --user luke \
-          --password skywalker \
-          --output ./schemathesis.toml
-
-    # Every REST API endpoint is called with generated data and the response is
-    # verified against the OpenAPI specification. Endpoints which would stop the
-    # application or modify the filesystem/settings are excluded, because they
-    # would break the test run itself.
-    #
-    # Only valid data is generated (positive mode). Remove the mode option to
-    # let schemathesis fuzz the API with invalid data as well.
-    - name: Verify the REST API against the OpenAPI specification
-      run: |
-        schemathesis --config-file ./schemathesis.toml \
-          run ./doc/OpenAPI/OpenAPI.yaml \
-          --url http://localhost:8080/rest/api/v1 \
-          --auth luke:skywalker \
-          --mode positive \
-          --checks status_code_conformance,response_schema_conformance \
-          --max-examples 20 \
-          --exclude-operation-id restart \
-          --exclude-operation-id changePartition \
-          --exclude-operation-id installPlugin \
-          --exclude-operation-id uninstallPlugin \
-          --exclude-operation-id uploadFile \
-          --exclude-operation-id removeFile \
-          --exclude-operation-id writeFile \
-          --exclude-operation-id deleteFile \
-          --exclude-operation-id setSetting \
-          --exclude-operation-id clearCoredump
-
-    - name: Stop the native application
-      if: always()
-      run: |
-        if [ -f pixelix.pid ]; then
-          kill "$(cat pixelix.pid)" || true
-        fi
-        cat pixelix.log || true
+          cat pixelix.log || true
 
   # Perform clang-format check
   check_format:
@@ -351,35 +448,35 @@ jobs:
     needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Run clang-format check
-      run: find src lib -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' | xargs clang-format -i --dry-run -Werror
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
+
+      - name: Run clang-format check
+        run: find src lib -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' | xargs clang-format -i --dry-run -Werror
 
   # Build documentation
   doc:
@@ -387,42 +484,42 @@ jobs:
     runs-on: ubuntu-latest
     needs: intro
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO
+        uses: actions/cache@v5
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Set up graphviz
-      uses: ts-graphviz/setup-graphviz@v2
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade platformio
 
-    - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1
-      with:
-        working-directory: './doc/doxygen'
-        doxyfile-path: './Doxyfile'
+      - name: Set up graphviz
+        uses: ts-graphviz/setup-graphviz@v2
 
-    - name: Print doxygen warnings
-      if: ${{ failure() }}
-      run: cat ./doc/doxygen/doxygen_warnings.txt
+      - name: Set up doxygen and generate documentation
+        uses: mattnotmitt/doxygen-action@v1
+        with:
+          working-directory: "./doc/doxygen"
+          doxyfile-path: "./Doxyfile"
+
+      - name: Print doxygen warnings
+        if: ${{ failure() }}
+        run: cat ./doc/doxygen/doxygen_warnings.txt
