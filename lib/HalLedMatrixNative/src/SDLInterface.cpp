@@ -34,7 +34,9 @@
  * Includes
  *****************************************************************************/
 #include <SDL3/SDL.h>
+
 #include "SDLInterface.h"
+#include "Logging.h"
 
 #include <array>
 /******************************************************************************
@@ -82,7 +84,7 @@ bool SDLInterface::initialize(int width, int height)
 
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        SDL_Log("SDL_Init failed: %s", SDL_GetError());
+        LOG_WARNING("SDL_Init failed: %s", SDL_GetError());
         return false;
     }
     m_sdl_initialized = true;
@@ -94,7 +96,7 @@ bool SDLInterface::initialize(int width, int height)
         SDL_WINDOW_RESIZABLE);
     if (m_window == nullptr)
     {
-        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
+        LOG_WARNING("SDL_CreateWindow failed: %s", SDL_GetError());
         shutdown();
         return false;
     }
@@ -105,7 +107,7 @@ bool SDLInterface::initialize(int width, int height)
         auto surface = SDL_LoadPNG(imgEntry.path);
         if (surface == nullptr)
         {
-            SDL_Log("SDL_LoadPNG failed for %s: %s", imgEntry.path, SDL_GetError());
+            LOG_WARNING("SDL_LoadPNG failed for %s: %s", imgEntry.path, SDL_GetError());
         }
         else
         {
@@ -122,7 +124,7 @@ bool SDLInterface::initialize(int width, int height)
     m_renderer = SDL_CreateRenderer(m_window, nullptr);
     if (m_renderer == nullptr)
     {
-        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
+        LOG_WARNING("SDL_CreateRenderer failed: %s", SDL_GetError());
         shutdown();
         return false;
     }

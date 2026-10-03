@@ -43,6 +43,7 @@
 #include "SDLInterface.h"
 
 #include "Board.h"
+#include "Logging.h"
 #include "Version.h"
 
 #include <array>
@@ -107,7 +108,7 @@ bool LedGridSim::initialize(int width, int height)
 {
     if (!m_sdl_interface->initialize(width, height))
     {
-        SDL_Log("SDL initialization failed");
+        LOG_WARNING("SDL initialization failed");
         return false;
     }
 
@@ -115,7 +116,7 @@ bool LedGridSim::initialize(int width, int height)
     SDL_Renderer* renderer = m_sdl_interface->getRenderer();
     if (window == nullptr || renderer == nullptr)
     {
-        SDL_Log("Cannot initialize ImGui: SDL window or renderer is unavailable");
+        LOG_WARNING("Cannot initialize ImGui: SDL window or renderer is unavailable");
         return false;
     }
 
@@ -126,14 +127,14 @@ bool LedGridSim::initialize(int width, int height)
 
     if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
     {
-        SDL_Log("ImGui SDL3 platform backend initialization failed");
+        LOG_WARNING("ImGui SDL3 platform backend initialization failed");
         return false;
     }
     m_platform_backend_initialized = true;
 
     if (!ImGui_ImplSDLRenderer3_Init(renderer))
     {
-        SDL_Log("ImGui SDL renderer backend initialization failed");
+        LOG_WARNING("ImGui SDL renderer backend initialization failed");
         return false;
     }
     m_renderer_backend_initialized = true;
@@ -144,7 +145,7 @@ bool LedGridSim::initialize(int width, int height)
         m_logo_texture = SDL_CreateTextureFromSurface(renderer, logoSurface);
         if (m_logo_texture == nullptr)
         {
-            SDL_Log("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
+            LOG_WARNING("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
         }
     }
 
