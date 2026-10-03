@@ -109,19 +109,35 @@ bool DisplayDrv::isOn() const
 
 void DisplayDrv::show(const YAGfxBitmap& bitmap)
 {
-    if (!m_simulationInterface->isInitialized())
+    static bool isFirstCall = true;
+
+    if (!m_simulationInterface->isInitialized() && isFirstCall)
     {
-        /* Initialize the simulation interface. */
+        /* Initialize the simulation interface.
+         * This is done during the first call of show(), because the SDL init must run in the same thread
+         * as the later update() calls. Alternative would be to run the simulation interface in a separate thread,
+         * but this would require some broader changes and doesn't seem to be necessary so far.
+         */
         m_simulationInterface->initialize(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT);
+        isFirstCall = false;
     }
 
-    if (m_simulationInterface->dispatchEvents())
+    /* Check if the simulation interface is initialized again because the initialization might have failed.
+     * This happens for example in pipelines or if running Pixelix from an ssh session. In this case we don't
+     * die, but run without the UI. The webserver is still running and can be used to control the app.
+     */
+    if (m_simulationInterface->isInitialized())
     {
-        m_simulationInterface->update(bitmap);
-    }
-    else
-    {
-        exit(0); /* Window Close event received, exit the application. */
+        if (m_simulationInterface->dispatchEvents())
+        {
+            m_simulationInterface->update(bitmap);
+        }
+        else
+        {
+            /* Window Close event received, exit the application. */
+            /* TODO: Exit is brutal, find a better way to handle this. */
+            exit(0);
+        }
     }
 }
 
