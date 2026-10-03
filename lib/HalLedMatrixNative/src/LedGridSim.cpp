@@ -112,6 +112,9 @@ bool LedGridSim::initialize(int width, int height)
         return false;
     }
 
+    m_width                = width;
+    m_height               = height;
+
     SDL_Window*   window   = m_sdl_interface->getWindow();
     SDL_Renderer* renderer = m_sdl_interface->getRenderer();
     if (window == nullptr || renderer == nullptr)
@@ -316,7 +319,7 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
     if (availHeight < 10.0F)
         availHeight = 10.0F;
 
-    float aspectRatio  = (float)32 / (float)8;
+    float aspectRatio  = m_width / m_height;
 
     // Fit within (avail.x, availHeight) while preserving aspect ratio
     float targetWidth  = avail.x;
@@ -334,8 +337,8 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
 
     const ImVec2 displayPos = ImGui::GetCursorScreenPos();
-    const float  cellWidth  = targetWidth / 32.0F;
-    const float  cellHeight = targetHeight / 8.0F;
+    const float  cellWidth  = targetWidth / m_width;
+    const float  cellHeight = targetHeight / m_height;
     const float  cellInset  = (cellWidth < cellHeight ? cellWidth : cellHeight) * 0.12F;
     ImDrawList*  drawList   = ImGui::GetWindowDrawList();
 

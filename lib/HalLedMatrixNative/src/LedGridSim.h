@@ -152,10 +152,9 @@ private:
     bool          m_platform_backend_initialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
     bool          m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
 
-    bool          m_power                        = true; /**< Tracks the power state of the display. */
-    uint8_t       m_brightness                   = 255U; /**< Brightness value [0; 255] */
-
-    int16_t       m_framebuffer[32 * 8]; /**< Framebuffer for the LCD display. */
+    bool          m_power                        = true;  /**< Tracks the power state of the display. */
+    uint8_t       m_brightness                   = 255U;  /**< Brightness value [0; 255] */
+    float         m_width                        = 32.0F; /**< Width of the simulated display in pixels. */
+    float         m_height                       = 8.0F;  /**< Height of the simulated display in pixels. */
 };
-
 /** @} */

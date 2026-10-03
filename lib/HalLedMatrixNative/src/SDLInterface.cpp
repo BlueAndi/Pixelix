@@ -43,9 +43,18 @@
  * Macros
  *****************************************************************************/
 
+static const int32_t WINDOW_DEFAULT_WIDTH     = 1024U; /**< Default window width in pixels. */
+static const int32_t WINDOW_DEFAULT_HEIGHT_8  = 240U;  /**< Default window height in pixels. */
+static const int32_t WINDOW_DEFAULT_HEIGHT_16 = 360U;  /**< Default window height in pixels. */
+static const int32_t WINDOW_DEFAULT_HEIGHT_32 = 512U;  /**< Default window height in pixels. */
+static const int32_t WINDOW_DEFAULT_HEIGHT_64 = 1024U; /**< Default window height in pixels. */
+
+static const int32_t WINDOW_BUTTONBAR_HEIGHT  = 100U; /**< Vertical space for buttons */
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
+
 /** Image entry for the SDL interface. */
 struct ImageEntry
 {
@@ -56,15 +65,25 @@ struct ImageEntry
  * Prototypes
  *****************************************************************************/
 
+/**
+ * @brief   Gets the default window height based on the number of pixel rows.
+ * @param   pixelrows The number of pixel rows.
+ * @return  The default window height in pixels.
+ */
+static uint32_t getDefaultWindowHeight(uint32_t pixelrows);
+
 /******************************************************************************
  * Local Variables
+
  *****************************************************************************/
 /**
  * @brief   Image entry for the SDL interface.
  * @details Contains the path and surface of a registered image.
  */
-std::array<ImageEntry, static_cast<std::size_t>(SDLInterface::ImageId::IMG_ID_COUNT)> gImages = { { { SDLInterface::ImageId::IMG_ID_WINDOW_ICON, "data/favicon.png" },
-    { SDLInterface::ImageId::IMG_ID_ABOUT_LOGO, "data/images/LogoSmall.png" } } };
+std::array<ImageEntry, static_cast<std::size_t>(SDLInterface::ImageId::IMG_ID_COUNT)> gImages = {
+    { { SDLInterface::ImageId::IMG_ID_WINDOW_ICON, "data/favicon.png" },
+        { SDLInterface::ImageId::IMG_ID_ABOUT_LOGO, "data/images/LogoSmall.png" } }
+};
 
 /******************************************************************************
  * Public Methods
@@ -91,8 +110,8 @@ bool SDLInterface::initialize(int width, int height)
 
     m_window          = SDL_CreateWindow(
         "Pixelix LED Grid Simulation",
-        width * 30,
-        height * 30 + 100,
+        WINDOW_DEFAULT_WIDTH, /* Width is same for all layouts.*/
+        getDefaultWindowHeight(height),
         SDL_WINDOW_RESIZABLE);
     if (m_window == nullptr)
     {
@@ -212,3 +231,33 @@ void SDLInterface::finishUpdate()
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+static uint32_t getDefaultWindowHeight(uint32_t pixelrows)
+{
+    uint32_t height = 0U;
+
+    switch (pixelrows)
+    {
+    case 8U:
+        height = WINDOW_DEFAULT_HEIGHT_8;
+        break;
+
+    case 16U:
+        height = WINDOW_DEFAULT_HEIGHT_16;
+        break;
+
+    case 32U:
+        height = WINDOW_DEFAULT_HEIGHT_32;
+        break;
+
+    case 64U:
+        height = WINDOW_DEFAULT_HEIGHT_64;
+        break;
+
+    default:
+        height = WINDOW_DEFAULT_HEIGHT_8;
+        break;
+    }
+
+    return height + WINDOW_BUTTONBAR_HEIGHT;
+}
