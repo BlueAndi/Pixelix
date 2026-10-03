@@ -260,8 +260,8 @@ void LedGridSim::beginFullscreenWindow()
         ImGuiWindowFlags_NoNavFocus |
         ImGuiWindowFlags_MenuBar;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
 
     ImGui::Begin("PixelixSimulatorRoot", nullptr, flags);
@@ -271,19 +271,19 @@ void LedGridSim::beginFullscreenWindow()
 
 void LedGridSim::renderButtonBar()
 {
-    const float buttonWidth  = 100.0f;
-    const float buttonHeight = 30.0f;
+    const float buttonWidth  = 100.0F;
+    const float buttonHeight = 30.0F;
     const float spacing      = ImGui::GetStyle().ItemSpacing.x;
 
     const float buttonCount  = static_cast<float>(gSimButtons.size());
 
-    float       totalWidth   = (buttonWidth * buttonCount) + (spacing * (buttonCount - 1.0f));
+    float       totalWidth   = (buttonWidth * buttonCount) + (spacing * (buttonCount - 1.0F));
     float       availWidth   = ImGui::GetContentRegionAvail().x;
-    float       offsetX      = (availWidth - totalWidth) * 0.5f;
+    float       offsetX      = (availWidth - totalWidth) * 0.5F;
 
     ButtonDrv*  buttonDrv    = dynamic_cast<ButtonDrv*>(&Board::getInstance().getButtonDrv());
 
-    if (offsetX > 0.0f)
+    if (offsetX > 0.0F)
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
 
     for (const SimulatedButton& button : gSimButtons)
@@ -311,10 +311,10 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
 
     // Reserve space at the bottom for the button bar (computed by caller ideally,
     // but here we just reserve a fixed height for simplicity)
-    float buttonBarHeight = ImGui::GetFrameHeightWithSpacing() + 20.0f;
+    float buttonBarHeight = ImGui::GetFrameHeightWithSpacing() + 20.0F;
     float availHeight     = avail.y - buttonBarHeight;
-    if (availHeight < 10.0f)
-        availHeight = 10.0f;
+    if (availHeight < 10.0F)
+        availHeight = 10.0F;
 
     float aspectRatio  = (float)32 / (float)8;
 
@@ -329,14 +329,14 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
     }
 
     // Center horizontally
-    float offsetX = (avail.x - targetWidth) * 0.5f;
-    if (offsetX > 0.0f)
+    float offsetX = (avail.x - targetWidth) * 0.5F;
+    if (offsetX > 0.0F)
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
 
     const ImVec2 displayPos = ImGui::GetCursorScreenPos();
-    const float  cellWidth  = targetWidth / 32.0f;
-    const float  cellHeight = targetHeight / 8.0f;
-    const float  cellInset  = (cellWidth < cellHeight ? cellWidth : cellHeight) * 0.12f;
+    const float  cellWidth  = targetWidth / 32.0F;
+    const float  cellHeight = targetHeight / 8.0F;
+    const float  cellInset  = (cellWidth < cellHeight ? cellWidth : cellHeight) * 0.12F;
     ImDrawList*  drawList   = ImGui::GetWindowDrawList();
 
     drawList->AddRectFilled(
@@ -377,7 +377,7 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
                     ImVec2(cellMin.x + cellInset, cellMin.y + cellInset),
                     ImVec2(cellMax.x - cellInset, cellMax.y - cellInset),
                     color,
-                    5.0f);
+                    5.0F);
             }
         }
     }
@@ -404,10 +404,10 @@ void LedGridSim::renderMenuBar()
         ImGui::TextLinkOpenURL("Open Web Page", webpageUrl.c_str());
 
         /* Reserve space and push "Help" to the right edge */
-        float helpWidth = ImGui::CalcTextSize("FPS: 100.00").x + ImGui::GetStyle().FramePadding.x * 2.0f;
-        ImGui::SameLine(ImGui::GetWindowWidth() - helpWidth - 10.0f);
+        float helpWidth = ImGui::CalcTextSize("FPS: 100.00").x + ImGui::GetStyle().FramePadding.x * 2.0F;
+        ImGui::SameLine(ImGui::GetWindowWidth() - helpWidth - 10.0F);
 
-        ImGui::Text("FPS: %.1f", this->getPower() ? ImGui::GetIO().Framerate : 0.0f);
+        ImGui::Text("FPS: %.1f", this->getPower() ? ImGui::GetIO().Framerate : 0.0F);
 
         ImGui::EndMenuBar();
     }
@@ -427,9 +427,9 @@ void LedGridSim::renderMenuBar()
         if (m_logo_texture != nullptr)
         {
             const ImTextureID textureId   = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(m_logo_texture));
-            const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logo_texture->w) * 0.5f;
+            const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logo_texture->w) * 0.5F;
             /* Center the logo horizontally */
-            if (logoOffsetX > 0.0f)
+            if (logoOffsetX > 0.0F)
             {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + logoOffsetX);
             }
@@ -454,9 +454,9 @@ void LedGridSim::renderMenuBar()
 
         ImGui::Spacing();
 
-        const float closeButtonWidth   = 120.0f;
-        const float closeButtonOffsetX = (ImGui::GetContentRegionAvail().x - closeButtonWidth) * 0.5f;
-        if (closeButtonOffsetX > 0.0f)
+        const float closeButtonWidth   = 120.0F;
+        const float closeButtonOffsetX = (ImGui::GetContentRegionAvail().x - closeButtonWidth) * 0.5F;
+        if (closeButtonOffsetX > 0.0F)
         {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + closeButtonOffsetX);
         }
