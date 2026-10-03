@@ -57,7 +57,6 @@ public:
 
     /**
      * @brief Creates an ImGui context and initializes its SDL3 backends.
-     * @param sdl_interface Initialized SDL interface providing the window and renderer.
      */
     explicit LedGridSim();
 
@@ -82,6 +81,7 @@ public:
 
     /**
      * @brief Updates the ImGui UI.
+     * @param bitmap The bitmap to display in the ImGui Led Grid window.
      */
     void update(const YAGfxBitmap& bitmap);
 
@@ -135,6 +135,7 @@ protected:
 
     /**
      * @brief Renders the main display area of the ImGui window.
+     * @param bitmap The bitmap to display in the ImGui Led Grid window.
      */
     void renderDisplay(const YAGfxBitmap& bitmap);
 
