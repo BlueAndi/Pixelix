@@ -109,9 +109,7 @@ public:
      */
     ButtonState getState(ButtonId buttonId) final
     {
-        (void)buttonId;
-
-        return BUTTON_STATE_RELEASED;
+        return m_state[buttonId];
     }
 
     /**
