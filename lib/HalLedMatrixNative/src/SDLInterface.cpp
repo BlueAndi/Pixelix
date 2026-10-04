@@ -59,7 +59,7 @@ struct ImageEntry
 
 /**
  * @brief   Gets the default window height based on the number of pixel rows.
- * @param   pixelrows[in] The number of pixel rows.
+ * @param[in] pixelrows The number of pixel rows.
  * @return  The default window height in pixels.
  */
 static uint32_t getDefaultWindowHeight(uint32_t pixelrows);

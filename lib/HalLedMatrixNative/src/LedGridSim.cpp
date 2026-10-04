@@ -84,8 +84,8 @@ struct SimulatedButton
  * A brightness of 0 means 50%, while a brightness of 255 means the 100%.
  * The simulated display is otherwise getting too dark at low brightness values.
  *
- * @param channel[in] The original RGB channel value in the range [0; 255].
- * @param brightness[in] The brightness value in the range [0; 255].
+ * @param[in] channel The original RGB channel value in the range [0; 255].
+ * @param[in] brightness The brightness value in the range [0; 255].
  * @return The adjusted RGB channel value in the range [0; 255].
  */
 static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness);
@@ -93,9 +93,9 @@ static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness);
 /**
  * @brief   Calculate the default main window height based on LED configuration.
  *
- * @param   windowWidth[in] The desired window width in screen pixels.
- * @param   ledsX[in] The simulated pixel grid X resolution.
- * @param   ledsY[in] The simulated pixel grid Y resolution.
+ * @param[in] windowWidth The desired window width in screen pixels.
+ * @param[in] ledsX The simulated pixel grid X resolution.
+ * @param[in] ledsY The simulated pixel grid Y resolution.
 
  * @return  The default window height in screen pixels.
  */
@@ -244,7 +244,7 @@ bool LedGridSim::dispatchEvents()
 
 /**
  * @brief Updates the ImGui UI.
- * @param bitmap [in] The bitmap to display in the ImGui LED grid window.
+ * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
  */
 void LedGridSim::update(const YAGfxBitmap& bitmap)
 {

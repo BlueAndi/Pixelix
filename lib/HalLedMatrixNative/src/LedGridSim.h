@@ -67,8 +67,8 @@ public:
 
     /**
      * @brief Initializes SDL and creates the window and renderer.
-     * @param width[in] The width of the LED matrix in LEDs.
-     * @param height[in] The height of the LED matrix in pixels.
+     * @param[in] width The width of the LED matrix in LEDs.
+     * @param[in] height The height of the LED matrix in pixels.
      * @return true if initialization succeeds; otherwise, false.
      */
     bool initialize(int width, int height);
@@ -81,13 +81,13 @@ public:
 
     /**
      * @brief Updates the ImGui UI.
-     * @param bitmap[in] The bitmap to display in the ImGui LED grid window.
+     * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
      */
     void update(const YAGfxBitmap& bitmap);
 
     /**
      * @brief Sets the power state of the simulated display.
-     * @param powerOn[in] true to power on the display; false to power it off.
+     * @param[in] powerOn true to power on the display; false to power it off.
      */
     void setPower(bool powerOn)
     {
@@ -111,7 +111,7 @@ public:
 
     /**
      * @brief Sets the brightness of the simulated display.
-     * @param brightness[in] Brightness value in the range [0; 255].
+     * @param[in] brightness Brightness value in the range [0; 255].
      */
     void setBrightness(uint8_t brightness)
     {
@@ -132,7 +132,7 @@ protected:
 
     /**
      * @brief Renders the main display area of the ImGui window.
-     * @param bitmap[in] The bitmap to display in the ImGui LED grid window.
+     * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
      */
     void renderDisplay(const YAGfxBitmap& bitmap);
 

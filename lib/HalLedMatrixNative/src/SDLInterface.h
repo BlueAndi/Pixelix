@@ -77,8 +77,8 @@ public:
 
     /**
      * @brief Initializes SDL and creates the window and renderer.
-     * @param width[in] The window width in screen pixels.
-     * @param height[in] The window height in screen pixels.
+     * @param[in] width The window width in screen pixels.
+     * @param[in] height The window height in screen pixels.
      * @return true if initialization succeeds; otherwise, false.
      */
     bool initialize(int width, int height);
@@ -119,7 +119,7 @@ public:
 
     /**
      * @brief Gets a registered image surface.
-     * @param id[in] Image identifier.
+     * @param[in] id Image identifier.
      * @return A non-owning pointer to the image surface, or nullptr if unavailable.
      */
     SDL_Surface* getImageSurface(ImageId id) const;
