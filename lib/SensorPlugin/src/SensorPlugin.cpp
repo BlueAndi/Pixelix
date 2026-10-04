@@ -245,7 +245,8 @@ bool SensorPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 void SensorPlugin::update()
 {
     String         text;
-    const uint32_t PRECISION = 2U;
+    const uint32_t PRECISION      = 2U;
+    const size_t   VALUE_STR_SIZE = 24U;
 
     if (nullptr == m_sensorChannel)
     {
@@ -257,8 +258,15 @@ void SensorPlugin::update()
          * aligned looks better, because the unit stays at the same
          * position and only the number seems to be updated.
          */
+        char valueStr[VALUE_STR_SIZE];
+
+        if (false == m_sensorChannel->getValueAsString(valueStr, sizeof(valueStr), PRECISION))
+        {
+            valueStr[0U] = '\0';
+        }
+
         text  = "{hr}";
-        text += m_sensorChannel->getValueAsString(PRECISION);
+        text += valueStr;
         text += " ";
         text += ISensorChannel::channelTypeToUnit(m_sensorChannel->getType());
     }

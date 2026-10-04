@@ -46,6 +46,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include "ISensorChannel.hpp"
 
 /******************************************************************************
@@ -55,6 +56,44 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/**
+ * Write a 64 bit unsigned value to a buffer.
+ *
+ * The overload set replaces the String conversion, which allocated.
+ *
+ * @param[out]  str     Destination buffer.
+ * @param[in]   size    Size of the buffer in byte.
+ * @param[in]   value   The value.
+ */
+static inline void sensorValueToStr(char* str, size_t size, uint64_t value)
+{
+    (void)snprintf(str, size, "%" PRIu64, value);
+}
+
+/**
+ * Write a 32 bit unsigned value to a buffer.
+ *
+ * @param[out]  str     Destination buffer.
+ * @param[in]   size    Size of the buffer in byte.
+ * @param[in]   value   The value.
+ */
+static inline void sensorValueToStr(char* str, size_t size, uint32_t value)
+{
+    (void)snprintf(str, size, "%" PRIu32, value);
+}
+
+/**
+ * Write a 32 bit signed value to a buffer.
+ *
+ * @param[out]  str     Destination buffer.
+ * @param[in]   size    Size of the buffer in byte.
+ * @param[in]   value   The value.
+ */
+static inline void sensorValueToStr(char* str, size_t size, int32_t value)
+{
+    (void)snprintf(str, size, "%" PRId32, value);
+}
 
 /**
  * Concrete sensor channel, considering the data type of the channel values.
@@ -110,16 +149,29 @@ public:
     virtual void setOffset(T offset) = 0;
 
     /**
-     * Get value as string.
+     * Get the value as string.
      *
-     * @param[in] precision The precision (ignored for integer values) of the value.
+     * @param[out]  str         Buffer for the value, always zero terminated.
+     * @param[in]   size        Size of the buffer in byte, including the terminator.
+     * @param[in]   precision   The precision (ignored for integer values) of the value.
      *
-     * @return Value as string
+     * @return If the value was written, it will return true otherwise false.
      */
-    String getValueAsString(uint32_t precision) override
+    bool getValueAsString(char* str, size_t size, uint32_t precision) override
     {
+        bool isSuccessful = false;
+
         (void)precision;
-        return String(getValue());
+
+        if ((nullptr != str) &&
+            (0U < size))
+        {
+            sensorValueToStr(str, size, getValue());
+
+            isSuccessful = true;
+        }
+
+        return isSuccessful;
     }
 
 protected:
@@ -182,23 +234,27 @@ public:
     virtual void setOffset(float offset) = 0;
 
     /**
-     * Get value as string.
-     * If there is any error, it will return "NAN".
+     * Get the value as string.
      *
-     * @param[in] precision The precision (ignored for integer values) of the value.
+     * @param[out]  str         Buffer for the value, always zero terminated.
+     * @param[in]   size        Size of the buffer in byte, including the terminator.
+     * @param[in]   precision   The precision (ignored for integer values) of the value.
      *
-     * @return Value as string
+     * @return If the value was written, it will return true otherwise false.
      */
-    String getValueAsString(uint32_t precision) override
+    bool getValueAsString(char* str, size_t size, uint32_t precision) override
     {
-        float  value = getValue();
-        String valueStr;
-        char   buffer[20U];
+        bool isSuccessful = false;
 
-        (void)snprintf(buffer, sizeof(buffer), "%.*F", precision, value);
-        valueStr = buffer;
+        if ((nullptr != str) &&
+            (0U < size))
+        {
+            (void)snprintf(str, size, "%.*F", static_cast<int>(precision), getValue());
 
-        return valueStr;
+            isSuccessful = true;
+        }
+
+        return isSuccessful;
     }
 };
 
@@ -249,19 +305,29 @@ public:
     virtual void setOffset(bool offset) = 0;
 
     /**
-     * Get value as string.
+     * Get the value as string.
      *
-     * @param[in] precision The precision (ignored for integer values) of the value.
+     * @param[out]  str         Buffer for the value, always zero terminated.
+     * @param[in]   size        Size of the buffer in byte, including the terminator.
+     * @param[in]   precision   The precision (ignored for integer values) of the value.
      *
-     * @return Value as string
+     * @return If the value was written, it will return true otherwise false.
      */
-    String getValueAsString(uint32_t precision) override
+    bool getValueAsString(char* str, size_t size, uint32_t precision) override
     {
-        bool value = getValue();
+        bool isSuccessful = false;
 
         (void)precision;
 
-        return (false == value) ? "false" : "true";
+        if ((nullptr != str) &&
+            (0U < size))
+        {
+            (void)snprintf(str, size, "%s", (false == getValue()) ? "false" : "true");
+
+            isSuccessful = true;
+        }
+
+        return isSuccessful;
     }
 };
 
