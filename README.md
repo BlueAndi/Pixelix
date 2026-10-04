@@ -86,6 +86,10 @@ Please note, that not every feature might be available for all kind of developme
 | ![IconTextLampPlugin](./lib/IconTextLampPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/IconTextPlugin/web/IconTextPlugin.jpg) |
 | ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg)       | ...                                                            |
 
+A native environment variant is available to run PIXELIX as an application on Windows and Linux platforms without the need for hardware. PIXELIX shows a simulated LED grid in a window und executes its web server on local port 8080.
+
+![Pixelix Native](./doc/images/pixelix_native.png)
+
 ## Original Setup
 
 The original setup for development and the first release was:
@@ -389,6 +393,7 @@ build_flags =
 | [FileSaver.js](https://github.com/eligrey/FileSaver.js)                       | FileSaver.js is the solution to saving files on the client-side.                                                                                                                                   | MIT                               |
 | [Arduino client for MQTT](https://github.com/knolleary/pubsubclient)          | This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT.                                                                                      | MIT                               |
 | [ESP32-PSRamFS](https://github.com/tobozo/ESP32-PsRamFS)                      | ESP32-PsRamFS is a pseudo RamDisk library for Arduino-ESP32, with vfs compliance.                                                                                                                  | MIT                               |
+| [Dear ImGui](https://github.com/ocornut/imgui)                                | ImGui is a bloat-free graphical user interface library for C++. Is is used by the native Platfrom only to create a simulated LED grid window.                                                      | MIT                               |
 
 ## Issues, Ideas And Bugs
 

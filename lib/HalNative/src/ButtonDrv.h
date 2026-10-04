@@ -29,8 +29,8 @@
  * @brief  Button driver for the native environment
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * There are no buttons on the host. The buttons can be triggered by the
- * webinterface instead, see the websocket command BUTTON.
+ * This driver is used together with the HalLedMatrixNative library to provide
+ * button functionality using the simulated LED grid window.
  *
  * @addtogroup TEST
  *
@@ -70,7 +70,8 @@ public:
      */
     ButtonDrv() :
         IButtonDrv(),
-        m_observer(nullptr)
+        m_observer(nullptr),
+        m_state{ BUTTON_STATE_UNKNOWN, BUTTON_STATE_UNKNOWN, BUTTON_STATE_UNKNOWN }
     {
     }
 
@@ -88,7 +89,7 @@ public:
      * @param[in] buttonLeftIn  Pin of the "left" button.
      * @param[in] buttonRightIn Pin of the "right" button.
      *
-     * @return Always true, there are no buttons on the host.
+     * @return Always true, there are no pin based buttons on the host.
      */
     bool init(const DInPin& buttonOkIn, const DInPin& buttonLeftIn, const DInPin& buttonRightIn) final
     {
@@ -108,9 +109,13 @@ public:
      */
     ButtonState getState(ButtonId buttonId) final
     {
-        (void)buttonId;
+        ButtonState state = BUTTON_STATE_UNKNOWN;
 
-        return BUTTON_STATE_RELEASED;
+        if (BUTTON_ID_CNT > buttonId)
+        {
+            state = m_state[buttonId];
+        }
+        return state;
     }
 
     /**
@@ -141,9 +146,34 @@ public:
         return false;
     }
 
+    /**
+     * Update button state of the given button.
+     *
+     * This function is only available in the native environment and not part of the IButtonDrv interface.
+     * It is used by the HalLedMatrixNative library to trigger button presses.
+     *
+     * @param[in] buttonId  Id of the button.
+     * @param[in] state     New button state.
+     */
+    void updateButton(ButtonId buttonId, ButtonState state)
+    {
+        if (BUTTON_ID_CNT > buttonId)
+        {
+            if (m_state[buttonId] != state)
+            {
+                m_state[buttonId] = state;
+                if (nullptr != m_observer)
+                {
+                    m_observer->notify(buttonId, state);
+                }
+            }
+        }
+    }
+
 private:
 
-    IButtonObserver* m_observer; /**< Observer, which is notified about button state changes. */
+    IButtonObserver* m_observer;             /**< Observer, which is notified about button state changes. */
+    ButtonState      m_state[BUTTON_ID_CNT]; /**< Current button states */
 
     ButtonDrv(const ButtonDrv& drv);
     ButtonDrv& operator=(const ButtonDrv& drv);

@@ -48,7 +48,6 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
 #include <IDisplayDrv.h>
 #include <YAGfxBitmap.h>
 #include <ColorDef.hpp>
@@ -60,6 +59,7 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+class LedGridSim;
 
 /**
  * Display driver for the native environment.
@@ -111,10 +111,7 @@ public:
      *
      * @param[in] brightness    Brightness value [0; 255]
      */
-    void setBrightness(uint8_t brightness) final
-    {
-        m_brightness = brightness;
-    }
+    void setBrightness(uint8_t brightness) final;
 
     /**
      * Clear the display.
@@ -124,37 +121,23 @@ public:
     /**
      * Power the display off.
      */
-    void off() final
-    {
-        m_isOn = false;
-    }
+    void off() final;
 
     /**
      * Power the display on.
      */
-    void on() final
-    {
-        m_isOn = true;
-    }
+    void on() final;
 
     /**
      * Is the display powered on?
      *
      * @return If the display is powered on, it will return true otherwise false.
      */
-    bool isOn() const final
-    {
-        return m_isOn;
-    }
+    bool isOn() const final;
 
 private:
 
-    /** Number of pixels of the display. */
-    static const size_t PIXEL_COUNT = static_cast<size_t>(CONFIG_LED_MATRIX_WIDTH) * static_cast<size_t>(CONFIG_LED_MATRIX_HEIGHT);
-
-    Color               m_framebuffer[PIXEL_COUNT]; /**< The last shown framebuffer. */
-    uint8_t             m_brightness;               /**< Brightness value [0; 255] */
-    bool                m_isOn;                     /**< Is the display powered on? */
+    LedGridSim* m_simulationInterface; /**< Simulation interface to show the framebuffer on the host. */
 
     DisplayDrv(const DisplayDrv& drv);
     DisplayDrv& operator=(const DisplayDrv& drv);

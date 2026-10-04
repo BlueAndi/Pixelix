@@ -35,6 +35,9 @@
  *****************************************************************************/
 #include "DisplayDrv.h"
 
+#include "SDLInterface.h"
+#include "LedGridSim.h"
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -50,6 +53,7 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
+static LedGridSim theLedGridSim; /**< Simulation pixel interface  */
 
 /******************************************************************************
  * Local Variables
@@ -61,9 +65,7 @@
 
 DisplayDrv::DisplayDrv() :
     IDisplayDrv(),
-    m_framebuffer(),
-    m_brightness(UINT8_MAX),
-    m_isOn(false)
+    m_simulationInterface(&theLedGridSim)
 {
 }
 
@@ -73,47 +75,74 @@ DisplayDrv::~DisplayDrv()
 
 bool DisplayDrv::begin()
 {
-    clear();
-
-    m_isOn = true;
+    this->clear();
+    this->on();
 
     return true;
 }
 
+void DisplayDrv::off()
+{
+    m_simulationInterface->setPower(false);
+}
+
+void DisplayDrv::on()
+{
+    m_simulationInterface->setPower(true);
+}
+
+void DisplayDrv::setBrightness(uint8_t brightness)
+{
+    m_simulationInterface->setBrightness(brightness);
+}
+
+/**
+ * Is the display powered on?
+ *
+ * @return If the display is powered on, it will return true otherwise false.
+ */
+bool DisplayDrv::isOn() const
+{
+    return m_simulationInterface->getPower();
+}
+
 void DisplayDrv::show(const YAGfxBitmap& bitmap)
 {
-    uint16_t x      = 0U;
-    uint16_t y      = 0U;
-    uint16_t width  = bitmap.getWidth();
-    uint16_t height = bitmap.getHeight();
+    static bool isFirstCall = true;
 
-    if (CONFIG_LED_MATRIX_WIDTH < width)
+    if ((false == m_simulationInterface->isInitialized()) && (true == isFirstCall))
     {
-        width = CONFIG_LED_MATRIX_WIDTH;
+        /* Initialize the simulation interface.
+         * This is done during the first call of show(), because the SDL init must run in the same thread
+         * as the later update() calls. Alternative would be to run the simulation interface in a separate thread,
+         * but this would require some broader changes and doesn't seem to be necessary so far.
+         */
+        m_simulationInterface->initialize(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT);
+        isFirstCall = false;
     }
 
-    if (CONFIG_LED_MATRIX_HEIGHT < height)
+    /* Check if the simulation interface is initialized again because the initialization might have failed.
+     * This happens for example in pipelines or if running Pixelix from an ssh session. In this case we don't
+     * die, but run without the UI. The webserver is still running and can be used to control the app.
+     */
+    if (true == m_simulationInterface->isInitialized())
     {
-        height = CONFIG_LED_MATRIX_HEIGHT;
-    }
-
-    for (y = 0U; y < height; ++y)
-    {
-        for (x = 0U; x < width; ++x)
+        if (true == m_simulationInterface->dispatchEvents())
         {
-            m_framebuffer[x + (y * CONFIG_LED_MATRIX_WIDTH)] = bitmap.getColor(x, y);
+            m_simulationInterface->update(bitmap);
+        }
+        else
+        {
+            /* Window Close event received, exit the application. */
+            /* TODO: Exit is brutal, find a better way to handle this. */
+            exit(0);
         }
     }
 }
 
 void DisplayDrv::clear()
 {
-    size_t index = 0U;
-
-    for (index = 0U; index < PIXEL_COUNT; ++index)
-    {
-        m_framebuffer[index] = ColorDef::BLACK;
-    }
+    /* No local framebuffer to clear, because the simulation interface is drawing directly to the window. */
 }
 
 /******************************************************************************

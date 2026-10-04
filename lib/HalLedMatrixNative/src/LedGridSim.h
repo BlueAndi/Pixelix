@@ -1,0 +1,160 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @file   LedGridSim.h
+ * @brief  ImGui/SDL3 Interface for native LED Grid Simulation
+ * @author Norbert Schulz <github@schulznorbert.de>
+ *
+ * @addtogroup LED Grid Simulator
+ *
+ * @{
+ */
+#pragma once
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+
+#include <YAGfxBitmap.h>
+
+#include <stdint.h>
+
+class SDLInterface;
+struct SDL_Texture;
+
+/**
+ * @brief Initializes and manages the Dear ImGui SDL3 backends.
+ * @details The referenced SDLInterface must outlive this object and must have
+ *          successfully initialized its window and renderer before construction.
+ */
+class LedGridSim
+{
+public:
+
+    /**
+     * @brief Creates an ImGui context and initializes its SDL3 backends.
+     */
+    explicit LedGridSim();
+
+    /**
+     * @brief Shuts down the interface and releases IMGUI resources.
+     */
+    ~LedGridSim();
+
+    /**
+     * @brief Initializes SDL and creates the window and renderer.
+     * @param[in] width The width of the LED matrix in LEDs.
+     * @param[in] height The height of the LED matrix in pixels.
+     * @return true if initialization succeeds; otherwise, false.
+     */
+    bool initialize(int width, int height);
+
+    /**
+     * @brief Processes all pending SDL events and forwards them to ImGui.
+     * @return true if processing should continue; false if a quit event was received.
+     */
+    bool dispatchEvents();
+
+    /**
+     * @brief Updates the ImGui UI.
+     * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
+     */
+    void update(const YAGfxBitmap& bitmap);
+
+    /**
+     * @brief Sets the power state of the simulated display.
+     * @param[in] powerOn true to power on the display; false to power it off.
+     */
+    void setPower(bool powerOn)
+    {
+        m_power = powerOn;
+    }
+
+    /**
+     * @brief Gets the power state of the simulated display.
+     * @return true if the display is powered on; otherwise, false.
+     */
+    bool getPower() const
+    {
+        return m_power;
+    }
+
+    /**
+     * @brief Reports whether the context and both SDL3 backends initialized successfully.
+     * @return true if this interface is ready for ImGui use; otherwise, false.
+     */
+    bool isInitialized() const;
+
+    /**
+     * @brief Sets the brightness of the simulated display.
+     * @param[in] brightness Brightness value in the range [0; 255].
+     */
+    void setBrightness(uint8_t brightness)
+    {
+        m_brightness = brightness;
+    }
+
+protected:
+
+    /**
+     * @brief Begins a fullscreen ImGui window that covers the entire viewport.
+     */
+    void beginFullscreenWindow();
+
+    /**
+     * @brief Renders a button bar at the bottom of the ImGui window.
+     */
+    void renderButtonBar();
+
+    /**
+     * @brief Renders the main display area of the ImGui window.
+     * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
+     */
+    void renderDisplay(const YAGfxBitmap& bitmap);
+
+    /**
+     * @brief Renders the menu bar at the top of the ImGui window.
+     */
+    void renderMenuBar();
+
+private:
+
+    SDLInterface* m_sdl_interface                = nullptr; /**< Underlying SDL interface. */
+    SDL_Texture*  m_logo_texture                 = nullptr; /**< SDL texture for the About dialog logo. */
+    bool          m_context_created              = false;   /**< Tracks whether this object created an ImGui context. */
+    bool          m_platform_backend_initialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
+    bool          m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
+
+    bool          m_power                        = true;  /**< Tracks the power state of the display. */
+    uint8_t       m_brightness                   = 255U;  /**< Brightness value [0; 255] */
+    float         m_width                        = 32.0F; /**< Width of the simulated display in pixels. */
+    float         m_height                       = 8.0F;  /**< Height of the simulated display in pixels. */
+
+    LedGridSim(const LedGridSim&)                = delete;
+    LedGridSim& operator=(const LedGridSim&)     = delete;
+};
+/** @} */

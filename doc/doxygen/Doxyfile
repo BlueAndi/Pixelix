@@ -1094,7 +1094,8 @@ EXCLUDE                = ../../lib/ArduinoNative \
                          ../../lib/Os/src/native \
                          ../../lib/HalHub75Esp32 \
                          ../../lib/HalTftDisplay \
-                         ../../lib/Fonts/src/TomThumb.h
+                         ../../lib/Fonts/src/TomThumb.h \
+                         ../../lib/HalLedMatrixNative/src/imgui
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
