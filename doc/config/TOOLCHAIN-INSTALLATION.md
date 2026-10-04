@@ -64,9 +64,10 @@ to modify the sourcecode and test it afterwards.
 
 1. For the test environment on windows platform, install [MSYS2](https://www.msys2.org/) by following its instructions
 2. Open MSYS2 UCRT64 terminal.
-3. Install the gcc compiler package: ```pacman -S mingw-w64-ucrt-x86_64-gcc```
-4. Install clang-format to be used by AI: ```pacman -S mingw-w64-ucrt-x86_64-clang```
-5. Install [SDL3](https://wiki.libsdl.org/SDL3/FrontPage) needed for LED Grid simulation:  ```pacman -S mingw-w64-ucrt-x86_64-sdl3```
+3. Update all packages: ```pacman -Syu```
+4. Install the gcc compiler package: ```pacman -S mingw-w64-ucrt-x86_64-gcc```
+5. Install clang-format to be used by AI: ```pacman -S mingw-w64-ucrt-x86_64-clang```
+6. Install [SDL3](https://wiki.libsdl.org/SDL3/FrontPage) needed for LED Grid simulation:  ```pacman -S mingw-w64-ucrt-x86_64-sdl3```
 
 ## Next Step
 
