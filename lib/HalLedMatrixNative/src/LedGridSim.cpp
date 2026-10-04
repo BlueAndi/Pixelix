@@ -54,6 +54,11 @@
  * Macros
  *****************************************************************************/
 
+static const uint32_t DEFAULT_WINDOW_WIDTH      = 1024U; /**< Default main window width. */
+
+static const uint32_t RESERVED_MENUBAR_HEIGHT   = 28U; /**< space for title bar and menu bar. */
+static const uint32_t RESERVED_BUTTONBAR_HEIGHT = 50U; /**< space for button bar on bottom. */
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -85,6 +90,18 @@ struct SimulatedButton
  */
 static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness);
 
+/**
+ * @brief   Calculate the default main window height based on LED configuration.
+ *
+ * @param   windowWidth[in] The desired window width in screen pixels.
+ * @param   ledsX[in] The simulated pixel grid X resolution.
+ * @param   ledsY[in] The simulated pixel grid Y resolution.
+
+ * @return  The default window height in screen pixels.
+ */
+static uint32_t getDefaultWindowHeight(uint32_t windowWidth, uint32_t ledsX, uint32_t ledsY);
+
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -107,11 +124,12 @@ LedGridSim::LedGridSim() :
 bool LedGridSim::initialize(int width, int height)
 {
     bool result = false;
-
     m_width     = width;
     m_height    = height;
 
-    if (false == m_sdl_interface->initialize(width, height))
+    if (false == m_sdl_interface->initialize(
+                     DEFAULT_WINDOW_WIDTH,
+                     getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, width, height)))
     {
         LOG_WARNING("SDL initialization failed");
     }
@@ -523,4 +541,18 @@ static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness)
 
     return static_cast<uint8_t>(
         (static_cast<uint32_t>(channel) * scaling + MAX_CHANNEL_VALUE) / (2 * MAX_CHANNEL_VALUE));
-};
+}
+
+
+static uint32_t getDefaultWindowHeight(uint32_t windowWidth, uint32_t ledsX, uint32_t ledsY)
+{
+    /* Calculate pixel grid height based on given windowWidth and resolution aspect ratio. */
+    uint32_t height  = windowWidth;
+    height          *= ledsY;
+    height          /= ledsX;
+
+    /* Add extra space for window title/menu bar and button bar */
+    height          += RESERVED_MENUBAR_HEIGHT + RESERVED_BUTTONBAR_HEIGHT;
+
+    return height;
+}

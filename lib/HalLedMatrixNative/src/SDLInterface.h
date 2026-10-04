@@ -77,8 +77,8 @@ public:
 
     /**
      * @brief Initializes SDL and creates the window and renderer.
-     * @param width[in] The width of the LED matrix in LEDs.
-     * @param height[in] The height of the LED matrix in pixels.
+     * @param width[in] The window width in screen pixels.
+     * @param height[in] The window height in screen pixels.
      * @return true if initialization succeeds; otherwise, false.
      */
     bool initialize(int width, int height);

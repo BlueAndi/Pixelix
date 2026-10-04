@@ -43,14 +43,6 @@
  * Macros
  *****************************************************************************/
 
-static const int32_t WINDOW_DEFAULT_WIDTH     = 1024U; /**< Default window width in pixels. */
-static const int32_t WINDOW_DEFAULT_HEIGHT_8  = 240U;  /**< Default window height in pixels. */
-static const int32_t WINDOW_DEFAULT_HEIGHT_16 = 360U;  /**< Default window height in pixels. */
-static const int32_t WINDOW_DEFAULT_HEIGHT_32 = 512U;  /**< Default window height in pixels. */
-static const int32_t WINDOW_DEFAULT_HEIGHT_64 = 1024U; /**< Default window height in pixels. */
-
-static const int32_t WINDOW_BUTTONBAR_HEIGHT  = 100U; /**< Vertical space for buttons */
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -115,8 +107,8 @@ bool SDLInterface::initialize(int width, int height)
 
             m_window          = SDL_CreateWindow(
                 "Pixelix LED Grid Simulation",
-                WINDOW_DEFAULT_WIDTH, /* Width is same for all layouts.*/
-                getDefaultWindowHeight(height),
+                static_cast<int>(width),
+                static_cast<int>(height),
                 SDL_WINDOW_RESIZABLE);
 
             if (nullptr == m_window)
@@ -241,33 +233,3 @@ void SDLInterface::finishUpdate()
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
-
-static uint32_t getDefaultWindowHeight(uint32_t pixelrows)
-{
-    uint32_t height = 0U;
-
-    switch (pixelrows)
-    {
-    case 8U:
-        height = WINDOW_DEFAULT_HEIGHT_8;
-        break;
-
-    case 16U:
-        height = WINDOW_DEFAULT_HEIGHT_16;
-        break;
-
-    case 32U:
-        height = WINDOW_DEFAULT_HEIGHT_32;
-        break;
-
-    case 64U:
-        height = WINDOW_DEFAULT_HEIGHT_64;
-        break;
-
-    default:
-        height = WINDOW_DEFAULT_HEIGHT_8;
-        break;
-    }
-
-    return height + WINDOW_BUTTONBAR_HEIGHT;
-}
