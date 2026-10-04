@@ -573,19 +573,25 @@ void SensorDataProvider::registerSensorTopics()
         /* Try to find a sensor channel which provides the required information. */
         if (false == find(sensorIndex, channelIndex, sensorTopic->sensorChannelType))
         {
-            LOG_WARNING("Sensor %u, channel %u - %s not found.", sensorIndex, channelIndex, ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType).c_str());
+            LOG_WARNING("Sensor %u, channel %u - %s not found.", sensorIndex, channelIndex, ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType));
         }
         else
         {
             const uint32_t              VALUE_PRECISION = 2U; /* 2 digits after the . */
+            const size_t                VALUE_STR_SIZE  = 24U;
             ISensor*                    sensor          = this->getSensor(sensorIndex);
             ISensorChannel*             sensorChannel   = sensor->getChannel(channelIndex);
             String                      channelName     = ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
             String                      entityId        = "sensors/";
             ITopicHandler::GetTopicFunc getTopicFunc =
                 [sensorTopic, sensorChannel, VALUE_PRECISION](const String& topic, JsonObject& jsonValue) -> bool {
-                bool   isSuccessful = false;
-                String value        = sensorChannel->getValueAsString(VALUE_PRECISION);
+                bool isSuccessful = false;
+                char value[VALUE_STR_SIZE];
+
+                if (false == sensorChannel->getValueAsString(value, sizeof(value), VALUE_PRECISION))
+                {
+                    value[0U] = '\0';
+                }
 
                 /* The callback is dedicated to a topic, therefore the
                  * topic parameter is not used.
@@ -593,7 +599,7 @@ void SensorDataProvider::registerSensorTopics()
                 UTIL_NOT_USED(topic);
 
                 /* Floating point channels may provide NaN. */
-                if (value != "NAN")
+                if (0 != strcmp(value, "NAN"))
                 {
                     jsonValue["value"] = value;
 
@@ -605,16 +611,21 @@ void SensorDataProvider::registerSensorTopics()
             TopicHandlerService::HasChangedFunc hasChangedFunc =
                 [sensorTopic, sensorChannel, sensorTopicRunData, VALUE_PRECISION](const String& topic) -> bool {
                 bool     hasChanged = false;
-                String   value      = sensorChannel->getValueAsString(VALUE_PRECISION);
-                uint32_t timestamp  = millis();
-                uint32_t delta      = timestamp - sensorTopicRunData->lastTimestamp;
+                char     value[VALUE_STR_SIZE];
+                uint32_t timestamp = millis();
+                uint32_t delta     = timestamp - sensorTopicRunData->lastTimestamp;
+
+                if (false == sensorChannel->getValueAsString(value, sizeof(value), VALUE_PRECISION))
+                {
+                    value[0U] = '\0';
+                }
 
                 /* The callback is dedicated to a topic, therefore the
                  * topic parameter is not used.
                  */
                 UTIL_NOT_USED(topic);
 
-                if ((value != "NAN") &&                         /* Floating point channels may provide NaN. */
+                if ((0 != strcmp(value, "NAN")) &&              /* Floating point channels may provide NaN. */
                     (sensorTopicRunData->lastValue != value) && /* Value changed? */
                     (sensorTopic->updatePeriod <= delta))       /* Update period expired? */
                 {
