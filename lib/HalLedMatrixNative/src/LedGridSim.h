@@ -67,8 +67,8 @@ public:
 
     /**
      * @brief Initializes SDL and creates the window and renderer.
-     * @param width The width of the Led Matrix in leds.
-     * @param height The height of the Led Matrix in pixels.
+     * @param width[in] The width of the LED matrix in LEDs.
+     * @param height[in] The height of the LED matrix in pixels.
      * @return true if initialization succeeds; otherwise, false.
      */
     bool initialize(int width, int height);
@@ -81,13 +81,13 @@ public:
 
     /**
      * @brief Updates the ImGui UI.
-     * @param bitmap The bitmap to display in the ImGui Led Grid window.
+     * @param bitmap[in] The bitmap to display in the ImGui LED grid window.
      */
     void update(const YAGfxBitmap& bitmap);
 
     /**
      * @brief Sets the power state of the simulated display.
-     * @param powerOn true to power on the display; false to power it off.
+     * @param powerOn[in] true to power on the display; false to power it off.
      */
     void setPower(bool powerOn)
     {
@@ -111,15 +111,12 @@ public:
 
     /**
      * @brief Sets the brightness of the simulated display.
-     * @param brightness Brightness value [0; 255]
+     * @param brightness[in] Brightness value in the range [0; 255].
      */
     void setBrightness(uint8_t brightness)
     {
         m_brightness = brightness;
     }
-
-    LedGridSim(const LedGridSim&)            = delete;
-    LedGridSim& operator=(const LedGridSim&) = delete;
 
 protected:
 
@@ -135,7 +132,7 @@ protected:
 
     /**
      * @brief Renders the main display area of the ImGui window.
-     * @param bitmap The bitmap to display in the ImGui Led Grid window.
+     * @param bitmap[in] The bitmap to display in the ImGui LED grid window.
      */
     void renderDisplay(const YAGfxBitmap& bitmap);
 
@@ -156,5 +153,8 @@ private:
     uint8_t       m_brightness                   = 255U;  /**< Brightness value [0; 255] */
     float         m_width                        = 32.0F; /**< Width of the simulated display in pixels. */
     float         m_height                       = 8.0F;  /**< Height of the simulated display in pixels. */
+
+    LedGridSim(const LedGridSim&)                = delete;
+    LedGridSim& operator=(const LedGridSim&)     = delete;
 };
 /** @} */

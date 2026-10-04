@@ -71,7 +71,6 @@ DisplayDrv::DisplayDrv() :
 
 DisplayDrv::~DisplayDrv()
 {
-    delete m_simulationInterface;
 }
 
 bool DisplayDrv::begin()
@@ -111,7 +110,7 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
 {
     static bool isFirstCall = true;
 
-    if (!m_simulationInterface->isInitialized() && isFirstCall)
+    if ((false == m_simulationInterface->isInitialized()) && (true == isFirstCall))
     {
         /* Initialize the simulation interface.
          * This is done during the first call of show(), because the SDL init must run in the same thread
@@ -126,9 +125,9 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
      * This happens for example in pipelines or if running Pixelix from an ssh session. In this case we don't
      * die, but run without the UI. The webserver is still running and can be used to control the app.
      */
-    if (m_simulationInterface->isInitialized())
+    if (true == m_simulationInterface->isInitialized())
     {
-        if (m_simulationInterface->dispatchEvents())
+        if (true == m_simulationInterface->dispatchEvents())
         {
             m_simulationInterface->update(bitmap);
         }

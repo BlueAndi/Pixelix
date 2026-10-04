@@ -73,15 +73,15 @@ struct SimulatedButton
  *****************************************************************************/
 
 /**
- * @brief Adjusts a RGB channel value based on the specified brightness.
+ * @brief Adjusts an RGB channel value based on the specified brightness.
  *
  * The brightness is affecting the upper 50% of the channel value range.
  * A brightness of 0 means 50%, while a brightness of 255 means the 100%.
  * The simulated display is otherwise getting too dark at low brightness values.
  *
- * @param channel The original RGB channel value [0; 255].
- * @param brightness The brightness value [0; 255].
- * @return The adjusted RGB channel value [0; 255].
+ * @param channel[in] The original RGB channel value in the range [0; 255].
+ * @param brightness[in] The brightness value in the range [0; 255].
+ * @return The adjusted RGB channel value in the range [0; 255].
  */
 static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness);
 
@@ -100,80 +100,92 @@ static const std::array<SimulatedButton, 3U> gSimButtons = {
  * Public Methods
  *****************************************************************************/
 LedGridSim::LedGridSim() :
-    m_sdl_interface(new SDLInterface())
+    m_sdl_interface(new (std::nothrow) SDLInterface())
 {
 }
 
 bool LedGridSim::initialize(int width, int height)
 {
-    if (!m_sdl_interface->initialize(width, height))
+    bool result = false;
+
+    m_width     = width;
+    m_height    = height;
+
+    if (false == m_sdl_interface->initialize(width, height))
     {
         LOG_WARNING("SDL initialization failed");
-        return false;
     }
-
-    m_width                = width;
-    m_height               = height;
-
-    SDL_Window*   window   = m_sdl_interface->getWindow();
-    SDL_Renderer* renderer = m_sdl_interface->getRenderer();
-    if (window == nullptr || renderer == nullptr)
+    else
     {
-        LOG_WARNING("Cannot initialize ImGui: SDL window or renderer is unavailable");
-        return false;
-    }
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    m_context_created = true;
-    ImGui::StyleColorsDark();
-
-    if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
-    {
-        LOG_WARNING("ImGui SDL3 platform backend initialization failed");
-        return false;
-    }
-    m_platform_backend_initialized = true;
-
-    if (!ImGui_ImplSDLRenderer3_Init(renderer))
-    {
-        LOG_WARNING("ImGui SDL renderer backend initialization failed");
-        return false;
-    }
-    m_renderer_backend_initialized = true;
-
-    SDL_Surface* logoSurface       = m_sdl_interface->getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
-    if (logoSurface != nullptr)
-    {
-        m_logo_texture = SDL_CreateTextureFromSurface(renderer, logoSurface);
-        if (m_logo_texture == nullptr)
+        SDL_Window*   window   = m_sdl_interface->getWindow();
+        SDL_Renderer* renderer = m_sdl_interface->getRenderer();
+        if ((nullptr == window) || (nullptr == renderer))
         {
-            LOG_WARNING("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
+            LOG_WARNING("Cannot initialize ImGui: SDL window or renderer is unavailable");
+        }
+        else
+        {
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+            m_context_created = true;
+            ImGui::StyleColorsDark();
+
+            if (false == ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
+            {
+                LOG_WARNING("ImGui SDL3 platform backend initialization failed");
+            }
+            else
+            {
+                m_platform_backend_initialized = true;
+
+                if (false == ImGui_ImplSDLRenderer3_Init(renderer))
+                {
+                    LOG_WARNING("ImGui SDL renderer backend initialization failed");
+                }
+                else
+                {
+                    m_renderer_backend_initialized = true;
+
+                    SDL_Surface* logoSurface       = m_sdl_interface->getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
+                    if (nullptr != logoSurface)
+                    {
+                        m_logo_texture = SDL_CreateTextureFromSurface(renderer, logoSurface);
+                        if (nullptr == m_logo_texture)
+                        {
+                            LOG_WARNING("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
+                        }
+                    }
+                    result = true;
+                }
+            }
         }
     }
-
-    return m_renderer_backend_initialized;
+    return result;
 }
 
 LedGridSim::~LedGridSim()
 {
-    if (m_logo_texture != nullptr)
+    if (nullptr != m_logo_texture)
+    {
+        SDL_DestroyTexture(m_logo_texture);
+        m_logo_texture = nullptr;
+    }
     {
         SDL_DestroyTexture(m_logo_texture);
         m_logo_texture = nullptr;
     }
 
-    if (m_renderer_backend_initialized)
+    if (true == m_renderer_backend_initialized)
     {
         ImGui_ImplSDLRenderer3_Shutdown();
     }
 
-    if (m_platform_backend_initialized)
+    if (true == m_platform_backend_initialized)
     {
         ImGui_ImplSDL3_Shutdown();
     }
 
-    if (m_context_created)
+    if (true == m_context_created)
     {
         ImGui::DestroyContext();
     }
@@ -192,55 +204,60 @@ bool LedGridSim::dispatchEvents()
 {
     bool continueRunning = true;
 
-    if (!isInitialized())
+    if (true == isInitialized())
     {
-        return false;
-    }
-
-    SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
-        ImGui_ImplSDL3_ProcessEvent(&event);
-        if (event.type == SDL_EVENT_QUIT)
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
         {
-            continueRunning = false;
+            ImGui_ImplSDL3_ProcessEvent(&event);
+            if (SDL_EVENT_QUIT == event.type)
+            {
+                continueRunning = false;
+            }
         }
     }
+    else
+    {
+        continueRunning = false;
+    }
+
     return continueRunning;
 }
 
+/**
+ * @brief Updates the ImGui UI.
+ * @param bitmap [in] The bitmap to display in the ImGui LED grid window.
+ */
 void LedGridSim::update(const YAGfxBitmap& bitmap)
 {
-    if (!isInitialized())
+    if (true == isInitialized())
     {
-        return;
+        m_sdl_interface->beginUpdate();
+
+        // --- ImGui frame ---
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+
+        this->beginFullscreenWindow();
+
+        this->renderMenuBar();
+        this->renderDisplay(bitmap);
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        this->renderButtonBar();
+
+        ImGui::End();
+
+        // --- Render ---
+        ImGui::Render();
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdl_interface->getRenderer());
+
+        m_sdl_interface->finishUpdate();
     }
-
-    m_sdl_interface->beginUpdate();
-
-    // --- ImGui frame ---
-    ImGui_ImplSDLRenderer3_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
-
-    this->beginFullscreenWindow();
-
-    this->renderMenuBar();
-    this->renderDisplay(bitmap);
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    this->renderButtonBar();
-
-    ImGui::End();
-
-    // --- Render ---
-    ImGui::Render();
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdl_interface->getRenderer());
-
-    m_sdl_interface->finishUpdate();
 }
 
 /******************************************************************************
@@ -286,28 +303,44 @@ void LedGridSim::renderButtonBar()
 
     ButtonDrv*  buttonDrv    = dynamic_cast<ButtonDrv*>(&Board::getInstance().getButtonDrv());
 
-    if (offsetX > 0.0F)
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
-
-    for (const SimulatedButton& button : gSimButtons)
+    if (nullptr != buttonDrv)
     {
-        if (button.sameLine)
+        if (0.0F < offsetX)
         {
-            ImGui::SameLine();
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
         }
 
-        ImGui::Button(button.label, ImVec2(buttonWidth, buttonHeight));
+        for (const SimulatedButton& button : gSimButtons)
+        {
+            if (true == button.sameLine)
+            {
+                ImGui::SameLine();
+            }
 
-        if (ImGui::IsItemActivated())
-        {
-            buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
+            ImGui::Button(button.label, ImVec2(buttonWidth, buttonHeight));
+
+            if (true == ImGui::IsItemActivated())
+            {
+                buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
+            }
+            if ((true == ImGui::IsItemDeactivated()))
+            {
+                buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
+            }
         }
-        if ((ImGui::IsItemDeactivated()))
+    }
+    else
+    {
+        static bool errorLogged = false;
+        if (false == errorLogged)
         {
-            buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
+            LOG_ERROR("Cannot render button bar: Unexpected ButtonDrv class.");
+            errorLogged = true;
         }
     }
 }
+
+
 void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
 {
     ImVec2 avail          = ImGui::GetContentRegionAvail();
@@ -316,7 +349,7 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
     // but here we just reserve a fixed height for simplicity)
     float buttonBarHeight = ImGui::GetFrameHeightWithSpacing() + 20.0F;
     float availHeight     = avail.y - buttonBarHeight;
-    if (availHeight < 10.0F)
+    if (10.0F > availHeight)
         availHeight = 10.0F;
 
     float aspectRatio  = m_width / m_height;
@@ -333,7 +366,7 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
 
     // Center horizontally
     float offsetX = (avail.x - targetWidth) * 0.5F;
-    if (offsetX > 0.0F)
+    if (0.0F < offsetX)
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
 
     const ImVec2 displayPos = ImGui::GetCursorScreenPos();
@@ -347,7 +380,7 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
         ImVec2(displayPos.x + targetWidth, displayPos.y + targetHeight),
         IM_COL32(24, 27, 26, 255));
 
-    if (m_power)
+    if (true == m_power)
     {
         uint16_t bitmap_width  = bitmap.getWidth();
         uint16_t bitmap_height = bitmap.getHeight();
@@ -392,9 +425,9 @@ void LedGridSim::renderMenuBar()
 {
     bool showAboutDialog = false;
 
-    if (ImGui::BeginMenuBar())
+    if (true == ImGui::BeginMenuBar())
     {
-        if (ImGui::BeginMenu("About"))
+        if (true == ImGui::BeginMenu("About"))
         {
             showAboutDialog = true;
             ImGui::EndMenu();
@@ -415,7 +448,7 @@ void LedGridSim::renderMenuBar()
         ImGui::EndMenuBar();
     }
 
-    if (showAboutDialog)
+    if (true == showAboutDialog)
     {
         ImGui::OpenPopup("About");
         showAboutDialog = false; // only trigger once
@@ -425,14 +458,14 @@ void LedGridSim::renderMenuBar()
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-    if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    if (true == ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        if (m_logo_texture != nullptr)
+        if (nullptr != m_logo_texture)
         {
             const ImTextureID textureId   = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(m_logo_texture));
             const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logo_texture->w) * 0.5F;
             /* Center the logo horizontally */
-            if (logoOffsetX > 0.0F)
+            if (0.0F < logoOffsetX)
             {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + logoOffsetX);
             }
@@ -459,12 +492,12 @@ void LedGridSim::renderMenuBar()
 
         const float closeButtonWidth   = 120.0F;
         const float closeButtonOffsetX = (ImGui::GetContentRegionAvail().x - closeButtonWidth) * 0.5F;
-        if (closeButtonOffsetX > 0.0F)
+        if (0.0F < closeButtonOffsetX)
         {
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + closeButtonOffsetX);
         }
 
-        if (ImGui::Button("Close", ImVec2(closeButtonWidth, 0)))
+        if (true == ImGui::Button("Close", ImVec2(closeButtonWidth, 0)))
         {
             ImGui::CloseCurrentPopup();
         }

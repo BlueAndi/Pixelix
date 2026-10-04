@@ -68,13 +68,7 @@ public:
     /**
      * @brief Constructs an SDL interface without initializing SDL.
      */
-    SDLInterface()                               = default;
-
-    /** @brief Copy construction is disabled because this class owns SDL resources. */
-    SDLInterface(const SDLInterface&)            = delete;
-
-    /** @brief Copy assignment is disabled because this class owns SDL resources. */
-    SDLInterface& operator=(const SDLInterface&) = delete;
+    SDLInterface() = default;
 
     /**
      * @brief Shuts down the interface and releases its SDL resources.
@@ -83,9 +77,9 @@ public:
 
     /**
      * @brief Initializes SDL and creates the window and renderer.
-     * @param width The width of the Led Matrix in leds  .
-     * @param height The height of the Led Matrix in pixels.
-     * @return true if initialization succeeds; leds, false.
+     * @param width[in] The width of the LED matrix in LEDs.
+     * @param height[in] The height of the LED matrix in pixels.
+     * @return true if initialization succeeds; otherwise, false.
      */
     bool initialize(int width, int height);
 
@@ -125,7 +119,7 @@ public:
 
     /**
      * @brief Gets a registered image surface.
-     * @param id Image identifier.
+     * @param id[in] Image identifier.
      * @return A non-owning pointer to the image surface, or nullptr if unavailable.
      */
     SDL_Surface* getImageSurface(ImageId id) const;
@@ -138,6 +132,12 @@ private:
     bool                            m_sdl_initialized = false;
 
     std::map<ImageId, SDL_Surface*> m_images; /**< Map of registered images. */
+
+    /** @brief Copy construction is disabled because this class owns SDL resources. */
+    SDLInterface(const SDLInterface&)            = delete;
+
+    /** @brief Copy assignment is disabled because this class owns SDL resources. */
+    SDLInterface& operator=(const SDLInterface&) = delete;
 };
 
 /** @} */

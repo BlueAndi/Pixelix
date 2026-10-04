@@ -67,7 +67,7 @@ struct ImageEntry
 
 /**
  * @brief   Gets the default window height based on the number of pixel rows.
- * @param   pixelrows The number of pixel rows.
+ * @param   pixelrows[in] The number of pixel rows.
  * @return  The default window height in pixels.
  */
 static uint32_t getDefaultWindowHeight(uint32_t pixelrows);
@@ -96,60 +96,74 @@ SDLInterface::~SDLInterface()
 
 bool SDLInterface::initialize(int width, int height)
 {
-    if (m_sdl_initialized)
-    {
-        return m_window != nullptr && m_renderer != nullptr;
-    }
+    bool result = false;
 
-    if (!SDL_Init(SDL_INIT_VIDEO))
+    if (true == m_sdl_initialized)
     {
-        LOG_WARNING("SDL_Init failed: %s", SDL_GetError());
-        return false;
+        result = ((nullptr != m_window) && (nullptr != m_renderer));
     }
-    m_sdl_initialized = true;
-
-    m_window          = SDL_CreateWindow(
-        "Pixelix LED Grid Simulation",
-        WINDOW_DEFAULT_WIDTH, /* Width is same for all layouts.*/
-        getDefaultWindowHeight(height),
-        SDL_WINDOW_RESIZABLE);
-    if (m_window == nullptr)
+    else
     {
-        LOG_WARNING("SDL_CreateWindow failed: %s", SDL_GetError());
-        shutdown();
-        return false;
-    }
-
-    /* Load all images from registry to SDL surfaces.*/
-    for (auto imgEntry : gImages)
-    {
-        auto surface = SDL_LoadPNG(imgEntry.path);
-        if (surface == nullptr)
+        if (false == SDL_Init(SDL_INIT_VIDEO))
         {
-            LOG_WARNING("SDL_LoadPNG failed for %s: %s", imgEntry.path, SDL_GetError());
+            LOG_WARNING("SDL_Init failed: %s", SDL_GetError());
+            result = false;
         }
         else
         {
-            m_images[imgEntry.id] = surface;
+            m_sdl_initialized = true;
 
-            if (imgEntry.id == SDLInterface::ImageId::IMG_ID_WINDOW_ICON)
+            m_window          = SDL_CreateWindow(
+                "Pixelix LED Grid Simulation",
+                WINDOW_DEFAULT_WIDTH, /* Width is same for all layouts.*/
+                getDefaultWindowHeight(height),
+                SDL_WINDOW_RESIZABLE);
+
+            if (nullptr == m_window)
             {
-                /* Favicon is used as the window icon. */
-                SDL_SetWindowIcon(m_window, surface);
+                LOG_WARNING("SDL_CreateWindow failed: %s", SDL_GetError());
+                shutdown();
+                result = false;
+            }
+            else
+            {
+                /* Load all images from registry to SDL surfaces.*/
+                for (auto imgEntry : gImages)
+                {
+                    auto surface = SDL_LoadPNG(imgEntry.path);
+                    if (nullptr == surface)
+                    {
+                        LOG_WARNING("SDL_LoadPNG failed for %s: %s", imgEntry.path, SDL_GetError());
+                    }
+                    else
+                    {
+                        m_images[imgEntry.id] = surface;
+
+                        if (imgEntry.id == SDLInterface::ImageId::IMG_ID_WINDOW_ICON)
+                        {
+                            /* Favicon is used as the window icon. */
+                            SDL_SetWindowIcon(m_window, surface);
+                        }
+                    }
+                }
+
+                m_renderer = SDL_CreateRenderer(m_window, nullptr);
+                if (nullptr == m_renderer)
+                {
+                    LOG_WARNING("SDL_CreateRenderer failed: %s", SDL_GetError());
+                    shutdown();
+                    result = false;
+                }
+                else
+                {
+                    result = true;
+                    SDL_SetRenderVSync(m_renderer, 1);
+                }
             }
         }
     }
 
-    m_renderer = SDL_CreateRenderer(m_window, nullptr);
-    if (m_renderer == nullptr)
-    {
-        LOG_WARNING("SDL_CreateRenderer failed: %s", SDL_GetError());
-        shutdown();
-        return false;
-    }
-
-    SDL_SetRenderVSync(m_renderer, 1);
-    return true;
+    return result;
 }
 
 void SDLInterface::shutdown()
@@ -163,19 +177,19 @@ void SDLInterface::shutdown()
     }
     m_images.clear();
 
-    if (m_renderer != nullptr)
+    if (nullptr != m_renderer)
     {
         SDL_DestroyRenderer(m_renderer);
         m_renderer = nullptr;
     }
 
-    if (m_window != nullptr)
+    if (nullptr != m_window)
     {
         SDL_DestroyWindow(m_window);
         m_window = nullptr;
     }
 
-    if (m_sdl_initialized)
+    if (false != m_sdl_initialized)
     {
         SDL_Quit();
         m_sdl_initialized = false;
@@ -197,23 +211,19 @@ SDL_Surface* SDLInterface::getImageSurface(ImageId id) const
 
 void SDLInterface::beginUpdate()
 {
-    if (!m_sdl_initialized)
+    if (true == m_sdl_initialized)
     {
-        return;
+        SDL_SetRenderDrawColor(m_renderer, 30, 30, 30, 255);
+        SDL_RenderClear(m_renderer);
     }
-
-    SDL_SetRenderDrawColor(m_renderer, 30, 30, 30, 255);
-    SDL_RenderClear(m_renderer);
 }
 
 void SDLInterface::finishUpdate()
 {
-    if (!m_sdl_initialized)
+    if (true == m_sdl_initialized)
     {
-        return;
+        SDL_RenderPresent(m_renderer);
     }
-
-    SDL_RenderPresent(m_renderer);
 }
 
 /******************************************************************************

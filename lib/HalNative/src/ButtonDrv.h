@@ -89,7 +89,7 @@ public:
      * @param[in] buttonLeftIn  Pin of the "left" button.
      * @param[in] buttonRightIn Pin of the "right" button.
      *
-     * @return Always true, there are no pin basedbuttons on the host.
+     * @return Always true, there are no pin based buttons on the host.
      */
     bool init(const DInPin& buttonOkIn, const DInPin& buttonLeftIn, const DInPin& buttonRightIn) final
     {
@@ -109,7 +109,13 @@ public:
      */
     ButtonState getState(ButtonId buttonId) final
     {
-        return m_state[buttonId];
+        ButtonState state = BUTTON_STATE_UNKNOWN;
+
+        if (BUTTON_ID_CNT > buttonId)
+        {
+            state = m_state[buttonId];
+        }
+        return state;
     }
 
     /**
@@ -151,12 +157,15 @@ public:
      */
     void updateButton(ButtonId buttonId, ButtonState state)
     {
-        if (m_state[buttonId] != state)
+        if (BUTTON_ID_CNT > buttonId)
         {
-            m_state[buttonId] = state;
-            if (nullptr != m_observer)
+            if (m_state[buttonId] != state)
             {
-                m_observer->notify(buttonId, state);
+                m_state[buttonId] = state;
+                if (nullptr != m_observer)
+                {
+                    m_observer->notify(buttonId, state);
+                }
             }
         }
     }
