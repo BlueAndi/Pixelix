@@ -86,6 +86,10 @@ Please note, that not every feature might be available for all kind of developme
 | ![IconTextLampPlugin](./lib/IconTextLampPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/IconTextPlugin/web/IconTextPlugin.jpg) |
 | ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg)       | ...                                                            |
 
+A native environment variant is available to run PIXELIX as an application on Windows and Linux platforms without the need for hardware. PIXELIX shows a simulated LED grid in a window und executes its web server on local port 8080.
+
+![Pixelix Native](./doc/images/pixelix_native.png)
+
 ## Original Setup
 
 The original setup for development and the first release was:
