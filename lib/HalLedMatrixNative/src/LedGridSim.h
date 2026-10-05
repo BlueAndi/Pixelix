@@ -74,6 +74,11 @@ public:
     bool initialize(int width, int height);
 
     /**
+     * @brief Release IMGUI resources.
+     */
+    void shutdown();
+
+    /**
      * @brief Processes all pending SDL events and forwards them to ImGui.
      * @return true if processing should continue; false if a quit event was received.
      */

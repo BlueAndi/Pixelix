@@ -131,6 +131,11 @@ LedGridSim::LedGridSim() :
 {
 }
 
+LedGridSim::~LedGridSim()
+{
+    shutdown();
+}
+
 bool LedGridSim::initialize(int width, int height)
 {
     bool result = false;
@@ -161,6 +166,7 @@ bool LedGridSim::initialize(int width, int height)
             if (false == ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
             {
                 LOG_WARNING("ImGui SDL3 platform backend initialization failed");
+                shutdown();
             }
             else
             {
@@ -169,6 +175,7 @@ bool LedGridSim::initialize(int width, int height)
                 if (false == ImGui_ImplSDLRenderer3_Init(renderer))
                 {
                     LOG_WARNING("ImGui SDL renderer backend initialization failed");
+                    shutdown();
                 }
                 else
                 {
@@ -181,6 +188,7 @@ bool LedGridSim::initialize(int width, int height)
                         if (nullptr == m_logo_texture)
                         {
                             LOG_WARNING("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
+                            /* No shutdown here, we just don't have an app icon. */
                         }
                     }
                     result = true;
@@ -191,7 +199,7 @@ bool LedGridSim::initialize(int width, int height)
     return result;
 }
 
-LedGridSim::~LedGridSim()
+void LedGridSim::shutdown()
 {
     if (nullptr != m_logo_texture)
     {
@@ -214,8 +222,11 @@ LedGridSim::~LedGridSim()
         ImGui::DestroyContext();
     }
 
-    m_sdl_interface->shutdown();
-    m_sdl_interface = nullptr;
+    if (nullptr != m_sdl_interface)
+    {
+        m_sdl_interface->shutdown();
+        m_sdl_interface = nullptr;
+    }
 }
 
 bool LedGridSim::isInitialized() const
