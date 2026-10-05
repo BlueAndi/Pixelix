@@ -51,6 +51,10 @@
 #include <string>
 
 /******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
+
+/******************************************************************************
  * Macros
  *****************************************************************************/
 
@@ -58,6 +62,20 @@ static const uint32_t DEFAULT_WINDOW_WIDTH      = 1024U; /**< Default main windo
 
 static const uint32_t RESERVED_MENUBAR_HEIGHT   = 28U; /**< space for title bar and menu bar. */
 static const uint32_t RESERVED_BUTTONBAR_HEIGHT = 50U; /**< space for button bar on bottom. */
+
+/******************************************************************************
+ * Types and classes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Prototypes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
+
+static SDLInterface theSdlInterface; /**< SDL3 interaction interface  */
 
 /******************************************************************************
  * Types and classes
@@ -117,7 +135,7 @@ static const std::array<SimulatedButton, 3U> gSimButtons = {
  * Public Methods
  *****************************************************************************/
 LedGridSim::LedGridSim() :
-    m_sdl_interface(new (std::nothrow) SDLInterface())
+    m_sdl_interface(&theSdlInterface)
 {
 }
 
@@ -205,7 +223,6 @@ LedGridSim::~LedGridSim()
     }
 
     m_sdl_interface->shutdown();
-    delete m_sdl_interface;
     m_sdl_interface = nullptr;
 }
 
