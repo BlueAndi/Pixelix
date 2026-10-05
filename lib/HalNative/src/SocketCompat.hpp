@@ -251,6 +251,44 @@ static inline void setReuseAddr(Socket sock)
 }
 
 /**
+ * Allow the socket to send broadcast datagrams.
+ *
+ * @param[in] sock  The socket.
+ */
+static inline void setBroadcast(Socket sock)
+{
+    int value = 1;
+
+    (void)setsockopt(sock, SOL_SOCKET, SO_BROADCAST, reinterpret_cast<const char*>(&value), sizeof(value));
+}
+
+/**
+ * Don't report a ICMP "port unreachable" as receive error of a UDP socket.
+ * Only Windows does that, on Linux it does nothing.
+ *
+ * @param[in] sock  The socket.
+ */
+static inline void disableUdpConnReset(Socket sock)
+{
+#ifdef _WIN32
+
+#ifndef SIO_UDP_CONNRESET
+#define SIO_UDP_CONNRESET _WSAIOW(IOC_VENDOR, 12)
+#endif /* SIO_UDP_CONNRESET */
+
+    DWORD bytesReturned = 0U;
+    BOOL  behavior      = FALSE;
+
+    (void)WSAIoctl(sock, SIO_UDP_CONNRESET, &behavior, sizeof(behavior), nullptr, 0U, &bytesReturned, nullptr, nullptr);
+
+#else /* _WIN32 */
+
+    (void)sock;
+
+#endif /* _WIN32 */
+}
+
+/**
  * Send data.
  *
  * @param[in] sock  The socket.
