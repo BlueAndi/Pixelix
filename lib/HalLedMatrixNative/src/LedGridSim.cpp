@@ -188,10 +188,6 @@ LedGridSim::~LedGridSim()
         SDL_DestroyTexture(m_logo_texture);
         m_logo_texture = nullptr;
     }
-    {
-        SDL_DestroyTexture(m_logo_texture);
-        m_logo_texture = nullptr;
-    }
 
     if (true == m_renderer_backend_initialized)
     {
