@@ -109,8 +109,6 @@ static uint32_t getDefaultWindowHeight(uint32_t windowWidth, uint32_t ledsX, uin
  * Local Variables
  *****************************************************************************/
 
-static SDLInterface theSdlInterface; /**< SDL3 interaction interface  */
-
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -127,7 +125,7 @@ static const std::array<SimulatedButton, 3U> gSimButtons = {
  *****************************************************************************/
 
 LedGridSim::LedGridSim() :
-    m_sdl_interface(&theSdlInterface)
+    m_sdl_interface()
 {
 }
 
@@ -144,7 +142,7 @@ bool LedGridSim::initialize(int width, int height)
     m_height      = static_cast<uint16_t>(height);
     m_aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
 
-    if (false == m_sdl_interface->initialize(
+    if (false == m_sdl_interface.initialize(
                      DEFAULT_WINDOW_WIDTH,
                      getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, width, height)))
     {
@@ -152,8 +150,8 @@ bool LedGridSim::initialize(int width, int height)
     }
     else
     {
-        SDL_Window*   window   = m_sdl_interface->getWindow();
-        SDL_Renderer* renderer = m_sdl_interface->getRenderer();
+        SDL_Window*   window   = m_sdl_interface.getWindow();
+        SDL_Renderer* renderer = m_sdl_interface.getRenderer();
         if ((nullptr == window) || (nullptr == renderer))
         {
             LOG_WARNING("Cannot initialize ImGui: SDL window or renderer is unavailable");
@@ -183,7 +181,7 @@ bool LedGridSim::initialize(int width, int height)
                 {
                     m_renderer_backend_initialized = true;
 
-                    SDL_Surface* logoSurface       = m_sdl_interface->getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
+                    SDL_Surface* logoSurface       = m_sdl_interface.getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
                     if (nullptr != logoSurface)
                     {
                         m_logo_texture = SDL_CreateTextureFromSurface(renderer, logoSurface);
@@ -218,23 +216,22 @@ void LedGridSim::shutdown()
     if (true == m_renderer_backend_initialized)
     {
         ImGui_ImplSDLRenderer3_Shutdown();
+        m_renderer_backend_initialized = false;
     }
 
     if (true == m_platform_backend_initialized)
     {
         ImGui_ImplSDL3_Shutdown();
+        m_platform_backend_initialized = false;
     }
 
     if (true == m_context_created)
     {
         ImGui::DestroyContext();
+        m_context_created = false;
     }
 
-    if (nullptr != m_sdl_interface)
-    {
-        m_sdl_interface->shutdown();
-        m_sdl_interface = nullptr;
-    }
+    m_sdl_interface.shutdown();
 }
 
 bool LedGridSim::isInitialized() const
@@ -274,7 +271,7 @@ void LedGridSim::update(const YAGfxBitmap& bitmap)
 {
     if (true == isInitialized())
     {
-        m_sdl_interface->beginUpdate();
+        m_sdl_interface.beginUpdate();
 
         // --- ImGui frame ---
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -296,9 +293,9 @@ void LedGridSim::update(const YAGfxBitmap& bitmap)
 
         // --- Render ---
         ImGui::Render();
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdl_interface->getRenderer());
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdl_interface.getRenderer());
 
-        m_sdl_interface->finishUpdate();
+        m_sdl_interface.finishUpdate();
     }
 }
 
