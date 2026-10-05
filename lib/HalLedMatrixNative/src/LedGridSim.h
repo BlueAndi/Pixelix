@@ -49,8 +49,6 @@ class ButtonDrv;
 
 /**
  * @brief Initializes and manages the Dear ImGui SDL3 backends.
- * @details The referenced SDLInterface must outlive this object and must have
- *          successfully initialized its window and renderer before construction.
  */
 class LedGridSim
 {
@@ -67,7 +65,7 @@ public:
     ~LedGridSim();
 
     /**
-     * @brief Initializes SDL and creates the window and renderer.
+     * @brief Initializes UI and creates the window and renderer.
      * @param[in] width The width of the LED matrix in LEDs.
      * @param[in] height The height of the LED matrix in pixels.
      * @return true if initialization succeeds; otherwise, false.
