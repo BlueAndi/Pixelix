@@ -67,20 +67,6 @@ static const uint32_t RESERVED_BUTTONBAR_HEIGHT = 50U; /**< space for button bar
  * Types and classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-static SDLInterface theSdlInterface; /**< SDL3 interaction interface  */
-
-/******************************************************************************
- * Types and classes
- *****************************************************************************/
-
 /**
  * Describes a single button in the simulator button bar.
  */
@@ -119,6 +105,11 @@ static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness);
  */
 static uint32_t getDefaultWindowHeight(uint32_t windowWidth, uint32_t ledsX, uint32_t ledsY);
 
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
+
+static SDLInterface theSdlInterface; /**< SDL3 interaction interface  */
 
 /******************************************************************************
  * Local Variables
@@ -134,6 +125,7 @@ static const std::array<SimulatedButton, 3U> gSimButtons = {
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
 LedGridSim::LedGridSim() :
     m_sdl_interface(&theSdlInterface)
 {

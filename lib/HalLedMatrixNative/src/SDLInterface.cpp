@@ -39,6 +39,7 @@
 #include "Logging.h"
 
 #include <array>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -53,16 +54,10 @@ struct ImageEntry
     SDLInterface::ImageId id;             /**< Image identifier. */
     const char*           path = nullptr; /**< Path to the image file. */
 };
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
-
-/**
- * @brief   Gets the default window height based on the number of pixel rows.
- * @param[in] pixelrows The number of pixel rows.
- * @return  The default window height in pixels.
- */
-static uint32_t getDefaultWindowHeight(uint32_t pixelrows);
 
 /******************************************************************************
  * Local Variables
