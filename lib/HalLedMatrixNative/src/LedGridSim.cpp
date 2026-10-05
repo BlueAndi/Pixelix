@@ -138,9 +138,11 @@ LedGridSim::~LedGridSim()
 
 bool LedGridSim::initialize(int width, int height)
 {
-    bool result = false;
-    m_width     = width;
-    m_height    = height;
+    bool result   = false;
+
+    m_width       = static_cast<uint16_t>(width);
+    m_height      = static_cast<uint16_t>(height);
+    m_aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
 
     if (false == m_sdl_interface->initialize(
                      DEFAULT_WINDOW_WIDTH,
@@ -190,6 +192,12 @@ bool LedGridSim::initialize(int width, int height)
                             LOG_WARNING("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
                             /* No shutdown here, we just don't have an app icon. */
                         }
+                    }
+
+                    m_buttonDrv = dynamic_cast<ButtonDrv*>(&Board::getInstance().getButtonDrv());
+                    if (nullptr == m_buttonDrv)
+                    {
+                        LOG_ERROR("Unexpected ButtonDrv class. Buttons will not work.");
                     }
                     result = true;
                 }
@@ -335,9 +343,7 @@ void LedGridSim::renderButtonBar()
     float       availWidth   = ImGui::GetContentRegionAvail().x;
     float       offsetX      = (availWidth - totalWidth) * 0.5F;
 
-    ButtonDrv*  buttonDrv    = dynamic_cast<ButtonDrv*>(&Board::getInstance().getButtonDrv());
-
-    if (nullptr != buttonDrv)
+    if (nullptr != m_buttonDrv)
     {
         if (0.0F < offsetX)
         {
@@ -355,21 +361,12 @@ void LedGridSim::renderButtonBar()
 
             if (true == ImGui::IsItemActivated())
             {
-                buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
+                m_buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
             }
             if ((true == ImGui::IsItemDeactivated()))
             {
-                buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
+                m_buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
             }
-        }
-    }
-    else
-    {
-        static bool errorLogged = false;
-        if (false == errorLogged)
-        {
-            LOG_ERROR("Cannot render button bar: Unexpected ButtonDrv class.");
-            errorLogged = true;
         }
     }
 }
@@ -386,16 +383,15 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
     if (10.0F > availHeight)
         availHeight = 10.0F;
 
-    float aspectRatio  = m_width / m_height;
 
     // Fit within (avail.x, availHeight) while preserving aspect ratio
     float targetWidth  = avail.x;
-    float targetHeight = targetWidth / aspectRatio;
+    float targetHeight = targetWidth / m_aspectRatio;
 
     if (targetHeight > availHeight)
     {
         targetHeight = availHeight;
-        targetWidth  = targetHeight * aspectRatio;
+        targetWidth  = targetHeight * m_aspectRatio;
     }
 
     // Center horizontally
@@ -419,14 +415,14 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
         uint16_t bitmap_width  = bitmap.getWidth();
         uint16_t bitmap_height = bitmap.getHeight();
 
-        if (CONFIG_LED_MATRIX_WIDTH < bitmap_width)
+        if (m_width < bitmap_width)
         {
-            bitmap_width = CONFIG_LED_MATRIX_WIDTH;
+            bitmap_width = m_width;
         }
 
-        if (CONFIG_LED_MATRIX_HEIGHT < bitmap_height)
+        if (m_height < bitmap_height)
         {
-            bitmap_height = CONFIG_LED_MATRIX_HEIGHT;
+            bitmap_height = m_height;
         }
 
         for (int y = 0; y < bitmap_height; ++y)

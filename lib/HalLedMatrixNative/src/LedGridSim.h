@@ -43,6 +43,7 @@
 
 #include <stdint.h>
 
+class ButtonDrv;
 class SDLInterface;
 struct SDL_Texture;
 
@@ -154,10 +155,13 @@ private:
     bool          m_platform_backend_initialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
     bool          m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
 
-    bool          m_power                        = true;  /**< Tracks the power state of the display. */
-    uint8_t       m_brightness                   = 255U;  /**< Brightness value [0; 255] */
-    float         m_width                        = 32.0F; /**< Width of the simulated display in pixels. */
-    float         m_height                       = 8.0F;  /**< Height of the simulated display in pixels. */
+    bool          m_power                        = true; /**< Tracks the power state of the display. */
+    uint8_t       m_brightness                   = 255U; /**< Brightness value [0; 255] */
+    uint16_t      m_width                        = 32U;  /**< Width of the simulated display in pixels. */
+    uint16_t      m_height                       = 8;    /**< Height of the simulated display in pixels. */
+    float         m_aspectRatio                  = 1.0F; /**< The width / height aspect ratio. */
+
+    ButtonDrv*    m_buttonDrv                    = nullptr; /**< Access to native buttondriver class instance. */
 
     LedGridSim(const LedGridSim&)                = delete;
     LedGridSim& operator=(const LedGridSim&)     = delete;
