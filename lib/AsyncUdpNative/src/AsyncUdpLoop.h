@@ -49,6 +49,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -93,8 +94,10 @@ public:
     /**
      * Unregister a UDP socket.
      * It waits until a running packet handler of any socket returned, so the
-     * caller may destroy the socket afterwards. Calling it from inside a packet
-     * handler is allowed.
+     * caller may destroy the socket afterwards. It also waits until a select()
+     * which still watches the socket returned, because on Linux the port stays
+     * bound until then, even after the socket is closed. Calling it from inside
+     * a packet handler is allowed.
      *
      * @param[in] udp   The UDP socket.
      */
@@ -103,13 +106,19 @@ public:
 private:
 
     /** Max. time the loop waits for a socket event in ms. */
-    static const uint32_t  SELECT_PERIOD = 25U;
+    static const uint32_t SELECT_PERIOD        = 25U;
 
-    std::mutex             m_mutex;         /**< Protects the socket list. */
-    std::recursive_mutex   m_dispatchMutex; /**< Held while packet handlers are called. */
-    std::vector<AsyncUDP*> m_sockets;       /**< The registered UDP sockets. */
-    std::thread            m_thread;        /**< The thread which runs the loop. */
-    std::atomic<bool>      m_isRunning;     /**< Is the loop running? */
+    /** Max. time to wait for the loop in ms, if a socket is unregistered. */
+    static const uint32_t   UNREGISTER_TIMEOUT = 1000U;
+
+    std::mutex              m_mutex;         /**< Protects the socket list. */
+    std::recursive_mutex    m_dispatchMutex; /**< Held while packet handlers are called. */
+    std::vector<AsyncUDP*>  m_sockets;       /**< The registered UDP sockets. */
+    std::thread             m_thread;        /**< The thread which runs the loop. */
+    std::atomic<bool>       m_isRunning;     /**< Is the loop running? */
+    std::mutex              m_cycleMutex;    /**< Protects the cycle counter. */
+    std::condition_variable m_cycleCv;       /**< Signals a finished wait for a socket event. */
+    uint32_t                m_cycle;         /**< Number of finished waits for a socket event. */
 
     /**
      * Constructs the event loop.
@@ -119,7 +128,10 @@ private:
         m_dispatchMutex(),
         m_sockets(),
         m_thread(),
-        m_isRunning(false)
+        m_isRunning(false),
+        m_cycleMutex(),
+        m_cycleCv(),
+        m_cycle(0U)
     {
     }
 
@@ -152,6 +164,16 @@ private:
      * @return If registered, it will return true otherwise false.
      */
     bool isRegistered(const AsyncUDP* udp);
+
+    /**
+     * Notify that the wait for a socket event finished.
+     */
+    void notifyCycle();
+
+    /**
+     * Wait until the wait for a socket event, which is in progress, finished.
+     */
+    void waitForCycle();
 
     /**
      * The loop itself, which watches every socket.

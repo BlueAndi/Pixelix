@@ -62,6 +62,9 @@
  * Local Variables
  *****************************************************************************/
 
+/** Is the current thread the loop thread? */
+static thread_local bool isLoopThread = false;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -85,14 +88,23 @@ void AsyncUdpLoop::registerSocket(AsyncUDP* udp)
 
 void AsyncUdpLoop::unregisterSocket(AsyncUDP* udp)
 {
-    /* Lock order: dispatch mutex first, like in process(). */
-    std::lock_guard<std::recursive_mutex> dispatchGuard(m_dispatchMutex);
-    std::lock_guard<std::mutex>           guard(m_mutex);
-    std::vector<AsyncUDP*>::iterator      it = std::find(m_sockets.begin(), m_sockets.end(), udp);
-
-    if (m_sockets.end() != it)
     {
-        (void)m_sockets.erase(it);
+        /* Lock order: dispatch mutex first, like in process(). */
+        std::lock_guard<std::recursive_mutex> dispatchGuard(m_dispatchMutex);
+        std::lock_guard<std::mutex>           guard(m_mutex);
+        std::vector<AsyncUDP*>::iterator      it = std::find(m_sockets.begin(), m_sockets.end(), udp);
+
+        if (m_sockets.end() != it)
+        {
+            (void)m_sockets.erase(it);
+        }
+    }
+
+    /* In the loop thread no select() is in progress. */
+    if ((false == isLoopThread) &&
+        (true == m_isRunning))
+    {
+        waitForCycle();
     }
 }
 
@@ -132,8 +144,29 @@ bool AsyncUdpLoop::isRegistered(const AsyncUDP* udp)
     return (m_sockets.end() != std::find(m_sockets.begin(), m_sockets.end(), udp));
 }
 
+void AsyncUdpLoop::notifyCycle()
+{
+    {
+        std::lock_guard<std::mutex> guard(m_cycleMutex);
+
+        ++m_cycle;
+    }
+
+    m_cycleCv.notify_all();
+}
+
+void AsyncUdpLoop::waitForCycle()
+{
+    std::unique_lock<std::mutex> lock(m_cycleMutex);
+    uint32_t                     cycle = m_cycle;
+
+    (void)m_cycleCv.wait_for(lock, std::chrono::milliseconds(static_cast<long long>(UNREGISTER_TIMEOUT)), [this, cycle]() { return (cycle != m_cycle); });
+}
+
 void AsyncUdpLoop::process()
 {
+    isLoopThread = true;
+
     while (true == m_isRunning)
     {
         fd_set                 readSet;
@@ -180,6 +213,8 @@ void AsyncUdpLoop::process()
         if (0U == count)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<long long>(SELECT_PERIOD)));
+
+            notifyCycle();
         }
         else
         {
@@ -187,6 +222,8 @@ void AsyncUdpLoop::process()
             timeout.tv_usec = static_cast<long>(SELECT_PERIOD) * 1000L;
 
             (void)select(static_cast<int>(maxSocket) + 1, &readSet, nullptr, nullptr, &timeout);
+
+            notifyCycle();
 
             /* A socket may be unregistered by another thread during select().
              * The dispatch mutex ensures that it is not destroyed while its
