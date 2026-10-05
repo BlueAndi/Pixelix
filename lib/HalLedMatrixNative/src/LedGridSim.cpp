@@ -454,10 +454,9 @@ void LedGridSim::renderMenuBar()
 
     if (true == ImGui::BeginMenuBar())
     {
-        if (true == ImGui::BeginMenu("About"))
+        if (true == ImGui::MenuItem("About"))
         {
             showAboutDialog = true;
-            ImGui::EndMenu();
         }
 
         ImGui::SameLine();
