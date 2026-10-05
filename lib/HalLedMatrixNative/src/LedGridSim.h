@@ -81,13 +81,13 @@ public:
      * @brief Processes all pending SDL events and forwards them to ImGui.
      * @return true if processing should continue; false if a quit event was received.
      */
-    bool dispatchEvents();
+    bool dispatchEvents() const;
 
     /**
      * @brief Updates the ImGui UI.
      * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
      */
-    void update(const YAGfxBitmap& bitmap);
+    void update(const YAGfxBitmap& bitmap) const;
 
     /**
      * @brief Sets the power state of the simulated display.
@@ -127,23 +127,23 @@ protected:
     /**
      * @brief Begins a fullscreen ImGui window that covers the entire viewport.
      */
-    void beginFullscreenWindow();
+    void beginFullscreenWindow() const;
 
     /**
      * @brief Renders a button bar at the bottom of the ImGui window.
      */
-    void renderButtonBar();
+    void renderButtonBar() const;
 
     /**
      * @brief Renders the main display area of the ImGui window.
      * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
      */
-    void renderDisplay(const YAGfxBitmap& bitmap);
+    void renderDisplay(const YAGfxBitmap& bitmap) const;
 
     /**
      * @brief Renders the menu bar at the top of the ImGui window.
      */
-    void renderMenuBar();
+    void renderMenuBar() const;
 
 private:
 

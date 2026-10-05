@@ -67,7 +67,7 @@ struct ImageEntry
  * @brief   Image entry for the SDL interface.
  * @details Contains the path and surface of a registered image.
  */
-static std::array<ImageEntry, static_cast<std::size_t>(SDLInterface::ImageId::IMG_ID_COUNT)> gImages = {
+static const std::array<ImageEntry, static_cast<std::size_t>(SDLInterface::ImageId::IMG_ID_COUNT)> gImages = {
     { { SDLInterface::ImageId::IMG_ID_WINDOW_ICON, "data/favicon.png" },
         { SDLInterface::ImageId::IMG_ID_ABOUT_LOGO, "data/images/LogoSmall.png" } }
 };
@@ -115,7 +115,7 @@ bool SDLInterface::initialize(int width, int height)
             else
             {
                 /* Load all images from registry to SDL surfaces.*/
-                for (ImageEntry& imgEntry : gImages)
+                for (const ImageEntry& imgEntry : gImages)
                 {
                     auto surface = SDL_LoadPNG(imgEntry.path);
                     if (nullptr == surface)
@@ -196,7 +196,7 @@ SDL_Surface* SDLInterface::getImageSurface(ImageId id) const
     return surface;
 }
 
-void SDLInterface::beginUpdate()
+void SDLInterface::beginUpdate() const
 {
     if (true == m_sdl_initialized)
     {
@@ -205,7 +205,7 @@ void SDLInterface::beginUpdate()
     }
 }
 
-void SDLInterface::finishUpdate()
+void SDLInterface::finishUpdate() const
 {
     if (true == m_sdl_initialized)
     {

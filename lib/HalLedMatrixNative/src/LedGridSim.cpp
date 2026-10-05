@@ -239,7 +239,7 @@ bool LedGridSim::isInitialized() const
     return m_context_created && m_platform_backend_initialized && m_renderer_backend_initialized;
 }
 
-bool LedGridSim::dispatchEvents()
+bool LedGridSim::dispatchEvents() const
 {
     bool continueRunning = true;
 
@@ -267,7 +267,7 @@ bool LedGridSim::dispatchEvents()
  * @brief Updates the ImGui UI.
  * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
  */
-void LedGridSim::update(const YAGfxBitmap& bitmap)
+void LedGridSim::update(const YAGfxBitmap& bitmap) const
 {
     if (true == isInitialized())
     {
@@ -304,7 +304,7 @@ void LedGridSim::update(const YAGfxBitmap& bitmap)
  *****************************************************************************/
 
 
-void LedGridSim::beginFullscreenWindow()
+void LedGridSim::beginFullscreenWindow() const
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -328,7 +328,7 @@ void LedGridSim::beginFullscreenWindow()
     ImGui::PopStyleVar(3);
 }
 
-void LedGridSim::renderButtonBar()
+void LedGridSim::renderButtonBar() const
 {
     const float buttonWidth  = 100.0F;
     const float buttonHeight = 30.0F;
@@ -369,7 +369,7 @@ void LedGridSim::renderButtonBar()
 }
 
 
-void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
+void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap) const
 {
     ImVec2 avail          = ImGui::GetContentRegionAvail();
 
@@ -448,7 +448,7 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
     ImGui::Dummy(ImVec2(targetWidth, targetHeight));
 }
 
-void LedGridSim::renderMenuBar()
+void LedGridSim::renderMenuBar() const
 {
     bool showAboutDialog = false;
 
@@ -465,7 +465,7 @@ void LedGridSim::renderMenuBar()
 
         ImGui::TextLinkOpenURL("Open Web Page", webpageUrl.c_str());
 
-        /* Reserve space and push "Help" to the right edge */
+        /* Reserve space and push "FPS" to the right edge */
         float helpWidth = ImGui::CalcTextSize("FPS: 100.00").x + ImGui::GetStyle().FramePadding.x * 2.0F;
         ImGui::SameLine(ImGui::GetWindowWidth() - helpWidth - 10.0F);
 
