@@ -136,15 +136,24 @@ LedGridSim::~LedGridSim()
 
 bool LedGridSim::initialize(int width, int height)
 {
-    bool result   = false;
+    bool result = false;
 
-    m_width       = static_cast<uint16_t>(width);
-    m_height      = static_cast<uint16_t>(height);
+    if ((0 >= height) || (0 >= width))
+    {
+        LOG_WARNING("Unexpected LED grid dimensions %d:%d. Falling back to 32:8", width, height);
+        m_width  = 32U;
+        m_height = 8U;
+    }
+    else
+    {
+        m_width  = static_cast<uint16_t>(width);
+        m_height = static_cast<uint16_t>(height);
+    }
     m_aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
 
     if (false == m_sdl_interface.initialize(
                      DEFAULT_WINDOW_WIDTH,
-                     getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, width, height)))
+                     getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, m_width, m_height)))
     {
         LOG_WARNING("SDL initialization failed");
     }
