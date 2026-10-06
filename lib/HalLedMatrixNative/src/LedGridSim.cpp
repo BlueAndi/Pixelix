@@ -121,7 +121,7 @@ static const std::array<SimulatedButton, 3U> gSimButtons = {
  *****************************************************************************/
 
 LedGridSim::LedGridSim() :
-    m_sdl_interface()
+    m_sdlInterface()
 {
 }
 
@@ -147,7 +147,7 @@ bool LedGridSim::initialize(int width, int height)
     }
     m_aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
 
-    if (false == m_sdl_interface.initialize(
+    if (false == m_sdlInterface.initialize(
                      DEFAULT_WINDOW_WIDTH,
                      getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, m_width, m_height)))
     {
@@ -155,8 +155,8 @@ bool LedGridSim::initialize(int width, int height)
     }
     else
     {
-        SDL_Window*   window   = m_sdl_interface.getWindow();
-        SDL_Renderer* renderer = m_sdl_interface.getRenderer();
+        SDL_Window*   window   = m_sdlInterface.getWindow();
+        SDL_Renderer* renderer = m_sdlInterface.getRenderer();
         if ((nullptr == window) || (nullptr == renderer))
         {
             LOG_WARNING("Cannot initialize ImGui: SDL window or renderer is unavailable");
@@ -165,7 +165,7 @@ bool LedGridSim::initialize(int width, int height)
         {
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
-            m_context_created = true;
+            m_contextCreated = true;
             ImGui::StyleColorsDark();
 
             if (false == ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
@@ -175,7 +175,7 @@ bool LedGridSim::initialize(int width, int height)
             }
             else
             {
-                m_platform_backend_initialized = true;
+                m_platformBackendInitialized = true;
 
                 if (false == ImGui_ImplSDLRenderer3_Init(renderer))
                 {
@@ -184,13 +184,13 @@ bool LedGridSim::initialize(int width, int height)
                 }
                 else
                 {
-                    m_renderer_backend_initialized = true;
+                    m_rendererBackendInitialized = true;
 
-                    SDL_Surface* logoSurface       = m_sdl_interface.getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
+                    SDL_Surface* logoSurface     = m_sdlInterface.getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
                     if (nullptr != logoSurface)
                     {
-                        m_logo_texture = SDL_CreateTextureFromSurface(renderer, logoSurface);
-                        if (nullptr == m_logo_texture)
+                        m_logoTexture = SDL_CreateTextureFromSurface(renderer, logoSurface);
+                        if (nullptr == m_logoTexture)
                         {
                             LOG_WARNING("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
                             /* No shutdown here, we just don't have an app icon. */
@@ -212,36 +212,36 @@ bool LedGridSim::initialize(int width, int height)
 
 void LedGridSim::shutdown()
 {
-    if (nullptr != m_logo_texture)
+    if (nullptr != m_logoTexture)
     {
-        SDL_DestroyTexture(m_logo_texture);
-        m_logo_texture = nullptr;
+        SDL_DestroyTexture(m_logoTexture);
+        m_logoTexture = nullptr;
     }
 
-    if (true == m_renderer_backend_initialized)
+    if (true == m_rendererBackendInitialized)
     {
         ImGui_ImplSDLRenderer3_Shutdown();
-        m_renderer_backend_initialized = false;
+        m_rendererBackendInitialized = false;
     }
 
-    if (true == m_platform_backend_initialized)
+    if (true == m_platformBackendInitialized)
     {
         ImGui_ImplSDL3_Shutdown();
-        m_platform_backend_initialized = false;
+        m_platformBackendInitialized = false;
     }
 
-    if (true == m_context_created)
+    if (true == m_contextCreated)
     {
         ImGui::DestroyContext();
-        m_context_created = false;
+        m_contextCreated = false;
     }
 
-    m_sdl_interface.shutdown();
+    m_sdlInterface.shutdown();
 }
 
 bool LedGridSim::isInitialized() const
 {
-    return m_context_created && m_platform_backend_initialized && m_renderer_backend_initialized;
+    return m_contextCreated && m_platformBackendInitialized && m_rendererBackendInitialized;
 }
 
 bool LedGridSim::dispatchEvents() const
@@ -276,7 +276,7 @@ void LedGridSim::update(const YAGfxBitmap& bitmap) const
 {
     if (true == isInitialized())
     {
-        m_sdl_interface.beginUpdate();
+        m_sdlInterface.beginUpdate();
 
         // --- ImGui frame ---
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -298,9 +298,9 @@ void LedGridSim::update(const YAGfxBitmap& bitmap) const
 
         // --- Render ---
         ImGui::Render();
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdl_interface.getRenderer());
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdlInterface.getRenderer());
 
-        m_sdl_interface.finishUpdate();
+        m_sdlInterface.finishUpdate();
     }
 }
 
@@ -490,16 +490,16 @@ void LedGridSim::renderMenuBar() const
 
     if (true == ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        if (nullptr != m_logo_texture)
+        if (nullptr != m_logoTexture)
         {
-            const ImTextureID textureId   = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(m_logo_texture));
-            const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logo_texture->w) * 0.5F;
+            const ImTextureID textureId   = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(m_logoTexture));
+            const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logoTexture->w) * 0.5F;
             /* Center the logo horizontally */
             if (0.0F < logoOffsetX)
             {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + logoOffsetX);
             }
-            ImGui::Image(ImTextureRef(textureId), ImVec2(m_logo_texture->w, m_logo_texture->h));
+            ImGui::Image(ImTextureRef(textureId), ImVec2(m_logoTexture->w, m_logoTexture->h));
         }
         else
         {

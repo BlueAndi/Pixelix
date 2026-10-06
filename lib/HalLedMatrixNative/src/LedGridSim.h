@@ -147,21 +147,21 @@ protected:
 
 private:
 
-    SDLInterface m_sdl_interface;                          /**< Underlying SDL interface. */
-    SDL_Texture* m_logo_texture                 = nullptr; /**< SDL texture for the About dialog logo. */
-    bool         m_context_created              = false;   /**< Tracks whether this object created an ImGui context. */
-    bool         m_platform_backend_initialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
-    bool         m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
+    SDLInterface m_sdlInterface;                         /**< Underlying SDL interface. */
+    SDL_Texture* m_logoTexture                = nullptr; /**< SDL texture for the About dialog logo. */
+    bool         m_contextCreated             = false;   /**< Tracks whether this object created an ImGui context. */
+    bool         m_platformBackendInitialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
+    bool         m_rendererBackendInitialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
 
-    bool         m_power                        = true; /**< Tracks the power state of the display. */
-    uint8_t      m_brightness                   = 255U; /**< Brightness value [0; 255] */
-    uint16_t     m_width                        = 32U;  /**< Width of the simulated display in pixels. */
-    uint16_t     m_height                       = 8U;   /**< Height of the simulated display in pixels. */
-    float        m_aspectRatio                  = 1.0F; /**< The width / height aspect ratio. */
+    bool         m_power                      = true; /**< Tracks the power state of the display. */
+    uint8_t      m_brightness                 = 255U; /**< Brightness value [0; 255] */
+    uint16_t     m_width                      = 32U;  /**< Width of the simulated display in pixels. */
+    uint16_t     m_height                     = 8U;   /**< Height of the simulated display in pixels. */
+    float        m_aspectRatio                = 1.0F; /**< The width / height aspect ratio. */
 
-    ButtonDrv*   m_buttonDrv                    = nullptr; /**< Access to native buttondriver class instance. */
+    ButtonDrv*   m_buttonDrv                  = nullptr; /**< Access to native buttondriver class instance. */
 
-    LedGridSim(const LedGridSim&)               = delete;
-    LedGridSim& operator=(const LedGridSim&)    = delete;
+    LedGridSim(const LedGridSim&)             = delete;
+    LedGridSim& operator=(const LedGridSim&)  = delete;
 };
 /** @} */
