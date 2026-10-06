@@ -65,8 +65,17 @@ void SystemDrv::reset()
 {
     /* There is no reset on the host. The program is terminated instead, which
      * is the closest to a restart the user can observe.
+     *
+     * Note: We call quick_exit() instead of exit() here to bypass atexit()
+     *       processing like static object destruction. The code base uses
+     *       static objects like WebSocketSrv at least around the webserver.
+     *       These get stored as unique_ptr there. Calling exit() result in
+     *       double destruction through the webserver shutdown and at static
+     *       object destructor calls. This issue is not seen on the ESP, as
+     *       esp_restart() behaves like quick_exit(), bypassing the static
+     *       object destruction.
      */
-    exit(0);
+    quick_exit(0);
 }
 
 /******************************************************************************
