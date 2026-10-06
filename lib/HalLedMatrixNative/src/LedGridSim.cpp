@@ -58,6 +58,7 @@
  * Macros
  *****************************************************************************/
 
+static const uint16_t MAX_GRID_RESOLUTION       = 64U;   /**< Maximum supported Led dimension. */
 static const uint32_t DEFAULT_WINDOW_WIDTH      = 1024U; /**< Default main window width. */
 
 static const uint32_t RESERVED_MENUBAR_HEIGHT   = 28U; /**< space for title bar and menu bar. */
@@ -130,11 +131,11 @@ LedGridSim::~LedGridSim()
     shutdown();
 }
 
-bool LedGridSim::initialize(int width, int height)
+bool LedGridSim::initialize(uint16_t width, uint16_t height)
 {
     bool result = false;
 
-    if ((0 >= height) || (0 >= width))
+    if ((0U == height) || (0U == width) || (MAX_GRID_RESOLUTION < height) || (MAX_GRID_RESOLUTION < width))
     {
         LOG_WARNING("Unexpected LED grid dimensions %d:%d. Falling back to 32:8", width, height);
         m_width  = 32U;
@@ -142,14 +143,14 @@ bool LedGridSim::initialize(int width, int height)
     }
     else
     {
-        m_width  = static_cast<uint16_t>(width);
-        m_height = static_cast<uint16_t>(height);
+        m_width  = width;
+        m_height = height;
     }
     m_aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
 
     if (false == m_sdlInterface.initialize(
-                     DEFAULT_WINDOW_WIDTH,
-                     getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, m_width, m_height)))
+                     static_cast<int>(DEFAULT_WINDOW_WIDTH),
+                     static_cast<int>(getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, m_width, m_height))))
     {
         LOG_WARNING("SDL initialization failed");
     }

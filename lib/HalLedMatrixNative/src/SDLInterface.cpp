@@ -61,8 +61,8 @@ struct ImageEntry
 
 /******************************************************************************
  * Local Variables
-
  *****************************************************************************/
+
 /**
  * @brief   Image entry for the SDL interface.
  * @details Contains the path and surface of a registered image.

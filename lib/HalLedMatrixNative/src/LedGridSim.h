@@ -67,13 +67,13 @@ public:
     /**
      * @brief Initializes UI and creates the window and renderer.
      * @param[in] width The width of the LED matrix in LEDs.
-     * @param[in] height The height of the LED matrix in pixels.
+     * @param[in] height The height of the LED matrix in LEDs.
      * @return true if initialization succeeds; otherwise, false.
      */
-    bool initialize(int width, int height);
+    bool initialize(uint16_t width, uint16_t height);
 
     /**
-     * @brief Release IMGUI resources.
+     * @brief Release IMGUI/SDL owned heap and GPU resources.
      */
     void shutdown();
 
