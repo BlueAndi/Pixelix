@@ -109,10 +109,6 @@ static uint32_t getDefaultWindowHeight(uint32_t windowWidth, uint32_t ledsX, uin
  * Local Variables
  *****************************************************************************/
 
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
 /** Simulated Hardware buttons shown in the button bar, from left to right. */
 static const std::array<SimulatedButton, 3U> gSimButtons = {
     { { "Left", BUTTON_ID_LEFT, false },
@@ -486,7 +482,6 @@ void LedGridSim::renderMenuBar() const
     if (true == showAboutDialog)
     {
         ImGui::OpenPopup("About");
-        showAboutDialog = false; // only trigger once
     }
 
     // Centered modal popup
