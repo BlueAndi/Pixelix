@@ -38,6 +38,9 @@
 #include "SDLInterface.h"
 #include "LedGridSim.h"
 
+#include "Logging.h"
+#include "RestartMgr.h"
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -133,9 +136,15 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
         }
         else
         {
-            /* Window Close event received, exit the application. */
-            /* TODO: Exit is brutal, find a better way to handle this. */
-            exit(0);
+            const uint32_t               RESTART_DELAY = 100U; /* ms */
+            RestartMgr&                  restartMgr    = RestartMgr::getInstance();
+            RestartMgr::RestartReqStatus status        = RestartMgr::RESTART_REQ_STATUS_ERR;
+
+
+            if (RestartMgr::RESTART_REQ_STATUS_OK != restartMgr.reqRestart(RESTART_DELAY, false))
+            {
+                LOG_ERROR("Unable to perform restart.");
+            }
         }
     }
 }
