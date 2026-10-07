@@ -29,6 +29,8 @@ env:
   PIO_VERSION: "6.2.0"
   # Bump this to invalidate every PlatformIO cache of this repository.
   PIO_CACHE_EPOCH: "v1"
+  # Only used if the runner image provides no libsdl3-dev package.
+  SDL3_VERSION: "release-3.4.18"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
@@ -344,38 +346,32 @@ jobs:
             echo "SDL3 package unavailable, it is built from source."
           fi
 
-      - name: Resolve the SDL3 release to build
-        id: sdl_version
-        if: steps.sdl_apt.outputs.installed != 'true'
-        run: |
-          SDL3_TAG=$(git ls-remote --tags --refs https://github.com/libsdl-org/SDL.git 'release-3.*' \
-            | awk -F/ '{ print $NF }' | sort -V | tail -n 1)
-          if [ -z "${SDL3_TAG}" ]; then
-            echo "No SDL3 release tag was found." >&2
-            exit 1
-          fi
-          echo "Using SDL3 ${SDL3_TAG}."
-          echo "tag=${SDL3_TAG}" >> "$GITHUB_OUTPUT"
-
       - name: Cache the SDL3 installation
         id: sdl_cache
         if: steps.sdl_apt.outputs.installed != 'true'
         uses: actions/cache@v5
         with:
           path: ~/sdl3-install
-          key: ${{ runner.os }}-sdl3-${{ steps.sdl_version.outputs.tag }}
+          key: ${{ runner.os }}-sdl3-${{ env.SDL3_VERSION }}
 
       - name: Build SDL3 from source
         if: steps.sdl_apt.outputs.installed != 'true' && steps.sdl_cache.outputs.cache-hit != 'true'
-        env:
-          SDL3_TAG: ${{ steps.sdl_version.outputs.tag }}
         run: |
-          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
-            libasound2-dev libpulse-dev libx11-dev libxext-dev libxrandr-dev \
-            libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxkbcommon-dev \
-            libdrm-dev libgbm-dev libgl1-mesa-dev libegl1-mesa-dev libdbus-1-dev \
-            libudev-dev libwayland-dev libdecor-0-dev
-          git clone --depth 1 --branch "${SDL3_TAG}" https://github.com/libsdl-org/SDL.git /tmp/SDL
+          # This is the dependency list from the SDL documentation
+          # (docs/README-linux.md). It has to stay complete, because SDL aborts
+          # the configure step on a missing X11 or Wayland dependency instead of
+          # disabling the feature silently.
+          sudo apt-get install -y \
+            build-essential git make pkg-config cmake ninja-build \
+            gnome-desktop-testing libasound2-dev libpulse-dev libaudio-dev \
+            libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
+            libxtst-dev libxrender-dev libxkbcommon-dev libdrm-dev libgbm-dev \
+            libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev libdbus-1-dev \
+            libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
+            libpipewire-0.3-dev libwayland-dev wayland-protocols libdecor-0-dev \
+            liburing-dev
+          git clone --depth 1 --branch "${SDL3_VERSION}" https://github.com/libsdl-org/SDL.git /tmp/SDL
           cmake -S /tmp/SDL -B /tmp/SDL/build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr/local
