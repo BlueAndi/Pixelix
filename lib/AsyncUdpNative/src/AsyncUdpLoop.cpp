@@ -88,23 +88,26 @@ void AsyncUdpLoop::registerSocket(AsyncUDP* udp)
 
 void AsyncUdpLoop::unregisterSocket(AsyncUDP* udp)
 {
+    if (nullptr != udp)
     {
-        /* Lock order: dispatch mutex first, like in process(). */
-        std::lock_guard<std::recursive_mutex> dispatchGuard(m_dispatchMutex);
-        std::lock_guard<std::mutex>           guard(m_mutex);
-        std::vector<AsyncUDP*>::iterator      it = std::find(m_sockets.begin(), m_sockets.end(), udp);
-
-        if (m_sockets.end() != it)
         {
-            (void)m_sockets.erase(it);
-        }
-    }
+            /* Lock order: dispatch mutex first, like in process(). */
+            std::lock_guard<std::recursive_mutex> dispatchGuard(m_dispatchMutex);
+            std::lock_guard<std::mutex>           guard(m_mutex);
+            std::vector<AsyncUDP*>::iterator      it = std::find(m_sockets.begin(), m_sockets.end(), udp);
 
-    /* In the loop thread no select() is in progress. */
-    if ((false == isLoopThread) &&
-        (true == m_isRunning))
-    {
-        waitForCycle();
+            if (m_sockets.end() != it)
+            {
+                (void)m_sockets.erase(it);
+            }
+        }
+
+        /* In the loop thread no select() is in progress. */
+        if ((false == isLoopThread) &&
+            (true == m_isRunning))
+        {
+            waitForCycle();
+        }
     }
 }
 
@@ -129,9 +132,20 @@ void AsyncUdpLoop::start()
 
 void AsyncUdpLoop::stop()
 {
-    m_isRunning = false;
+    bool isJoinable = false;
 
-    if (true == m_thread.joinable())
+    {
+        /* The thread handle is written by start() under the mutex, therefore
+         * it must not be read without it.
+         */
+        std::lock_guard<std::mutex> guard(m_mutex);
+
+        m_isRunning = false;
+        isJoinable  = m_thread.joinable();
+    }
+
+    /* Join outside of the mutex, because the loop itself requires it. */
+    if (true == isJoinable)
     {
         m_thread.join();
     }
@@ -246,6 +260,11 @@ void AsyncUdpLoop::process()
             }
         }
     }
+
+    /* No further cycle will be notified. A thread which unregisters a socket
+     * right now shall not run into the timeout.
+     */
+    notifyCycle();
 }
 
 /******************************************************************************

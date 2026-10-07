@@ -41,6 +41,11 @@
  *   last received packet, because there is no connect().
  * - AsyncUDPPacket::isBroadcast() and AsyncUDPPacket::isMulticast() are always
  *   false.
+ * - A received datagram is limited to RX_BUFFER_SIZE byte. A larger one is
+ *   dropped on Windows and truncated on Linux, while lwIP would provide it
+ *   completely. In both cases a warning is logged.
+ * - AsyncUDPPacket::localIP() is always 0.0.0.0, because the socket is not
+ *   bound to a dedicated network interface.
  *
  * @addtogroup TEST
  *

@@ -354,6 +354,25 @@ void AsyncUDP::process()
         if (0 > size)
         {
             isDone = true;
+
+            /* A closed socket and an empty receive queue are the normal cases.
+             * Anything else is a real error, e.g. a datagram which exceeds the
+             * receive buffer, and shall not stay silent. Remaining datagrams
+             * are received in the next event loop cycle.
+             */
+            if ((-1 != sock) &&
+                (false == SocketCompat::wouldBlock()))
+            {
+                uint16_t localPort = 0U;
+
+                {
+                    std::lock_guard<std::mutex> guard(m_mutex);
+
+                    localPort = m_localPort;
+                }
+
+                LOG_WARNING("Failed to receive a UDP packet on port %u.", localPort);
+            }
         }
         else
         {
