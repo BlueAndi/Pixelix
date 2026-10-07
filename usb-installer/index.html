@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#f2f1ed" />
+        <meta name="description" content="Install Pixelix firmware and configure Wi-Fi over USB." />
+        <title>Pixelix USB Setup</title>
+    </head>
+
+    <body>
+        <header class="topbar container-xl">
+            <a class="brand" href="./" aria-label="Pixelix USB setup home">
+                <span class="brand-art"><img src="./images/LogoSmall.png" alt="Pixelix" /></span>
+                <span class="brand-label">USB INSTALLER <small>FIRMWARE + WI-FI</small></span>
+            </a>
+            <a class="source-link" href="https://github.com/BlueAndi/Pixelix/releases">
+                <span>OPEN SOURCE</span>
+                <strong>Releases <span aria-hidden="true">↗</span></strong>
+            </a>
+        </header>
+
+        <main class="container-xl">
+            <section class="intro row g-4 align-items-center" aria-labelledby="page-title">
+                <div class="intro-copy-block col-lg-7">
+                    <p class="eyebrow"><span class="signal-mark" aria-hidden="true"></span> DEVICE SETUP <span id="release-version">Loading release</span></p>
+                    <h1 id="page-title">Pixelix<br /><em>USB setup.</em></h1>
+                    <p class="intro-copy">Flash the right build for your display. Connect to Wi-Fi. All from this browser.</p>
+                    <ul class="hero-facts" aria-label="Installer features">
+                        <li><span class="fact-pixel fact-pixel-red" aria-hidden="true"></span>USB flash</li>
+                        <li><span class="fact-pixel fact-pixel-green" aria-hidden="true"></span><span id="board-count">Release board builds</span></li>
+                        <li><span class="fact-pixel fact-pixel-cyan" aria-hidden="true"></span>Improv Wi-Fi</li>
+                    </ul>
+                </div>
+                <figure class="hero-logo col-lg-5">
+                    <img src="./images/Logo.png" alt="Pixelix, an RGB pixel display" />
+                    <figcaption><span>PIXELIX</span><span>ESP32 / RGB MATRIX</span></figcaption>
+                </figure>
+            </section>
+
+            <section class="setup-flow" aria-label="Device setup">
+                <article class="step" id="step-board">
+                    <div class="step-number">01</div>
+                    <div class="step-body">
+                        <h2>Choose your board</h2>
+                        <label class="form-label" for="board-select">Board and display configuration</label>
+                        <select class="form-select" id="board-select" disabled>
+                            <option>Loading supported boards…</option>
+                        </select>
+                        <p class="step-note">Use the exact display configuration printed on your Pixelix kit.</p>
+                    </div>
+                    <span class="step-state" id="board-state">WAITING</span>
+                </article>
+
+                <article class="step" id="step-connect">
+                    <div class="step-number">02</div>
+                    <div class="step-body">
+                        <h2>Connect over USB</h2>
+                        <p>Use a data-capable USB cable. If automatic connection fails, hold BOOT while reconnecting the board.</p>
+                        <button class="btn button button-dark" id="connect-button" type="button" disabled>Choose USB device</button>
+                        <p class="step-note" id="chip-status" role="status">Chrome or Edge on desktop is required.</p>
+                    </div>
+                    <span class="step-state" id="connect-state">WAITING</span>
+                </article>
+
+                <article class="step" id="step-flash">
+                    <div class="step-number">03</div>
+                    <div class="step-body">
+                        <h2>Install firmware</h2>
+                        <p>This erases the current flash, including stored settings. Keep the USB cable connected while Pixelix restarts.</p>
+                        <button class="btn button button-accent" id="flash-button" type="button" disabled>Erase and install</button>
+                        <div class="progress-wrap" id="progress-wrap" hidden>
+                            <progress id="flash-progress" max="100" value="0"></progress>
+                            <span id="progress-label">0%</span>
+                        </div>
+                    </div>
+                    <span class="step-state" id="flash-state">WAITING</span>
+                </article>
+
+                <article class="step" id="step-wifi">
+                    <div class="step-number">04</div>
+                    <div class="step-body">
+                        <h2>Set up Wi-Fi</h2>
+                        <p id="wifi-intro">Keep the cable connected. After restart, reopen the serial port here; no unplugging is needed. If the browser asks, select the same device.</p>
+                        <button class="btn button button-dark" id="wifi-connect-button" type="button" disabled>Continue to Wi-Fi setup</button>
+                        <p id="authorization-status" class="step-note" role="status"></p>
+                        <form id="wifi-form" hidden>
+                            <label class="form-label" for="ssid-input">Wi-Fi network name</label>
+                            <input class="form-control" id="ssid-input" name="ssid" autocomplete="username" maxlength="32" required />
+                            <label class="form-label" for="password-input">Wi-Fi password</label>
+                            <input class="form-control" id="password-input" name="password" type="password" autocomplete="current-password" maxlength="64" />
+                            <button class="btn button button-accent" id="provision-button" type="submit" disabled>Save and restart Pixelix</button>
+                        </form>
+                    </div>
+                    <span class="step-state" id="wifi-state">WAITING</span>
+                </article>
+            </section>
+
+            <details class="terminal-panel" id="terminal-panel">
+                <summary>
+                    <span class="terminal-summary-title">SERIAL CONSOLE <small>OPTIONAL DIAGNOSTICS</small></span>
+                    <span id="terminal-state" class="terminal-state">DISCONNECTED</span>
+                </summary>
+                <div class="terminal-content">
+                    <div class="terminal-toolbar">
+                        <p>View device output and run diagnostic commands. Wi-Fi credentials are managed above.</p>
+                        <div class="terminal-actions">
+                            <button class="btn button button-dark" id="terminal-connect-button" type="button" disabled>Open serial console</button>
+                            <button class="text-button" id="terminal-clear-button" type="button">Clear output</button>
+                        </div>
+                    </div>
+                    <pre id="terminal-output" role="log" aria-live="off">Serial output will appear here.</pre>
+                    <form id="terminal-form" class="terminal-command-form" hidden>
+                        <label class="form-label" for="terminal-command">Command</label>
+                        <div class="terminal-command-row">
+                            <input class="form-control" id="terminal-command" name="command" maxlength="78" autocomplete="off" spellcheck="false" required />
+                            <button class="btn button button-accent" id="terminal-send-button" type="submit">Send</button>
+                        </div>
+                        <p class="step-note">Try <code>help</code>, <code>get ip</code>, <code>get hostname</code>, or <code>get status</code>.</p>
+                    </form>
+                </div>
+            </details>
+
+            <section class="activity" aria-labelledby="activity-title">
+                <div class="activity-heading">
+                    <h2 id="activity-title">Installer status</h2>
+                    <button id="clear-status" class="text-button" type="button">Clear</button>
+                </div>
+                <ol id="status-list" aria-live="polite" aria-relevant="additions"></ol>
+            </section>
+
+            <aside class="fallback" aria-label="Alternative Wi-Fi setup">
+                <span class="fallback-mark" aria-hidden="true">i</span>
+                <p><strong>USB Wi-Fi setup unavailable?</strong> After flashing, join the Pixelix access point and configure the network in its captive portal.</p>
+            </aside>
+        </main>
+
+        <footer class="container-xl">
+            <span>Pixelix firmware is open source under the MIT License.</span>
+            <a href="https://github.com/BlueAndi/Pixelix">Source code</a>
+        </footer>
+
+        <script type="module" src="/src/main.js"></script>
+    </body>
+
+</html>

@@ -1,0 +1,91 @@
+name: Publish Development Installer
+
+on:
+    workflow_dispatch:
+        inputs:
+            source_branch:
+                description: Branch used to build the installer and firmware images.
+                required: true
+                type: choice
+                default: Development
+                options:
+                    - Development
+
+concurrency:
+    group: github-pages
+    cancel-in-progress: false
+
+jobs:
+    deploy_pages:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: Checkout selected branch
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ inputs.source_branch }}
+
+            - name: Configure GitHub Pages
+              uses: actions/configure-pages@v5
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+                  cache: npm
+                  cache-dependency-path: usb-installer/package-lock.json
+
+            - name: Build installer
+              working-directory: usb-installer
+              run: |
+                  npm ci
+                  npm run build
+
+            - name: Resolve latest release
+              id: latest_release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  RELEASE_TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+                  if [ -z "$RELEASE_TAG" ]; then
+                    echo "No published release was found." >&2
+                    exit 1
+                  fi
+                  echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+            - name: Download latest release USB packages
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RELEASE_TAG: ${{ steps.latest_release.outputs.tag }}
+              run: |
+                  ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${RELEASE_TAG}-usb-flash-packages.zip"
+                  gh release download "$RELEASE_TAG" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --pattern "$ARCHIVE_NAME" \
+                    --dir latest-release
+                  mkdir release-packages
+                  unzip "latest-release/$ARCHIVE_NAME" -d release-packages
+
+            - name: Assemble Pages site
+              env:
+                  RELEASE_TAG: ${{ steps.latest_release.outputs.tag }}
+              run: |
+                  python scripts/prepare_usb_installer.py \
+                    --packages-dir release-packages \
+                    --site-dir site \
+                    --version "Development-${GITHUB_SHA:0:7} / Firmware-${RELEASE_TAG}"
+
+            - name: Upload Pages artifact
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: site
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

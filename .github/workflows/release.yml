@@ -41,6 +41,7 @@ jobs:
             "lilygo-ttgo-t-display-TFT-32x8",
             "lilygo-t-display-s3-TFT-32x8",
             "lilygo-t-display-s3-TFT-64x16",
+            "lilygo-t-display-s3-TFT-64x16-makapix",
             "m5stack_core-TFT-32x8",
             "ulanzi-tc001-LED-32x8",
             "wemos_lolin_s2_mini-LED-32x8",
@@ -111,6 +112,20 @@ jobs:
 
       - name: Build ${{ matrix.environment }} filesystem image
         run: platformio run --environment ${{ matrix.environment }} --target buildfs
+
+      - name: Package ${{ matrix.environment }} USB flash images
+        run: |
+          python scripts/package_flash_images.py \
+            --environment "${{ matrix.environment }}" \
+            --build-dir ".pio/build/${{ matrix.environment }}" \
+            --output-dir "flash-package/${{ matrix.environment }}"
+
+      - name: Upload ${{ matrix.environment }} USB flash package
+        uses: actions/upload-artifact@v6
+        with:
+          name: usb-flash-${{ matrix.environment }}
+          path: flash-package/${{ matrix.environment }}/*
+          retention-days: 5
 
       - name: Collect size metrics for ${{ matrix.environment }}
         run: |
@@ -210,8 +225,17 @@ jobs:
         with:
           path: ${{ github.workspace }}/artifacts
 
+      - name: Archive USB flash packages
+        run: |
+          zip -qr "${GITHUB_WORKSPACE}/${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}-usb-flash-packages.zip" usb-flash-*
+        working-directory: ${{ github.workspace }}/artifacts
+
       - name: Exclude CI size metrics from release archive
         run: find . -type d -name 'size-metrics-*' -prune -exec rm -rf {} +
+        working-directory: ${{ github.workspace }}/artifacts
+
+      - name: Exclude Pages flash packages from release archive
+        run: find . -type d -name 'usb-flash-*' -prune -exec rm -rf {} +
         working-directory: ${{ github.workspace }}/artifacts
 
       - name: Display structure of release artifacts
@@ -226,6 +250,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag_name }}
-          files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip
+          files: |
+            ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip
+            ${{ github.workspace }}/${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}-usb-flash-packages.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

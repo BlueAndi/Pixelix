@@ -46,6 +46,7 @@
 #include "ErrorState.h"
 #include "MemMon.h"
 #include "MiniTerminal.h"
+#include "ImprovSerialService.h"
 #include "RestartMgr.h"
 #include <SimpleTimer.hpp>
 #include <DisplayMgr.h>
@@ -129,6 +130,9 @@ static void* main_mbedtls_calloc(size_t count, size_t size);
 
 /** Serial terminal */
 static MiniTerminal gTerminal(Serial);
+
+/** Improv Wi-Fi Serial provisioning service */
+static ImprovSerialService gImprovSerialService(Serial, gTerminal);
 
 /** System state machine */
 static StateMachine gSysStateMachine(InitState::getInstance());
@@ -272,8 +276,8 @@ void loop()
     /* Memory monitor */
     MemMon::getInstance().process();
 
-    /* Process terminal */
-    gTerminal.process();
+    /* Process Improv serial protocol and route other input to the terminal. */
+    gImprovSerialService.process(Board::getInstance().getButtonDrv());
 
     /* Handle delayed restart request. */
     restartMgr.process();

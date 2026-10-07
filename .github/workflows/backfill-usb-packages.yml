@@ -1,0 +1,70 @@
+name: Backfill Release USB Packages
+
+on:
+    workflow_dispatch:
+        inputs:
+            tag_name:
+                description: Existing release tag to package (for example v10.0.0).
+                required: true
+                type: string
+
+permissions:
+    contents: write
+
+jobs:
+    backfill:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout backfill tooling
+              uses: actions/checkout@v6
+
+            - name: Checkout selected release source
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ inputs.tag_name }}
+                  path: release-source
+
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: "3.12"
+
+            - name: Install PlatformIO CLI
+              run: python -m pip install --upgrade platformio
+
+            - name: Download existing release archive
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RELEASE_TAG: ${{ inputs.tag_name }}
+              run: |
+                  ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${RELEASE_TAG}.zip"
+                  gh release download "$RELEASE_TAG" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --pattern "$ARCHIVE_NAME" \
+                    --dir release-archive
+                  echo "archive_name=$ARCHIVE_NAME" >> "$GITHUB_ENV"
+
+            - name: Repackage existing firmware artifacts
+              run: |
+                  python scripts/package_release_archive.py \
+                    --release-archive "release-archive/${ARCHIVE_NAME}" \
+                    --project-dir release-source \
+                    --output-dir usb-flash-packages
+
+            - name: Create USB packages archive
+              env:
+                  RELEASE_TAG: ${{ inputs.tag_name }}
+              run: |
+                  ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${RELEASE_TAG}-usb-flash-packages.zip"
+                  cd usb-flash-packages
+                  zip -qr "$GITHUB_WORKSPACE/$ARCHIVE_NAME" usb-flash-*
+                  echo "package_archive=$GITHUB_WORKSPACE/$ARCHIVE_NAME" >> "$GITHUB_ENV"
+
+            - name: Upload USB packages to existing release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  RELEASE_TAG: ${{ inputs.tag_name }}
+              run: |
+                  gh release upload "$RELEASE_TAG" "$package_archive" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --clobber
