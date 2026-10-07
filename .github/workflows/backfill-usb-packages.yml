@@ -46,10 +46,13 @@ jobs:
                     --repo "$GITHUB_REPOSITORY" \
                     --pattern "$ARCHIVE_NAME" \
                     --dir release-archive
-                  echo "archive_name=$ARCHIVE_NAME" >> "$GITHUB_ENV"
+                  echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> "$GITHUB_ENV"
 
             - name: Repackage existing firmware artifacts
               run: |
+                  # Fail loudly if the handover via GITHUB_ENV did not work,
+                  # instead of passing a truncated path to the script.
+                  set -u
                   python scripts/package_release_archive.py \
                     --release-archive "release-archive/${ARCHIVE_NAME}" \
                     --project-dir release-source \
@@ -62,13 +65,14 @@ jobs:
                   ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${RELEASE_TAG}-usb-flash-packages.zip"
                   cd usb-flash-packages
                   zip -qr "$GITHUB_WORKSPACE/$ARCHIVE_NAME" usb-flash-*
-                  echo "package_archive=$GITHUB_WORKSPACE/$ARCHIVE_NAME" >> "$GITHUB_ENV"
+                  echo "PACKAGE_ARCHIVE=$GITHUB_WORKSPACE/$ARCHIVE_NAME" >> "$GITHUB_ENV"
 
             - name: Upload USB packages to existing release
               env:
                   GH_TOKEN: ${{ github.token }}
                   RELEASE_TAG: ${{ inputs.tag_name }}
               run: |
-                  gh release upload "$RELEASE_TAG" "$package_archive" \
+                  set -u
+                  gh release upload "$RELEASE_TAG" "$PACKAGE_ARCHIVE" \
                     --repo "$GITHUB_REPOSITORY" \
                     --clobber
