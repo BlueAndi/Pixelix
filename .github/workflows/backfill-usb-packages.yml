@@ -11,6 +11,10 @@ on:
 permissions:
     contents: write
 
+env:
+    # Pinned to keep the toolchain reproducible and the cache key meaningful.
+    PIO_VERSION: "6.2.0"
+
 jobs:
     backfill:
         runs-on: ubuntu-latest
@@ -30,7 +34,7 @@ jobs:
                   python-version: "3.12"
 
             - name: Install PlatformIO CLI
-              run: python -m pip install --upgrade platformio
+              run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
 
             - name: Download existing release archive
               env:

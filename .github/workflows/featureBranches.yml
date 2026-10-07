@@ -1,12 +1,15 @@
 name: Feature Branches CI
 
-# Run this workflow on pushes and pull requests to any branch except master and main.
+# Pull requests against any branch except master and main are verified here.
+#
+# The push trigger is limited to the integration branch on purpose. A feature
+# branch with an open pull request would otherwise be built twice for every
+# commit, once for the push and once for the pull request. Use workflow_dispatch
+# to verify a feature branch which has no pull request yet.
 on:
   push:
     branches:
-      - "**"
-      - "!master"
-      - "!main"
+      - Development
   pull_request:
     branches:
       - "**"
@@ -14,22 +17,25 @@ on:
       - "!main"
   workflow_dispatch:
 
+# A superseded pull request run is cancelled, because its result is obsolete as
+# soon as a newer commit is pushed. Runs on the integration branch are kept,
+# because they refresh the build cache and the size report baseline.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Pinned to keep the toolchain reproducible and the cache key meaningful.
+  PIO_VERSION: "6.2.0"
+  # Bump this to invalidate every PlatformIO cache of this repository.
+  PIO_CACHE_EPOCH: "v1"
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # The introduction just shows some useful informations.
-  intro:
-    # The type of runner that the job will run on.
-    runs-on: ubuntu-latest
-    # Steps represent a sequence of tasks that will be executed as part of the job.
-    steps:
-      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
-
   # Build all targets
   build:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
     strategy:
       matrix:
         environment:
@@ -56,35 +62,52 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Cache pip
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v5
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
+      # The pip download cache and the PlatformIO home share one cache entry.
+      # All ESP32 environments use the same platform packages, therefore a
+      # single key for the whole repository is sufficient and keeps the cache
+      # small.
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
+
       - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
+
+      # SCons decides by content signature, therefore a restored build folder
+      # survives the new timestamps of a fresh checkout and the build becomes
+      # incremental. Saving happens on the integration branch only, which bounds
+      # the cache to one entry per environment.
+      - name: Restore ${{ matrix.environment }} build folder
+        uses: actions/cache/restore@v5
+        with:
+          path: .pio/build/${{ matrix.environment }}
+          key: ${{ runner.os }}-piobuild-${{ env.PIO_CACHE_EPOCH }}-${{ matrix.environment }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-piobuild-${{ env.PIO_CACHE_EPOCH }}-${{ matrix.environment }}-
 
       - name: Compile ${{ matrix.environment }} firmware
         run: platformio run --environment ${{ matrix.environment }} 2>&1 | tee firmware-build.log
 
       - name: Build ${{ matrix.environment }} filesystem image
         run: platformio run --environment ${{ matrix.environment }} --target buildfs
+
+      - name: Save ${{ matrix.environment }} build folder
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v5
+        with:
+          path: .pio/build/${{ matrix.environment }}
+          key: ${{ runner.os }}-piobuild-${{ env.PIO_CACHE_EPOCH }}-${{ matrix.environment }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
 
       - name: Collect size metrics for ${{ matrix.environment }}
         run: |
@@ -178,25 +201,23 @@ jobs:
             --target-label "$TARGET_LABEL"
 
   # Perform static checks
+  #
+  # clang-tidy sees the same sources for every environment, only the
+  # preprocessor configuration differs. The matrix therefore contains one
+  # environment per combination of feature set (config/config*.ini) and display
+  # driver, which covers all of them without running the analysis 15 times.
   check:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
     strategy:
       matrix:
         environment:
           [
-            "adafruit_feather_esp32_v2-LED-32x8",
-            "adafruit_matrixportal_s3-HUB75-64x64",
             "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-            "az-delivery-devkit-v4-LED-32x8",
-            "esp32doit-devkit-v1-LED-32x8",
             "esp32doit-devkit-v1-HUB75-64x64",
-            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
             "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-            "esp32-nodemcu-LED-32x8",
             "lilygo-ttgo-t-display-TFT-32x8",
-            "lilygo-t-display-s3-TFT-32x8",
             "lilygo-t-display-s3-TFT-64x16",
             "m5stack_core-TFT-32x8",
             "ulanzi-tc001-LED-32x8",
@@ -207,29 +228,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Cache pip
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v5
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
+
       - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
 
       - name: Perform static checks on ${{ matrix.environment }}
         run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
@@ -238,35 +253,28 @@ jobs:
   test:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Cache pip
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v5
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
+
       - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
 
       - name: Run tests on native environment
         run: platformio test --environment test -vvv
@@ -275,7 +283,6 @@ jobs:
   openapi_lint:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
 
     steps:
       - name: Checkout repository
@@ -287,9 +294,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install openapi-spec-validator
-        run: |
-          python -m pip install --upgrade pip
-          pip install openapi-spec-validator==0.9.0
+        run: pip install --disable-pip-version-check openapi-spec-validator==0.9.0
 
       - name: Validate the OpenAPI specification
         run: openapi-spec-validator ./doc/OpenAPI/OpenAPI.yaml
@@ -301,58 +306,92 @@ jobs:
   build_native:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Cache pip
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v5
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
 
-      - name: Install SDL3 dependencies
+      - name: Install PlatformIO
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
+
+      # The native environment links against SDL3 via pkg-config. Not every
+      # Ubuntu runner image ships libsdl3-dev, therefore SDL3 is built from
+      # source as a fallback and the installable tree is cached. A runner image
+      # which provides the package takes the fast path and skips all of this.
+      - name: Try to install SDL3 from the package manager
+        id: sdl_apt
         run: |
           sudo apt-get update
-          if apt-cache show libsdl3-dev >/dev/null 2>&1; then
-            sudo apt-get install -y libsdl3-dev
+          if sudo apt-get install -y libsdl3-dev; then
+            echo "installed=true" >> "$GITHUB_OUTPUT"
           else
-            echo "SDL3 package unavailable, building SDL3 from source"
-
-            sudo apt-get install build-essential git make \
-            pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
-            libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
-            libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
-            libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev
-
-            git clone --depth 1 https://github.com/libsdl-org/SDL.git /tmp/SDL
-            cmake -S /tmp/SDL -B /tmp/SDL/build -DCMAKE_BUILD_TYPE=Release
-            cmake --build /tmp/SDL/build --parallel
-            sudo cmake --install /tmp/SDL/build --prefix /usr/local
-            sudo ldconfig
+            echo "installed=false" >> "$GITHUB_OUTPUT"
+            echo "SDL3 package unavailable, it is built from source."
           fi
+
+      - name: Resolve the SDL3 release to build
+        id: sdl_version
+        if: steps.sdl_apt.outputs.installed != 'true'
+        run: |
+          SDL3_TAG=$(git ls-remote --tags --refs https://github.com/libsdl-org/SDL.git 'release-3.*' \
+            | awk -F/ '{ print $NF }' | sort -V | tail -n 1)
+          if [ -z "${SDL3_TAG}" ]; then
+            echo "No SDL3 release tag was found." >&2
+            exit 1
+          fi
+          echo "Using SDL3 ${SDL3_TAG}."
+          echo "tag=${SDL3_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the SDL3 installation
+        id: sdl_cache
+        if: steps.sdl_apt.outputs.installed != 'true'
+        uses: actions/cache@v5
+        with:
+          path: ~/sdl3-install
+          key: ${{ runner.os }}-sdl3-${{ steps.sdl_version.outputs.tag }}
+
+      - name: Build SDL3 from source
+        if: steps.sdl_apt.outputs.installed != 'true' && steps.sdl_cache.outputs.cache-hit != 'true'
+        env:
+          SDL3_TAG: ${{ steps.sdl_version.outputs.tag }}
+        run: |
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libasound2-dev libpulse-dev libx11-dev libxext-dev libxrandr-dev \
+            libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxkbcommon-dev \
+            libdrm-dev libgbm-dev libgl1-mesa-dev libegl1-mesa-dev libdbus-1-dev \
+            libudev-dev libwayland-dev libdecor-0-dev
+          git clone --depth 1 --branch "${SDL3_TAG}" https://github.com/libsdl-org/SDL.git /tmp/SDL
+          cmake -S /tmp/SDL -B /tmp/SDL/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build /tmp/SDL/build --parallel
+          # DESTDIR stages the installation below the home folder, so that the
+          # cache can be written without root rights. The pkg-config and CMake
+          # metadata still point to /usr/local, where it is copied to afterwards.
+          DESTDIR="${HOME}/sdl3-install" cmake --install /tmp/SDL/build
+
+      - name: Install SDL3 from the cached tree
+        if: steps.sdl_apt.outputs.installed != 'true'
+        run: |
+          sudo cp -a "${HOME}/sdl3-install/usr/local/." /usr/local/
+          sudo ldconfig
+          pkg-config --modversion sdl3
+
       - name: Compile native application
         run: platformio run --environment native
 
@@ -406,15 +445,8 @@ jobs:
             sleep 1
           done
 
-      # Schemathesis requires Python 3.10 or higher, PlatformIO is not used
-      # anymore from here on.
-      - name: Set up Python for the REST API test
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
       - name: Install schemathesis
-        run: pip install schemathesis==4.27.0
+        run: pip install --disable-pip-version-check schemathesis==4.27.0
 
       # A plugin instance gets its unique id (UID) at runtime, therefore the UID
       # can not be part of the OpenAPI specification. The plugins are installed
@@ -464,38 +496,15 @@ jobs:
           cat pixelix.log || true
 
   # Perform clang-format check
+  #
+  # clang-format is part of the runner image, no further tooling is required.
   check_format:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Cache pip
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v5
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
 
       - name:
           Run clang-format check
@@ -509,37 +518,14 @@ jobs:
             -print | xargs clang-format -i --dry-run -Werror
 
   # Build documentation
+  #
+  # Only doxygen and graphviz are required here, PlatformIO is not used.
   doc:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Cache pip
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Cache PlatformIO
-        uses: actions/cache@v5
-        with:
-          path: ~/.platformio
-          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
 
       - name: Set up graphviz
         uses: ts-graphviz/setup-graphviz@v2
