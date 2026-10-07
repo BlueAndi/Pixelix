@@ -35,6 +35,8 @@
  *****************************************************************************/
 #include "RestUtil.h"
 
+#include <JsonEscape.hpp>
+
 #include <Logging.h>
 
 /******************************************************************************
@@ -117,7 +119,12 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
         {
             response->setCode(static_cast<int>(httpStatusCode));
 
-            (void)serializeJson(jsonDoc, *response);
+            /* Escape control characters, otherwise the response would not be
+             * valid JSON anymore, see JsonEscape.hpp.
+             */
+            JsonEscapePrint escapedResponse(*response);
+
+            (void)serializeJson(jsonDoc, escapedResponse);
 
             /* ----- Add security headers: ----- */
 

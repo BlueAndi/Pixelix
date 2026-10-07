@@ -34,6 +34,8 @@
  * Includes
  *****************************************************************************/
 #include "HomeAssistantMqtt.h"
+
+#include <JsonEscape.hpp>
 #include "Version.h"
 
 #include <SettingsService.h>
@@ -499,6 +501,11 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
             /* Send the JSON as string. */
             if (0U < serializeJson(jsonDoc, mqttDiscoveryContent))
             {
+                /* Escape control characters, otherwise the content would not be
+                 * valid JSON anymore, see JsonEscape.hpp.
+                 */
+                JsonEscape::escapeControlCharacters(mqttDiscoveryContent);
+
                 /* Publish retained to ensure that HomeAssistant will recognize the device entity. */
                 if (false == mqttService.publish(MqttService::PRIMARY_MQTT_INST, mqttDiscoveryTopic, mqttDiscoveryContent.c_str(), true))
                 {

@@ -108,6 +108,10 @@
                             </div>
                             <small class="form-text">The time format string defines how the time is shown.</small>
                         </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false).</label>
+                        </div>
                         <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
@@ -193,6 +197,7 @@
                     document.getElementById("longitude").value = rsp.data.longitude;
                     document.getElementById("latitude").value = rsp.data.latitude;
                     document.getElementById("timeFormat").value = rsp.data.timeFormat;
+                    document.getElementById("scrollIcon").checked = rsp.data.scrollIcon;
                 } catch (rsp) {
                     alert("Internal error.");
                 } finally {
@@ -210,7 +215,8 @@
                         parameter: {
                             latitude: document.getElementById("latitude").value,
                             longitude: document.getElementById("longitude").value,
-                            timeFormat: document.getElementById("timeFormat").value
+                            timeFormat: document.getElementById("timeFormat").value,
+                            scrollIcon: document.getElementById("scrollIcon").checked
                         }
                     });
                     alert("Ok.");

@@ -21,9 +21,6 @@
 - [Enable/Disable logging](#enabledisable-logging)
   - [Is logging enabled?](#is-logging-enabled)
   - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
-- [Enable/Disable iperf](#enabledisable-iperf)
-  - [Is iperf enabled?](#is-iperf-enabled)
-  - [Start/Stop iperf server](#startstop-iperf-server)
 - [Trigger virtual user button](#trigger-virtual-user-button)
 - [Switch to next fade effect](#switch-to-next-fade-effect)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
@@ -222,40 +219,6 @@ Event: If logging is enabled, a event will be automatically be sent for every lo
 * ```<filename>```: Filename where the log message comes from, emphasized in "".
 * ```<line>```: Line number if in the file where the log message comes from.
 * ```<text>```: Logged text, emphasized in "".
-
-## Enable/Disable iperf
-
-### Is iperf enabled?
-
-Command: ```IPERF```
-
-Response:
-
-* Successful:
-  * ```ACK;<is-enabled>```
-  * ```<is-enabled>```: 0 means disabled and 1 enabled
-* Failed:
-  * ```NACK```
-
-### Start/Stop iperf server
-
-Command: ```IPERF;<CMD>;<OPTIONS>```
-
-Parameter:
-
-* ```<CMD>```: START to start server; STOP to stop server
-* ```<OPTIONS>```: Options are only valid for the START command.
-  * 1st option is protocol: DEFAULT (= TCP), TCP, UDP
-  * 2nd option is interval in s: DEFAULT (= 3) or value
-  * 3rd option is time in s: DEFAULT (= 30) or value
-
-Response:
-
-* Successful:
-  * ```ACK;<is-enabled>```
-  * ```<is-enabled>```: 0 means disabled and 1 enabled
-* Failed:
-  * ```NACK```
 
 ## Trigger virtual user button
 

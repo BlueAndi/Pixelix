@@ -101,12 +101,18 @@ void MiniTerminal::process()
 {
     char   buffer[LOCAL_BUFFER_SIZE];
     size_t read = m_stream.readBytes(buffer, LOCAL_BUFFER_SIZE);
-    size_t idx  = 0U;
+
+    process(reinterpret_cast<const uint8_t*>(buffer), read);
+}
+
+void MiniTerminal::process(const uint8_t* data, size_t length)
+{
+    size_t idx = 0U;
 
     /* Process the read input data. */
-    while (read > idx)
+    while (length > idx)
     {
-        char currentChar = buffer[idx];
+        char currentChar = static_cast<char>(data[idx]);
 
         /* Command finished? */
         if (ASCII_LF == currentChar)

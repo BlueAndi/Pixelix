@@ -50,7 +50,6 @@
 #include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
-#include <FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -78,9 +77,9 @@ public:
     IconTextLampPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
         m_view(),
-        m_iconFileId(FileMgrService::FILE_ID_INVALID),
+        m_iconFileName(),
         m_formatTextStored(),
-        m_iconFileIdStored(FileMgrService::FILE_ID_INVALID),
+        m_iconFileNameStored(),
         m_mutex(),
         m_hasTopicTextChanged(false),
         m_hasTopicLampsChanged(false),
@@ -140,16 +139,14 @@ public:
      * }
      * </code>
      *
-     * Homeassistant MQTT discovery support can be added with the "ha" JSON object inside
-     * the "extra" JSON object.
+     * Home Assistant MQTT discovery support can be added with the "ha" JSON object inside
+     * the "extra" JSON object. The Home Assistant extension supports only loading by file.
      * <code>{.json}
      * {
      *     "topics": [{
      *         "name": "text",
      *         "extra": {
-     *             "ha": {
-     *                 ... everything here will be used for MQTT discovery ...
-     *             }
+     *             "ha": "myHomeAssistantConfig.json"
      *         }
      *     }]
      * }
@@ -249,12 +246,12 @@ public:
     /**
      * Load icon by file id.
      *
-     * @param[in] fileId    File id
+     * @param[in] fileName  File name of the icon file.
      * @param[in] storeFlag Store the text persistent or not.
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadIcon(FileMgrService::FileId fileId, bool storeFlag);
+    bool loadIcon(const String& fileName, bool storeFlag);
 
     /**
      * Clear icon from view and remove it from filesytem.
@@ -304,9 +301,9 @@ private:
     static const char*        TOPIC_LAMP;
 
     _IconTextLampPlugin::View m_view;                                                      /**< View with all widgets. */
-    FileMgrService::FileId    m_iconFileId;                                                /**< Icon file id, used to retrieve the full path to the icon from the file manager. */
+    String                    m_iconFileName;                                              /**< Icon file name. */
     String                    m_formatTextStored;                                          /**< It contains the format text, which is persistent stored. */
-    FileMgrService::FileId    m_iconFileIdStored;                                          /**< Icon file id, which is persistent stored. */
+    String                    m_iconFileNameStored;                                        /**< Icon file name, which is persistent stored. */
     mutable MutexRecursive    m_mutex;                                                     /**< Mutex to protect against concurrent access. */
     bool                      m_hasTopicTextChanged;                                       /**< Has the topic text content changed? Used to notify the TopicHandlerService about changes. */
     bool                      m_hasTopicLampsChanged;                                      /**< Has the topic lamps content changed? Used to notify the TopicHandlerService about changes. */

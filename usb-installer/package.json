@@ -1,0 +1,19 @@
+{
+  "name": "pixelix-usb-installer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "bootstrap": "5.3.8",
+    "esptool-js": "0.7.0",
+    "improv-wifi-serial-sdk": "2.8.1"
+  },
+  "devDependencies": {
+    "vite": "7.1.12"
+  }
+}

@@ -75,8 +75,12 @@
                             </select>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="gruenbeckIP">IP-address of Gruenbeck server:</label>
-                            <input class="form-control" type="text" id="gruenbeckIP" name="gruenbeckIP" value="192.168.178.12" />
+                            <label class="form-label" for="ipAddress">IP-address of Gruenbeck server:</label>
+                            <input class="form-control" type="text" id="ipAddress" name="ipAddress" value="192.168.178.12" />
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false).</label>
                         </div>
                         <input name="submit" type="submit" value="Update" />
                     </form>
@@ -159,7 +163,8 @@
                         url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/ipAddress",
                         isJsonResponse: true
                     });
-                    document.getElementById("gruenbeckIP").value = rsp.data.gruenbeckIP;
+                    document.getElementById("ipAddress").value = rsp.data.ipAddress;
+                    document.getElementById("scrollIcon").checked = rsp.data.scrollIcon;
                 } catch (rsp) {
                     alert("Internal error.");
                 } finally {
@@ -175,7 +180,8 @@
                         url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/ipAddress",
                         isJsonResponse: true,
                         parameter: {
-                            gruenbeckIP: document.getElementById("gruenbeckIP").value
+                            ipAddress: document.getElementById("ipAddress").value,
+                            scrollIcon: document.getElementById("scrollIcon").checked
                         }
                     });
                     alert("Ok.");

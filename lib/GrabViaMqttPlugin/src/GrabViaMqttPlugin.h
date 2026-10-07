@@ -50,7 +50,6 @@
 #include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
-#include <FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -78,7 +77,7 @@ public:
         m_view(),
         m_path(),
         m_filter(1024U),
-        m_iconFileId(FileMgrService::FILE_ID_INVALID),
+        m_iconFileName(),
         m_format("%s"),
         m_delimiter("::"),
         m_multiplier(1.0f),
@@ -283,7 +282,7 @@ private:
     _GrabViaMqttPlugin::View m_view;            /**< View with all widgets. */
     String                   m_path;            /**< MQTT topic path */
     DynamicJsonDocument      m_filter;          /**< Filter used for the response in JSON format. */
-    FileMgrService::FileId   m_iconFileId;      /**< Icon file id. */
+    String                   m_iconFileName;    /**< Icon file name. */
     String                   m_format;          /**< Format used to embed the retrieved filtered value. */
     String                   m_delimiter;       /**< Delimiter is used in case several values shall be shown, because of an JSON array. */
     float                    m_multiplier;      /**< If grabbed value is a number, it will be multiplied with the multiplier. */
@@ -306,6 +305,17 @@ private:
      * @return If successful set, it will return true otherwise false.
      */
     bool setConfiguration(const JsonObjectConst& jsonCfg) final;
+
+    /**
+     * Set the filter from the given JSON value.
+     *
+     * The filter is a JSON document by itself. It is accepted as string, as
+     * object and as array. A string which contains no valid JSON document will
+     * clear the filter.
+     *
+     * @param[in] jsonFilter    The filter as string, object or array.
+     */
+    void setFilter(const JsonVariantConst& jsonFilter);
 
     /**
      * Get value from JSON source by the filter.

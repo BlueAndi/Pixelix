@@ -38,6 +38,7 @@
 #include <Logging.h>
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches

@@ -39,3 +39,11 @@
 - Plugin development: `doc/PLUGIN-DEV.md`, `doc/PLUGINS.md`
 - APIs and integrations: `doc/MQTT.md`, `doc/WEBSOCKET.md`, `doc/HOMEASSISTANT.md`, `doc/SENSORS.md`
 - Board and config references: `doc/boards/README.md`, `doc/config/README.md`, `doc/grabConfigs/README.md`
+
+## Copilot Skills
+- For embedded C/C++ firmware work in `src/`, `lib/`, or `test/`, read `.github/skills/embedded-cpp14-misra/SKILL.md`.
+- For HTML and Bootstrap UI work, read `.github/skills/html5-bootstrap/SKILL.md`.
+- For JavaScript work in `data/` or frontend assets, read `.github/skills/javascript-coding-guidelines/SKILL.md`.
+- For OpenAPI specification work, read `.github/skills/openapi-spec/SKILL.md`.
+- For OpenSCAD mechanical design work, read `.github/skills/openscad-mechanical/SKILL.md`.
+- For PlantUML diagram work, read `.github/skills/plantuml-diagrams/SKILL.md`.

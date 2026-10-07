@@ -2,157 +2,96 @@
 
 title Hardware Abstraction Layer (HAL)
 
-package "Common" as commonPkg {
+package "HAL contracts" as contractsPkg {
 
-    component "Io" as io {
-        interface "DOutPin" <pinNo>
-        interface "DInPin" <pinNo, pinMode>
-        interface "AnalogPin" <pinNo>
-
-        note bottom of DOutPin: Digital output pin
-        note bottom of DInPin: Digital input pin
-        note bottom of AnalogPin: Analog input pin
+    package "GPIO" as gpioPkg {
+        class "DOutPin" as dOutPin
+        class "DInPin" as dInPin
+        class "AnalogPin" as analogPin
     }
 
-    note top of io
-        Abstract interfaces used to configure the GPIO, which
-        providing methods depended on its type.
-    end note
-
-    interface "IDisplay" as iDisplay
-
-    note bottom of iDisplay
-        The abstract interface to control
-        a display.
-    end note
-
+    interface "IBoard" as iBoard
+    interface "IDisplayDrv" as iDisplayDrv
+    interface "IButtonDrv" as iButtonDrv
+    interface "IBuzzerDrv" as iBuzzerDrv
+    interface "ILedDrv" as iLedDrv
+    interface "ISystemDrv" as iSystemDrv
     interface "ISensor" as iSensor
-
-    note bottom of iSensor
-        Abstract sensor interface, used for 
-        generic sensor handling. A sensor may provide
-        one ore more data channels, depending on its
-        nature.
-    end note
-
     interface "ISensorChannel" as iSensorChannel
 
-    note bottom of iSensorChannel
-        Abstract sensor channel interface, used
-        for generic channel handling.
-    end note
-
-    component "SensorChannelType" as sensorChannelPkg {
-        
-        class "SensorChannelType<T, dataType : DataType>" as sensorChannelType
-
-        note right of sensorChannelType
-            The template variant for easy
-            providing channels with different
-            kind of value data types.
-        end note
-
-        class SensorUInt32 <<typedef>>
-        hide SensorUInt32 members
-
-        class SensorInt32 <<typedef>>
-        hide SensorInt32 members
-
-        class SensorFloat32 <<typedef>>
-        hide SensorFloat32 members
-
-        SensorUInt32 .u.> sensorChannelType: <<bind>>\nT -> uint32_t\ndataType = DATA_TYPE_UINT32
-        SensorInt32 .u.> sensorChannelType: <<bind>>\nT -> int32_t\ndataType = DATA_TYPE_INT32
-        SensorFloat32 ..> sensorChannelType: <<bind>>\nT -> float\ndataType = DATA_TYPE_FLOAT
-    }
-
-    note top of sensorChannelPkg
-        Considers the different data types a
-        sensor may provide.
-    end note
-
-    sensorChannelType .u..|> iSensorChannel
-    iSensor .> iSensorChannel: <<use>>
+    class "SensorChannelType<T>" as sensorChannelType
+    sensorChannelType ..|> iSensorChannel
+    iSensor --> iSensorChannel: <<provide>>
 }
 
-note top of commonPkg
-    Common interfaces and classes, used by
-    the HAL.
-end note
+package "HAL implementations" as halPkg {
 
-package "HAL" as halPkg {
+    class "Board" as board <<singleton>>
+    class "ButtonDrv" as buttonDrv
+    class "BuzzerDrv" as buzzerDrv
+    class "LedDrv" as ledDrv
+    class "SystemDrv" as systemDrv
 
-    package "HAL<concrete-name>" as halXXXPkg {
-
-        class "Display" as display <<singleton>>
-        class "Board" as board <<namespace>>
-
-        display .> board: <<use>>
+    package "Selected display HAL" as displayHalPkg {
+        class "DisplayDrv\n(HalLedMatrix)" as ledMatrixDisplayDrv
+        class "DisplayDrv\n(HalHub75Esp32)" as hub75DisplayDrv
+        class "DisplayDrv\n(HalTftDisplay)" as tftDisplayDrv
     }
-
-    note top of halXXXPkg
-        The hardware is a combination
-        of a board and a display.
-    end note
 
     package "Sensors" as sensorsPkg {
-
-        class "SensorDhtX" as sensorDhtX
         class "Sensors" as sensors <<namespace>>
-
-        note right of sensorDhtX
-            The DHTx sensor is just
-            a example, providing two channels.
-            One for temperature and one for
-            humidity.
-        end note
-
-        note right of sensors
-            Provides the sensor data provider
-            implementation (pimpl idiom), which contains
-            all instantiated sensors.
-        end note
+        class "SensorBattery" as sensorBattery
+        class "SensorDhtX" as sensorDhtX
+        class "SensorLdr" as sensorLdr
+        class "SensorSht3X" as sensorSht3X
     }
 
-    display ..|> iDisplay: <<realize>>
-    board --> DOutPin
-    board --> DInPin
-    board --> AnalogPin
-    board <.... sensorDhtX: <<use>>
+    note right of board
+        A board owns the common ESP32 drivers and
+        exactly one display driver selected at build time.
+    end note
+
+    board ..|> iBoard
+    board *--> buttonDrv
+    board *--> buzzerDrv
+    board *--> ledDrv
+    board *--> systemDrv
+    board o--> "1" iDisplayDrv: selected driver
+
+    buttonDrv ..|> iButtonDrv
+    buzzerDrv ..|> iBuzzerDrv
+    ledDrv ..|> iLedDrv
+    systemDrv ..|> iSystemDrv
+    ledMatrixDisplayDrv ..|> iDisplayDrv
+    hub75DisplayDrv ..|> iDisplayDrv
+    tftDisplayDrv ..|> iDisplayDrv
+
+    buttonDrv --> dInPin
+    buzzerDrv --> dOutPin
+    ledDrv --> dOutPin
+    sensorBattery --> analogPin
+    sensorDhtX --> dInPin
+    sensorLdr --> analogPin
+    sensorSht3X --> dInPin
+
+    sensors *--> sensorBattery
     sensors *--> sensorDhtX
-    sensorDhtX ...|> iSensor: <<realize>>
-    sensorDhtX *-----> "2" SensorFloat32
+    sensors *--> sensorLdr
+    sensors *--> sensorSht3X
+    sensorBattery ..|> iSensor
+    sensorDhtX ..|> iSensor
+    sensorLdr ..|> iSensor
+    sensorSht3X ..|> iSensor
 }
 
-note top of halPkg
-    Virtual hardware abstraction layer (HAL).
-    Its a combination of the concrete HAL and
-    the provided sensors.
-end note
-
-halPkg -[hidden]--- commonPkg
-
-package "App" as appPkg {
-
-    class "App" as app
-
-    note top of app
-        Represents the application, which of course
-        is a litte bit more complex.
-    end note
-
+package "Application" as appPkg {
+    class "Display" as display
     class "SensorDataProvider" as sensorDataProvider <<singleton>>
-
-    note top of sensorDataProvider
-        Provides access to every sensor
-        and its data channels.
-    end note
+    class "Application services" as app
 }
 
-app ....> board: <<use>>
-app ....> display: <<use>>
-app .r.> sensorDataProvider: <<use>>
-
-sensorDataProvider ..> sensors: <<use>>
+display ....> iDisplayDrv: <<use>>
+app ....> iBoard: <<use>>
+sensorDataProvider ...> sensors: <<use>>
 
 @enduml

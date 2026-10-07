@@ -319,7 +319,10 @@ void HttpService::abortJob(HttpJobId jobId)
                 /* Wait till the job is aborted. */
                 while (1)
                 {
-                    if (true == m_workerData.mutex.take(0U))
+                    /* The worker holds the mutex, e.g. while handling the HTTP response. Sleep at least 1 ms, otherwise
+                     * the idle task of this core gets starved.
+                     */
+                    if (true == m_workerData.mutex.take(1U))
                     {
                         /* Aborted? */
                         if (INVALID_HTTP_JOB_ID != m_workerData.abortedJob)

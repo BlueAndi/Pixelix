@@ -1,0 +1,27 @@
+{
+    "name": "HalEsp32",
+    "version": "0.1.0",
+    "description": "HAL for ESP32 platform specific drivers.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "HalCommon"
+    }, {
+        "name": "HalInterface"
+    }, {
+        "name": "Logging"
+    }, {
+        "name": "RtcDrv"
+    }, {
+        "name": "Os"
+    }, {
+        "name": "Utilities"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

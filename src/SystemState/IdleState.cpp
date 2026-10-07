@@ -35,6 +35,7 @@
  *****************************************************************************/
 #include "IdleState.h"
 #include "DisplayMgr.h"
+#include "MyWebServer.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -74,7 +75,8 @@ void IdleState::process(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
-    /* Nothing to do. */
+    /* Handle webserver. */
+    MyWebServer::process();
 }
 
 void IdleState::exit(StateMachine& sm)

@@ -1,0 +1,248 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @file   ClockDrv.h
+ * @brief  Clock driver
+ * @author Yann Le Glaz <yann_le@web.de>
+ *
+ * @addtogroup HAL
+ *
+ * @{
+ */
+
+#ifndef CLOCKDRV_H
+#define CLOCKDRV_H
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+#include "Arduino.h"
+#include <RtcDrv.hpp>
+#include <SimpleTimer.hpp>
+
+/******************************************************************************
+ * Macros
+ *****************************************************************************/
+
+/******************************************************************************
+ * Types and Classes
+ *****************************************************************************/
+
+/**
+ * Clock driver.
+ *
+ * The time zone provided with init() is used for local time operations.
+ * The utc time is stored in the RTC if available.
+ */
+class ClockDrv
+{
+public:
+
+    /**
+     *  Get the ClockDrv instance.
+     *
+     * @return ClockDrv instance.
+     */
+    static ClockDrv& getInstance()
+    {
+        static ClockDrv instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
+    }
+
+    /**
+     * Initialize the ClockDrv.
+     *
+     * The configuration is provided by the caller, therefore the driver is
+     * independent from the settings service.
+     *
+     * @param[in] timeZone          Time zone string in POSIX format. If empty, UTC is used.
+     * @param[in] ntpServerAddress  Address of the NTP server, used for the time synchronization.
+     */
+    void init(const String& timeZone, const String& ntpServerAddress);
+
+    /**
+     * Get the local time.
+     *
+     * @param[out] timeInfo Time information.
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
+     */
+    bool getTime(struct tm& timeInfo);
+
+    /**
+     * Get the UTC time.
+     *
+     * @param[out] timeInfo Time information.
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
+     */
+    bool getTimeUtc(struct tm& timeInfo);
+
+    /**
+     * Get the time by considering the given time zone.
+     *
+     * @param[in]   tz          Time zone string
+     * @param[out]  timeInfo    Time information
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
+     */
+    bool getTzTime(const char* tz, struct tm& timeInfo);
+
+    /**
+     * Get the current time zone offset in seconds.
+     *
+     * @return Current time zone offset in seconds.
+     */
+    long getCurrentTimeZoneOffset() const;
+
+private:
+
+    /**
+     * The minimum time zone string size (incl. string termination).
+     */
+    static const size_t TZ_MIN_SIZE                = 60U;
+
+    /**
+     * Time zone in POSIX format, used if the caller provides none.
+     */
+    static constexpr const char* DEFAULT_TIME_ZONE = "UTC0";
+
+    /**
+     * Period for time synchronization by NTP in ms.
+     */
+    static const uint32_t SYNC_TIME_BY_NTP_PERIOD  = SIMPLE_TIMER_HOURS(12U);
+
+    /**
+     * Period for time synchronization by RTC in ms.
+     */
+    static const int32_t SYNC_TIME_BY_RTC_PERIOD   = SIMPLE_TIMER_HOURS(1U);
+
+    /**
+     * Period for RTC synchronization by time in ms.
+     */
+    static const uint32_t SYNC_RTC_BY_TIME_PERIOD  = SIMPLE_TIMER_DAYS(2U);
+
+    /** Flag indicating a initialized clock driver. */
+    bool m_isClockDrvInitialized;
+
+    /** Device time zone */
+    String m_timeZone;
+
+    /** newlib's internal time zone buffer. */
+    char* m_internalTimeZoneBuffer;
+
+    /** NTP server address, used by sntp. Don't remove it! */
+    char m_ntpServerAddress[32U];
+
+    /** Real time clock */
+    RtcDrv m_rtc;
+
+    /** Timer used to synchronize the time by the RTC. */
+    SimpleTimer m_syncTimeByRtcTimer;
+
+    /** Timer used to synchronize the RTC by the time. */
+    SimpleTimer m_syncRtcByNtpTimer;
+
+    /**
+     * Construct ClockDrv.
+     */
+    ClockDrv() :
+        m_isClockDrvInitialized(false),
+        m_timeZone(),
+        m_internalTimeZoneBuffer(nullptr),
+        m_ntpServerAddress{ 0 },
+        m_rtc(),
+        m_syncTimeByRtcTimer(),
+        m_syncRtcByNtpTimer()
+    {
+    }
+
+    /**
+     * Destroys ClockDrv.
+     */
+    ~ClockDrv()
+    {
+    }
+
+    /* Prevent copying */
+    ClockDrv(const ClockDrv&);
+    ClockDrv& operator=(const ClockDrv&);
+
+    /**
+     * Fill string up with spaces.
+     *
+     * @param[in, out]  str         String which to fill up.
+     * @param[in]       size        String buffer size in byte (incl. termination)
+     */
+    void fillUpWithSpaces(char* str, size_t size);
+
+    /**
+     * Update the time by the RTC.
+     * If no RTC is available, nothing will happen.
+     *
+     * @return true if time is set by RTC, otherwise false.
+     */
+    bool setTimeByRtc();
+
+    /**
+     * Update the RTC by the time.
+     * If no RTC is available, nothing will happen.
+     */
+    void setRtcByTime();
+
+    /**
+     * Synchronize periodically the time by the RTC.
+     * If the synchronization time period is expired, it will synchronizse
+     * otherwise not.
+     * If no RTC is available, nothing will happen.
+     */
+    void syncTimeByRtc();
+
+    /**
+     * Synchronize periodically the RTC by the time.
+     * If the synchronization time period is expired, it will synchronizse
+     * otherwise not.
+     * If no RTC is available, nothing will happen.
+     */
+    void syncRtcByTime();
+
+    /* Allow the SNTP callback to synchronize the RTC by the NTP. */
+    friend void sntpCallback(struct timeval* tv);
+};
+
+/******************************************************************************
+ * Functions
+ *****************************************************************************/
+
+#endif /* CLOCKDRV_H */
+
+/** @} */

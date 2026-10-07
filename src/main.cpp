@@ -40,16 +40,17 @@
 #include <StateMachine.hpp>
 #include <Board.h>
 #include <esp_task_wdt.h>
+#include <esp_log.h>
 #include "InitState.h"
 #include "RestartState.h"
 #include "ErrorState.h"
 #include "MemMon.h"
 #include "MiniTerminal.h"
+#include "ImprovSerialService.h"
 #include "RestartMgr.h"
 #include <SimpleTimer.hpp>
 #include <DisplayMgr.h>
 
-#include "ButtonDrv.h"
 #include "ButtonHandler.hpp"
 #include "OneButtonCtrl.hpp"
 #include "TwoButtonCtrl.hpp"
@@ -129,6 +130,9 @@ static void* main_mbedtls_calloc(size_t count, size_t size);
 
 /** Serial terminal */
 static MiniTerminal gTerminal(Serial);
+
+/** Improv Wi-Fi Serial provisioning service */
+static ImprovSerialService gImprovSerialService(Serial, gTerminal);
 
 /** System state machine */
 static StateMachine gSysStateMachine(InitState::getInstance());
@@ -235,7 +239,7 @@ void setup()
     /* Observe button state changes and derrive actions.
      * Do this after init state!
      */
-    ButtonDrv::getInstance().registerObserver(gButtonHandler);
+    Board::getInstance().getButtonDrv().registerObserver(gButtonHandler);
 
     /* Initialize task watchdog. */
     (void)esp_task_wdt_init(TASK_WDT_TIMEOUT_S, true);
@@ -272,8 +276,8 @@ void loop()
     /* Memory monitor */
     MemMon::getInstance().process();
 
-    /* Process terminal */
-    gTerminal.process();
+    /* Process Improv serial protocol and route other input to the terminal. */
+    gImprovSerialService.process(Board::getInstance().getButtonDrv());
 
     /* Handle delayed restart request. */
     restartMgr.process();

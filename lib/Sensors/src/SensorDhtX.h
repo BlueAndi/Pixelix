@@ -48,7 +48,7 @@
 #include <ISensor.hpp>
 #include <SensorChannelType.hpp>
 #include <DHT.h>
-#include <Board.h>
+#include <Pin.h>
 
 /******************************************************************************
  * Macros
@@ -254,7 +254,7 @@ public:
      * @param[in] model DHTx sensor model
      */
     SensorDhtX(Model model) :
-        m_driver(Board::Pin::dhtInPinNo, model),
+        m_driver(PinNo::dhtInPinNo, model),
         m_model(model),
         m_isAvailable(false),
         m_temperatureChannel(m_driver),

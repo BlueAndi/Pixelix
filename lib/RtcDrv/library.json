@@ -14,15 +14,13 @@
     }, {
         "name": "SPI"
     }, {
-        "owner": "Adafruit",
+        "owner": "adafruit",
         "name": "Adafruit BusIO",
         "version": "~1.14.1"
     }, {
-        "owner": "Adafruit",
+        "owner": "adafruit",
         "name": "RTClib",
-        "version": "~2.1.1"
-    }, {
-        "name": "Utilities"
+        "version": "~2.1.4"
     }],
     "frameworks": "*",
     "platforms": "*"

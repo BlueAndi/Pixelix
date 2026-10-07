@@ -169,11 +169,10 @@ private:
     void configureViews();
 
     /**
-     * Get flash chip mode.
-     *
-     * @return Flash chip mode.
+     * Initialize the clock driver with the time zone and the NTP server address
+     * from the persistent memory.
      */
-    const char* getFlashChipMode();
+    void initClockDrv();
 };
 
 /******************************************************************************

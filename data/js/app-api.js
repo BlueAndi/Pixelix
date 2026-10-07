@@ -95,11 +95,27 @@ utils.makeRequest = function (options) {
 
         xhr.onload = () => {
             if (isJsonResponse === true) {
-                const jsonRsp = JSON.parse(xhr.response);
+                let jsonRsp = null;
+
+                try {
+                    jsonRsp = JSON.parse(xhr.response);
+                } catch (e) {
+                    /* A rejected request may come without any body, e.g. if the device
+                     * has not enough memory left to generate one. */
+                    jsonRsp = null;
+                }
+
+                if ((jsonRsp === null) || (typeof jsonRsp !== "object")) {
+                    jsonRsp = { status: "error", error: { msg: xhr.statusText } };
+                }
 
                 if ((xhr.status === 200) && (jsonRsp.status === "ok")) {
                     resolve(jsonRsp);
                 } else {
+                    /* The HTTP status is provided to the caller, which allows to handle
+                     * a temporary rejection (HTTP 503) different than a permanent error. */
+                    jsonRsp.httpStatus = xhr.status;
+
                     reject(jsonRsp);
                 }
             } else if (xhr.status === 200) {
@@ -474,8 +490,8 @@ pixelix.rest.Client = class {
         });
     }
 
-    fileMgrRemoveFile(fileId) {
-        if (typeof fileId !== "number") {
+    fileMgrRemoveFile(fileName) {
+        if (typeof fileName !== "string") {
             return Promise.reject();
         }
 
@@ -484,7 +500,7 @@ pixelix.rest.Client = class {
             url: this._hostname + this._baseUri + "/fileMgrService/remove",
             isJsonResponse: true,
             parameter: {
-                fileId: fileId
+                fileName: fileName
             }
         });
     }

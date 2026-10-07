@@ -3,235 +3,533 @@ name: Main CI/CD Pipeline
 # Controls when the action will run.
 # This workflow is triggered only on pull requests to the master or main branch.
 on:
+  push:
+    branches: [master, main]
   pull_request:
-    branches: [ master, main ]
+    branches: [master, main]
   release:
     # A release, pre-release, or draft of a release is published.
-    types: [ published ]
+    types: [published]
   # Allows you to run this workflow manually from the Actions tab.
   workflow_dispatch:
 
+# A superseded pull request run is cancelled, because its result is obsolete as
+# soon as a newer commit is pushed. Runs on master/main are kept, because they
+# refresh the build cache and the size report baseline.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Pinned to keep the toolchain reproducible and the cache key meaningful.
+  PIO_VERSION: "6.2.0"
+  # Bump this to invalidate every PlatformIO cache of this repository.
+  PIO_CACHE_EPOCH: "v1"
+  # Only used if the runner image provides no libsdl3-dev package.
+  SDL3_VERSION: "release-3.4.18"
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # The introduction just shows some useful informations.
-  intro:
-    # The type of runner that the job will run on.
-    runs-on: ubuntu-latest
-    # Steps represent a sequence of tasks that will be executed as part of the job.
-    steps:
-    - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
-    - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
-
   # Build all targets
   build:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_feather_esp32_v2-LED-32x8",
+            "adafruit_matrixportal_s3-HUB75-64x64",
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "az-delivery-devkit-v4-LED-32x8",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "esp32-nodemcu-LED-32x8",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      # The pip download cache and the PlatformIO home share one cache entry.
+      # All ESP32 environments use the same platform packages, therefore a
+      # single key for the whole repository is sufficient and keeps the cache
+      # small.
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-    
-    - name: Create release artifcats folder
-      if: startsWith(github.ref_type, 'refs/tags/v')
-      run: |
-        mkdir ${{ github.workspace }}/artifacts
+      - name: Install PlatformIO
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
 
-    - name: Compile ${{ matrix.environment }} firmware
-      run: platformio run --environment ${{ matrix.environment }}
-    
-    - name: Build ${{ matrix.environment }} filesystem image
-      run: platformio run --environment ${{ matrix.environment }} --target buildfs
+      # SCons decides by content signature, therefore a restored build folder
+      # survives the new timestamps of a fresh checkout and the build becomes
+      # incremental. Saving happens on master/main only, which bounds the cache
+      # to one entry per environment.
+      - name: Restore ${{ matrix.environment }} build folder
+        uses: actions/cache/restore@v5
+        with:
+          path: .pio/build/${{ matrix.environment }}
+          key: ${{ runner.os }}-piobuild-${{ env.PIO_CACHE_EPOCH }}-${{ matrix.environment }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-piobuild-${{ env.PIO_CACHE_EPOCH }}-${{ matrix.environment }}-
 
-    - name: Deploy ${{ matrix.environment }}
-      if: startsWith(github.ref_type, 'refs/tags/v')
-      uses: actions/upload-artifact@v6
-      with:
-        name: ${{ matrix.environment }}
-        path: |
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
-        retention-days: 5
+      - name: Create release artifcats folder
+        if: startsWith(github.ref_type, 'refs/tags/v')
+        run: |
+          mkdir ${{ github.workspace }}/artifacts
+
+      - name: Compile ${{ matrix.environment }} firmware
+        run: platformio run --environment ${{ matrix.environment }} 2>&1 | tee firmware-build.log
+
+      - name: Build ${{ matrix.environment }} filesystem image
+        run: platformio run --environment ${{ matrix.environment }} --target buildfs
+
+      - name: Save ${{ matrix.environment }} build folder
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v5
+        with:
+          path: .pio/build/${{ matrix.environment }}
+          key: ${{ runner.os }}-piobuild-${{ env.PIO_CACHE_EPOCH }}-${{ matrix.environment }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+
+      - name: Collect size metrics for ${{ matrix.environment }}
+        run: |
+          python scripts/ci_size_report.py collect \
+            --environment "${{ matrix.environment }}" \
+            --build-log firmware-build.log \
+            --build-dir ".pio/build/${{ matrix.environment }}" \
+            --output-dir size-metrics
+
+      - name: Save size metrics for ${{ matrix.environment }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: size-metrics-${{ matrix.environment }}
+          path: size-metrics/${{ matrix.environment }}.json
+
+      - name: Deploy ${{ matrix.environment }}
+        if: startsWith(github.ref_type, 'refs/tags/v')
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.environment }}
+          path: |
+            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
+            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
+            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
+          retention-days: 5
+
+  # Show firmware and filesystem size changes against prior builds.
+  size_report:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Download current size metrics
+        uses: actions/download-artifact@v7
+        with:
+          pattern: size-metrics-*
+          path: current-metrics
+          merge-multiple: true
+
+      - name: Find previous successful builds
+        id: baselines
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          BASE_BRANCH: ${{ github.base_ref }}
+        run: |
+          python scripts/ci_size_report.py find-runs \
+            --workflow-file main.yml \
+            --event "$EVENT_NAME" \
+            --ref-name "$REF_NAME" \
+            --head-branch "$HEAD_BRANCH" \
+            --base-branch "$BASE_BRANCH" \
+            --current-sha "$GITHUB_SHA" \
+            --output "$GITHUB_OUTPUT"
+
+      - name: Download previous branch metrics
+        if: steps.baselines.outputs.branch_run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@v7
+        with:
+          pattern: size-metrics-*
+          path: branch-baseline
+          merge-multiple: true
+          run-id: ${{ steps.baselines.outputs.branch_run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Download target branch metrics
+        if: steps.baselines.outputs.target_run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@v7
+        with:
+          pattern: size-metrics-*
+          path: target-baseline
+          merge-multiple: true
+          run-id: ${{ steps.baselines.outputs.target_run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Write size trend to workflow summary
+        env:
+          BRANCH_LABEL: previous successful run on ${{ github.head_ref || github.ref_name }}
+          TARGET_LABEL: ${{ github.base_ref && format('target branch {0}', github.base_ref) || 'not applicable' }}
+        run: |
+          python scripts/ci_size_report.py report \
+            --current-dir current-metrics \
+            --branch-dir branch-baseline \
+            --target-dir target-baseline \
+            --branch-label "$BRANCH_LABEL" \
+            --target-label "$TARGET_LABEL"
 
   # Perform static checks
+  #
+  # clang-tidy sees the same sources for every environment, only the
+  # preprocessor configuration differs. The matrix therefore contains one
+  # environment per combination of feature set (config/config*.ini) and display
+  # driver, which covers all of them without running the analysis 15 times.
   check:
+    if: github.event_name != 'push'
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2-LED-32x8",
-                      "adafruit_matrixportal_s3-HUB75-64x64",
-                      "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-                      "az-delivery-devkit-v4-LED-32x8",
-                      "esp32doit-devkit-v1-LED-32x8",
-                      "esp32doit-devkit-v1-HUB75-64x64",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x8",
-                      "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-                      "esp32-nodemcu-LED-32x8",
-                      "lilygo-ttgo-t-display-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-32x8",
-                      "lilygo-t-display-s3-TFT-64x16",
-                      "m5stack_core-TFT-32x8",
-                      "ulanzi-tc001-LED-32x8",
-                      "wemos_lolin_s2_mini-LED-32x8"]
+        environment:
+          [
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Install PlatformIO
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
 
-    - name: Perform static checks on ${{ matrix.environment }}
-      run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
+      - name: Perform static checks on ${{ matrix.environment }}
+        run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
 
   # Perform tests
   test:
+    if: github.event_name != 'push'
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-    
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
+      - name: Install PlatformIO
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
 
-    - name: Run tests on native environment
-      run: platformio test --environment test
+      - name: Run tests on native environment
+        run: platformio test --environment test
+
+  # Validate the OpenAPI specification of the REST API.
+  openapi_lint:
+    if: github.event_name != 'push'
+    # The type of runner that the job will run on.
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install openapi-spec-validator
+        run: pip install --disable-pip-version-check openapi-spec-validator==0.9.0
+
+      - name: Validate the OpenAPI specification
+        run: openapi-spec-validator ./doc/OpenAPI/OpenAPI.yaml
+
+  # Build the application for the host, check that its webserver answers and
+  # verify the REST API against the OpenAPI specification.
+  # This is the only place where the POSIX part of the native environment is
+  # built.
+  build_native:
+    if: github.event_name != 'push'
+    # The type of runner that the job will run on.
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
+
+      - name: Install PlatformIO
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
+
+      # The native environment links against SDL3 via pkg-config. Not every
+      # Ubuntu runner image ships libsdl3-dev, therefore SDL3 is built from
+      # source as a fallback and the installable tree is cached. A runner image
+      # which provides the package takes the fast path and skips all of this.
+      - name: Try to install SDL3 from the package manager
+        id: sdl_apt
+        run: |
+          sudo apt-get update
+          if sudo apt-get install -y libsdl3-dev; then
+            echo "installed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "installed=false" >> "$GITHUB_OUTPUT"
+            echo "SDL3 package unavailable, it is built from source."
+          fi
+
+      - name: Cache the SDL3 installation
+        id: sdl_cache
+        if: steps.sdl_apt.outputs.installed != 'true'
+        uses: actions/cache@v5
+        with:
+          path: ~/sdl3-install
+          key: ${{ runner.os }}-sdl3-${{ env.SDL3_VERSION }}
+
+      - name: Build SDL3 from source
+        if: steps.sdl_apt.outputs.installed != 'true' && steps.sdl_cache.outputs.cache-hit != 'true'
+        run: |
+          # This is the dependency list from the SDL documentation
+          # (docs/README-linux.md). It has to stay complete, because SDL aborts
+          # the configure step on a missing X11 or Wayland dependency instead of
+          # disabling the feature silently.
+          sudo apt-get install -y \
+            build-essential git make pkg-config cmake ninja-build \
+            gnome-desktop-testing libasound2-dev libpulse-dev libaudio-dev \
+            libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
+            libxtst-dev libxrender-dev libxkbcommon-dev libdrm-dev libgbm-dev \
+            libgl1-mesa-dev libgles2-mesa-dev libegl1-mesa-dev libdbus-1-dev \
+            libibus-1.0-dev libudev-dev libthai-dev libusb-1.0-0-dev \
+            libpipewire-0.3-dev libwayland-dev wayland-protocols libdecor-0-dev \
+            liburing-dev
+          git clone --depth 1 --branch "${SDL3_VERSION}" https://github.com/libsdl-org/SDL.git /tmp/SDL
+          cmake -S /tmp/SDL -B /tmp/SDL/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build /tmp/SDL/build --parallel
+          # DESTDIR stages the installation below the home folder, so that the
+          # cache can be written without root rights. The pkg-config and CMake
+          # metadata still point to /usr/local, where it is copied to afterwards.
+          DESTDIR="${HOME}/sdl3-install" cmake --install /tmp/SDL/build
+
+      - name: Install SDL3 from the cached tree
+        if: steps.sdl_apt.outputs.installed != 'true'
+        run: |
+          sudo cp -a "${HOME}/sdl3-install/usr/local/." /usr/local/
+          sudo ldconfig
+          pkg-config --modversion sdl3
+
+      - name: Compile native application
+        run: platformio run --environment native
+
+      - name: Start the native application
+        run: |
+          ./.pio/build/native/program > pixelix.log 2>&1 &
+          echo $! > pixelix.pid
+          # The webserver is started by the init state, which takes a moment.
+          for _ in $(seq 1 30); do
+            if curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Check that the webserver answers
+        run: |
+          STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8080/)
+          # The root page redirects to the index page.
+          if [ "${STATUS}" != "302" ]; then
+            echo "The webserver answered with ${STATUS} instead of 302."
+            exit 1
+          fi
+
+      # Every plugin which the OpenAPI specification describes shall be installed
+      # for the test, which needs more display slots than the default. The number
+      # of slots is evaluated during startup only, therefore the application is
+      # restarted afterwards.
+      - name: Increase the number of display slots
+        run: |
+          curl --silent --show-error --fail --user luke:skywalker \
+            --request POST --output /dev/null \
+            "http://localhost:8080/rest/api/v1/setting?key=max_slots&value=16"
+
+      - name: Restart the native application
+        run: |
+          kill "$(cat pixelix.pid)"
+          # Wait until the webserver is down.
+          for _ in $(seq 1 30); do
+            if ! curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
+          ./.pio/build/native/program >> pixelix.log 2>&1 &
+          echo $! > pixelix.pid
+          for _ in $(seq 1 30); do
+            if curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Install schemathesis
+        run: pip install --disable-pip-version-check schemathesis==4.27.0
+
+      # A plugin instance gets its unique id (UID) at runtime, therefore the UID
+      # can not be part of the OpenAPI specification. The plugins are installed
+      # first and their UIDs are written into the schemathesis configuration.
+      - name: Prepare the plugin UIDs for the REST API test
+        run: |
+          python ./scripts/prepare_api_test.py \
+            --spec ./doc/OpenAPI/OpenAPI.yaml \
+            --url http://localhost:8080/rest/api/v1 \
+            --user luke \
+            --password skywalker \
+            --output ./schemathesis.toml
+
+      # Every REST API endpoint is called with generated data and the response is
+      # verified against the OpenAPI specification. Endpoints which would stop the
+      # application or modify the filesystem/settings are excluded, because they
+      # would break the test run itself.
+      #
+      # Only valid data is generated (positive mode). Remove the mode option to
+      # let schemathesis fuzz the API with invalid data as well.
+      - name: Verify the REST API against the OpenAPI specification
+        run: |
+          schemathesis --config-file ./schemathesis.toml \
+            run ./doc/OpenAPI/OpenAPI.yaml \
+            --url http://localhost:8080/rest/api/v1 \
+            --auth luke:skywalker \
+            --mode positive \
+            --checks status_code_conformance,response_schema_conformance \
+            --max-examples 20 \
+            --exclude-operation-id restart \
+            --exclude-operation-id changePartition \
+            --exclude-operation-id installPlugin \
+            --exclude-operation-id uninstallPlugin \
+            --exclude-operation-id uploadFile \
+            --exclude-operation-id removeFile \
+            --exclude-operation-id writeFile \
+            --exclude-operation-id deleteFile \
+            --exclude-operation-id setSetting \
+            --exclude-operation-id clearCoredump
+
+      - name: Stop the native application
+        if: always()
+        run: |
+          if [ -f pixelix.pid ]; then
+            kill "$(cat pixelix.pid)" || true
+          fi
+          cat pixelix.log || true
 
   # Build documentation
+  #
+  # Only doxygen and graphviz are required here, PlatformIO is not used.
   doc:
+    if: github.event_name != 'push'
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: intro
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Cache pip
-      uses: actions/cache@v5
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Set up graphviz
+        uses: ts-graphviz/setup-graphviz@v2
 
-    - name: Cache PlatformIO
-      uses: actions/cache@v5
-      with:
-        path: ~/.platformio
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Set up doxygen and generate documentation
+        uses: mattnotmitt/doxygen-action@v1
+        with:
+          working-directory: "./doc/doxygen"
+          doxyfile-path: "./Doxyfile"
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.9'
-  
-    - name: Install PlatformIO
-      run: |
-        python -m pip install --upgrade pip
-        pip install --upgrade platformio
-
-    - name: Set up graphviz
-      uses: ts-graphviz/setup-graphviz@v2
-
-    - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1
-      with:
-        working-directory: './doc/doxygen'
-        doxyfile-path: './Doxyfile'
-
-    - name: Print doxygen warnings
-      if: ${{ failure() }}
-      run: cat ./doc/doxygen/doxygen_warnings.txt
+      - name: Print doxygen warnings
+        if: ${{ failure() }}
+        run: cat ./doc/doxygen/doxygen_warnings.txt
 
   # Deploy release artifacts
   deploy:
@@ -240,22 +538,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, check, doc]
     steps:
-    - name: Deploy release artifacts
-      uses: actions/download-artifact@v7
-      with:
-        path: ${{ github.workspace }}/artifacts
+      - name: Deploy release artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ github.workspace }}/artifacts
 
-    - name: Display structure of release artifacts
-      run: ls -R
-      working-directory: ${{ github.workspace }}/artifacts
+      - name: Exclude CI size metrics from release archive
+        run: find . -type d -name 'size-metrics-*' -prune -exec rm -rf {} +
+        working-directory: ${{ github.workspace }}/artifacts
 
-    - name: Zip release artifacts folder
-      run: zip -rj ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip .
-      working-directory: ${{ github.workspace }}/artifacts
+      - name: Display structure of release artifacts
+        run: ls -R
+        working-directory: ${{ github.workspace }}/artifacts
 
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Zip release artifacts folder
+        run: zip -rj ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip .
+        working-directory: ${{ github.workspace }}/artifacts
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

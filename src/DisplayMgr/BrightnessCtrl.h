@@ -46,7 +46,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <SimpleTimer.hpp>
-#include <IDisplay.hpp>
+#include <IDisplay.h>
 #include <SensorChannelType.hpp>
 
 /******************************************************************************

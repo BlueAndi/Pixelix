@@ -50,7 +50,6 @@
 #include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
-#include <FileMgrService.h>
 
 /******************************************************************************
  * Macros
@@ -233,23 +232,23 @@ public:
     void update(YAGfx& gfx) final;
 
     /**
-     * Get the file id of the given slot.
+     * Get the file name of the given slot.
      *
      * @param[in] slotId    The slot id.
      *
-     * @return The icon file id.
+     * @return The icon file name.
      */
-    uint8_t getIconFileId(uint8_t slotId) const;
+    String getIconFileName(uint8_t slotId) const;
 
     /**
-     * Load the icon in a slot by file id.
+     * Load the icon in a slot by file name.
      *
      * @param[in] slotId    The slot id.
-     * @param[in] fileId    The icon file id.
+     * @param[in] fileName  The icon file name.
      *
      * @return If successful it will return true otherwise false.
      */
-    bool loadIcon(uint8_t slotId, FileMgrService::FileId fileId);
+    bool loadIcon(uint8_t slotId, const String& fileName);
 
     /**
      * Clear icon from view and remove it from filesytem.
@@ -282,14 +281,14 @@ private:
      */
     struct IconSlot
     {
-        FileMgrService::FileId fileId;         /**< File id of the icon. */
-        bool                   hasSlotChanged; /**< Has slot changed since last time? */
+        String fileName;       /**< File name of the icon. */
+        bool   hasSlotChanged; /**< Has slot changed since last time? */
 
         /**
          * Construct icon slot.
          */
         IconSlot() :
-            fileId(FileMgrService::FILE_ID_INVALID),
+            fileName(),
             hasSlotChanged(false)
         {
         }

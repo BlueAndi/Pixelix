@@ -35,7 +35,7 @@
  *****************************************************************************/
 #include "SensorBattery.h"
 
-#include <Board.h>
+#include <Pin.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -68,7 +68,7 @@ uint32_t BatteryChannelSoC::getValue()
 
 void SensorBattery::begin()
 {
-    if (IoPin::NC != Board::batteryVoltageIn.getPinNo())
+    if (IoPin::NC != Pin::batteryVoltageIn.getPinNo())
     {
         m_isAvailable = true;
     }
@@ -132,7 +132,7 @@ float SensorBattery::getStateOfCharge()
 
 uint16_t SensorBattery::getAdcRawAvg()
 {
-    const uint16_t ADC_BATTERY_VOLTAGE = Board::batteryVoltageIn.read();
+    const uint16_t ADC_BATTERY_VOLTAGE = Pin::batteryVoltageIn.read();
 
     if (true == m_isInit)
     {

@@ -144,7 +144,6 @@
         <!-- Pixelix REST API -->
         <!-- Zip library-->
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" onerror="this.onerror=null;this.src='/js/jszip.min.js';"></script>
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jszip-utils@0.1.0/dist/jszip-utils.min.js" onerror="this.onerror=null;this.src='/js/jszip-utils.min.js';"></script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js" onerror="this.onerror=null;this.src='/js/FileSaver.min.js';"></script>
 
         <!-- Custom javascript -->
@@ -152,6 +151,62 @@
 
             const restClient = new pixelix.rest.Client();
             const hostname = "~HOSTNAME~";
+
+            /* The device rejects a request with HTTP 503 as long as its internal heap is
+             * temporarily too low. Such a request is repeated after a delay instead of
+             * aborting the whole operation. Any other error aborts immediately, because
+             * repeating it won't help.
+             */
+            const HTTP_STATUS_SERVICE_UNAVAILABLE = 503;
+            const REQUEST_MAX_ATTEMPTS = 3;
+            const REQUEST_RETRY_DELAY = 3000;
+
+            function delay(timeMs) {
+                return new Promise((resolve) => window.setTimeout(resolve, timeMs));
+            }
+
+            /* Create a handler, which shows the retry information in the dialog. Without
+             * it the additional delay looks like a hanging operation.
+             */
+            function createRetryHandler(info) {
+                return (attempt, maxAttempts) => {
+                    document.getElementById("dialogBody").innerHTML = info +
+                        "<p>The device is busy. Attempt " + attempt + " of " + maxAttempts +
+                        " in " + (REQUEST_RETRY_DELAY / 1000) + " s ...</p>";
+                };
+            }
+
+            function isServiceUnavailable(err) {
+                return (err !== null) &&
+                    (typeof err === "object") &&
+                    (err.httpStatus === HTTP_STATUS_SERVICE_UNAVAILABLE);
+            }
+
+            /* Perform a request and repeat it, as long as the device is temporarily
+             * unavailable. After REQUEST_MAX_ATTEMPTS failed attempts in a row the
+             * error is forwarded to the caller.
+             */
+            async function requestWithRetry(request, onRetry) {
+                let attempt = 0;
+
+                for (attempt = 1; attempt <= REQUEST_MAX_ATTEMPTS; ++attempt) {
+                    try {
+                        return await request();
+                    } catch (err) {
+                        const isLastAttempt = (attempt >= REQUEST_MAX_ATTEMPTS);
+
+                        if ((isServiceUnavailable(err) === false) || (isLastAttempt === true)) {
+                            throw err;
+                        }
+
+                        if (typeof onRetry === "function") {
+                            onRetry(attempt + 1, REQUEST_MAX_ATTEMPTS);
+                        }
+
+                        await delay(REQUEST_RETRY_DELAY);
+                    }
+                }
+            }
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -176,8 +231,8 @@
                 bar.textContent = progressInt + "%";
             }
 
-            async function getConfigurationFiles() {
-                const items = await restClient.listAllFiles("/configuration");
+            async function getConfigurationFiles(onRetry) {
+                const items = await requestWithRetry(() => restClient.listAllFiles("/configuration"), onRetry);
 
                 return items.map((item) => ({
                     name: item.name,
@@ -185,19 +240,37 @@
                 }));
             }
 
-            function urlToPromise(url) {
+            /* The binary content is requested via XMLHttpRequest on purpose, because the
+             * HTTP status is required to detect a temporary rejection by the device.
+             */
+            function getBinaryContent(url) {
                 return new Promise((resolve, reject) => {
-                    JSZipUtils.getBinaryContent(url, (err, data) => {
-                        if (err) {
-                            reject(err);
+                    const xhr = new XMLHttpRequest();
+
+                    xhr.open("GET", url);
+                    xhr.responseType = "arraybuffer";
+
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            resolve(xhr.response);
                         } else {
-                            resolve(data);
+                            reject({ httpStatus: xhr.status });
                         }
-                    });
+                    };
+
+                    xhr.ontimeout = () => {
+                        reject({ httpStatus: 0 });
+                    };
+
+                    xhr.onerror = () => {
+                        reject({ httpStatus: 0 });
+                    };
+
+                    xhr.send();
                 });
             }
 
-            async function downloadWithBlob(fileUrlList) {
+            async function downloadWithBlob(fileUrlList, onRetry) {
                 /* Use a fresh zip instance per backup to avoid accumulating files across operations. */
                 const zip = new JSZip();
                 /* Limit the number of concurrent requests. The device has only a small internal heap. */
@@ -211,7 +284,7 @@
 
                         ++index;
 
-                        const data = await urlToPromise(fileUrl.url);
+                        const data = await requestWithRetry(() => getBinaryContent(fileUrl.url), onRetry);
                         zip.file(filenameOnly, data, { binary: true });
                     }
                 };
@@ -229,15 +302,22 @@
             }
 
             async function backup() {
-                try {
-                    await dialog.show("Backup", "<p>Please wait, backup is in progress.</p>");
+                const backupInfo = "<p>Please wait, backup is in progress.</p>";
+                const onRetry = createRetryHandler(backupInfo);
 
-                    const fileUrlList = await getConfigurationFiles();
-                    await downloadWithBlob(fileUrlList);
+                try {
+                    await dialog.show("Backup", backupInfo);
+
+                    const fileUrlList = await getConfigurationFiles(onRetry);
+                    await downloadWithBlob(fileUrlList, onRetry);
 
                     dialog.showInfo("<p>Backup successful.</p>");
                 } catch (err) {
-                    dialog.showError("<p>Backup failed.</p>");
+                    if (isServiceUnavailable(err) === true) {
+                        dialog.showError("<p>Backup failed, because the device is busy. Please try again later.</p>");
+                    } else {
+                        dialog.showError("<p>Backup failed.</p>");
+                    }
                 }
             }
 
@@ -259,13 +339,16 @@
                     return;
                 }
 
+                const restoreInfo = "<p>Please wait, restore is in progress.</p>";
+                const onRetry = createRetryHandler(restoreInfo);
+
                 try {
-                    await dialog.show("Restore", "<p>Please wait, restore is in progress.</p>");
+                    await dialog.show("Restore", restoreInfo);
 
                     progress = 2;
                     updateProgressBar("progressBarRestore", progress);
 
-                    await restClient.removeFile("/configuration/*.json");
+                    await requestWithRetry(() => restClient.removeFile("/configuration/*.json"), onRetry);
 
                     progress = 10;
                     updateProgressBar("progressBarRestore", progress);
@@ -296,20 +379,24 @@
                         progress += progressPerFile;
                         updateProgressBar("progressBarRestore", progress);
 
-                        await restClient.writeFile("/configuration/" + filename, data, mimeType);
+                        await requestWithRetry(() => restClient.writeFile("/configuration/" + filename, data, mimeType), onRetry);
                     }
 
                     progress = 90;
                     updateProgressBar("progressBarRestore", progress);
 
-                    await restClient.restart();
+                    await requestWithRetry(() => restClient.restart(), onRetry);
 
                     progress = 100;
                     updateProgressBar("progressBarRestore", progress);
 
                     dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
                 } catch (err) {
-                    dialog.showError("<p>Restore failed.</p>");
+                    if (isServiceUnavailable(err) === true) {
+                        dialog.showError("<p>Restore failed, because the device is busy. Please try again later.</p>");
+                    } else {
+                        dialog.showError("<p>Restore failed.</p>");
+                    }
                 }
             }
 

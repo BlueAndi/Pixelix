@@ -10,9 +10,9 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "Common"
+        "name": "HalCommon"
     }, {
-        "name": "YAGfx"
+        "name": "HalInterface"
     }, {
         "owner": "makuna",
         "name": "NeoPixelBus",

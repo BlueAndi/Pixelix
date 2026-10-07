@@ -38,11 +38,13 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Board.h>
+#include <Pin.h>
 #include <Display.h>
 #include <SensorDataProvider.h>
 #include <Wire.h>
 #include <IconTextPlugin.h>
 #include <ViewConfig.h>
+#include <ScrollContainer.h>
 
 #include "ButtonDrv.h"
 #include "ClockDrv.h"
@@ -69,9 +71,6 @@
 #include <SettingsService.h>
 #include <WiFiUtil.h>
 
-#include <lwip/init.h>
-#include <esp_littlefs.h>
-
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -95,14 +94,20 @@
 /**
  * The filename of the version information file.
  */
-static const char VERSION_FILE_NAME[]   = "/version.json";
+static const char VERSION_FILE_NAME[]      = "/version.json";
 
 /**
  * Plugin type of the welcome plugin. This is used to install it in the very
  * first startup. In further startups it is used in addition to the plugin
  * alias whether to show the welcome icon and message.
  */
-static const char WELCOME_PLUGIN_TYPE[] = "IconTextPlugin";
+static const char WELCOME_PLUGIN_TYPE[]    = "IconTextPlugin";
+
+/**
+ * Icon of the welcome plugin, incl. the full path. The plugins load the icon
+ * exactly from the given path, therefore it must be complete.
+ */
+static const char WELCOME_ICON_FILE_NAME[] = "/configuration/smiley.bmp";
 
 /******************************************************************************
  * Public Methods
@@ -110,13 +115,12 @@ static const char WELCOME_PLUGIN_TYPE[] = "IconTextPlugin";
 
 void InitState::entry(StateMachine& sm)
 {
-    bool                isError  = false;
-    ErrorState::ErrorId errorId  = ErrorState::ERROR_ID_UNKNOWN;
-    SettingsService&    settings = SettingsService::getInstance();
+    bool                isError   = false;
+    Board&              board     = Board::getInstance();
+    IButtonDrv&         buttonDrv = board.getButtonDrv();
+    ErrorState::ErrorId errorId   = ErrorState::ERROR_ID_UNKNOWN;
+    SettingsService&    settings  = SettingsService::getInstance();
     String              uniqueId;
-
-    /* Initialize hardware */
-    Board::init();
 
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
@@ -126,8 +130,15 @@ void InitState::entry(StateMachine& sm)
     settings.getWifiApSSID().setUniqueId(uniqueId);
     settings.getHostname().setUniqueId(uniqueId);
 
+    /* Initialize hardware */
+    if (false == Board::getInstance().init())
+    {
+        LOG_FATAL("Couldn't initialize board.");
+        errorId = ErrorState::ERROR_ID_BOARD;
+        isError = true;
+    }
     /* Set two-wire (I2C) pins, before calling begin(). */
-    if (false == Wire.setPins(Board::Pin::i2cSdaPinNo, Board::Pin::i2cSclPinNo))
+    else if (false == Wire.setPins(PinNo::i2cSdaPinNo, PinNo::i2cSclPinNo))
     {
         LOG_FATAL("Couldn't set two-wire pins.");
         errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
@@ -138,13 +149,6 @@ void InitState::entry(StateMachine& sm)
     {
         LOG_FATAL("Couldn't initialize two-wire.");
         errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
-        isError = true;
-    }
-    /* Initialize button driver */
-    else if (false == ButtonDrv::getInstance().init())
-    {
-        LOG_FATAL("Couldn't initialize button driver.");
-        errorId = ErrorState::ERROR_ID_NO_USER_BUTTON;
         isError = true;
     }
     /* Mounting the filesystem. */
@@ -173,7 +177,7 @@ void InitState::entry(StateMachine& sm)
     else
     {
         /* Initialize clock driver */
-        ClockDrv::getInstance().init();
+        initClockDrv();
 
         /* Initialize sensors */
         SensorDataProvider::getInstance().begin();
@@ -227,7 +231,7 @@ void InitState::entry(StateMachine& sm)
         {
             /* Set text scroll pause for all text widgets. */
             uint32_t scrollPause = settings.getScrollPause().getValue();
-            if (false == TextWidget::setScrollPause(scrollPause))
+            if (false == ScrollContainer::setScrollPause(scrollPause))
             {
                 LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
             }
@@ -289,12 +293,14 @@ void InitState::entry(StateMachine& sm)
 
 void InitState::process(StateMachine& sm)
 {
+    Board&      board       = Board::getInstance();
+    IButtonDrv& buttonDrv   = board.getButtonDrv();
     ButtonState buttonState = BUTTON_STATE_RELEASED;
 
     /* Check all buttons to detect a user AP mode request during startup. */
     for (uint8_t btnId = BUTTON_ID_OK; btnId < BUTTON_ID_CNT; ++btnId)
     {
-        if (BUTTON_STATE_PRESSED == ButtonDrv::getInstance().getState(static_cast<ButtonId>(btnId)))
+        if (BUTTON_STATE_PRESSED == buttonDrv.getState(static_cast<ButtonId>(btnId)))
         {
             buttonState = BUTTON_STATE_PRESSED;
             break;
@@ -462,12 +468,15 @@ void InitState::exit(StateMachine& sm)
 
 void InitState::showStartupInfoOnSerial()
 {
-    const char* littleFsRepo = "https://github.com/joltwallet/esp_littlefs/releases/tag/v" ESP_LITTLEFS_VERSION_NUMBER;
     String      macAddr;
     String      chipId;
+    ISystemDrv& systemDrv     = Board::getInstance().getSystemDrv();
+    String      littleFsRepo  = "https://github.com/joltwallet/esp_littlefs/releases/tag/v";
 
-    WiFiUtil::getEFuseMAC(macAddr);
-    WiFiUtil::getChipId(chipId);
+    littleFsRepo             += systemDrv.getLittleFSVersion();
+
+    systemDrv.getEFuseMAC(macAddr);
+    systemDrv.getChipId(chipId);
 
     LOG_INFO("PIXELIX starts up ...");
     LOG_INFO("Target           : %s", Version::getTargetName());
@@ -475,17 +484,17 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO("SW revision      : %s", Version::getSoftwareRevision());
     LOG_INFO("ESP chip id      : %s", chipId.c_str());
     LOG_INFO("ESP type         : %s", CONFIG_IDF_TARGET);
-    LOG_INFO("ESP chip rev.    : %u", ESP.getChipRevision());
-    LOG_INFO("ESP cpu freq.    : %u MHz", ESP.getCpuFreqMHz());
-    LOG_INFO("Flash chip mode  : %s", getFlashChipMode());
-    LOG_INFO("Flash chip speed : %u", ESP.getFlashChipSpeed());
-    LOG_INFO("Flash chip size  : 0x%08X byte", ESP.getFlashChipSize());
-    LOG_INFO("Flash freq.      : %u MHz", ESP.getFlashChipSpeed() / (1000U * 1000U));
-    LOG_INFO("ESP SDK version  : %s", ESP.getSdkVersion());
+    LOG_INFO("ESP chip rev.    : %u", systemDrv.getChipRevision());
+    LOG_INFO("ESP cpu freq.    : %u MHz", systemDrv.getCpuFreqMHz());
+    LOG_INFO("Flash chip mode  : %s", systemDrv.getFlashChipModeStr());
+    LOG_INFO("Flash chip speed : %u", systemDrv.getFlashChipSpeed());
+    LOG_INFO("Flash chip size  : 0x%08X byte", systemDrv.getFlashChipSize());
+    LOG_INFO("Flash freq.      : %u MHz", systemDrv.getFlashChipSpeed() / (1000U * 1000U));
+    LOG_INFO("ESP SDK version  : %s", systemDrv.getSdkVersion());
     LOG_INFO("Wifi efuse MAC   : %s", macAddr.c_str());
-    LOG_INFO("LwIP version     : %s", LWIP_VERSION_STRING);
-    LOG_INFO("LittleFS version : %s", ESP_LITTLEFS_VERSION_NUMBER);
-    LOG_INFO("LittleFS link    : %s", littleFsRepo);
+    LOG_INFO("LwIP version     : %s", systemDrv.getLwIPVersion());
+    LOG_INFO("LittleFS version : %s", systemDrv.getLittleFSVersion());
+    LOG_INFO("LittleFS link    : %s", littleFsRepo.c_str());
 }
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
@@ -541,11 +550,9 @@ void InitState::welcome(bool isVeryFirstStart)
 
     if (nullptr != welcomePlugin)
     {
-        FileMgrService::FileId iconFileId = FileMgrService::getInstance().getFileIdByName("smiley");
-
-        if (FileMgrService::FILE_ID_INVALID != iconFileId)
+        if (false == welcomePlugin->loadIcon(WELCOME_ICON_FILE_NAME, true))
         {
-            (void)welcomePlugin->loadIcon(iconFileId, true);
+            LOG_WARNING("Welcome plugin icon couldn't be loaded.");
         }
 
         welcomePlugin->setText("{hc}Hello World!", true);
@@ -588,7 +595,7 @@ void InitState::getDeviceUniqueId(String& deviceUniqueId)
     /* Use the last 4 bytes of the factory programmed wifi MAC address to generate a unique id. */
     String chipId;
 
-    WiFiUtil::getChipId(chipId);
+    Board::getInstance().getSystemDrv().getChipId(chipId);
 
     deviceUniqueId += "-";
     deviceUniqueId += chipId.substring(4U);
@@ -659,44 +666,34 @@ void InitState::configureViews()
     }
 }
 
-const char* InitState::getFlashChipMode()
+void InitState::initClockDrv()
 {
-    const char* result = "UNKNOWN";
+    SettingsService& settings = SettingsService::getInstance();
+    String           timeZone;
+    String           ntpServerAddress;
 
-    switch (ESP.getFlashChipMode())
+    /* Get the time zone and the NTP server address from persistent memory. */
+    if (false == settings.open(true))
     {
-    case FM_QIO:
-        result = "QUIO";
-        break;
+        LOG_WARNING("Use default values for NTP request.");
 
-    case FM_QOUT:
-        result = "QOUT";
-        break;
+        timeZone         = settings.getTimeZone().getDefault();
+        ntpServerAddress = settings.getNTPServerAddress().getDefault();
+    }
+    else
+    {
+        timeZone         = settings.getTimeZone().getValue();
+        ntpServerAddress = settings.getNTPServerAddress().getValue();
 
-    case FM_DIO:
-        result = "DIO";
-        break;
-
-    case FM_DOUT:
-        result = "DOUT";
-        break;
-
-    case FM_FAST_READ:
-        result = "FAST_READ";
-        break;
-
-    case FM_SLOW_READ:
-        result = "SLOW_READ";
-        break;
-
-    case FM_UNKNOWN:
-        /* fallthrough */
-
-    default:
-        break;
+        settings.close();
     }
 
-    return result;
+    if (true == timeZone.isEmpty())
+    {
+        timeZone = settings.getTimeZone().getDefault();
+    }
+
+    ClockDrv::getInstance().init(timeZone, ntpServerAddress);
 }
 
 /******************************************************************************

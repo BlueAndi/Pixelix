@@ -39,6 +39,7 @@
 #include <ArduinoJson.h>
 #include <HttpStatus.h>
 #include <Util.h>
+#include <PsramJsonDocument.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -107,14 +108,15 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
     {
         const size_t      JSON_DOC_SIZE = 1024U;
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
-        JsonVariantConst  jsonMethod     = value["method"];
-        JsonVariantConst  jsonUrl        = value["url"];
-        JsonVariantConst  jsonFilter     = value["filter"];
-        JsonVariantConst  jsonIconFileId = value["iconFileId"];
-        JsonVariantConst  jsonFormat     = value["format"];
-        JsonVariantConst  jsonMultiplier = value["multiplier"];
-        JsonVariantConst  jsonOffset     = value["offset"];
+        JsonObject        jsonCfg          = jsonDoc.to<JsonObject>();
+        JsonVariantConst  jsonMethod       = value["method"];
+        JsonVariantConst  jsonUrl          = value["url"];
+        JsonVariantConst  jsonFilter       = value["filter"];
+        JsonVariantConst  jsonIconFileName = value["iconFileName"];
+        JsonVariantConst  jsonFormat       = value["format"];
+        JsonVariantConst  jsonMultiplier   = value["multiplier"];
+        JsonVariantConst  jsonOffset       = value["offset"];
+        JsonVariantConst  jsonScrollIcon   = value["scrollIcon"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -181,10 +183,10 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             }
         }
 
-        if (false == jsonIconFileId.isNull())
+        if (false == jsonIconFileName.isNull())
         {
-            jsonCfg["iconFileId"] = jsonIconFileId.as<FileMgrService::FileId>();
-            isSuccessful          = true;
+            jsonCfg["iconFileName"] = jsonIconFileName.as<const char*>();
+            isSuccessful            = true;
         }
 
         if (false == jsonFormat.isNull())
@@ -203,6 +205,27 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
         {
             jsonCfg["offset"] = jsonOffset.as<float>();
             isSuccessful      = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
@@ -239,23 +262,14 @@ void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
+
     PluginWithConfig::start(width, height);
 
-    if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
+    if (false == m_iconFileName.isEmpty())
     {
-        String iconFullPath;
-
-        if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+        if (false == m_view.loadIcon(m_iconFileName))
         {
-            LOG_WARNING("Unknown file id %u.", m_iconFileId);
-        }
-        else if (false == m_view.loadIcon(iconFullPath))
-        {
-            LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-        }
-        else
-        {
-            ;
+            LOG_ERROR("Icon not found: %s", m_iconFileName.c_str());
         }
     }
 }
@@ -397,26 +411,37 @@ void GrabViaRestPlugin::update(YAGfx& gfx)
 void GrabViaRestPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
+    /* The filter is a JSON document by itself, which is provided as string.
+     * A not configured filter is provided as empty string.
+     */
+    String filter;
 
-    jsonCfg["method"]     = m_method;
-    jsonCfg["url"]        = m_url;
-    jsonCfg["filter"]     = m_filter;
-    jsonCfg["iconFileId"] = m_iconFileId;
-    jsonCfg["format"]     = m_format;
-    jsonCfg["multiplier"] = m_multiplier;
-    jsonCfg["offset"]     = m_offset;
+    if (false == m_filter.isNull())
+    {
+        (void)serializeJson(m_filter, filter);
+    }
+
+    jsonCfg["method"]       = m_method;
+    jsonCfg["url"]          = m_url;
+    jsonCfg["filter"]       = filter;
+    jsonCfg["iconFileName"] = m_iconFileName;
+    jsonCfg["format"]       = m_format;
+    jsonCfg["multiplier"]   = m_multiplier;
+    jsonCfg["offset"]       = m_offset;
+    jsonCfg["scrollIcon"]   = m_view.isIconScrolling();
 }
 
 bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status         = false;
-    JsonVariantConst jsonMethod     = jsonCfg["method"];
-    JsonVariantConst jsonUrl        = jsonCfg["url"];
-    JsonVariantConst jsonFilter     = jsonCfg["filter"];
-    JsonVariantConst jsonIconFileId = jsonCfg["iconFileId"];
-    JsonVariantConst jsonFormat     = jsonCfg["format"];
-    JsonVariantConst jsonMultiplier = jsonCfg["multiplier"];
-    JsonVariantConst jsonOffset     = jsonCfg["offset"];
+    bool             status           = false;
+    JsonVariantConst jsonMethod       = jsonCfg["method"];
+    JsonVariantConst jsonUrl          = jsonCfg["url"];
+    JsonVariantConst jsonFilter       = jsonCfg["filter"];
+    JsonVariantConst jsonIconFileName = jsonCfg["iconFileName"];
+    JsonVariantConst jsonFormat       = jsonCfg["format"];
+    JsonVariantConst jsonMultiplier   = jsonCfg["multiplier"];
+    JsonVariantConst jsonOffset       = jsonCfg["offset"];
+    JsonVariantConst jsonScrollIcon   = jsonCfg["scrollIcon"];
 
     if (false == jsonMethod.is<String>())
     {
@@ -426,14 +451,15 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     {
         LOG_WARNING("JSON URL not found or invalid type.");
     }
-    else if ((false == jsonFilter.is<JsonObjectConst>()) &&
+    else if ((false == jsonFilter.is<String>()) &&
+             (false == jsonFilter.is<JsonObjectConst>()) &&
              (false == jsonFilter.is<JsonArrayConst>()))
     {
         LOG_WARNING("JSON filter not found or invalid type.");
     }
-    else if (false == jsonIconFileId.is<FileMgrService::FileId>())
+    else if (false == jsonIconFileName.is<String>())
     {
-        LOG_WARNING("JSON icon file id not found or invalid type.");
+        LOG_WARNING("JSON icon file name not found or invalid type.");
     }
     else if (false == jsonFormat.is<String>())
     {
@@ -450,38 +476,27 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
-        FileMgrService::FileId     newIconFileId = jsonIconFileId.as<FileMgrService::FileId>();
+        const String               newIconFileName = jsonIconFileName.as<const char*>();
 
-        m_method                                 = jsonMethod.as<const char*>();
-        m_url                                    = jsonUrl.as<const char*>();
-        m_filter                                 = jsonFilter;
-        m_format                                 = jsonFormat.as<const char*>();
-        m_multiplier                             = jsonMultiplier.as<float>();
-        m_offset                                 = jsonOffset.as<float>();
+        m_method                                   = jsonMethod.as<const char*>();
+        m_url                                      = jsonUrl.as<const char*>();
+        m_format                                   = jsonFormat.as<const char*>();
+        m_multiplier                               = jsonMultiplier.as<float>();
+        m_offset                                   = jsonOffset.as<float>();
 
-        if (m_iconFileId != newIconFileId)
+        setFilter(jsonFilter);
+
+        if (m_iconFileName != newIconFileName)
         {
-            m_iconFileId = newIconFileId;
+            m_iconFileName = newIconFileName;
 
-            if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
-            {
-                m_view.clearIcon();
-            }
-            else
-            {
-                String iconFullPath;
+            m_view.clearIcon();
 
-                if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+            if (false == m_iconFileName.isEmpty())
+            {
+                if (false == m_view.loadIcon(m_iconFileName))
                 {
-                    LOG_WARNING("Unknown file id %u.", m_iconFileId);
-                    m_view.clearIcon();
-                }
-                else
-                {
-                    if (false == m_view.loadIcon(iconFullPath))
-                    {
-                        LOG_WARNING("Couldn't load icon: %s", iconFullPath.c_str());
-                    }
+                    LOG_WARNING("Couldn't load icon: %s", m_iconFileName.c_str());
                 }
             }
         }
@@ -491,10 +506,37 @@ bool GrabViaRestPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
         m_hasTopicChanged = true;
 
-        status            = true;
+        /* The scroll behaviour is optional to stay compatible with a
+         * configuration, which was stored before it was introduced.
+         */
+        if (true == jsonScrollIcon.is<bool>())
+        {
+            m_view.setIconScrolling(jsonScrollIcon.as<bool>());
+        }
+
+        status = true;
     }
 
     return status;
+}
+
+void GrabViaRestPlugin::setFilter(const JsonVariantConst& jsonFilter)
+{
+    if (false == jsonFilter.is<String>())
+    {
+        m_filter = jsonFilter;
+    }
+    else
+    {
+        DeserializationError error = deserializeJson(m_filter, jsonFilter.as<const char*>());
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("Filter is no valid JSON document.");
+
+            m_filter.clear();
+        }
+    }
 }
 
 bool GrabViaRestPlugin::startHttpRequest()

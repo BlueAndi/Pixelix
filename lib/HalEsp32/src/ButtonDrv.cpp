@@ -1,0 +1,458 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @file   ButtonDrv.cpp
+ * @brief  Button driver
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+#include "ButtonDrv.h"
+
+#include <Logging.h>
+#include <esp_sleep.h>
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
+
+/******************************************************************************
+ * Macros
+ *****************************************************************************/
+
+/******************************************************************************
+ * Types and classes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Prototypes
+ *****************************************************************************/
+
+static void IRAM_ATTR isrButton(void* arg);
+
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
+
+/**
+ * If a button is triggered, the ISR will set it to true.
+ * The task will set it to false and every time the task see true, it will
+ * (re-)start the debounce timer.
+ */
+static ButtonId gButtonId[BUTTON_ID_CNT] = {
+    BUTTON_ID_OK,
+    BUTTON_ID_LEFT,
+    BUTTON_ID_RIGHT
+};
+
+/** Number of elements in the button id queue. */
+static const uint32_t QUEUE_SIZE = 10U;
+
+/**
+ * Button id queue, used to communicate from ISR to task.
+ * Every time the task detects a pin level change, it will notify the task
+ * about it by sending the corresponding button id via queue.
+ */
+static QueueHandle_t gxQueue     = nullptr;
+
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+/**
+ * Constructs the button driver instance.
+ */
+ButtonDrv::ButtonDrv() :
+    m_buttonTask("buttonTask", buttonTask, BUTTON_TASK_STACKE_SIZE, BUTTON_TASK_PRIORITY, BUTTON_TASK_RUN_CORE),
+    m_xSemaphore(nullptr),
+    m_state(),
+    m_timer(),
+    m_observer(nullptr),
+    m_buttonPin{ nullptr, nullptr, nullptr }
+{
+}
+
+/**
+ * Destroys the button driver instance.
+ */
+ButtonDrv::~ButtonDrv()
+{
+    if (nullptr != m_xSemaphore)
+    {
+        vSemaphoreDelete(m_xSemaphore);
+        m_xSemaphore = nullptr;
+    }
+}
+
+bool ButtonDrv::init(const DInPin& buttonOkIn, const DInPin& buttonLeftIn, const DInPin& buttonRightIn)
+{
+    bool    isSuccessful         = true;
+    uint8_t buttonIdx            = 0U;
+
+    m_buttonPin[BUTTON_ID_OK]    = &buttonOkIn;
+    m_buttonPin[BUTTON_ID_LEFT]  = &buttonLeftIn;
+    m_buttonPin[BUTTON_ID_RIGHT] = &buttonRightIn;
+
+    while (BUTTON_ID_CNT > buttonIdx)
+    {
+        /* No pin connected? */
+        if (IoPin::NC == m_buttonPin[buttonIdx]->getPinNo())
+        {
+            m_state[buttonIdx] = BUTTON_STATE_NC;
+        }
+        /* Interrupt can not be attached to pin? */
+        else if (NOT_AN_INTERRUPT == digitalPinToInterrupt(m_buttonPin[buttonIdx]->getPinNo()))
+        {
+            m_state[buttonIdx] = BUTTON_STATE_NC;
+        }
+        /* Configured pin is ok. */
+        else
+        {
+            m_state[buttonIdx] = BUTTON_STATE_UNKNOWN;
+        }
+
+        ++buttonIdx;
+    }
+
+    /* Create semaphore to protect the button trigger array, which is accessed
+     * by the task and the ISR.
+     */
+    gxQueue = xQueueCreate(QUEUE_SIZE, sizeof(ButtonId));
+
+    if (nullptr == gxQueue)
+    {
+        isSuccessful = false;
+    }
+
+    if (true == isSuccessful)
+    {
+        /* Create semaphore to protect button state member. */
+        m_xSemaphore = xSemaphoreCreateBinary();
+
+        if (nullptr == m_xSemaphore)
+        {
+            isSuccessful = false;
+        }
+        /* The semaphore must be given, right after the creation! */
+        else if (pdTRUE != xSemaphoreGive(m_xSemaphore))
+        {
+            isSuccessful = false;
+        }
+        else
+        {
+            ;
+        }
+    }
+
+    if (true == isSuccessful)
+    {
+        isSuccessful = m_buttonTask.start(this);
+
+        if (true == isSuccessful)
+        {
+            attachButtonsToInterrupt();
+        }
+    }
+
+    if (false == isSuccessful)
+    {
+        (void)m_buttonTask.stop();
+
+        if (nullptr != gxQueue)
+        {
+            vQueueDelete(gxQueue);
+            gxQueue = nullptr;
+        }
+
+        if (nullptr != m_xSemaphore)
+        {
+            vSemaphoreDelete(m_xSemaphore);
+            m_xSemaphore = nullptr;
+        }
+    }
+
+    return isSuccessful;
+}
+
+ButtonState ButtonDrv::getState(ButtonId buttonId)
+{
+    ButtonState state = BUTTON_STATE_UNKNOWN;
+
+    if (BUTTON_ID_CNT > buttonId)
+    {
+        if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
+        {
+            state = m_state[buttonId];
+
+            (void)xSemaphoreGive(m_xSemaphore);
+        }
+    }
+
+    return state;
+}
+
+void ButtonDrv::registerObserver(IButtonObserver& observer)
+{
+    if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
+    {
+        uint8_t buttonIndex = 0U;
+
+        m_observer          = &observer;
+
+        while (BUTTON_ID_CNT > buttonIndex)
+        {
+            m_observer->notify(static_cast<ButtonId>(buttonIndex), m_state[buttonIndex]);
+
+            ++buttonIndex;
+        }
+
+        (void)xSemaphoreGive(m_xSemaphore);
+    }
+}
+
+void ButtonDrv::unregisterObserver()
+{
+    if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
+    {
+        m_observer = nullptr;
+
+        (void)xSemaphoreGive(m_xSemaphore);
+    }
+}
+
+bool ButtonDrv::enableWakeUpSources()
+{
+    uint8_t buttonIdx          = 0U;
+    bool    allButtonsReleased = true;
+
+    /* Ensure that no button is pressed anymore. */
+    while ((BUTTON_ID_CNT > buttonIdx) && (nullptr != m_buttonPin[buttonIdx]))
+    {
+        uint8_t pinNo = m_buttonPin[buttonIdx]->getPinNo();
+
+        if (IoPin::NC != pinNo)
+        {
+            gpio_num_t gpioPinNum = static_cast<gpio_num_t>(pinNo);
+
+            if (0 == gpio_get_level(gpioPinNum))
+            {
+                allButtonsReleased = false;
+            }
+        }
+
+        ++buttonIdx;
+    }
+
+    /* If no button is pressed anymore, enable them as wakeup source. */
+    if (true == allButtonsReleased)
+    {
+        /* Use all available buttons as wakeup sources. */
+        while ((BUTTON_ID_CNT > buttonIdx) && (nullptr != m_buttonPin[buttonIdx]))
+        {
+            uint8_t pinNo = m_buttonPin[buttonIdx]->getPinNo();
+
+            if (IoPin::NC != pinNo)
+            {
+                gpio_num_t gpioPinNum = static_cast<gpio_num_t>(pinNo);
+
+                /* Important: Buttons must be low active! */
+
+                if (ESP_OK != gpio_wakeup_enable(gpioPinNum, GPIO_INTR_LOW_LEVEL))
+                {
+                    LOG_ERROR("Button %u can not be used as wakeup source.", buttonIdx);
+                }
+            }
+
+            ++buttonIdx;
+        }
+
+        (void)esp_sleep_enable_gpio_wakeup();
+    }
+
+    return allButtonsReleased;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void ButtonDrv::attachButtonsToInterrupt()
+{
+    uint8_t buttonIdx = 0U;
+
+    /* The ISR shall notify about on change to determine whether the
+     * pin state is stable or not.
+     */
+    while (BUTTON_ID_CNT > buttonIdx)
+    {
+        if (IoPin::NC != m_buttonPin[buttonIdx]->getPinNo())
+        {
+            attachInterruptArg(m_buttonPin[buttonIdx]->getPinNo(),
+                isrButton,
+                &m_buttonPin[buttonIdx],
+                CHANGE);
+
+            /* Start the debouncing to get a stable initial button state. */
+            m_timer[buttonIdx].start(DEBOUNCING_TIME);
+        }
+
+        ++buttonIdx;
+    }
+}
+
+void ButtonDrv::setState(ButtonId buttonId, ButtonState state)
+{
+    if (BUTTON_ID_CNT > buttonId)
+    {
+        if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
+        {
+            m_state[buttonId] = state;
+
+            (void)xSemaphoreGive(m_xSemaphore);
+        }
+    }
+}
+
+void ButtonDrv::buttonTask(ButtonDrv* self)
+{
+    self->buttonTaskMainLoop();
+}
+
+void ButtonDrv::buttonTaskMainLoop()
+{
+    ButtonId buttonId  = BUTTON_ID_CNT;
+    uint8_t  buttonIdx = 0U;
+
+    /* The main loop scans several times during one debounce period
+     * for any pin change. If there is no change, the state is
+     * considered as stable.
+     */
+
+    /* Wait 25% of debouncing time whether any button level changed. */
+    if (pdTRUE == xQueueReceive(gxQueue, &buttonId, (DEBOUNCING_TIME / 4U) * portTICK_PERIOD_MS))
+    {
+        if (BUTTON_ID_CNT > buttonId)
+        {
+            m_timer[buttonId].start(DEBOUNCING_TIME);
+        }
+    }
+
+    /* Debounce buttons */
+    while (BUTTON_ID_CNT > buttonIdx)
+    {
+        if ((true == m_timer[buttonIdx].isTimerRunning()) &&
+            (true == m_timer[buttonIdx].isTimeout()))
+        {
+            ButtonState buttonState = BUTTON_STATE_UNKNOWN;
+            uint8_t     buttonValue = HIGH;
+
+            switch (buttonIdx)
+            {
+            case BUTTON_ID_OK:
+                buttonValue = m_buttonPin[buttonIdx]->read();
+                break;
+
+            case BUTTON_ID_LEFT:
+                buttonValue = m_buttonPin[buttonIdx]->read();
+                break;
+
+            case BUTTON_ID_RIGHT:
+                buttonValue = m_buttonPin[buttonIdx]->read();
+                break;
+
+            default:
+                break;
+            }
+
+            if (LOW == buttonValue)
+            {
+                buttonState = BUTTON_STATE_PRESSED;
+            }
+            else
+            {
+                buttonState = BUTTON_STATE_RELEASED;
+            }
+
+            if (BUTTON_STATE_NC != m_state[buttonIdx])
+            {
+                if (m_state[buttonIdx] != buttonState)
+                {
+                    buttonId = static_cast<ButtonId>(buttonIdx);
+
+                    setState(buttonId, buttonState);
+
+                    /* Notify observer */
+                    if (nullptr != m_observer)
+                    {
+                        m_observer->notify(buttonId, m_state[buttonIdx]);
+                    }
+                }
+            }
+
+            m_timer[buttonIdx].stop();
+        }
+
+        ++buttonIdx;
+    }
+}
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
+/**
+ * Button ISR which is called on change (falling- or rising-edge).
+ *
+ * @param[in] arg   Trigger counter for the button.
+ */
+static void IRAM_ATTR isrButton(void* arg)
+{
+    ButtonId   buttonId                 = *static_cast<ButtonId*>(arg);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    (void)xQueueSendFromISR(gxQueue, &buttonId, &xHigherPriorityTaskWoken);
+
+    /* If xHigherPriorityTaskWoken is now set to pdTRUE then a context switch
+     * should be performed to ensure the interrupt returns directly to the highest
+     * priority task. The macro used for this purpose is dependent on the port in
+     * use and may be called portEND_SWITCHING_ISR().
+     */
+    if (pdTRUE == xHigherPriorityTaskWoken)
+    {
+        portYIELD_FROM_ISR();
+    }
+}

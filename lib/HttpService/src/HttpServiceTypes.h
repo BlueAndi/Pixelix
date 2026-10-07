@@ -42,6 +42,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 #include <limits>
 #include <utility>
 #include <HTTPClient.h>

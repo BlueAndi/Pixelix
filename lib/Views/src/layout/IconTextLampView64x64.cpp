@@ -70,7 +70,12 @@ bool IconTextLampView64x64::loadIcon(const String& filename, FS& fs)
     }
     else
     {
-        setTextWidgetReducedHeight();
+        if (false == m_isIconVisible)
+        {
+            m_isIconVisible = true;
+
+            applyScrollLayout();
+        }
 
         isSuccessful = true;
     }

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "~/.platformio"
+    ],
+    "deny": [
+      "Edit(~/.platformio/**)",
+      "Write(~/.platformio/**)"
+    ]
+  }
+}
