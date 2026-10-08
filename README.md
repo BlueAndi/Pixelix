@@ -32,6 +32,11 @@ ___
   - [Recommendation](#recommendation)
   - [Special Variants](#special-variants)
 - [Installation](#installation)
+  - [Install A Prebuilt Release With The Web USB Installer](#install-a-prebuilt-release-with-the-web-usb-installer)
+  - [Install A Prebuilt Release Manually](#install-a-prebuilt-release-manually)
+  - [Build And Install The Software Yourself](#build-and-install-the-software-yourself)
+  - [Verify The Installation](#verify-the-installation)
+  - [Update A Running PIXELIX](#update-a-running-pixelix)
 - [Very First Startup](#very-first-startup)
   - [Variant 1: Configure WiFi station SSID and passphrase using a browser](#variant-1-configure-wifi-station-ssid-and-passphrase-using-a-browser)
   - [Variant 2: Configure WiFi station SSID and passphrase using a serial terminal](#variant-2-configure-wifi-station-ssid-and-passphrase-using-a-serial-terminal)
@@ -139,15 +144,58 @@ Although PIXELIX was designed to show information, that is pushed or pulled via 
 
 ## Installation
 
-The following steps are necessary for the first time and to get PIXELIX initial running on the target. Once it runs, later on the firmware and filesystem can be updated via the PIXELIX Updater: [https://github.com/BlueAndi/PixelixUpdater](https://github.com/BlueAndi/PixelixUpdater).
-You can accesss the Updater through the submenu "Update" of PIXELIX's webinterface.
+PIXELIX can be installed in two different ways. Decide first which one applies to you, because it determines whether you need a build toolchain at all.
+
+| Your situation                                                                                                                                                                                                                 | Way to go                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| You use one of the [supported development boards](#supported-development-boards) with its standard display and the panel wiring matches.                                                                                       | Install a prebuilt release. No toolchain required, nothing needs to be compiled. Use the [web USB installer](#install-a-prebuilt-release-with-the-web-usb-installer) or [flash the binaries manually](#install-a-prebuilt-release-manually). |
+| Your board/display combination is not released, your LED matrix size or panel topology is different, you want another set of plugins, you want to rotate the display by 180&deg; or you want to develop a plugin or fix a bug. | [Build and install the software yourself](#build-and-install-the-software-yourself).                                                                                                                                                         |
+
+Every release provides ready-to-flash binaries for all supported board and display combinations. They are named after their build environment, e.g. ```esp32doit-devkit-v1-LED-32x8```, which encodes the development board as well as the display type and its resolution.
+
+> :warning: A prebuilt binary has the LED matrix width/height, the panel topology and the list of plugins compiled in. None of them can be changed later in the web interface. If one of them does not match your hardware, you have to build the software yourself.
+
+### Install A Prebuilt Release With The Web USB Installer
+
+This is the easiest way and the recommended one for everybody who does not want to touch the source code. The installer runs completely in the browser, writes a full flash image (bootloader, partition table, factory image, firmware and filesystem) and can hand over the WiFi credentials over USB afterwards.
+
+1. Open the [PIXELIX USB installer](https://blueandi.github.io/Pixelix/) in a Chromium based desktop browser, like Chrome, Edge, Opera or Brave. It is based on the Web Serial API, which is not available in Firefox, Safari or on mobile devices.
+2. Choose your board and display configuration.
+3. Connect the development board to your PC with a data capable USB cable and select the serial device once.
+4. Start _Erase and install_. Note, that the flash is erased completely, which includes all settings of a previous installation.
+5. Keep the USB cable connected and continue with the WiFi setup on the same page. If that succeeds, you can skip the [Very First Startup](#very-first-startup).
+
+If the board does not enter the download mode automatically, follow the BOOT/RESET sequence shown on the page. This is typically necessary for the ESP32 DevKit V1.
+
+### Install A Prebuilt Release Manually
+
+Use this way if no Chromium based browser is available or if you prefer the classic Espressif tools.
+
+1. Download the binaries from the [latest release](https://github.com/BlueAndi/Pixelix/releases).
+2. Write them to the flash with the Espressif Flash Download Tool (Windows only) or with esptool (any OS). The detailed steps, the required flash addresses and the flash layout are documented in [Upload/Update the software and the filesystem](./doc/config/SW-UPDATE.md).
+3. Continue with the [Very First Startup](#very-first-startup).
+
+### Build And Install The Software Yourself
+
+> :information_source: The order matters. Configure the display **before** the first build, because the display configuration is compiled into the firmware.
 
 1. Setup the [toolchain](./doc/config/TOOLCHAIN-INSTALLATION.md).
-2. [Build the software](./doc/config/SW-BUILD.md) and check whether the toolchain works.
-3. [Upload/Update the software and firmware](./doc/config/SW-UPDATE.md) to the target.
-4. Verify that the LED panel topology is correct and you see the "Hello World" on the display.
+2. Configure your display in ```./config/display.ini```:
+   - Adapt _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according to your LED matrix.
+   - Change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: [https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects](https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects)
+   - Optional: set _CONFIG_DISPLAY_ROTATE180_ to 1 to [rotate the display by 180&deg;](#is-there-an-easy-way-to-rotate-the-display-by-180--i-need-to-turn-the-display-when-putting-it-into-a-housing).
+3. Optional: adapt the [list of plugins](#how-to-configure-my-own-list-of-plugins) in the corresponding ```./config/config*.ini```.
+4. [Build the software](./doc/config/SW-BUILD.md) and check whether the toolchain works.
+5. [Upload the software and the filesystem](./doc/config/SW-UPDATE.md) to the target. Note, that both parts are necessary, the firmware and the filesystem image.
+6. Continue with the [Very First Startup](#very-first-startup).
 
-Note, that the LED panel topology and the display width/height can not be changed in the web interface. If its necessary, adapt first in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according your LED matrix and change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: [https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects]( https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects)
+### Verify The Installation
+
+Independent of the way you installed PIXELIX, verify that the LED panel topology is correct and that you see the "Hello World" on the display. If the text is mirrored, scrambled or spread over the wrong rows, the panel topology does not match and the software has to be built with the right _CONFIG_LED_TOPO_ setting.
+
+### Update A Running PIXELIX
+
+Once PIXELIX runs and its web interface is accessible, the firmware and the filesystem can be updated over WiFi with the PIXELIX Updater: [https://github.com/BlueAndi/PixelixUpdater](https://github.com/BlueAndi/PixelixUpdater). You can access the Updater through the submenu "Update" of PIXELIX's web interface. Reinstalling via USB is not necessary for an update.
 
 ## Very First Startup
 

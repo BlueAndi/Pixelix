@@ -790,7 +790,7 @@ async function provisionWifi(event) {
  * @returns {void}
  */
 function handleUnsupportedSerial() {
-    elements.chipStatus.textContent = "Web Serial requires a secure context in Chrome or Edge on desktop.";
+    elements.chipStatus.textContent = "Web Serial requires a secure context in a Chromium based desktop browser (Chrome, Edge, Opera, Brave).";
     elements.connectButton.disabled = true;
     elements.wifiConnectButton.disabled = true;
     elements.terminalConnectButton.disabled = true;
