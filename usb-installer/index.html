@@ -57,9 +57,10 @@
                     <div class="step-number">02</div>
                     <div class="step-body">
                         <h2>Connect over USB</h2>
-                        <p>Use a data-capable USB cable. If automatic connection fails, hold BOOT while reconnecting the board.</p>
+                        <p>Use a data-capable USB cable and choose the device once. For ESP32 DevKit V1, see the bootloader steps below if automatic sync fails.</p>
                         <button class="btn button button-dark" id="connect-button" type="button" disabled>Choose USB device</button>
                         <p class="step-note" id="chip-status" role="status">Chrome or Edge on desktop is required.</p>
+                        <p class="bootloader-note" id="bootloader-help">Most boards enter download mode automatically. If sync fails, follow the board-specific BOOT/RESET sequence.</p>
                     </div>
                     <span class="step-state" id="connect-state">WAITING</span>
                 </article>
@@ -82,7 +83,7 @@
                     <div class="step-number">04</div>
                     <div class="step-body">
                         <h2>Set up Wi-Fi</h2>
-                        <p id="wifi-intro">Keep the cable connected. After restart, reopen the serial port here; no unplugging is needed. If the browser asks, select the same device.</p>
+                        <p id="wifi-intro">Choose the USB device first. After firmware restart, this page reopens the same serial port; keep the cable connected. Some boards may ask you to select the device again.</p>
                         <button class="btn button button-dark" id="wifi-connect-button" type="button" disabled>Continue to Wi-Fi setup</button>
                         <p id="authorization-status" class="step-note" role="status"></p>
                         <form id="wifi-form" hidden>
