@@ -252,3 +252,15 @@ jobs:
             ${{ github.workspace }}/${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}-usb-flash-packages.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish the USB installer on GitHub Pages with the binaries of this release.
+  publish_installer:
+    needs: [deploy]
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      source_ref: ${{ github.event.inputs.tag_name }}
+      release_tag: ${{ github.event.inputs.tag_name }}

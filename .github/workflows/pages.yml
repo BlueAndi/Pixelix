@@ -1,15 +1,33 @@
-name: Publish Development Installer
+name: Publish USB Installer
 
 on:
+    # Called by the release pipeline, right after the release was created.
+    workflow_call:
+        inputs:
+            source_ref:
+                description: Branch or tag the installer frontend is built from.
+                required: true
+                type: string
+            release_tag:
+                description: Release tag whose USB flash packages are published. Empty uses the latest release.
+                required: false
+                default: ""
+                type: string
+
+    # Allows you to publish the installer manually from the Actions tab,
+    # e.g. after a frontend change without a new firmware release.
     workflow_dispatch:
         inputs:
-            source_branch:
-                description: Branch used to build the installer and firmware images.
+            source_ref:
+                description: Branch or tag the installer frontend is built from.
                 required: true
-                type: choice
+                type: string
                 default: Development
-                options:
-                    - Development
+            release_tag:
+                description: Release tag whose USB flash packages are published. Empty uses the latest release.
+                required: false
+                type: string
+                default: ""
 
 concurrency:
     group: github-pages
@@ -26,10 +44,10 @@ jobs:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}
         steps:
-            - name: Checkout selected branch
+            - name: Checkout selected branch or tag
               uses: actions/checkout@v6
               with:
-                  ref: ${{ inputs.source_branch }}
+                  ref: ${{ inputs.source_ref }}
 
             - name: Configure GitHub Pages
               uses: actions/configure-pages@v5
@@ -47,22 +65,38 @@ jobs:
                   npm ci
                   npm run build
 
-            - name: Resolve latest release
-              id: latest_release
+            - name: Resolve release tag
+              id: release
               env:
                   GH_TOKEN: ${{ github.token }}
+                  RELEASE_TAG: ${{ inputs.release_tag }}
               run: |
-                  RELEASE_TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+                  if [ -z "$RELEASE_TAG" ]; then
+                    RELEASE_TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+                  fi
                   if [ -z "$RELEASE_TAG" ]; then
                     echo "No published release was found." >&2
                     exit 1
                   fi
                   echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
-            - name: Download latest release USB packages
+            - name: Determine site version label
+              id: version
+              env:
+                  RELEASE_TAG: ${{ steps.release.outputs.tag }}
+                  SOURCE_REF: ${{ inputs.source_ref }}
+              run: |
+                  if [ "$SOURCE_REF" = "$RELEASE_TAG" ]; then
+                    LABEL="$RELEASE_TAG"
+                  else
+                    LABEL="${SOURCE_REF}-$(git rev-parse --short HEAD) / Firmware-${RELEASE_TAG}"
+                  fi
+                  echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+
+            - name: Download release USB packages
               env:
                   GH_TOKEN: ${{ github.token }}
-                  RELEASE_TAG: ${{ steps.latest_release.outputs.tag }}
+                  RELEASE_TAG: ${{ steps.release.outputs.tag }}
               run: |
                   ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${RELEASE_TAG}-usb-flash-packages.zip"
                   gh release download "$RELEASE_TAG" \
@@ -74,12 +108,12 @@ jobs:
 
             - name: Assemble Pages site
               env:
-                  RELEASE_TAG: ${{ steps.latest_release.outputs.tag }}
+                  VERSION_LABEL: ${{ steps.version.outputs.label }}
               run: |
                   python scripts/prepare_usb_installer.py \
                     --packages-dir release-packages \
                     --site-dir site \
-                    --version "Development-${GITHUB_SHA:0:7} / Firmware-${RELEASE_TAG}"
+                    --version "$VERSION_LABEL"
 
             - name: Upload Pages artifact
               uses: actions/upload-pages-artifact@v4
