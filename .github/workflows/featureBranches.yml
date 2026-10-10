@@ -403,6 +403,51 @@ jobs:
             sleep 1
           done
 
+      # Without WiFi station credentials the application spawns a WiFi access
+      # point and serves the captive portal. This is the state of a device,
+      # which is started the very first time.
+      - name: Check that the captive portal answers
+        run: |
+          STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8080/)
+          if [ "${STATUS}" != "200" ]; then
+            echo "The captive portal answered with ${STATUS} instead of 200."
+            exit 1
+          fi
+
+      # In this state the captive portal is the only way to configure the WiFi
+      # station credentials. The native WiFi stub accepts any credentials and
+      # reports a successful connection afterwards.
+      - name: Configure the WiFi station credentials via the captive portal
+        run: |
+          RESULT=$(curl --silent --show-error --fail --data "ssid=simulated" --data "passphrase=simulated123" http://localhost:8080/)
+          # The captive portal answers with HTTP 200 even in case it failed.
+          if [ "${RESULT}" != "Ok." ]; then
+            echo "The captive portal answered with '${RESULT}' instead of 'Ok.'."
+            exit 1
+          fi
+
+      # The credentials are evaluated during startup only. A restart terminates
+      # the native application, therefore it is started again here instead of
+      # killing it.
+      - name: Restart into the WiFi station mode
+        run: |
+          curl --silent --show-error --fail --output /dev/null --data "restart=now" http://localhost:8080/
+          # Wait until the application terminated itself.
+          for _ in $(seq 1 30); do
+            if ! curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
+          ./.pio/build/native/program >> pixelix.log 2>&1 &
+          echo $! > pixelix.pid
+          for _ in $(seq 1 30); do
+            if curl --silent --output /dev/null http://localhost:8080/; then
+              break
+            fi
+            sleep 1
+          done
+
       - name: Check that the webserver answers
         run: |
           STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8080/)
