@@ -206,7 +206,9 @@ When the device starts for the very first time, the WiFi station SSID and passph
 
 ### Variant 1: Configure WiFi station SSID and passphrase using a browser
 
-Restart the device and **keep the button pressed** until it shows the SSID of the WiFi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
+As long as no WiFi station SSID and passphrase are configured, PIXELIX spawns a WiFi access point automatically on every startup. Just wait until it shows the SSID of the access point, search for it with your mobile device and connect.
+
+Once the WiFi station SSID and passphrase are configured, PIXELIX connects to your WiFi network instead. To get back into the access point mode on purpose - e.g. after you replaced your router - restart the device and **keep the button pressed** until the access point SSID is shown.
 
 - SSID: **pixelix-&lt;DEVICE-ID&gt;**
 - Passphrase: **Luke, I am your father.**
