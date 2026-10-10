@@ -111,9 +111,15 @@ void CaptivePortal::init(AsyncWebServer& srv)
     /* The about dialog is the only additional page, which shall be accessible. */
     (void)srv.serveStatic("/about.html", FILESYSTEM, "/about.html");
 
-    /* Add the captive portal request handler at last, because it will handle everything else. */
-    (void)srv.addHandler(&gCaptivePortalReqHandler)
-        .setFilter(ON_AP_FILTER);
+    /* Add the captive portal request handler at last, because it will handle everything else.
+     *
+     * No request filter (ON_AP_FILTER) is used on purpose. The wifi is either in
+     * access point mode or in station mode, never in both at the same time. As the
+     * captive portal is only installed in access point mode, every request can only
+     * come in over the access point interface anyway. Beside that the filter would
+     * block every request in the native environment, where it is always false.
+     */
+    (void)srv.addHandler(&gCaptivePortalReqHandler);
 }
 
 bool CaptivePortal::isRestartRequested()

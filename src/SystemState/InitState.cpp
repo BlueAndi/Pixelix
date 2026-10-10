@@ -236,13 +236,25 @@ void InitState::entry(StateMachine& sm)
                 LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
             }
 
-            m_isQuiet = settings.getQuietMode().getValue();
+            m_isQuiet            = settings.getQuietMode().getValue();
+
+            /* Remember whether the device is able to connect to a remote wifi
+             * network at all. Without credentials the wifi access point is the
+             * only way for the user to configure the device.
+             */
+            m_hasWifiCredentials = (false == settings.getWifiSSID().getValue().isEmpty()) &&
+                                   (false == settings.getWifiPassphrase().getValue().isEmpty());
 
             settings.close();
         }
         else
         {
-            m_isQuiet = settings.getQuietMode().getDefault();
+            m_isQuiet            = settings.getQuietMode().getDefault();
+
+            /* Without readable settings no remote wifi network connection is
+             * possible, therefore the wifi access point is used.
+             */
+            m_hasWifiCredentials = false;
         }
 
         configureViews();
@@ -307,8 +319,15 @@ void InitState::process(StateMachine& sm)
         }
     }
 
+    /* No remote wifi network credentials available? The wifi access point is
+     * the only way to configure the device, therefore the button is ignored.
+     */
+    if (false == m_hasWifiCredentials)
+    {
+        m_isApModeRequested = true;
+    }
     /* Connect to a remote wifi network? */
-    if (BUTTON_STATE_RELEASED == buttonState)
+    else if (BUTTON_STATE_RELEASED == buttonState)
     {
         m_isApModeRequested = false;
         DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_ALL, IIndicatorView::State::STATE_OFF);

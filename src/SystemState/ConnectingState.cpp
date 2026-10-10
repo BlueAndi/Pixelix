@@ -95,7 +95,7 @@ void ConnectingState::entry(StateMachine& sm)
     if ((0 == m_wifiSSID.length()) ||
         (0 == m_wifiPassphrase.length()))
     {
-        String infoStr = "Keep button pressed and reboot. Set SSID/password via webserver.";
+        String infoStr = "No wifi SSID/password set. Reboot to spawn the wifi access point.";
 
         LOG_INFO(infoStr);
         SysMsg::getInstance().show(infoStr);

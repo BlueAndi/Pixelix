@@ -107,9 +107,10 @@ private:
      */
     static const uint32_t SHOW_LOGO_DURATION = 2000U;
 
-    bool                  m_isQuiet;           /**< Is quite mode active? */
-    bool                  m_isApModeRequested; /**< Is wifi AP mode requested? */
-    SimpleTimer           m_timer;             /**< Timer used to stay for a min. time in this state. */
+    bool                  m_isQuiet;            /**< Is quite mode active? */
+    bool                  m_isApModeRequested;  /**< Is wifi AP mode requested? */
+    bool                  m_hasWifiCredentials; /**< Are remote wifi network credentials available? */
+    SimpleTimer           m_timer;              /**< Timer used to stay for a min. time in this state. */
 
     /**
      * Constructs the state.
@@ -117,6 +118,7 @@ private:
     InitState() :
         m_isQuiet(false),
         m_isApModeRequested(false),
+        m_hasWifiCredentials(false),
         m_timer()
     {
     }
