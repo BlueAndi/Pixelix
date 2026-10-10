@@ -60,6 +60,17 @@
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Task watchdog configuration, compatible to the ESP-IDF v5 task watchdog.
+ */
+typedef struct
+{
+    uint32_t timeout_ms;     /**< Timeout in ms. */
+    uint32_t idle_core_mask; /**< Bitmask of the idle cores to observe. */
+    bool     trigger_panic;  /**< Trigger a panic (restart) on timeout or not. */
+
+} esp_task_wdt_config_t;
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
@@ -67,15 +78,37 @@
 /**
  * Initialize the task watchdog.
  *
- * @param[in] timeout   Timeout in s.
- * @param[in] panic     Restart on timeout or not.
+ * @param[in] config    Task watchdog configuration.
  *
  * @return Always ESP_OK, there is no watchdog on the host.
  */
-static inline esp_err_t esp_task_wdt_init(uint32_t timeout, bool panic)
+static inline esp_err_t esp_task_wdt_init(const esp_task_wdt_config_t* config)
 {
-    (void)timeout;
-    (void)panic;
+    (void)config;
+
+    return ESP_OK;
+}
+
+/**
+ * Deinitialize the task watchdog.
+ *
+ * @return Always ESP_OK, there is no watchdog on the host.
+ */
+static inline esp_err_t esp_task_wdt_deinit(void)
+{
+    return ESP_OK;
+}
+
+/**
+ * Reconfigure the task watchdog.
+ *
+ * @param[in] config    Task watchdog configuration.
+ *
+ * @return Always ESP_OK, there is no watchdog on the host.
+ */
+static inline esp_err_t esp_task_wdt_reconfigure(const esp_task_wdt_config_t* config)
+{
+    (void)config;
 
     return ESP_OK;
 }

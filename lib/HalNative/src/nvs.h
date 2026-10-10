@@ -50,12 +50,26 @@
  *****************************************************************************/
 #include <stdint.h>
 
+#include "esp_err.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /** Name of the default non-volatile storage partition. */
 #define NVS_DEFAULT_PART_NAME "nvs"
+
+/** Base of the non-volatile storage error codes. */
+#define ESP_ERR_NVS_BASE (0x1100)
+
+/** The requested entry was not found in the non-volatile storage. */
+#define ESP_ERR_NVS_NOT_FOUND (ESP_ERR_NVS_BASE + 0x02)
+
+/** The non-volatile storage is not initialized yet. */
+#define ESP_ERR_NVS_NOT_INITIALIZED (ESP_ERR_NVS_BASE + 0x01)
+
+/** Internal error of the non-volatile storage. */
+#define ESP_ERR_NVS_INVALID_HANDLE (ESP_ERR_NVS_BASE + 0x03)
 
 /******************************************************************************
  * Types and Classes
@@ -98,33 +112,42 @@ typedef struct nvs_opaque_iterator_t* nvs_iterator_t;
  * Find the first entry of the given namespace and type.
  * There is no non-volatile storage on the host, therefore nothing is found.
  *
- * @param[in] partName      Name of the partition.
- * @param[in] namespaceName Name of the namespace.
- * @param[in] type          Type of the entry.
+ * @param[in]  partName         Name of the partition.
+ * @param[in]  namespaceName    Name of the namespace.
+ * @param[in]  type             Type of the entry.
+ * @param[out] outputIterator   Iterator to the found entry.
  *
- * @return Always nullptr.
+ * @return Always ESP_ERR_NVS_NOT_FOUND, there is no non-volatile storage on the host.
  */
-static inline nvs_iterator_t nvs_entry_find(const char* partName, const char* namespaceName, nvs_type_t type)
+static inline esp_err_t nvs_entry_find(const char* partName, const char* namespaceName, nvs_type_t type, nvs_iterator_t* outputIterator)
 {
     (void)partName;
     (void)namespaceName;
     (void)type;
 
-    return nullptr;
+    if (nullptr != outputIterator)
+    {
+        *outputIterator = nullptr;
+    }
+
+    return ESP_ERR_NVS_NOT_FOUND;
 }
 
 /**
  * Get the next entry.
  *
- * @param[in] it    Current iterator.
+ * @param[in,out] it    Iterator, which will be advanced.
  *
- * @return Always nullptr.
+ * @return Always ESP_ERR_NVS_NOT_FOUND, there is no non-volatile storage on the host.
  */
-static inline nvs_iterator_t nvs_entry_next(nvs_iterator_t it)
+static inline esp_err_t nvs_entry_next(nvs_iterator_t* it)
 {
-    (void)it;
+    if (nullptr != it)
+    {
+        *it = nullptr;
+    }
 
-    return nullptr;
+    return ESP_ERR_NVS_NOT_FOUND;
 }
 
 /**
@@ -132,8 +155,10 @@ static inline nvs_iterator_t nvs_entry_next(nvs_iterator_t it)
  *
  * @param[in]  it   Iterator.
  * @param[out] info Information about the entry.
+ *
+ * @return Always ESP_ERR_NVS_NOT_FOUND, there is no non-volatile storage on the host.
  */
-static inline void nvs_entry_info(nvs_iterator_t it, nvs_entry_info_t* info)
+static inline esp_err_t nvs_entry_info(nvs_iterator_t it, nvs_entry_info_t* info)
 {
     (void)it;
 
@@ -143,6 +168,18 @@ static inline void nvs_entry_info(nvs_iterator_t it, nvs_entry_info_t* info)
         info->key[0]            = '\0';
         info->type              = NVS_TYPE_ANY;
     }
+
+    return ESP_ERR_NVS_NOT_FOUND;
+}
+
+/**
+ * Release the iterator.
+ *
+ * @param[in] it    Iterator.
+ */
+static inline void nvs_release_iterator(nvs_iterator_t it)
+{
+    (void)it;
 }
 
 #endif /* NVS_H */
