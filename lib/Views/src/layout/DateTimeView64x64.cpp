@@ -202,7 +202,7 @@ void DateTimeView64x64::update(YAGfx& gfx)
 
         if ((ViewMode::DIGITAL_AND_ANALOG == m_mode) || (ViewMode::DIGITAL_ONLY == m_mode))
         {
-            m_textWidget.update(gfx);
+            ScrollableView::update(gfx, m_textWidget);
         }
 
         m_lastUpdateSecondVal = m_now.tm_sec;

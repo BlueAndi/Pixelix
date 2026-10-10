@@ -1,0 +1,17 @@
+{
+    "name": "HalCommon",
+    "version": "0.1.0",
+    "description": "HAL functionality that is common to all HAL implementations and without dependencies to the platform specific HAL drivers.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "HalInterface"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

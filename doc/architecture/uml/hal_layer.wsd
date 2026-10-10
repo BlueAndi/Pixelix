@@ -2,64 +2,85 @@
 
 skinparam component {
     BackgroundColor<<Arduino>> Lightgreen
-    BackgroundColor<<Future>> White
 }
 
-package "HAL" as halPckg {
-
-    component "AudioDrv" as audioDrv
+package "Application" as appPkg {
+    component "Display" as display
     component "SensorDataProvider" as sensorDataProvider
-    component "ButtonDrv" as buttonDrv
-    component "BuzzerDrv" as buzzerDrv
+    component "AudioService" as audioService
+}
 
-    package "RtcDrv" as rtcDrvPckg {
-        component "Rtc1307Drv" as rtc1307Drv
-        component "Rtc3231Drv" as rtc3231Drv
-        component "RtcNoneDrv" as rtcNoneDrv
-        component "RtcDrv" as rtcDrv
+package "HAL" as halPkg {
 
-        rtcDrv --> rtc1307Drv
-        rtcDrv --> rtc3231Drv
-        rtcDrv --> rtcNoneDrv
+    package "HalInterface" as halInterfacePkg {
+        component "IBoard" as iBoard
+        component "IDisplayDrv" as iDisplayDrv
+        component "IButtonDrv" as iButtonDrv
+        component "IBuzzerDrv" as iBuzzerDrv
+        component "ILedDrv" as iLedDrv
+        component "ISystemDrv" as iSystemDrv
+        component "Io" as io
     }
 
-    package "Hal<concrete-name>" as halConcretePckg {
-        component "Display" as display
+    package "Common ESP32 drivers" as commonDriversPkg {
+        component "ButtonDrv\n(HalEsp32)" as buttonDrv
+        component "BuzzerDrv\n(HalEsp32)" as buzzerDrv
+        component "SystemDrv\n(HalEsp32)" as systemDrv
+        component "LedDrv\n(HalCommon)" as ledDrv
+    }
+
+    package "Display HAL\n(selected at build time)" as displayHalPkg {
         component "Board" as board
+        component "DisplayDrv\n(HalLedMatrix)" as ledMatrixDisplayDrv
+        component "DisplayDrv\n(HalHub75Esp32)" as hub75DisplayDrv
+        component "DisplayDrv\n(HalTftDisplay)" as tftDisplayDrv
     }
 
-    package "3rd party" as hal3rdPartyPckg {
-
-        component "NeoPixelBus" <<Arduino>> as neoPixelBus
-        component "TwoWire" <<Arduino>> as twoWire
-        component "WiFi" <<Arduino>> as wifi
-        component "OneWire\n(Proprietary)" as oneWire
-        component "I2S" <<Arduino>> as i2s
-        component "RMT" <<Arduino>> as rmt
-    }
-
-    package "Sensors" as sensorsPckg {
+    package "Sensors" as sensorsPkg {
+        component "Sensors" as sensors
         component "SensorBattery" as sensorBattery
         component "SensorDhtX" as sensorDhtX
         component "SensorLdr" as sensorLdr
         component "SensorSht3X" as sensorSht3X
     }
 
-    display ..> neoPixelBus
-    neoPixelBus ..> rmt: <<use>>\n(for other than ESP32-S3)
-    neoPixelBus ..> i2s: <<use>>\n(for ESP32-S3 only)
+    package "Platform libraries" as platformPkg {
+        component "NeoPixelBus" <<Arduino>> as neoPixelBus
+        component "ESP32-HUB75\nMatrixPanel-I2S-DMA" as hub75Library
+        component "TFT_eSPI" <<Arduino>> as tftEsPi
+        component "TwoWire" <<Arduino>> as twoWire
+        component "OneWire\n(Proprietary)" as oneWire
+        component "I2S" <<Arduino>> as i2s
+    }
 
-    audioDrv .....> i2s
-    sensorDataProvider ..> sensorSht3X
-    sensorDataProvider ..> sensorDhtX
-    sensorDataProvider ..> sensorLdr
-    buttonDrv ...> board
-    buzzerDrv ...> board
+    board ..> iBoard: <<implement>>
+    board *--> buttonDrv
+    board *--> buzzerDrv
+    board *--> systemDrv
+    board *--> ledDrv
+    board o--> iDisplayDrv: selected driver
 
-    sensorBattery ..> board
+    buttonDrv ..> iButtonDrv: <<implement>>
+    buzzerDrv ..> iBuzzerDrv: <<implement>>
+    systemDrv ..> iSystemDrv: <<implement>>
+    ledDrv ..> iLedDrv: <<implement>>
+    ledMatrixDisplayDrv ..> iDisplayDrv: <<implement>>
+    hub75DisplayDrv ..> iDisplayDrv: <<implement>>
+    tftDisplayDrv ..> iDisplayDrv: <<implement>>
+    ledMatrixDisplayDrv ..> neoPixelBus
+    hub75DisplayDrv ..> hub75Library
+    tftDisplayDrv ..> tftEsPi
+
+    sensorDataProvider ..> sensors
+    sensors *--> sensorBattery
+    sensors *--> sensorDhtX
+    sensors *--> sensorLdr
+    sensors *--> sensorSht3X
     sensorSht3X ..> twoWire
     sensorDhtX ..> oneWire
-    sensorLdr ..> board
+
+    display ..> iDisplayDrv: <<use>>
+    audioService .....> i2s
 }
 
 @enduml

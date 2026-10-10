@@ -45,6 +45,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <functional>
 #include <IPluginMaintenance.hpp>
 #include <ArduinoJson.h>
 

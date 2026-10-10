@@ -46,6 +46,7 @@
 #include <YAGfx.h>
 #include <Fonts.h>
 #include <TextWidget.h>
+#include <ScrollableView.hpp>
 #include <Util.h>
 
 #include "../interface/ITextView.h"
@@ -62,7 +63,7 @@
 /**
  * Generic view for LED matrix with text.
  */
-class TextViewGeneric : public ITextView
+class TextViewGeneric : public ITextView, public ScrollableView
 {
 public:
 
@@ -71,9 +72,11 @@ public:
      */
     TextViewGeneric() :
         ITextView(),
+        ScrollableView(TEXT_WIDTH, TEXT_HEIGHT),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y)
     {
+        addScrollableWidget(m_textWidget);
     }
 
     /**
@@ -126,8 +129,24 @@ public:
     void update(YAGfx& gfx) override
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_textWidget.update(gfx);
+
+        ScrollableView::update(gfx, m_textWidget);
     }
+
+    /**
+     * Get scrolling informations of the shown text.
+     *
+     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
+     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
+     *
+     * @return If scroll information is ready, it will return true otherwise false.
+     */
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt) const
+    {
+        return ScrollableView::getScrollInfo(m_textWidget, isScrollingEnabled, scrollingCnt);
+    }
+
+public:
 
     /**
      * Get text (non-formatted).
@@ -158,8 +177,6 @@ public:
     {
         m_textWidget.setFormatStr(formatText);
     }
-
-protected:
 
     /**
      * Text width in pixels.

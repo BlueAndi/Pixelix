@@ -53,8 +53,18 @@ namespace WebConfig
  * Constants
  *****************************************************************************/
 
+#ifndef CONFIG_WEBSERVER_PORT
+
+/** Web server port, can be overwritten by the build configuration.
+ * On a host a port below 1024 requires elevated privileges, therefore the
+ * native environment uses a higher one.
+ */
+#define CONFIG_WEBSERVER_PORT (80U)
+
+#endif /* CONFIG_WEBSERVER_PORT */
+
 /** Web server port */
-static const uint32_t WEBSERVER_PORT   = 80U;
+static const uint32_t WEBSERVER_PORT   = CONFIG_WEBSERVER_PORT;
 
 /** Project title, used by the web pages. */
 static const char PROJECT_TITLE[]      = "PIXELIX";
@@ -62,8 +72,8 @@ static const char PROJECT_TITLE[]      = "PIXELIX";
 /** Websocket protocol */
 static const char WEBSOCKET_PROTOCOL[] = "ws";
 
-/** Websocket port */
-static const uint32_t WEBSOCKET_PORT   = 80U;
+/** Websocket port, served by the same web server. */
+static const uint32_t WEBSOCKET_PORT   = CONFIG_WEBSERVER_PORT;
 
 /** Websocket path */
 static const char WEBSOCKET_PATH[]     = "/ws";

@@ -93,6 +93,14 @@ public:
      */
     void process();
 
+    /**
+     * Process bytes already read from the terminal stream.
+     *
+     * @param[in] data      Input bytes
+     * @param[in] length    Number of input bytes
+     */
+    void process(const uint8_t* data, size_t length);
+
 private:
 
     /**

@@ -90,12 +90,12 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 
         m_imgType       = widget.m_imgType;
         m_bitmap        = widget.m_bitmap;
-        m_gifFileLoader = widget.m_gifFileLoader;
         m_gifPlayer     = widget.m_gifPlayer;
         m_hAlign        = widget.m_hAlign;
         m_vAlign        = widget.m_vAlign;
         m_hAlignPosX    = widget.m_hAlignPosX;
         m_vAlignPosY    = widget.m_vAlignPosY;
+        m_gifFileLoader = widget.m_gifFileLoader;
     }
 
     return *this;
@@ -185,7 +185,7 @@ bool BitmapWidget::isImageTypeSupported(const String& path)
     {
         const char* ext = IMAGE_FILE_EXTENSIONS[idx];
 
-        if (true == path.endsWith(ext))
+        if (true == FileUtil::getFileExtension(path).equalsIgnoreCase(ext))
         {
             isSupported = true;
             break;
@@ -227,6 +227,15 @@ void BitmapWidget::alignWidget()
         break;
     }
 
+    /* The alignment is calculated signed on purpose. If the image is larger
+     * than the widget, the position gets negative and the image will be
+     * cropped instead of being moved out of the visible area.
+     */
+    const int32_t canvasWidth  = static_cast<int32_t>(m_canvas.getWidth());
+    const int32_t canvasHeight = static_cast<int32_t>(m_canvas.getHeight());
+    const int32_t imgWidth     = static_cast<int32_t>(imageWidth);
+    const int32_t imgHeight    = static_cast<int32_t>(imageHeight);
+
     switch (m_hAlign)
     {
     case Alignment::Horizontal::HORIZONTAL_LEFT:
@@ -234,11 +243,11 @@ void BitmapWidget::alignWidget()
         break;
 
     case Alignment::Horizontal::HORIZONTAL_CENTER:
-        m_hAlignPosX = (m_canvas.getWidth() - imageWidth) / 2;
+        m_hAlignPosX = static_cast<int16_t>((canvasWidth - imgWidth) / 2);
         break;
 
     case Alignment::Horizontal::HORIZONTAL_RIGHT:
-        m_hAlignPosX = m_canvas.getWidth() - imageWidth;
+        m_hAlignPosX = static_cast<int16_t>(canvasWidth - imgWidth);
         break;
 
     default:
@@ -252,11 +261,11 @@ void BitmapWidget::alignWidget()
         break;
 
     case Alignment::Vertical::VERTICAL_CENTER:
-        m_vAlignPosY = (m_canvas.getHeight() - imageHeight) / 2;
+        m_vAlignPosY = static_cast<int16_t>((canvasHeight - imgHeight) / 2);
         break;
 
     case Alignment::Vertical::VERTICAL_BOTTOM:
-        m_vAlignPosY = m_canvas.getHeight() - imageHeight;
+        m_vAlignPosY = static_cast<int16_t>(canvasHeight - imgHeight);
         break;
 
     default:
@@ -315,11 +324,7 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
     /* A already opened GIF image shall be closed first. */
     m_gifPlayer.close();
 
-    /* Open GIF image and keep it opened as long its shown.
-     *
-     * Note: The file is kept in memory, because the application will be able
-     *       to remove or replace the file in the filesystem.
-     */
+    /* Open GIF image and keep it opened as long its shown. */
     ret = m_gifPlayer.open(fs, filename, m_gifFileLoader);
 
     if (GifImgPlayer::RET_OK != ret)

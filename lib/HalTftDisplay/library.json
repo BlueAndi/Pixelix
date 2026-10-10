@@ -10,7 +10,9 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "Common"
+        "name": "HalCommon"
+    }, {
+        "name": "HalInterface"
     }, {
         "name": "SPI"
     }, {

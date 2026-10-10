@@ -35,6 +35,9 @@
  *****************************************************************************/
 #include "Arduino.h"
 
+#include <chrono>
+#include <thread>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -55,6 +58,18 @@
  * Local Variables
  *****************************************************************************/
 
+/** Max. number of supported pins. */
+static const uint8_t MAX_PINS       = 64U;
+
+/** Mode of every pin. There is no GPIO on the host, its just remembered. */
+static uint8_t gPinModes[MAX_PINS]  = { 0U };
+
+/** Level of every pin. There is no GPIO on the host, its just remembered. */
+static uint8_t gPinLevels[MAX_PINS] = { 0U };
+
+/** Start time for timing functions. */
+static const auto gTimerStartTime   = std::chrono::steady_clock::now();
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -73,9 +88,84 @@
 
 extern unsigned long millis()
 {
-    clock_t now = clock();
+    using namespace std::chrono;
 
-    return (now * 1000UL) / CLOCKS_PER_SEC;
+    return duration_cast<milliseconds>(steady_clock::now() - gTimerStartTime).count();
+}
+
+extern unsigned long micros()
+{
+    using namespace std::chrono;
+
+    return duration_cast<microseconds>(steady_clock::now() - gTimerStartTime).count();
+}
+
+extern void delay(unsigned long ms)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
+extern void yield()
+{
+    std::this_thread::yield();
+}
+
+extern void pinMode(uint8_t pinNo, uint8_t mode)
+{
+    if (MAX_PINS > pinNo)
+    {
+        gPinModes[pinNo] = mode;
+    }
+}
+
+extern void digitalWrite(uint8_t pinNo, uint8_t level)
+{
+    if (MAX_PINS > pinNo)
+    {
+        gPinLevels[pinNo] = level;
+    }
+}
+
+extern int digitalRead(uint8_t pinNo)
+{
+    int level = LOW;
+
+    if (MAX_PINS > pinNo)
+    {
+        level = gPinLevels[pinNo];
+    }
+
+    return level;
+}
+
+extern uint16_t analogRead(uint8_t pinNo)
+{
+    /* There is no ADC on the host. */
+    (void)pinNo;
+
+    return 0U;
+}
+
+extern long random(long max)
+{
+    return random(0, max);
+}
+
+extern long random(long min, long max)
+{
+    long result = min;
+
+    if (min < max)
+    {
+        result = min + (rand() % (max - min));
+    }
+
+    return result;
+}
+
+extern void randomSeed(unsigned long seed)
+{
+    srand(static_cast<unsigned int>(seed));
 }
 
 extern uint32_t esp_log_timestamp(void)

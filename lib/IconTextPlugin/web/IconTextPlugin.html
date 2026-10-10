@@ -45,9 +45,7 @@
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX"
-                        data-bs-toggle="tooltip" data-bs-placement="bottom"
-                        title="~TARGET~ | ~HOSTNAME~" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -85,7 +83,7 @@
                                     <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
                                 </div>
                             </div>
-                            <p class="text-secondary">Click an icon to use its file id.</p>
+                            <p class="text-secondary">Click an icon to use its file path.</p>
                             <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="iconPickerOverview"></div>
                         </div>
                         <div class="modal-footer">
@@ -99,6 +97,7 @@
                 <p><img src="IconTextPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.</p>
                 <p>Each part can be set separately via the REST API.</p>
+                <p>If the text is too long, it will scroll. Per plugin instance it can be selected whether the icon scrolls together with the text or whether the icon stands still and only the text scrolls next to it.</p>
                 <p>Show icon in the specified slot. Supported are GIF files and bitmap files (.bmp) with:</p>
                 <ul>
                     <li>24 or 32 bits per pixel.</li>
@@ -143,13 +142,17 @@
                             <small class="form-text">The text to show on the display.</small>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="iconFileId">Icon file id:</label>
+                            <label class="form-label" for="iconFileName">Icon file name:</label>
                             <div class="input-group">
-                                <input class="form-control" type="number" id="iconFileId" name="iconFileId" min="0" max="255" />
+                                <input class="form-control" type="text" id="iconFileName" name="iconFileName" value="" />
                                 <button class="btn btn-outline-primary" type="button" id="btnSelectIcon">Select...</button>
                                 <button class="btn btn-outline-secondary" type="button" id="btnClearIcon">Clear</button>
                             </div>
-                            <small class="form-text">The file id of the icon which to show. Find the file id in the icons page. Use 255 to clear the icon.</small>
+                            <small class="form-text">The full path of the icon to show, e.g. /configuration/smiley.bmp. Select it from the icons page or enter a path manually. Empty means no icon.</small>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false). This setting is always stored persistent.</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="storeFlag" name="storeFlag" value="0" />
@@ -172,7 +175,7 @@
 
         <!-- Bootstrap JS bundle -->
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
-        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
+        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
@@ -209,73 +212,113 @@
                 });
             }
 
-            function selectIconFileId(fileId) {
-                document.getElementById("iconFileId").value = fileId;
+            function selectIconFileName(fileName) {
+                document.getElementById("iconFileName").value = fileName;
 
                 if (null !== iconPickerModal) {
                     iconPickerModal.hide();
                 }
             }
 
-            function clearIconFileId(targetInputId) {
-                document.getElementById(targetInputId).value = 255;
+            function clearIconFileName(targetInputId) {
+                document.getElementById(targetInputId).value = "";
             }
 
-            function fillIconPicker(fileTable) {
+            function updateIconPickerLoadStatus(overview, loadedCount, totalCount, isDone = false) {
+                const statusId = "icon-picker-load-status";
+                let status = document.getElementById(statusId);
+
+                if (isDone === true) {
+                    if (status !== null) {
+                        status.remove();
+                    }
+
+                    return;
+                }
+
+                if (status === null) {
+                    status = document.createElement("p");
+                    status.id = statusId;
+                    status.className = "text-secondary";
+                    overview.parentNode.insertBefore(status, overview);
+                }
+
+                status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
+            }
+
+            async function appendIconTileSequentially(overview, fileId, fullPath) {
+                const fileIdElem = document.createElement("p");
+                fileIdElem.textContent = "[" + fileId + "]";
+
+                const img = document.createElement("img");
+                img.setAttribute("alt", "Icon " + fileId);
+
+                const name = document.createElement("p");
+                name.textContent = fullPath;
+
+                const button = document.createElement("button");
+                button.setAttribute("type", "button");
+                button.setAttribute("class", "btn btn-primary btn-sm");
+                button.textContent = "Use";
+                button.addEventListener("click", function () {
+                    selectIconFileName(fullPath);
+                });
+
+                const card = document.createElement("div");
+                card.setAttribute("class", "bg-body text-center m-2 p-2 bd-highlight border rounded");
+                card.append(fileIdElem);
+                card.append(img);
+                card.append(name);
+                card.append(button);
+
+                overview.append(card);
+
+                await new Promise((resolve) => {
+                    img.addEventListener("load", function () {
+                        applyZoomToImage(this);
+                        resolve();
+                    }, { once: true });
+
+                    img.addEventListener("error", () => resolve(), { once: true });
+
+                    img.src = fullPath;
+                });
+            }
+
+            async function fillIconPicker(files) {
                 const overview = document.getElementById("iconPickerOverview");
-                let idx;
+                const validFiles = files.filter((fileName) => 0 < fileName.length);
+                let loadedCount = 0;
 
                 overview.replaceChildren();
+                updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
 
-                for (idx = 0; idx < fileTable.length; ++idx) {
-                    if (0 < fileTable[idx].fullPath.length) {
-                        (function (fileId, fullPath) {
-                            const fileIdElem = document.createElement("p");
-                            fileIdElem.textContent = "[" + fileId + "]";
-
-                            const img = document.createElement("img");
-                            img.setAttribute("src", fullPath);
-                            img.setAttribute("alt", "Icon " + fileId);
-                            img.addEventListener("load", function () {
-                                applyZoomToImage(this);
-                            });
-
-                            const name = document.createElement("p");
-                            name.textContent = fullPath.replace(/^.*[\\\/]/, "");
-
-                            const button = document.createElement("button");
-                            button.setAttribute("type", "button");
-                            button.setAttribute("class", "btn btn-primary btn-sm");
-                            button.textContent = "Use";
-                            button.addEventListener("click", function () {
-                                selectIconFileId(fileId);
-                            });
-
-                            const card = document.createElement("div");
-                            card.setAttribute("class", "bg-body text-center m-2 p-2 bd-highlight border rounded");
-                            card.append(fileIdElem);
-                            card.append(img);
-                            card.append(name);
-                            card.append(button);
-
-                            overview.append(card);
-                        })(idx, fileTable[idx].fullPath);
+                for (let idx = 0; idx < files.length; ++idx) {
+                    if (0 < files[idx].length) {
+                        await appendIconTileSequentially(overview, idx, files[idx]);
+                        ++loadedCount;
+                        updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
                     }
                 }
+
+                updateIconPickerLoadStatus(overview, validFiles.length, validFiles.length, true);
             }
 
             async function openIconPickerDialog() {
                 try {
-                    const rsp = await restClient.readFile("/configuration/fileMgr.json");
-                    const jsonRsp = JSON.parse(rsp);
-
-                    fillIconPicker(jsonRsp.fileTable);
-
                     if (null === iconPickerModal) {
                         iconPickerModal = new bootstrap.Modal(document.getElementById("iconPickerDialog"));
                     }
 
                     iconPickerModal.show();
+
+                    const rsp = await utils.makeRequest({
+                        method: "GET",
+                        url: restClient.getBaseUri() + "/fileMgrService/files",
+                        isJsonResponse: true
+                    });
+
+                    await fillIconPicker(rsp.data.files);
                 } catch (e) {
                     alert("Failed to load icon list. Open the icons page once to initialize it.");
                 }
@@ -332,7 +375,7 @@
                 }
             }
 
-            async function getText(pluginUid, justTextId, iconFileId, storeFlagId) {
+            async function getText(pluginUid, justTextId, iconFileNameId, scrollIconId, storeFlagId) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
@@ -341,11 +384,13 @@
                         isJsonResponse: true
                     });
                     const justTextInput = document.getElementById(justTextId);
-                    const iconFileIdInput = document.getElementById(iconFileId);
+                    const iconFileNameInput = document.getElementById(iconFileNameId);
+                    const scrollIconInput = document.getElementById(scrollIconId);
                     const storeFlagIdInput = document.getElementById(storeFlagId);
 
                     justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
-                    iconFileIdInput.value = rsp.data.iconFileId;
+                    iconFileNameInput.value = rsp.data.iconFileName ?? "";
+                    scrollIconInput.checked = rsp.data.scrollIcon;
                     storeFlagIdInput.checked = false;
 
                 } catch (rsp) {
@@ -355,7 +400,7 @@
                 }
             }
 
-            async function setText(pluginUid, justText, iconFileId, storeFlag) {
+            async function setText(pluginUid, justText, iconFileName, scrollIcon, storeFlag) {
                 disableUI();
 
                 justText = justText.replaceAll("\\n", "\n");
@@ -368,7 +413,8 @@
                         isJsonResponse: true,
                         parameter: {
                             text: justText,
-                            iconFileId: Number.parseInt(iconFileId),
+                            iconFileName: iconFileName,
+                            scrollIcon: scrollIcon,
                             storeFlag: storeFlag
                         }
                     });
@@ -388,7 +434,8 @@
                     return getText(
                         selectText.options[selectText.selectedIndex].value,
                         "justText",
-                        "iconFileId",
+                        "iconFileName",
+                        "scrollIcon",
                         "storeFlag"
                     );
                 }
@@ -405,20 +452,20 @@
                 });
 
                 document.getElementById("btnSelectIcon").addEventListener("click", function () {
-                    openIconPickerDialog("iconFileId");
+                    openIconPickerDialog("iconFileName");
                 });
 
                 document.getElementById("btnClearIcon").addEventListener("click", function () {
-                    clearIconFileId("iconFileId");
+                    clearIconFileName("iconFileName");
                 });
 
                 document.getElementById("pluginUidText").addEventListener("change", function () {
-                    getText(document.getElementById("pluginUidText").value, "justText", "iconFileId", "storeFlag");
+                    getText(document.getElementById("pluginUidText").value, "justText", "iconFileName", "scrollIcon", "storeFlag");
                 });
 
                 document.getElementById("myFormText").addEventListener("submit", function (event) {
                     event.preventDefault();
-                    setText(document.getElementById("pluginUidText").value, document.getElementById("justText").value, document.getElementById("iconFileId").value, document.getElementById("storeFlag").checked);
+                    setText(document.getElementById("pluginUidText").value, document.getElementById("justText").value, document.getElementById("iconFileName").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */

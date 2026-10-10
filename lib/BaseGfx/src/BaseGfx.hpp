@@ -84,14 +84,34 @@ public:
      *
      * @return Canvas width in pixel.
      */
-    virtual uint16_t getWidth() const                                                                        = 0;
+    virtual uint16_t getWidth() const  = 0;
 
     /**
      * Get canvas height in pixel.
      *
      * @return Canvas height in pixel.
      */
-    virtual uint16_t getHeight() const                                                                       = 0;
+    virtual uint16_t getHeight() const = 0;
+
+    /**
+     * Get the visible area in canvas coordinates. Every graphic operation
+     * outside of the visible area has no effect.
+     *
+     * By default the whole canvas is visible. A canvas, which is part of a
+     * parent canvas, may be visible only partly.
+     *
+     * @param[out] x        x-coordinate of the upper left corner of the visible area.
+     * @param[out] y        y-coordinate of the upper left corner of the visible area.
+     * @param[out] width    Width of the visible area in pixel.
+     * @param[out] height   Height of the visible area in pixel.
+     */
+    virtual void getVisibleArea(int16_t& x, int16_t& y, uint16_t& width, uint16_t& height) const
+    {
+        x      = 0;
+        y      = 0;
+        width  = getWidth();
+        height = getHeight();
+    }
 
     /**
      * Get pixel color at given position.
@@ -267,21 +287,29 @@ public:
      */
     void drawVLine(int16_t x, int16_t y, uint16_t height, const TColor& color)
     {
-        adaptCoordAndLength(y, height, getHeight());
+        (void)clipRunY(x, y, height);
 
         /* Anything to draw? */
         if (0U < height)
         {
             uint16_t dstOffset  = 0U;
             TColor*  dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
+            uint16_t idx        = 0U;
 
             if (nullptr != dstAddress)
             {
-                uint16_t idx = 0U;
-
                 while (height > idx)
                 {
                     dstAddress[idx * dstOffset] = color;
+                    ++idx;
+                }
+            }
+            /* No framebuffer access available, draw pixel by pixel. */
+            else
+            {
+                while (height > idx)
+                {
+                    drawPixel(x, static_cast<int16_t>(y + idx), color);
                     ++idx;
                 }
             }
@@ -299,21 +327,29 @@ public:
      */
     void drawHLine(int16_t x, int16_t y, uint16_t width, const TColor& color)
     {
-        adaptCoordAndLength(x, width, getWidth());
+        (void)clipRunX(x, y, width);
 
         /* Anything to draw? */
         if (0U < width)
         {
             uint16_t dstOffset  = 0U;
             TColor*  dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
+            uint16_t idx        = 0U;
 
             if (nullptr != dstAddress)
             {
-                uint16_t idx = 0U;
-
                 while (width > idx)
                 {
                     dstAddress[idx * dstOffset] = color;
+                    ++idx;
+                }
+            }
+            /* No framebuffer access available, draw pixel by pixel. */
+            else
+            {
+                while (width > idx)
+                {
+                    drawPixel(static_cast<int16_t>(x + idx), y, color);
                     ++idx;
                 }
             }
@@ -536,35 +572,36 @@ public:
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap)
     {
-        uint16_t minWidth  = std::min(bitmap.getWidth(), getWidth());
-        uint16_t minHeight = std::min(bitmap.getHeight(), getHeight());
+        const uint16_t bitmapWidth  = bitmap.getWidth();
+        const uint16_t bitmapHeight = bitmap.getHeight();
 
-        adaptCoordAndLength(x, minWidth, getWidth());
-        adaptCoordAndLength(y, minHeight, getHeight());
-
-        /* Anything to draw? */
-        if ((0U < minWidth) &&
-            (0U < minHeight))
+        /* Anything to draw? The clipping to the visible area takes place during
+         * the copy operation, which considers the source coordinates as well.
+         * This way a bitmap, which is larger than the destination or partly
+         * outside of it, will be cropped and not moved.
+         */
+        if ((0U < bitmapWidth) &&
+            (0U < bitmapHeight))
         {
             /* For better performance choose larger side for the internal
              * copy operation.
              */
-            if (minWidth >= minHeight)
+            if (bitmapWidth >= bitmapHeight)
             {
-                int16_t yIndex;
+                uint16_t yIndex;
 
-                for (yIndex = 0; yIndex < minHeight; ++yIndex)
+                for (yIndex = 0U; yIndex < bitmapHeight; ++yIndex)
                 {
-                    internalCopyX(x, y + yIndex, minWidth, bitmap, 0, yIndex);
+                    internalCopyX(x, static_cast<int16_t>(y + yIndex), bitmapWidth, bitmap, 0, static_cast<int16_t>(yIndex));
                 }
             }
             else
             {
-                int16_t xIndex;
+                uint16_t xIndex;
 
-                for (xIndex = 0; xIndex < minWidth; ++xIndex)
+                for (xIndex = 0U; xIndex < bitmapWidth; ++xIndex)
                 {
-                    internalCopyY(x + xIndex, y, minHeight, bitmap, xIndex, 0);
+                    internalCopyY(static_cast<int16_t>(x + xIndex), y, bitmapHeight, bitmap, static_cast<int16_t>(xIndex), 0);
                 }
             }
         }
@@ -586,35 +623,32 @@ public:
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap, const TColor& transparentColor)
     {
-        uint16_t minWidth  = std::min(bitmap.getWidth(), getWidth());
-        uint16_t minHeight = std::min(bitmap.getHeight(), getHeight());
+        const uint16_t bitmapWidth  = bitmap.getWidth();
+        const uint16_t bitmapHeight = bitmap.getHeight();
 
-        adaptCoordAndLength(x, minWidth, getWidth());
-        adaptCoordAndLength(y, minHeight, getHeight());
-
-        /* Anything to draw? */
-        if ((0U < minWidth) &&
-            (0U < minHeight))
+        /* See drawBitmap() without transparent color. */
+        if ((0U < bitmapWidth) &&
+            (0U < bitmapHeight))
         {
             /* For better performance choose larger side for the internal
              * copy operation.
              */
-            if (minWidth >= minHeight)
+            if (bitmapWidth >= bitmapHeight)
             {
-                int16_t yIndex;
+                uint16_t yIndex;
 
-                for (yIndex = 0; yIndex < minHeight; ++yIndex)
+                for (yIndex = 0U; yIndex < bitmapHeight; ++yIndex)
                 {
-                    internalCopyX(x, y + yIndex, minWidth, bitmap, 0, yIndex, transparentColor);
+                    internalCopyX(x, static_cast<int16_t>(y + yIndex), bitmapWidth, bitmap, 0, static_cast<int16_t>(yIndex), transparentColor);
                 }
             }
             else
             {
-                int16_t xIndex;
+                uint16_t xIndex;
 
-                for (xIndex = 0; xIndex < minWidth; ++xIndex)
+                for (xIndex = 0U; xIndex < bitmapWidth; ++xIndex)
                 {
-                    internalCopyY(x + xIndex, y, minHeight, bitmap, xIndex, 0, transparentColor);
+                    internalCopyY(static_cast<int16_t>(x + xIndex), y, bitmapHeight, bitmap, static_cast<int16_t>(xIndex), 0, transparentColor);
                 }
             }
         }
@@ -627,7 +661,116 @@ protected:
     {
     }
 
+    /**
+     * Intersects two ranges on the same axis. The result is the part which
+     * both ranges have in common. If they have nothing in common, the
+     * resulting length will be 0.
+     *
+     * @param[in,out] coord         Start coordinate of the first range, will contain the start of the intersection.
+     * @param[in,out] length        Length of the first range, will contain the length of the intersection.
+     * @param[in] otherCoord        Start coordinate of the second range.
+     * @param[in] otherLength       Length of the second range.
+     */
+    static void intersectRange(int16_t& coord, uint16_t& length, int16_t otherCoord, uint16_t otherLength)
+    {
+        const int32_t end      = static_cast<int32_t>(coord) + static_cast<int32_t>(length);
+        const int32_t otherEnd = static_cast<int32_t>(otherCoord) + static_cast<int32_t>(otherLength);
+        const int32_t start    = (coord > otherCoord) ? coord : otherCoord;
+        const int32_t stop     = (end < otherEnd) ? end : otherEnd;
+
+        if (stop <= start)
+        {
+            coord  = 0;
+            length = 0U;
+        }
+        else
+        {
+            coord  = static_cast<int16_t>(start);
+            length = static_cast<uint16_t>(stop - start);
+        }
+    }
+
 private:
+
+    /**
+     * Clips a horizontal run of pixels to the visible area. This way the run
+     * can be drawn via the framebuffer, even if it is only partly visible.
+     *
+     * @param[in,out] x         Start x-coordinate, will be moved to the first visible pixel.
+     * @param[in] y             y-coordinate of the run.
+     * @param[in,out] length    Number of pixels, will be reduced to the visible ones.
+     *
+     * @return Number of pixels which are clipped at the begin of the run.
+     */
+    uint16_t clipRunX(int16_t& x, int16_t y, uint16_t& length) const
+    {
+        int16_t  visibleX      = 0;
+        int16_t  visibleY      = 0;
+        uint16_t visibleWidth  = 0U;
+        uint16_t visibleHeight = 0U;
+        int16_t  startX        = x;
+        uint16_t clippedAtHead = 0U;
+
+        getVisibleArea(visibleX, visibleY, visibleWidth, visibleHeight);
+
+        /* Is the whole run outside of the visible area? */
+        if ((y < visibleY) ||
+            ((visibleY + visibleHeight) <= y))
+        {
+            length = 0U;
+        }
+        else
+        {
+            intersectRange(x, length, visibleX, visibleWidth);
+
+            if (0U < length)
+            {
+                clippedAtHead = static_cast<uint16_t>(x - startX);
+            }
+        }
+
+        return clippedAtHead;
+    }
+
+    /**
+     * Clips a vertical run of pixels to the visible area. This way the run
+     * can be drawn via the framebuffer, even if it is only partly visible.
+     *
+     * @param[in] x             x-coordinate of the run.
+     * @param[in,out] y         Start y-coordinate, will be moved to the first visible pixel.
+     * @param[in,out] length    Number of pixels, will be reduced to the visible ones.
+     *
+     * @return Number of pixels which are clipped at the begin of the run.
+     */
+    uint16_t clipRunY(int16_t x, int16_t& y, uint16_t& length) const
+    {
+        int16_t  visibleX      = 0;
+        int16_t  visibleY      = 0;
+        uint16_t visibleWidth  = 0U;
+        uint16_t visibleHeight = 0U;
+        int16_t  startY        = y;
+        uint16_t clippedAtHead = 0U;
+
+        getVisibleArea(visibleX, visibleY, visibleWidth, visibleHeight);
+
+        /* Is the whole run outside of the visible area? */
+        if ((x < visibleX) ||
+            ((visibleX + visibleWidth) <= x))
+        {
+            length = 0U;
+        }
+        else
+        {
+            intersectRange(y, length, visibleY, visibleHeight);
+
+            if (0U < length)
+            {
+                clippedAtHead = static_cast<uint16_t>(y - startY);
+            }
+        }
+
+        return clippedAtHead;
+    }
 
     /**
      * Adapts the coordinate and the length for a axis to ensure that
@@ -692,20 +835,36 @@ private:
      */
     void internalCopyX(int16_t x, int16_t y, uint16_t width, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY)
     {
-        uint16_t      dstOffset  = 0U;
-        uint16_t      srcOffset  = 0U;
-        TColor*       dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
-        const TColor* srcAddress = src.getFrameBufferXAddr(srcX, srcY, width, srcOffset);
+        /* Clip the run to the visible area and keep the source in sync. */
+        const uint16_t clippedAtHead = clipRunX(x, y, width);
+        const int16_t  srcStartX     = static_cast<int16_t>(srcX + clippedAtHead);
 
-        if ((nullptr != dstAddress) &&
-            (nullptr != srcAddress))
+        /* Anything to copy? */
+        if (0U < width)
         {
-            uint16_t idx = 0U;
+            uint16_t      dstOffset  = 0U;
+            uint16_t      srcOffset  = 0U;
+            TColor*       dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
+            const TColor* srcAddress = src.getFrameBufferXAddr(srcStartX, srcY, width, srcOffset);
+            uint16_t      idx        = 0U;
 
-            while (width > idx)
+            if ((nullptr != dstAddress) &&
+                (nullptr != srcAddress))
             {
-                dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
-                ++idx;
+                while (width > idx)
+                {
+                    dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                    ++idx;
+                }
+            }
+            /* No framebuffer access available, copy pixel by pixel. */
+            else
+            {
+                while (width > idx)
+                {
+                    drawPixel(static_cast<int16_t>(x + idx), y, src.getColor(static_cast<int16_t>(srcStartX + idx), srcY));
+                    ++idx;
+                }
             }
         }
     }
@@ -725,26 +884,48 @@ private:
      */
     void internalCopyX(int16_t x, int16_t y, uint16_t width, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY, const TColor& transparentColor)
     {
-        uint16_t      dstOffset  = 0U;
-        uint16_t      srcOffset  = 0U;
-        TColor*       dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
-        const TColor* srcAddress = src.getFrameBufferXAddr(srcX, srcY, width, srcOffset);
+        /* Clip the run to the visible area and keep the source in sync. */
+        const uint16_t clippedAtHead = clipRunX(x, y, width);
+        const int16_t  srcStartX     = static_cast<int16_t>(srcX + clippedAtHead);
 
-        if ((nullptr != dstAddress) &&
-            (nullptr != srcAddress))
+        /* Anything to copy? */
+        if (0U < width)
         {
-            uint16_t idx = 0U;
+            uint16_t      dstOffset  = 0U;
+            uint16_t      srcOffset  = 0U;
+            TColor*       dstAddress = getFrameBufferXAddr(x, y, width, dstOffset);
+            const TColor* srcAddress = src.getFrameBufferXAddr(srcStartX, srcY, width, srcOffset);
+            uint16_t      idx        = 0U;
 
-            while (width > idx)
+            if ((nullptr != dstAddress) &&
+                (nullptr != srcAddress))
             {
-                const TColor* color = &srcAddress[idx * srcOffset];
-
-                if (transparentColor != (*color))
+                while (width > idx)
                 {
-                    dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
-                }
+                    const TColor* color = &srcAddress[idx * srcOffset];
 
-                ++idx;
+                    if (transparentColor != (*color))
+                    {
+                        dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                    }
+
+                    ++idx;
+                }
+            }
+            /* No framebuffer access available, copy pixel by pixel. */
+            else
+            {
+                while (width > idx)
+                {
+                    const TColor& color = src.getColor(static_cast<int16_t>(srcStartX + idx), srcY);
+
+                    if (transparentColor != color)
+                    {
+                        drawPixel(static_cast<int16_t>(x + idx), y, color);
+                    }
+
+                    ++idx;
+                }
             }
         }
     }
@@ -762,20 +943,36 @@ private:
      */
     void internalCopyY(int16_t x, int16_t y, uint16_t height, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY)
     {
-        uint16_t      dstOffset  = 0U;
-        uint16_t      srcOffset  = 0U;
-        TColor*       dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
-        const TColor* srcAddress = src.getFrameBufferYAddr(srcX, srcY, height, srcOffset);
+        /* Clip the run to the visible area and keep the source in sync. */
+        const uint16_t clippedAtHead = clipRunY(x, y, height);
+        const int16_t  srcStartY     = static_cast<int16_t>(srcY + clippedAtHead);
 
-        if ((nullptr != dstAddress) &&
-            (nullptr != srcAddress))
+        /* Anything to copy? */
+        if (0U < height)
         {
-            uint16_t idx = 0U;
+            uint16_t      dstOffset  = 0U;
+            uint16_t      srcOffset  = 0U;
+            TColor*       dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
+            const TColor* srcAddress = src.getFrameBufferYAddr(srcX, srcStartY, height, srcOffset);
+            uint16_t      idx        = 0U;
 
-            while (height > idx)
+            if ((nullptr != dstAddress) &&
+                (nullptr != srcAddress))
             {
-                dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
-                ++idx;
+                while (height > idx)
+                {
+                    dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                    ++idx;
+                }
+            }
+            /* No framebuffer access available, copy pixel by pixel. */
+            else
+            {
+                while (height > idx)
+                {
+                    drawPixel(x, static_cast<int16_t>(y + idx), src.getColor(srcX, static_cast<int16_t>(srcStartY + idx)));
+                    ++idx;
+                }
             }
         }
     }
@@ -795,26 +992,48 @@ private:
      */
     void internalCopyY(int16_t x, int16_t y, uint16_t height, const BaseGfx<TColor>& src, int16_t srcX, int16_t srcY, const TColor& transparentColor)
     {
-        uint16_t      dstOffset  = 0U;
-        uint16_t      srcOffset  = 0U;
-        TColor*       dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
-        const TColor* srcAddress = src.getFrameBufferYAddr(srcX, srcY, height, srcOffset);
+        /* Clip the run to the visible area and keep the source in sync. */
+        const uint16_t clippedAtHead = clipRunY(x, y, height);
+        const int16_t  srcStartY     = static_cast<int16_t>(srcY + clippedAtHead);
 
-        if ((nullptr != dstAddress) &&
-            (nullptr != srcAddress))
+        /* Anything to copy? */
+        if (0U < height)
         {
-            uint16_t idx = 0U;
+            uint16_t      dstOffset  = 0U;
+            uint16_t      srcOffset  = 0U;
+            TColor*       dstAddress = getFrameBufferYAddr(x, y, height, dstOffset);
+            const TColor* srcAddress = src.getFrameBufferYAddr(srcX, srcStartY, height, srcOffset);
+            uint16_t      idx        = 0U;
 
-            while (height > idx)
+            if ((nullptr != dstAddress) &&
+                (nullptr != srcAddress))
             {
-                const TColor* color = &srcAddress[idx * srcOffset];
-
-                if (transparentColor != (*color))
+                while (height > idx)
                 {
-                    dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
-                }
+                    const TColor* color = &srcAddress[idx * srcOffset];
 
-                ++idx;
+                    if (transparentColor != (*color))
+                    {
+                        dstAddress[idx * dstOffset] = srcAddress[idx * srcOffset];
+                    }
+
+                    ++idx;
+                }
+            }
+            /* No framebuffer access available, copy pixel by pixel. */
+            else
+            {
+                while (height > idx)
+                {
+                    const TColor& color = src.getColor(srcX, static_cast<int16_t>(srcStartY + idx));
+
+                    if (transparentColor != color)
+                    {
+                        drawPixel(x, static_cast<int16_t>(y + idx), color);
+                    }
+
+                    ++idx;
+                }
             }
         }
     }

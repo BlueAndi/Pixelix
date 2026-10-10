@@ -11,14 +11,14 @@
   - [Non-Developer](#non-developer)
   - [Developer](#developer)
 - [Update possibilities](#update-possibilities)
+  - [Use the web USB installer (Chromium based browser)](#use-the-web-usb-installer-chromium-based-browser)
   - [Use Espressif Flash Download Tool (Windows only)](#use-espressif-flash-download-tool-windows-only)
   - [Use esptool](#use-esptool)
     - [Debian Linux](#debian-linux)
     - [Windows](#windows)
     - [Common after python and esptool are installed](#common-after-python-and-esptool-are-installed)
-  - [Use VSCode and Platformio](#use-vscode-and-platformio)
-- [Update via USB](#update-via-usb)
-- [Use the browser](#use-the-browser)
+  - [Use VSCode and PlatformIO](#use-vscode-and-platformio)
+  - [Use the browser (PIXELIX Updater)](#use-the-browser-pixelix-updater)
 - [Flash Layout Information](#flash-layout-information)
   - [esp32 / esp32-s2](#esp32--esp32-s2)
   - [esp32-s3](#esp32-s3)
@@ -29,7 +29,14 @@
 
 ## Purpose
 
-The software can be uploaded/updated to the development board in 4 different ways. Not all of them can be used in any case. Take a look to the recommendations which variant might be the best for you.
+The software can be uploaded/updated to the development board in several different ways. Not all of them can be used in any case. Which one fits you depends on two questions:
+
+1. Do you use the **prebuilt binaries of a release** or did you **build the software yourself**? See the [installation chapter](../../README.md#installation) to find out which one applies to you.
+2. Is PIXELIX **already running** on the board with an accessible web interface, or is this the **first installation**?
+
+Note, that the web USB installer always installs the prebuilt binaries of the latest release. All other ways work with the release binaries as well as with binaries you built yourself.
+
+Take a look to the recommendations which variant might be the best for you.
 
 ## Recommendations
 
@@ -37,22 +44,39 @@ The recommeded way how to program the software to the board depends on the skill
 
 ### Non-Developer
 
-| Use Case                                                                             | Recommended To Use                                               |
-| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| Brand new development board, with only the preinstalled software on it.              | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
-| A development board already used by you.                                             | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
-| Pixelix is already running on the development board. Its webinterface is accessible. | Browser                                                          |
+| Use Case                                                                             | Recommended To Use                                                                                |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Brand new development board, with only the preinstalled software on it.              | Web USB installer<br>Alternatively **Windows:** Espressif Flash Download Tool, **Linux:** esptool |
+| A development board already used by you.                                             | Web USB installer<br>Alternatively **Windows:** Espressif Flash Download Tool, **Linux:** esptool |
+| Pixelix is already running on the development board. Its webinterface is accessible. | Browser                                                                                           |
 
 ### Developer
 
-| Use Case                                                                                    | Recommended To Use                                               |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Development board, not running Pixelix and you don't like to install VSCode and PlatformIO. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
-| Development board, not running Pixelix and you like to go the developers way.               | VSCode and PlatformIO                                            |
-| You like to develop a plugin or change code for a pull request.                             | VSCode and PlatformIO                                            |
-| Pixelix is already running on the development board.                                        | Browser                                                          |
+| Use Case                                                                                    | Recommended To Use                                                                                |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Development board, not running Pixelix and you don't like to install VSCode and PlatformIO. | Web USB installer<br>Alternatively **Windows:** Espressif Flash Download Tool, **Linux:** esptool |
+| Development board, not running Pixelix and you like to go the developers way.               | VSCode and PlatformIO                                                                             |
+| You like to develop a plugin or change code for a pull request.                             | VSCode and PlatformIO                                                                             |
+| Pixelix is already running on the development board.                                        | Browser                                                                                           |
 
 ## Update possibilities
+
+### Use the web USB installer (Chromium based browser)
+
+Preconditions:
+
+- A Chromium based desktop browser, like Chrome, Edge, Opera or Brave. The installer uses the Web Serial API, which is not available in Firefox, Safari or on mobile devices.
+- A data capable USB cable.
+
+Steps:
+
+1. Open the [PIXELIX USB installer](https://blueandi.github.io/Pixelix/).
+2. Choose the build environment which matches your development board and display configuration, e.g. ```esp32doit-devkit-v1-LED-32x8```.
+3. Connect the development board with the PC and select its serial device in the browser dialog.
+4. Click on _Erase and install_. The complete flash is erased, which includes all settings of a previous installation. Bootloader, partition table, factory image, firmware and filesystem are written in one step, therefore no separate filesystem update is necessary.
+5. Keep the USB cable connected and optionally configure the WiFi credentials on the same page.
+
+If the board does not enter the download mode automatically, follow the BOOT/RESET sequence shown on the page.
 
 ### Use Espressif Flash Download Tool (Windows only)
 
@@ -103,16 +127,18 @@ The recommeded way how to program the software to the board depends on the skill
     - Replace &lt;port&gt; with the serial port the development board is connected too, e.g. ```COM4``` on Windows or ```/dev/ttyUSB0``` on Linux.
     - Use _DIO_ for &lt;spi-mode&gt; in case of esp32, except esp32-s3 use _QIO_.
 
-### Use VSCode and Platformio
+### Use VSCode and PlatformIO
+
+Preconditions:
+
+- The [toolchain](./TOOLCHAIN-INSTALLATION.md) is installed.
 
 If your board is not available out of the box, have a look for the [supported boards by platformio](https://docs.platformio.org/en/latest/platforms/espressif32.html#boards). Copy a board configuration block in the ```platformio.ini``` and overwrite the board configuration (```board = ...```) by using the right board id from [supported boards by platformio](https://docs.platformio.org/en/latest/platforms/espressif32.html#boards).
 
-The update consists of two parts:
+The update consists of two parts and both of them have to be written to the target:
 
 - The software.
 - The filesystem.
-
-## Update via USB
 
 Steps:
 
@@ -131,23 +157,26 @@ Example:
 
 Note: Sometimes it happens that the _Platform_ sub-menu in the PlatformIO Project Tasks is missing. In this case restart VSCode and it should appear.
 
-## Use the browser
+### Use the browser (PIXELIX Updater)
 
 Preconditions:
 
-- PIXELIX runs already on the target.
+- PIXELIX runs already on the target and its web interface is accessible.
+
+This way updates the software and the filesystem over WiFi. It can not change the display configuration, because width, height and panel topology are compiled into the firmware.
 
 Steps:
 
-1. Build the software via _Project Tasks -> General -> Build All_
-2. Build the filesystem via _Project Tasks -> env:```<choose-your-board>``` -> Platform -> Build File System Image_.
-3. Now in the ```.pio/build/<choose-your-board>``` folder there are two important files:
-   1. The software for the device: ```firmware.bin```
-   2. The prebuilt filesystem for the device: ```littlefs.bin``` (or ```spiffs.bin``` for Pixelix &lt; 6.x.x)
-4. Open browser add enter ip address of the device.
-5. Open the "Update" submenu of the webinterface.
-6. Go to Pixelix Updater.
-7. Select firmware binary (```firmware.bin```) or filesystem binary (```spiffs.bin```/```littlefs.bin```) and click on the respective upload button.
+1. Provide the binaries, either by downloading them from the [latest release](https://github.com/BlueAndi/Pixelix/releases) and unzipping them to a local folder, or by building them yourself:
+   1. Build the software via _Project Tasks -> env:```<choose-your-board>``` -> General -> Build_.
+   2. Build the filesystem via _Project Tasks -> env:```<choose-your-board>``` -> Platform -> Build Filesystem Image_.
+   3. Now in the ```.pio/build/<choose-your-board>``` folder there are two important files:
+      1. The software for the device: ```firmware.bin```
+      2. The prebuilt filesystem for the device: ```littlefs.bin``` (or ```spiffs.bin``` for Pixelix &lt; 6.x.x)
+2. Open browser and enter the ip address of the device.
+3. Open the "Update" submenu of the webinterface.
+4. Go to [PIXELIX Updater](https://github.com/BlueAndi/PixelixUpdater).
+5. Select firmware binary (```firmware.bin```) or filesystem binary (```spiffs.bin```/```littlefs.bin```) and click on the respective upload button.
 
 ## Flash Layout Information
 

@@ -154,13 +154,15 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
 
     if (true == topic.equals(TOPIC_TEXT))
     {
-        bool                storeFlag     = false;
-        const size_t        JSON_DOC_SIZE = 512U;
+        bool                storeFlag       = false;
+        bool                isScrollIconSet = false;
+        const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonCfg        = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonIconFileId = value["iconFileId"];
-        JsonVariantConst    jsonText       = value["text"];
-        JsonVariantConst    jsonStoreFlag  = value["storeFlag"];
+        JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonIconFileName = value["iconFileName"];
+        JsonVariantConst    jsonText         = value["text"];
+        JsonVariantConst    jsonScrollIcon   = value["scrollIcon"];
+        JsonVariantConst    jsonStoreFlag    = value["storeFlag"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -173,16 +175,39 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
          * The type check will follow in the setConfiguration().
          */
 
-        if (false == jsonIconFileId.isNull())
+        if (false == jsonIconFileName.isNull())
         {
-            jsonCfg["iconFileId"] = jsonIconFileId.as<FileMgrService::FileId>();
-            isSuccessful          = true;
+            jsonCfg["iconFileName"] = jsonIconFileName.as<const char*>();
+            isSuccessful            = true;
         }
 
         if (false == jsonText.isNull())
         {
             jsonCfg["text"] = jsonText.as<const char*>();
             isSuccessful    = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isScrollIconSet       = true;
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isScrollIconSet       = true;
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         /* Note: The store flag is not part of the stored configuration, its just
@@ -214,6 +239,15 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
             if (false == storeFlag)
             {
                 isSuccessful = setActualConfiguration(jsonCfgConst);
+
+                /* The scroll behaviour is not volatile like the text or the
+                 * icon, it is a layout setting which is always stored.
+                 */
+                if ((true == isSuccessful) &&
+                    (true == isScrollIconSet))
+                {
+                    requestStoreToPersistentMemory();
+                }
             }
             else
             {
@@ -304,7 +338,6 @@ bool IconTextLampPlugin::hasTopicChanged(const String& topic)
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    String                     iconFullPath;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_view.init(width, height);
@@ -313,19 +346,11 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 
     m_view.setFormatText(m_formatTextStored);
 
-    if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
+    if (false == m_iconFileName.isEmpty())
     {
-        if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+        if (false == m_view.loadIcon(m_iconFileName))
         {
-            LOG_WARNING("Unknown file id %u.", m_iconFileId);
-        }
-        else if (false == m_view.loadIcon(iconFullPath))
-        {
-            LOG_ERROR("Icon not found: %s", iconFullPath.c_str());
-        }
-        else
-        {
-            ;
+            LOG_ERROR("Icon not found: %s", m_iconFileName.c_str());
         }
     }
 }
@@ -370,39 +395,37 @@ void IconTextLampPlugin::setText(const String& formatText, bool storeFlag)
     }
 }
 
-bool IconTextLampPlugin::loadIcon(FileMgrService::FileId fileId, bool storeFlag)
+bool IconTextLampPlugin::loadIcon(const String& iconFileName, bool storeFlag)
 {
     bool                       isSuccessful = false;
-    String                     iconFullPath;
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (m_iconFileId != fileId)
+    if (m_iconFileName != iconFileName)
     {
-        m_iconFileId          = fileId;
+        m_iconFileName        = iconFileName;
         m_hasTopicTextChanged = true;
 
         if (true == storeFlag)
         {
-            m_iconFileIdStored = m_iconFileId;
+            m_iconFileNameStored = m_iconFileName;
             requestStoreToPersistentMemory();
         }
     }
 
-    if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
+    if (true == m_iconFileName.isEmpty())
     {
         m_view.clearIcon();
-    }
-    else if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
-    {
-        LOG_WARNING("Unknown file id %u.", m_iconFileId);
-        m_view.clearIcon();
+
+        isSuccessful = true;
     }
     else
     {
-        /* Load the icon always again, as the path might be the same, but
-         * the icon file changed.
-         */
-        isSuccessful = m_view.loadIcon(iconFullPath);
+        isSuccessful = m_view.loadIcon(m_iconFileName);
+
+        if (false == isSuccessful)
+        {
+            LOG_ERROR("Icon not found: %s", m_iconFileName.c_str());
+        }
     }
 
     return isSuccessful;
@@ -412,17 +435,17 @@ void IconTextLampPlugin::clearIcon(bool storeFlag)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (FileMgrService::FILE_ID_INVALID != m_iconFileId)
+    if (false == m_iconFileName.isEmpty())
     {
         /* Clear icon first in the view (will close file). */
         m_view.clearIcon();
 
-        m_iconFileId          = FileMgrService::FILE_ID_INVALID;
+        m_iconFileName.clear();
         m_hasTopicTextChanged = true;
 
         if (true == storeFlag)
         {
-            m_iconFileIdStored = m_iconFileId;
+            m_iconFileNameStored = m_iconFileName;
             requestStoreToPersistentMemory();
         }
     }
@@ -464,19 +487,21 @@ void IconTextLampPlugin::getActualConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["iconFileId"] = m_iconFileId;
-    jsonCfg["text"]       = m_view.getFormatText();
+    jsonCfg["iconFileName"] = m_iconFileName;
+    jsonCfg["text"]         = m_view.getFormatText();
+    jsonCfg["scrollIcon"]   = m_view.isIconScrolling();
 }
 
 bool IconTextLampPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
 {
-    bool             status         = false;
-    JsonVariantConst jsonIconFileId = jsonCfg["iconFileId"];
-    JsonVariantConst jsonText       = jsonCfg["text"];
+    bool             status           = false;
+    JsonVariantConst jsonIconFileName = jsonCfg["iconFileName"];
+    JsonVariantConst jsonText         = jsonCfg["text"];
+    JsonVariantConst jsonScrollIcon   = jsonCfg["scrollIcon"];
 
-    if (false == jsonIconFileId.is<FileMgrService::FileId>())
+    if (false == jsonIconFileName.is<String>())
     {
-        LOG_WARNING("JSON icon file id not found or invalid type.");
+        LOG_WARNING("JSON icon file name not found or invalid type.");
     }
     else if (false == jsonText.is<String>())
     {
@@ -485,32 +510,22 @@ bool IconTextLampPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
-        FileMgrService::FileId     newIconFileId = jsonIconFileId.as<FileMgrService::FileId>();
-        String                     newFormatText = jsonText.as<const char*>();
+        const String               newIconFileName = jsonIconFileName.as<const char*>();
+        String                     newFormatText   = jsonText.as<const char*>();
 
-        if (m_iconFileId != newIconFileId)
+        if (m_iconFileName != newIconFileName)
         {
-            m_iconFileId = newIconFileId;
+            m_iconFileName = newIconFileName;
 
-            if (FileMgrService::FILE_ID_INVALID == m_iconFileId)
+            if (true == m_iconFileName.isEmpty())
             {
                 m_view.clearIcon();
             }
             else
             {
-                String iconFullPath;
-
-                if (false == FileMgrService::getInstance().getFileFullPathById(iconFullPath, m_iconFileId))
+                if (false == m_view.loadIcon(m_iconFileName))
                 {
-                    LOG_WARNING("Unknown file id %u.", m_iconFileId);
-                    m_view.clearIcon();
-                }
-                else
-                {
-                    if (false == m_view.loadIcon(iconFullPath))
-                    {
-                        LOG_WARNING("Couldn't load icon: %s", iconFullPath.c_str());
-                    }
+                    LOG_WARNING("Couldn't load icon: %s", m_iconFileName.c_str());
                 }
             }
 
@@ -524,6 +539,21 @@ bool IconTextLampPlugin::setActualConfiguration(const JsonObjectConst& jsonCfg)
             m_hasTopicTextChanged = true;
         }
 
+        /* The scroll behaviour is optional to stay compatible with a
+         * configuration, which was stored before it was introduced.
+         */
+        if (true == jsonScrollIcon.is<bool>())
+        {
+            bool isIconScrolling = jsonScrollIcon.as<bool>();
+
+            if (m_view.isIconScrolling() != isIconScrolling)
+            {
+                m_view.setIconScrolling(isIconScrolling);
+
+                m_hasTopicTextChanged = true;
+            }
+        }
+
         status = true;
     }
 
@@ -534,8 +564,13 @@ void IconTextLampPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["iconFileId"] = m_iconFileIdStored;
-    jsonCfg["text"]       = m_formatTextStored;
+    jsonCfg["iconFileName"] = m_iconFileNameStored;
+    jsonCfg["text"]         = m_formatTextStored;
+
+    /* The scroll behaviour is always stored, therefore the actual value is
+     * used and no separate stored value is necessary.
+     */
+    jsonCfg["scrollIcon"]   = m_view.isIconScrolling();
 }
 
 bool IconTextLampPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -544,8 +579,8 @@ bool IconTextLampPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
     if (true == status)
     {
-        m_iconFileIdStored = m_iconFileId;
-        m_formatTextStored = m_view.getFormatText();
+        m_iconFileNameStored = m_iconFileName;
+        m_formatTextStored   = m_view.getFormatText();
     }
 
     return status;

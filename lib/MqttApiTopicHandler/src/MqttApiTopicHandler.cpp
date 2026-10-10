@@ -34,6 +34,8 @@
  * Includes
  *****************************************************************************/
 #include "MqttApiTopicHandler.h"
+
+#include <JsonEscape.hpp>
 #include "FileSystem.h"
 
 #include <Logging.h>
@@ -479,6 +481,11 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 
             if (0U < serializeJson(jsonDoc["data"], topicContent))
             {
+                /* Escape control characters, otherwise the content would not be
+                 * valid JSON anymore, see JsonEscape.hpp.
+                 */
+                JsonEscape::escapeControlCharacters(topicContent);
+
                 MqttService& mqttService   = MqttService::getInstance();
                 String       topicStateUri = mqttTopicBase + MQTT_ENDPOINT_READ_ACCESS;
 

@@ -98,6 +98,7 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value
         JsonVariantConst    jsonYear         = value["year"];
         JsonVariantConst    jsonDescPlural   = value["descPlural"];
         JsonVariantConst    jsonDescSingular = value["descSingular"];
+        JsonVariantConst    jsonScrollIcon   = value["scrollIcon"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -138,6 +139,27 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value
         {
             jsonCfg["descSingular"] = jsonDescSingular.as<const char*>();
             isSuccessful            = true;
+        }
+
+        /* The scroll behaviour may be received as string, e.g. in case of a
+         * REST request with form encoded parameters.
+         */
+        if (false == jsonScrollIcon.isNull())
+        {
+            if (true == jsonScrollIcon.is<String>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<String>().equalsIgnoreCase("true");
+                isSuccessful          = true;
+            }
+            else if (true == jsonScrollIcon.is<bool>())
+            {
+                jsonCfg["scrollIcon"] = jsonScrollIcon.as<bool>();
+                isSuccessful          = true;
+            }
+            else
+            {
+                ;
+            }
         }
 
         if (true == isSuccessful)
@@ -220,6 +242,7 @@ void CountdownPlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["year"]         = m_targetDate.year;
     jsonCfg["descPlural"]   = m_targetDateInformation.plural;
     jsonCfg["descSingular"] = m_targetDateInformation.singular;
+    jsonCfg["scrollIcon"]   = m_view.isIconScrolling();
 }
 
 bool CountdownPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
@@ -230,6 +253,7 @@ bool CountdownPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
     JsonVariantConst jsonYear         = jsonCfg["year"];
     JsonVariantConst jsonDescPlural   = jsonCfg["descPlural"];
     JsonVariantConst jsonDescSingular = jsonCfg["descSingular"];
+    JsonVariantConst jsonScrollIcon   = jsonCfg["scrollIcon"];
 
     if (false == jsonDay.is<uint8_t>())
     {
@@ -295,7 +319,15 @@ bool CountdownPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
 
             m_hasTopicChanged                = true;
 
-            status                           = true;
+            /* The scroll behaviour is optional to stay compatible with a
+             * configuration, which was stored before it was introduced.
+             */
+            if (true == jsonScrollIcon.is<bool>())
+            {
+                m_view.setIconScrolling(jsonScrollIcon.as<bool>());
+            }
+
+            status = true;
         }
     }
 

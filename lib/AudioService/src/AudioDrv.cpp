@@ -36,7 +36,7 @@
 #include "AudioDrv.h"
 
 #include <Logging.h>
-#include <Board.h>
+#include <Pin.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -253,10 +253,10 @@ bool AudioDrv::initI2S()
             .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_BITS_PER_SAMPLE, I2S_SLOT_MODE_MONO),
             .gpio_cfg = {
                 .mclk         = I2S_GPIO_UNUSED, /* No master clock output required. */
-                .bclk         = static_cast<gpio_num_t>(Board::Pin::i2sSerialClock),
-                .ws           = static_cast<gpio_num_t>(Board::Pin::i2sWordSelect),
+                .bclk         = static_cast<gpio_num_t>(PinNo::i2sSerialClockPinNo),
+                .ws           = static_cast<gpio_num_t>(PinNo::i2sWordSelectPinNo),
                 .dout         = I2S_GPIO_UNUSED, /* RX channel only. */
-                .din          = static_cast<gpio_num_t>(Board::Pin::i2sSerialDataIn),
+                .din          = static_cast<gpio_num_t>(PinNo::i2sSerialDataInPinNo),
                 .invert_flags = {
                     .mclk_inv = 0U, /* Do not invert the MCLK output. */
                     .bclk_inv = 0U, /* Do not invert the BCLK input/output. */

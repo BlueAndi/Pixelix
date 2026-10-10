@@ -164,7 +164,7 @@ void RestartState::process(StateMachine& sm)
         FILESYSTEM.end();
 
         /* Reset */
-        Board::reset();
+        Board::getInstance().getSystemDrv().reset();
     }
 }
 

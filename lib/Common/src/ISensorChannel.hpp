@@ -104,23 +104,25 @@ public:
      *
      * @return Sensor data type
      */
-    virtual DataType getDataType() const                = 0;
+    virtual DataType getDataType() const                                      = 0;
 
     /**
      * Get sensor channel type.
      *
      * @return Sensor channel type
      */
-    virtual Type getType() const                        = 0;
+    virtual Type getType() const                                              = 0;
 
     /**
-     * Get value as string.
+     * Get the value as string.
      *
-     * @param[in] precision The precision (ignored for integer values) of the value.
+     * @param[out]  str         Buffer for the value, always zero terminated.
+     * @param[in]   size        Size of the buffer in byte, including the terminator.
+     * @param[in]   precision   The precision (ignored for integer values) of the value.
      *
-     * @return Value as string
+     * @return If the value was written, it will return true otherwise false.
      */
-    virtual String getValueAsString(uint32_t precision) = 0;
+    virtual bool getValueAsString(char* str, size_t size, uint32_t precision) = 0;
 
     /**
      * Get the channel type as string from the corresponding sensor channel type.
@@ -129,9 +131,9 @@ public:
      *
      * @return Unit as string
      */
-    static String channelTypeToName(ISensorChannel::Type channelType)
+    static const char* channelTypeToName(ISensorChannel::Type channelType)
     {
-        String name;
+        const char* name = "";
 
         switch (channelType)
         {

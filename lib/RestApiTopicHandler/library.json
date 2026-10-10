@@ -10,11 +10,15 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "Logging"
-    }, {
-        "name": "AsyncHttpClient"
+        "owner": "esp32async",
+        "name": "ESPAsyncWebServer",
+        "version": "~3.12.0"
     }, {
         "name": "ITopicHandler"
+    }, {
+        "name": "Logging"
+    }, {
+        "name": "SettingsService"
     }, {
         "name": "Utilities"
     }],

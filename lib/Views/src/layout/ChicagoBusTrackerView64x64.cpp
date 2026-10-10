@@ -154,10 +154,15 @@ ChicagoBusTrackerView64x64::ChicagoBusTrackerView64x64() :
     IChicagoBusTrackerView(),
     m_fontType(Fonts::FONT_TYPE_DEFAULT),
     m_routeNumberWidget(RTE_NUMBER_WIDTH, RTE_NUMBER_HEIGHT, RTE_NUMBER_X, RTE_NUMBER_Y),
+    m_routeNumberScroll(m_routeNumberWidget),
     m_infoWidget1(WIDGET_1_WIDTH, WIDGET_HEIGHT, WIDGET_1_X, WIDGET_1_Y),
+    m_infoScroll1(m_infoWidget1),
     m_infoWidget2(DISPLAY_WIDTH, WIDGET_HEIGHT, WIDGET_X, WIDGET_2_Y),
+    m_infoScroll2(m_infoWidget2),
     m_infoWidget3(DISPLAY_WIDTH, WIDGET_HEIGHT, WIDGET_X, WIDGET_3_Y),
+    m_infoScroll3(m_infoWidget3),
     m_infoWidget4(DISPLAY_WIDTH, WIDGET_HEIGHT, WIDGET_X, WIDGET_4_Y),
+    m_infoScroll4(m_infoWidget4),
     m_routeNumberText(" - "),
     m_routeInfoText(""),
     m_firstArrivalText(" NO DATA "),
@@ -192,11 +197,11 @@ ChicagoBusTrackerView64x64::ChicagoBusTrackerView64x64() :
 void ChicagoBusTrackerView64x64::update(YAGfx& gfx)
 {
     gfx.fillScreen(ColorDef::BLACK);
-    m_routeNumberWidget.update(gfx);
-    m_infoWidget1.update(gfx);
-    m_infoWidget2.update(gfx);
-    m_infoWidget3.update(gfx);
-    m_infoWidget4.update(gfx);
+    m_routeNumberScroll.update(gfx, m_routeNumberWidget);
+    m_infoScroll1.update(gfx, m_infoWidget1);
+    m_infoScroll2.update(gfx, m_infoWidget2);
+    m_infoScroll3.update(gfx, m_infoWidget3);
+    m_infoScroll4.update(gfx, m_infoWidget4);
 }
 
 /******************************************************************************

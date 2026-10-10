@@ -79,6 +79,10 @@
                             <label class="form-label" for="host">Host address of server:</label>
                             <input class="form-control" type="text" id="host" name="host" value="volumio.fritz.box" />
                         </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false).</label>
+                        </div>
                         <input name="submit" type="submit" value="Update" />
                     </form>
                 </div>
@@ -161,6 +165,7 @@
                         isJsonResponse: true
                     });
                     document.getElementById("host").value = rsp.data.host;
+                    document.getElementById("scrollIcon").checked = rsp.data.scrollIcon;
                 } catch (rsp) {
                     alert("Internal error.");
                 } finally {
@@ -176,7 +181,8 @@
                         url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/host",
                         isJsonResponse: true,
                         parameter: {
-                            host: document.getElementById("host").value
+                            host: document.getElementById("host").value,
+                            scrollIcon: document.getElementById("scrollIcon").checked
                         }
                     });
                     alert("Ok.");

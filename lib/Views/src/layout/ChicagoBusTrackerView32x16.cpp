@@ -147,8 +147,11 @@ ChicagoBusTrackerView32x16::ChicagoBusTrackerView32x16() :
     IChicagoBusTrackerView(),
     m_fontType(Fonts::FONT_TYPE_DEFAULT),
     m_routeNumberWidget(RTE_NUMBER_WIDTH, RTE_NUMBER_HEIGHT, RTE_NUMBER_X, RTE_NUMBER_Y),
+    m_routeNumberScroll(m_routeNumberWidget),
     m_topInfoWidget(RTE_INFO_WIDTH, RTE_INFO_HEIGHT, RTE_INFO_X, RTE_INFO_Y),
+    m_topInfoScroll(m_topInfoWidget),
     m_bottomInfoWidget(ARR_SECTION_WIDTH, ARR_SECTION_HEIGHT, ARR_SECTION_X, ARR_SECTION_Y),
+    m_bottomInfoScroll(m_bottomInfoWidget),
     m_routeNumberText(""),
     m_routeInfoText(""),
     m_firstArrivalText(""),
@@ -181,9 +184,9 @@ ChicagoBusTrackerView32x16::ChicagoBusTrackerView32x16() :
 void ChicagoBusTrackerView32x16::update(YAGfx& gfx)
 {
     gfx.fillScreen(ColorDef::BLACK);
-    m_routeNumberWidget.update(gfx);
-    m_topInfoWidget.update(gfx);
-    m_bottomInfoWidget.update(gfx);
+    m_routeNumberScroll.update(gfx, m_routeNumberWidget);
+    m_topInfoScroll.update(gfx, m_topInfoWidget);
+    m_bottomInfoScroll.update(gfx, m_bottomInfoWidget);
 }
 
 /******************************************************************************
