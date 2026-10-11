@@ -2296,6 +2296,80 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
+  /notify:
+    post:
+      tags:
+        - Display
+      summary: Show a notification
+      description: |
+        Show a notification on the display for a given time. The notification
+        interrupts the currently shown slot. A sticky slot is suspended and
+        restored automatically afterwards.
+
+        Only the text is mandatory. A problem with the optional icon or melody
+        never suppresses the notification itself.
+
+        The melody is only played on a board with a buzzer, see
+        CONFIG_MELODY_SERVICE_ENABLE. On every other board the melody and the
+        volume are ignored, the notification is shown as usual.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "text=Doorbell" -d "duration=5000" -X POST http://pixelix-FFFFFFFF/rest/api/v1/notify
+        ```
+      operationId: notify
+      parameters:
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: true
+          description: "The notification text."
+        - in: query
+          name: duration
+          schema:
+            type: number
+            minimum: 0
+            maximum: 60000
+            default: 10000
+          required: false
+          description: "Display time in ms. A missing value or 0 means 10000 ms, a greater value than 60000 ms is limited to it. The duration also ends a scrolling text."
+        - in: query
+          name: iconFileName
+          schema:
+            type: string
+          required: false
+          description: "Full path of a icon on the device file system. Without a icon the text uses the full display width."
+        - in: query
+          name: melody
+          schema:
+            type: string
+          required: false
+          description: "Melody in RTTTL format, limited to 256 characters. Only played on a board with a buzzer."
+        - in: query
+          name: volume
+          schema:
+            type: number
+            minimum: 0
+            maximum: 10
+            default: 10
+          required: false
+          description: "Melody volume. Only evaluated together with the melody."
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
   /plugin/install:
     post:
       tags:
@@ -3888,6 +3962,18 @@ components:
                 port:
                   type: number
                   example: 1883
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    Notification:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
         status:
           type: string
           description: The request result.

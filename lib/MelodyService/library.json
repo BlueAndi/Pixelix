@@ -1,0 +1,30 @@
+{
+    "name": "MelodyService",
+    "version": "0.1.0",
+    "description": "Melody playback based on the Ring Tone Text Transfer Language (RTTTL).",
+    "authors": [
+        {
+            "name": "Andreas Merkle",
+            "email": "web@blue-andi.de",
+            "url": "https://github.com/BlueAndi",
+            "maintainer": true
+        }
+    ],
+    "license": "MIT",
+    "dependencies": [
+        {
+            "name": "HalInterface"
+        },
+        {
+            "name": "Logging"
+        },
+        {
+            "name": "Service"
+        },
+        {
+            "name": "Utilities"
+        }
+    ],
+    "frameworks": "*",
+    "platforms": "*"
+}

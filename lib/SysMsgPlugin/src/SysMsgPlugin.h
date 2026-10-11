@@ -79,6 +79,7 @@ public:
         m_duration(0U),
         m_max(0U),
         m_isInit(true),
+        m_isDurationHard(false),
         m_messages(),
         m_wrIndex(0U),
         m_rdIndex(0U)
@@ -177,8 +178,25 @@ public:
      * @param[in] msg       Message to show
      * @param[in] duration  Duration in ms, how long a non-scrolling text shall be shown.
      * @param[in] max       Maximum number how often a scrolling text shall be shown.
+     *
+     * @return If the message is queued, it will return true otherwise false.
      */
-    void show(const String& msg, uint32_t duration, uint32_t max);
+    bool show(const String& msg, uint32_t duration, uint32_t max);
+
+    /**
+     * Show a notification.
+     *
+     * In contrast to show() the duration is a hard limit. It ends the message
+     * independent of the text scrolling. A optional icon is shown left of the
+     * text, without a icon the text uses the full display width.
+     *
+     * @param[in] msg           Message to show
+     * @param[in] duration      Duration in ms, how long the message shall be shown.
+     * @param[in] iconFileName  Full path of the icon file. Empty means no icon.
+     *
+     * @return If the notification is queued, it will return true otherwise false.
+     */
+    bool showNotification(const String& msg, uint32_t duration, const String& iconFileName);
 
     /**
      * Show next message in the queue and abort the current one.
@@ -203,9 +221,11 @@ private:
      */
     struct SysMsg
     {
-        String   msg;      /**< Message */
-        uint32_t duration; /**< Duration in ms, how long the text shall be shown. */
-        uint32_t max;      /**< Maximum number how often a scrolling text shall be shown. */
+        String   msg;            /**< Message */
+        uint32_t duration;       /**< Duration in ms, how long the text shall be shown. */
+        uint32_t max;            /**< Maximum number how often a scrolling text shall be shown. */
+        String   iconFileName;   /**< Full path of the icon file. Empty means no icon. */
+        bool     isDurationHard; /**< Shall the duration end the message even if the text scrolls? */
 
         /**
          * Construct a system message.
@@ -213,7 +233,9 @@ private:
         SysMsg() :
             msg(),
             duration(0U),
-            max(0U)
+            max(0U),
+            iconFileName(),
+            isDurationHard(false)
         {
         }
 
@@ -230,9 +252,23 @@ private:
     uint32_t            m_duration;              /**< Duration in ms, how long a non-scrolling text shall be shown. */
     uint32_t            m_max;                   /**< Maximum number how often a scrolling text shall be shown. */
     bool                m_isInit;                /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
+    bool                m_isDurationHard;        /**< Shall the duration end the current message even if the text scrolls? */
     SysMsg              m_messages[MAX_SYS_MSG]; /**< System message buffer */
     size_t              m_wrIndex;               /**< System message buffer write index. */
     size_t              m_rdIndex;               /**< System message buffer read index. */
+
+    /**
+     * Queue a message.
+     *
+     * @param[in] msg               Message to show
+     * @param[in] duration          Duration in ms.
+     * @param[in] max               Maximum number how often a scrolling text shall be shown.
+     * @param[in] iconFileName      Full path of the icon file. Empty means no icon.
+     * @param[in] isDurationHard    Shall the duration end the message even if the text scrolls?
+     *
+     * @return If the message is queued, it will return true otherwise false.
+     */
+    bool enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, bool isDurationHard);
 
     /**
      * Show next message from the queue.

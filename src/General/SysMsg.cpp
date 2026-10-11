@@ -92,7 +92,7 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
         uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
 
         /* Important: Call first show() to enable plugin. Otherwise the slot activation request will fail. */
-        m_plugin->show(msg, duration, max);
+        (void)m_plugin->show(msg, duration, max);
 
         if (false == displayMgr.activateSlot(slotId))
         {
@@ -117,6 +117,44 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
             }
         }
     }
+}
+
+bool SysMsg::showNotification(const String& msg, uint32_t duration, const String& iconFileName)
+{
+    bool isQueued = false;
+
+    if (nullptr != m_plugin)
+    {
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
+
+        /* Important: Call first showNotification() to enable plugin. Otherwise the slot activation request will fail. */
+        isQueued               = m_plugin->showNotification(msg, duration, iconFileName);
+
+        if (true == isQueued)
+        {
+            if (false == displayMgr.activateSlot(slotId))
+            {
+                /* A sticky slot prevents the activation. Suspend the sticky flag instead of removing it, because the
+                 * display manager restores it automatically after the notification is over.
+                 */
+                displayMgr.suspendSticky(slotId);
+
+                displayMgr.enableSlot(slotId);
+
+                if (false == displayMgr.activateSlot(slotId))
+                {
+                    LOG_WARNING("Notification suppressed.");
+                }
+                else
+                {
+                    LOG_WARNING("Notification activation recovered.");
+                }
+            }
+        }
+    }
+
+    return isQueued;
 }
 
 bool SysMsg::isActive() const

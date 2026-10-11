@@ -103,13 +103,29 @@ void SysMsgPlugin::update(YAGfx& gfx)
     /* In initialization phase? */
     if (true == m_isInit)
     {
-        m_timer.stop();
+        /* A hard duration ends the message independent of the scrolling. It is
+         * started immediately and not only once the scroll info is available,
+         * otherwise a view which never reports it could block the display.
+         */
+        if (true == m_isDurationHard)
+        {
+            if ((0U < m_duration) &&
+                (false == m_timer.isTimerRunning()))
+            {
+                m_timer.start(m_duration);
+            }
+        }
+        else
+        {
+            m_timer.stop();
+        }
 
         /* Is the scroll info ready? */
         if (true == status)
         {
             /* Start timer if text doesn't scroll and shall not be shown infinite. */
-            if ((false == isScrollingEnabled) &&
+            if ((false == m_isDurationHard) &&
+                (false == isScrollingEnabled) &&
                 (0U < m_duration))
             {
                 m_timer.start(m_duration);
@@ -154,8 +170,27 @@ void SysMsgPlugin::update(YAGfx& gfx)
     }
 }
 
-void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
+bool SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 {
+    return enqueue(msg, duration, max, String(), false);
+}
+
+bool SysMsgPlugin::showNotification(const String& msg, uint32_t duration, const String& iconFileName)
+{
+    return enqueue(msg, duration, 0U, iconFileName, true);
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, bool isDurationHard)
+{
+    bool   isQueued     = false;
     size_t nextWrIndex  = m_wrIndex + 1U;
     nextWrIndex        %= MAX_SYS_MSG;
 
@@ -166,11 +201,14 @@ void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
     }
     else
     {
-        m_messages[m_wrIndex].msg      = msg;
-        m_messages[m_wrIndex].duration = duration;
-        m_messages[m_wrIndex].max      = max;
+        m_messages[m_wrIndex].msg            = msg;
+        m_messages[m_wrIndex].duration       = duration;
+        m_messages[m_wrIndex].max            = max;
+        m_messages[m_wrIndex].iconFileName   = iconFileName;
+        m_messages[m_wrIndex].isDurationHard = isDurationHard;
 
-        m_wrIndex                      = nextWrIndex;
+        m_wrIndex                            = nextWrIndex;
+        isQueued                             = true;
 
         /* If plugin is disabled, it will be enabled and next is shown. */
         if (false == isEnabled())
@@ -179,15 +217,9 @@ void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
             enable();
         }
     }
+
+    return isQueued;
 }
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
 
 bool SysMsgPlugin::nextMessage()
 {
@@ -199,9 +231,29 @@ bool SysMsgPlugin::nextMessage()
         SysMsg& sysMsg = m_messages[m_rdIndex];
 
         m_view.setFormatText(sysMsg.msg);
-        m_duration = sysMsg.duration;
-        m_max      = sysMsg.max;
-        m_isInit   = true;
+
+        if (true == sysMsg.iconFileName.isEmpty())
+        {
+            m_view.clearIcon();
+        }
+        else if (false == m_view.loadIcon(sysMsg.iconFileName))
+        {
+            LOG_ERROR("Icon not found: %s", sysMsg.iconFileName.c_str());
+        }
+        else
+        {
+            /* Icon successful loaded. */
+            ;
+        }
+
+        m_duration       = sysMsg.duration;
+        m_max            = sysMsg.max;
+        m_isDurationHard = sysMsg.isDurationHard;
+        m_isInit         = true;
+
+        /* Release the message, it is handed over to the view now. */
+        sysMsg.msg.clear();
+        sysMsg.iconFileName.clear();
 
         ++m_rdIndex;
         m_rdIndex      %= MAX_SYS_MSG;

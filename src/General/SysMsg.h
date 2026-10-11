@@ -93,6 +93,21 @@ public:
     void show(const String& msg, uint32_t duration = 0U, uint32_t max = 0U);
 
     /**
+     * Show a notification for a given time.
+     *
+     * In contrast to show() the duration is a hard limit, it ends the
+     * notification independent of the text scrolling. A optional icon is shown
+     * left of the text, without a icon the text uses the full display width.
+     *
+     * @param[in] msg           Message to show
+     * @param[in] duration      Duration in ms, how long the notification shall be shown.
+     * @param[in] iconFileName  Full path of the icon file. Empty means no icon.
+     *
+     * @return If the notification is queued, it will return true otherwise false.
+     */
+    bool showNotification(const String& msg, uint32_t duration, const String& iconFileName);
+
+    /**
      * Is a system message shown in this moment?
      *
      * @return If a system message is shown, it will return true otherwise false.

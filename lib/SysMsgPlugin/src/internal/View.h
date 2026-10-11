@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <TextViewBase.hpp>
+#include <IconTextViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -59,8 +59,12 @@ namespace _SysMsgPlugin
 
 /**
  * SysMsgPlugin view.
+ *
+ * It is based on the icon and text view, because a notification may carry a
+ * icon. As long as no icon is loaded, the text uses the full display width,
+ * which keeps the appearance of the system messages without a icon.
  */
-class View : public TextViewBase
+class View : public IconTextViewBase
 {
 public:
 
@@ -68,7 +72,7 @@ public:
      * Construct the view.
      */
     View() :
-        TextViewBase()
+        IconTextViewBase()
     {
         m_textWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
         m_textWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
@@ -82,11 +86,12 @@ public:
     }
 
     /**
-     * Clear text.
+     * Clear text and icon.
      */
     void clear()
     {
         m_textWidget.clear();
+        clearIcon();
         disableScrolling();
     }
 

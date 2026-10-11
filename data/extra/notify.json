@@ -1,0 +1,10 @@
+[
+    {
+        "component": "notify",
+        "discovery": {
+            "name": "Notification",
+            "ic": "mdi:bell-ring-outline",
+            "cmd_tpl": "{\"text\": \"{{ value }}\" }"
+        }
+    }
+]

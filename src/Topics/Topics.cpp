@@ -41,6 +41,15 @@
 #include "DisplayMgr.h"
 #include "RestartMgr.h"
 #include "ButtonActions.h"
+#include "SysMsg.h"
+
+#include <Logging.h>
+
+#if (0 != CONFIG_MELODY_SERVICE_ENABLE)
+
+#include <MelodyService.h>
+
+#endif /* (0 != CONFIG_MELODY_SERVICE_ENABLE) */
 
 /******************************************************************************
  * Compiler Switches
@@ -114,10 +123,17 @@ static bool getDisplayState(const String& topic, JsonObject& value);
 static bool hasDisplayStateChanged(const String& topic);
 static bool setDisplayState(const String& topic, const JsonObjectConst& value);
 static bool restart(const String& topic, const JsonObjectConst& value);
+static bool notify(const String& topic, const JsonObjectConst& value);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** Default duration of a notification in ms, if none or 0 is given. */
+static const uint32_t NOTIFY_DURATION_DEFAULT = 10000U;
+
+/** Maximum duration of a notification in ms. A greater value will be limited. */
+static const uint32_t NOTIFY_DURATION_MAX     = 60000U;
 
 /**
  * Device id, which is unique for each device.
@@ -144,6 +160,7 @@ static String gDeviceId;
 static TopicElem gTopicList[] = {
     /* ENTITY-ID    TOPIC       GET                 HAS-CHANGED             SET                 EXTRA-HA-FILE */
     { "",           "button",   nullptr,            nullptr,                execButtonAction,   "/extra/button.json"  },
+    { "",           "notify",   nullptr,            nullptr,                notify,             "/extra/notify.json"  },
     { "display",    "power",    getDisplayState,    hasDisplayStateChanged, setDisplayState,    "/extra/display.json" },
     { "",           "restart",  nullptr,            nullptr,                restart,            "/extra/restart.json" }
 };
@@ -391,6 +408,92 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
  *
  * @return If successful, it will return true otherwise false.
  */
+/**
+ * Show a notification on the display.
+ *
+ * Mandatory is only the text. The duration is limited, so a notification can
+ * not block the display. A problem with the optional icon or melody never
+ * suppresses the notification itself.
+ *
+ * @param[in] topic The topic.
+ * @param[in] value The notification in JSON format.
+ *
+ * @return If successful, it will return true otherwise false.
+ */
+static bool notify(const String& topic, const JsonObjectConst& value)
+{
+    bool             isSuccessful     = false;
+    JsonVariantConst jsonText         = value["text"];
+    JsonVariantConst jsonDuration     = value["duration"];
+    JsonVariantConst jsonIconFileName = value["iconFileName"];
+
+    UTIL_NOT_USED(topic);
+
+    /* Guard path: without a text there is nothing to show. */
+    if (false == jsonText.is<String>())
+    {
+        LOG_WARNING("Notification without text.");
+    }
+    else
+    {
+        uint32_t duration     = NOTIFY_DURATION_DEFAULT;
+        String   iconFileName = "";
+
+        if (true == jsonDuration.is<uint32_t>())
+        {
+            duration = jsonDuration.as<uint32_t>();
+
+            /* A duration of 0 would show the notification infinite, because the
+             * system message slot has no slot duration.
+             */
+            if (0U == duration)
+            {
+                duration = NOTIFY_DURATION_DEFAULT;
+            }
+            else if (NOTIFY_DURATION_MAX < duration)
+            {
+                duration = NOTIFY_DURATION_MAX;
+            }
+            else
+            {
+                /* Duration is in the valid range. */
+                ;
+            }
+        }
+
+        if (true == jsonIconFileName.is<String>())
+        {
+            iconFileName = jsonIconFileName.as<String>();
+        }
+
+#if (0 != CONFIG_MELODY_SERVICE_ENABLE)
+
+        {
+            JsonVariantConst jsonMelody = value["melody"];
+            JsonVariantConst jsonVolume = value["volume"];
+
+            if (true == jsonMelody.is<String>())
+            {
+                uint8_t volume = RTTTL::MAX_VOLUME;
+
+                if (true == jsonVolume.is<uint8_t>())
+                {
+                    volume = jsonVolume.as<uint8_t>();
+                }
+
+                /* A rejected melody shall not suppress the notification. */
+                (void)MelodyService::getInstance().playMelody(jsonMelody.as<String>(), volume);
+            }
+        }
+
+#endif /* (0 != CONFIG_MELODY_SERVICE_ENABLE) */
+
+        isSuccessful = SysMsg::getInstance().showNotification(jsonText.as<String>(), duration, iconFileName);
+    }
+
+    return isSuccessful;
+}
+
 static bool restart(const String& topic, const JsonObjectConst& value)
 {
     const uint32_t RESTART_DELAY = 100U; /* ms */

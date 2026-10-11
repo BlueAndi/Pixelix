@@ -29,7 +29,7 @@
  * @brief  Ring Tone Text Transfer Language (RTTTL) player
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup TIMER_SERVICE
+ * @addtogroup MELODY_SERVICE
  *
  * @{
  */
@@ -42,6 +42,8 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <stddef.h>
+#include <IBuzzerDrv.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -514,14 +516,19 @@ public:
 
     /**
      * Constructs the RTTTL player.
+     *
+     * @param[in] buzzerDrv The buzzer driver, used to generate the tones.
+     *                      It must exist over the whole player lifetime.
      */
-    RTTTL() :
+    RTTTL(IBuzzerDrv& buzzerDrv) :
+        m_buzzerDrv(buzzerDrv),
         m_melody(nullptr),
+        m_melodyEnd(nullptr),
         m_defaultDuration(DEFAULT_DURATION),
         m_defaultOctave(DEFAULT_OCTAVE),
         m_bpm(DEFAULT_BPM),
         m_volume(DEFAULT_VOLUME),
-        m_noteDelay(0U),
+        m_noteTimer(),
         m_isPlaying(false),
         m_wholeNoteDuration(0U)
     {
@@ -539,22 +546,35 @@ public:
      * Load melody in RTTTL format.
      * The default volume is 10.
      *
+     * The melody is not copied! The caller must keep it alive until the
+     * playback is finished, see isDone().
+     *
      * Example: "Entertainer:d=4,o=5,b=140:8d6,16d#6,16e6,16f6,16f#6,16g6,16g#6,16a6,16a#6,16b6,8c7"
      *
      * @param[in] melody The melody in RTTTL format.
+     *
+     * @return If the melody is accepted, it will return true otherwise false.
      */
-    void loadMelody(const char* melody);
+    bool loadMelody(const char* melody);
 
     /**
      * Load melody in RTTTL format with specific volume.
-     * Volume range is 0 to 10.
+     * A volume above MAX_VOLUME is limited to MAX_VOLUME.
+     *
+     * The melody is not copied! The caller must keep it alive until the
+     * playback is finished, see isDone().
+     *
+     * A melody is rejected if it is empty, longer than MAX_MELODY_LENGTH or
+     * if the mandatory separators are missing. In this case nothing is played.
      *
      * Example: "Entertainer:d=4,o=5,b=140:8d6,16d#6,16e6,16f6,16f#6,16g6,16g#6,16a6,16a#6,16b6,8c7"
      *
      * @param[in] melody The melody in RTTTL format.
-     * @param[in] volume The volume (0 to 10).
+     * @param[in] volume The volume (0 to MAX_VOLUME).
+     *
+     * @return If the melody is accepted, it will return true otherwise false.
      */
-    void loadMelody(const char* melody, uint8_t volume);
+    bool loadMelody(const char* melody, uint8_t volume);
 
     /**
      * Play loaded song.
@@ -574,14 +594,20 @@ public:
      *
      * @return If playing, it will return true otherwise false.
      */
-    bool isPlaying();
+    bool isPlaying() const;
 
     /**
      * Is the song done?
      *
      * @return If done, it will return true otherwise false.
      */
-    bool isDone();
+    bool isDone() const;
+
+    /** Maximum supported melody length in characters, without terminating null. */
+    static const size_t MAX_MELODY_LENGTH = 256U;
+
+    /** Maximum volume. */
+    static const uint8_t MAX_VOLUME       = 10U;
 
 private:
 
@@ -594,9 +620,17 @@ private:
     static const uint8_t  OCTAVE_LOWER_LIMIT = 4U;   /**< Lower octave limit. */
     static const uint8_t  OCTAVE_UPPER_LIMIT = 7U;   /**< Upper octave limit. */
     static const uint16_t MAX_DUTY_CYCLE     = 125U; /**< Maximum duty cycle in digits. A greater value may sound strange. */
+    static const uint32_t BPM_LOWER_LIMIT    = 1U;   /**< Lower beats per minute limit. Avoids a division by zero. */
+    static const uint32_t BPM_UPPER_LIMIT    = 900U; /**< Upper beats per minute limit. */
 
-    /** Whole note duration in milliseconds. */
+    /** Buzzer driver, used to generate the tones. */
+    IBuzzerDrv& m_buzzerDrv;
+
+    /** Parse cursor inside the melody. It never points behind m_melodyEnd. */
     const char* m_melody;
+
+    /** Points to the terminating null of the melody. Used to limit the parse cursor. */
+    const char* m_melodyEnd;
 
     /** Default duration of a note (in beats). */
     uint8_t m_defaultDuration;
@@ -610,8 +644,8 @@ private:
     /** Volume (0 to 10). */
     uint8_t m_volume;
 
-    /** Note delay in ms. */
-    uint32_t m_noteDelay;
+    /** Timer for the duration of the current note. Overflow safe, in contrast to a absolute timestamp. */
+    SimpleTimer m_noteTimer;
 
     /** Is the player currently playing? */
     bool m_isPlaying;
@@ -620,7 +654,27 @@ private:
     uint32_t m_wholeNoteDuration;
 
     /**
+     * Move the parse cursor forward, but never behind the end of the melody.
+     *
+     * Every cursor movement must use this method. It guarantees that every
+     * dereference of the cursor reads a valid character, in the worst case
+     * the terminating null.
+     *
+     * @param[in] count Number of characters to move forward.
+     */
+    void advance(size_t count);
+
+    /**
+     * Move the parse cursor forward, if the cursor points to the given character.
+     *
+     * @param[in] singleChar    The expected character.
+     */
+    void advanceIfChar(char singleChar);
+
+    /**
      * Get number from string.
+     *
+     * The number is limited to UINT32_MAX, a overflow can not happen.
      *
      * @param[in]   str         The string.
      * @param[out]  remaining   The remaining string after the number.

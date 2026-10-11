@@ -34,8 +34,11 @@
  * Includes
  *****************************************************************************/
 #include "RTTTL.h"
-#include <Board.h>
+
+#include <Util.h>
+
 #include <cctype>
+#include <string.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -117,95 +120,132 @@ const uint16_t RTTTL::NOTES[] = {
  * Public Methods
  *****************************************************************************/
 
-void RTTTL::loadMelody(const char* melody)
+bool RTTTL::loadMelody(const char* melody)
 {
-    loadMelody(melody, DEFAULT_VOLUME);
+    return loadMelody(melody, DEFAULT_VOLUME);
 }
 
-void RTTTL::loadMelody(const char* melody, uint8_t volume)
+bool RTTTL::loadMelody(const char* melody, uint8_t volume)
 {
-    if (nullptr != melody)
+    bool isAccepted = false;
+
+    /* Guard path: a melody must exist. */
+    if (nullptr == melody)
     {
-        Board&      board     = Board::getInstance();
-        IBuzzerDrv& buzzerDrv = board.getBuzzerDrv();
-        uint32_t    number;
+        ;
+    }
+    /* Guard path: a melody must be limited, because it is parsed character by character. */
+    else if (MAX_MELODY_LENGTH < strnlen(melody, MAX_MELODY_LENGTH + 1U))
+    {
+        ;
+    }
+    /* Guard path: the name is separated by a colon from the rest. Without it the
+     * melody is no RTTTL and the parser would have nothing to synchronize on.
+     */
+    else if (nullptr == strchr(melody, ':'))
+    {
+        ;
+    }
+    else
+    {
+        uint32_t number;
 
         m_melody          = melody;
+        m_melodyEnd       = melody + strlen(melody);
         m_defaultDuration = DEFAULT_DURATION;
         m_defaultOctave   = DEFAULT_OCTAVE;
         m_bpm             = DEFAULT_BPM;
-        m_volume          = volume;
-        m_noteDelay       = 0U;
+        m_volume          = (MAX_VOLUME < volume) ? MAX_VOLUME : volume;
         m_isPlaying       = true;
 
+        m_noteTimer.start(0U);
+
         /* Stop current note. */
-        buzzerDrv.stop();
+        m_buzzerDrv.stop();
 
         /* Format: d=N,o=N,b=NNN: */
 
-        /* Skip name. */
-        while (*m_melody != ':')
+        /* Skip name. The colon is guaranteed to exist, see above. */
+        while (':' != *m_melody)
         {
-            ++m_melody;
+            advance(1U);
         }
 
         /* Skip ':' */
-        ++m_melody;
+        advance(1U);
 
         /* Get default duration */
         if ('d' == *m_melody)
         {
             /* Skip "d=" */
-            ++m_melody;
-            ++m_melody;
+            advance(2U);
 
             number = getNumber(m_melody, &m_melody);
 
             if ((0U < number) && (UINT8_MAX >= number))
             {
-                m_defaultDuration = number;
+                m_defaultDuration = static_cast<uint8_t>(number);
             }
 
             /* Skip comma. */
-            ++m_melody;
+            advanceIfChar(',');
         }
 
         /* Get default octave. */
         if ('o' == *m_melody)
         {
             /* Skip "o=" */
-            ++m_melody;
-            ++m_melody;
+            advance(2U);
 
             number = getNumber(m_melody, &m_melody);
 
             if ((OCTAVE_LOWER_LIMIT <= number) && (OCTAVE_UPPER_LIMIT >= number))
             {
-                m_defaultOctave = number;
+                m_defaultOctave = static_cast<uint8_t>(number);
             }
 
             /* Skip comma. */
-            ++m_melody;
+            advanceIfChar(',');
         }
 
         /* Get BPM. */
         if ('b' == *m_melody)
         {
             /* Skip "b=" */
-            ++m_melody;
-            ++m_melody;
+            advance(2U);
 
             m_bpm = getNumber(m_melody, &m_melody);
 
             /* Skip colon. */
-            ++m_melody;
+            advanceIfChar(':');
+        }
+
+        /* A missing or absurd BPM would lead to a division by zero or to a note
+         * duration of zero. Therefore it is limited to a playable range.
+         */
+        if (BPM_LOWER_LIMIT > m_bpm)
+        {
+            m_bpm = DEFAULT_BPM;
+        }
+        else if (BPM_UPPER_LIMIT < m_bpm)
+        {
+            m_bpm = BPM_UPPER_LIMIT;
+        }
+        else
+        {
+            /* BPM is in the valid range. */
+            ;
         }
 
         /* BPM = number of quarter notes per minute.
          * This is the time for whole note (in ms).
          */
         m_wholeNoteDuration = (60U * 1000U / m_bpm) * 4U;
+
+        isAccepted          = true;
     }
+
+    return isAccepted;
 }
 
 void RTTTL::play()
@@ -213,10 +253,8 @@ void RTTTL::play()
     /* Are we still playing a note? */
     if (true == m_isPlaying)
     {
-        uint32_t timestamp = millis();
-
         /* Are we ready to play the next note? */
-        if (timestamp >= m_noteDelay)
+        if (true == m_noteTimer.isTimeout())
         {
             /* Melody end reached? */
             if ((nullptr == m_melody) ||
@@ -236,22 +274,22 @@ void RTTTL::stop()
 {
     if (true == m_isPlaying)
     {
-        Board&      board     = Board::getInstance();
-        IBuzzerDrv& buzzerDrv = board.getBuzzerDrv();
+        m_buzzerDrv.stop();
 
-        buzzerDrv.stop();
+        m_noteTimer.stop();
 
         m_melody    = nullptr;
+        m_melodyEnd = nullptr;
         m_isPlaying = false;
     }
 }
 
-bool RTTTL::isPlaying()
+bool RTTTL::isPlaying() const
 {
     return m_isPlaying;
 }
 
-bool RTTTL::isDone()
+bool RTTTL::isDone() const
 {
     return (false == m_isPlaying);
 }
@@ -264,15 +302,54 @@ bool RTTTL::isDone()
  * Private Methods
  *****************************************************************************/
 
+void RTTTL::advance(size_t count)
+{
+    if ((nullptr != m_melody) &&
+        (nullptr != m_melodyEnd))
+    {
+        size_t remaining = static_cast<size_t>(m_melodyEnd - m_melody);
+
+        /* Never move behind the terminating null. This guarantees that every
+         * dereference of the cursor reads a valid character.
+         */
+        if (remaining < count)
+        {
+            count = remaining;
+        }
+
+        m_melody += count;
+    }
+}
+
+void RTTTL::advanceIfChar(char singleChar)
+{
+    if ((nullptr != m_melody) &&
+        (singleChar == *m_melody))
+    {
+        advance(1U);
+    }
+}
+
 uint32_t RTTTL::getNumber(const char* str, const char** remaining)
 {
     uint32_t number = 0U;
 
     if (nullptr != str)
     {
-        while (true == std::isdigit(*str))
+        while (0 != std::isdigit(static_cast<unsigned char>(*str)))
         {
-            number = (number * 10U) + ((*str) - '0');
+            uint32_t digit = static_cast<uint32_t>((*str) - '0');
+
+            /* Limit instead of wrapping around, if the accumulator would overflow. */
+            if (((UINT32_MAX - digit) / 10U) < number)
+            {
+                number = UINT32_MAX;
+            }
+            else
+            {
+                number = (number * 10U) + digit;
+            }
+
             ++str;
         }
 
@@ -287,15 +364,13 @@ uint32_t RTTTL::getNumber(const char* str, const char** remaining)
 
 void RTTTL::nextNote()
 {
-    Board&      board     = Board::getInstance();
-    IBuzzerDrv& buzzerDrv = board.getBuzzerDrv();
-    uint32_t    duration;
-    uint8_t     noteOffset;
-    uint32_t    scale;
-    uint32_t    number;
+    uint32_t duration;
+    uint8_t  noteOffset;
+    uint32_t scale;
+    uint32_t number;
 
     /* Stop current note */
-    buzzerDrv.stop();
+    m_buzzerDrv.stop();
 
     /* First, get note duration, if available. */
     number = getNumber(m_melody, &m_melody);
@@ -312,27 +387,35 @@ void RTTTL::nextNote()
 
     /* Now get the note offset for the NOTES table. */
     noteOffset = getNoteOffset(*m_melody);
-    ++m_melody;
+    advance(1U);
 
     /* Get optional '#' sharp. */
     if ('#' == *m_melody)
     {
-        ++noteOffset;
-        ++m_melody;
+        /* A sharp note of the last note in a octave, e.g. "b#", is no valid
+         * note. It must not be raised, otherwise the NOTES table index would
+         * leave the octave and in the upper octave even the table itself.
+         */
+        if (NOTES_PER_OCTAVE > noteOffset)
+        {
+            ++noteOffset;
+        }
+
+        advance(1U);
     }
 
     /* Get optional '.' dotted note. */
     if ('.' == *m_melody)
     {
         duration += duration / 2U;
-        ++m_melody;
+        advance(1U);
     }
 
     /* Get scale. */
-    if (true == std::isdigit(*m_melody))
+    if (0 != std::isdigit(static_cast<unsigned char>(*m_melody)))
     {
-        scale = *m_melody - '0';
-        ++m_melody;
+        scale = static_cast<uint32_t>(*m_melody - '0');
+        advance(1U);
     }
     else
     {
@@ -346,25 +429,30 @@ void RTTTL::nextNote()
         scale = m_defaultOctave;
     }
 
-    if (',' == *m_melody)
-    {
-        /* Skip comma for next note (or we may be at the end). */
-        ++m_melody;
-    }
+    /* Skip comma for next note (or we may be at the end). */
+    advanceIfChar(',');
 
     if (0U < noteOffset)
     {
         uint32_t octaveOffset = (scale - OCTAVE_LOWER_LIMIT) * NOTES_PER_OCTAVE;
-        uint32_t freq         = NOTES[octaveOffset + noteOffset];                       /* [Hz] */
-        uint16_t dc           = MAX_DUTY_CYCLE * static_cast<uint16_t>(m_volume) / 10U; /* [digits] */
+        uint32_t noteIndex    = octaveOffset + noteOffset;
 
-        buzzerDrv.play(freq, dc);
+        /* Defensive bound check. The octave and the note offset are limited
+         * above, this protects the table access against a future change.
+         */
+        if (UTIL_ARRAY_NUM(NOTES) > noteIndex)
+        {
+            uint32_t freq = NOTES[noteIndex];                                              /* [Hz] */
+            uint16_t dc   = MAX_DUTY_CYCLE * static_cast<uint16_t>(m_volume) / MAX_VOLUME; /* [digits] */
 
-        m_noteDelay = millis() + duration + 1U;
+            m_buzzerDrv.play(freq, dc);
+        }
+
+        m_noteTimer.start(duration + 1U);
     }
     else
     {
-        m_noteDelay = millis() + duration;
+        m_noteTimer.start(duration);
     }
 }
 
@@ -372,7 +460,7 @@ uint8_t RTTTL::getNoteOffset(char noteChar)
 {
     uint8_t noteOffset = 0U;
 
-    switch (std::tolower(noteChar))
+    switch (std::tolower(static_cast<unsigned char>(noteChar)))
     {
     case 'c':
         noteOffset = 1U;
