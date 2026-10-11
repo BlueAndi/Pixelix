@@ -74,6 +74,7 @@ Steps:
 2. Choose the build environment which matches your development board and display configuration, e.g. ```esp32doit-devkit-v1-LED-32x8```.
 3. Connect the development board with the PC and select its serial device in the browser dialog.
 4. Click on _Erase and install_. The complete flash is erased, which includes all settings of a previous installation. Bootloader, partition table, factory image, firmware and filesystem are written in one step, therefore no separate filesystem update is necessary.
+    - Enable _Keep settings_ to update an already installed Pixelix without losing its configuration. The flash erase is skipped, therefore the NVS partition and its device settings survive: WiFi credentials, hostname, web login, brightness, timezone and so on. The slot configuration, MQTT, sensor calibration, timers and the plugin configuration are stored in the filesystem, which is written in any case and therefore reset. Don't use it for the first installation on a board, where leftovers of a foreign software may remain in the flash.
 5. Keep the USB cable connected and optionally configure the WiFi credentials on the same page.
 
 If the board does not enter the download mode automatically, follow the BOOT/RESET sequence shown on the page.

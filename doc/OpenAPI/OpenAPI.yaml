@@ -2323,8 +2323,9 @@ paths:
           name: text
           schema:
             type: string
+            maxLength: 256
           required: true
-          description: "The notification text."
+          description: "The notification text. A longer text is rejected, not truncated."
         - in: query
           name: duration
           schema:
@@ -2344,8 +2345,9 @@ paths:
           name: melody
           schema:
             type: string
+            maxLength: 256
           required: false
-          description: "Melody in RTTTL format, limited to 256 characters. It starts when the notification appears, not when it is accepted. Only played on a board with a buzzer."
+          description: "Melody in RTTTL format. A longer melody is rejected and not truncated, because a cut off RTTTL string is invalid; the notification is still shown. It starts when the notification appears, not when it is accepted. Only played on a board with a buzzer."
         - in: query
           name: volume
           schema:

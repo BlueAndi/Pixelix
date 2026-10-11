@@ -303,6 +303,28 @@ input {
     min-height: 44px;
 }
 
+/* The generic input rule above targets text controls. A checkbox needs its
+ * Bootstrap box geometry back.
+ */
+.form-check-input[type="checkbox"] {
+    width: 1em;
+    min-height: 0;
+    padding: 0;
+}
+
+.keep-settings {
+    margin: 0 0 15px;
+}
+
+.keep-settings .form-check-label {
+    display: inline;
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
 select:focus-visible,
 input:focus-visible,
 button:focus-visible,

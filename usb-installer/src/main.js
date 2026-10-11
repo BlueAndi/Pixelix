@@ -43,6 +43,7 @@ const elements = {
     chipStatus: document.getElementById("chip-status"),
     bootloaderHelp: document.getElementById("bootloader-help"),
     flashButton: document.getElementById("flash-button"),
+    keepSettings: document.getElementById("keep-settings"),
     progressWrap: document.getElementById("progress-wrap"),
     flashProgress: document.getElementById("flash-progress"),
     progressLabel: document.getElementById("progress-label"),
@@ -140,6 +141,8 @@ function updateSerialControls() {
     elements.terminalForm.hidden = !isConsoleConnected;
     elements.connectButton.disabled = !manifest || isSessionOwned || isFlashing;
     elements.flashButton.disabled = !loader || !transport || Boolean(improv || isFlashing);
+    elements.flashButton.textContent = elements.keepSettings.checked ? "Install, keep settings" : "Erase and install";
+    elements.keepSettings.disabled = isFlashing;
     elements.wifiConnectButton.disabled = !devicePortReady || Boolean(improv || isFlashing);
 }
 
@@ -418,8 +421,10 @@ async function flashBoard() {
     try {
         const files = await Promise.all(selectedTarget.images.map(fetchImage));
         const totalBytes = getTotalImageBytes(files);
+        const eraseAll = selectedTarget.eraseAll && !elements.keepSettings.checked;
+        const eraseInfo = eraseAll ? "Erasing flash" : "Keeping the stored device settings";
 
-        addStatus(`Verified all ${files.length} images. Erasing flash and installing ${selectedTarget.environment}.`);
+        addStatus(`Verified all ${files.length} images. ${eraseInfo} and installing ${selectedTarget.environment}.`);
         setStepState("flash", "Flashing");
 
         await loader.writeFlash({
@@ -427,7 +432,7 @@ async function flashBoard() {
             flashMode: selectedTarget.flashMode,
             flashFreq: selectedTarget.flashFrequency,
             flashSize: selectedTarget.flashSize,
-            eraseAll: selectedTarget.eraseAll,
+            eraseAll,
             compress: true,
             /**
              * Translate esptool-js per-image compressed progress to total image progress.
@@ -446,7 +451,12 @@ async function flashBoard() {
         setStepState("flash", "Complete");
         devicePortReady = true;
         updateSerialControls();
-        addStatus("Firmware installed. Reconnect to the device for Wi-Fi setup.", "success");
+        addStatus(
+            eraseAll
+                ? "Firmware installed. Reconnect to the device for Wi-Fi setup."
+                : "Firmware installed. The stored settings were kept, so Wi-Fi setup is only needed if the device does not connect.",
+            "success"
+        );
         appendTerminalOutput("\r\n[Firmware flashed. The device rebooted; USB remains connected.]\r\n");
     } catch (error) {
         devicePortReady = false;
@@ -852,6 +862,7 @@ if (!("serial" in navigator) || !window.isSecureContext) {
 
 elements.connectButton.addEventListener("click", connectToBoard);
 elements.flashButton.addEventListener("click", flashBoard);
+elements.keepSettings.addEventListener("change", updateSerialControls);
 elements.wifiConnectButton.addEventListener("click", connectForWifiSetup);
 elements.wifiForm.addEventListener("submit", provisionWifi);
 elements.terminalConnectButton.addEventListener("click", toggleTerminalConnection);

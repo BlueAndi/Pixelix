@@ -69,7 +69,12 @@
                     <div class="step-number">03</div>
                     <div class="step-body">
                         <h2>Install firmware</h2>
-                        <p>This erases the current flash, including stored settings. Keep the USB cable connected while Pixelix restarts.</p>
+                        <p>By default the complete flash is erased, which removes every setting of a previous installation. Keep the USB cable connected while Pixelix restarts.</p>
+                        <div class="form-check keep-settings">
+                            <input class="form-check-input" id="keep-settings" type="checkbox" />
+                            <label class="form-check-label" for="keep-settings">Keep settings (not recommended for initial Pixelix installation)</label>
+                        </div>
+                        <p class="step-note">Keeps the device settings stored in NVS: WiFi credentials, hostname, web login, brightness, timezone and so on. Slot configuration, MQTT, sensor calibration, timers and plugin configuration are reset in any case, because the filesystem image is always written.</p>
                         <button class="btn button button-accent" id="flash-button" type="button" disabled>Erase and install</button>
                         <div class="progress-wrap" id="progress-wrap" hidden>
                             <progress id="flash-progress" max="100" value="0"></progress>
