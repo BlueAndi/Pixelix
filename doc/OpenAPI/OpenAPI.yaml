@@ -2345,7 +2345,7 @@ paths:
           schema:
             type: string
           required: false
-          description: "Melody in RTTTL format, limited to 256 characters. Only played on a board with a buzzer."
+          description: "Melody in RTTTL format, limited to 256 characters. It starts when the notification appears, not when it is accepted. Only played on a board with a buzzer."
         - in: query
           name: volume
           schema:

@@ -206,6 +206,18 @@ void Topics::begin()
         settings.close();
     }
 
+#if (0 != CONFIG_MELODY_SERVICE_ENABLE)
+
+    /* Connect the notification to the melody service. The system message plugin
+     * itself has no audio knowledge.
+     */
+    SysMsg::getInstance().registerMelodyHandler(
+        [](const String& melody, uint8_t volume) {
+            (void)MelodyService::getInstance().playMelody(melody, volume);
+        });
+
+#endif /* (0 != CONFIG_MELODY_SERVICE_ENABLE) */
+
     /* Register topics */
     for (idx = 0U; idx < UTIL_ARRAY_NUM(gTopicList); ++idx)
     {
@@ -401,14 +413,6 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
 }
 
 /**
- * Restart the device.
- *
- * @param[in]   topic   Topic
- * @param[in]   value   Value
- *
- * @return If successful, it will return true otherwise false.
- */
-/**
  * Show a notification on the display.
  *
  * Mandatory is only the text. The duration is limited, so a notification can
@@ -436,8 +440,10 @@ static bool notify(const String& topic, const JsonObjectConst& value)
     }
     else
     {
-        uint32_t duration     = NOTIFY_DURATION_DEFAULT;
-        String   iconFileName = "";
+        uint32_t duration = NOTIFY_DURATION_DEFAULT;
+        String   iconFileName;
+        String   melody;
+        uint8_t  volume = 0U;
 
         if (true == jsonDuration.is<uint32_t>())
         {
@@ -474,26 +480,36 @@ static bool notify(const String& topic, const JsonObjectConst& value)
 
             if (true == jsonMelody.is<String>())
             {
-                uint8_t volume = RTTTL::MAX_VOLUME;
+                melody = jsonMelody.as<String>();
+                volume = RTTTL::MAX_VOLUME;
 
                 if (true == jsonVolume.is<uint8_t>())
                 {
                     volume = jsonVolume.as<uint8_t>();
                 }
-
-                /* A rejected melody shall not suppress the notification. */
-                (void)MelodyService::getInstance().playMelody(jsonMelody.as<String>(), volume);
             }
         }
 
 #endif /* (0 != CONFIG_MELODY_SERVICE_ENABLE) */
 
-        isSuccessful = SysMsg::getInstance().showNotification(jsonText.as<String>(), duration, iconFileName);
+        /* The melody travels with the notification and is started when it
+         * appears. Playing it here would sound to the previous message, or to a
+         * notification which is never shown because the queue is full.
+         */
+        isSuccessful = SysMsg::getInstance().showNotification(jsonText.as<String>(), duration, iconFileName, melody, volume);
     }
 
     return isSuccessful;
 }
 
+/**
+ * Restart the device.
+ *
+ * @param[in]   topic   Topic
+ * @param[in]   value   Value
+ *
+ * @return If successful, it will return true otherwise false.
+ */
 static bool restart(const String& topic, const JsonObjectConst& value)
 {
     const uint32_t RESTART_DELAY = 100U; /* ms */

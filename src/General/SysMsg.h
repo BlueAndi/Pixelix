@@ -102,10 +102,22 @@ public:
      * @param[in] msg           Message to show
      * @param[in] duration      Duration in ms, how long the notification shall be shown.
      * @param[in] iconFileName  Full path of the icon file. Empty means no icon.
+     * @param[in] melody        Melody in RTTTL format, played when the notification appears. Empty means no melody.
+     * @param[in] volume        Volume of the melody.
      *
      * @return If the notification is queued, it will return true otherwise false.
      */
-    bool showNotification(const String& msg, uint32_t duration, const String& iconFileName);
+    bool showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume);
+
+    /**
+     * Register the handler which plays the melody of a notification.
+     *
+     * The handler is called when the notification appears, not when it is
+     * queued. Without a handler a melody is silently ignored.
+     *
+     * @param[in] handler   The melody handler.
+     */
+    void registerMelodyHandler(SysMsgPlugin::MelodyHandler handler);
 
     /**
      * Is a system message shown in this moment?

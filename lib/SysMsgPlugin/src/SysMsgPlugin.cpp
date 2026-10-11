@@ -79,6 +79,8 @@ void SysMsgPlugin::active(YAGfx& gfx)
 
 void SysMsgPlugin::inactive()
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     /* User selected next slot. Skip showing current information further. */
     disable();
 
@@ -92,9 +94,10 @@ void SysMsgPlugin::inactive()
 
 void SysMsgPlugin::update(YAGfx& gfx)
 {
-    bool     isScrollingEnabled = false;
-    uint32_t scrollingCnt       = 0U;
-    bool     status             = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       isScrollingEnabled = false;
+    uint32_t                   scrollingCnt       = 0U;
+    bool                       status             = false;
 
     m_view.update(gfx);
 
@@ -172,12 +175,23 @@ void SysMsgPlugin::update(YAGfx& gfx)
 
 bool SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 {
-    return enqueue(msg, duration, max, String(), false);
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    return enqueue(msg, duration, max, String(), String(), 0U, false);
 }
 
-bool SysMsgPlugin::showNotification(const String& msg, uint32_t duration, const String& iconFileName)
+bool SysMsgPlugin::showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume)
 {
-    return enqueue(msg, duration, 0U, iconFileName, true);
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    return enqueue(msg, duration, 0U, iconFileName, melody, volume, true);
+}
+
+void SysMsgPlugin::registerMelodyHandler(MelodyHandler handler)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_melodyHandler = handler;
 }
 
 /******************************************************************************
@@ -188,7 +202,7 @@ bool SysMsgPlugin::showNotification(const String& msg, uint32_t duration, const 
  * Private Methods
  *****************************************************************************/
 
-bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, bool isDurationHard)
+bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, const String& melody, uint8_t volume, bool isDurationHard)
 {
     bool   isQueued     = false;
     size_t nextWrIndex  = m_wrIndex + 1U;
@@ -205,6 +219,8 @@ bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, c
         m_messages[m_wrIndex].duration       = duration;
         m_messages[m_wrIndex].max            = max;
         m_messages[m_wrIndex].iconFileName   = iconFileName;
+        m_messages[m_wrIndex].melody         = melody;
+        m_messages[m_wrIndex].volume         = volume;
         m_messages[m_wrIndex].isDurationHard = isDurationHard;
 
         m_wrIndex                            = nextWrIndex;
@@ -251,9 +267,20 @@ bool SysMsgPlugin::nextMessage()
         m_isDurationHard = sysMsg.isDurationHard;
         m_isInit         = true;
 
+        /* The melody belongs to this message and starts now, together with it.
+         * Starting it already when the message is queued would play it to the
+         * previous message or to a message which is never shown at all.
+         */
+        if ((false == sysMsg.melody.isEmpty()) &&
+            (nullptr != m_melodyHandler))
+        {
+            m_melodyHandler(sysMsg.melody, sysMsg.volume);
+        }
+
         /* Release the message, it is handed over to the view now. */
         sysMsg.msg.clear();
         sysMsg.iconFileName.clear();
+        sysMsg.melody.clear();
 
         ++m_rdIndex;
         m_rdIndex      %= MAX_SYS_MSG;

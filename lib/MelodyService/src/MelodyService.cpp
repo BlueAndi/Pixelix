@@ -86,6 +86,8 @@ bool MelodyService::start()
 
 bool MelodyService::startWithBuzzer(IBuzzerDrv& buzzerDrv)
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if (false == m_isStarted)
     {
         m_buzzerProxy.setBuzzerDrv(buzzerDrv);
@@ -99,6 +101,8 @@ bool MelodyService::startWithBuzzer(IBuzzerDrv& buzzerDrv)
 
 void MelodyService::stop()
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     stopMelody();
 
     m_isStarted = false;
@@ -108,6 +112,8 @@ void MelodyService::stop()
 
 void MelodyService::process()
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if (true == m_isStarted)
     {
         m_player.play();
@@ -126,7 +132,8 @@ void MelodyService::process()
 
 bool MelodyService::playMelody(const String& melody, uint8_t volume)
 {
-    bool isAccepted = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       isAccepted = false;
 
     /* Guard path: without a started service there is no buzzer to play on. */
     if (false == m_isStarted)
@@ -157,17 +164,23 @@ bool MelodyService::playMelody(const String& melody, uint8_t volume)
 
 void MelodyService::stopMelody()
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     m_player.stop();
     m_currentMelody.clear();
 }
 
 bool MelodyService::isPlaying() const
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     return m_player.isPlaying();
 }
 
 const String& MelodyService::getCurrentMelody() const
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     return m_currentMelody;
 }
 

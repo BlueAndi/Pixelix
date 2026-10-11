@@ -50,6 +50,7 @@
 #include <IService.hpp>
 #include <IBuzzerDrv.h>
 #include <WString.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -265,6 +266,15 @@ private:
     bool        m_isStarted;     /**< Is the service started? */
 
     /**
+     * Mutex to protect against concurrent access.
+     *
+     * A melody is requested from the task which handles the notification, while
+     * the playback runs in the service task. Without the mutex the player could
+     * reference the melody string while it is replaced.
+     */
+    mutable MutexRecursive m_mutex;
+
+    /**
      * Constructs the melody service.
      */
     MelodyService() :
@@ -272,8 +282,10 @@ private:
         m_buzzerProxy(),
         m_player(m_buzzerProxy),
         m_currentMelody(),
-        m_isStarted(false)
+        m_isStarted(false),
+        m_mutex()
     {
+        (void)m_mutex.create();
     }
 
     /**
@@ -281,6 +293,7 @@ private:
      */
     ~MelodyService()
     {
+        m_mutex.destroy();
     }
 
     MelodyService(const MelodyService& service);

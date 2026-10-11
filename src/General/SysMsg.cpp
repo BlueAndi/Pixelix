@@ -119,7 +119,7 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
     }
 }
 
-bool SysMsg::showNotification(const String& msg, uint32_t duration, const String& iconFileName)
+bool SysMsg::showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume)
 {
     bool isQueued = false;
 
@@ -129,7 +129,7 @@ bool SysMsg::showNotification(const String& msg, uint32_t duration, const String
         uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
 
         /* Important: Call first showNotification() to enable plugin. Otherwise the slot activation request will fail. */
-        isQueued               = m_plugin->showNotification(msg, duration, iconFileName);
+        isQueued               = m_plugin->showNotification(msg, duration, iconFileName, melody, volume);
 
         if (true == isQueued)
         {
@@ -155,6 +155,14 @@ bool SysMsg::showNotification(const String& msg, uint32_t duration, const String
     }
 
     return isQueued;
+}
+
+void SysMsg::registerMelodyHandler(SysMsgPlugin::MelodyHandler handler)
+{
+    if (nullptr != m_plugin)
+    {
+        m_plugin->registerMelodyHandler(handler);
+    }
 }
 
 bool SysMsg::isActive() const
