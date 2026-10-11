@@ -263,6 +263,9 @@ public:
     /**
      * Get slot which is marked sticky.
      *
+     * A sticky flag which is temporarily suspended by suspendSticky() is still
+     * reported here, because it remains the users configuration.
+     *
      * @return Id of sticky slot. If no slot is sticky, it will return SLOT_ID_INVALID.
      */
     uint8_t getStickySlot() const;
@@ -285,6 +288,29 @@ public:
      * Removes the sticky flag.
      */
     void clearSticky();
+
+    /**
+     * Suspend the sticky flag temporarily in favour of the given slot.
+     *
+     * The sticky flag of the currently sticky slot is removed and automatically
+     * restored as soon as the plugin in the given slot is not enabled anymore.
+     * This is used to show a slot with a higher priority, e.g. a system message,
+     * without losing the users sticky slot configuration.
+     *
+     * A explicit sticky flag change (setSlotSticky()/clearSticky()) in the meantime
+     * cancels the restoration, because the user request has a higher priority.
+     *
+     * The suspension is only visible to the slot scheduling. Towards the outside
+     * (getStickySlot(), getSlotConfig()) the slot is still reported sticky, so
+     * neither the web user interface nor the persistent slot configuration are
+     * influenced.
+     *
+     * If no slot is sticky, the given slot is sticky itself or a sticky flag is
+     * already suspended, it will do nothing.
+     *
+     * @param[in] slotId    The id of the slot which shall be shown instead of the sticky one.
+     */
+    void suspendSticky(uint8_t slotId);
 
     /**
      * Activate the slot with the given id.
@@ -552,6 +578,12 @@ private:
     /** Current selected slot. */
     uint8_t m_selectedSlotId;
 
+    /** Id of the slot, whose sticky flag is suspended. If no sticky flag is suspended, it contains a invalid id. */
+    uint8_t m_stickySlotIdSuspended;
+
+    /** Id of the slot, which caused the sticky flag suspension. If no sticky flag is suspended, it contains a invalid id. */
+    uint8_t m_slotIdSuspender;
+
     /** Current selected plugin, which is active shown. */
     IPluginMaintenance* m_selectedPlugin;
 
@@ -618,6 +650,16 @@ private:
      * @return Id of previous slot
      */
     uint8_t previousSlot(uint8_t slotId);
+
+    /**
+     * Restore a sticky flag, which was suspended by suspendSticky().
+     *
+     * The restoration takes place as soon as the plugin in the slot, which
+     * caused the suspension, is not enabled anymore.
+     *
+     * Note, the caller must be in the context of the interface mutex.
+     */
+    void restoreSuspendedSticky(void);
 
     /**
      * Process the slots. This shall be called periodically in

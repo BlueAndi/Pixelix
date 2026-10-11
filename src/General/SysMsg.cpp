@@ -98,10 +98,11 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
         {
             bool isRecovered = false;
 
-            if (SlotList::SLOT_ID_INVALID != displayMgr.getStickySlot())
-            {
-                displayMgr.clearSticky();
-            }
+            /* A sticky slot prevents the activation. Suspend the sticky flag
+             * instead of removing it, because the display manager restores it
+             * automatically after the system message is over.
+             */
+            displayMgr.suspendSticky(slotId);
 
             displayMgr.enableSlot(slotId);
             isRecovered = displayMgr.activateSlot(slotId);

@@ -538,7 +538,7 @@ bool DisplayMgr::getSlotConfig(uint8_t slotId, SlotConfig& config) const
 
         config.duration   = m_slotList.getDuration(slotId);
         config.isLocked   = m_slotList.isLocked(slotId);
-        config.isSticky   = m_slotList.isSticky(slotId);
+        config.isSticky   = (slotId == getStickySlot());
         config.isDisabled = m_slotList.isDisabled(slotId);
 
         isSuccessful      = true;
@@ -550,7 +550,20 @@ bool DisplayMgr::getSlotConfig(uint8_t slotId, SlotConfig& config) const
 uint8_t DisplayMgr::getStickySlot() const
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
-    uint8_t                    slotId = m_slotList.getStickySlot();
+    uint8_t                    slotId = m_stickySlotIdSuspended;
+
+    /* A suspended sticky flag is reported as still being set, because it is the
+     * users configuration. Otherwise the sticky flag would disappear in the web
+     * user interface and would be stored as removed, as long as a temporary
+     * slot, e.g. a system message, is shown.
+     *
+     * Note, the slot scheduling uses the sticky flag of the slot list directly
+     * and is therefore not influenced.
+     */
+    if (SlotList::SLOT_ID_INVALID == slotId)
+    {
+        slotId = m_slotList.getStickySlot();
+    }
 
     return slotId;
 }
@@ -565,6 +578,10 @@ bool DisplayMgr::setSlotSticky(uint8_t slotId)
 
     if (true == isSuccessful)
     {
+        /* A explicit request has a higher priority than a suspended sticky flag. */
+        m_stickySlotIdSuspended = SlotList::SLOT_ID_INVALID;
+        m_slotIdSuspender       = SlotList::SLOT_ID_INVALID;
+
         if (SlotList::SLOT_ID_INVALID == slotId)
         {
             LOG_INFO("Sticky flag cleared.");
@@ -581,6 +598,10 @@ bool DisplayMgr::setSlotSticky(uint8_t slotId)
 void DisplayMgr::clearSticky()
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
+
+    /* A explicit request has a higher priority than a suspended sticky flag. */
+    m_stickySlotIdSuspended = SlotList::SLOT_ID_INVALID;
+    m_slotIdSuspender       = SlotList::SLOT_ID_INVALID;
 
     m_slotList.clearSticky();
 
@@ -599,6 +620,45 @@ void DisplayMgr::clearSticky()
     }
 
     LOG_INFO("Sticky flag cleared.");
+}
+
+void DisplayMgr::suspendSticky(uint8_t slotId)
+{
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+    uint8_t                    stickySlotId = m_slotList.getStickySlot();
+
+    /* Nothing to suspend? */
+    if (SlotList::SLOT_ID_INVALID == stickySlotId)
+    {
+        /* Guard path: no slot is sticky. */
+        ;
+    }
+    /* The sticky slot shall be shown anyway? */
+    else if (stickySlotId == slotId)
+    {
+        /* Guard path: the sticky slot is the one to show, no suspension necessary. */
+        ;
+    }
+    /* A sticky flag is already suspended? */
+    else if (SlotList::SLOT_ID_INVALID != m_stickySlotIdSuspended)
+    {
+        /* Guard path: a second suspension would overwrite the original sticky
+         * slot id and therefore the sticky flag would be lost.
+         */
+        ;
+    }
+    else
+    {
+        /* Note, clearSticky() cancels a pending restoration. Therefore the
+         * suspension is noted afterwards.
+         */
+        clearSticky();
+
+        m_stickySlotIdSuspended = stickySlotId;
+        m_slotIdSuspender       = slotId;
+
+        LOG_INFO("Sticky flag of slot %u suspended by slot %u.", stickySlotId, slotId);
+    }
 }
 
 bool DisplayMgr::activateSlot(uint8_t slotId)
@@ -913,6 +973,8 @@ DisplayMgr::DisplayMgr() :
     m_updateTaskLastDuration(UPDATE_TASK_PERIOD_MIN),
     m_slotList(),
     m_selectedSlotId(SlotList::SLOT_ID_INVALID),
+    m_stickySlotIdSuspended(SlotList::SLOT_ID_INVALID),
+    m_slotIdSuspender(SlotList::SLOT_ID_INVALID),
     m_selectedPlugin(nullptr),
     m_requestedPlugin(nullptr),
     m_slotTimer(),
@@ -1033,6 +1095,39 @@ uint8_t DisplayMgr::previousSlot(uint8_t slotId)
     return slotId;
 }
 
+void DisplayMgr::restoreSuspendedSticky(void)
+{
+    /* Is a sticky flag suspended? */
+    if (SlotList::SLOT_ID_INVALID != m_stickySlotIdSuspended)
+    {
+        const IPluginMaintenance* suspenderPlugin = m_slotList.getPlugin(m_slotIdSuspender);
+
+        /* The slot which caused the suspension is shown as long as its plugin
+         * is enabled. The plugin disables itself after the job is done.
+         */
+        if ((nullptr == suspenderPlugin) ||
+            (false == suspenderPlugin->isEnabled()))
+        {
+            uint8_t stickySlotId    = m_stickySlotIdSuspended;
+
+            /* Clear the suspension first, to avoid a retry in the next cycle
+             * in case the sticky flag can not be set anymore.
+             */
+            m_stickySlotIdSuspended = SlotList::SLOT_ID_INVALID;
+            m_slotIdSuspender       = SlotList::SLOT_ID_INVALID;
+
+            if (false == m_slotList.setSlotSticky(stickySlotId))
+            {
+                LOG_WARNING("Sticky flag of slot %u can not be restored.", stickySlotId);
+            }
+            else
+            {
+                LOG_INFO("Sticky flag of slot %u restored.", stickySlotId);
+            }
+        }
+    }
+}
+
 void DisplayMgr::process()
 {
     uint8_t                    index      = 0U;
@@ -1041,6 +1136,13 @@ void DisplayMgr::process()
 
     /* Handle display brightness */
     BrightnessCtrl::getInstance().process();
+
+    /* Restore a suspended sticky flag, as soon as the slot which caused the
+     * suspension is not shown anymore. It must take place before the sticky
+     * slot is evaluated, otherwise a different slot would be scheduled in
+     * between.
+     */
+    restoreSuspendedSticky();
 
     /* Check whether a different slot got sticky and it shall be activated. */
     stickySlot = m_slotList.getStickySlot();
