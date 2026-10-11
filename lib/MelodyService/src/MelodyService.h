@@ -143,9 +143,13 @@ public:
     /**
      * Get the melody which is currently playing.
      *
+     * A copy is returned by intention. A reference would only be protected while
+     * it is handed out, not while the caller reads it, and the playback may clear
+     * the melody in between.
+     *
      * @return The melody in RTTTL format. If no melody is playing, it will be empty.
      */
-    const String& getCurrentMelody() const;
+    String getCurrentMelody() const;
 
 private:
 

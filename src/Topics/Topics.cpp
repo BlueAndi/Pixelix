@@ -45,6 +45,8 @@
 
 #include <Logging.h>
 
+#include <string.h>
+
 #if (0 != CONFIG_MELODY_SERVICE_ENABLE)
 
 #include <MelodyService.h>
@@ -134,6 +136,16 @@ static const uint32_t NOTIFY_DURATION_DEFAULT = 10000U;
 
 /** Maximum duration of a notification in ms. A greater value will be limited. */
 static const uint32_t NOTIFY_DURATION_MAX     = 60000U;
+
+/**
+ * Maximum length of a notification text in characters.
+ *
+ * The text is copied into the message queue, which holds several entries. Without
+ * a limit a few requests could occupy a noticeable amount of heap on a device
+ * without PSRAM. A too long text is rejected and not truncated, so the sender
+ * notices it instead of seeing a cut off message.
+ */
+static const size_t NOTIFY_TEXT_MAX_LENGTH    = 256U;
 
 /**
  * Device id, which is unique for each device.
@@ -430,13 +442,19 @@ static bool notify(const String& topic, const JsonObjectConst& value)
     JsonVariantConst jsonText         = value["text"];
     JsonVariantConst jsonDuration     = value["duration"];
     JsonVariantConst jsonIconFileName = value["iconFileName"];
+    const char*      text             = jsonText.as<const char*>();
 
     UTIL_NOT_USED(topic);
 
     /* Guard path: without a text there is nothing to show. */
-    if (false == jsonText.is<String>())
+    if (nullptr == text)
     {
         LOG_WARNING("Notification without text.");
+    }
+    /* Guard path: the text is queued, therefore its length is limited. */
+    else if (NOTIFY_TEXT_MAX_LENGTH < strlen(text))
+    {
+        LOG_WARNING("Notification text too long.");
     }
     else
     {
@@ -467,9 +485,13 @@ static bool notify(const String& topic, const JsonObjectConst& value)
             }
         }
 
-        if (true == jsonIconFileName.is<String>())
         {
-            iconFileName = jsonIconFileName.as<String>();
+            const char* iconFileNamePtr = jsonIconFileName.as<const char*>();
+
+            if (nullptr != iconFileNamePtr)
+            {
+                iconFileName = iconFileNamePtr;
+            }
         }
 
 #if (0 != CONFIG_MELODY_SERVICE_ENABLE)
@@ -478,14 +500,28 @@ static bool notify(const String& topic, const JsonObjectConst& value)
             JsonVariantConst jsonMelody = value["melody"];
             JsonVariantConst jsonVolume = value["volume"];
 
-            if (true == jsonMelody.is<String>())
-            {
-                melody = jsonMelody.as<String>();
-                volume = RTTTL::MAX_VOLUME;
+            const char*      melodyPtr  = jsonMelody.as<const char*>();
 
-                if (true == jsonVolume.is<uint8_t>())
+            if (nullptr != melodyPtr)
+            {
+                /* The melody is queued as well, therefore its length is limited
+                 * too. It is rejected and not truncated, because a cut off RTTTL
+                 * string is either invalid or sounds wrong. A rejected melody
+                 * does not suppress the notification itself.
+                 */
+                if (RTTTL::MAX_MELODY_LENGTH < strlen(melodyPtr))
                 {
-                    volume = jsonVolume.as<uint8_t>();
+                    LOG_WARNING("Notification melody too long.");
+                }
+                else
+                {
+                    melody = melodyPtr;
+                    volume = RTTTL::MAX_VOLUME;
+
+                    if (true == jsonVolume.is<uint8_t>())
+                    {
+                        volume = jsonVolume.as<uint8_t>();
+                    }
                 }
             }
         }
@@ -496,7 +532,7 @@ static bool notify(const String& topic, const JsonObjectConst& value)
          * appears. Playing it here would sound to the previous message, or to a
          * notification which is never shown because the queue is full.
          */
-        isSuccessful = SysMsg::getInstance().showNotification(jsonText.as<String>(), duration, iconFileName, melody, volume);
+        isSuccessful = SysMsg::getInstance().showNotification(text, duration, iconFileName, melody, volume);
     }
 
     return isSuccessful;

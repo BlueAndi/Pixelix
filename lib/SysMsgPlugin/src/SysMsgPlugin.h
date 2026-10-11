@@ -131,6 +131,8 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         return m_view.getFontType();
     }
 
@@ -145,6 +147,8 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         m_view.setFontType(fontType);
     }
 

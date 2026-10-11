@@ -177,7 +177,7 @@ bool MelodyService::isPlaying() const
     return m_player.isPlaying();
 }
 
-const String& MelodyService::getCurrentMelody() const
+String MelodyService::getCurrentMelody() const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
