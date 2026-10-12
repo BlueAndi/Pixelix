@@ -253,7 +253,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Publish the USB installer on GitHub Pages with the binaries of this release.
+  # Publish the USB installer and the Home Assistant blueprints on GitHub Pages.
   publish_installer:
     needs: [deploy]
     permissions:

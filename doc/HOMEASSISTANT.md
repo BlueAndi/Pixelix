@@ -14,6 +14,7 @@
     - [Installation (MQTT)](#installation-mqtt)
     - [MQTT Discovery](#mqtt-discovery)
     - [Automation (MQTT)](#automation-mqtt)
+    - [Notification (MQTT)](#notification-mqtt)
 - [Automation Blueprint](#automation-blueprint)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
@@ -92,6 +93,7 @@ The Home Assistant MQTT discovery is supported by several plugins and features, 
 
 - Display on/off
 - Device restart
+- Notification
 - Sensor information
 - IconTextPlugin
 - IconTextLampPlugin
@@ -127,16 +129,49 @@ Add an automation to `automations.yaml`, for example to show the garage door sta
 
 For a simpler approach without writing YAML manually, see the [Automation Blueprint](#automation-blueprint) section.
 
+#### Notification (MQTT)
+
+With MQTT discovery enabled, Pixelix provides a *Notification* entity (`notify` domain). It shows the message on top of everything else for a limited time.
+
+The Home Assistant `notify.send_message` action only transfers a message. To set duration, icon and melody, the message is a JSON string. A plain text message is shown with the default duration of 10 s.
+
+| Field          | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| `text`         | Text to show. Mandatory, max. 256 characters.         |
+| `duration`     | Duration in ms. Default and for 0: 10000, max. 60000. |
+| `iconFileName` | Full path of an icon on the device. Optional.         |
+| `melody`       | Melody in RTTTL format. Optional, requires a buzzer.  |
+| `volume`       | Volume of the melody. Optional.                       |
+
+```yaml
+- action: notify.send_message
+  target:
+    entity_id: notify.pixelix_notification
+  data:
+    message: >-
+      {{ {
+        "text": "Door open",
+        "duration": 15000,
+        "iconFileName": "/configuration/smiley.bmp",
+        "melody": "Beep:d=4,o=5,b=200:c,e,g"
+      } | tojson }}
+```
+
+The entity id depends on the device name. A message which starts with `{` is forwarded unchanged, everything else is handled as text.
+
+Without writing the JSON manually, use the [notification blueprint](#automation-blueprint).
+
 ## Automation Blueprint
 
 [Automation Blueprints](https://www.home-assistant.io/docs/automation/using_blueprints/) let you set up automations through a guided interface without writing YAML from scratch. Pixelix provides blueprints for both REST API and MQTT API communication. Click a button below to import the blueprint directly into your Home Assistant instance.
 
-| Supported Plugin                      | Blueprint                                                                                                                                                                                                                        |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IconTextPlugin and IconTextLampPlugin | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fwww.blue-andi.de%2Fpixelix%2Fpixelix_send_sensor_data.yaml)  |
-| MultiIconPlugin                       | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fwww.blue-andi.de%2Fpixelix%2Fpixelix_multi_icon_plugin.yaml) |
+| Supported Plugin                      | Blueprint                                                                                                                                                                                                                          |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IconTextPlugin and IconTextLampPlugin | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fblueandi.github.io%2FPixelix%2Fpixelix_send_sensor_data.yaml)  |
+| MultiIconPlugin                       | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fblueandi.github.io%2FPixelix%2Fpixelix_multi_icon_plugin.yaml) |
+| Notification (MQTT and REST)          | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fblueandi.github.io%2FPixelix%2Fpixelix_notification.yaml)      |
 
-Alternatively, copy [pixelix_send_sensor_data.yaml](./homeassistant/blueprint/pixelix_send_sensor_data.yaml) and [pixelix_multi_icon_plugin.yaml](./homeassistant/blueprint/pixelix_multi_icon_plugin.yaml) to `/config/blueprints/automation/homeassistant/`.
+Alternatively, copy [pixelix_send_sensor_data.yaml](./homeassistant/blueprint/pixelix_send_sensor_data.yaml), [pixelix_multi_icon_plugin.yaml](./homeassistant/blueprint/pixelix_multi_icon_plugin.yaml) and [pixelix_notification.yaml](./homeassistant/blueprint/pixelix_notification.yaml) to `/config/blueprints/automation/homeassistant/`.
 
 When using the REST API, also add the following REST command to `configuration.yaml`:
 

@@ -1,4 +1,4 @@
-name: Publish USB Installer
+name: Publish GitHub Pages
 
 on:
     # Called by the release pipeline, right after the release was created.
@@ -114,6 +114,9 @@ jobs:
                     --packages-dir release-packages \
                     --site-dir site \
                     --version "$VERSION_LABEL"
+
+            - name: Add Home Assistant blueprints
+              run: cp doc/homeassistant/blueprint/*.yaml site/
 
             - name: Upload Pages artifact
               uses: actions/upload-pages-artifact@v4

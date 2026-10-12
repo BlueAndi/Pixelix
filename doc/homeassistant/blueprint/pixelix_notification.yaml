@@ -1,0 +1,197 @@
+blueprint:
+  # https://www.home-assistant.io/docs/blueprint/schema/
+  # https://www.home-assistant.io/docs/automation/basics/
+  name: Pixelix - Show notification on Pixelix device
+  description: |
+    # Pixelix Notification Blueprint
+
+    Shows a notification on a Pixelix device whenever the selected trigger fires.
+    The notification interrupts the current slot for the given time. Optionally a icon is shown
+    and a melody is played, if the device has a buzzer.
+  domain: automation
+  author: Pixelix & Friends <https://github.com/BlueAndi/Pixelix>
+  source_url: https://blueandi.github.io/Pixelix/pixelix_notification.yaml
+  homeassistant:
+    min_version: 2024.10.0
+  # https://www.home-assistant.io/docs/blueprint/selectors/
+  input:
+    section_notification:
+      name: Notification Section
+      description: Content of the notification.
+      input:
+        triggers:
+          name: Triggers
+          description: What shall trigger the notification?
+          selector:
+            trigger:
+        user_conditions:
+          name: User Conditions
+          description: User defined conditions for the automation.
+          default: []
+          selector:
+            condition:
+        text:
+          name: Text
+          description: |
+            The text to show, max. 256 characters. Templates are supported, e.g. "Door {{ states('binary_sensor.door') }}".
+          selector:
+            text:
+        duration:
+          name: Duration
+          description: |
+            How long the notification is shown in seconds. 0 means the default of the device (10 s).
+            The maximum is 60 s. The duration also ends a scrolling text.
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 60
+              unit_of_measurement: s
+              mode: box
+        icon_file_name:
+          name: Icon File Name
+          description: |
+            Optional: The full path of the icon to display, e.g. /configuration/smiley.bmp.
+            See Pixelix icons web page for the available icons and their paths.
+            Without a icon the text uses the full display width.
+          default: ""
+          selector:
+            text:
+        melody:
+          name: Melody
+          description: |
+            Optional: Melody in RTTTL format, max. 256 characters. It is played when the notification appears.
+            Only supported by devices with a buzzer, otherwise it is ignored.
+          default: ""
+          selector:
+            text:
+        volume:
+          name: Melody Volume
+          description: The volume of the melody. Only used together with a melody.
+          default: 10
+          selector:
+            number:
+              min: 0
+              max: 10
+              mode: slider
+    section_protocol:
+      name: Protocol Section
+      description: |
+        # Protocol specific configuration.
+
+        ## MQTT API
+
+        For the communication to Pixelix via MQTT API, you need to install the MQTT integration in Home Assistant and
+        configure it to connect to your MQTT broker.
+
+        Enable MQTT in Pixelix via the settings web page. Pixelix uses the MQTT automatic discovery feature.
+
+        ## REST API
+
+        For the REST API add the following REST command to your configuration.yaml in Home Assistant.
+        It will be called by the automation blueprint.
+
+        ```yaml
+          rest_command:
+            pixelix_plugin_command:
+              url: "http://{{ hostname }}{{ endpoint }}?{{ url_parameter }}"
+              method: POST
+        ```
+      input:
+        protocol:
+          name: Communication Protocol
+          description: The protocol to use for communication.
+          default: mqtt
+          selector:
+            select:
+              options:
+                - label: MQTT API
+                  value: mqtt
+                - label: REST API
+                  value: rest
+        pixelix_device:
+          name: MQTT Pixelix device
+          description: |
+            The Pixelix device to use for MQTT communication.
+            Only used by MQTT API protocol selection.
+          default:
+          selector:
+            device:
+              integration: mqtt
+              manufacturer: BlueAndi & Friends
+              model: Pixelix
+        pixelix_hostname:
+          name: Pixelix Hostname
+          description: |
+            Enter the hostname (e.g. pixelix-FFFFFFFF or 192.168.178.110) of the Pixelix device.
+            Only used by REST API protocol selection.
+          default: ""
+          selector:
+            text:
+
+variables:
+  var_text: !input text
+  var_duration: !input duration
+  var_icon_file_name: !input icon_file_name
+  var_melody: !input melody
+  var_volume: !input volume
+  var_protocol: !input protocol
+  var_device: !input pixelix_device
+  var_hostname: !input pixelix_hostname
+  var_data: >-
+    {%- set ns = namespace(data = dict(text=var_text)) -%}
+    {%- if var_duration | int > 0 -%}
+      {%- set ns.data = dict(ns.data, duration=(var_duration | int) * 1000) -%}
+    {%- endif -%}
+    {%- if var_icon_file_name != '' -%}
+      {%- set ns.data = dict(ns.data, iconFileName=var_icon_file_name) -%}
+    {%- endif -%}
+    {%- if var_melody != '' -%}
+      {%- set ns.data = dict(ns.data, melody=var_melody, volume=var_volume | int) -%}
+    {%- endif -%}
+    {{- ns.data -}}
+
+# https://www.home-assistant.io/docs/automation/trigger/
+triggers: !input triggers
+
+# https://www.home-assistant.io/docs/automation/condition/
+conditions: !input user_conditions
+
+# https://www.home-assistant.io/docs/automation/action/
+actions:
+  - choose:
+      # Use MQTT API
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'mqtt' }}"
+          - condition: template
+            value_template: "{{ var_device is not none and var_hostname == '' }}"
+        sequence:
+          - action: mqtt.publish
+            data:
+              topic: "{{ device_attr(var_device, 'name') }}/notify/set"
+              payload: "{{ var_data | tojson }}"
+
+      # Use REST API
+      - conditions:
+          - condition: template
+            value_template: "{{ var_protocol == 'rest' }}"
+          - condition: template
+            value_template: "{{ var_device is none and var_hostname != '' }}"
+        sequence:
+          - action: rest_command.pixelix_plugin_command
+            data:
+              hostname: "{{ var_hostname }}"
+              endpoint: "/rest/api/v1/notify"
+              url_parameter: "{{ var_data | urlencode }}"
+
+    # Default
+    default:
+      - action: persistent_notification.create
+        data:
+          title: "Pixelix Notification Blueprint"
+          message: "Error: Could not send the notification to the Pixelix device. Please check your configuration."
+
+# The device queues up to 10 notifications, so don't drop triggers which arrive in a burst.
+mode: queued
+max: 10
