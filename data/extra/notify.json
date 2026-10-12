@@ -4,7 +4,7 @@
         "discovery": {
             "name": "Notification",
             "ic": "mdi:bell-ring-outline",
-            "cmd_tpl": "{\"text\": {{ value | tojson }} }"
+            "cmd_tpl": "{ \"text\": {{ value | tojson }}{% if data is defined and data.duration is defined %}, \"duration\": {{ data.duration | int }}{% endif %}{% if data is defined and data.iconFileName is defined %}, \"iconFileName\": {{ data.iconFileName | tojson }}{% endif %}{% if data is defined and data.melody is defined %}, \"melody\": {{ data.melody | tojson }}{% endif %}{% if data is defined and data.volume is defined %}, \"volume\": {{ data.volume | int }}{% endif %} }"
         }
     }
 ]

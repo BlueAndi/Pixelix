@@ -89,6 +89,7 @@ void SysMsgPlugin::inactive()
      * queued system messages.
      */
     m_view.clear();
+    m_timer.stop();
     m_rdIndex = m_wrIndex;
 }
 
@@ -266,6 +267,9 @@ bool SysMsgPlugin::nextMessage()
         m_max            = sysMsg.max;
         m_isDurationHard = sysMsg.isDurationHard;
         m_isInit         = true;
+
+        /* An expired timer of the previous message must not end this one. */
+        m_timer.stop();
 
         /* The melody belongs to this message and starts now, together with it.
          * Starting it already when the message is queued would play it to the
