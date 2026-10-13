@@ -44,6 +44,7 @@
 #include <WiFi.h>
 #include <JsonFile.h>
 #include <FileSystem.h>
+#include <Board.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -334,10 +335,13 @@ void HomeAssistantMqtt::getConfigTopic(String& haConfigTopic, const String& comp
 
 void HomeAssistantMqtt::addDeviceInfo(JsonDocument& jsonDoc, MqttDiscoveryInfo& mqttDiscoveryInfo)
 {
-    String nodeId          = getNodeId(mqttDiscoveryInfo.deviceId);
+    String nodeId = getNodeId(mqttDiscoveryInfo.deviceId);
+    String chipIdStr;
+
+    Board::getInstance().getSystemDrv().getChipId(chipIdStr);
 
     /* Device identifier */
-    jsonDoc["dev"]["ids"]  = WiFi.macAddress();
+    jsonDoc["dev"]["ids"]  = chipIdStr;
     /* URL to configuration of the device (configuration_url). */
     jsonDoc["dev"]["cu"]   = String("http://") + WiFi.localIP().toString();
     /* Name of the device. */

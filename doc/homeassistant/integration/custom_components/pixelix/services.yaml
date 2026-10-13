@@ -1,0 +1,50 @@
+notify:
+  name: Send notification
+  description: Send a Pixelix notification with optional display duration, icon and RTTTL melody. Without a target device, all Pixelix devices show it.
+  target:
+    device:
+      integration: pixelix
+  fields:
+    message:
+      name: Message
+      description: Text displayed on Pixelix. At most 256 bytes in UTF-8, a longer text is rejected.
+      required: true
+      example: The washing machine is finished!
+      selector:
+        text:
+          multiline: true
+    duration:
+      name: Duration
+      description: Display duration in milliseconds. Omit it or use 0 for the default of the firmware (10 s). The firmware limits it to 60 s.
+      required: false
+      example: 10000
+      selector:
+        number:
+          min: 0
+          max: 60000
+          unit_of_measurement: ms
+          mode: box
+    icon_file_name:
+      name: Icon file name
+      description: Full path of the icon file on the Pixelix device. A file which does not exist does not suppress the notification.
+      required: false
+      example: /configuration/smiley.bmp
+      selector:
+        text:
+    melody:
+      name: Melody (RTTTL)
+      description: Optional RTTTL melody, at most 256 bytes, a longer melody is rejected. Played only by devices with a buzzer.
+      required: false
+      example: "Finished:d=4,o=5,b=120:8c,8e,8g,c6"
+      selector:
+        text:
+    volume:
+      name: Volume
+      description: Volume of the melody from 0 to 10. The firmware limits a higher value to 10. Only used together with a melody.
+      required: false
+      example: 5
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider

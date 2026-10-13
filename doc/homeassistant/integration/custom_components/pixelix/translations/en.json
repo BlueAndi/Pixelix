@@ -1,0 +1,58 @@
+{
+    "title": "Pixelix",
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "title": "Add Pixelix device",
+                "description": "Enter the host name or IP address and the web login of the device. Pixelix devices in the network are normally found automatically.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "username": "Username",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "host": "Host name or IP address of the Pixelix device.",
+                    "port": "Port of the web server of the device.",
+                    "username": "Website login user, which is set in the settings of the device.",
+                    "password": "Website login password, which is set in the settings of the device."
+                }
+            },
+            "discovery_confirm": {
+                "title": "Add Pixelix device",
+                "description": "{name} was found at {host}. Enter its web login.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "username": "Website login user, which is set in the settings of the device.",
+                    "password": "Website login password, which is set in the settings of the device."
+                }
+            },
+            "reauth_confirm": {
+                "title": "Update web login",
+                "description": "{name} ({host}) rejected the web login. Enter the current web login of the device.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "username": "Website login user, which is set in the settings of the device.",
+                    "password": "Website login password, which is set in the settings of the device."
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "The device is not reachable.",
+            "invalid_auth": "The web login was rejected.",
+            "unexpected_response": "The device answered unexpectedly. Is it a Pixelix device with a compatible firmware?"
+        },
+        "abort": {
+            "already_configured": "The device is already configured.",
+            "reauth_successful": "The web login was updated.",
+            "wrong_device": "Another device with a different host name answers at this address. If the host name was changed, remove the device and add it again."
+        }
+    }
+}

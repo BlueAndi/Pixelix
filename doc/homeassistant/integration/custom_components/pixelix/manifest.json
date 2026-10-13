@@ -1,0 +1,21 @@
+{
+  "domain": "pixelix",
+  "name": "Pixelix",
+  "codeowners": [
+    "@BlueAndi"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "after_dependencies": [
+    "mqtt"
+  ],
+  "documentation": "https://github.com/BlueAndi/Pixelix",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "issue_tracker": "https://github.com/BlueAndi/Pixelix/issues",
+  "requirements": [],
+  "version": "0.2.0",
+  "zeroconf": [
+    "_pixelix._tcp.local."
+  ]
+}

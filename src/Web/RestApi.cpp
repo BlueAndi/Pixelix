@@ -1318,12 +1318,17 @@ static void handleStatus(AsyncWebServerRequest* request)
         String           ssid;
         int8_t           rssi           = -100; /* [dbm] */
         JsonVariant      dataObj        = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonObject       devObj         = dataObj.createNestedObject("device");
         JsonObject       hwObj          = dataObj.createNestedObject("hardware");
         JsonObject       swObj          = dataObj.createNestedObject("software");
         JsonObject       internalRamObj = swObj.createNestedObject("internalRam");
         JsonObject       wifiObj        = dataObj.createNestedObject("wifi");
         SettingsService& settings       = SettingsService::getInstance();
         ISystemDrv&      systemDrv      = Board::getInstance().getSystemDrv();
+        String           chipIdStr;
+        String           hostname;
+
+        systemDrv.getChipId(chipIdStr);
 
         /* Only in station mode it makes sense to retrieve the RSSI.
          * Otherwise keep it -100 dbm.
@@ -1333,13 +1338,30 @@ static void handleStatus(AsyncWebServerRequest* request)
             rssi = WiFi.RSSI();
         }
 
-        if (true == settings.open(true))
+        if (false == settings.open(true))
         {
-            ssid = settings.getWifiSSID().getValue();
+            ssid     = settings.getWifiSSID().getDefault();
+            hostname = settings.getHostname().getDefault();
+        }
+        else
+        {
+            ssid     = settings.getWifiSSID().getValue();
+            hostname = settings.getHostname().getValue();
             settings.close();
         }
 
-        /* Prepare response */
+        /* The id is required for identification in Home Assistant.
+         * Its used by the Home Assistant integration to uniquely identify the device.
+         *
+         * The following device block shall be identical to the MQTT device configuration.
+         */
+        devObj["id"]                           = chipIdStr;
+        devObj["model"]                        = "Pixelix";
+        devObj["manufacturer"]                 = "BlueAndi & Friends";
+        devObj["name"]                         = hostname;
+        devObj["swVersion"]                    = Version::getSoftwareVersion();
+        devObj["hwVersion"]                    = Version::getTargetName();
+
         hwObj["chipRev"]                       = systemDrv.getChipRevision();
         hwObj["cpuFreqMhz"]                    = systemDrv.getCpuFreqMHz();
 

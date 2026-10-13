@@ -1,0 +1,58 @@
+{
+    "title": "Pixelix",
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "title": "Pixelix-Gerät hinzufügen",
+                "description": "Gib den Hostnamen oder die IP-Adresse und die Web-Anmeldedaten des Geräts ein. Pixelix-Geräte im Netzwerk werden normalerweise automatisch gefunden.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "username": "Benutzername",
+                    "password": "Passwort"
+                },
+                "data_description": {
+                    "host": "Hostname oder IP-Adresse des Pixelix-Geräts.",
+                    "port": "Port des Webservers des Geräts.",
+                    "username": "Benutzer für die Webseite, der in den Einstellungen des Geräts festgelegt ist.",
+                    "password": "Passwort für die Webseite, das in den Einstellungen des Geräts festgelegt ist."
+                }
+            },
+            "discovery_confirm": {
+                "title": "Pixelix-Gerät hinzufügen",
+                "description": "{name} wurde unter {host} gefunden. Gib die Web-Anmeldedaten des Geräts ein.",
+                "data": {
+                    "username": "Benutzername",
+                    "password": "Passwort"
+                },
+                "data_description": {
+                    "username": "Benutzer für die Webseite, der in den Einstellungen des Geräts festgelegt ist.",
+                    "password": "Passwort für die Webseite, das in den Einstellungen des Geräts festgelegt ist."
+                }
+            },
+            "reauth_confirm": {
+                "title": "Web-Anmeldedaten aktualisieren",
+                "description": "{name} ({host}) hat die Web-Anmeldedaten abgelehnt. Gib die aktuellen Anmeldedaten des Geräts ein.",
+                "data": {
+                    "username": "Benutzername",
+                    "password": "Passwort"
+                },
+                "data_description": {
+                    "username": "Benutzer für die Webseite, der in den Einstellungen des Geräts festgelegt ist.",
+                    "password": "Passwort für die Webseite, das in den Einstellungen des Geräts festgelegt ist."
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Das Gerät ist nicht erreichbar.",
+            "invalid_auth": "Die Web-Anmeldedaten wurden abgelehnt.",
+            "unexpected_response": "Das Gerät hat unerwartet geantwortet. Ist es ein Pixelix-Gerät mit kompatibler Firmware?"
+        },
+        "abort": {
+            "already_configured": "Das Gerät ist bereits eingerichtet.",
+            "reauth_successful": "Die Web-Anmeldedaten wurden aktualisiert.",
+            "wrong_device": "Unter dieser Adresse meldet sich ein anderes Gerät mit einem anderen Hostnamen. Wurde der Hostname geändert, entferne das Gerät und füge es erneut hinzu."
+        }
+    }
+}
