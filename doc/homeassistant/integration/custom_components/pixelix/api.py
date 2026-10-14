@@ -110,6 +110,9 @@ class PixelixClient:
         self._session = session
         self._base_url = URL.build(scheme="http", host=host, port=port)
         self._hostname: str | None = None
+        self._sw_version: str | None = None
+        self._hw_version: str | None = None
+        self._mac: str | None = None
         # Built by hand, because aiohttp deprecates its BasicAuth class. The
         # header is never logged.
         token = base64.b64encode(f"{username}:{password}".encode("utf-8"))
@@ -126,11 +129,51 @@ class PixelixClient:
 
     @property
     def hostname(self) -> str | None:
-        """Get the device hostname reported by its status endpoint."""
+        """Get the device hostname reported by its device endpoint.
+
+        Returns:
+            The hostname, or None if the device did not report one.
+        """
         return self._hostname
 
-    async def async_get_status(self) -> dict[str, Any]:
-        """Read the status of the device.
+    @property
+    def sw_version(self) -> str | None:
+        """Get the firmware version reported by the device.
+
+        Returns:
+            The firmware version, e.g. ``"7.4.0"``, or None if the device
+            did not report one. It is read by async_get_device_id().
+        """
+        return self._sw_version
+
+    @property
+    def hw_version(self) -> str | None:
+        """Get the hardware of the device.
+
+        The firmware reports the PlatformIO target name here, which
+        identifies the board, e.g. ``"ulanzi-TC001"``.
+
+        Returns:
+            The hardware name, or None if the device did not report one.
+            It is read by async_get_device_id().
+        """
+        return self._hw_version
+
+    @property
+    def mac(self) -> str | None:
+        """Get the WiFi MAC address of the device.
+
+        Older firmware versions do not report it.
+
+        Returns:
+            The MAC address as the device spells it, e.g.
+            ``"A1:B2:C3:D4:E5:F6"``, or None if the device did not report
+            one. It is read by async_get_device_id().
+        """
+        return self._mac
+
+    async def async_get_device(self) -> dict[str, Any]:
+        """Read the device information of the device.
 
         Returns:
             The JSON response of the device.
@@ -141,12 +184,12 @@ class PixelixClient:
             PixelixRequestError: The device answered with an HTTP error.
             PixelixResponseError: The answer is invalid or incompatible.
         """
-        return await self._async_request("GET", "/status")
+        return await self._async_request("GET", "/device")
 
     async def async_get_device_id(self) -> str:
-        """Read the unique device id from the status of the device.
+        """Read the unique device id from the device information.
 
-        The status endpoint returns the chip id under ``device.id``, which
+        The device endpoint returns the chip id under ``device.id``, which
         uniquely identifies the physical device. It also verifies host, port
         and web login.
 
@@ -159,17 +202,18 @@ class PixelixClient:
             PixelixRequestError: The device answered with an HTTP error.
             PixelixResponseError: The answer is invalid or incompatible.
         """
-        payload = await self.async_get_status()
+        payload = await self.async_get_device()
         data = payload.get("data")
         device = data.get("device") if isinstance(data, dict) else None
         device_id = device.get("id") if isinstance(device, dict) else None
-        hostname = device.get("name") if isinstance(device, dict) else None
 
-        self._hostname = (
-            hostname.strip()
-            if isinstance(hostname, str) and hostname.strip()
-            else None
-        )
+        if not isinstance(device, dict):
+            device = {}
+
+        self._hostname = _text_or_none(device.get("name"))
+        self._sw_version = _text_or_none(device.get("swVersion"))
+        self._hw_version = _text_or_none(device.get("hwVersion"))
+        self._mac = _text_or_none(device.get("mac"))
 
         if not isinstance(device_id, str) or not device_id.strip():
             raise PixelixResponseError(
@@ -300,3 +344,21 @@ class PixelixClient:
 ###############################################################################
 # Functions
 ###############################################################################
+
+
+def _text_or_none(value: Any) -> str | None:
+    """Reduce a value of the device status to a non-empty string.
+
+    The device may omit a field, report it as null or as an empty string.
+    All of them mean that the information is not available.
+
+    Args:
+        value: The value as it was decoded from the JSON answer.
+
+    Returns:
+        The stripped text, or None if it is not a non-empty string.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+
+    return value.strip()

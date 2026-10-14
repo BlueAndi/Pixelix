@@ -49,8 +49,11 @@ from custom_components.pixelix.api import (
 from .helpers import (
     DEVICE_ID_A,
     HOST_A,
+    HW_VERSION,
     INVALID_DATA_ANSWER,
+    MAC_A,
     OK_RESPONSE,
+    SW_VERSION,
     api_url,
     mock_device_status,
     mock_notify,
@@ -226,3 +229,64 @@ async def test_secrets_are_not_logged(
     assert SECRET not in str(err.value)
     assert SECRET not in caplog.text
     assert "Private text" not in caplog.text
+
+
+async def test_device_details_are_read_from_status(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """The firmware, the hardware and the MAC are taken from the status.
+
+    Args:
+        hass: The Home Assistant test instance.
+        aioclient_mock: The mock of the aiohttp client.
+
+    Returns:
+        None.
+    """
+    mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
+    client = create_client(hass)
+
+    await client.async_get_device_id()
+
+    assert SW_VERSION == client.sw_version
+    assert HW_VERSION == client.hw_version
+    assert MAC_A == client.mac
+
+
+@pytest.mark.parametrize(
+    "device",
+    [
+        {"id": DEVICE_ID_A},
+        {"id": DEVICE_ID_A, "mac": "", "swVersion": "", "hwVersion": ""},
+        {"id": DEVICE_ID_A, "mac": None, "swVersion": None},
+        {"id": DEVICE_ID_A, "mac": 42, "swVersion": [], "hwVersion": {}},
+    ],
+)
+async def test_missing_device_details_are_none(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device: dict[str, object],
+) -> None:
+    """A detail which is absent, empty or not a string becomes None.
+
+    Args:
+        hass: The Home Assistant test instance.
+        aioclient_mock: The mock of the aiohttp client.
+        device: The device block which the device reports.
+
+    Returns:
+        None.
+    """
+    mock_device_status(
+        aioclient_mock,
+        HOST_A,
+        DEVICE_ID_A,
+        json={"data": {"device": device}, "status": "ok"},
+    )
+    client = create_client(hass)
+
+    await client.async_get_device_id()
+
+    assert client.sw_version is None
+    assert client.hw_version is None
+    assert client.mac is None

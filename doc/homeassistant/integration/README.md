@@ -30,6 +30,22 @@ If a device is not found, e.g. because mDNS is not forwarded to Home Assistant, 
 
 A device is identified by its unique device id (the ESP chip id) which it reports in the REST `/status` response (`device.id`). Manual setup and mDNS discovery therefore lead to the same device, and it is added only once. If its IP address changes, the address is updated automatically when it is discovered again. The IP address and host name are never used as the unique id.
 
+### Device information
+
+The device page under **Settings → Devices & services → Pixelix** shows what the device reports in its REST `/status` response:
+
+| Shown as    | Source (`device.*`) | Example               |
+| ----------- | ------------------- | --------------------- |
+| Firmware    | `swVersion`         | `7.4.0`               |
+| Hardware    | `hwVersion`         | `ulanzi-TC001`        |
+| MAC address | `mac`               | `a1:b2:c3:d4:e5:f6`   |
+
+The hardware is the PlatformIO target name of the firmware, which identifies the board.
+
+The MAC address is registered as a device connection. Home Assistant treats two devices which share a connection as one, so the device of this integration and the device created by the MQTT discovery of the firmware are merged into a single device instead of appearing twice.
+
+These details need a firmware which reports them. The firmware version and the hardware have been part of `/status` for a long time; the MAC address was added together with this feature. A device with an older firmware simply does not show the MAC address and works as before. A detail is only updated while the device is reachable — if it is offline during a restart of Home Assistant, the last known values are kept.
+
 ### Several devices
 
 Every device is an own entry with an own device in Home Assistant. Select one or more of them as target of the action. Without a target, all configured devices show the notification. The devices are contacted in parallel. An unreachable device only delays itself, its request ends after 10 s at the latest.

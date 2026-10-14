@@ -101,6 +101,8 @@ The Home Assistant MQTT discovery is supported by several plugins and features, 
 
 Pixelix will be shown as device with its entities. Every installed plugin will be shown as at least one entity.
 
+The device reports its firmware version, its hardware (the build target name) and its MAC address. Because Home Assistant treats two devices which share a connection such as the MAC address as one device, a Pixelix device which is discovered by MQTT and additionally added by the [Pixelix integration](./homeassistant/integration/README.md) is shown as a single device instead of twice.
+
 [More technical details about MQTT](./MQTT.md)
 
 #### Automation (MQTT)

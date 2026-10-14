@@ -354,6 +354,21 @@ void HomeAssistantMqtt::addDeviceInfo(JsonDocument& jsonDoc, MqttDiscoveryInfo& 
     jsonDoc["dev"]["sw"]   = Version::getSoftwareVersion();
     /* HW version is used for the target name (hw_version). */
     jsonDoc["dev"]["hw"]   = Version::getTargetName();
+
+    /* Network connection of the device (connections). Home Assistant expects
+     * a list of [type, identifier] pairs. The MAC address lets Home Assistant
+     * recognize the device as the same one which the Pixelix integration
+     * reports, so both are merged to a single device.
+     */
+    if (WIFI_MODE_NULL != WiFi.getMode())
+    {
+        JsonObject devObj      = jsonDoc["dev"];
+        JsonArray  connections = devObj.createNestedArray("cns");
+        JsonArray  connection  = connections.createNestedArray();
+
+        connection.add("mac");
+        connection.add(WiFi.macAddress());
+    }
 }
 
 void HomeAssistantMqtt::addOriginInfo(JsonDocument& jsonDoc)

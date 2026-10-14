@@ -213,6 +213,7 @@ async def async_setup_entry(
         manufacturer=MANUFACTURER,
         model=MODEL,
         configuration_url=client.base_url,
+        **_device_details(client),
     )
     return True
 
@@ -320,15 +321,66 @@ def _create_client(
     )
 
 
+def _device_details(client: PixelixClient) -> dict[str, Any]:
+    """Collect the device details which the device reported, if any.
+
+    Only details which the device actually reported are returned. Passing
+    None to the device registry would clear a value which an earlier, online
+    setup had stored, so a device which is offline or runs an older firmware
+    keeps what is already known about it.
+
+    The MAC address is reported as a connection. Home Assistant merges
+    devices which share a connection, so the device of this integration and
+    the one created by the MQTT discovery of the firmware become one device.
+
+    Args:
+        client: The client of the device, after its status was read.
+
+    Returns:
+        The keyword arguments for the device registry, which may be empty.
+    """
+    details: dict[str, Any] = {}
+
+    if client.sw_version is not None:
+        details["sw_version"] = client.sw_version
+
+    if client.hw_version is not None:
+        details["hw_version"] = client.hw_version
+
+    if client.mac is not None:
+        details["connections"] = {
+            (dr.CONNECTION_NETWORK_MAC, dr.format_mac(client.mac))
+        }
+
+    return details
+
+
 async def _async_subscribe_to_availability(
     hass: HomeAssistant, runtime_data: PixelixRuntimeData
 ) -> None:
-    """Track the retained MQTT availability state of the device."""
+    """Track the retained MQTT availability state of the device.
+
+    Args:
+        hass: The Home Assistant instance.
+        runtime_data: The runtime state of the device, which receives the
+            availability and the unsubscribe callback.
+
+    Returns:
+        None.
+    """
     if (
         runtime_data.hostname is not None
         and "mqtt" in hass.config.components
     ):
         async def _async_handle_message(message: Any) -> None:
+            """Store whether the device reports itself as online.
+
+            Args:
+                message: The received MQTT message.
+
+            Returns:
+                None.
+            """
             runtime_data.mqtt_online = message.payload == "online"
 
         try:

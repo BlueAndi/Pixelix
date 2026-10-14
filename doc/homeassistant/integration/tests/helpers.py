@@ -59,6 +59,12 @@ DEVICE_ID_B = "AABBCCDDEEFF"
 USERNAME = "luke"
 PASSWORD = "skywalker"
 
+# Device details which the status of a device reports.
+MAC_A = "A1:B2:C3:D4:E5:F6"
+MAC_B = "A6:B5:C4:D3:E2:F1"
+SW_VERSION = "7.4.0"
+HW_VERSION = "ulanzi-TC001"
+
 OK_RESPONSE = {"data": {}, "status": "ok"}
 
 # The answer of a device which rejects a notification, see the REST API.
@@ -95,15 +101,18 @@ def mock_device_status(
     chip_id: str,
     *,
     hostname: str | None = None,
+    omit: tuple[str, ...] = (),
     **kwargs: Any,
 ) -> None:
-    """Mock the /status endpoint which reports device.id.
+    """Mock the /device endpoint which reports device.id.
 
     Args:
         aioclient_mock: The HTTP client mock.
         host: The address of the device.
         chip_id: The chip id which the device reports.
         hostname: The hostname which the device reports.
+        omit: Names of fields of the device block which the device does not
+            report, e.g. ``("mac",)`` for an older firmware.
         **kwargs: Additional arguments of the mocked response, e.g. the
             status or an exception. They replace the successful answer.
 
@@ -119,21 +128,24 @@ def mock_device_status(
                 if host == HOST_B
                 else host
             )
+        mac = MAC_B if host == HOST_B else MAC_A
+        device = {
+            "id": chip_id,
+            "name": hostname,
+            "model": "Pixelix",
+            "manufacturer": "BlueAndi & Friends",
+            "swVersion": SW_VERSION,
+            "hwVersion": HW_VERSION,
+            "mac": mac,
+        }
+        for field in omit:
+            device.pop(field, None)
+
         kwargs = {
-            "json": {
-                "data": {
-                    "device": {
-                        "id": chip_id,
-                        "name": hostname,
-                        "model": "Pixelix",
-                        "manufacturer": "BlueAndi & Friends",
-                    }
-                },
-                "status": "ok",
-            }
+            "json": {"data": {"device": device}, "status": "ok"}
         }
 
-    aioclient_mock.get(api_url(host, "/status"), **kwargs)
+    aioclient_mock.get(api_url(host, "/device"), **kwargs)
 
 
 def mock_notify(

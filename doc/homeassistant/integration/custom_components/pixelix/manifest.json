@@ -14,7 +14,7 @@
   "iot_class": "assumed_state",
   "issue_tracker": "https://github.com/BlueAndi/Pixelix/issues",
   "requirements": [],
-  "version": "0.2.0",
+  "version": "0.3.0",
   "zeroconf": [
     "_pixelix._tcp.local."
   ]

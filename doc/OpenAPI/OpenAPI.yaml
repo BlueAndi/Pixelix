@@ -2829,34 +2829,32 @@ paths:
                 $ref: "#/components/schemas/Settings"
       security:
         - pixelixAuth: []
-  /status:
+  /device:
     get:
       tags:
         - Common
-      summary: Get status information
+      summary: Get device information
       description: |
-        Status information:
+        Device information:
+        * Unique device id (chip id).
+        * Device model and manufacturer.
+        * Device name (hostname).
         * Software version.
-        * ESP SDK version.
-        * ESP chip revision.
-        * ESP cpu frequency in MHz.
-        * Internal RAM heap size and available heap.
-        * Wifi SSID of the network, the display will connect to.
-        * Wifi receive signal strength indicator in dBm.
-        * Wifi signal quality in percent.
+        * Hardware version (board target name).
+        * Wifi MAC address.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/status
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/device
         ```
-      operationId: getStatus
+      operationId: getDevice
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Status"
+                $ref: "#/components/schemas/Device"
       security:
         - pixelixAuth: []
   /timerService/timer:
@@ -4327,7 +4325,7 @@ components:
           type: string
           description: The request result.
           example: ok
-    Status:
+    Device:
       type: object
       required:
         - data
@@ -4336,48 +4334,34 @@ components:
         data:
           type: object
           properties:
-            hardware:
+            device:
               type: object
               properties:
-                chipRev:
-                  type: number
-                  example: 1
-                cpuFreqMhz:
-                  type: number
-                  example: 120
-            software:
-              type: object
-              properties:
-                version:
+                id:
+                  type: string
+                  description: Unique device id (chip id).
+                  example: 1a2b3c4d5e6f
+                model:
+                  type: string
+                  example: Pixelix
+                manufacturer:
+                  type: string
+                  example: BlueAndi & Friends
+                name:
+                  type: string
+                  description: The hostname of the device.
+                  example: pixelix-FFFFFFFF
+                swVersion:
                   type: string
                   example: v3.0.0
-                revision:
+                hwVersion:
                   type: string
-                  example: 3d50648904d5633facecec278410cc34c8206b18
-                espSdkVersion:
+                  description: The board target name.
+                  example: ulanzi-TC001
+                mac:
                   type: string
-                  example: v3.3.5-1-g85c43024c
-                internalRam:
-                  type: object
-                  properties:
-                    heapSize:
-                      type: number
-                      example: 496
-                    availableHeap:
-                      type: number
-                      example: 412
-            wifi:
-              type: object
-              properties:
-                ssid:
-                  type: string
-                  example: DeathStar
-                rssi:
-                  type: number
-                  example: -50
-                quality:
-                  type: number
-                  example: 100
+                  description: The wifi MAC address.
+                  example: A1:B2:C3:D4:E5:F6
         status:
           type: string
           description: The request result.

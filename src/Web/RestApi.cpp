@@ -118,7 +118,7 @@ static void                         handleSensors(AsyncWebServerRequest* request
 static void                         handleSettings(AsyncWebServerRequest* request);
 static void                         handleSetting(AsyncWebServerRequest* request);
 static bool                         storeSetting(KeyValue* parameter, const String& value, String& error);
-static void                         handleStatus(AsyncWebServerRequest* request);
+static void                         handleDevice(AsyncWebServerRequest* request);
 static void                         getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
 static void                         handleFilesystem(AsyncWebServerRequest* request);
 static void                         handleFileGet(AsyncWebServerRequest* request);
@@ -164,7 +164,7 @@ static const RestApiRoute gRestApiRoutes[] = {
     { "/sensors", HTTP_GET, handleSensors, nullptr, nullptr },
     { "/settings", HTTP_GET, handleSettings, nullptr, nullptr },
     { "/setting", HTTP_GET | HTTP_POST, handleSetting, nullptr, nullptr },
-    { "/status", HTTP_GET, handleStatus, nullptr, nullptr },
+    { "/device", HTTP_GET, handleDevice, nullptr, nullptr },
     { "/fs/file", HTTP_GET, handleFileGet, nullptr, nullptr },
     { "/fs/file", HTTP_POST, handleFilePost, uploadHandler, nullptr },
     { "/fs/file", HTTP_DELETE, handleFileDelete, nullptr, nullptr },
@@ -1292,12 +1292,12 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
 }
 
 /**
- * Get status information.
- * GET \c "/api/v1/status"
+ * Get device information.
+ * GET \c "/api/v1/device"
  *
  * @param[in] request   HTTP request
  */
-static void handleStatus(AsyncWebServerRequest* request)
+static void handleDevice(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
     const size_t      JSON_DOC_SIZE  = 1024U;
@@ -1315,37 +1315,21 @@ static void handleStatus(AsyncWebServerRequest* request)
     }
     else
     {
-        String           ssid;
-        int8_t           rssi           = -100; /* [dbm] */
-        JsonVariant      dataObj        = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonObject       devObj         = dataObj.createNestedObject("device");
-        JsonObject       hwObj          = dataObj.createNestedObject("hardware");
-        JsonObject       swObj          = dataObj.createNestedObject("software");
-        JsonObject       internalRamObj = swObj.createNestedObject("internalRam");
-        JsonObject       wifiObj        = dataObj.createNestedObject("wifi");
-        SettingsService& settings       = SettingsService::getInstance();
-        ISystemDrv&      systemDrv      = Board::getInstance().getSystemDrv();
+        JsonVariant      dataObj   = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonObject       devObj    = dataObj.createNestedObject("device");
+        SettingsService& settings  = SettingsService::getInstance();
+        ISystemDrv&      systemDrv = Board::getInstance().getSystemDrv();
         String           chipIdStr;
         String           hostname;
 
         systemDrv.getChipId(chipIdStr);
 
-        /* Only in station mode it makes sense to retrieve the RSSI.
-         * Otherwise keep it -100 dbm.
-         */
-        if (WIFI_MODE_STA == WiFi.getMode())
-        {
-            rssi = WiFi.RSSI();
-        }
-
         if (false == settings.open(true))
         {
-            ssid     = settings.getWifiSSID().getDefault();
             hostname = settings.getHostname().getDefault();
         }
         else
         {
-            ssid     = settings.getWifiSSID().getValue();
             hostname = settings.getHostname().getValue();
             settings.close();
         }
@@ -1355,29 +1339,13 @@ static void handleStatus(AsyncWebServerRequest* request)
          *
          * The following device block shall be identical to the MQTT device configuration.
          */
-        devObj["id"]                           = chipIdStr;
-        devObj["model"]                        = "Pixelix";
-        devObj["manufacturer"]                 = "BlueAndi & Friends";
-        devObj["name"]                         = hostname;
-        devObj["swVersion"]                    = Version::getSoftwareVersion();
-        devObj["hwVersion"]                    = Version::getTargetName();
-
-        hwObj["chipRev"]                       = systemDrv.getChipRevision();
-        hwObj["cpuFreqMhz"]                    = systemDrv.getCpuFreqMHz();
-
-        swObj["version"]                       = Version::getSoftwareVersion();
-        swObj["revision"]                      = Version::getSoftwareRevision();
-        swObj["espSdkVersion"]                 = systemDrv.getSdkVersion();
-
-        internalRamObj["heapSize"]             = MemUtil::getTotalHeapSize();        /* [byte] */
-        internalRamObj["availableHeapSize"]    = MemUtil::getFreeHeapSize();         /* [byte] */
-        internalRamObj["minFreeHeapSize"]      = MemUtil::getMinFreeHeapSize();      /* [byte] */
-        internalRamObj["largestFreeBlockSize"] = MemUtil::getLargestFreeBlockSize(); /* [byte] */
-        internalRamObj["isPsramAvailable"]     = MemUtil::isPsramAvailable();        /* [byte] */
-
-        wifiObj["ssid"]                        = ssid;
-        wifiObj["rssi"]                        = rssi;                             /* [dbm] */
-        wifiObj["quality"]                     = WiFiUtil::getSignalQuality(rssi); /* [%] */
+        devObj["id"]           = chipIdStr;
+        devObj["model"]        = "Pixelix";
+        devObj["manufacturer"] = "BlueAndi & Friends";
+        devObj["name"]         = hostname;
+        devObj["swVersion"]    = Version::getSoftwareVersion();
+        devObj["hwVersion"]    = Version::getTargetName();
+        devObj["mac"]          = WiFi.macAddress();
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
