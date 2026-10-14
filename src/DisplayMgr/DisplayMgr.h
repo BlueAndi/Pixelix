@@ -54,6 +54,7 @@
 #include <Fonts.h>
 
 #include "IPluginMaintenance.hpp"
+#include "PluginAlias.hpp"
 #include "SlotList.h"
 #include "FadeEffectController.h"
 #include "DoubleFrameBuffer.h"
@@ -201,9 +202,10 @@ public:
      *
      * @param[in] uid   Plugin UID
      * @param[in] alias Plugin alias name
-     * @return If successful, it will return true otherwise false.
+     *
+     * @return The result of the assignment.
      */
-    bool setPluginAliasName(uint16_t uid, const String& alias);
+    PluginAlias::Result setPluginAliasName(uint16_t uid, const String& alias);
 
     /**
      * Get the font type of a plugin.

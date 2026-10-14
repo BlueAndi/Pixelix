@@ -129,16 +129,35 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
     return status;
 }
 
-bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
+PluginAlias::Result PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
 {
-    bool   isSuccessful = false;
-    String candidate    = PluginAlias::sanitize(alias);
+    PluginAlias::Result result    = PluginAlias::RESULT_INVALID;
+    String              candidate = PluginAlias::sanitize(alias);
 
-    if ((nullptr != plugin) &&
-        (plugin->getAlias() != candidate) &&
-        (true == PluginAlias::isValid(candidate)))
+    if (nullptr == plugin)
     {
-        /* First remove current registered topics. */
+        /* Guard path: nothing to rename. */
+        ;
+    }
+    else if (false == PluginAlias::isValid(candidate))
+    {
+        /* Guard path: result is already RESULT_INVALID. */
+        ;
+    }
+    else if (true == m_pluginFactory.isAliasInUse(candidate, plugin))
+    {
+        result = PluginAlias::RESULT_IN_USE;
+    }
+    else if (candidate == plugin->getAlias())
+    {
+        /* No change, so no topic churn and no Home Assistant entity churn. */
+        result = PluginAlias::RESULT_OK;
+    }
+    else
+    {
+        /* First remove the currently registered topics, so the old Home Assistant
+         * entity is purged before the new one is announced.
+         */
         unregisterTopics(m_deviceId, plugin, true);
 
         /* Set new alias */
@@ -147,10 +166,10 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         /* Register web API, based on new alias. */
         registerTopics(m_deviceId, plugin);
 
-        isSuccessful = true;
+        result = PluginAlias::RESULT_OK;
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void PluginMgr::unregisterAllPluginTopics()

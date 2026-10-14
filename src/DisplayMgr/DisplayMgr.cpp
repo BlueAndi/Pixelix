@@ -422,9 +422,9 @@ String DisplayMgr::getPluginAliasName(uint16_t uid) const
     return alias;
 }
 
-bool DisplayMgr::setPluginAliasName(uint16_t uid, const String& alias)
+PluginAlias::Result DisplayMgr::setPluginAliasName(uint16_t uid, const String& alias)
 {
-    bool                       isSuccessful = false;
+    PluginAlias::Result        result = PluginAlias::RESULT_INVALID;
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
     uint8_t                    slotId = m_slotList.getSlotIdByPluginUID(uid);
     IPluginMaintenance*        plugin = m_slotList.getPlugin(slotId);
@@ -433,16 +433,16 @@ bool DisplayMgr::setPluginAliasName(uint16_t uid, const String& alias)
     {
         PluginMgr& pluginMgr = PluginMgr::getInstance();
 
-        if (true == pluginMgr.setPluginAliasName(plugin, alias))
+        result               = pluginMgr.setPluginAliasName(plugin, alias);
+
+        if (PluginAlias::RESULT_OK == result)
         {
             /* Save current installed plugins to persistent memory. */
             pluginMgr.save();
-
-            isSuccessful = true;
         }
     }
 
-    return isSuccessful;
+    return result;
 }
 
 Fonts::FontType DisplayMgr::getPluginFontType(uint16_t uid) const

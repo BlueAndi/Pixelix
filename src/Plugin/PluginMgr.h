@@ -49,6 +49,7 @@
 #include "PluginFactory.h"
 
 #include <IPluginMaintenance.hpp>
+#include <PluginAlias.hpp>
 
 /******************************************************************************
  * Macros
@@ -110,13 +111,14 @@ public:
 
     /**
      * Set the alias name of a plugin.
-     * If the plugin has registered a topic handler, the corresponding URIs will be updated.
+     * The registered topics will be moved to the new alias.
      *
      * @param[in] plugin    Plugin which to assign the alias name
      * @param[in] alias     Plugin alias name
-     * @return If successful, it will return true otherwise false.
+     *
+     * @return The result of the assignment.
      */
-    bool setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
+    PluginAlias::Result setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
 
     /**
      * Unregister all plugin topics from the topic handler service.
