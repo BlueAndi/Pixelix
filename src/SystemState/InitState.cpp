@@ -549,12 +549,7 @@ void InitState::welcome(bool isVeryFirstStart)
     {
         PluginMgr& pluginMgr = PluginMgr::getInstance();
 
-        welcomePlugin        = static_cast<IconTextPlugin*>(pluginMgr.install(WELCOME_PLUGIN_TYPE));
-
-        if (nullptr != welcomePlugin)
-        {
-            pluginMgr.setPluginAliasName(welcomePlugin, WELCOME_PLUGIN_ALIAS);
-        }
+        welcomePlugin        = static_cast<IconTextPlugin*>(pluginMgr.install(WELCOME_PLUGIN_TYPE, SlotList::SLOT_ID_INVALID, WELCOME_PLUGIN_ALIAS));
     }
     else
     {

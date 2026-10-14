@@ -67,7 +67,10 @@ bool SysMsg::init()
 {
     bool status = false;
 
-    m_plugin    = static_cast<SysMsgPlugin*>(PluginMgr::getInstance().install("SysMsgPlugin"));
+    /* A fixed alias, because a generated default would depend on the creation order
+     * and would not be stable across configurations.
+     */
+    m_plugin    = static_cast<SysMsgPlugin*>(PluginMgr::getInstance().install("SysMsgPlugin", SlotList::SLOT_ID_INVALID, "_sysmsg"));
 
     if (nullptr != m_plugin)
     {
