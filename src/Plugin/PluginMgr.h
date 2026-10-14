@@ -244,56 +244,30 @@ private:
     String determineAlias(const char* pluginTypeName, const String& requestedAlias, const IPluginMaintenance* plugin) const;
 
     /**
-     * Get the entity id by plugin UID.
+     * Get the entity id of the given plugin.
      *
-     * @param[in] uid   Plugin UID
-     *
-     * @return Entity id
-     */
-    String getEntityIdByPluginUid(uint16_t uid);
-
-    /**
-     * Get the entity id by plugin alias.
-     *
-     * @param[in] alias Plugin alias
+     * @param[in] plugin    The plugin
      *
      * @return Entity id
      */
-    String getEntityIdByPluginAlias(const String& alias);
+    String getEntityId(const IPluginMaintenance* plugin) const;
 
     /**
-     * Register all topics of the given plugin by its UID.
+     * Register all topics of the given plugin.
      *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics shall be registered.
      */
-    void registerTopicsByUID(const String& deviceId, IPluginMaintenance* plugin);
+    void registerTopics(const String& deviceId, IPluginMaintenance* plugin);
 
     /**
-     * Unregister all topics of the given plugin by its UID.
+     * Unregister all topics of the given plugin.
      *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics shall be unregistered.
      * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge);
-
-    /**
-     * Register all topics of the given plugin by its alias.
-     *
-     * @param[in] deviceId  The device id which represents the physical device.
-     * @param[in] plugin    The plugin, which topics shall be registered.
-     */
-    void registerTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin);
-
-    /**
-     * Unregister all topics of the given plugin by its alias.
-     *
-     * @param[in] deviceId  The device id which represents the physical device.
-     * @param[in] plugin    The plugin, which topics shall be unregistered.
-     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
-     */
-    void unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge);
+    void unregisterTopics(const String& deviceId, IPluginMaintenance* plugin, bool purge);
 };
 
 /******************************************************************************

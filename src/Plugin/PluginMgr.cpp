@@ -120,8 +120,7 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            unregisterTopicsByUID(m_deviceId, plugin, true);
-            unregisterTopicsByAlias(m_deviceId, plugin, true);
+            unregisterTopics(m_deviceId, plugin, true);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
@@ -140,13 +139,13 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         (true == PluginAlias::isValid(candidate)))
     {
         /* First remove current registered topics. */
-        unregisterTopicsByAlias(m_deviceId, plugin, true);
+        unregisterTopics(m_deviceId, plugin, true);
 
         /* Set new alias */
         plugin->setAlias(candidate);
 
         /* Register web API, based on new alias. */
-        registerTopicsByAlias(m_deviceId, plugin);
+        registerTopics(m_deviceId, plugin);
 
         isSuccessful = true;
     }
@@ -163,8 +162,7 @@ void PluginMgr::unregisterAllPluginTopics()
     {
         IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
-        unregisterTopicsByUID(m_deviceId, plugin, false);
-        unregisterTopicsByAlias(m_deviceId, plugin, false);
+        unregisterTopics(m_deviceId, plugin, false);
     }
 }
 
@@ -426,8 +424,7 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            registerTopicsByUID(m_deviceId, plugin);
-            registerTopicsByAlias(m_deviceId, plugin);
+            registerTopics(m_deviceId, plugin);
         }
     }
 
@@ -527,55 +524,36 @@ String PluginMgr::determineAlias(const char* pluginTypeName, const String& reque
     return alias;
 }
 
-String PluginMgr::getEntityIdByPluginUid(uint16_t uid)
+String PluginMgr::getEntityId(const IPluginMaintenance* plugin) const
 {
-    return String("display/uid/") + uid;
+    String entityId;
+
+    if (nullptr != plugin)
+    {
+        entityId  = "display/plugin/";
+        entityId += plugin->getAlias();
+    }
+
+    return entityId;
 }
 
-String PluginMgr::getEntityIdByPluginAlias(const String& alias)
-{
-    return String("display/alias/") + alias;
-}
-
-void PluginMgr::registerTopicsByUID(const String& deviceId, IPluginMaintenance* plugin)
+void PluginMgr::registerTopics(const String& deviceId, IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        String entityId = getEntityIdByPluginUid(plugin->getUID());
+        String entityId = getEntityId(plugin);
 
-        TopicHandlerService::getInstance().registerTopics(m_deviceId, entityId.c_str(), plugin);
+        TopicHandlerService::getInstance().registerTopics(deviceId, entityId.c_str(), plugin);
     }
 }
 
-void PluginMgr::unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge)
+void PluginMgr::unregisterTopics(const String& deviceId, IPluginMaintenance* plugin, bool purge)
 {
     if (nullptr != plugin)
     {
-        String entityId = getEntityIdByPluginUid(plugin->getUID());
+        String entityId = getEntityId(plugin);
 
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
-    }
-}
-
-void PluginMgr::registerTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin)
-{
-    if ((nullptr != plugin) &&
-        (false == plugin->getAlias().isEmpty()))
-    {
-        String entityId = getEntityIdByPluginAlias(plugin->getAlias());
-
-        TopicHandlerService::getInstance().registerTopics(m_deviceId, entityId.c_str(), plugin);
-    }
-}
-
-void PluginMgr::unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge)
-{
-    if ((nullptr != plugin) &&
-        (false == plugin->getAlias().isEmpty()))
-    {
-        String entityId = getEntityIdByPluginAlias(plugin->getAlias());
-
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
+        TopicHandlerService::getInstance().unregisterTopics(deviceId, entityId.c_str(), plugin, purge);
     }
 }
 
