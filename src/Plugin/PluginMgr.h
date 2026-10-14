@@ -87,13 +87,16 @@ public:
     /**
      * Install plugin.
      * If no slot id is given, the plugin will be installed in the next available slot.
+     * If no alias is given, or the given alias is invalid or already in use, a default
+     * alias is generated from the plugin type name.
      *
      * @param[in] name      Plugin name
      * @param[in] slotId    Optional slot id
+     * @param[in] alias     Optional plugin alias name
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    IPluginMaintenance* install(const char* name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
+    IPluginMaintenance* install(const char* name, uint8_t slotId = SlotList::SLOT_ID_INVALID, const String& alias = String());
 
     /**
      * Uninstall plugin.
@@ -145,18 +148,20 @@ public:
 
 private:
 
-    /** MQTT special characters, which shall not be part of a plugin alias. */
-    static const char* MQTT_SPECIAL_CHARACTERS;
+    /** Upper bound for the default alias index search. */
+    static const uint8_t MAX_ALIAS_SEARCH = 100U;
 
-    PluginFactory      m_pluginFactory; /**< The plugin factory with the plugin type registry. */
-    String             m_deviceId;      /**< Device id, used for topic registration. */
+    PluginFactory        m_pluginFactory;        /**< The plugin factory with the plugin type registry. */
+    String               m_deviceId;             /**< Device id, used for topic registration. */
+    bool                 m_isSlotConfigRepaired; /**< Was any alias repaired while loading the slot configuration? */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
         m_pluginFactory(),
-        m_deviceId()
+        m_deviceId(),
+        m_isSlotConfigRepaired(false)
     {
     }
 
@@ -216,23 +221,27 @@ private:
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
     /**
-     * Checks whether the alias is valid. It will check for not compliant
-     * special characters.
+     * Find a free default alias for the given plugin type name.
      *
-     * @param[in] alias Plugin alias
+     * The index is increased until the resulting alias is not in use. The search is
+     * bounded by MAX_ALIAS_SEARCH; see the implementation for the fallback.
      *
-     * @return If plugin alias is valid, it will return true otherwise false.
+     * @param[in] pluginTypeName    Plugin type name
+     *
+     * @return A valid alias, which is not in use.
      */
-    bool isPluginAliasValid(const String& alias);
+    String findFreeAlias(const char* pluginTypeName) const;
 
     /**
-     * Filters not allowed characters out of the plugin alias.
+     * Determine the alias of a plugin instance, falling back to a generated default.
      *
-     * @param[in] alias Plugin alias
+     * @param[in] pluginTypeName    Plugin type name
+     * @param[in] requestedAlias    The requested alias, may be empty or invalid
+     * @param[in] plugin            The plugin instance, which is skipped in the uniqueness check
      *
-     * @return Filtered plugin alias
+     * @return A valid alias, which is not in use.
      */
-    String filterPluginAlias(const String& alias);
+    String determineAlias(const char* pluginTypeName, const String& requestedAlias, const IPluginMaintenance* plugin) const;
 
     /**
      * Get the entity id by plugin UID.

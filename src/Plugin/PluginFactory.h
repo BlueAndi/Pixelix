@@ -110,6 +110,19 @@ public:
      */
     void destroyPlugin(const IPluginMaintenance* plugin);
 
+    /**
+     * Is the given alias already used by a produced plugin instance?
+     *
+     * The comparison is case sensitive on purpose. Two aliases which differ only
+     * in case are two different entities with two different MQTT topics.
+     *
+     * @param[in] alias     Alias to look for
+     * @param[in] except    This plugin instance is skipped, may be nullptr
+     *
+     * @return If the alias is already in use, it will return true otherwise false.
+     */
+    bool isAliasInUse(const String& alias, const IPluginMaintenance* except) const;
+
 private:
 
     /** List of plugins type. */

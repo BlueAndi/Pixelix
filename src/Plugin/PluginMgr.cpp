@@ -43,6 +43,7 @@
 #include <ArduinoJson.h>
 #include <PsramJsonDocument.hpp>
 #include <Util.h>
+#include <PluginAlias.hpp>
 #include <SettingsService.h>
 #include <TopicHandlerService.h>
 
@@ -67,8 +68,7 @@
  *****************************************************************************/
 
 /* Initialize static members */
-const char* PluginMgr::CONFIG_FILE_NAME        = "slotConfig.json";
-const char* PluginMgr::MQTT_SPECIAL_CHARACTERS = "+#*>$"; /* See MQTT specification */
+const char* PluginMgr::CONFIG_FILE_NAME = "slotConfig.json";
 
 /******************************************************************************
  * Public Methods
@@ -92,12 +92,14 @@ void PluginMgr::begin()
     createPluginConfigDirectory();
 }
 
-IPluginMaintenance* PluginMgr::install(const char* name, uint8_t slotId)
+IPluginMaintenance* PluginMgr::install(const char* name, uint8_t slotId, const String& alias)
 {
     IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
 
     if (nullptr != plugin)
     {
+        plugin->setAlias(determineAlias(name, alias, plugin));
+
         if (false == install(plugin, slotId))
         {
             m_pluginFactory.destroyPlugin(plugin);
@@ -130,17 +132,18 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
 bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
 {
-    bool isSuccessful = false;
+    bool   isSuccessful = false;
+    String candidate    = PluginAlias::sanitize(alias);
 
     if ((nullptr != plugin) &&
-        (plugin->getAlias() != alias) &&
-        (true == isPluginAliasValid(alias)))
+        (plugin->getAlias() != candidate) &&
+        (true == PluginAlias::isValid(candidate)))
     {
         /* First remove current registered topics. */
         unregisterTopicsByAlias(m_deviceId, plugin, true);
 
         /* Set new alias */
-        plugin->setAlias(alias);
+        plugin->setAlias(candidate);
 
         /* Register web API, based on new alias. */
         registerTopicsByAlias(m_deviceId, plugin);
@@ -192,6 +195,8 @@ bool PluginMgr::load()
         uint8_t       slotId    = 0;
         const uint8_t MAX_SLOTS = DisplayMgr::getInstance().getMaxSlots();
 
+        m_isSlotConfigRepaired  = false;
+
         for (JsonObject jsonSlot : jsonSlots)
         {
             prepareSlotByConfiguration(slotId, jsonSlot);
@@ -201,6 +206,15 @@ bool PluginMgr::load()
             {
                 break;
             }
+        }
+
+        /* Keep the repaired aliases, so the next power cycle doesn't repair again
+         * and the user sees the effective names.
+         */
+        if (true == m_isSlotConfigRepaired)
+        {
+            LOG_INFO("Slot configuration repaired, saving it.");
+            save();
         }
     }
 
@@ -348,12 +362,18 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
                 else
                 {
-                    String          alias         = jsonAlias.as<const char*>();
-                    String          filteredAlias = filterPluginAlias(alias);
-                    String          fontTypeStr   = jsonFontType.as<const char*>();
-                    Fonts::FontType fontType      = Fonts::strToFontType(fontTypeStr.c_str());
+                    String          requestedAlias = jsonAlias.as<const char*>();
+                    String          alias          = determineAlias(name, requestedAlias, plugin);
+                    String          fontTypeStr    = jsonFontType.as<const char*>();
+                    Fonts::FontType fontType       = Fonts::strToFontType(fontTypeStr.c_str());
 
-                    plugin->setAlias(filteredAlias);
+                    if (alias != requestedAlias)
+                    {
+                        LOG_WARNING("Slot %u: Alias %s replaced by %s.", slotId, requestedAlias.c_str(), alias.c_str());
+                        m_isSlotConfigRepaired = true;
+                    }
+
+                    plugin->setAlias(alias);
                     plugin->setFontType(fontType);
 
                     if (false == install(plugin, slotId))
@@ -452,47 +472,59 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
     return status;
 }
 
-bool PluginMgr::isPluginAliasValid(const String& alias)
+String PluginMgr::findFreeAlias(const char* pluginTypeName) const
 {
-    const size_t MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
-    bool         isValid                     = true;
-    size_t       idx                         = 0U;
+    String  alias;
+    uint8_t index = 1U;
 
-    while ((MQTT_SPECIAL_CHARACTERS_LEN > idx) && (true == isValid))
+    while ((MAX_ALIAS_SEARCH >= index) && (true == alias.isEmpty()))
     {
-        if (0 <= alias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]))
+        String candidate = PluginAlias::makeDefault(pluginTypeName, index);
+
+        if (false == m_pluginFactory.isAliasInUse(candidate, nullptr))
         {
-            isValid = false;
+            alias = candidate;
         }
         else
         {
-            ++idx;
+            ++index;
         }
     }
 
-    return isValid;
+    /* Fallback: the search is bounded, but there are far less slots than
+     * MAX_ALIAS_SEARCH. Reaching this means the plugin list is inconsistent.
+     * Use the last candidate instead of returning an empty alias, which would
+     * break the topic registration.
+     */
+    if (true == alias.isEmpty())
+    {
+        LOG_ERROR("No free alias for %s found.", pluginTypeName);
+        alias = PluginAlias::makeDefault(pluginTypeName, MAX_ALIAS_SEARCH);
+    }
+
+    return alias;
 }
 
-String PluginMgr::filterPluginAlias(const String& alias)
+String PluginMgr::determineAlias(const char* pluginTypeName, const String& requestedAlias, const IPluginMaintenance* plugin) const
 {
-    const size_t MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
-    size_t       idx                         = 0U;
-    String       filteredPluginAlias         = alias;
+    String alias = PluginAlias::sanitize(requestedAlias);
 
-    while (MQTT_SPECIAL_CHARACTERS_LEN > idx)
+    if (false == PluginAlias::isValid(alias))
     {
-        int pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
-
-        while (0 <= pos)
-        {
-            filteredPluginAlias.remove(pos, 1U);
-            pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
-        }
-
-        ++idx;
+        alias = findFreeAlias(pluginTypeName);
+    }
+    else if (true == m_pluginFactory.isAliasInUse(alias, plugin))
+    {
+        LOG_WARNING("Alias %s is already in use.", alias.c_str());
+        alias = findFreeAlias(pluginTypeName);
+    }
+    else
+    {
+        /* Requested alias is valid and free. */
+        ;
     }
 
-    return filteredPluginAlias;
+    return alias;
 }
 
 String PluginMgr::getEntityIdByPluginUid(uint16_t uid)
