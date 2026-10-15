@@ -699,20 +699,24 @@
                     aliasLabel.textContent = "Alias";
                     aliasGroup.appendChild(aliasLabel);
 
+                    const aliasRow = document.createElement("div");
+                    aliasRow.className = "alias-row";
+
                     const aliasText = document.createElement("span");
                     aliasText.className = "alias-text";
                     aliasText.id = "alias" + slot.uid;
                     aliasText.textContent = slot.alias;
-                    aliasGroup.appendChild(aliasText);
+                    aliasRow.appendChild(aliasText);
 
                     const aliasBtn = document.createElement("button");
-                    aliasBtn.className = "icon-btn";
+                    aliasBtn.className = "icon-btn compact";
                     aliasBtn.type = "button";
                     aliasBtn.title = "Change alias";
                     aliasBtn.textContent = "✎";
                     aliasBtn.addEventListener("click", () => changeAlias(slot.uid, slot.alias));
-                    aliasGroup.appendChild(aliasBtn);
+                    aliasRow.appendChild(aliasBtn);
 
+                    aliasGroup.appendChild(aliasRow);
                     pluginInfo.appendChild(aliasGroup);
 
                     /* Font Type */

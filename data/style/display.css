@@ -169,31 +169,38 @@
     padding: 2rem 0;
 }
 
-/* Alias Input */
+/* Alias */
 .alias-group {
     margin-bottom: 1rem;
 }
 
-.alias-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    margin-bottom: 0.5rem;
+/* No .alias-label rule on purpose: the label shall render exactly like the
+ * unstyled font type label below it.
+ */
+
+.alias-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
+/* Same box as the Bootstrap .form-select which shows the font type. */
 .alias-text {
-    display: inline-block;
-    padding: 0.625rem 0.875rem;
-    margin-right: 0.5rem;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid var(--slot-border);
-    border-radius: 8px;
-    color: #fff;
-    font-size: 0.875rem;
+    flex: 1;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
     overflow-wrap: anywhere;
+}
+
+.icon-btn.compact {
+    flex: 0 0 auto;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
 }
 
 /* Duration Control */
