@@ -131,8 +131,8 @@
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myFormText">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="pluginUidText">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidText" name="pluginUid" size="1">
+                            <label class="form-label" for="pluginAliasText">Plugin:</label>
+                            <select class="form-select" id="pluginAliasText" name="pluginAlias" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -164,8 +164,8 @@
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myFormLamp">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="pluginUidLamp">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidLamp" name="pluginUid" size="1">
+                            <label class="form-label" for="pluginAliasLamp">Plugin:</label>
+                            <select class="form-select" id="pluginAliasLamp" name="pluginAlias" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -370,26 +370,17 @@
                 try {
                     const rsp = await restClient.getPluginInstances();
                     let cnt = 0;
-                    const elements = document.getElementsByName("pluginUid");
+                    const elements = document.getElementsByName("pluginAlias");
 
                     for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            let optionText = rsp.data.slots[slotIndex].uid;
-                            optionText += " (";
-
-                            if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-"
-                            } else {
-                                optionText += rsp.data.slots[slotIndex].alias
-                            }
-
-                            optionText += ")";
+                            let optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
 
                             for (let elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                                 const option = document.createElement("option");
-                                option.setAttribute("value", "" + rsp.data.slots[slotIndex].uid);
+                                option.setAttribute("value", rsp.data.slots[slotIndex].alias);
                                 option.textContent = optionText;
 
                                 elements[elemIndex].append(option);
@@ -406,12 +397,12 @@
                 }
             }
 
-            async function getText(pluginUid, justTextId, iconFileNameId, scrollIconId, storeFlagId) {
+            async function getText(pluginAlias, justTextId, iconFileNameId, scrollIconId, storeFlagId) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/iconText",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
                         isJsonResponse: true
                     });
                     const justTextInput = document.getElementById(justTextId);
@@ -431,7 +422,7 @@
                 }
             }
 
-            async function setText(pluginUid, justText, iconFileName, scrollIcon, storeFlag) {
+            async function setText(pluginAlias, justText, iconFileName, scrollIcon, storeFlag) {
                 disableUI();
 
                 justText = justText.replaceAll("\\n", "\n");
@@ -440,7 +431,7 @@
                 try {
                     const rsp = await utils.makeRequest({
                         method: "POST",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/iconText",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
                         isJsonResponse: true,
                         parameter: {
                             text: justText,
@@ -457,12 +448,12 @@
                 }
             }
 
-            async function getLamp(pluginUid, lampId, lampStateId) {
+            async function getLamp(pluginAlias, lampId, lampStateId) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/lamps",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/lamps",
                         isJsonResponse: true
                     });
                     const selectLampState = document.getElementById(lampStateId);
@@ -480,13 +471,13 @@
                 }
             }
 
-            async function setLamp(pluginUid, lampId, lampState) {
+            async function setLamp(pluginAlias, lampId, lampState) {
                 disableUI();
 
                 try {
                     const rsp = await utils.makeRequest({
                         method: "POST",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/lamp/" + lampId,
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/lamp/" + lampId,
                         isJsonResponse: true,
                         parameter: {
                             state: lampState
@@ -501,7 +492,7 @@
             }
 
             async function updateForms() {
-                const selectText = document.getElementById("pluginUidText");
+                const selectText = document.getElementById("pluginAliasText");
 
                 if (0 <= selectText.selectedIndex) {
 
@@ -533,26 +524,26 @@
                     clearIconFileName("iconFileName");
                 });
 
-                const pluginUidText = document.getElementById("pluginUidText");
-                pluginUidText.addEventListener("change", () => {
-                    getText(pluginUidText.options[pluginUidText.selectedIndex].value, "justText", "iconFileName", "scrollIcon", "storeFlag");
+                const pluginAliasText = document.getElementById("pluginAliasText");
+                pluginAliasText.addEventListener("change", () => {
+                    getText(pluginAliasText.options[pluginAliasText.selectedIndex].value, "justText", "iconFileName", "scrollIcon", "storeFlag");
                 });
 
                 const lampIdSelect = document.getElementById("lampId");
                 lampIdSelect.addEventListener("change", () => {
-                    getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, "lampState");
+                    getLamp(pluginAliasText.options[pluginAliasText.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, "lampState");
                 });
 
                 document.getElementById("myFormText").addEventListener("submit", (event) => {
                     event.preventDefault();
-                    setText(pluginUidText.options[pluginUidText.selectedIndex].value, document.getElementById("justText").value, document.getElementById("iconFileName").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
+                    setText(pluginAliasText.options[pluginAliasText.selectedIndex].value, document.getElementById("justText").value, document.getElementById("iconFileName").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
                 });
 
                 document.getElementById("myFormLamp").addEventListener("submit", (event) => {
                     event.preventDefault();
-                    const pluginUidLamp = document.getElementById("pluginUidLamp");
+                    const pluginAliasLamp = document.getElementById("pluginAliasLamp");
                     const lampState = document.getElementById("lampState");
-                    setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, lampState.options[lampState.selectedIndex].value);
+                    setLamp(pluginAliasLamp.options[pluginAliasLamp.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, lampState.options[lampState.selectedIndex].value);
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */
@@ -560,22 +551,22 @@
 
                 /* Load all plugin instances. */
                 const cnt = await getPluginInstances();
-                const selectText = document.getElementById("pluginUidText");
-                const selectLamp = document.getElementById("pluginUidLamp");
+                const selectText = document.getElementById("pluginAliasText");
+                const selectLamp = document.getElementById("pluginAliasLamp");
                 const selectLampId = document.getElementById("lampId");
 
                 if (0 < cnt) {
-                    /* Check if UID was passed in URL and auto-select it */
-                    const uidFromUrl = utils.getURLParameter('uid');
-                    if (uidFromUrl) {
+                    /* Check if the alias was passed in the URL and auto-select it */
+                    const aliasFromUrl = utils.getURLParameter('alias');
+                    if (aliasFromUrl) {
                         for (let i = 0; i < selectText.options.length; i++) {
-                            if (selectText.options[i].value === uidFromUrl) {
+                            if (selectText.options[i].value === aliasFromUrl) {
                                 selectText.selectedIndex = i;
                                 break;
                             }
                         }
                         for (let i = 0; i < selectLamp.options.length; i++) {
-                            if (selectLamp.options[i].value === uidFromUrl) {
+                            if (selectLamp.options[i].value === aliasFromUrl) {
                                 selectLamp.selectedIndex = i;
                                 break;
                             }

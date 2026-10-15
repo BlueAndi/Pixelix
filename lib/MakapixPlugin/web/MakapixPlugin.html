@@ -125,8 +125,8 @@
                         <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                             <form id="formConfig">
                                 <div class="form-group mb-3">
-                                    <label class="form-label" for="pluginUid">Plugin UID:</label>
-                                    <select class="form-select" id="pluginUid" size="1">
+                                    <label class="form-label" for="pluginAlias">Plugin:</label>
+                                    <select class="form-select" id="pluginAlias" size="1">
                                     </select>
                                 </div>
                                 <div class="form-group mb-3">
@@ -259,8 +259,8 @@
             const pluginName = "MakapixPlugin";
             const restClient = new pixelix.rest.Client();
 
-            function getSelectedPluginUid() {
-                const select = document.getElementById("pluginUid");
+            function getSelectedPluginAlias() {
+                const select = document.getElementById("pluginAlias");
                 return select.options[select.selectedIndex].value;
             }
 
@@ -282,13 +282,13 @@
                     for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            const optionText = rsp.data.slots[slotIndex].uid;
+                            const optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
 
                             const option = document.createElement("option");
-                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.value = rsp.data.slots[slotIndex].alias;
                             option.textContent = optionText;
 
-                            document.getElementById("pluginUid").appendChild(option);
+                            document.getElementById("pluginAlias").appendChild(option);
 
                             ++cnt;
                         }
@@ -301,12 +301,12 @@
                 }
             }
 
-            async function getConfig(pluginUid) {
+            async function getConfig(pluginAlias) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixCfg",
                         isJsonResponse: true
                     });
                     document.getElementById("playerKey").value = rsp.data.playerKey;
@@ -318,13 +318,13 @@
                 }
             }
 
-            async function setConfig(pluginUid) {
+            async function setConfig(pluginAlias) {
                 disableUI();
 
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixCfg",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixCfg",
                         isJsonResponse: true,
                         parameter: {
                             playerKey: document.getElementById("playerKey").value,
@@ -339,12 +339,12 @@
                 }
             }
 
-            async function getStatus(pluginUid) {
+            async function getStatus(pluginAlias) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixPlayCtrl",
                         isJsonResponse: true
                     });
                     const channel = rsp.data.channel;
@@ -386,7 +386,7 @@
                 }
             }
 
-            async function playChannel(pluginUid, channelName) {
+            async function playChannel(pluginAlias, channelName) {
                 const parameter = {
                     action: "playChannel",
                     channelName: channelName
@@ -409,11 +409,11 @@
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixPlayCtrl",
                         isJsonResponse: true,
                         parameter: parameter
                     });
-                    await getStatus(pluginUid);
+                    await getStatus(pluginAlias);
                 } catch (rsp) {
                     alert("Failed.");
                 } finally {
@@ -421,19 +421,19 @@
                 }
             }
 
-            async function playNext(pluginUid) {
+            async function playNext(pluginAlias) {
                 disableUI();
 
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixPlayCtrl",
                         isJsonResponse: true,
                         parameter: {
                             action: "next"
                         }
                     });
-                    await getStatus(pluginUid);
+                    await getStatus(pluginAlias);
                 } catch (rsp) {
                     alert("Failed.");
                 } finally {
@@ -441,7 +441,7 @@
                 }
             }
 
-            async function pause(pluginUid) {
+            async function pause(pluginAlias) {
                 disableUI();
 
                 const isPaused = document.getElementById("btnPause").classList.contains("active");
@@ -450,13 +450,13 @@
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixPlayCtrl",
                         isJsonResponse: true,
                         parameter: {
                             action: action
                         }
                     });
-                    await getStatus(pluginUid);
+                    await getStatus(pluginAlias);
                 } catch (rsp) {
                     alert("Failed.");
                 } finally {
@@ -464,19 +464,19 @@
                 }
             }
 
-            async function playPrev(pluginUid) {
+            async function playPrev(pluginAlias) {
                 disableUI();
 
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixPlayCtrl",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixPlayCtrl",
                         isJsonResponse: true,
                         parameter: {
                             action: "previous"
                         }
                     });
-                    await getStatus(pluginUid);
+                    await getStatus(pluginAlias);
                 } catch (rsp) {
                     alert("Failed.");
                 } finally {
@@ -484,14 +484,14 @@
                 }
             }
 
-            async function getProvisionStatus(pluginUid) {
+            async function getProvisionStatus(pluginAlias) {
                 const payload = {};
 
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixProvision",
                         isJsonResponse: true,
                         parameter: payload
                     });
@@ -516,14 +516,14 @@
                 }
             }
 
-            async function provisionPlayer(pluginUid) {
+            async function provisionPlayer(pluginAlias) {
                 const payload = {};
                 disableUI();
 
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/makapixProvision",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/makapixProvision",
                         isJsonResponse: true,
                         parameter: payload
                     });
@@ -541,20 +541,20 @@
                 menu.create("menu", menu.data);
 
                 /* Wire up event handlers. */
-                document.getElementById("btnPrev").addEventListener("click", () => playPrev(getSelectedPluginUid()));
-                document.getElementById("btnPause").addEventListener("click", () => pause(getSelectedPluginUid()));
-                document.getElementById("btnNext").addEventListener("click", () => playNext(getSelectedPluginUid()));
-                document.getElementById("btnAll").addEventListener("click", () => playChannel(getSelectedPluginUid(), "all"));
-                document.getElementById("btnPromoted").addEventListener("click", () => playChannel(getSelectedPluginUid(), "promoted"));
-                document.getElementById("btnUser").addEventListener("click", () => playChannel(getSelectedPluginUid(), "user"));
-                document.getElementById("btnByUser").addEventListener("click", () => playChannel(getSelectedPluginUid(), "by_user"));
-                document.getElementById("btnByHashtag").addEventListener("click", () => playChannel(getSelectedPluginUid(), "hashtag"));
-                document.getElementById("btnProvision").addEventListener("click", () => provisionPlayer(getSelectedPluginUid()));
-                document.getElementById("btnGetProvisionStatus").addEventListener("click", () => getProvisionStatus(getSelectedPluginUid()));
-                document.getElementById("pluginUid").addEventListener("change", () => getConfig(getSelectedPluginUid()));
+                document.getElementById("btnPrev").addEventListener("click", () => playPrev(getSelectedPluginAlias()));
+                document.getElementById("btnPause").addEventListener("click", () => pause(getSelectedPluginAlias()));
+                document.getElementById("btnNext").addEventListener("click", () => playNext(getSelectedPluginAlias()));
+                document.getElementById("btnAll").addEventListener("click", () => playChannel(getSelectedPluginAlias(), "all"));
+                document.getElementById("btnPromoted").addEventListener("click", () => playChannel(getSelectedPluginAlias(), "promoted"));
+                document.getElementById("btnUser").addEventListener("click", () => playChannel(getSelectedPluginAlias(), "user"));
+                document.getElementById("btnByUser").addEventListener("click", () => playChannel(getSelectedPluginAlias(), "by_user"));
+                document.getElementById("btnByHashtag").addEventListener("click", () => playChannel(getSelectedPluginAlias(), "hashtag"));
+                document.getElementById("btnProvision").addEventListener("click", () => provisionPlayer(getSelectedPluginAlias()));
+                document.getElementById("btnGetProvisionStatus").addEventListener("click", () => getProvisionStatus(getSelectedPluginAlias()));
+                document.getElementById("pluginAlias").addEventListener("change", () => getConfig(getSelectedPluginAlias()));
                 document.getElementById("formConfig").addEventListener("submit", (event) => {
                     event.preventDefault();
-                    setConfig(getSelectedPluginUid());
+                    setConfig(getSelectedPluginAlias());
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */
@@ -562,14 +562,14 @@
 
                 /* Load all plugin instances. */
                 const cnt = await getPluginInstances();
-                const select = document.getElementById("pluginUid");
+                const select = document.getElementById("pluginAlias");
 
                 if (0 < cnt) {
-                    /* Check if UID was passed in URL and auto-select it */
-                    const uidFromUrl = utils.getURLParameter("uid");
-                    if (uidFromUrl) {
+                    /* Check if the alias was passed in the URL and auto-select it */
+                    const aliasFromUrl = utils.getURLParameter("alias");
+                    if (aliasFromUrl) {
                         for (let i = 0; i < select.options.length; i++) {
-                            if (select.options[i].value === uidFromUrl) {
+                            if (select.options[i].value === aliasFromUrl) {
                                 select.selectedIndex = i;
                                 break;
                             }

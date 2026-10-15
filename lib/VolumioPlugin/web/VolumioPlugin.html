@@ -71,8 +71,8 @@
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUid" size="1">
+                            <label class="form-label" for="pluginAlias">Plugin:</label>
+                            <select class="form-select" id="pluginAlias" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -128,22 +128,13 @@
                     for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            let optionText = rsp.data.slots[slotIndex].uid;
-                            optionText += " (";
-
-                            if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-";
-                            } else {
-                                optionText += rsp.data.slots[slotIndex].alias;
-                            }
-
-                            optionText += ")";
+                            let optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
 
                             const option = document.createElement("option");
-                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.value = rsp.data.slots[slotIndex].alias;
                             option.textContent = optionText;
 
-                            document.getElementById("pluginUid").append(option);
+                            document.getElementById("pluginAlias").append(option);
 
                             ++cnt;
                         }
@@ -156,12 +147,12 @@
                 }
             }
 
-            async function getConfig(pluginUid) {
+            async function getConfig(pluginAlias) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/host",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/host",
                         isJsonResponse: true
                     });
                     document.getElementById("host").value = rsp.data.host;
@@ -173,12 +164,12 @@
                 }
             }
 
-            async function setConfig(pluginUid) {
+            async function setConfig(pluginAlias) {
                 disableUI();
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/host",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/host",
                         isJsonResponse: true,
                         parameter: {
                             host: document.getElementById("host").value,
@@ -198,15 +189,15 @@
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
 
-                const pluginUidSelect = document.getElementById("pluginUid");
+                const pluginAliasSelect = document.getElementById("pluginAlias");
 
-                pluginUidSelect.addEventListener("change", () => {
-                    getConfig(pluginUidSelect.value);
+                pluginAliasSelect.addEventListener("change", () => {
+                    getConfig(pluginAliasSelect.value);
                 });
 
                 document.getElementById("myForm").addEventListener("submit", (event) => {
                     event.preventDefault();
-                    setConfig(document.getElementById("pluginUid").value);
+                    setConfig(document.getElementById("pluginAlias").value);
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */
@@ -216,18 +207,18 @@
                 const cnt = await getPluginInstances();
 
                 if (0 < cnt) {
-                    /* Check if UID was passed in URL and auto-select it */
-                    const uidFromUrl = utils.getURLParameter('uid');
-                    if (uidFromUrl) {
-                        for (let i = 0; i < pluginUidSelect.options.length; i++) {
-                            if (pluginUidSelect.options[i].value === uidFromUrl) {
-                                pluginUidSelect.selectedIndex = i;
+                    /* Check if the alias was passed in the URL and auto-select it */
+                    const aliasFromUrl = utils.getURLParameter('alias');
+                    if (aliasFromUrl) {
+                        for (let i = 0; i < pluginAliasSelect.options.length; i++) {
+                            if (pluginAliasSelect.options[i].value === aliasFromUrl) {
+                                pluginAliasSelect.selectedIndex = i;
                                 break;
                             }
                         }
                     }
 
-                    await getConfig(pluginUidSelect.options[pluginUidSelect.selectedIndex].value);
+                    await getConfig(pluginAliasSelect.options[pluginAliasSelect.selectedIndex].value);
                 }
             });
         </script>

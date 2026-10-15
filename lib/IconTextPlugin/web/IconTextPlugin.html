@@ -132,8 +132,8 @@
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myFormText">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="pluginUidText">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidText" name="pluginUid" size="1">
+                            <label class="form-label" for="pluginAliasText">Plugin:</label>
+                            <select class="form-select" id="pluginAliasText" name="pluginAlias" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -338,27 +338,18 @@
                     let elemIndex = 0;
                     let slotIndex = 0;
                     let cnt = 0;
-                    const elements = document.getElementsByName("pluginUid");
+                    const elements = document.getElementsByName("pluginAlias");
                     let optionText = "";
 
                     for (slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            optionText = rsp.data.slots[slotIndex].uid;
-                            optionText += " (";
-
-                            if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-";
-                            } else {
-                                optionText += rsp.data.slots[slotIndex].alias;
-                            }
-
-                            optionText += ")";
+                            optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
 
                             for (elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                                 const option = document.createElement("option");
-                                option.setAttribute("value", "" + rsp.data.slots[slotIndex].uid);
+                                option.setAttribute("value", rsp.data.slots[slotIndex].alias);
                                 option.textContent = optionText;
 
                                 elements[elemIndex].append(option);
@@ -375,12 +366,12 @@
                 }
             }
 
-            async function getText(pluginUid, justTextId, iconFileNameId, scrollIconId, storeFlagId) {
+            async function getText(pluginAlias, justTextId, iconFileNameId, scrollIconId, storeFlagId) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/iconText",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
                         isJsonResponse: true
                     });
                     const justTextInput = document.getElementById(justTextId);
@@ -400,7 +391,7 @@
                 }
             }
 
-            async function setText(pluginUid, justText, iconFileName, scrollIcon, storeFlag) {
+            async function setText(pluginAlias, justText, iconFileName, scrollIcon, storeFlag) {
                 disableUI();
 
                 justText = justText.replaceAll("\\n", "\n");
@@ -409,7 +400,7 @@
                 try {
                     const rsp = await utils.makeRequest({
                         method: "POST",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/iconText",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
                         isJsonResponse: true,
                         parameter: {
                             text: justText,
@@ -427,7 +418,7 @@
             }
 
             async function updateForms() {
-                const selectText = document.getElementById("pluginUidText");
+                const selectText = document.getElementById("pluginAliasText");
 
                 if (0 <= selectText.selectedIndex) {
 
@@ -459,13 +450,13 @@
                     clearIconFileName("iconFileName");
                 });
 
-                document.getElementById("pluginUidText").addEventListener("change", function () {
-                    getText(document.getElementById("pluginUidText").value, "justText", "iconFileName", "scrollIcon", "storeFlag");
+                document.getElementById("pluginAliasText").addEventListener("change", function () {
+                    getText(document.getElementById("pluginAliasText").value, "justText", "iconFileName", "scrollIcon", "storeFlag");
                 });
 
                 document.getElementById("myFormText").addEventListener("submit", function (event) {
                     event.preventDefault();
-                    setText(document.getElementById("pluginUidText").value, document.getElementById("justText").value, document.getElementById("iconFileName").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
+                    setText(document.getElementById("pluginAliasText").value, document.getElementById("justText").value, document.getElementById("iconFileName").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */
@@ -474,12 +465,12 @@
                 /* Load all plugin instances. */
                 await getPluginInstances();
 
-                /* Check if UID was passed in URL and auto-select it */
-                const uidFromUrl = utils.getURLParameter("uid");
-                if (uidFromUrl) {
-                    const selectText = document.getElementById("pluginUidText");
+                /* Check if the alias was passed in the URL and auto-select it */
+                const aliasFromUrl = utils.getURLParameter("alias");
+                if (aliasFromUrl) {
+                    const selectText = document.getElementById("pluginAliasText");
                     for (let i = 0; i < selectText.options.length; i++) {
-                        if (selectText.options[i].value === uidFromUrl) {
+                        if (selectText.options[i].value === aliasFromUrl) {
                             selectText.selectedIndex = i;
                             break;
                         }

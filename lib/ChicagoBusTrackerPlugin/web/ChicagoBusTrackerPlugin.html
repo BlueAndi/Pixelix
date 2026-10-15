@@ -71,8 +71,8 @@
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUid" size="1">
+                            <label class="form-label" for="pluginAlias">Plugin:</label>
+                            <select class="form-select" id="pluginAlias" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -137,7 +137,7 @@
 
             const pluginName = "ChicagoBusTrackerPlugin";
             const restClient = new pixelix.rest.Client();
-            let rootPluginId = "";
+            let rootPluginAlias = "";
             const selected = {
                 routes: "",
                 directions: "",
@@ -197,7 +197,7 @@
                 selected[elementId] = value
                 try {
                     switch (elementId) {
-                        case "pluginUid":
+                        case "pluginAlias":
                             await getConfig(value)
                             if (hasApiKeyConfigured()) {
                                 await getRoutes()
@@ -267,22 +267,13 @@
                     for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            let optionText = rsp.data.slots[slotIndex].uid;
-                            optionText += " (";
-
-                            if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-"
-                            } else {
-                                optionText += rsp.data.slots[slotIndex].alias
-                            }
-
-                            optionText += ")";
+                            let optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
 
                             const option = document.createElement("option");
-                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.value = rsp.data.slots[slotIndex].alias;
                             option.text = optionText;
 
-                            document.getElementById("pluginUid").appendChild(option);
+                            document.getElementById("pluginAlias").appendChild(option);
 
                             ++cnt;
                         }
@@ -296,14 +287,14 @@
             }
 
 
-            async function getConfig(pluginUid) {
+            async function getConfig(pluginAlias) {
                 disableUI()
-                rootPluginId = pluginUid
+                rootPluginAlias = pluginAlias
 
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/chicagobus",
                         isJsonResponse: true,
                     })
 
@@ -354,9 +345,9 @@
                 updateDependentControlState()
             }
 
-            async function setConfig(pluginUid) {
+            async function setConfig(pluginAlias) {
                 disableUI()
-                rootPluginId = pluginUid
+                rootPluginAlias = pluginAlias
                 const parameter = {
                     apiKey: document.getElementById("apiKey").value,
                     rte: selected.routes,
@@ -370,12 +361,12 @@
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/chicagobus",
+                        url: "/rest/api/v1/display/plugin/" + pluginAlias + "/chicagobus",
                         isJsonResponse: true,
                         parameter,
                     })
                     alert("Ok.")
-                    await getConfig(pluginUid)
+                    await getConfig(pluginAlias)
                     if (hasApiKeyConfigured()) {
                         await getRoutes()
                         await getDirections()
@@ -402,7 +393,7 @@
              * @returns {Promise<object>} Resolved CTA API response object.
              */
             async function proxyFetch(path) {
-                const baseUrl = "/rest/api/v1/display/uid/" + rootPluginId + "/chicagobusrequest";
+                const baseUrl = "/rest/api/v1/display/plugin/" + rootPluginAlias + "/chicagobusrequest";
 
                 await utils.makeRequest({
                     method: "POST",
@@ -521,9 +512,9 @@
                 /* Wire up event handlers. */
                 document.getElementById("myForm").addEventListener("submit", function (event) {
                     event.preventDefault();
-                    setConfig(document.getElementById("pluginUid").value);
+                    setConfig(document.getElementById("pluginAlias").value);
                 });
-                document.getElementById("pluginUid").addEventListener("change", () => handleChange("pluginUid"));
+                document.getElementById("pluginAlias").addEventListener("change", () => handleChange("pluginAlias"));
                 document.getElementById("routes").addEventListener("change", () => handleChange("routes"));
                 document.getElementById("directions").addEventListener("change", () => handleChange("directions"));
                 document.getElementById("stops").addEventListener("change", () => handleChange("stops"));
@@ -531,11 +522,11 @@
 
                 /* Load all plugin instances. */
                 const cnt = await getPluginInstances();
-                const select = document.getElementById("pluginUid");
+                const select = document.getElementById("pluginAlias");
 
                 if (0 < cnt) {
-                    rootPluginId = select.options[select.selectedIndex].value
-                    await getConfig(rootPluginId);
+                    rootPluginAlias = select.options[select.selectedIndex].value
+                    await getConfig(rootPluginAlias);
                 }
 
                 if (hasApiKeyConfigured()) {

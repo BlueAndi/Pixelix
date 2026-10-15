@@ -102,8 +102,8 @@
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myFormSlot" enctype="multipart/form-data">
                         <div class="form-group mb-3">
-                            <label class="form-label" for="pluginUidSlot">Plugin UID:</label>
-                            <select class="form-select" id="pluginUidSlot" name="pluginUid" size="1">
+                            <label class="form-label" for="pluginAliasSlot">Plugin:</label>
+                            <select class="form-select" id="pluginAliasSlot" name="pluginAlias" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -327,26 +327,17 @@
                 try {
                     const rsp = await restClient.getPluginInstances();
                     let cnt = 0;
-                    const elements = document.getElementsByName("pluginUid");
+                    const elements = document.getElementsByName("pluginAlias");
 
                     for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            let optionText = rsp.data.slots[slotIndex].uid;
-                            optionText += " (";
-
-                            if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-";
-                            } else {
-                                optionText += rsp.data.slots[slotIndex].alias;
-                            }
-
-                            optionText += ")";
+                            let optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
 
                             for (let elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                                 const option = document.createElement("option");
-                                option.setAttribute("value", "" + rsp.data.slots[slotIndex].uid);
+                                option.setAttribute("value", rsp.data.slots[slotIndex].alias);
                                 option.textContent = optionText;
 
                                 elements[elemIndex].append(option);
@@ -365,14 +356,14 @@
 
             function getSlotsByForm(formId) {
                 const values = serializeFormAll(formId);
-                let pluginUid = 0;
+                let pluginAlias = 0;
                 let icon0FileName = "";
                 let icon1FileName = "";
                 let icon2FileName = "";
 
                 values.forEach((field) => {
-                    if (field.name === "pluginUid") {
-                        pluginUid = field.value;
+                    if (field.name === "pluginAlias") {
+                        pluginAlias = field.value;
                     } else if (field.name === "icon0FileName") {
                         icon0FileName = field.value;
                     } else if (field.name === "icon1FileName") {
@@ -384,16 +375,16 @@
                     }
                 });
 
-                return getSlots(pluginUid, icon0FileName, icon1FileName, icon2FileName);
+                return getSlots(pluginAlias, icon0FileName, icon1FileName, icon2FileName);
             }
 
-            async function getSlots(pluginUid, icon0FileName, icon1FileName, icon2FileName) {
+            async function getSlots(pluginAlias, icon0FileName, icon1FileName, icon2FileName) {
                 disableUI();
 
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/slots",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/slots",
                         isJsonResponse: true
                     });
 
@@ -413,12 +404,12 @@
 
             function setSlotsByForm(formId) {
                 const values = serializeFormAll(formId);
-                let pluginUid = 0;
+                let pluginAlias = 0;
                 const slots = ["", "", ""];
 
                 values.forEach((field) => {
-                    if (field.name === "pluginUid") {
-                        pluginUid = field.value;
+                    if (field.name === "pluginAlias") {
+                        pluginAlias = field.value;
                     } else if (field.name === "icon0FileName") {
                         slots[0] = field.value;
                     } else if (field.name === "icon1FileName") {
@@ -430,16 +421,16 @@
                     }
                 });
 
-                return setSlots(pluginUid, slots);
+                return setSlots(pluginAlias, slots);
             }
 
-            async function setSlots(pluginUid, slots) {
+            async function setSlots(pluginAlias, slots) {
                 disableUI();
 
                 try {
                     await utils.makeRequest({
                         method: "POST",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/slots",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/slots",
                         isJsonResponse: true,
                         parameter: {
                             slots: slots
@@ -455,7 +446,7 @@
             }
 
             function updateForms() {
-                const selectText = document.getElementById("pluginUidSlot");
+                const selectText = document.getElementById("pluginAliasSlot");
 
                 if (0 <= selectText.selectedIndex) {
 
@@ -473,8 +464,8 @@
                     radio.addEventListener("change", updateIconPickerZoom);
                 });
 
-                /* Wire up the plugin UID selection. */
-                document.getElementById("pluginUidSlot").addEventListener("change", updateForms);
+                /* Wire up the plugin alias selection. */
+                document.getElementById("pluginAliasSlot").addEventListener("change", updateForms);
 
                 /* Wire up the slot form submission. */
                 document.getElementById("myFormSlot").addEventListener("submit", (event) => {
@@ -497,12 +488,12 @@
                 /* Load all plugin instances. */
                 const cnt = await getPluginInstances();
                 if (0 < cnt) {
-                    /* Check if UID was passed in URL and auto-select it */
-                    const uidFromUrl = utils.getURLParameter("uid");
-                    if (uidFromUrl) {
-                        const selectSlot = document.getElementById("pluginUidSlot");
+                    /* Check if the alias was passed in the URL and auto-select it */
+                    const aliasFromUrl = utils.getURLParameter("alias");
+                    if (aliasFromUrl) {
+                        const selectSlot = document.getElementById("pluginAliasSlot");
                         for (let i = 0; i < selectSlot.options.length; i++) {
-                            if (selectSlot.options[i].value === uidFromUrl) {
+                            if (selectSlot.options[i].value === aliasFromUrl) {
                                 selectSlot.selectedIndex = i;
                                 break;
                             }
