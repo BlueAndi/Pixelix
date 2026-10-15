@@ -184,21 +184,16 @@
     margin-bottom: 0.5rem;
 }
 
-.alias-input {
-    width: 100%;
+.alias-text {
+    display: inline-block;
     padding: 0.625rem 0.875rem;
+    margin-right: 0.5rem;
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid var(--slot-border);
     border-radius: 8px;
     color: #fff;
     font-size: 0.875rem;
-    transition: all 0.2s;
-}
-
-.alias-input:focus {
-    outline: none;
-    border-color: var(--primary-glow);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    overflow-wrap: anywhere;
 }
 
 /* Duration Control */

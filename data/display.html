@@ -95,6 +95,7 @@
                             <div class="control-panel-title">Install Plugin</div>
                             <select class="form-select form-select-sm mb-2" id="pluginToInstall" size="1">
                             </select>
+                            <input class="form-control form-control-sm mb-2" id="pluginAliasToInstall" type="text" maxlength="20" placeholder="Alias (optional)">
                             <button class="btn btn-sm btn-outline-light w-100" id="btnInstall" type="button" disabled>Install</button>
                         </div>
 
@@ -324,11 +325,18 @@
             async function install() {
                 const pluginIndex = Number.parseInt(document.getElementById("pluginToInstall").value);
                 const pluginName = plugins[pluginIndex];
+                const aliasInput = document.getElementById("pluginAliasToInstall");
+                const alias = aliasInput.value.trim();
+
+                if ((0 < alias.length) && (false === ALIAS_PATTERN.test(alias))) {
+                    await dialog.showError("<p>Alias must be 3 to 20 characters long and may contain letters, digits, _ and - only.</p>");
+                    return;
+                }
 
                 disableUI();
 
                 try {
-                    await wsClient.install({ pluginName: pluginName });
+                    await wsClient.install({ pluginName: pluginName, alias: alias });
                     await updateSlotInfo();
                 } catch (err) {
                     if ("undefined" !== typeof err) {
@@ -336,6 +344,7 @@
                     }
                     await dialog.showError("<p>Install " + pluginName + " failed.</p>");
                 } finally {
+                    aliasInput.value = "";
                     enableUI();
                 }
             }
@@ -566,16 +575,36 @@
                 }
             }
 
-            async function setAlias(pluginUid) {
-                const alias = document.getElementById("alias" + pluginUid).value;
+            const ALIAS_PATTERN = /^[A-Za-z0-9_-]{3,20}$/;
+
+            async function changeAlias(pluginUid, currentAlias) {
+                const alias = await dialog.showPrompt(
+                    "Change alias",
+                    "New alias, 3 to 20 characters, letters, digits, _ and - only:",
+                    currentAlias,
+                    20);
+
+                if (null === alias) {
+                    return;
+                }
+
+                if (false === ALIAS_PATTERN.test(alias)) {
+                    await dialog.showError("<p>Alias must be 3 to 20 characters long and may contain letters, digits, _ and - only.</p>");
+                    return;
+                }
 
                 try {
                     await wsClient.setPluginAlias({ uid: pluginUid, name: alias });
                 } catch (err) {
-                    if ("undefined" !== typeof err) {
+                    let reason = "Set alias failed.";
+
+                    if ("string" === typeof err) {
+                        reason = err;
+                    } else if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    await dialog.showError("<p>Set alias failed.</p>");
+
+                    await dialog.showError("<p>" + reason + "</p>");
                 } finally {
                     await updateSlotInfo();
                 }
@@ -658,6 +687,7 @@
                     const pluginUid = document.createElement("div");
                     pluginUid.className = "plugin-uid";
                     pluginUid.textContent = "UID: " + slot.uid;
+                    pluginUid.title = "Names the plugin configuration file /configuration/" + slot.uid + ".json in the file editor";
                     pluginInfo.appendChild(pluginUid);
 
                     /* Alias */
@@ -669,15 +699,20 @@
                     aliasLabel.textContent = "Alias";
                     aliasGroup.appendChild(aliasLabel);
 
-                    const aliasInput = document.createElement("input");
-                    aliasInput.className = "alias-input";
-                    aliasInput.id = "alias" + slot.uid;
-                    aliasInput.type = "text";
-                    aliasInput.value = slot.alias || "";
-                    aliasInput.placeholder = "Enter alias...";
-                    aliasInput.maxLength = 8;
-                    aliasInput.addEventListener("change", () => setAlias(slot.uid));
-                    aliasGroup.appendChild(aliasInput);
+                    const aliasText = document.createElement("span");
+                    aliasText.className = "alias-text";
+                    aliasText.id = "alias" + slot.uid;
+                    aliasText.textContent = slot.alias;
+                    aliasGroup.appendChild(aliasText);
+
+                    const aliasBtn = document.createElement("button");
+                    aliasBtn.className = "icon-btn";
+                    aliasBtn.type = "button";
+                    aliasBtn.title = "Change alias";
+                    aliasBtn.textContent = "✎";
+                    aliasBtn.addEventListener("click", () => changeAlias(slot.uid, slot.alias));
+                    aliasGroup.appendChild(aliasBtn);
+
                     pluginInfo.appendChild(aliasGroup);
 
                     /* Font Type */
@@ -758,7 +793,7 @@
                     configBtn.title = "Configure plugin";
                     configBtn.textContent = "\u2699 Config";
                     configBtn.addEventListener("click", () => {
-                        window.location.href = "/plugins/" + slot.name + "/" + slot.name + ".html?uid=" + slot.uid;
+                        window.location.href = "/plugins/" + slot.name + "/" + slot.name + ".html?alias=" + encodeURIComponent(slot.alias);
                     });
                     actions.appendChild(configBtn);
                 }

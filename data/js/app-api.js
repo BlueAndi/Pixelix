@@ -285,6 +285,43 @@ dialog.showYesNo = function (title, message, onYes, onNo, isBlocking) {
     return dialog._show(title, message, isBlocking);
 };
 
+dialog.showPrompt = function (title, message, value, maxLength) {
+    return new Promise((resolve) => {
+        const modalElement = document.getElementById("modalDialog");
+        const okButton = document.createElement("button");
+        const cancelButton = document.createElement("button");
+        let result = null;
+
+        okButton.type = "button";
+        okButton.className = "btn btn-secondary";
+        okButton.setAttribute("data-bs-dismiss", "modal");
+        okButton.textContent = "Ok";
+        okButton.addEventListener("click", () => {
+            result = document.getElementById("dialogInput").value;
+        }, { once: true });
+
+        cancelButton.type = "button";
+        cancelButton.className = "btn btn-secondary";
+        cancelButton.setAttribute("data-bs-dismiss", "modal");
+        cancelButton.textContent = "Cancel";
+
+        dialog._prepare("modal-header bg-dark text-white", [cancelButton, okButton]);
+
+        document.getElementById("dialogTitle").textContent = title;
+        document.getElementById("dialogBody").innerHTML =
+            "<p>" + message + "</p>" +
+            "<input class=\"form-control\" id=\"dialogInput\" type=\"text\" maxlength=\"" + maxLength + "\">";
+        document.getElementById("dialogInput").value = value;
+
+        /* Resolve on hide, so both the Ok and the Cancel path end the promise.
+         * result stays null unless Ok was pressed.
+         */
+        modalElement.addEventListener("hidden.bs.modal", () => resolve(result), { once: true });
+
+        dialog._getModal().show();
+    });
+};
+
 dialog.updateMessage = function (message) {
     document.getElementById("dialogBody").innerHTML = message;
 };
