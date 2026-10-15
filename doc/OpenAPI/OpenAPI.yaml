@@ -216,7 +216,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Channel"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -256,7 +256,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -287,7 +287,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChicagoBusConfig"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -322,7 +322,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -352,7 +352,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChicagoBusRoutes"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -390,7 +390,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChicagoBusDirections"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -433,7 +433,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChicagoBusStops"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -464,7 +464,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Config"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -500,7 +500,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -530,7 +530,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Countdown"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -588,7 +588,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -618,7 +618,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DateTime"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -682,7 +682,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -712,7 +712,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GrabConfig"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -782,7 +782,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -812,7 +812,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Host"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -846,7 +846,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -876,7 +876,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/IPAddress"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -910,7 +910,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -940,7 +940,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Github"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -980,7 +980,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1017,7 +1017,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Lamp"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1058,7 +1058,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1088,7 +1088,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Lamps"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1118,7 +1118,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Location"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1158,7 +1158,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1188,7 +1188,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MakapixConfig"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1228,7 +1228,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1258,7 +1258,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MakapixPlaybackStatus"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1324,7 +1324,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1354,7 +1354,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MakapixProvisionStatus"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1387,7 +1387,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1417,7 +1417,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/OMWeather"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1483,7 +1483,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1513,7 +1513,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SignalDetector"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1589,7 +1589,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1619,7 +1619,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SlotsFileName"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1653,7 +1653,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1690,7 +1690,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/SlotFileName"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1728,7 +1728,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1759,7 +1759,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Text"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1806,7 +1806,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1836,7 +1836,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Weather"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -1895,7 +1895,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
@@ -2379,7 +2379,7 @@ paths:
 
         Example:
         ```bash
-        curl -u luke:skywalker -d "name=IconTextPlugin" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/install
+        curl -u luke:skywalker -d "name=IconTextPlugin" -d "alias=MyAlias" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/install
         ```
       operationId: installPlugin
       parameters:
@@ -2389,6 +2389,12 @@ paths:
             type: string
           required: true
           description: The plugin name.
+        - in: query
+          name: alias
+          schema:
+            type: string
+          required: false
+          description: The plugin alias name. 3 to 20 characters of A-Z, a-z, 0-9, _ and -. If omitted, invalid or already in use, a default is generated from the plugin type name.
       responses:
         "200":
           description: Ok
@@ -4028,6 +4034,10 @@ components:
             uid:
               type: number
               example: 27065
+            alias:
+              type: string
+              description: The alias the plugin was installed with, which may differ from the requested one.
+              example: IconText1
         status:
           type: string
           description: The request result.

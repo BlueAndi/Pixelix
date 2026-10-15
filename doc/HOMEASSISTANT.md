@@ -273,7 +273,7 @@ Add an automation to `automations.yaml`, for example to show the garage door sta
   actions:
     - service: rest_command.pixelix_notify
       data:
-        uid: 42798
+        alias: IconText1
         text: "{{ states('cover.garage_door') }}"
   mode: single
 ```
