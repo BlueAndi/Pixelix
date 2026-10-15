@@ -78,7 +78,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, uint32_t clientId)
     else
     {
         String              msg;
-        IPluginMaintenance* plugin = PluginMgr::getInstance().install(m_pluginName.c_str());
+        IPluginMaintenance* plugin = PluginMgr::getInstance().install(m_pluginName.c_str(), SlotList::SLOT_ID_INVALID, m_alias);
 
         if (nullptr == plugin)
         {
@@ -91,6 +91,10 @@ void WsCmdInstall::execute(AsyncWebSocket* server, uint32_t clientId)
             msg += DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
             msg += DELIMITER;
             msg += plugin->getUID();
+            msg += DELIMITER;
+            msg += "\"";
+            msg += plugin->getAlias();
+            msg += "\"";
 
             plugin->enable();
 
@@ -103,18 +107,29 @@ void WsCmdInstall::execute(AsyncWebSocket* server, uint32_t clientId)
 
     m_isError = false;
     m_pluginName.clear();
+    m_alias.clear();
 }
 
 void WsCmdInstall::setPar(const char* par)
 {
-    /* The name of the plugin is enclosed in "". */
-    if ((0U == m_pluginName.length()) &&
-        (2U <= strlen(par)))
+    /* The parameters are enclosed in "". */
+    if (2U > strlen(par))
+    {
+        m_isError = true;
+    }
+    else if (0U == m_pluginName.length())
     {
         m_pluginName = par;
 
         /* Remove the enclosing "" */
         m_pluginName = m_pluginName.substring(1, m_pluginName.length() - 1);
+    }
+    else if (0U == m_alias.length())
+    {
+        m_alias = par;
+
+        /* Remove the enclosing "" */
+        m_alias = m_alias.substring(1, m_alias.length() - 1);
     }
     else
     {

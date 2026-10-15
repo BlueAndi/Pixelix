@@ -611,7 +611,15 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
         else
         {
             const String&       pluginName = request->arg("name");
-            IPluginMaintenance* plugin     = PluginMgr::getInstance().install(pluginName.c_str());
+            String              alias;
+            IPluginMaintenance* plugin = nullptr;
+
+            if (true == request->hasArg("alias"))
+            {
+                alias = request->arg("alias");
+            }
+
+            plugin = PluginMgr::getInstance().install(pluginName.c_str(), SlotList::SLOT_ID_INVALID, alias);
 
             /* Plugin not found? */
             if (nullptr == plugin)
@@ -632,6 +640,7 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
                 /* Prepare response */
                 dataObj["slotId"] = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
                 dataObj["uid"]    = plugin->getUID();
+                dataObj["alias"]  = plugin->getAlias();
             }
         }
     }
