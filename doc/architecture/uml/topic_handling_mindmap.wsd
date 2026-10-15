@@ -82,35 +82,7 @@
 ++++++ <HOMEASSISTANT-OBJECT-ID> = [ENTITY-ID/]TOPIC with "/" and "." replaced by "_"
 ++++++ <HOMEASSISTANT-UNIQUE-ID> = DEVICE-ID/[ENTITY-ID/]TOPIC
 
-+++++ Topic with plugin UID: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display_uid_<PLUGIN-UID>_<TOPIC>/config
-*****:
-<code>
-{
-    "obj_id": "display_uid_42798_text",
-    "uniq_id": "pixelix-6F1AD6B8/display_uid_42798_text",
-    "dev": {
-        "ids": "B8:D6:1A:6F:F7:00",
-        "cu": "http://192.168.2.238",
-        "name": "pixelix-6F1AD6B8",
-        "mdl": "Pixelix",
-        "mf": "BlueAndi & Friends",
-        "sw": "v8.0.0:uc:lc:b",
-        "hw": "ulanzi-tc001-LED-32x8"
-    },
-    "o": {
-        "name": "Pixelix",
-        "url": "https://github.com/BlueAndi/Pixelix"
-    },
-    "name": "JustTextPlugin",
-    "ic": "mdi:form-textbox",
-    "cmd_tpl": "{\"text\": \"{{ value }}\" }",
-    "val_tpl": "{{ value_json.text }}",
-    "stat_t": "pixelix-6F1AD6B8/display/plugin/myPlugin/text/state",
-    "cmd_t": "pixelix-6F1AD6B8/display/plugin/myPlugin/text/set",
-    "avty_t": "pixelix-6F1AD6B8/status"
-}
-</code>;
-+++++ Topic with plugin alias: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display_alias_<PLUGIN-ALIAS>_<TOPIC>/config
++++++ Plugin topic: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display_alias_<PLUGIN-ALIAS>_<TOPIC>/config
 *****:
 <code>
 {

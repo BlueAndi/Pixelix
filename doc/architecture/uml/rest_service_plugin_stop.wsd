@@ -1,39 +1,50 @@
-@startuml plugin-stop
+@startuml rest_service_plugin_stop
 
-participant Plugin
-participant RestService
-participant "RestService::m_requestQueue" as requestQ
-participant "RestService::m_responseQueue" as responseQ
-participant AsyncHttpClient
+title REST Service - Plugin Stop
+
+' UML 2.5.1: a combined fragment with a single operand and a guard is
+' "opt", not an "alt" without an else operand.
+
+participant "ConcretePlugin" as plugin
+participant "RestService" as restService
+participant "HttpService" as httpService
 
 autoactivate on
 
--> Plugin: stop()
-    Plugin -> RestService: abortRequest(restId)
-        loop (request in m_requestQueue) && (false == isRequestFound)
-            alt req.restId == restId
-                RestService -> requestQ: erase Request, isRequestFound = true
-                RestService <-- requestQ
-            end
-        end   
+-> plugin: stop()
 
-        alt restId == m_activeRestId
-            RestService -> AsyncHttpClient: end()
-            RestService <-- AsyncHttpClient
+    plugin -> restService: abortRequest(restId)
 
-            RestService -> RestService: m_activeRestId = INVALID_REST_ID, m_activePreProcessCallback = nullptr, isRequestFound = true
-            return
-        end
+        loop over m_requestQueue, while not found
+            opt request.restId == restId
+                restService -> restService: Erase the request and\nset isRequestFound = true.
+                restService <-- restService
+            end opt
+        end loop
 
-        alt false == isRequestFound
-            loop (response in m_responseQueue) && (false == isRequestFound)
-                alt response.restId == restId
-                    RestService -> responseQ: erase response, isRequestFound = true
-                    RestService <-- responseQ
-                end
-            end  
-        end
-    Plugin <-- RestService
-<-- Plugin
+        opt m_activeRestId == restId
+
+            opt m_activeHttpJobId is valid
+                restService -> httpService: abortJob(m_activeHttpJobId)
+                restService <-- httpService
+            end opt
+
+            restService -> restService: Reset m_activeRestId, m_activeHttpJobId\nand the callback. Set isRequestFound = true.
+            restService <-- restService
+
+        end opt
+
+        opt false == isRequestFound
+            loop over m_responseQueue, while not found
+                opt response.restId == restId
+                    restService -> restService: Erase the response and\nset isRequestFound = true.
+                    restService <-- restService
+                end opt
+            end loop
+        end opt
+
+    plugin <-- restService
+
+<-- plugin
 
 @enduml

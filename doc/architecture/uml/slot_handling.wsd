@@ -1,35 +1,42 @@
 @startuml slot_handling
 
-title Slot handling
+title Slot Handling
 
-state "Idle" as idle: /do Find next slot with enabled plugin (for last active slot + 1 to last active slot)
-state "Idle" as idle: /exit Select found slot
+' UML 2.5.1 behaviour notation inside a state is "entry / action",
+' "do / action" and "exit / action".
 
-state "FadeIn" as fadeIn: /entry Fade next plugin in
+state "Idle" as idle
+idle: do / Find the next slot with an enabled plugin\n(from last active slot + 1 to last active slot).
+idle: exit / Select the found slot.
 
-state "Active" as active: /entry If slot duration > 0 then start timer
-state "Active" as active: /do Show plugin
-state "Active" as active: /exit Stop timer
+state "FadeIn" as fadeIn
+fadeIn: entry / Fade the next plugin in.
 
-state "FadeOut" as fadeOut: /do Fade previous plugin out
+state "Active" as active
+active: entry / If the slot duration > 0, start the timer.
+active: do / Show the plugin.
+active: exit / Stop the timer.
 
-[*] --> idle: set last active slot to last slot in list
+state "FadeOut" as fadeOut
+fadeOut: do / Fade the previous plugin out.
 
-idle --> fadeIn: [slot with enabled plugin found]
+[*] --> idle: / set the last active slot\nto the last slot in the list
+
+idle --> fadeIn: [slot with an enabled plugin found]
 
 fadeIn --> active: [fade in complete]
 
-active --> fadeOut: [plugin disabled] OR\n[plugin removed from slot]\nselect next slot with enable plugin
-active --> fadeOut: [timeout] AND\n[next slot contains enabled plugin] AND\n[next slot __is not__ current slot]\nselect next slot
-active --> fadeOut: [slot requested by user] AND\n[requested slot contains enabled plugin] AND\n[requested slot __is not__ current slot]\nselect requested slot
-active -> active: ([timeout] AND\n[next slot contains enabled plugin] AND\n[next slot __is same__ than current slot]) OR\n[slot duration re-configured]
+active --> fadeOut: [plugin disabled] or\n[plugin removed from slot] /\nselect the next slot with an enabled plugin
+active --> fadeOut: [timeout] and\n[next slot contains an enabled plugin] and\n[next slot __is not__ the current slot] /\nselect the next slot
+active --> fadeOut: [slot requested by user] and\n[requested slot contains an enabled plugin] and\n[requested slot __is not__ the current slot] /\nselect the requested slot
+active --> active: ([timeout] and\n[next slot contains an enabled plugin] and\n[next slot __is the same as__ the current slot]) or\n[slot duration reconfigured]
 
-fadeOut --> idle: [fade out complete] AND\n[no slot selected]
-fadeOut --> fadeIn: [fade out complete] AND\n[slot selected]
+fadeOut --> idle: [fade out complete] and\n[no slot selected]
+fadeOut --> fadeIn: [fade out complete] and\n[slot selected]
 
 note top of active
-    If user configures a slot duration of 0 ms, the timer is disabled and
-    the slot will stay active until other conditions appear.
+    If the user configures a slot duration of 0 ms, the timer stays
+    disabled and the slot remains active until another condition appears.
 end note
 
 @enduml

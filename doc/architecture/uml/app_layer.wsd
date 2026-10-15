@@ -1,52 +1,133 @@
 @startuml app_layer
 
-package "Application" as app {
+title Application Layer
 
-    component "main" as main <<program-entry>>
+skinparam nodesep 20
+skinparam ranksep 40
+
+<style>
+component {
+    .generated {
+        BackGroundColor Orange
+    }
+}
+</style>
+
+package "Application" as appPckg {
+
+    component "main\n(setup / loop)" as main
+
+    package "Generated" as generatedPckg {
+        component "Services" <<generated>> as services
+        component "PluginList" <<generated>> as pluginList
+        component "TopicHandlers" <<generated>> as topicHandlers
+    }
 
     package "StateMachine" as stateMachinePckg {
         component "StateMachine" as stateMachine
     }
-    
-    package "General" as generalPckg {
-        component "MiniTerminal" as miniTerminal
-        component "MemoryMonitor" as memoryMonitor
+
+    package "SystemState" as systemStatePckg {
+        component "InitState" as initState
+        component "APState" as apState
+        component "ConnectingState" as connectingState
+        component "ConnectedState" as connectedState
+        component "IdleState" as idleState
+        component "ErrorState" as errorState
+        component "RestartState" as restartState
+    }
+
+    package "DisplayMgr" as displayMgrPckg {
+        component "DisplayMgr" as displayMgr
+        component "Display" as display
+        component "SlotList" as slotList
+        component "BrightnessCtrl" as brightnessCtrl
+        component "FadeEffectController" as fadeEffectCtrl
+        component "DoubleFrameBuffer" as doubleFrameBuffer
+    }
+
+    package "Plugin" as pluginPckg {
+        component "PluginMgr" as pluginMgr
+        component "PluginFactory" as pluginFactory
+    }
+
+    package "Topics" as topicsPckg {
+        component "Topics" as topics
+    }
+
+    package "Web" as webPckg {
+        component "MyWebServer" as myWebServer
+        component "Pages" as pages
+        component "RestApi" as restApi
+        component "WebSocket" as webSocket
+        component "CaptivePortalHandler" as captivePortalHandler
     }
 
     package "ButtonHandler" as buttonHandlerPckg {
         component "ButtonHandler" as buttonHandler
     }
 
-    package "DisplayMgr" as displayMgrPckg {
-        component "DisplayMgr" as displayMgr
-    }
-
-    package "Plugin" as pluginPckg {
-        component "PluginMgr" as pluginMgr
-    }
-
-    package "SystemState" as systemStatePckg {
-        component "APState" as apState
-        component "ConnectedState" as connectedState
-        component "ConnectingState" as connectingState
-        component "ErrorState" as errorState
-        component "IdleState" as idleState
-        component "InitState" as initState
-        component "RestartState" as restartState
+    package "Hal" as halAdapterPckg {
+        component "SensorDataProvider" as sensorDataProvider
     }
 
     package "Restart" as restartPckg {
         component "RestartMgr" as restartMgr
     }
 
-    main --> stateMachine
-    main --> miniTerminal
-    main ---> buttonHandler
-    main --> memoryMonitor
-    stateMachine o---> systemStatePckg
-
-    connectedState ...> restartMgr: <<use>>
-    restartState ...> restartMgr: <<use>>
+    package "General" as generalPckg {
+        component "MiniTerminal" as miniTerminal
+        component "MemMon" as memMon
+        component "SysMsg" as sysMsg
+        component "CoredumpDecoder" as coredumpDecoder
+        component "ImprovSerialService" as improvSerial
+    }
 }
+
+main --> stateMachine
+main --> buttonHandler
+main --> miniTerminal
+main --> memMon
+
+stateMachine o--> systemStatePckg
+
+initState ..> services: <<use>>
+initState ..> topicHandlers: <<use>>
+initState ..> pluginList: <<use>>
+initState ..> topics: <<use>>
+
+connectingState ..> services: <<use>>
+connectedState ..> services: <<use>>
+errorState ..> services: <<use>>
+restartState ..> services: <<use>>
+
+connectedState ..> restartMgr: <<use>>
+restartState ..> restartMgr: <<use>>
+
+pluginList ..> pluginMgr: <<use>>
+pluginMgr o--> pluginFactory
+pluginMgr ..> displayMgr: <<use>>
+
+displayMgr o--> slotList
+displayMgr o--> display
+displayMgr o--> brightnessCtrl
+displayMgr o--> fadeEffectCtrl
+display o--> doubleFrameBuffer
+
+myWebServer ..> pages: <<use>>
+myWebServer ..> restApi: <<use>>
+myWebServer ..> webSocket: <<use>>
+myWebServer ..> captivePortalHandler: <<use>>
+
+restApi ..> displayMgr: <<use>>
+webSocket ..> displayMgr: <<use>>
+
+brightnessCtrl ..> sensorDataProvider: <<use>>
+sysMsg ..> pluginMgr: <<use>>
+
+legend bottom
+    <&cog> The generated components are produced by the build scripts
+    in scripts/ into src/Generated/. They must not be edited manually.
+endlegend
 
 @enduml

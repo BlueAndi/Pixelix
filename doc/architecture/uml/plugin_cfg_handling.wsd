@@ -1,89 +1,86 @@
 @startuml plugin_cfg_handling
 
+title Plugin Concept - Configuration Handling
+
+' UML 2.5.1: a combined fragment with a single operand and a guard is "opt",
+' not an "alt" without an else operand.
+
 participant "RestApiTopicHandler" as restApiTopicHandler
 participant "PluginMgr" as pluginMgr
 participant "DisplayMgr" as displayMgr
-participant "Plugin" as plugin
-participant "FS" as fs
+participant "ConcretePlugin" as plugin
+participant "Filesystem" as fs
 
 autoactivate on
 
-note over restApiTopicHandler,fs
-    Initial start of the plugin.
-end note
+== Initial start of the plugin ==
 
--> pluginMgr: install <PLUGIN-TYPE>
-    pluginMgr -> displayMgr: install plugin <PLUGIN-INSTANCE>
-        displayMgr -> plugin : start
-            plugin ->  fs: Read configuration from <PLUGIN-UID>.json
+-> pluginMgr: install(<PLUGIN-TYPE>)
+    pluginMgr -> displayMgr: installPlugin(<PLUGIN-INSTANCE>)
+        displayMgr -> plugin: start()
+            plugin -> fs: Read the configuration from <PLUGIN-UID>.json
             plugin <-- fs
 
-            alt Read failed
-                note over plugin,fs
-                    If configuration is not available or invalid,
-                    a initial configuration will be written.
+            opt read failed
+                note over plugin, fs
+                    If the configuration is not available or invalid,
+                    an initial configuration is written.
                 end note
-                plugin -> fs: Write configuration to <PLUGIN-UID>.json
+                plugin -> fs: Write the configuration to <PLUGIN-UID>.json
                 plugin <-- fs
-            end alt
+            end opt
 
-        displayMgr <--plugin
+        displayMgr <-- plugin
     pluginMgr <-- displayMgr
 <-- pluginMgr
 
-note over restApiTopicHandler,fs
-    Read configuration via REST API.
-end note
+== Read the configuration via REST API ==
 
--> restApiTopicHandler: GET /rest/api/v1/display/plugin/<PLUGIN-ALIAS>/<PLUGIN-SPECIFIC-URI>
+-> restApiTopicHandler: GET /rest/api/v1/display/plugin/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
     note over restApiTopicHandler
-        The topic handler would be able to read the configuration
-        from the filesystem. But this shall be avoided because of
-        slow flash access and to avoid that plugin has internally
-        a different configuration than stored in the filesystem.
+        The topic handler could read the configuration from the
+        filesystem. This is avoided on purpose: flash access is slow
+        and the plugin could hold a configuration in memory which
+        differs from the stored one.
     end note
-    restApiTopicHandler -> plugin: Read configuration
-    restApiTopicHandler <-- plugin: Configuration as JSON
-<-- restApiTopicHandler: Configuration as JSON
+    restApiTopicHandler -> plugin: getTopic(topic, value)
+    restApiTopicHandler <-- plugin: configuration as JSON
+<-- restApiTopicHandler: configuration as JSON
 
-note over restApiTopicHandler,fs
-    Write configuration via REST API.
-end note
+== Write the configuration via REST API ==
 
--> restApiTopicHandler: POST /rest/api/v1/display/plugin/<PLUGIN-ALIAS>/<PLUGIN-SPECIFIC-URI> with JSON
+-> restApiTopicHandler: POST /rest/api/v1/display/plugin/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
     note over plugin
-        Don't write configuration to flash, because flash access is
-        slow. It shall be written during plugin processing.
+        The configuration is not written to flash here, because
+        flash access is slow and this runs in the web server task.
+        It is written during plugin processing instead.
     end note
-    restApiTopicHandler -> plugin: Write configuration
+    restApiTopicHandler -> plugin: setTopic(topic, value)
     restApiTopicHandler <-- plugin
 <-- restApiTopicHandler
 
-note over plugin
-    Store configuration triggered by previous
-    REST API call for writing the configuration.
-end note
+== Store the configuration during processing ==
 
--> displayMgr: Process
-    displayMgr -> plugin: Process
-        plugin -> fs: Write configuration to <PLUGIN-UID>.json
-        plugin <-- fs
+-> displayMgr: process()
+    displayMgr -> plugin: process(isConnected)
+        opt configuration marked as changed
+            plugin -> fs: Write the configuration to <PLUGIN-UID>.json
+            plugin <-- fs
+        end opt
     displayMgr <-- plugin
 <-- displayMgr
 
-note over restApiTopicHandler,fs
-    Stop of the plugin.
-end note
+== Stop of the plugin ==
 
--> pluginMgr: uninstall <PLUGIN-UID>
-    pluginMgr -> displayMgr: uninstall plugin <PLUGIN-UID>
-        displayMgr -> plugin : stop
-            note over plugin,fs
-                Don't waste flash space by unused configurations.
+-> pluginMgr: uninstall(<PLUGIN-UID>)
+    pluginMgr -> displayMgr: uninstallPlugin(<PLUGIN-UID>)
+        displayMgr -> plugin: stop()
+            note over plugin, fs
+                Don't waste flash space with unused configurations.
             end note
-            plugin ->  fs: Remove configuration <PLUGIN-UID>.json
+            plugin -> fs: Remove the configuration <PLUGIN-UID>.json
             plugin <-- fs
-        displayMgr <--plugin
+        displayMgr <-- plugin
     pluginMgr <-- displayMgr
 <-- pluginMgr
 

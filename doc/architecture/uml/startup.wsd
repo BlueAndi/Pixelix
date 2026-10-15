@@ -1,36 +1,65 @@
 @startuml startup
 
+title System Startup
+
 start
-:Initialize hardware.;
-:Check user button state.;
 
-if (Is pressed?) then (yes)
+:Initialize board (HAL);
+:Initialize two-wire (I2C);
+:Mount filesystem;
 
-    :Check settings for wifi credentials.;
+if (Board, I2C and filesystem ok?) then (no)
+    :Enter ErrorState;
+    stop
+else (yes)
+endif
 
-    if (Is available?) then (yes)
+:Start all services;
 
-        repeat
-            :Show connection establishment on display.;
-            :Connect to WiFi access point.;
-        repeat while(Connection successful established?)
+if (All services started?) then (no)
+    :Enter ErrorState;
+    stop
+else (yes)
+endif
 
-    else (no)
+:Initialize clock driver and sensors;
+:Prepare plugins (PluginMgr);
+:Start display and display manager;
+:Load general settings;
+:Show startup information on the display;
 
-        :Show instructions on display.;
-        :Wait for restart.;
-        stop
+:Sample the user button state
+for the duration of the init timer;
 
-    endif
+if (User button pressed?) then (yes)
+
+    :Set up WiFi access point (APState);
+    :Show the access point SSID on the display;
 
 else (no)
 
-    :Setting up access-point (AP).;
-    :Show SSID of AP on the display.;
+    if (Remote WiFi credentials available?) then (no)
+
+        :Show instructions on the display (IdleState);
+        :Wait for manual restart;
+        stop
+
+    else (yes)
+
+        repeat
+            :Show connection establishment on the display;
+            :Connect to the WiFi access point (ConnectingState);
+        repeat while (Connection established?) is (no) not (yes)
+
+        :Show the hostname and enable
+        slot routing on the display (ConnectedState);
+
+    endif
 
 endif
 
-:Handle all kind of external requests.;
+:Handle all kind of external requests;
+
 stop
 
 @enduml

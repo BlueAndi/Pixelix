@@ -1,8 +1,12 @@
 @startuml topic_handler_service
 
+title Topic Handler Service
+
+' UML 2.5.1: a combined fragment with a single operand and a guard is "opt",
+' not an "alt" without an else operand.
 
 participant "PluginMgr" as pluginMgr
-participant "Plugin" as plugin
+participant "ConcretePlugin" as plugin
 participant "TopicHandlerService" as topicHandlerService
 participant "RestApiTopicHandler" as restApiTopicHandler
 participant "MqttApiTopicHandler" as mqttApiTopicHandler
@@ -11,86 +15,69 @@ participant "MQTT Client" as mqttClient
 
 autoactivate on
 
-note over pluginMgr,mqttClient
-    Registration of plugin topics
-end note
+== Registration of plugin topics ==
 
 -> pluginMgr
 
 loop for every plugin
-    pluginMgr -> topicHandlerService: register plugin topics with <DEVICE-ID>
 
-        topicHandlerService -> plugin: get topics
+    note over pluginMgr
+        <ENTITY-ID> = "display/plugin/<PLUGIN-ALIAS>"
+    end note
+
+    pluginMgr -> topicHandlerService: registerTopics(<DEVICE-ID>, <ENTITY-ID>, plugin)
+
+        topicHandlerService -> plugin: getTopics(topics)
         topicHandlerService <-- plugin: topics
 
         loop for every plugin topic
 
-            topicHandlerService -> topicHandlerService: Determine topic name, accessibility and extra parameters.
+            topicHandlerService -> topicHandlerService: Determine the topic name,\nits accessibility and extra parameters.
             topicHandlerService <-- topicHandlerService
 
-            loop for every topic handler
+            loop for every registered topic handler
 
-                note over topicHandlerService
-                    <ENTITY-ID> = "display/plugin/<PLUGIN-ALIAS>"
-                end note
+                topicHandlerService -> restApiTopicHandler: registerTopic(deviceId, entityId, topic,\naccessibility, extra parameters)
 
-                topicHandlerService -> restApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
-
-                    note over restApiTopicHandler,httpServer
+                    note over restApiTopicHandler, httpServer
                         URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
                     end note
 
-                    restApiTopicHandler -> httpServer: register REST URL
+                    restApiTopicHandler -> httpServer: Register the REST URL.
                     restApiTopicHandler <-- httpServer
 
                 topicHandlerService <-- restApiTopicHandler
 
-                note over topicHandlerService
-                    <ENTITY-ID> = "display/plugin/<PLUGIN-ALIAS>"
-                end note
+                topicHandlerService -> mqttApiTopicHandler: registerTopic(deviceId, entityId, topic,\naccessibility, extra parameters)
 
-                topicHandlerService -> mqttApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
+                    opt topic is readable
 
-                    note over mqttApiTopicHandler
-                        Readable topics will be published during processing:
-                        * Initially after registration
-                        * After connection establishment
-                        * On Change
-                    end note
-
-                    alt If topic is readable
-
-                        note over mqttApiTopicHandler,mqttClient
-                            path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/state
+                        note over mqttApiTopicHandler, mqttClient
                             path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/state
                         end note
 
-                        mqttApiTopicHandler -> mqttApiTopicHandler: Store plugin topic in publisher queue
+                        note over mqttApiTopicHandler
+                            A readable topic is published
+                            * initially after registration,
+                            * after connection establishment and
+                            * on change.
+                        end note
+
+                        mqttApiTopicHandler -> mqttApiTopicHandler: Store the topic in the publisher queue.
                         mqttApiTopicHandler <-- mqttApiTopicHandler
 
-                    end alt
+                    end opt
 
-                    alt If topic is writeable
+                    opt topic is writeable
 
-                        note over mqttApiTopicHandler,mqttClient
+                        note over mqttApiTopicHandler, mqttClient
                             path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/set
                         end note
 
-                        mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin UID
+                        mqttApiTopicHandler -> mqttClient: Subscribe the topic path.
                         mqttApiTopicHandler <-- mqttClient
 
-                        alt If plugin alias available
-
-                            note over mqttApiTopicHandler,mqttClient
-                                path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/set
-                            end note
-
-                            mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin alias
-                            mqttApiTopicHandler <-- mqttClient
-
-                        end alt
-
-                    end alt
+                    end opt
 
                 topicHandlerService <-- mqttApiTopicHandler
 
@@ -103,47 +90,41 @@ end loop
 
 <-- pluginMgr
 
-note over pluginMgr,mqttClient
-    Automatically publish in case of a changed readable topic.
-end note
+== Automatic publishing of a changed readable topic ==
 
--> topicHandlerService: process
+-> topicHandlerService: process()
 
-    alt Every 500ms
+    opt every 500 ms (ON_CHANGE_PERIOD)
 
-        loop For every readable plugin topic
+        loop for every readable topic
 
-            alt Topic not changed
-                topicHandlerService -> plugin: Has topic changed?
-                topicHandlerService <-- plugin: false
-            end alt
+            topicHandlerService -> plugin: hasTopicChanged(topic)
+            topicHandlerService <-- plugin: hasChanged
 
-            alt Topic changed
-                topicHandlerService -> plugin: Has topic changed?
-                topicHandlerService <-- plugin: true
+            opt hasChanged
 
-                loop for every topic handler
+                loop for every registered topic handler
 
-                    topicHandlerService -> restApiTopicHandler: Plugin topic changed
+                    topicHandlerService -> restApiTopicHandler: notify(topic)
                     topicHandlerService <-- restApiTopicHandler
 
-                    topicHandlerService -> mqttApiTopicHandler: Plugin topic changed
+                    topicHandlerService -> mqttApiTopicHandler: notify(topic)
 
-                        mqttApiTopicHandler -> plugin: get topic
+                        mqttApiTopicHandler -> plugin: getTopic(topic, value)
                         mqttApiTopicHandler <-- plugin: topic content
 
-                        mqttApiTopicHandler -> mqttClient: publish topic content
+                        mqttApiTopicHandler -> mqttClient: Publish the topic content.
                         mqttApiTopicHandler <-- mqttClient
 
                     topicHandlerService <-- mqttApiTopicHandler
 
                 end loop
 
-            end alt
+            end opt
 
         end loop
 
-    end alt
+    end opt
 
 <-- topicHandlerService
 

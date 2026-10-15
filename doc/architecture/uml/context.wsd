@@ -1,19 +1,63 @@
 @startuml context
 
-rectangle "System" {
-    component "PIXELIX" as system
-}
+title System Context
+
+' PIXELIX is not a complete system on its own. It interacts with neighbour
+' systems over physical and logical interfaces.
+
+skinparam nodesep 60
+skinparam ranksep 55
+
+' --- Neighbour systems which use PIXELIX ---
 
 actor "User" as user
-actor "Service" as service
+component "Web Browser" as browser
 component "Remote Button" as remoteButton
-component "Device" as device
-component "WiFi Access Point" as wifiAP
+component "Home Automation\n(e.g. Home Assistant)" as homeAutomation
 
-user - system: <<physical>>\nButton/Display
-system -- remoteButton: <<logical>>\nREST API
-system -- device: <<logical>>\nREST API /\nWebsocket /\nMQTT
-system - service: <<logical>>\nHTTP Webserver
-system -- wifiAP: <<physical>>\nWiFi
+' --- The system under consideration ---
+
+component "PIXELIX" <<Subsystem>> as pixelix
+
+' --- Neighbour systems which PIXELIX uses ---
+
+component "MQTT Broker" as mqttBroker
+component "WiFi Access Point" as wifiAp
+component "Internet Service\n(e.g. OpenMeteo, Volumio)" as internetService
+
+' --- Interfaces provided by PIXELIX ---
+
+interface "Local HMI" as iLocalHmi
+interface "Web UI" as iWebUi
+interface "REST API" as iRestApi
+interface "WebSocket" as iWebSocket
+
+' --- Interfaces required by PIXELIX ---
+
+interface "MQTT" as iMqtt
+interface "IEEE 802.11" as iWifi
+interface "HTTP / HTTPS" as iHttp
+
+pixelix -up- iLocalHmi
+iLocalHmi )-up- user
+
+pixelix -left- iWebUi
+iWebUi )-up- browser
+
+pixelix -left- iWebSocket
+iWebSocket )-down- browser
+
+pixelix -left- iRestApi
+iRestApi )-down- remoteButton
+
+pixelix -right-( iMqtt
+iMqtt -up- mqttBroker
+iMqtt )-down- homeAutomation
+
+pixelix -down-( iWifi
+iWifi -down- wifiAp
+
+pixelix -down-( iHttp
+iHttp -down- internetService
 
 @enduml

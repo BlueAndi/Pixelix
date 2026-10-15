@@ -1,0 +1,70 @@
+@startuml service_lifecycle
+
+title Service Lifecycle
+
+participant "StateMachine" as stateMachine
+participant "InitState" as initState
+participant "Connecting-/\nConnectedState" as runState
+participant "Restart-/\nErrorState" as stopState
+participant "Services\n<<generated>>" as services
+participant "<service>\n: IService" as service
+
+autoactivate on
+
+== Start ==
+
+stateMachine -> initState: entry()
+    initState -> services: startAll()
+
+        loop for every service, in list order
+            services -> service: start()
+            services <-- service: isSuccessful
+        end loop
+
+        opt a service failed to start
+            note over services
+                A partially started system is not left running.
+                stopAll() rolls the already started services back.
+            end note
+            services -> services: stopAll()
+            services <-- services
+        end opt
+
+    initState <-- services: isSuccessful
+stateMachine <-- initState
+
+opt startAll() failed
+    note over stateMachine, stopState
+        The state machine transitions to ErrorState with ERROR_ID_SERVICE.
+    end note
+end opt
+
+== Run ==
+
+loop every cycle of the loop task
+    stateMachine -> runState: process()
+        runState -> services: processAll()
+
+            loop for every service, in list order
+                services -> service: process()
+                services <-- service
+            end loop
+
+        runState <-- services
+    stateMachine <-- runState
+end loop
+
+== Stop ==
+
+stateMachine -> stopState: entry() / process()
+    stopState -> services: stopAll()
+
+        loop for every service, in __reverse__ list order
+            services -> service: stop()
+            services <-- service
+        end loop
+
+    stopState <-- services
+stateMachine <-- stopState
+
+@enduml

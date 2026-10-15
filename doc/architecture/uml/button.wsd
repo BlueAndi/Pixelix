@@ -1,59 +1,68 @@
 @startuml button
 
-title User Button Debouncing\n
+title User Button Debouncing
+
+' UML 2.5.1: every branch of a fork either joins or ends. The ISR branch and
+' the task branch both run forever, so each one ends with "detach" instead of
+' flowing into an unreachable final node.
+
+note right
+    Design: the ISR only reports that a button edge was detected.
+    Every edge restarts the debounce timer of that button. The task
+    evaluates the pin level once the timer expired, which means the
+    level was stable for DEBOUNCING_TIME (100 ms).
+end note
 
 start
 
-note left
-    Design: The user button ISR counts the number of detected button triggers.
-    The button task determines every 10 ms how many trigger are detected.
-    If there are 0 triggers over 100 ms, the current user button state is valid.
-end note
-
-:Install ISR on falling and rising edge.;
+:Install the ISR on falling and rising edge
+for every button;
 
 fork
 
-    :Increase trigger counter;
-    
-    note left: Runs in ISR.
+    :Send the button id to the queue;
+
+    note right: Runs in the ISR.
+
+    detach
 
 fork again
 
     repeat
-    
-        if (0 == trigger counter) then (yes)
-            
-            :Set lastButtonState to current user button state;
-            :Increase cycle counter;
-    
-            if (10 >= cycle counter?) then (yes)
-            
-                :Push lastButtonState to button queue.;
-                
-                note left
-                    The button queue will be handled in a
-                    different task.
-                end note
-                
-            else (no)
-    
-            endif
-            
+
+        :Wait up to DEBOUNCING_TIME / 4 (25 ms)
+        for a button id on the queue;
+
+        if (Button id received?) then (yes)
+            :(Re)start the debounce timer
+            (DEBOUNCING_TIME) of that button;
         else (no)
-        
-            :Reset cycle counter;
-            
         endif
-        
-        :Reset trigger counter;
-    
-        :Wait 10 ms.;
-    
-    repeat while(Repeat infinite)
+
+        while (For every button?) is (next button)
+
+            if (Debounce timer running and timed out?) then (yes)
+
+                :Read the button pin level;
+                :Derive PRESSED or RELEASED from the level;
+
+                if (State differs from the stored one?) then (yes)
+                    :Store the new button state;
+                    :Notify the observer;
+                else (no)
+                endif
+
+                :Stop the debounce timer;
+
+            else (no)
+            endif
+
+        endwhile (all buttons done)
+
+    repeat while (Run forever?) is (yes)
+
+    detach
 
 end fork
-
-stop
 
 @enduml

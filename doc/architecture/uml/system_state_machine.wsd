@@ -2,49 +2,66 @@
 
 title System State Machine
 
-InitState: /entry: Initialize HAL and slot layouts.
-InitState: /do: Get button state.
-InitState: /exit: Start wifi network
-InitState: /exit: Start mDNS
-InitState: /exit: Start web- and update server.
+' UML 2.5.1 behaviour notation inside a state is "entry / action",
+' "do / action" and "exit / action".
 
-APState: /entry: Setup access point.
-APState: /do: Handle client requests.
-APState: /exit: Disconnect all wifi connections.
+state InitState
+InitState: entry / Initialize HAL, filesystem and display.
+InitState: entry / Start all services.
+InitState: entry / Prepare plugins and slot layouts.
+InitState: do / Sample the user button state.
+InitState: do / Process all services.
+InitState: exit / Start WiFi and mDNS.
+InitState: exit / Start web- and update server.
 
-IdleState: /do: Wait for manual reset.
+state APState
+APState: entry / Set up the WiFi access point.
+APState: do / Handle client requests.
+APState: exit / Disconnect all WiFi connections.
 
-ConnectingState: /entry: Get remote wifi SSID and passphrase.
-ConnectingState: /do: Connect every 30 s to remote wifi network.
+state ConnectingState
+ConnectingState: entry / Get the remote WiFi SSID and passphrase.
+ConnectingState: do / Connect every 30 s to the remote WiFi network.
+ConnectingState: do / Process all services.
 
-ConnectedState: /entry: Show hostname.
-ConnectedState: /entry: Enable slot routing on the display.
-ConnectedState: /do: Handle client requests.
-ConnectedState: /exit: Disconnect all wifi connections.
+state ConnectedState
+ConnectedState: entry / Show the hostname.
+ConnectedState: entry / Enable slot routing on the display.
+ConnectedState: do / Handle client requests.
+ConnectedState: do / Process all services.
+ConnectedState: exit / Disconnect all WiFi connections.
 
-ErrorState: /entry: Show error message on display.
-ErrorState: /do: Wait for button press to restart.
+state IdleState
+IdleState: do / Wait for a manual reset.
 
-RestartState: /entry: Unmount filesystem
-RestartState: /do: Restart
+state ErrorState
+ErrorState: entry / Show the error message on the display.
+ErrorState: entry / Stop all services.
+ErrorState: do / Wait for a button press to restart.
+
+state RestartState
+RestartState: entry / Stop all services.
+RestartState: entry / Unmount the filesystem.
+RestartState: do / Restart.
 
 [*] --> InitState: Power up
-InitState --> APState: [Button pressed]\nSet wifi access point mode
-InitState -> ConnectingState: [Button released]\nSet wifi station mode
 
-APState --> ErrorState: [Failed to start\nwifi access point]
-APState --> RestartState: [Restart requested via Captive Portal]
+InitState --> APState: [button pressed] /\nset WiFi access point mode
+InitState --> ConnectingState: [button released] /\nset WiFi station mode
+InitState --> ErrorState: [initialization failed]
 
-ConnectingState --> IdleState: [Remote wifi SSID or\npassword missing]
-ConnectingState --> ConnectedState: [Connection successful established]
+APState --> ErrorState: [failed to start\nthe WiFi access point]
+APState --> RestartState: [restart requested\nvia captive portal]
 
-ConnectedState --> ConnectingState: [Connection lost]
-ConnectedState --> RestartState: [Restart requested]
+ConnectingState --> IdleState: [remote WiFi SSID or\npassphrase missing]
+ConnectingState --> ConnectedState: [connection successfully established]
 
-ErrorState --> RestartState: [Any button pressed]
+ConnectedState --> ConnectingState: [connection lost]
+ConnectedState --> RestartState: [restart requested]
 
-IdleState --> [*]: [Restart]
+ErrorState --> RestartState: [any button pressed]
 
-RestartState --> [*]: [Restart]
+IdleState --> [*]: [restart]
+RestartState --> [*]: [restart]
 
 @enduml
