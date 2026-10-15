@@ -7,13 +7,10 @@ info:
 
     ## General
 
-    If a plugin is instantiated, it will get a random and unqiue id (UID). The UID is used to address the plugin specific REST API. The user is able to assign a alias name for every plugin instance, which can be used to address it too.
-    * UID:
-      * ```<server-url>/display/uid/{uid}```
-    * Alias:
-      * ```/display/alias/{alias}```
+    Every plugin instance carries an alias name, which is unique per device and is the only way to address the plugin specific REST API:
+    * ```<server-url>/display/plugin/{alias}```
 
-    The REST API description focus only on the UID for the sake of maintainability.
+    An alias is 3 to 20 characters long and may contain ```A-Z```, ```a-z```, ```0-9```, ```_``` and ```-```. If none is given at installation time, a default is generated from the plugin type name, e.g. ```DateTime1```.
   version: 1.10.0
   title: Pixelix REST API
   termsOfService: ""
@@ -196,9 +193,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/channel:
+  /display/plugin/{alias}/channel:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SensorPlugin
@@ -208,7 +205,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/channel
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/channel
         ```
       operationId: getSensorCfg
       responses:
@@ -235,7 +232,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "sensorIndex=0" -d "channelIndex=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/channel
+        $ curl -u luke:skywalker -d "sensorIndex=0" -d "channelIndex=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/channel
         ```
       operationId: setSensorCfg
       parameters:
@@ -266,9 +263,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/chicagobus:
+  /display/plugin/{alias}/chicagobus:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - ChicagoBusTrackerPlugin
@@ -309,7 +306,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -F "apiKey=00000000" -F "rte=55" -F "dir=Eastbound" -F "stpid=10507" -F "orig=false" -F "dest=true" -F "two=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobus
+        $ curl -u luke:skywalker -F "apiKey=00000000" -F "rte=55" -F "dir=Eastbound" -F "stpid=10507" -F "orig=false" -F "dest=true" -F "two=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobus
         ```
       operationId: setChicagoBusConfig
       requestBody:
@@ -330,9 +327,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /display/uid/{uid}/chicagobusroutes:
+  /display/plugin/{alias}/chicagobusroutes:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - ChicagoBusTrackerPlugin
@@ -344,7 +341,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusroutes
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusroutes
         ```
       operationId: getChicagoBusRoutes
       responses:
@@ -362,9 +359,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/chicagobusdirections:
+  /display/plugin/{alias}/chicagobusdirections:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
       - in: query
         name: rte
         schema:
@@ -382,7 +379,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusdirections?rte=55
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusdirections?rte=55
         ```
       operationId: getChicagoBusDirections
       responses:
@@ -400,9 +397,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/chicagobusstops:
+  /display/plugin/{alias}/chicagobusstops:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
       - in: query
         name: rte
         schema:
@@ -425,7 +422,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusstops?rte=55&dir=Eastbound
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusstops?rte=55&dir=Eastbound
         ```
       operationId: getChicagoBusStops
       responses:
@@ -443,9 +440,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/config:
+  /display/plugin/{alias}/config:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SoundReactivePlugin
@@ -456,7 +453,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/config
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/config
         ```
       operationId: getConfiguration
       responses:
@@ -484,7 +481,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/config
+        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/config
         ```
       operationId: setConfiguration
       parameters:
@@ -510,9 +507,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/countdown:
+  /display/plugin/{alias}/countdown:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - CountdownPlugin
@@ -522,7 +519,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/countdown
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/countdown
         ```
       operationId: getTargetDate
       responses:
@@ -549,7 +546,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "descPlural=DAYS" -d "descSingular=DAY" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/countdown
+        $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "descPlural=DAYS" -d "descSingular=DAY" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/countdown
         ```
       operationId: setTargetDate
       parameters:
@@ -598,9 +595,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/dateTime:
+  /display/plugin/{alias}/dateTime:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - DateTimePlugin
@@ -610,7 +607,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/dateTime
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/dateTime
         ```
       operationId: getDateTimeCfg
       responses:
@@ -637,7 +634,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "mode=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/dateTime
+        $ curl -u luke:skywalker -d "mode=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/dateTime
         ```
       operationId: setDateTimeCfg
       parameters:
@@ -692,9 +689,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/grabConfig:
+  /display/plugin/{alias}/grabConfig:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - GrabViaRestPlugin
@@ -704,7 +701,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/grabConfig
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/grabConfig
         ```
       operationId: getGrabConfiguration
       responses:
@@ -731,7 +728,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/grabConfig
+        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/grabConfig
         ```
       operationId: setGrabConfiguration
       parameters:
@@ -792,9 +789,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/host:
+  /display/plugin/{alias}/host:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - VolumioPlugin
@@ -804,7 +801,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/host
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/host
         ```
       operationId: getHost
       responses:
@@ -831,7 +828,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/host
+        $ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/host
         ```
       operationId: setHost
       parameters:
@@ -856,9 +853,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/ipAddress:
+  /display/plugin/{alias}/ipAddress:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - GruenbeckPlugin
@@ -868,7 +865,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/ipAddress
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/ipAddress
         ```
       operationId: getIpAddress
       responses:
@@ -895,7 +892,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "ipAddress=192.168.178.10" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/ipAddress
+        $ curl -u luke:skywalker -d "ipAddress=192.168.178.10" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/ipAddress
         ```
       operationId: setIpAddress
       parameters:
@@ -920,9 +917,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/github:
+  /display/plugin/{alias}/github:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - GithubPlugin
@@ -932,7 +929,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/github
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/github
         ```
       operationId: getUserAndRepositoryName
       responses:
@@ -959,7 +956,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "user=BlueAndi" -d "repository=Pixelix" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/github
+        $ curl -u luke:skywalker -d "user=BlueAndi" -d "repository=Pixelix" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/github
         ```
       operationId: setUserAndRepositoryName
       parameters:
@@ -990,9 +987,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/lamp/{lampId}:
+  /display/plugin/{alias}/lamp/{lampId}:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - IconTextLampPlugin
@@ -1002,7 +999,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamp/0
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/lamp/0
         ```
       operationId: getLampState
       parameters:
@@ -1036,7 +1033,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "state=on" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamp/0
+        $ curl -u luke:skywalker -d "state=on" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/lamp/0
         ```
       operationId: setLampState
       parameters:
@@ -1068,9 +1065,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/lamps:
+  /display/plugin/{alias}/lamps:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - IconTextLampPlugin
@@ -1080,7 +1077,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamps
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/lamps
         ```
       operationId: getLampStates
       responses:
@@ -1098,9 +1095,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/location:
+  /display/plugin/{alias}/location:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SunrisePlugin
@@ -1110,7 +1107,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/location
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/location
         ```
       operationId: getLocation
       responses:
@@ -1137,7 +1134,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/location
+        $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/location
         ```
       operationId: setLocation
       parameters:
@@ -1168,9 +1165,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/makapixCfg:
+  /display/plugin/{alias}/makapixCfg:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MakapixPlugin
@@ -1180,7 +1177,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixCfg
         ```
       operationId: getMakapixConfig
       responses:
@@ -1207,7 +1204,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "playerKey=abc123" -d "mqttInstance=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        $ curl -u luke:skywalker -d "playerKey=abc123" -d "mqttInstance=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixCfg
         ```
       operationId: setMakapixConfig
       parameters:
@@ -1238,9 +1235,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/makapixPlayCtrl:
+  /display/plugin/{alias}/makapixPlayCtrl:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MakapixPlugin
@@ -1250,7 +1247,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
         ```
       operationId: getMakapixPlaybackStatus
       responses:
@@ -1278,19 +1275,19 @@ paths:
         Examples:
         ```bash
         # Next artwork
-        $ curl -u luke:skywalker -d "action=next" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=next" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Previous artwork
-        $ curl -u luke:skywalker -d "action=previous" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=previous" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Play a channel
-        $ curl -u luke:skywalker -d "action=playChannel" -d "channelName=promoted" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=playChannel" -d "channelName=promoted" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Pause playback
-        $ curl -u luke:skywalker -d "action=pause" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=pause" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Continue playback
-        $ curl -u luke:skywalker -d "action=continue" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=continue" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
         ```
       operationId: controlMakapixPlayback
       parameters:
@@ -1334,9 +1331,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/makapixProvision:
+  /display/plugin/{alias}/makapixProvision:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MakapixPlugin
@@ -1346,7 +1343,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixProvision
         ```
       operationId: getMakapixProvisionStatus
       responses:
@@ -1373,7 +1370,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixProvision
         ```
       operationId: provisionMakapixPlayer
       responses:
@@ -1397,9 +1394,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/omweather:
+  /display/plugin/{alias}/omweather:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - OpenMeteoPlugin
@@ -1409,7 +1406,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/omweather
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/omweather
         ```
       operationId: getOMWeather
       responses:
@@ -1436,7 +1433,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "latitude=48.858" -d "longitude=2.295" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/omweather
+        $ curl -u luke:skywalker -d "latitude=48.858" -d "longitude=2.295" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/omweather
         ```
       operationId: setOMWeather
       parameters:
@@ -1493,9 +1490,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/signalDetector:
+  /display/plugin/{alias}/signalDetector:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SignalDetectorPlugin
@@ -1505,7 +1502,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/signalDetector
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/signalDetector
         ```
       operationId: getSignalDetector
       responses:
@@ -1532,7 +1529,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "pushUrl=\"http://notify.me\"" -d "text=\"Detected!\"" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/signalDetector
+        $ curl -u luke:skywalker -d "pushUrl=\"http://notify.me\"" -d "text=\"Detected!\"" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/signalDetector
         ```
       operationId: setSignalDetector
       parameters:
@@ -1599,9 +1596,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/slots:
+  /display/plugin/{alias}/slots:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MultiIconPlugin
@@ -1611,7 +1608,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots
         ```
       operationId: getSlotsFileName
       responses:
@@ -1636,7 +1633,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "slots[]=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        $ curl -u luke:skywalker -d "slots[]=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots
         ```
       operationId: setSlotsFileName
       parameters:
@@ -1663,9 +1660,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/slot/{id}:
+  /display/plugin/{alias}/slot/{id}:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MultiIconPlugin
@@ -1675,7 +1672,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots/1
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots/1
         ```
       operationId: getSlotFileName
       parameters:
@@ -1707,7 +1704,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileName=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slot/1
+        $ curl -u luke:skywalker -d "fileName=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slot/1
         ```
       operationId: setSlotFileName
       parameters:
@@ -1738,9 +1735,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/text:
+  /display/plugin/{alias}/text:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - IconTextLampPlugin
@@ -1751,7 +1748,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/text
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/text
         ```
       operationId: getText
       responses:
@@ -1779,7 +1776,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "text=Test" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/text
+        $ curl -u luke:skywalker -d "text=Test" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/text
         ```
       operationId: setText
       parameters:
@@ -1816,9 +1813,9 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/weather:
+  /display/plugin/{alias}/weather:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - OpenWeatherPlugin
@@ -1828,7 +1825,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/weather
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/weather
         ```
       operationId: getWeather
       responses:
@@ -1855,7 +1852,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "apiKey=yourApiKey" -d "lat=48.858" -d "lon=2.295" -d "other=3" -d "units=metric" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/weather
+        $ curl -u luke:skywalker -d "apiKey=yourApiKey" -d "lat=48.858" -d "lon=2.295" -d "other=3" -d "units=metric" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/weather
         ```
       operationId: setWeather
       parameters:
@@ -3257,20 +3254,13 @@ components:
         type: number
       required: true
       description: The bitmap slot id.
-    uid:
-      in: path
-      name: uid
-      schema:
-        type: number
-      required: true
-      description: The plugin unique id (UID).
     alias:
       in: path
       name: alias
       schema:
         type: string
       required: true
-      description: The plugin alias name.
+      description: The plugin alias name. 3 to 20 characters of A-Z, a-z, 0-9, _ and -. Unique per device.
   schemas:
     Button:
       type: object

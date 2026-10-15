@@ -11,15 +11,13 @@
 ++++ GET
 +++++ URL: <BASE-URI>/[<ENTITY-ID>/]<TOPIC>
 ++++++ Examples
-+++++++ <BASE-URI>/display/uid/1234/text
-+++++++ <BASE-URI>/display/alias/myPlugin/text
++++++++ <BASE-URI>/display/plugin/myPlugin/text
 
 ++++ POST
 +++++ URL: <BASE-URI>/[<ENTITY-ID>/]<TOPIC>
 ++++++ Examples
 +++++++ <BASE-URI>/restart
-+++++++ <BASE-URI>/display/uid/1234/text
-+++++++ <BASE-URI>/display/alias/myPlugin/text
++++++++ <BASE-URI>/display/plugin/myPlugin/text
 
 +++++ Parameters via HTTP arguments
 ******: key=value __converts to__
@@ -107,8 +105,8 @@
     "ic": "mdi:form-textbox",
     "cmd_tpl": "{\"text\": \"{{ value }}\" }",
     "val_tpl": "{{ value_json.text }}",
-    "stat_t": "pixelix-6F1AD6B8/display/uid/42798/text/state",
-    "cmd_t": "pixelix-6F1AD6B8/display/uid/42798/text/set",
+    "stat_t": "pixelix-6F1AD6B8/display/plugin/myPlugin/text/state",
+    "cmd_t": "pixelix-6F1AD6B8/display/plugin/myPlugin/text/set",
     "avty_t": "pixelix-6F1AD6B8/status"
 }
 </code>;
@@ -135,8 +133,8 @@
     "ic": "mdi:form-textbox",
     "cmd_tpl": "{\"text\": \"{{ value }}\" }",
     "val_tpl": "{{ value_json.text }}",
-    "stat_t": "pixelix-6F1AD6B8/display/alias/myPlugin/text/state",
-    "cmd_t": "pixelix-6F1AD6B8/display/alias/myPlugin/text/set",
+    "stat_t": "pixelix-6F1AD6B8/display/plugin/myPlugin/text/state",
+    "cmd_t": "pixelix-6F1AD6B8/display/plugin/myPlugin/text/set",
     "avty_t": "pixelix-6F1AD6B8/status"
 }
 </code>;
@@ -152,17 +150,14 @@
 ++++++ https://www.home-assistant.io/integrations/sensor.mqtt/
 
 ++++ Status
-+++++ MQTT topic by plugin UID: <HOSTNAME>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/state
-+++++ MQTT topic by plugin alias: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/state
++++++ MQTT topic: <HOSTNAME>/display/plugin/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/state
 +++++ MQTT topic by sensor: <HOSTNAME>/sensors/<SENSOR-CHANNEL-ID>/<TOPIC>/state
 +++++ Direction: Pixelix --> Client(s)
 ++++ Command
-+++++ MQTT topic: <HOSTNAME>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/set
-+++++ MQTT topic: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/set
++++++ MQTT topic: <HOSTNAME>/display/plugin/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/set
 +++++ Direction: Client(s) --> Pixelix
 ++++ Availability
-+++++ MQTT topic: <HOSTNAME>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/available
-+++++ MQTT topic: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/available
++++++ MQTT topic: <HOSTNAME>/display/plugin/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/available
 +++++ Direction: Pixelix --> Client(s)
 +++++ "online"/"offline"
 +++++ Skipped for the moment. May be supported in future.
@@ -172,8 +167,7 @@
 --- Unique hostname (HOSTNAME)
 -- Entity identification\n(ENTITY-ID)
 --- Plugins
----- display/uid/<PLUGIN-UID>
----- display/alias/<PLUGIN-ALIAS>
+---- display/plugin/<PLUGIN-ALIAS>
 --- Sensors
 ---- sensors/<SENSOR-CHANNEL-ID>
 -- Plugin identification

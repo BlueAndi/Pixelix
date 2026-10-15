@@ -145,7 +145,7 @@ Add an automation to `automations.yaml`, for example to show the garage door sta
     data:
       evaluate_payload: false
       qos: '0'
-      topic: pixelix-6F1AD6B8/display/uid/42798/iconText/set
+      topic: pixelix-6F1AD6B8/display/plugin/IconText1/iconText/set
       payload: '{ "text": "{{ states(''cover.garage_door'') }}" }'
   mode: single
 ```
@@ -251,7 +251,7 @@ A simple REST command example looks like:
 ```yaml
 rest_command:
   pixelix_notify:
-    url: 'http://<IP-ADDRESS>/rest/api/v1/display/uid/{{ uid }}/iconText?text={{ text | urlencode() }}'
+    url: 'http://<IP-ADDRESS>/rest/api/v1/display/plugin/{{ alias }}/iconText?text={{ text | urlencode() }}'
     method: POST
 ```
 

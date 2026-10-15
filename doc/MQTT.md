@@ -68,10 +68,11 @@ After the successful connection establishment to the MQTT broker, Pixelix will s
 
 ### Plugin topic path
 
-The MQTT base topic path to access plugin related topics can be setup with the plugin UID or the plugin alias:
+The MQTT base topic path to access plugin related topics is built from the plugin alias:
 
-- &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;
-- &lt;HOSTNAME&gt;/display/alias/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;
+- &lt;HOSTNAME&gt;/display/plugin/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;
+
+Every plugin instance has an alias, which is unique per device. It is 3 to 20 characters long and may contain ```A-Z```, ```a-z```, ```0-9```, ```_``` and ```-```. If none is given at installation time, a default is generated from the plugin type name, e.g. ```DateTime1```.
 
 ### Readable/Writeable Topic
 
@@ -89,10 +90,10 @@ The complete topic name can be derived from the REST API documentation.
 
 Example: IconTextPlugin
 
-The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;?text=&lt;TEXT&gt;
+The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/plugin/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;?text=&lt;TEXT&gt;
 
-1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/ part with &lt;HOSTNAME&gt; and remove the parameters which will look like &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;
-2. To read from the topic, add ```/state```: &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;/state
+1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/ part with &lt;HOSTNAME&gt; and remove the parameters which will look like &lt;HOSTNAME&gt;/display/plugin/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;
+2. To read from the topic, add ```/state```: &lt;HOSTNAME&gt;/display/plugin/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;/state
     - Every URL parameter, which is in this case text=&lt;TEXT&gt; will be received in JSON format.
 
         ```json
@@ -101,7 +102,7 @@ The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/d
         }
         ```
 
-3. To write to the topic, add  ```/set```: &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/&lt;TOPIC&gt;/set
+3. To write to the topic, add  ```/set```: &lt;HOSTNAME&gt;/display/plugin/&lt;PLUGIN-ALIAS&gt;/&lt;TOPIC&gt;/set
     - Every URL parameter, which is in this case text=&lt;TEXT&gt; must be sent in JSON format.
 
         ```json

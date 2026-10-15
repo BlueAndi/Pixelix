@@ -31,7 +31,7 @@ loop for every plugin
             loop for every topic handler
 
                 note over topicHandlerService
-                    <ENTITY-ID> by plugin UID = "display/uid/<PLUGIN-UID>"
+                    <ENTITY-ID> = "display/plugin/<PLUGIN-ALIAS>"
                 end note
 
                 topicHandlerService -> restApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
@@ -45,27 +45,8 @@ loop for every plugin
 
                 topicHandlerService <-- restApiTopicHandler
 
-                alt If plugin alias available
-
-                    note over topicHandlerService
-                        <ENTITY-ID> by plugin alias = "display/alias/<PLUGIN-ALIAS>"
-                    end note
-
-                    topicHandlerService -> restApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
-
-                        note over restApiTopicHandler,httpServer
-                            URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
-                        end note
-
-                        restApiTopicHandler -> httpServer: register REST URL
-                        restApiTopicHandler <-- httpServer
-
-                    topicHandlerService <-- restApiTopicHandler
-
-                end alt
-
                 note over topicHandlerService
-                    <ENTITY-ID> by plugin UID = "display/uid/<PLUGIN-UID>"
+                    <ENTITY-ID> = "display/plugin/<PLUGIN-ALIAS>"
                 end note
 
                 topicHandlerService -> mqttApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
@@ -112,17 +93,6 @@ loop for every plugin
                     end alt
 
                 topicHandlerService <-- mqttApiTopicHandler
-
-                alt If plugin alias available
-
-                    note over topicHandlerService
-                        <ENTITY-ID> by plugin alias = "display/alias/<PLUGIN-ALIAS>"
-                    end note
-
-                    topicHandlerService -> mqttApiTopicHandler: ...
-                    topicHandlerService <-- mqttApiTopicHandler
-
-                end alt
 
             end loop
 

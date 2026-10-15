@@ -17,23 +17,11 @@ blueprint:
       name: General Section
       description: General configuration independent of using REST or MQTT API.
       input:
-        uid:
-          name: Plugin UID
-          description: |
-            The plugin UID of the plugin instance. See display page in the Pixelix web interface.
-            0 means invalid UID, like UID not set.
-            If both UID and alias are set, the alias is used.
-          default: 0
-          selector:
-            number:
-              min: 0
-              max: 65535
-              mode: box
         alias:
           name: Plugin Alias
           description: |
             The plugin alias of the plugin instance. See display page in the Pixelix web interface.
-            If both UID and alias are set, the alias is used.
+            It is unique per device and addresses the plugin over REST and MQTT.
           default: ""
           selector:
             text:
@@ -138,7 +126,6 @@ blueprint:
             text:
 
 variables:
-  var_uid: !input uid
   var_alias: !input alias
   var_icon_slot: !input icon_slot
   var_icon_selector: !input icon_selector
@@ -183,62 +170,33 @@ conditions: !input user_conditions
 # https://www.home-assistant.io/docs/automation/action/
 actions:
   - choose:
-      # Use MQTT API with plugin UID
+      # Use MQTT API
       - conditions:
           - condition: template
             value_template: "{{ var_protocol == 'mqtt' }}"
           - condition: template
             value_template: "{{ var_device and var_hostname == '' }}"
           - condition: template
-            value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
+            value_template: "{{ var_alias != '' }}"
         sequence:
           - action: mqtt.publish
             data:
-              topic: "{{ device_attr(var_device, 'name') }}/display/uid/{{ var_uid }}/{{ var_plugin_topic }}/set"
+              topic: "{{ device_attr(var_device, 'name') }}/display/plugin/{{ var_alias }}/{{ var_plugin_topic }}/set"
               payload: "{{ var_mqtt_payload }}"
 
-      # Use MQTT API with plugin alias
-      - conditions:
-          - condition: template
-            value_template: "{{ var_protocol == 'mqtt' }}"
-          - condition: template
-            value_template: "{{ var_device and var_hostname == '' }}"
-          - condition: template
-            value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
-        sequence:
-          - action: mqtt.publish
-            data:
-              topic: "{{ device_attr(var_device, 'name') }}/display/alias/{{ var_alias }}/{{ var_plugin_topic }}/set"
-              payload: "{{ var_mqtt_payload }}"
-
-      # Use REST API with plugin UID
+      # Use REST API
       - conditions:
           - condition: template
             value_template: "{{ var_protocol == 'rest' }}"
           - condition: template
             value_template: "{{ var_device is none and var_hostname != '' }}"
           - condition: template
-            value_template: "{{ (var_alias == '') or (var_uid != 0) }}"
+            value_template: "{{ var_alias != '' }}"
         sequence:
           - action: rest_command.pixelix_plugin_command
             data:
               hostname: "{{ var_hostname }}"
-              endpoint: "/rest/api/v1/display/uid/{{ var_uid }}/{{ var_plugin_topic }}"
-              url_parameter: "{{ var_rest_url_parameter }}"
-
-      # Use REST API with plugin alias
-      - conditions:
-          - condition: template
-            value_template: "{{ var_protocol == 'rest' }}"
-          - condition: template
-            value_template: "{{ var_device is none and var_hostname != '' }}"
-          - condition: template
-            value_template: "{{ (var_alias != '') or (var_uid == 0) }}"
-        sequence:
-          - action: rest_command.pixelix_plugin_command
-            data:
-              hostname: "{{ var_hostname }}"
-              endpoint: "/rest/api/v1/display/alias/{{ var_alias }}/{{ var_plugin_topic }}"
+              endpoint: "/rest/api/v1/display/plugin/{{ var_alias }}/{{ var_plugin_topic }}"
               url_parameter: "{{ var_rest_url_parameter }}"
 
     # Default

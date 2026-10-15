@@ -157,7 +157,7 @@ static String gDeviceId;
 /**
  * List of topics, sorted by topics in ascending order.
  *
- * ENTITY-ID     : display/uid/PLUGIN-UID | display/alias/PLUGIN-ALIAS | empty
+ * ENTITY-ID     : display/plugin/PLUGIN-ALIAS | empty
  *
  * REST API      : BASE-URL/[ENTITY-ID/]TOPIC
  *
