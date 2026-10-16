@@ -109,6 +109,12 @@ static const char WELCOME_PLUGIN_TYPE[]    = "IconTextPlugin";
  */
 static const char WELCOME_ICON_FILE_NAME[] = "/configuration/smiley.bmp";
 
+/* Full path of the animated logo, copied by the build to fit the display layout. */
+const char* InitState::LOGO_FILE_NAME      = "/images/LogoStartup.gif";
+
+/* The logo as plain text, used as fallback if no logo file is available. */
+const char* InitState::LOGO_TEXT           = "{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}{vm 1}:{vm -1}.";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -522,10 +528,23 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     const uint32_t SCROLLING_REPEAT_NUM   = 1U;
     const uint32_t DURATION_PAUSE         = 500U; /* ms */
     const uint32_t SCROLLING_NO_REPEAT    = 0U;
+    const uint8_t  NO_VOLUME              = 0U;
     SysMsg&        sysMsg                 = SysMsg::getInstance();
 
-    /* Show colored PIXELIX */
-    sysMsg.show("{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}{vm 1}:{vm -1}.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    /* Show the animated logo. Without a text the view shows the icon over the
+     * whole display. The logo is never scaled, therefore the build provides
+     * the one which fits to the display layout.
+     */
+    if (false == FILESYSTEM.exists(LOGO_FILE_NAME))
+    {
+        LOG_WARNING("No startup logo (%s), showing it as text.", LOGO_FILE_NAME);
+
+        sysMsg.show(LOGO_TEXT, SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    }
+    else
+    {
+        (void)sysMsg.showNotification("", SHOW_LOGO_DURATION, LOGO_FILE_NAME, String(), NO_VOLUME);
+    }
 
     if (false == isQuietEnabled)
     {

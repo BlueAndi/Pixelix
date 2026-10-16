@@ -100,6 +100,7 @@ public:
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT_FULL, TEXT_X, TEXT_Y_FULL), /* Use full height. */
         m_isIconVisible(false),
+        m_isTextVisible(false),
         m_isIconScrolling(false)
     {
         applyScrollLayout();
@@ -159,10 +160,10 @@ public:
     {
         gfx.fillScreen(ColorDef::BLACK);
 
-        /* If only the text scrolls, the icon is not part of the scrolling
-         * content and therefore it is drawn by the view itself.
+        /* If the icon is not part of the scrolling content, it is drawn by
+         * the view itself.
          */
-        if (false == m_isIconScrolling)
+        if (false == isIconInScrollContent())
         {
             m_bitmapWidget.update(gfx);
         }
@@ -223,7 +224,19 @@ public:
      */
     void setFormatText(const String& formatText) override
     {
+        const bool isTextVisible = (false == formatText.isEmpty());
+
         m_textWidget.setFormatStr(formatText);
+
+        /* Whether a text is shown decides about the layout, therefore it must
+         * be tracked like the icon is.
+         */
+        if (m_isTextVisible != isTextVisible)
+        {
+            m_isTextVisible = isTextVisible;
+
+            applyScrollLayout();
+        }
     }
 
     /**
@@ -317,6 +330,7 @@ protected:
     BitmapWidget         m_bitmapWidget;    /**< Bitmap widget used to show a icon. */
     TextWidget           m_textWidget;      /**< Text widget used to show some text. */
     bool                 m_isIconVisible;   /**< Is a icon shown or does the text use the full height? */
+    bool                 m_isTextVisible;   /**< Is a text shown or does the icon use the whole display? */
     bool                 m_isIconScrolling; /**< Shall the icon scroll together with the text? */
 
     /**
@@ -325,36 +339,68 @@ protected:
      *
      * Note, in this layout the icon is placed above the text.
      */
+    /**
+     * Is the icon part of the scrolling content?
+     *
+     * Without a text there is nothing the icon could scroll along with,
+     * therefore it is drawn by the view itself in this case.
+     *
+     * @return If the icon is part of the scrolling content, it will return true otherwise false.
+     */
+    bool isIconInScrollContent() const
+    {
+        return (true == m_isIconScrolling) && (true == m_isTextVisible);
+    }
+
     void applyScrollLayout()
     {
-        const uint16_t textHeight = (true == m_isIconVisible) ? TEXT_HEIGHT : TEXT_HEIGHT_FULL;
-        const int16_t  textY      = (true == m_isIconVisible) ? TEXT_Y : TEXT_Y_FULL;
-
-        m_bitmapWidget.move(BITMAP_X, BITMAP_Y);
-        m_textWidget.setHeight(textHeight);
-
-        if (true == m_isIconScrolling)
+        /* Without a text the icon gets the whole display. It is never scaled,
+         * only centered in its widget, see BitmapWidget.
+         */
+        if (false == m_isTextVisible)
         {
-            /* Icon and text scroll together, therefore both are part of the
-             * scrolling content, which spans the whole view.
+            m_bitmapWidget.setWidth(CONFIG_LED_MATRIX_WIDTH);
+            m_bitmapWidget.setHeight(CONFIG_LED_MATRIX_HEIGHT);
+            m_bitmapWidget.move(0, 0);
+
+            /* Nothing scrolls, but the scroll layout is applied anyway. The
+             * user of the view waits for the scroll information.
              */
             ScrollableView::beginScrollLayout(0, 0, CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT);
-
-            m_textWidget.move(TEXT_X, textY);
-
-            addScrollableWidget(m_bitmapWidget);
-            addScrollableWidget(m_textWidget);
         }
         else
         {
-            /* Only the text scrolls, therefore the scrolling content is limited
-             * to the text area. This keeps the text away from the icon.
-             */
-            ScrollableView::beginScrollLayout(TEXT_X, textY, TEXT_WIDTH, textHeight);
+            const uint16_t textHeight = (true == m_isIconVisible) ? TEXT_HEIGHT : TEXT_HEIGHT_FULL;
+            const int16_t  textY      = (true == m_isIconVisible) ? TEXT_Y : TEXT_Y_FULL;
 
-            m_textWidget.move(0, 0);
+            m_bitmapWidget.setWidth(BITMAP_WIDTH);
+            m_bitmapWidget.setHeight(BITMAP_HEIGHT);
+            m_bitmapWidget.move(BITMAP_X, BITMAP_Y);
+            m_textWidget.setHeight(textHeight);
 
-            addScrollableWidget(m_textWidget);
+            if (true == m_isIconScrolling)
+            {
+                /* Icon and text scroll together, therefore both are part of the
+                 * scrolling content, which spans the whole view.
+                 */
+                ScrollableView::beginScrollLayout(0, 0, CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT);
+
+                m_textWidget.move(TEXT_X, textY);
+
+                addScrollableWidget(m_bitmapWidget);
+                addScrollableWidget(m_textWidget);
+            }
+            else
+            {
+                /* Only the text scrolls, therefore the scrolling content is limited
+                 * to the text area. This keeps the text away from the icon.
+                 */
+                ScrollableView::beginScrollLayout(TEXT_X, textY, TEXT_WIDTH, textHeight);
+
+                m_textWidget.move(0, 0);
+
+                addScrollableWidget(m_textWidget);
+            }
         }
     }
 

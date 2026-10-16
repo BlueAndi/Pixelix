@@ -17,6 +17,7 @@ scripts/pluginsSubMenu.js
 scripts/servicesSubMenu.js
 data/js/app-menu.js
 data/js/*SubMenu.js
+data/images/LogoStartup.gif
 data/plugins/
 data/services/
 doc/doxygen/html/

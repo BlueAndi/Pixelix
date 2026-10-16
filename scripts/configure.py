@@ -31,6 +31,7 @@ from config_model import ConfigModel
 from configure_plugins import configure_plugins
 from configure_services import configure_services
 from configure_topic_handlers import configure_topic_handlers
+from copy_startup_logo import copy_startup_logo
 
 ################################################################################
 # Variables
@@ -80,6 +81,9 @@ def configure(config_full_path, layout):
     """
     print(
         f"Configure plugins and services: {config_full_path} with layout {layout}")
+
+    # The startup logo depends only on the layout, not on the configuration.
+    copy_startup_logo(layout)
 
     # Load configuration
     config_model = ConfigModel()

@@ -102,10 +102,27 @@ public:
 private:
 
     /**
+     * Full path of the animated logo. The build copies the one which fits to
+     * the display layout, see scripts/copy_startup_logo.py.
+     */
+    static const char* LOGO_FILE_NAME;
+
+    /**
+     * The logo as plain text. It is shown if no logo file is available, which
+     * happens if the display layout has none or if the firmware was updated
+     * without the filesystem.
+     */
+    static const char* LOGO_TEXT;
+
+    /**
      * How long shall the logo be shown in ms.
      * As long as it is shown, stay in this state!
+     *
+     * The logo animation repeats, therefore this is what ends it. It is the
+     * length of the shortest animation of all display layouts. The longer ones
+     * are cut inside their final still frame, which is not noticeable.
      */
-    static const uint32_t SHOW_LOGO_DURATION = 2000U;
+    static const uint32_t SHOW_LOGO_DURATION = 4160U;
 
     bool                  m_isQuiet;            /**< Is quite mode active? */
     bool                  m_isApModeRequested;  /**< Is wifi AP mode requested? */
