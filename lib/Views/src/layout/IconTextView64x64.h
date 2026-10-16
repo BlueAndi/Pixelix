@@ -334,12 +334,6 @@ protected:
     bool                 m_isIconScrolling; /**< Shall the icon scroll together with the text? */
 
     /**
-     * Apply the layout of the scrolling content. It depends on whether a icon
-     * is shown and whether the icon shall scroll together with the text.
-     *
-     * Note, in this layout the icon is placed above the text.
-     */
-    /**
      * Is the icon part of the scrolling content?
      *
      * Without a text there is nothing the icon could scroll along with,
@@ -352,6 +346,12 @@ protected:
         return (true == m_isIconScrolling) && (true == m_isTextVisible);
     }
 
+    /**
+     * Apply the layout of the scrolling content. It depends on whether a icon
+     * is shown and whether the icon shall scroll together with the text.
+     *
+     * Note, in this layout the icon is placed above the text.
+     */
     void applyScrollLayout()
     {
         /* Without a text the icon gets the whole display. It is never scaled,
