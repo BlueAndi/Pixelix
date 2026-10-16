@@ -46,6 +46,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <SysMsgPlugin.h>
+#include <Widget.hpp>
 #include <WString.h>
 
 /******************************************************************************
@@ -91,6 +92,20 @@ public:
      * @param[in] max       How often shall a scrolling message be shown.
      */
     void show(const String& msg, uint32_t duration = 0U, uint32_t max = 0U);
+
+    /**
+     * Show a widget over the whole display for a given time.
+     *
+     * It is meant for content which the text and icon view can not express,
+     * e.g. an animation. Like for a notification the duration is a hard limit.
+     *
+     * Note, the widget is not copied. The caller keeps the ownership and must
+     * ensure that it exists as long as it may be shown.
+     *
+     * @param[in] widget    Widget to show.
+     * @param[in] duration  Duration in ms, how long the widget shall be shown. 0 means infinite.
+     */
+    void showWidget(Widget& widget, uint32_t duration);
 
     /**
      * Show a notification for a given time.
@@ -153,6 +168,12 @@ private:
 
     SysMsg(const SysMsg& sysMsg);
     SysMsg& operator=(const SysMsg& sysMsg);
+
+    /**
+     * Activate the slot of the system message plugin, so the queued message
+     * is shown. A sticky slot is suspended for it.
+     */
+    void activateSlot();
 };
 
 /******************************************************************************

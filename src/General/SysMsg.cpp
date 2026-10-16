@@ -91,34 +91,21 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
 {
     if (nullptr != m_plugin)
     {
-        DisplayMgr& displayMgr = DisplayMgr::getInstance();
-        uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
-
         /* Important: Call first show() to enable plugin. Otherwise the slot activation request will fail. */
         (void)m_plugin->show(msg, duration, max);
 
-        if (false == displayMgr.activateSlot(slotId))
-        {
-            bool isRecovered = false;
+        activateSlot();
+    }
+}
 
-            /* A sticky slot prevents the activation. Suspend the sticky flag
-             * instead of removing it, because the display manager restores it
-             * automatically after the system message is over.
-             */
-            displayMgr.suspendSticky(slotId);
+void SysMsg::showWidget(Widget& widget, uint32_t duration)
+{
+    if (nullptr != m_plugin)
+    {
+        /* Important: Call first showWidget() to enable plugin. Otherwise the slot activation request will fail. */
+        (void)m_plugin->showWidget(widget, duration);
 
-            displayMgr.enableSlot(slotId);
-            isRecovered = displayMgr.activateSlot(slotId);
-
-            if (false == isRecovered)
-            {
-                LOG_WARNING("System message suppressed.");
-            }
-            else
-            {
-                LOG_WARNING("System message activation recovered.");
-            }
-        }
+        activateSlot();
     }
 }
 
@@ -195,6 +182,35 @@ void SysMsg::next()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void SysMsg::activateSlot()
+{
+    DisplayMgr& displayMgr = DisplayMgr::getInstance();
+    uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
+
+    if (false == displayMgr.activateSlot(slotId))
+    {
+        bool isRecovered = false;
+
+        /* A sticky slot prevents the activation. Suspend the sticky flag
+         * instead of removing it, because the display manager restores it
+         * automatically after the system message is over.
+         */
+        displayMgr.suspendSticky(slotId);
+
+        displayMgr.enableSlot(slotId);
+        isRecovered = displayMgr.activateSlot(slotId);
+
+        if (false == isRecovered)
+        {
+            LOG_WARNING("System message suppressed.");
+        }
+        else
+        {
+            LOG_WARNING("System message activation recovered.");
+        }
+    }
+}
 
 /******************************************************************************
  * External Functions

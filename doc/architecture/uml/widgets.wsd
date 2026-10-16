@@ -36,6 +36,10 @@ class LampWidget {
     # paint(gfx : YAGfx&) : void
 }
 
+class PixelixLogoWidget {
+    # paint(gfx : YAGfx&) : void
+}
+
 class ProgressBar {
     # paint(gfx : YAGfx&) : void
 }
@@ -51,11 +55,17 @@ class ScrollContainer {
 Widget <|-- BitmapWidget
 Widget <|-- CanvasWidget
 Widget <|-- LampWidget
+Widget <|-- PixelixLogoWidget
 Widget <|-- ProgressBar
 Widget <|-- TextWidget
 Widget <|-- ScrollContainer
 
 YAGfx <|-- CanvasWidget
+
+note bottom of PixelixLogoWidget
+    Draws the animated Pixelix logo, which is
+    calculated and needs no image file.
+end note
 
 note bottom of CanvasWidget
     A canvas widget is a widget and a graphics

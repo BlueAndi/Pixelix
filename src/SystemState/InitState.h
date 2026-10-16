@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <IPluginMaintenance.hpp>
+#include <PixelixLogoWidget.h>
 #include <SimpleTimer.hpp>
 
 /******************************************************************************
@@ -102,15 +103,21 @@ public:
 private:
 
     /**
+     * How long shall the static logo be shown in ms, after its animation is over.
+     */
+    static const uint32_t SHOW_LOGO_HOLD     = 300U;
+
+    /**
      * How long shall the logo be shown in ms.
      * As long as it is shown, stay in this state!
      */
-    static const uint32_t SHOW_LOGO_DURATION = 2000U;
+    static const uint32_t SHOW_LOGO_DURATION = PixelixLogoWidget::DURATION + SHOW_LOGO_HOLD;
 
     bool                  m_isQuiet;            /**< Is quite mode active? */
     bool                  m_isApModeRequested;  /**< Is wifi AP mode requested? */
     bool                  m_hasWifiCredentials; /**< Are remote wifi network credentials available? */
     SimpleTimer           m_timer;              /**< Timer used to stay for a min. time in this state. */
+    PixelixLogoWidget     m_logo;               /**< The animated logo, shown during startup. */
 
     /**
      * Constructs the state.
@@ -119,7 +126,8 @@ private:
         m_isQuiet(false),
         m_isApModeRequested(false),
         m_hasWifiCredentials(false),
-        m_timer()
+        m_timer(),
+        m_logo()
     {
     }
 

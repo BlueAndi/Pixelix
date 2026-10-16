@@ -51,6 +51,7 @@
 #include <Plugin.hpp>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
+#include <Widget.hpp>
 
 /******************************************************************************
  * Macros
@@ -98,6 +99,9 @@ public:
         m_wrIndex(0U),
         m_rdIndex(0U),
         m_melodyHandler(nullptr),
+        m_widget(nullptr),
+        m_width(0U),
+        m_height(0U),
         m_mutex()
     {
         (void)m_mutex.create();
@@ -224,6 +228,24 @@ public:
     bool showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume);
 
     /**
+     * Show a widget over the whole display for a given time.
+     *
+     * It is meant for content which the text and icon view can not express,
+     * e.g. an animation. The widget is resized to the display and drawn
+     * instead of the view, as long as the message is the current one. Like for
+     * a notification the duration is a hard limit.
+     *
+     * Note, the widget is not copied. The caller keeps the ownership and must
+     * ensure that it exists as long as it may be shown.
+     *
+     * @param[in] widget    Widget to show.
+     * @param[in] duration  Duration in ms, how long the widget shall be shown. 0 means infinite.
+     *
+     * @return If the widget is queued, it will return true otherwise false.
+     */
+    bool showWidget(Widget& widget, uint32_t duration);
+
+    /**
      * Register the handler which plays the melody of a notification.
      *
      * Without a handler a melody is silently ignored, which is the case on a
@@ -244,6 +266,7 @@ public:
         if (false == nextMessage())
         {
             m_view.clear();
+            m_widget = nullptr;
             disable();
         }
     }
@@ -265,6 +288,7 @@ private:
         String   melody;         /**< Melody in RTTTL format. Empty means no melody. */
         uint8_t  volume;         /**< Volume of the melody. */
         bool     isDurationHard; /**< Shall the duration end the message even if the text scrolls? */
+        Widget*  widget;         /**< Widget to show instead of the view. Not owned, nullptr means to use the view. */
 
         /**
          * Construct a system message.
@@ -276,7 +300,8 @@ private:
             iconFileName(),
             melody(),
             volume(0U),
-            isDurationHard(false)
+            isDurationHard(false),
+            widget(nullptr)
         {
         }
 
@@ -298,6 +323,9 @@ private:
     size_t              m_wrIndex;               /**< System message buffer write index. */
     size_t              m_rdIndex;               /**< System message buffer read index. */
     MelodyHandler       m_melodyHandler;         /**< Plays the melody of a notification. May be empty. */
+    Widget*             m_widget;                /**< Widget of the current message. Not owned, nullptr means the view is shown. */
+    uint16_t            m_width;                 /**< Display width in pixel. */
+    uint16_t            m_height;                /**< Display height in pixel. */
 
     /** Mutex to protect against concurrent access. A notification may arrive from a different task than the display update. */
     mutable MutexRecursive m_mutex;
@@ -312,10 +340,11 @@ private:
      * @param[in] melody            Melody in RTTTL format. Empty means no melody.
      * @param[in] volume            Volume of the melody.
      * @param[in] isDurationHard    Shall the duration end the message even if the text scrolls?
+     * @param[in] widget            Widget to show instead of the view. nullptr means to use the view.
      *
      * @return If the message is queued, it will return true otherwise false.
      */
-    bool enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, const String& melody, uint8_t volume, bool isDurationHard);
+    bool enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, const String& melody, uint8_t volume, bool isDurationHard, Widget* widget);
 
     /**
      * Show next message from the queue.
@@ -323,6 +352,20 @@ private:
      * @return If a message is available to be shown, it will return true otherwise false.
      */
     bool nextMessage();
+
+    /**
+     * Update the display with the view of the current message.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void updateView(YAGfx& gfx);
+
+    /**
+     * Update the display with the widget of the current message.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void updateWidget(YAGfx& gfx);
 };
 
 /******************************************************************************

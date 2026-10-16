@@ -63,6 +63,9 @@
 
 void SysMsgPlugin::start(uint16_t width, uint16_t height)
 {
+    m_width  = width;
+    m_height = height;
+
     m_view.init(width, height);
 }
 
@@ -89,6 +92,7 @@ void SysMsgPlugin::inactive()
      * queued system messages.
      */
     m_view.clear();
+    m_widget = nullptr;
     m_timer.stop();
     m_rdIndex = m_wrIndex;
 }
@@ -96,9 +100,59 @@ void SysMsgPlugin::inactive()
 void SysMsgPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
-    bool                       isScrollingEnabled = false;
-    uint32_t                   scrollingCnt       = 0U;
-    bool                       status             = false;
+
+    if (nullptr == m_widget)
+    {
+        updateView(gfx);
+    }
+    else
+    {
+        updateWidget(gfx);
+    }
+}
+
+bool SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    return enqueue(msg, duration, max, String(), String(), 0U, false, nullptr);
+}
+
+bool SysMsgPlugin::showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    return enqueue(msg, duration, 0U, iconFileName, melody, volume, true, nullptr);
+}
+
+bool SysMsgPlugin::showWidget(Widget& widget, uint32_t duration)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    /* A widget does not scroll, therefore its duration is always a hard one. */
+    return enqueue(String(), duration, 0U, String(), String(), 0U, true, &widget);
+}
+
+void SysMsgPlugin::registerMelodyHandler(MelodyHandler handler)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_melodyHandler = handler;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void SysMsgPlugin::updateView(YAGfx& gfx)
+{
+    bool     isScrollingEnabled = false;
+    uint32_t scrollingCnt       = 0U;
+    bool     status             = false;
 
     m_view.update(gfx);
 
@@ -174,36 +228,39 @@ void SysMsgPlugin::update(YAGfx& gfx)
     }
 }
 
-bool SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
+void SysMsgPlugin::updateWidget(YAGfx& gfx)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    m_widget->update(gfx);
 
-    return enqueue(msg, duration, max, String(), String(), 0U, false);
+    /* In initialization phase? A widget reports no scroll info, therefore the
+     * duration is the only thing which ends it.
+     */
+    if (true == m_isInit)
+    {
+        if (0U < m_duration)
+        {
+            m_timer.start(m_duration);
+        }
+
+        m_isInit = false;
+    }
+    else if (false == m_timer.isTimeout())
+    {
+        /* Guard path: show the widget further. A stopped timer means infinite. */
+    }
+    /* If no message is available anymore, the plugin will be disabled. */
+    else if (false == nextMessage())
+    {
+        disable();
+    }
+    else
+    {
+        /* The next message is shown. */
+        ;
+    }
 }
 
-bool SysMsgPlugin::showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    return enqueue(msg, duration, 0U, iconFileName, melody, volume, true);
-}
-
-void SysMsgPlugin::registerMelodyHandler(MelodyHandler handler)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_melodyHandler = handler;
-}
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, const String& melody, uint8_t volume, bool isDurationHard)
+bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, const String& melody, uint8_t volume, bool isDurationHard, Widget* widget)
 {
     bool   isQueued     = false;
     size_t nextWrIndex  = m_wrIndex + 1U;
@@ -223,6 +280,7 @@ bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, c
         m_messages[m_wrIndex].melody         = melody;
         m_messages[m_wrIndex].volume         = volume;
         m_messages[m_wrIndex].isDurationHard = isDurationHard;
+        m_messages[m_wrIndex].widget         = widget;
 
         m_wrIndex                            = nextWrIndex;
         isQueued                             = true;
@@ -247,20 +305,35 @@ bool SysMsgPlugin::nextMessage()
     {
         SysMsg& sysMsg = m_messages[m_rdIndex];
 
-        m_view.setFormatText(sysMsg.msg);
+        m_widget       = sysMsg.widget;
 
-        if (true == sysMsg.iconFileName.isEmpty())
+        if (nullptr != m_widget)
         {
-            m_view.clearIcon();
-        }
-        else if (false == m_view.loadIcon(sysMsg.iconFileName))
-        {
-            LOG_ERROR("Icon not found: %s", sysMsg.iconFileName.c_str());
+            /* The widget replaces the view and gets the whole display. Old view
+             * content must go, otherwise it would show up again afterwards.
+             */
+            m_view.clear();
+            m_widget->move(0, 0);
+            m_widget->setWidth(m_width);
+            m_widget->setHeight(m_height);
         }
         else
         {
-            /* Icon successful loaded. */
-            ;
+            m_view.setFormatText(sysMsg.msg);
+
+            if (true == sysMsg.iconFileName.isEmpty())
+            {
+                m_view.clearIcon();
+            }
+            else if (false == m_view.loadIcon(sysMsg.iconFileName))
+            {
+                LOG_ERROR("Icon not found: %s", sysMsg.iconFileName.c_str());
+            }
+            else
+            {
+                /* Icon successful loaded. */
+                ;
+            }
         }
 
         m_duration       = sysMsg.duration;
@@ -285,6 +358,7 @@ bool SysMsgPlugin::nextMessage()
         sysMsg.msg.clear();
         sysMsg.iconFileName.clear();
         sysMsg.melody.clear();
+        sysMsg.widget = nullptr;
 
         ++m_rdIndex;
         m_rdIndex      %= MAX_SYS_MSG;

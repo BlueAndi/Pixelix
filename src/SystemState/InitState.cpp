@@ -524,8 +524,12 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     const uint32_t SCROLLING_NO_REPEAT    = 0U;
     SysMsg&        sysMsg                 = SysMsg::getInstance();
 
-    /* Show colored PIXELIX */
-    sysMsg.show("{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}{vm 1}:{vm -1}.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    /* Show the animated PIXELIX logo. The animation starts now and not when
+     * the widget was constructed, otherwise its first part would be over
+     * before the logo is on the display.
+     */
+    m_logo.restart();
+    sysMsg.showWidget(m_logo, SHOW_LOGO_DURATION);
 
     if (false == isQuietEnabled)
     {
