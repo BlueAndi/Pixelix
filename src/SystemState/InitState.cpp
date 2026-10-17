@@ -305,7 +305,7 @@ void InitState::entry(StateMachine& sm)
         /* Stay for a minium time in this state.
          * This is only to give the user the chance to enter access point mode.
          */
-        m_timer.start(SHOW_LOGO_DURATION);
+        m_timer.start(MIN_STAY_DURATION);
     }
 }
 
@@ -352,8 +352,11 @@ void InitState::process(StateMachine& sm)
 
     Services::processAll();
 
-    /* Leave this state? */
-    if (true == m_timer.isTimeout())
+    /* Leave this state? Leaving while the startup messages are shown would cut them off,
+     * because the display manager skips the queued messages on a slot change.
+     */
+    if ((true == m_timer.isTimeout()) &&
+        (false == SysMsg::getInstance().isActive()))
     {
         m_timer.stop();
 

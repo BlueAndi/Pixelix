@@ -122,7 +122,13 @@ private:
      * length of the shortest animation of all display layouts. The longer ones
      * are cut inside their final still frame, which is not noticeable.
      */
-    static const uint32_t SHOW_LOGO_DURATION = 4160U;
+    static const uint32_t SHOW_LOGO_DURATION = 4200U;
+
+    /**
+     * Min. time in ms to stay in this state, to give the user the chance to
+     * request the wifi access point mode.
+     */
+    static const uint32_t MIN_STAY_DURATION  = 2000U;
 
     bool                  m_isQuiet;            /**< Is quite mode active? */
     bool                  m_isApModeRequested;  /**< Is wifi AP mode requested? */
