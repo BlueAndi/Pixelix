@@ -155,9 +155,10 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const Stri
         /* Filename for the HA discovery info available? */
         else if (true == jsonHomeAssistant.is<String>())
         {
-            String discoveryInfoFileName = jsonHomeAssistant.as<const char*>();
+            const char* discoveryInfoFileName = jsonHomeAssistant.as<const char*>();
 
-            if (false == discoveryInfoFileName.isEmpty())
+            /* Is the discovery info file name not empty? */
+            if ('\0' != discoveryInfoFileName[0])
             {
                 MqttDiscoveryInfo* mqttDiscoveryInfo = new (std::nothrow) MqttDiscoveryInfo();
 
@@ -514,7 +515,26 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
             /* Copy all discovery details. */
             for (JsonObjectConst::iterator discoveryDetailsIt = jsonDiscovery.begin(); discoveryDetailsIt != jsonDiscovery.end(); ++discoveryDetailsIt)
             {
-                jsonDoc[discoveryDetailsIt->key()] = discoveryDetailsIt->value();
+                /* Replace %ALIAS% in the discovery details with the actual alias. */
+                if (0 == strcmp(discoveryDetailsIt->key().c_str(), "name"))
+                {
+                    /* The alias is the last part of the plugin entity id: display/plugin/<alias> */
+                    String discoveryDetailValue = discoveryDetailsIt->value().as<const char*>();
+                    String alias                = mqttDiscoveryInfo.entityId;
+                    int    lastSlashIndex       = alias.lastIndexOf('/');
+
+                    if (lastSlashIndex >= 0)
+                    {
+                        alias = alias.substring(lastSlashIndex + 1);
+                    }
+                    discoveryDetailValue.replace("%ALIAS%", alias);
+
+                    jsonDoc[discoveryDetailsIt->key()] = discoveryDetailValue;
+                }
+                else
+                {
+                    jsonDoc[discoveryDetailsIt->key()] = discoveryDetailsIt->value();
+                }
             }
 
             /* Send the JSON as string. */

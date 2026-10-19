@@ -2,7 +2,7 @@
     {
         "component": "text",
         "discovery": {
-            "name": "MultiIconPlugin Slot",
+            "name": "%ALIAS% slot",
             "ic": "mdi:image-outline",
             "cmd_tpl": "{\"fileName\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.fileName }}"
