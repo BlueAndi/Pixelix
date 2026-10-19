@@ -51,9 +51,14 @@
 #include <string>
 
 /******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
+
+/******************************************************************************
  * Macros
  *****************************************************************************/
 
+static const uint16_t MAX_GRID_RESOLUTION       = 64U;   /**< Maximum supported Led dimension. */
 static const uint32_t DEFAULT_WINDOW_WIDTH      = 1024U; /**< Default main window width. */
 
 static const uint32_t RESERVED_MENUBAR_HEIGHT   = 28U; /**< space for title bar and menu bar. */
@@ -101,7 +106,6 @@ static uint8_t adjustRgbChannel(uint8_t channel, uint8_t brightness);
  */
 static uint32_t getDefaultWindowHeight(uint32_t windowWidth, uint32_t ledsX, uint32_t ledsY);
 
-
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -116,27 +120,44 @@ static const std::array<SimulatedButton, 3U> gSimButtons = {
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
 LedGridSim::LedGridSim() :
-    m_sdl_interface(new (std::nothrow) SDLInterface())
+    m_sdlInterface()
 {
 }
 
-bool LedGridSim::initialize(int width, int height)
+LedGridSim::~LedGridSim()
+{
+    shutdown();
+}
+
+bool LedGridSim::initialize(uint16_t width, uint16_t height)
 {
     bool result = false;
-    m_width     = width;
-    m_height    = height;
 
-    if (false == m_sdl_interface->initialize(
-                     DEFAULT_WINDOW_WIDTH,
-                     getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, width, height)))
+    if ((0U == height) || (0U == width) || (MAX_GRID_RESOLUTION < height) || (MAX_GRID_RESOLUTION < width))
+    {
+        LOG_WARNING("Unexpected LED grid dimensions %d:%d. Falling back to 32:8", width, height);
+        m_width  = 32U;
+        m_height = 8U;
+    }
+    else
+    {
+        m_width  = width;
+        m_height = height;
+    }
+    m_aspectRatio = static_cast<float>(m_width) / static_cast<float>(m_height);
+
+    if (false == m_sdlInterface.initialize(
+                     static_cast<int>(DEFAULT_WINDOW_WIDTH),
+                     static_cast<int>(getDefaultWindowHeight(DEFAULT_WINDOW_WIDTH, m_width, m_height))))
     {
         LOG_WARNING("SDL initialization failed");
     }
     else
     {
-        SDL_Window*   window   = m_sdl_interface->getWindow();
-        SDL_Renderer* renderer = m_sdl_interface->getRenderer();
+        SDL_Window*   window   = m_sdlInterface.getWindow();
+        SDL_Renderer* renderer = m_sdlInterface.getRenderer();
         if ((nullptr == window) || (nullptr == renderer))
         {
             LOG_WARNING("Cannot initialize ImGui: SDL window or renderer is unavailable");
@@ -145,33 +166,42 @@ bool LedGridSim::initialize(int width, int height)
         {
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
-            m_context_created = true;
+            m_contextCreated = true;
             ImGui::StyleColorsDark();
 
             if (false == ImGui_ImplSDL3_InitForSDLRenderer(window, renderer))
             {
                 LOG_WARNING("ImGui SDL3 platform backend initialization failed");
+                shutdown();
             }
             else
             {
-                m_platform_backend_initialized = true;
+                m_platformBackendInitialized = true;
 
                 if (false == ImGui_ImplSDLRenderer3_Init(renderer))
                 {
                     LOG_WARNING("ImGui SDL renderer backend initialization failed");
+                    shutdown();
                 }
                 else
                 {
-                    m_renderer_backend_initialized = true;
+                    m_rendererBackendInitialized = true;
 
-                    SDL_Surface* logoSurface       = m_sdl_interface->getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
+                    SDL_Surface* logoSurface     = m_sdlInterface.getImageSurface(SDLInterface::ImageId::IMG_ID_ABOUT_LOGO);
                     if (nullptr != logoSurface)
                     {
-                        m_logo_texture = SDL_CreateTextureFromSurface(renderer, logoSurface);
-                        if (nullptr == m_logo_texture)
+                        m_logoTexture = SDL_CreateTextureFromSurface(renderer, logoSurface);
+                        if (nullptr == m_logoTexture)
                         {
                             LOG_WARNING("SDL_CreateTextureFromSurface failed for the About logo: %s", SDL_GetError());
+                            /* No shutdown here, we just don't have an app icon. */
                         }
+                    }
+
+                    m_buttonDrv = dynamic_cast<ButtonDrv*>(&Board::getInstance().getButtonDrv());
+                    if (nullptr == m_buttonDrv)
+                    {
+                        LOG_ERROR("Unexpected ButtonDrv class. Buttons will not work.");
                     }
                     result = true;
                 }
@@ -181,44 +211,41 @@ bool LedGridSim::initialize(int width, int height)
     return result;
 }
 
-LedGridSim::~LedGridSim()
+void LedGridSim::shutdown()
 {
-    if (nullptr != m_logo_texture)
+    if (nullptr != m_logoTexture)
     {
-        SDL_DestroyTexture(m_logo_texture);
-        m_logo_texture = nullptr;
-    }
-    {
-        SDL_DestroyTexture(m_logo_texture);
-        m_logo_texture = nullptr;
+        SDL_DestroyTexture(m_logoTexture);
+        m_logoTexture = nullptr;
     }
 
-    if (true == m_renderer_backend_initialized)
+    if (true == m_rendererBackendInitialized)
     {
         ImGui_ImplSDLRenderer3_Shutdown();
+        m_rendererBackendInitialized = false;
     }
 
-    if (true == m_platform_backend_initialized)
+    if (true == m_platformBackendInitialized)
     {
         ImGui_ImplSDL3_Shutdown();
+        m_platformBackendInitialized = false;
     }
 
-    if (true == m_context_created)
+    if (true == m_contextCreated)
     {
         ImGui::DestroyContext();
+        m_contextCreated = false;
     }
 
-    m_sdl_interface->shutdown();
-    delete m_sdl_interface;
-    m_sdl_interface = nullptr;
+    m_sdlInterface.shutdown();
 }
 
 bool LedGridSim::isInitialized() const
 {
-    return m_context_created && m_platform_backend_initialized && m_renderer_backend_initialized;
+    return m_contextCreated && m_platformBackendInitialized && m_rendererBackendInitialized;
 }
 
-bool LedGridSim::dispatchEvents()
+bool LedGridSim::dispatchEvents() const
 {
     bool continueRunning = true;
 
@@ -246,11 +273,11 @@ bool LedGridSim::dispatchEvents()
  * @brief Updates the ImGui UI.
  * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
  */
-void LedGridSim::update(const YAGfxBitmap& bitmap)
+void LedGridSim::update(const YAGfxBitmap& bitmap) const
 {
     if (true == isInitialized())
     {
-        m_sdl_interface->beginUpdate();
+        m_sdlInterface.beginUpdate();
 
         // --- ImGui frame ---
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -272,9 +299,9 @@ void LedGridSim::update(const YAGfxBitmap& bitmap)
 
         // --- Render ---
         ImGui::Render();
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdl_interface->getRenderer());
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_sdlInterface.getRenderer());
 
-        m_sdl_interface->finishUpdate();
+        m_sdlInterface.finishUpdate();
     }
 }
 
@@ -283,7 +310,7 @@ void LedGridSim::update(const YAGfxBitmap& bitmap)
  *****************************************************************************/
 
 
-void LedGridSim::beginFullscreenWindow()
+void LedGridSim::beginFullscreenWindow() const
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -307,7 +334,7 @@ void LedGridSim::beginFullscreenWindow()
     ImGui::PopStyleVar(3);
 }
 
-void LedGridSim::renderButtonBar()
+void LedGridSim::renderButtonBar() const
 {
     const float buttonWidth  = 100.0F;
     const float buttonHeight = 30.0F;
@@ -319,9 +346,7 @@ void LedGridSim::renderButtonBar()
     float       availWidth   = ImGui::GetContentRegionAvail().x;
     float       offsetX      = (availWidth - totalWidth) * 0.5F;
 
-    ButtonDrv*  buttonDrv    = dynamic_cast<ButtonDrv*>(&Board::getInstance().getButtonDrv());
-
-    if (nullptr != buttonDrv)
+    if (nullptr != m_buttonDrv)
     {
         if (0.0F < offsetX)
         {
@@ -339,27 +364,18 @@ void LedGridSim::renderButtonBar()
 
             if (true == ImGui::IsItemActivated())
             {
-                buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
+                m_buttonDrv->updateButton(button.id, BUTTON_STATE_PRESSED);
             }
             if ((true == ImGui::IsItemDeactivated()))
             {
-                buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
+                m_buttonDrv->updateButton(button.id, BUTTON_STATE_RELEASED);
             }
-        }
-    }
-    else
-    {
-        static bool errorLogged = false;
-        if (false == errorLogged)
-        {
-            LOG_ERROR("Cannot render button bar: Unexpected ButtonDrv class.");
-            errorLogged = true;
         }
     }
 }
 
 
-void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
+void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap) const
 {
     ImVec2 avail          = ImGui::GetContentRegionAvail();
 
@@ -370,16 +386,15 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
     if (10.0F > availHeight)
         availHeight = 10.0F;
 
-    float aspectRatio  = m_width / m_height;
 
     // Fit within (avail.x, availHeight) while preserving aspect ratio
     float targetWidth  = avail.x;
-    float targetHeight = targetWidth / aspectRatio;
+    float targetHeight = targetWidth / m_aspectRatio;
 
     if (targetHeight > availHeight)
     {
         targetHeight = availHeight;
-        targetWidth  = targetHeight * aspectRatio;
+        targetWidth  = targetHeight * m_aspectRatio;
     }
 
     // Center horizontally
@@ -403,14 +418,14 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
         uint16_t bitmap_width  = bitmap.getWidth();
         uint16_t bitmap_height = bitmap.getHeight();
 
-        if (CONFIG_LED_MATRIX_WIDTH < bitmap_width)
+        if (m_width < bitmap_width)
         {
-            bitmap_width = CONFIG_LED_MATRIX_WIDTH;
+            bitmap_width = m_width;
         }
 
-        if (CONFIG_LED_MATRIX_HEIGHT < bitmap_height)
+        if (m_height < bitmap_height)
         {
-            bitmap_height = CONFIG_LED_MATRIX_HEIGHT;
+            bitmap_height = m_height;
         }
 
         for (int y = 0; y < bitmap_height; ++y)
@@ -439,16 +454,15 @@ void LedGridSim::renderDisplay(const YAGfxBitmap& bitmap)
     ImGui::Dummy(ImVec2(targetWidth, targetHeight));
 }
 
-void LedGridSim::renderMenuBar()
+void LedGridSim::renderMenuBar() const
 {
     bool showAboutDialog = false;
 
     if (true == ImGui::BeginMenuBar())
     {
-        if (true == ImGui::BeginMenu("About"))
+        if (true == ImGui::MenuItem("About"))
         {
             showAboutDialog = true;
-            ImGui::EndMenu();
         }
 
         ImGui::SameLine();
@@ -457,7 +471,7 @@ void LedGridSim::renderMenuBar()
 
         ImGui::TextLinkOpenURL("Open Web Page", webpageUrl.c_str());
 
-        /* Reserve space and push "Help" to the right edge */
+        /* Reserve space and push "FPS" to the right edge */
         float helpWidth = ImGui::CalcTextSize("FPS: 100.00").x + ImGui::GetStyle().FramePadding.x * 2.0F;
         ImGui::SameLine(ImGui::GetWindowWidth() - helpWidth - 10.0F);
 
@@ -469,7 +483,6 @@ void LedGridSim::renderMenuBar()
     if (true == showAboutDialog)
     {
         ImGui::OpenPopup("About");
-        showAboutDialog = false; // only trigger once
     }
 
     // Centered modal popup
@@ -478,16 +491,16 @@ void LedGridSim::renderMenuBar()
 
     if (true == ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        if (nullptr != m_logo_texture)
+        if (nullptr != m_logoTexture)
         {
-            const ImTextureID textureId   = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(m_logo_texture));
-            const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logo_texture->w) * 0.5F;
+            const ImTextureID textureId   = static_cast<ImTextureID>(reinterpret_cast<intptr_t>(m_logoTexture));
+            const float       logoOffsetX = (ImGui::GetContentRegionAvail().x - m_logoTexture->w) * 0.5F;
             /* Center the logo horizontally */
             if (0.0F < logoOffsetX)
             {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + logoOffsetX);
             }
-            ImGui::Image(ImTextureRef(textureId), ImVec2(m_logo_texture->w, m_logo_texture->h));
+            ImGui::Image(ImTextureRef(textureId), ImVec2(m_logoTexture->w, m_logoTexture->h));
         }
         else
         {

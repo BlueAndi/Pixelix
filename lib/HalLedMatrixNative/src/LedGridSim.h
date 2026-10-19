@@ -39,17 +39,16 @@
  * Includes
  *****************************************************************************/
 
-#include <YAGfxBitmap.h>
+#include "SDLInterface.h"
+#include "YAGfxBitmap.h"
 
 #include <stdint.h>
 
-class SDLInterface;
-struct SDL_Texture;
+class ButtonDrv;
+
 
 /**
  * @brief Initializes and manages the Dear ImGui SDL3 backends.
- * @details The referenced SDLInterface must outlive this object and must have
- *          successfully initialized its window and renderer before construction.
  */
 class LedGridSim
 {
@@ -66,24 +65,29 @@ public:
     ~LedGridSim();
 
     /**
-     * @brief Initializes SDL and creates the window and renderer.
+     * @brief Initializes UI and creates the window and renderer.
      * @param[in] width The width of the LED matrix in LEDs.
-     * @param[in] height The height of the LED matrix in pixels.
+     * @param[in] height The height of the LED matrix in LEDs.
      * @return true if initialization succeeds; otherwise, false.
      */
-    bool initialize(int width, int height);
+    bool initialize(uint16_t width, uint16_t height);
+
+    /**
+     * @brief Release IMGUI/SDL owned heap and GPU resources.
+     */
+    void shutdown();
 
     /**
      * @brief Processes all pending SDL events and forwards them to ImGui.
      * @return true if processing should continue; false if a quit event was received.
      */
-    bool dispatchEvents();
+    bool dispatchEvents() const;
 
     /**
      * @brief Updates the ImGui UI.
      * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
      */
-    void update(const YAGfxBitmap& bitmap);
+    void update(const YAGfxBitmap& bitmap) const;
 
     /**
      * @brief Sets the power state of the simulated display.
@@ -123,38 +127,41 @@ protected:
     /**
      * @brief Begins a fullscreen ImGui window that covers the entire viewport.
      */
-    void beginFullscreenWindow();
+    void beginFullscreenWindow() const;
 
     /**
      * @brief Renders a button bar at the bottom of the ImGui window.
      */
-    void renderButtonBar();
+    void renderButtonBar() const;
 
     /**
      * @brief Renders the main display area of the ImGui window.
      * @param[in] bitmap The bitmap to display in the ImGui LED grid window.
      */
-    void renderDisplay(const YAGfxBitmap& bitmap);
+    void renderDisplay(const YAGfxBitmap& bitmap) const;
 
     /**
      * @brief Renders the menu bar at the top of the ImGui window.
      */
-    void renderMenuBar();
+    void renderMenuBar() const;
 
 private:
 
-    SDLInterface* m_sdl_interface                = nullptr; /**< Underlying SDL interface. */
-    SDL_Texture*  m_logo_texture                 = nullptr; /**< SDL texture for the About dialog logo. */
-    bool          m_context_created              = false;   /**< Tracks whether this object created an ImGui context. */
-    bool          m_platform_backend_initialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
-    bool          m_renderer_backend_initialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
+    SDLInterface m_sdlInterface;                         /**< Underlying SDL interface. */
+    SDL_Texture* m_logoTexture                = nullptr; /**< SDL texture for the About dialog logo. */
+    bool         m_contextCreated             = false;   /**< Tracks whether this object created an ImGui context. */
+    bool         m_platformBackendInitialized = false;   /**< Tracks whether the SDL3 platform backend initialized. */
+    bool         m_rendererBackendInitialized = false;   /**< Tracks whether the SDL3 renderer backend initialized. */
 
-    bool          m_power                        = true;  /**< Tracks the power state of the display. */
-    uint8_t       m_brightness                   = 255U;  /**< Brightness value [0; 255] */
-    float         m_width                        = 32.0F; /**< Width of the simulated display in pixels. */
-    float         m_height                       = 8.0F;  /**< Height of the simulated display in pixels. */
+    bool         m_power                      = true; /**< Tracks the power state of the display. */
+    uint8_t      m_brightness                 = 255U; /**< Brightness value [0; 255] */
+    uint16_t     m_width                      = 32U;  /**< Width of the simulated display in pixels. */
+    uint16_t     m_height                     = 8U;   /**< Height of the simulated display in pixels. */
+    float        m_aspectRatio                = 1.0F; /**< The width / height aspect ratio. */
 
-    LedGridSim(const LedGridSim&)                = delete;
-    LedGridSim& operator=(const LedGridSim&)     = delete;
+    ButtonDrv*   m_buttonDrv                  = nullptr; /**< Access to native buttondriver class instance. */
+
+    LedGridSim(const LedGridSim&)             = delete;
+    LedGridSim& operator=(const LedGridSim&)  = delete;
 };
 /** @} */

@@ -33,6 +33,8 @@
  * @{
  */
 
+#pragma once
+
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -92,12 +94,12 @@ public:
     /**
      * @brief Begins the SDL UI update cycle.
      */
-    void beginUpdate();
+    void beginUpdate() const;
 
     /**
      * @brief Finishes the SDL UI update cycle.
      */
-    void finishUpdate();
+    void finishUpdate() const;
 
     /**
      * @brief Gets the SDL window managed by this interface.
