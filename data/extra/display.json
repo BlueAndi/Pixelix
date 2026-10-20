@@ -5,9 +5,10 @@
             "schema": "template",
             "name": "Display",
             "ic": "mdi:clock-digital",
-            "cmd_on_tpl": "{\"state\":\"on\"}",
+            "cmd_on_tpl": "{\"state\":\"on\"{% if brightness is defined %},\"brightness\":{{ brightness }}{% endif %}}",
             "cmd_off_tpl": "{\"state\":\"off\"}",
-            "stat_tpl": "{{ value_json.state }}"
+            "stat_tpl": "{{ value_json.state }}",
+            "bri_tpl": "{{ value_json.brightness }}"
         }
     }
 ]

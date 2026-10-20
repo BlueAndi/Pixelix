@@ -121,9 +121,13 @@ private:
  *****************************************************************************/
 
 static bool execButtonAction(const String& topic, const JsonObjectConst& value);
+static bool parseBrightness(JsonVariantConst jsonBrightness, uint8_t& brightness);
 static bool getDisplayState(const String& topic, JsonObject& value);
 static bool hasDisplayStateChanged(const String& topic);
 static bool setDisplayState(const String& topic, const JsonObjectConst& value);
+static bool getAutoBrightnessState(const String& topic, JsonObject& value);
+static bool hasAutoBrightnessStateChanged(const String& topic);
+static bool setAutoBrightnessState(const String& topic, const JsonObjectConst& value);
 static bool restart(const String& topic, const JsonObjectConst& value);
 static bool notify(const String& topic, const JsonObjectConst& value);
 
@@ -132,10 +136,10 @@ static bool notify(const String& topic, const JsonObjectConst& value);
  *****************************************************************************/
 
 /** Default duration of a notification in ms, if none or 0 is given. */
-static const uint32_t NOTIFY_DURATION_DEFAULT = 10000U;
+static const uint32_t NOTIFY_DURATION_DEFAULT    = 10000U;
 
 /** Maximum duration of a notification in ms. A greater value will be limited. */
-static const uint32_t NOTIFY_DURATION_MAX     = 60000U;
+static const uint32_t NOTIFY_DURATION_MAX        = 60000U;
 
 /**
  * Maximum length of a notification text in characters.
@@ -145,7 +149,16 @@ static const uint32_t NOTIFY_DURATION_MAX     = 60000U;
  * without PSRAM. A too long text is rejected and not truncated, so the sender
  * notices it instead of seeing a cut off message.
  */
-static const size_t NOTIFY_TEXT_MAX_LENGTH    = 256U;
+static const size_t NOTIFY_TEXT_MAX_LENGTH       = 256U;
+
+/**
+ * Minimum brightness difference which is reported as a change.
+ *
+ * The automatic brightness control adapts the brightness continously to the
+ * ambient light. Without a threshold every single step would be published,
+ * which would spam the MQTT broker and the Home Assistant history.
+ */
+static const uint8_t BRIGHTNESS_CHANGE_THRESHOLD = 8U;
 
 /**
  * Device id, which is unique for each device.
@@ -170,11 +183,12 @@ static String gDeviceId;
  *                 DISCOVERY-TOPIC = DISCOVERY-PREFIX/COMPONENT/NODE-ID/OBJECT-ID/config
  */
 static TopicElem gTopicList[] = {
-    /* ENTITY-ID    TOPIC       GET                 HAS-CHANGED             SET                 EXTRA-HA-FILE */
-    { "",           "button",   nullptr,            nullptr,                execButtonAction,   "/extra/button.json"  },
-    { "",           "notify",   nullptr,            nullptr,                notify,             "/extra/notify.json"  },
-    { "display",    "power",    getDisplayState,    hasDisplayStateChanged, setDisplayState,    "/extra/display.json" },
-    { "",           "restart",  nullptr,            nullptr,                restart,            "/extra/restart.json" }
+    /* ENTITY-ID    TOPIC               GET                     HAS-CHANGED                     SET                     EXTRA-HA-FILE */
+    { "display",    "autoBrightness",   getAutoBrightnessState, hasAutoBrightnessStateChanged,  setAutoBrightnessState, "/extra/autoBrightness.json" },
+    { "",           "button",           nullptr,                nullptr,                        execButtonAction,       "/extra/button.json"         },
+    { "",           "notify",           nullptr,                nullptr,                        notify,                 "/extra/notify.json"         },
+    { "display",    "power",            getDisplayState,        hasDisplayStateChanged,         setDisplayState,        "/extra/display.json"        },
+    { "",           "restart",          nullptr,                nullptr,                        restart,                "/extra/restart.json"        }
 };
 
 /* clang-format on */
@@ -182,7 +196,17 @@ static TopicElem gTopicList[] = {
 /**
  * Last display on state.
  */
-static bool gLastDisplayOnState = false;
+static bool gLastDisplayOnState      = false;
+
+/**
+ * Last reported display brightness.
+ */
+static uint8_t gLastBrightness       = 0U;
+
+/**
+ * Last automatic brightness adjustment state.
+ */
+static bool gLastAutoBrightnessState = false;
 
 /******************************************************************************
  * Public Methods
@@ -328,6 +352,37 @@ static bool execButtonAction(const String& topic, const JsonObjectConst& value)
  *
  * @return If successful, it will return true otherwise false.
  */
+static bool parseBrightness(JsonVariantConst jsonBrightness, uint8_t& brightness)
+{
+    bool isSuccessful = false;
+
+    /* Via MQTT the brightness arrives as JSON number, via the REST API as
+     * string. Both are accepted, everything else is rejected. A negative
+     * number is rejected by the unsigned type check already.
+     */
+    if (true == jsonBrightness.is<uint32_t>())
+    {
+        uint32_t brightnessRaw = jsonBrightness.as<uint32_t>();
+
+        if (UINT8_MAX >= brightnessRaw)
+        {
+            brightness   = static_cast<uint8_t>(brightnessRaw);
+            isSuccessful = true;
+        }
+    }
+    else if (true == jsonBrightness.is<const char*>())
+    {
+        /* The conversion validates the range as well. */
+        isSuccessful = Util::strToUInt8(jsonBrightness.as<const char*>(), brightness);
+    }
+    else
+    {
+        ;
+    }
+
+    return isSuccessful;
+}
+
 static bool getDisplayState(const String& topic, JsonObject& value)
 {
     DisplayMgr& displayMgr  = DisplayMgr::getInstance();
@@ -344,6 +399,8 @@ static bool getDisplayState(const String& topic, JsonObject& value)
         value["state"] = "on";
     }
 
+    value["brightness"] = displayMgr.getBrightness();
+
     return true;
 }
 
@@ -358,6 +415,7 @@ static bool hasDisplayStateChanged(const String& topic)
 {
     DisplayMgr& displayMgr  = DisplayMgr::getInstance();
     bool        isDisplayOn = displayMgr.isDisplayOn();
+    uint8_t     brightness  = displayMgr.getBrightness();
     bool        hasChanged  = false;
 
     UTIL_NOT_USED(topic);
@@ -366,6 +424,23 @@ static bool hasDisplayStateChanged(const String& topic)
     {
         gLastDisplayOnState = isDisplayOn;
         hasChanged          = true;
+    }
+
+    if (brightness != gLastBrightness)
+    {
+        uint8_t difference = (brightness > gLastBrightness) ? (brightness - gLastBrightness) : (gLastBrightness - brightness);
+
+        /* Only a noticeable difference is reported, see BRIGHTNESS_CHANGE_THRESHOLD.
+         * Both limits are always reported, otherwise the brightness would never
+         * be shown as completely dark or completely bright.
+         */
+        if ((BRIGHTNESS_CHANGE_THRESHOLD <= difference) ||
+            (0U == brightness) ||
+            (UINT8_MAX == brightness))
+        {
+            gLastBrightness = brightness;
+            hasChanged      = true;
+        }
     }
 
     return hasChanged;
@@ -381,35 +456,69 @@ static bool hasDisplayStateChanged(const String& topic)
  */
 static bool setDisplayState(const String& topic, const JsonObjectConst& value)
 {
-    bool             isSuccessful = false;
-    JsonVariantConst jsonState    = value["state"];
+    bool             isSuccessful   = false;
+    JsonVariantConst jsonState      = value["state"];
+    JsonVariantConst jsonBrightness = value["brightness"];
+    bool             hasState       = (false == jsonState.isNull());
+    bool             hasBrightness  = (false == jsonBrightness.isNull());
+    bool             isValid        = true;
+    bool             displayOn      = false;
+    uint8_t          brightness     = 0U;
 
     UTIL_NOT_USED(topic);
 
-    if (false == jsonState.isNull())
+    /* The display state is optional, but if given it shall be valid. */
+    if (true == hasState)
     {
-        bool   displayOn = false;
-        String state     = jsonState.as<const char*>();
+        String state = jsonState.as<const char*>();
 
         if (true == state.equalsIgnoreCase("off"))
         {
-            displayOn    = false;
-            isSuccessful = true;
+            displayOn = false;
         }
         else if (true == state.equalsIgnoreCase("on"))
         {
-            displayOn    = true;
-            isSuccessful = true;
+            displayOn = true;
         }
         else
         {
-            ;
+            isValid = false;
+        }
+    }
+
+    /* The brightness is optional, but if given it shall be in range. */
+    if ((true == hasBrightness) &&
+        (false == parseBrightness(jsonBrightness, brightness)))
+    {
+        isValid = false;
+    }
+
+    /* At least one of both shall be given, otherwise there is nothing to do. */
+    if ((false == hasState) &&
+        (false == hasBrightness))
+    {
+        /* Nothing to set. */
+        ;
+    }
+    else if (false == isValid)
+    {
+        /* Reject the whole request, to never apply it only partly. */
+        ;
+    }
+    else
+    {
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+
+        /* The brightness is set first, so that the display doesn't shortly
+         * appear with the previous brightness after it is switched on.
+         */
+        if (true == hasBrightness)
+        {
+            displayMgr.setBrightness(brightness);
         }
 
-        if (true == isSuccessful)
+        if (true == hasState)
         {
-            DisplayMgr& displayMgr = DisplayMgr::getInstance();
-
             if (false == displayOn)
             {
                 displayMgr.displayOff();
@@ -418,6 +527,75 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
             {
                 displayMgr.displayOn();
             }
+        }
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+static bool getAutoBrightnessState(const String& topic, JsonObject& value)
+{
+    DisplayMgr& displayMgr = DisplayMgr::getInstance();
+
+    UTIL_NOT_USED(topic);
+
+    if (false == displayMgr.getAutoBrightnessAdjustment())
+    {
+        value["state"] = "off";
+    }
+    else
+    {
+        value["state"] = "on";
+    }
+
+    return true;
+}
+
+static bool hasAutoBrightnessStateChanged(const String& topic)
+{
+    DisplayMgr& displayMgr = DisplayMgr::getInstance();
+    bool        isEnabled  = displayMgr.getAutoBrightnessAdjustment();
+    bool        hasChanged = false;
+
+    UTIL_NOT_USED(topic);
+
+    if (isEnabled != gLastAutoBrightnessState)
+    {
+        gLastAutoBrightnessState = isEnabled;
+        hasChanged               = true;
+    }
+
+    return hasChanged;
+}
+
+static bool setAutoBrightnessState(const String& topic, const JsonObjectConst& value)
+{
+    bool             isSuccessful = false;
+    JsonVariantConst jsonState    = value["state"];
+
+    UTIL_NOT_USED(topic);
+
+    if (false == jsonState.isNull())
+    {
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        String      state      = jsonState.as<const char*>();
+
+        /* The adjustment may be rejected, e.g. if the board has no ambient
+         * light sensor at all.
+         */
+        if (true == state.equalsIgnoreCase("off"))
+        {
+            isSuccessful = displayMgr.setAutoBrightnessAdjustment(false);
+        }
+        else if (true == state.equalsIgnoreCase("on"))
+        {
+            isSuccessful = displayMgr.setAutoBrightnessAdjustment(true);
+        }
+        else
+        {
+            ;
         }
     }
 

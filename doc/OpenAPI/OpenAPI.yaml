@@ -163,11 +163,19 @@ paths:
         - Display
       summary: Set display power state.
       description: |
-        Set current display power state.
+        Set current display power state and/or brightness.
+
+        At least one of both parameters shall be given. If one of them is
+        invalid, nothing is applied at all.
+
+        The brightness is limited by the brightness soft limits. It has no
+        effect as long as the automatic brightness adjustment is enabled,
+        see /display/autoBrightness.
 
         Example:
         ```bash
         $ curl -u luke:skywalker -d "state=off" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/power
+        $ curl -u luke:skywalker -d "brightness=128" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/power
         ```
       operationId: setDisplayPowerState
       parameters:
@@ -178,6 +186,14 @@ paths:
             enum: [off, on]
           required: false
           description: "Power on/off state."
+        - in: query
+          name: brightness
+          schema:
+            type: number
+            minimum: 0
+            maximum: 255
+          required: false
+          description: "Display brightness."
       responses:
         "200":
           description: Ok
@@ -185,6 +201,67 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DisplayPowerState"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - pixelixAuth: []
+  /display/autoBrightness:
+    get:
+      tags:
+        - Display
+      summary: Get automatic brightness adjustment state.
+      description: |
+        Get the state of the automatic brightness adjustment, which adapts the
+        display brightness to the ambient light.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/autoBrightness
+        ```
+      operationId: getDisplayAutoBrightnessState
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisplayAutoBrightnessState"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Display
+      summary: Set automatic brightness adjustment state.
+      description: |
+        Enable or disable the automatic brightness adjustment.
+
+        It is rejected if the board provides no ambient light sensor. As long
+        as it is enabled, a brightness set via /display/power has no effect.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "state=on" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/autoBrightness
+        ```
+      operationId: setDisplayAutoBrightnessState
+      parameters:
+        - in: query
+          name: state
+          schema:
+            type: string
+            enum: [off, on]
+          required: true
+          description: "Automatic brightness adjustment on/off state."
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisplayAutoBrightnessState"
         "404":
           description: Invalid or missing data
           content:
@@ -3480,6 +3557,26 @@ components:
           description: The request result.
           example: ok
     DisplayPowerState:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            state:
+              type: string
+              example: off
+            brightness:
+              type: number
+              description: Display brightness, limited by the brightness soft limits.
+              example: 128
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    DisplayAutoBrightnessState:
       type: object
       required:
         - data
