@@ -577,6 +577,14 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
     return isSuccessful;
 }
 
+/**
+ * Get automatic brightness adjustment state.
+ *
+ * @param[in]   topic   Topic
+ * @param[out]  value   Value
+ *
+ * @return If successful, it will return true otherwise false.
+ */
 static bool getAutoBrightnessState(const String& topic, JsonObject& value)
 {
     DisplayMgr& displayMgr = DisplayMgr::getInstance();
@@ -595,6 +603,13 @@ static bool getAutoBrightnessState(const String& topic, JsonObject& value)
     return true;
 }
 
+/**
+ * Has the automatic brightness adjustment state changed?
+ *
+ * @param[in]   topic   Topic
+ *
+ * @return If the automatic brightness adjustment state has changed, it will return true otherwise false.
+ */
 static bool hasAutoBrightnessStateChanged(const String& topic)
 {
     DisplayMgr& displayMgr = DisplayMgr::getInstance();
@@ -612,6 +627,14 @@ static bool hasAutoBrightnessStateChanged(const String& topic)
     return hasChanged;
 }
 
+/**
+ * Set automatic brightness adjustment state.
+ *
+ * @param[in]   topic   Topic
+ * @param[in]   value   Value
+ *
+ * @return If successful, it will return true otherwise false.
+ */
 static bool setAutoBrightnessState(const String& topic, const JsonObjectConst& value)
 {
     bool             isSuccessful = false;
