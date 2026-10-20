@@ -326,6 +326,43 @@ dialog.updateMessage = function (message) {
     document.getElementById("dialogBody").innerHTML = message;
 };
 
+/* Time in s the device gets to restart, before the page is reloaded. */
+dialog.RELOAD_COUNTDOWN = 10;
+
+/* Show the given information together with a countdown and reload the page
+ * afterwards. The device needs the time to restart, before it can answer again.
+ * Closing the dialog skips the countdown and reloads immediately.
+ */
+dialog.showCountdownAndReload = async function (info, countdown) {
+    const text = (typeof info === "string") ? info : "";
+    let seconds = (typeof countdown === "number") ? countdown : dialog.RELOAD_COUNTDOWN;
+
+    await dialog.showInfo(text + "<p>Reload in " + seconds + "s</p>");
+
+    await new Promise((resolve) => {
+        const intervalId = setInterval(() => {
+            if (seconds > 0) {
+                seconds--;
+                dialog.updateMessage(text + "<p>Reload in " + seconds + "s</p>");
+            }
+
+            if (seconds === 0) {
+                clearInterval(intervalId);
+                resolve();
+            }
+        }, 1000);
+
+        document.querySelectorAll("#modalDialog .btn-secondary").forEach((button) => {
+            button.addEventListener("click", () => {
+                clearInterval(intervalId);
+                resolve();
+            }, { once: true });
+        });
+    });
+
+    location.reload();
+};
+
 /* "pixelix" is a shared namespace that ws.js also declares as a top-level name.
  * In classic (non-module) scripts only "var" permits the same top-level
  * identifier across multiple files; const/let would throw on redeclaration when

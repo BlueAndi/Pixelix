@@ -390,7 +390,9 @@
                     progress = 100;
                     updateProgressBar("progressBarRestore", progress);
 
-                    dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
+                    disableUI();
+
+                    await dialog.showCountdownAndReload("<p>Restart performed to apply the restored configuration.</p>");
                 } catch (err) {
                     if (isServiceUnavailable(err) === true) {
                         dialog.showError("<p>Restore failed, because the device is busy. Please try again later.</p>");
@@ -406,7 +408,7 @@
 
                 try {
                     await restClient.restart();
-                    await dialog.showInfo("<p>Ok.</p>");
+                    await dialog.showCountdownAndReload("<p>Restart performed.</p>");
                 } catch (err) {
                     await dialog.showError("<p>Error: " + err + "</p>");
                 }
@@ -442,8 +444,6 @@
 
             /* Request change of active partition. */
             async function sendPartitionChangeRequest() {
-                let seconds = 10;
-
                 disableUI();
 
                 try {
@@ -453,30 +453,7 @@
                         isJsonResponse: true
                     });
 
-                    await dialog.showInfo(`<p>Reload in ${seconds}s</p>`);
-
-                    await new Promise((resolve) => {
-                        const intervalId = setInterval(() => {
-                            if (seconds > 0) {
-                                seconds--;
-                                dialog.updateMessage(`<p>Reload in ${seconds}s</p>`);
-                            }
-
-                            if (seconds === 0) {
-                                clearInterval(intervalId);
-                                resolve();
-                            }
-                        }, 1000);
-
-                        document.querySelectorAll("#modalDialog .btn-secondary").forEach((button) => {
-                            button.addEventListener("click", () => {
-                                clearInterval(intervalId);
-                                resolve();
-                            }, { once: true });
-                        });
-                    });
-
-                    location.reload();
+                    await dialog.showCountdownAndReload();
                 } catch (rsp) {
                     dialog.showError("<p>Error: " + rsp + "</p>");
                     enableUI();
