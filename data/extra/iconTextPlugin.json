@@ -4,6 +4,7 @@
         "discovery": {
             "name": "%ALIAS% text",
             "ic": "mdi:form-textbox",
+            "max": 255,
             "cmd_tpl": "{\"text\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.text }}"
         }
@@ -13,6 +14,7 @@
         "discovery": {
             "name": "%ALIAS% icon path",
             "ic": "mdi:image-outline",
+            "max": 255,
             "cmd_tpl": "{\"iconFileName\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.iconFileName }}"
         }

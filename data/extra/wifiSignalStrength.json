@@ -6,6 +6,8 @@
             "unit_of_meas": "dBm",
             "ic": "mdi:signal",
             "dev_cla": "signal_strength",
+            "stat_cla": "measurement",
+            "ent_cat": "diagnostic",
             "val_tpl": "{{ value_json.value }}"
         }
     }

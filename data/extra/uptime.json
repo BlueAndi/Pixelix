@@ -6,6 +6,8 @@
             "unit_of_meas": "s",
             "ic": "mdi:timelapse",
             "dev_cla": "duration",
+            "stat_cla": "total_increasing",
+            "ent_cat": "diagnostic",
             "val_tpl": "{{ value_json.value }}"
         }
     }

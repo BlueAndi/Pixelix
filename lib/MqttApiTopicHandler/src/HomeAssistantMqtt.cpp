@@ -45,6 +45,8 @@
 #include <JsonFile.h>
 #include <FileSystem.h>
 #include <Board.h>
+#include <Util.h>
+#include <string.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -87,6 +89,12 @@ const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_ENABLE    = "Enable Home Assist
 /* Initialize Home Assistant discovery enable flag default value */
 const bool HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_ENABLE  = false;
 
+/* Initialize Home Assistant birth topic endpoint. */
+const char* HomeAssistantMqtt::HA_BIRTH_TOPIC_ENDPOINT     = "/status";
+
+/* Initialize Home Assistant birth payload. */
+const char* HomeAssistantMqtt::HA_BIRTH_PAYLOAD_ONLINE     = "online";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -120,6 +128,8 @@ void HomeAssistantMqtt::stop()
 {
     SettingsService& settings = SettingsService::getInstance();
 
+    unsubscribeBirthTopic();
+
     settings.unregisterSetting(&m_haDiscoveryPrefixSetting);
     settings.unregisterSetting(&m_haDiscoveryEnabledSetting);
 }
@@ -127,13 +137,39 @@ void HomeAssistantMqtt::stop()
 void HomeAssistantMqtt::process(bool isConnected)
 {
     /* The Home Assistant discovery must be enabled. */
-    if (true == m_haDiscoveryEnabled)
+    if ((true == m_haDiscoveryEnabled) &&
+        (true == isConnected))
     {
-        if (true == isConnected)
+        subscribeBirthTopic();
+
+        /* Home Assistant reported itself as online again?
+         *
+         * The discovery infos are published retained and therefore the broker
+         * delivers them on its own. The topic states are not retained, they
+         * would stay unknown until the next change. Therefore everything is
+         * published again.
+         */
+        if (true == m_isReqToRepublishAll)
         {
-            publishAutoDiscoveryInfosOnDemand();
+            m_isReqToRepublishAll = false;
+
+            LOG_INFO("Home Assistant is online, publish discovery infos and states again.");
+
+            requestToPublishAllDiscoveryInfos();
+
+            if (nullptr != m_republishStatesFunc)
+            {
+                m_republishStatesFunc();
+            }
         }
+
+        publishAutoDiscoveryInfosOnDemand();
     }
+}
+
+void HomeAssistantMqtt::setRepublishStatesFunc(RepublishStatesFunc republishStatesFunc)
+{
+    m_republishStatesFunc = republishStatesFunc;
 }
 
 void HomeAssistantMqtt::registerMqttDiscovery(const String& deviceId, const String& entityId, const String& topic, const String& mqttStateTopic, const String& mqttCmdTopic, const String& mqttAvailabilityTopic, JsonObjectConst& jsonExtra)
@@ -207,30 +243,42 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
                 (entityId == mqttDiscoveryInfo->entityId) &&
                 (topic == mqttDiscoveryInfo->topic))
             {
-                uint8_t componentCount = getComponentCount(mqttDiscoveryInfo->components);
-                uint8_t idx            = 0U;
-
-                for (idx = 0U; idx < componentCount; ++idx)
+                /* Without any component the discovery info was never published,
+                 * e.g. because the discovery info file is invalid or the MQTT
+                 * connection was not established yet. There is nothing to purge
+                 * and a empty component would result in a invalid topic.
+                 */
+                if (true == mqttDiscoveryInfo->components.isEmpty())
                 {
-                    int8_t discoveryEntityIndex = (1U == componentCount) ? -1 : idx;
-                    String objectId             = getObjectId(entityId, topic, discoveryEntityIndex);
-                    String component;
-                    String mqttDiscoveryInfoTopic;
+                    LOG_INFO("No HA discovery published for %s, nothing to purge.", topic.c_str());
+                }
+                else
+                {
+                    uint8_t componentCount = getComponentCount(mqttDiscoveryInfo->components);
+                    uint8_t idx            = 0U;
 
-                    getComponentByIndex(component, mqttDiscoveryInfo->components, idx);
-                    getConfigTopic(mqttDiscoveryInfoTopic, component, mqttDiscoveryInfo->deviceId, mqttDiscoveryInfo->entityId, mqttDiscoveryInfo->topic, discoveryEntityIndex);
-
-                    LOG_DEBUG("Component: %s", component.c_str());
-
-                    /* Purge retained discovery info. */
-                    if (false == mqttService.publish(MqttService::PRIMARY_MQTT_INST, mqttDiscoveryInfoTopic, "", true))
+                    for (idx = 0U; idx < componentCount; ++idx)
                     {
-                        LOG_WARNING("Failed to purge HA discovery of %s.", objectId.c_str());
-                    }
-                    /* Successful purged. */
-                    else
-                    {
-                        LOG_INFO("Purged HA discovery of %s.", objectId.c_str());
+                        int8_t discoveryEntityIndex = (1U == componentCount) ? -1 : idx;
+                        String objectId             = getObjectId(entityId, topic, discoveryEntityIndex);
+                        String component;
+                        String mqttDiscoveryInfoTopic;
+
+                        getComponentByIndex(component, mqttDiscoveryInfo->components, idx);
+                        getConfigTopic(mqttDiscoveryInfoTopic, component, mqttDiscoveryInfo->deviceId, mqttDiscoveryInfo->entityId, mqttDiscoveryInfo->topic, discoveryEntityIndex);
+
+                        LOG_DEBUG("Component: %s", component.c_str());
+
+                        /* Purge retained discovery info. */
+                        if (false == mqttService.publish(MqttService::PRIMARY_MQTT_INST, mqttDiscoveryInfoTopic, "", true))
+                        {
+                            LOG_WARNING("Failed to purge HA discovery of %s.", objectId.c_str());
+                        }
+                        /* Successful purged. */
+                        else
+                        {
+                            LOG_INFO("Purged HA discovery of %s.", objectId.c_str());
+                        }
                     }
                 }
 
@@ -254,6 +302,80 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+String HomeAssistantMqtt::getBirthTopic() const
+{
+    return m_haDiscoveryPrefix + HA_BIRTH_TOPIC_ENDPOINT;
+}
+
+void HomeAssistantMqtt::subscribeBirthTopic()
+{
+    /* Subscribe only once. The MQTT service subscribes the topic again after
+     * a broker reconnect on its own.
+     */
+    if ((false == m_isBirthTopicSubscribed) &&
+        (false == m_haDiscoveryPrefix.isEmpty()))
+    {
+        MqttService&             mqttService = MqttService::getInstance();
+        String                   birthTopic  = getBirthTopic();
+        MqttTypes::TopicCallback birthCallback =
+            [this](const String& mqttTopic, const uint8_t* payload, size_t size) {
+                const size_t ONLINE_PAYLOAD_LENGTH = strlen(HA_BIRTH_PAYLOAD_ONLINE);
+
+                UTIL_NOT_USED(mqttTopic);
+
+                if ((nullptr != payload) &&
+                    (ONLINE_PAYLOAD_LENGTH == size) &&
+                    (0 == memcmp(payload, HA_BIRTH_PAYLOAD_ONLINE, ONLINE_PAYLOAD_LENGTH)))
+                {
+                    /* Handled in the process() method, because publishing is
+                     * throttled there to one message per process cycle.
+                     */
+                    m_isReqToRepublishAll = true;
+                }
+            };
+
+        if (false == mqttService.subscribe(MqttService::PRIMARY_MQTT_INST, birthTopic, birthCallback))
+        {
+            LOG_WARNING("Couldn't subscribe %s.", birthTopic.c_str());
+        }
+        else
+        {
+            m_isBirthTopicSubscribed = true;
+
+            LOG_INFO("Subscribe: %s", birthTopic.c_str());
+        }
+    }
+}
+
+void HomeAssistantMqtt::unsubscribeBirthTopic()
+{
+    if (true == m_isBirthTopicSubscribed)
+    {
+        MqttService& mqttService = MqttService::getInstance();
+
+        mqttService.unsubscribe(MqttService::PRIMARY_MQTT_INST, getBirthTopic());
+
+        m_isBirthTopicSubscribed = false;
+    }
+}
+
+void HomeAssistantMqtt::requestToPublishAllDiscoveryInfos()
+{
+    ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
+
+    while (m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
+    {
+        MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
+
+        if (nullptr != mqttDiscoveryInfo)
+        {
+            mqttDiscoveryInfo->isReqToPublish = true;
+        }
+
+        ++listOfMqttDiscoveryInfoIt;
+    }
+}
 
 String HomeAssistantMqtt::getNodeId(const String& deviceId)
 {
@@ -343,8 +465,13 @@ void HomeAssistantMqtt::addDeviceInfo(JsonDocument& jsonDoc, MqttDiscoveryInfo& 
 
     /* Device identifier */
     jsonDoc["dev"]["ids"]  = chipIdStr;
-    /* URL to configuration of the device (configuration_url). */
-    jsonDoc["dev"]["cu"]   = String("http://") + WiFi.localIP().toString();
+    /* URL to configuration of the device (configuration_url).
+     *
+     * The discovery info is published retained, therefore the IP address is not
+     * used. It would become stale after the device got another one. The host
+     * name is resolved via mDNS, which the device announces anyway.
+     */
+    jsonDoc["dev"]["cu"]   = String("http://") + mqttDiscoveryInfo.deviceId + ".local";
     /* Name of the device. */
     jsonDoc["dev"]["name"] = nodeId;
     /* Device model name (model) */
@@ -492,6 +619,12 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
             jsonDoc["avty_t"] = mqttDiscoveryInfo.mqttAvailabilityTopic;
         }
 
+        /* The component list is rebuilt, because this method is called again
+         * after Home Assistant reported itself as online. Otherwise the
+         * components would be appended a second time.
+         */
+        mqttDiscoveryInfo.components.clear();
+
         for (idx = 0U; idx < discoveryInfoArrayCount; ++idx)
         {
             JsonObjectConst discoveryInfo        = jsonDiscoveryInfoArray[idx];
@@ -537,8 +670,16 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
                 }
             }
 
+            /* Does the discovery info fit into the JSON document? Otherwise it
+             * would be silently truncated and the published content would be
+             * invalid JSON.
+             */
+            if (true == jsonDoc.overflowed())
+            {
+                LOG_ERROR("HA discovery info of %s needs more than %u bytes.", objectId.c_str(), JSON_DOC_SIZE);
+            }
             /* Send the JSON as string. */
-            if (0U < serializeJson(jsonDoc, mqttDiscoveryContent))
+            else if (0U < serializeJson(jsonDoc, mqttDiscoveryContent))
             {
                 /* Escape control characters, otherwise the content would not be
                  * valid JSON anymore, see JsonEscape.hpp.
@@ -554,6 +695,11 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
                 {
                     LOG_INFO("HA discovery info of %s published.", objectId.c_str());
                 }
+            }
+            else
+            {
+                /* Serialization failed, nothing to publish. */
+                ;
             }
 
             /* Remember the component for unregistration later. */
@@ -621,7 +767,10 @@ void HomeAssistantMqtt::getComponentByIndex(String& component, const String& com
         ++count;
     }
 
-    if (count < idx)
+    /* The loop above stops at the last component, therefore a index which
+     * addresses it or anything behind it is out of bounce.
+     */
+    if (count <= idx)
     {
         component.clear();
     }

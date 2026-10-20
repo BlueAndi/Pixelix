@@ -2,10 +2,12 @@
     {
         "component": "light",
         "discovery": {
+            "schema": "template",
             "name": "Display",
             "ic": "mdi:clock-digital",
-            "pl_on": "{\"state\":\"on\"}",
-            "pl_off": "{\"state\":\"off\"}"
+            "cmd_on_tpl": "{\"state\":\"on\"}",
+            "cmd_off_tpl": "{\"state\":\"off\"}",
+            "stat_tpl": "{{ value_json.state }}"
         }
     }
 ]

@@ -4,6 +4,7 @@
         "discovery": {
             "name": "%ALIAS% slot",
             "ic": "mdi:image-outline",
+            "max": 255,
             "cmd_tpl": "{\"fileName\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.fileName }}"
         }

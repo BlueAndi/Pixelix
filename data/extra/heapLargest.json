@@ -6,6 +6,8 @@
             "unit_of_meas": "B",
             "ic": "mdi:memory",
             "dev_cla": "data_size",
+            "stat_cla": "measurement",
+            "ent_cat": "diagnostic",
             "val_tpl": "{{ value_json.value }}"
         }
     }

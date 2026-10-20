@@ -48,6 +48,7 @@
 #include <KeyValueString.h>
 #include <KeyValueBool.h>
 #include <ArduinoJson.h>
+#include <functional>
 #include <vector>
 
 /******************************************************************************
@@ -67,6 +68,15 @@ class HomeAssistantMqtt
 public:
 
     /**
+     * Function which is called to request the republishing of all topic states.
+     *
+     * It is called after Home Assistant reported itself as online again, because
+     * the topic states are not published retained and therefore are lost for
+     * Home Assistant after its restart.
+     */
+    typedef std::function<void()> RepublishStatesFunc;
+
+    /**
      * Construct the Home Assistant extension instance.
      */
     HomeAssistantMqtt() :
@@ -74,7 +84,10 @@ public:
         m_haDiscoveryEnabledSetting(KEY_HA_DISCOVERY_ENABLE, NAME_HA_DISCOVERY_ENABLE, DEFAULT_HA_DISCOVERY_ENABLE),
         m_haDiscoveryPrefix(),
         m_haDiscoveryEnabled(false),
-        m_mqttDiscoveryInfoList()
+        m_mqttDiscoveryInfoList(),
+        m_isBirthTopicSubscribed(false),
+        m_isReqToRepublishAll(false),
+        m_republishStatesFunc(nullptr)
     {
     }
 
@@ -104,6 +117,14 @@ public:
      * @param[in] isConnected   Is a MQTT broker connection established?
      */
     void process(bool isConnected);
+
+    /**
+     * Set the function which is called to request the republishing of all
+     * topic states.
+     *
+     * @param[in] republishStatesFunc   The function or nullptr to remove it.
+     */
+    void setRepublishStatesFunc(RepublishStatesFunc republishStatesFunc);
 
     /**
      * Register Home Assistant MQTT discovery.
@@ -203,11 +224,46 @@ private:
     /** List of Home Assistant MQTT discovery information. */
     typedef std::vector<MqttDiscoveryInfo*> ListOfMqttDiscoveryInfo;
 
-    KeyValueString                          m_haDiscoveryPrefixSetting;  /**< Setting for the Home Assistant MQTT discovery prefix. */
-    KeyValueBool                            m_haDiscoveryEnabledSetting; /**< Setting for the Home Assistant MQTT discovery enable flag. */
-    String                                  m_haDiscoveryPrefix;         /**< Home Assistant MQTT discovery prefix. */
-    bool                                    m_haDiscoveryEnabled;        /**< Is the Home Assistant MQTT discovery enabled or not. */
-    ListOfMqttDiscoveryInfo                 m_mqttDiscoveryInfoList;     /**< List of Home Assistant MQTT discovery informations. */
+    /** Home Assistant birth/last will topic endpoint, appended to the discovery prefix. */
+    static const char* HA_BIRTH_TOPIC_ENDPOINT;
+
+    /** Payload which Home Assistant publishes to the birth topic after it is up again. */
+    static const char*      HA_BIRTH_PAYLOAD_ONLINE;
+
+    KeyValueString          m_haDiscoveryPrefixSetting;  /**< Setting for the Home Assistant MQTT discovery prefix. */
+    KeyValueBool            m_haDiscoveryEnabledSetting; /**< Setting for the Home Assistant MQTT discovery enable flag. */
+    String                  m_haDiscoveryPrefix;         /**< Home Assistant MQTT discovery prefix. */
+    bool                    m_haDiscoveryEnabled;        /**< Is the Home Assistant MQTT discovery enabled or not. */
+    ListOfMqttDiscoveryInfo m_mqttDiscoveryInfoList;     /**< List of Home Assistant MQTT discovery informations. */
+    bool                    m_isBirthTopicSubscribed;    /**< Is the Home Assistant birth topic subscribed? */
+    bool                    m_isReqToRepublishAll;       /**< Is requested to republish all discovery infos and topic states? */
+    RepublishStatesFunc     m_republishStatesFunc;       /**< Function to request the republishing of all topic states. */
+
+    /**
+     * Get the Home Assistant birth topic, which is derived from the discovery prefix.
+     *
+     * @return Birth topic
+     */
+    String getBirthTopic() const;
+
+    /**
+     * Subscribe the Home Assistant birth topic, if not already done.
+     *
+     * Home Assistant publishes its birth message after a restart. Because the
+     * topic states are not published retained, they are unknown to Home Assistant
+     * until they are published again.
+     */
+    void subscribeBirthTopic();
+
+    /**
+     * Unsubscribe the Home Assistant birth topic, if subscribed.
+     */
+    void unsubscribeBirthTopic();
+
+    /**
+     * Request to publish all MQTT discovery infos again.
+     */
+    void requestToPublishAllDiscoveryInfos();
 
     /**
      * Get the node id.

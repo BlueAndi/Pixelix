@@ -74,6 +74,15 @@ const char* MqttApiTopicHandler::MQTT_ENDPOINT_WRITE_ACCESS = "/set";
 
 void MqttApiTopicHandler::start()
 {
+    /* The topic states are not published retained. After Home Assistant
+     * restarted, they are unknown to it until the next change. Therefore the
+     * Home Assistant extension requests to publish all of them again, as soon
+     * as Home Assistant reports itself as online.
+     */
+    m_haExtension.setRepublishStatesFunc([this]() {
+        this->requestToPublishAllTopicStates();
+    });
+
     m_haExtension.start();
 
     m_isStarted = true;
@@ -82,6 +91,7 @@ void MqttApiTopicHandler::start()
 void MqttApiTopicHandler::stop()
 {
     m_haExtension.stop();
+    m_haExtension.setRepublishStatesFunc(nullptr);
 
     m_isStarted = false;
 }
