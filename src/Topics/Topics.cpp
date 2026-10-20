@@ -121,7 +121,8 @@ private:
  *****************************************************************************/
 
 static bool execButtonAction(const String& topic, const JsonObjectConst& value);
-static bool parseBrightness(JsonVariantConst jsonBrightness, uint8_t& brightness);
+static bool parseUInt8(JsonVariantConst jsonValue, uint8_t& value);
+static bool parseUInt32(JsonVariantConst jsonValue, uint32_t& value);
 static bool getDisplayState(const String& topic, JsonObject& value);
 static bool hasDisplayStateChanged(const String& topic);
 static bool setDisplayState(const String& topic, const JsonObjectConst& value);
@@ -345,35 +346,37 @@ static bool execButtonAction(const String& topic, const JsonObjectConst& value)
 }
 
 /**
- * Get display state.
+ * Convert a JSON value to a 8-bit unsigned integer.
  *
- * @param[in]   topic   Topic
- * @param[out]  value   Value
+ * Via MQTT and via a JSON body of the REST API the value arrives as JSON
+ * number. Via the HTTP parameters of the REST API it arrives as string.
+ * Therefore both are accepted, everything else is rejected. The destination
+ * is kept untouched if the value can not be converted.
+ *
+ * @param[in]   jsonValue   The JSON value to convert.
+ * @param[out]  value       The converted value.
  *
  * @return If successful, it will return true otherwise false.
  */
-static bool parseBrightness(JsonVariantConst jsonBrightness, uint8_t& brightness)
+static bool parseUInt8(JsonVariantConst jsonValue, uint8_t& value)
 {
     bool isSuccessful = false;
 
-    /* Via MQTT the brightness arrives as JSON number, via the REST API as
-     * string. Both are accepted, everything else is rejected. A negative
-     * number is rejected by the unsigned type check already.
-     */
-    if (true == jsonBrightness.is<uint32_t>())
+    /* A negative number is rejected by the unsigned type check already. */
+    if (true == jsonValue.is<uint32_t>())
     {
-        uint32_t brightnessRaw = jsonBrightness.as<uint32_t>();
+        uint32_t rawValue = jsonValue.as<uint32_t>();
 
-        if (UINT8_MAX >= brightnessRaw)
+        if (UINT8_MAX >= rawValue)
         {
-            brightness   = static_cast<uint8_t>(brightnessRaw);
+            value        = static_cast<uint8_t>(rawValue);
             isSuccessful = true;
         }
     }
-    else if (true == jsonBrightness.is<const char*>())
+    else if (true == jsonValue.is<const char*>())
     {
         /* The conversion validates the range as well. */
-        isSuccessful = Util::strToUInt8(jsonBrightness.as<const char*>(), brightness);
+        isSuccessful = Util::strToUInt8(jsonValue.as<const char*>(), value);
     }
     else
     {
@@ -383,6 +386,45 @@ static bool parseBrightness(JsonVariantConst jsonBrightness, uint8_t& brightness
     return isSuccessful;
 }
 
+/**
+ * Convert a JSON value to a 32-bit unsigned integer.
+ *
+ * See parseUInt8() for the accepted representations.
+ *
+ * @param[in]   jsonValue   The JSON value to convert.
+ * @param[out]  value       The converted value.
+ *
+ * @return If successful, it will return true otherwise false.
+ */
+static bool parseUInt32(JsonVariantConst jsonValue, uint32_t& value)
+{
+    bool isSuccessful = false;
+
+    if (true == jsonValue.is<uint32_t>())
+    {
+        value        = jsonValue.as<uint32_t>();
+        isSuccessful = true;
+    }
+    else if (true == jsonValue.is<const char*>())
+    {
+        isSuccessful = Util::strToUInt32(jsonValue.as<const char*>(), value);
+    }
+    else
+    {
+        ;
+    }
+
+    return isSuccessful;
+}
+
+/**
+ * Get display state.
+ *
+ * @param[in]   topic   Topic
+ * @param[out]  value   Value
+ *
+ * @return If successful, it will return true otherwise false.
+ */
 static bool getDisplayState(const String& topic, JsonObject& value)
 {
     DisplayMgr& displayMgr  = DisplayMgr::getInstance();
@@ -488,7 +530,7 @@ static bool setDisplayState(const String& topic, const JsonObjectConst& value)
 
     /* The brightness is optional, but if given it shall be in range. */
     if ((true == hasBrightness) &&
-        (false == parseBrightness(jsonBrightness, brightness)))
+        (false == parseUInt8(jsonBrightness, brightness)))
     {
         isValid = false;
     }
@@ -641,10 +683,8 @@ static bool notify(const String& topic, const JsonObjectConst& value)
         String   melody;
         uint8_t  volume = 0U;
 
-        if (true == jsonDuration.is<uint32_t>())
+        if (true == parseUInt32(jsonDuration, duration))
         {
-            duration = jsonDuration.as<uint32_t>();
-
             /* A duration of 0 would show the notification infinite, because the
              * system message slot has no slot duration.
              */
@@ -696,10 +736,7 @@ static bool notify(const String& topic, const JsonObjectConst& value)
                     melody = melodyPtr;
                     volume = RTTTL::MAX_VOLUME;
 
-                    if (true == jsonVolume.is<uint8_t>())
-                    {
-                        volume = jsonVolume.as<uint8_t>();
-                    }
+                    (void)parseUInt8(jsonVolume, volume);
                 }
             }
         }
