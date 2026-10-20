@@ -127,9 +127,16 @@ void SysMsgPlugin::update(YAGfx& gfx)
         /* Is the scroll info ready? */
         if (true == status)
         {
-            /* Start timer if text doesn't scroll and shall not be shown infinite. */
+            /* Start timer if the message shall not be shown infinite.
+             *
+             * A scrolling message is ended by the number of times it was
+             * scrolled, but only if such a number is given. Without it the
+             * duration is the only criteria to end it. Otherwise the message
+             * would be shown forever and block the plugin, which never would
+             * be disabled again.
+             */
             if ((false == m_isDurationHard) &&
-                (false == isScrollingEnabled) &&
+                ((false == isScrollingEnabled) || (0U == m_max)) &&
                 (0U < m_duration))
             {
                 m_timer.start(m_duration);

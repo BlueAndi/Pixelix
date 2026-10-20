@@ -149,6 +149,37 @@ public:
     }
 
     /**
+     * Get scrolling informations of the shown text.
+     *
+     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
+     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
+     *
+     * @return If scroll information is ready, it will return true otherwise false.
+     */
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt) const
+    {
+        bool isAvailable = false;
+
+        /* Without a visible text the text widget is not part of the scrolling
+         * content, see applyScrollLayout(). Therefore it is never painted and
+         * a pending text transition would never finish. Nothing scrolls in
+         * this case, which is reported right away.
+         */
+        if (false == m_isTextVisible)
+        {
+            isScrollingEnabled = false;
+            scrollingCnt       = 0U;
+            isAvailable        = true;
+        }
+        else
+        {
+            isAvailable = ScrollableView::getScrollInfo(m_textWidget, isScrollingEnabled, scrollingCnt);
+        }
+
+        return isAvailable;
+    }
+
+    /**
      * Does the icon scroll together with the text?
      *
      * @return If the icon scrolls together with the text, it will return true otherwise false.

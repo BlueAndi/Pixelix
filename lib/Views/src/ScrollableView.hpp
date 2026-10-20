@@ -221,18 +221,6 @@ public:
     }
 
     /**
-     * Gets scroll information.
-     *
-     * @param[out] isScrollingEnabled True if scrolling is enabled.
-     * @param[out] scrollingCnt Number of completed cycles.
-     * @return True when information is available.
-     */
-    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt) const
-    {
-        return m_scrollContainer.getScrollInfo(isScrollingEnabled, scrollingCnt);
-    }
-
-    /**
      * Gets scroll information of a scrolled text widget.
      *
      * As long as the text widget replaces its text, the scroll information
@@ -257,6 +245,22 @@ public:
     }
 
 protected:
+
+    /**
+     * Gets scroll information without considering a text transition.
+     *
+     * It is protected on purpose. A view which shows a text must use the
+     * overload taking the text widget, otherwise it would report the scroll
+     * information of the text which is replaced right now.
+     *
+     * @param[out] isScrollingEnabled True if scrolling is enabled.
+     * @param[out] scrollingCnt Number of completed cycles.
+     * @return True when information is available.
+     */
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt) const
+    {
+        return m_scrollContainer.getScrollInfo(isScrollingEnabled, scrollingCnt);
+    }
 
     ScrollContainer m_scrollContainer; /**< Shared scroll container. */
     uint16_t        m_width;           /**< View width. */
