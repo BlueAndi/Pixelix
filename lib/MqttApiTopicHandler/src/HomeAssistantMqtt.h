@@ -296,6 +296,19 @@ private:
     String getUniqueId(const String& nodeId, const String& objectId);
 
     /**
+     * Expand the placeholders in a Home Assistant entity name.
+     * %ALIAS% is replaced by the plugin alias and %TOPIC% by the topic. The
+     * topic hierarchy separators are replaced by spaces to keep the name
+     * readable, e.g. the topic slot/0 becomes "slot 0".
+     *
+     * @param[in]   name                Entity name, which may contain placeholders.
+     * @param[in]   mqttDiscoveryInfo   MQTT discovery information.
+     *
+     * @return Entity name with expanded placeholders.
+     */
+    String expandNamePlaceholders(const String& name, const MqttDiscoveryInfo& mqttDiscoveryInfo);
+
+    /**
      * Clear MQTT discovery info list.
      */
     void clearMqttDiscoveryInfoList();

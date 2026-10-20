@@ -2,7 +2,7 @@
     {
         "component": "text",
         "discovery": {
-            "name": "%ALIAS% slot",
+            "name": "%ALIAS% %TOPIC%",
             "ic": "mdi:image-outline",
             "max": 255,
             "cmd_tpl": "{\"fileName\": \"{{ value }}\" }",

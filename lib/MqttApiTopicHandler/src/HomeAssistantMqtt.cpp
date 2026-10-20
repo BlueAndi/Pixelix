@@ -423,6 +423,30 @@ String HomeAssistantMqtt::getUniqueId(const String& nodeId, const String& object
     return nodeId + "/" + objectId;
 }
 
+String HomeAssistantMqtt::expandNamePlaceholders(const String& name, const MqttDiscoveryInfo& mqttDiscoveryInfo)
+{
+    String expandedName   = name;
+    String alias          = mqttDiscoveryInfo.entityId;
+    String topic          = mqttDiscoveryInfo.topic;
+    int    lastSlashIndex = alias.lastIndexOf('/');
+
+    /* The alias is the last part of the plugin entity id: display/plugin/<alias> */
+    if (0 <= lastSlashIndex)
+    {
+        alias = alias.substring(lastSlashIndex + 1);
+    }
+
+    /* A topic may be hierarchical, e.g. slot/0. The separators are replaced by
+     * spaces, otherwise the entity name would contain the topic syntax.
+     */
+    topic.replace('/', ' ');
+
+    expandedName.replace("%ALIAS%", alias);
+    expandedName.replace("%TOPIC%", topic);
+
+    return expandedName;
+}
+
 void HomeAssistantMqtt::clearMqttDiscoveryInfoList()
 {
     ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
@@ -648,21 +672,10 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
             /* Copy all discovery details. */
             for (JsonObjectConst::iterator discoveryDetailsIt = jsonDiscovery.begin(); discoveryDetailsIt != jsonDiscovery.end(); ++discoveryDetailsIt)
             {
-                /* Replace %ALIAS% in the discovery details with the actual alias. */
+                /* Replace the placeholders in the entity name. */
                 if (0 == strcmp(discoveryDetailsIt->key().c_str(), "name"))
                 {
-                    /* The alias is the last part of the plugin entity id: display/plugin/<alias> */
-                    String discoveryDetailValue = discoveryDetailsIt->value().as<const char*>();
-                    String alias                = mqttDiscoveryInfo.entityId;
-                    int    lastSlashIndex       = alias.lastIndexOf('/');
-
-                    if (lastSlashIndex >= 0)
-                    {
-                        alias = alias.substring(lastSlashIndex + 1);
-                    }
-                    discoveryDetailValue.replace("%ALIAS%", alias);
-
-                    jsonDoc[discoveryDetailsIt->key()] = discoveryDetailValue;
+                    jsonDoc[discoveryDetailsIt->key()] = expandNamePlaceholders(discoveryDetailsIt->value().as<const char*>(), mqttDiscoveryInfo);
                 }
                 else
                 {
