@@ -45,6 +45,7 @@
 #include <stdint.h>
 
 class ButtonDrv;
+class BuzzerDrv;
 
 
 /**
@@ -160,6 +161,7 @@ private:
     float        m_aspectRatio                = 1.0F; /**< The width / height aspect ratio. */
 
     ButtonDrv*   m_buttonDrv                  = nullptr; /**< Access to native buttondriver class instance. */
+    BuzzerDrv*   m_buzzerDrv                  = nullptr; /**< Access to native buzzer driver class instance. */
 
     LedGridSim(const LedGridSim&)             = delete;
     LedGridSim& operator=(const LedGridSim&)  = delete;

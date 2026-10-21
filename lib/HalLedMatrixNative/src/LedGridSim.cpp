@@ -203,6 +203,12 @@ bool LedGridSim::initialize(uint16_t width, uint16_t height)
                     {
                         LOG_ERROR("Unexpected ButtonDrv class. Buttons will not work.");
                     }
+
+                    m_buzzerDrv = dynamic_cast<BuzzerDrv*>(&Board::getInstance().getBuzzerDrv());
+                    if (nullptr == m_buzzerDrv)
+                    {
+                        LOG_ERROR("Unexpected BuzzerDrv class. Muting will not work.");
+                    }
                     result = true;
                 }
             }
@@ -463,6 +469,26 @@ void LedGridSim::renderMenuBar() const
         if (true == ImGui::MenuItem("About"))
         {
             showAboutDialog = true;
+        }
+
+        if (nullptr != m_buzzerDrv)
+        {
+            /* The entry stays usable before anything was played, because muting
+             * in advance is a legitimate wish. It is only disabled once an
+             * attempt to open the audio device failed, so the user interface
+             * does not promise something it cannot deliver.
+             */
+            const bool isAudioAvailable = m_buzzerDrv->isAudioAvailable();
+            bool       isMuted          = m_buzzerDrv->isMuted();
+
+            ImGui::BeginDisabled(false == isAudioAvailable);
+
+            if (true == ImGui::MenuItem("Mute", nullptr, &isMuted))
+            {
+                m_buzzerDrv->setMuted(isMuted);
+            }
+
+            ImGui::EndDisabled();
         }
 
         ImGui::SameLine();
