@@ -27,6 +27,7 @@
 ################################################################################
 import subprocess
 import json
+import os
 
 ################################################################################
 # Variables
@@ -43,18 +44,34 @@ Import("env") # type: ignore
 # Functions
 ################################################################################
 
+def run_git(args):
+    """Run a git command and return its output.
+
+    Args:
+        args (list): Git arguments, without the leading 'git'
+
+    Returns:
+        str: Stripped output or None if the command failed or git is not available.
+    """
+    output = None
+
+    try:
+        output = subprocess.check_output(['git'] + args, stderr=subprocess.DEVNULL).decode('utf-8', errors='replace').strip()
+    except (subprocess.CalledProcessError, OSError):
+        pass
+
+    return output
+
 def get_git_revision_hash():
     """Get the git revision hash number.
 
     Returns:
         str: Revision hash
     """
-    rev_hash = "0"
+    rev_hash = run_git(['rev-parse', 'HEAD'])
 
-    try:
-        rev_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
-    except subprocess.CalledProcessError:
-        pass
+    if rev_hash is None:
+        rev_hash = "0"
 
     return rev_hash
 
@@ -64,14 +81,54 @@ def get_git_revision_short_hash():
     Returns:
         str: Short revision hash
     """
-    rev_short_hash = "0"
+    rev_short_hash = run_git(['rev-parse', '--short', 'HEAD'])
 
-    try:
-        rev_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
-    except subprocess.CalledProcessError:
-        pass
+    if rev_short_hash is None:
+        rev_short_hash = "0"
 
     return rev_short_hash
+
+def is_detached_head():
+    """Checks whether HEAD is detached, i.e. no branch is checked out.
+
+    Returns:
+        bool: If HEAD is detached, it will return True otherwise False.
+    """
+    # Fails with exit code 1 if HEAD is detached.
+    return run_git(['symbolic-ref', '--quiet', 'HEAD']) is None
+
+def get_detached_branch_name():
+    """Get a branch name for a detached HEAD.
+    A local or remote branch pointing to HEAD is preferred, then the
+    branch name provided by a CI environment.
+
+    Returns:
+        str: Branch name or "detached" if no branch can be determined.
+    """
+    branch_name = "detached"
+    candidates = []
+
+    # Local branches "refs/heads/<name>" and remote branches "refs/remotes/<remote>/<name>".
+    for refs_path, strip_count in [('refs/heads', 2), ('refs/remotes', 3)]:
+        refs = run_git(['for-each-ref', '--points-at', 'HEAD', f'--format=%(refname:lstrip={strip_count})', refs_path])
+
+        if refs is not None:
+            candidates += [ref for ref in refs.splitlines() if ref not in ("", "HEAD")]
+
+    if "master" in candidates:
+        branch_name = "master"
+    elif len(candidates) > 0:
+        branch_name = candidates[0]
+    else:
+        # GitHub Actions checks out pull requests and tags detached.
+        for env_name in ['GITHUB_HEAD_REF', 'GITHUB_REF_NAME']:
+            env_value = os.environ.get(env_name, "")
+
+            if len(env_value) > 0:
+                branch_name = env_value
+                break
+
+    return branch_name
 
 def get_current_git_branch():
     """Get current git branch name.
@@ -81,10 +138,14 @@ def get_current_git_branch():
     """
     branch_name = "unknown"
 
-    try:
-        branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
-    except subprocess.CalledProcessError:
-        pass
+    if is_detached_head() is True:
+        if run_git(['rev-parse', 'HEAD']) is not None:
+            branch_name = get_detached_branch_name()
+    else:
+        result = run_git(['rev-parse', '--abbrev-ref', 'HEAD'])
+
+        if result is not None:
+            branch_name = result
 
     return branch_name
 
@@ -95,21 +156,13 @@ def any_local_change():
     Returns:
         bool: If any local change is available, it will return True otherwise False.
     """
-    is_src_changed = False
-    result = ""
+    result = run_git(['status', '--porcelain', '--untracked-files=no'])
 
-    try:
-        result = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no']).decode('ascii').strip()
-    except subprocess.CalledProcessError:
-        pass
-
-    if len(result) > 0:
-        is_src_changed = True
-
-    return is_src_changed
+    return (result is not None) and (len(result) > 0)
 
 def any_unpushed_commit(upstream):
     """Checks whether there is any commit, which is not pushed to the remote repository.
+    If HEAD is detached, it checks whether HEAD is reachable from any remote branch.
 
     Args:
         upstream (str): Upstream repository path
@@ -117,16 +170,12 @@ def any_unpushed_commit(upstream):
     Returns:
         bool: If there is any unpushed commit, it will return True otherwise False.
     """
-    is_unpushed_commit_available = False
-    result = ""
-
-    try:
-        result = subprocess.check_output(['git', 'cherry', '-v', upstream], stderr=subprocess.STDOUT).decode('ascii').strip()
-    except subprocess.CalledProcessError:
-        pass
-
-    if len(result) > 0:
-        is_unpushed_commit_available = True
+    if is_detached_head() is True:
+        result = run_git(['rev-list', '--count', 'HEAD', '--not', '--remotes'])
+        is_unpushed_commit_available = (result is not None) and (result != "0")
+    else:
+        result = run_git(['cherry', '-v', upstream])
+        is_unpushed_commit_available = (result is not None) and (len(result) > 0)
 
     return is_unpushed_commit_available
 
