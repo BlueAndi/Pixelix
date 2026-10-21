@@ -78,11 +78,23 @@ struct SDL_AudioStream;
  * The audio device is opened with the first tone and not before, see init().
  *
  * m_frequency, m_amplitude, m_audioState and m_isMuted are atomic, because they
- * are written by the service task and by the user interface task, while the SDL
- * audio thread reads them. A mutex is deliberately avoided, because taking one
- * in an audio callback is the classic cause of dropouts. There is nothing to
- * protect atomically across these values either: a tone whose frequency lands
- * one buffer before its amplitude is inaudible at these durations.
+ * are read by the SDL audio thread while another thread writes them. A mutex is
+ * deliberately avoided, because taking one in an audio callback is the classic
+ * cause of dropouts. There is nothing to protect atomically across these values
+ * either: a tone whose frequency lands one buffer before its amplitude is
+ * inaudible at these durations.
+ *
+ * The atomics do not make the whole class thread safe, and it is not:
+ *
+ * - The IBuzzerDrv methods must be called from one serialized context only.
+ *   Today that is guaranteed by the melody service, which holds its mutex over
+ *   every call. They are not safe to call concurrently: m_dutyCycle is a plain
+ *   member, and the lazy open in play() is a check-then-act on m_audioState, so
+ *   two concurrent callers could open two audio devices and leak one of them.
+ * - The simulator user interface runs in its own thread and may therefore only
+ *   use setMuted(), isMuted() and isAudioAvailable(), which touch nothing but
+ *   atomics. Anything else, for example a test tone button, has to be
+ *   serialized against the melody service first.
  */
 class BuzzerDrv : public IBuzzerDrv
 {

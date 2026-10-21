@@ -127,10 +127,12 @@ void BuzzerDrv::stop()
 
 void BuzzerDrv::play(uint32_t freq)
 {
-    /* The first tone opens the audio device. A frequency of 0 means silence and
-     * is not worth opening it for.
+    /* The first audible tone opens the audio device. A frequency of 0 means
+     * silence and a duty cycle of 0 means no amplitude, so neither is worth
+     * claiming the playback device of the host for. The melody service asks for
+     * a duty cycle of 0 whenever a melody is played with volume 0.
      */
-    if ((0U < freq) && (AUDIO_STATE_CLOSED == m_audioState))
+    if ((0U < freq) && (0U < m_dutyCycle) && (AUDIO_STATE_CLOSED == m_audioState))
     {
         (void)openAudio();
     }
