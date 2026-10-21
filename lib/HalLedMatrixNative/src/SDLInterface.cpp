@@ -178,7 +178,15 @@ void SDLInterface::shutdown()
 
     if (false != m_sdl_initialized)
     {
-        SDL_Quit();
+        /* Only the video subsystem is released, because only that one was
+         * initialized here. SDL_Quit() would tear down every subsystem,
+         * regardless of its reference count, and the buzzer driver owns the
+         * audio subsystem independently. Note that shutdown() is not only
+         * called at the end of the application, but also when the window or
+         * the renderer could not be created, while the application
+         * deliberately keeps running.
+         */
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         m_sdl_initialized = false;
     }
 }
