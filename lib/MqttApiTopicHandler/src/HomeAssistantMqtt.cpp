@@ -111,16 +111,10 @@ void HomeAssistantMqtt::start()
     {
         LOG_ERROR("Couldn't register HA discovery enable setting.");
     }
-    else if (false == settings.open(true))
-    {
-        LOG_ERROR("Couldn't open settings.");
-    }
     else
     {
-        m_haDiscoveryPrefix  = m_haDiscoveryPrefixSetting.getValue();
-        m_haDiscoveryEnabled = m_haDiscoveryEnabledSetting.getValue();
-
-        settings.close();
+        m_haDiscoveryPrefix  = m_haDiscoveryPrefixSetting.getValueFromRam();
+        m_haDiscoveryEnabled = m_haDiscoveryEnabledSetting.getValueFromRam();
     }
 }
 

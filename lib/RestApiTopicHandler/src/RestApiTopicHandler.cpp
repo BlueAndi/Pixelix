@@ -68,24 +68,6 @@
  * Public Methods
  *****************************************************************************/
 
-void RestApiTopicHandler::start()
-{
-    SettingsService& settings = SettingsService::getInstance();
-
-    if (false == settings.open(true))
-    {
-        m_webLoginUser     = settings.getWebLoginUser().getDefault();
-        m_webLoginPassword = settings.getWebLoginPassword().getDefault();
-    }
-    else
-    {
-        m_webLoginUser     = settings.getWebLoginUser().getValue();
-        m_webLoginPassword = settings.getWebLoginPassword().getValue();
-
-        settings.close();
-    }
-}
-
 void RestApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
     /* A REST API URI is unique by its entity id and topic. */
@@ -122,7 +104,10 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
             topicMetaData->webHandler    = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload, onBody);
 
             /* Enable basic authentication. */
-            topicMetaData->webHandler->setAuthentication(m_webLoginUser, m_webLoginPassword);
+            SettingsService& settings    = SettingsService::getInstance();
+            topicMetaData->webHandler->setAuthentication(
+                settings.getWebLoginUser().getValueFromRam(),
+                settings.getWebLoginPassword().getValueFromRam());
 
             LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 

@@ -64,6 +64,7 @@ static void testStringValue();
 static void testNumberValues();
 static void testBoolValue();
 static void testUniqueId();
+static void testRamMirror();
 static void testClear();
 
 /******************************************************************************
@@ -109,6 +110,7 @@ extern int main(int argc, char** argv)
     RUN_TEST(testNumberValues);
     RUN_TEST(testBoolValue);
     RUN_TEST(testUniqueId);
+    RUN_TEST(testRamMirror);
     RUN_TEST(testClear);
 
     return UNITY_END();
@@ -153,7 +155,12 @@ static void testServiceLifecycle()
     /* The instance is a singleton. */
     TEST_ASSERT_EQUAL_PTR(&settings, &SettingsService::getInstance());
 
+    TEST_ASSERT_TRUE(settings.open(false));
+    settings.getHostname().setValue("startup-mirror");
+    settings.close();
+
     TEST_ASSERT_TRUE(settings.start());
+    TEST_ASSERT_EQUAL_STRING("startup-mirror", settings.getHostname().getValueFromRam().c_str());
     settings.process();
     settings.stop();
 
@@ -328,6 +335,7 @@ static void testStringValue()
     /* Without any open persistent storage the value can not be changed. */
     hostname.setValue("notStored");
     TEST_ASSERT_EQUAL_STRING(hostname.getDefault().c_str(), hostname.getValue().c_str());
+    TEST_ASSERT_EQUAL_STRING(hostname.getDefault().c_str(), hostname.getValueFromRam().c_str());
 
     /* Store and read it back. */
     TEST_ASSERT_TRUE(settings.open(false));
@@ -425,6 +433,52 @@ static void testUniqueId()
 }
 
 /**
+ * Test loading settings into the RAM mirror.
+ */
+static void testRamMirror()
+{
+    SettingsService& settings       = SettingsService::getInstance();
+    KeyValueString&  hostname       = settings.getHostname();
+    KeyValueUInt8&   brightness     = settings.getBrightness();
+    KeyValueUInt32&  scrollPause    = settings.getScrollPause();
+    KeyValueInt32&   gradientOffset = settings.getLinearGradientOffset();
+    KeyValueBool&    quietMode      = settings.getQuietMode();
+    String           mirroredDefault;
+    String           mirroredHostname;
+
+    TEST_ASSERT_TRUE(settings.open(false));
+
+    hostname.setUniqueId("-mirror");
+    settings.updateRamMirror();
+    mirroredDefault = hostname.getValueFromRam();
+
+    hostname.setValue("pixelix-mirror-test");
+    brightness.setValue(42U);
+    scrollPause.setValue(1234U);
+    gradientOffset.setValue(-12);
+    quietMode.setValue(true);
+
+    TEST_ASSERT_EQUAL_STRING("pixelix-mirror-test", hostname.getValueFromRam().c_str());
+    TEST_ASSERT_EQUAL_UINT8(42U, brightness.getValueFromRam());
+    TEST_ASSERT_EQUAL_UINT32(1234U, scrollPause.getValueFromRam());
+    TEST_ASSERT_EQUAL_INT32(-12, gradientOffset.getValueFromRam());
+    TEST_ASSERT_TRUE(quietMode.getValueFromRam());
+
+    settings.updateRamMirror();
+
+    mirroredHostname = hostname.getValueFromRam();
+    settings.close();
+    hostname.setUniqueId("");
+
+    TEST_ASSERT_EQUAL_STRING((String("pixelix") + "-mirror").c_str(), mirroredDefault.c_str());
+    TEST_ASSERT_EQUAL_STRING("pixelix-mirror-test", mirroredHostname.c_str());
+    TEST_ASSERT_EQUAL_UINT8(42U, brightness.getValueFromRam());
+    TEST_ASSERT_EQUAL_UINT32(1234U, scrollPause.getValueFromRam());
+    TEST_ASSERT_EQUAL_INT32(-12, gradientOffset.getValueFromRam());
+    TEST_ASSERT_TRUE(quietMode.getValueFromRam());
+}
+
+/**
  * Test to clear all settings.
  */
 static void testClear()
@@ -443,6 +497,8 @@ static void testClear()
     /* Clearing requires write access. */
     TEST_ASSERT_TRUE(settings.open(false));
     TEST_ASSERT_TRUE(settings.clear());
+    TEST_ASSERT_EQUAL_STRING(hostname.getDefault().c_str(), hostname.getValueFromRam().c_str());
+    TEST_ASSERT_EQUAL_UINT8(brightness.getDefault(), brightness.getValueFromRam());
     settings.close();
 
     /* Every setting is back to its factory default. */

@@ -232,16 +232,7 @@ void Topics::begin()
     PsramJsonDocument jsonDocExtra(JSON_DOC_SIZE);
     size_t            idx;
 
-    if (false == settings.open(true))
-    {
-        gDeviceId = settings.getHostname().getDefault();
-    }
-    else
-    {
-        gDeviceId = settings.getHostname().getValue();
-
-        settings.close();
-    }
+    gDeviceId = settings.getHostname().getValueFromRam();
 
 #if (0 != CONFIG_MELODY_SERVICE_ENABLE)
 

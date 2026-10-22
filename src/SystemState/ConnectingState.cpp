@@ -75,25 +75,14 @@
 
 void ConnectingState::entry(StateMachine& sm)
 {
-    SettingsService& settings = SettingsService::getInstance();
+    SettingsService& settings       = SettingsService::getInstance();
+    const String     wifiSSID       = settings.getWifiSSID().getValueFromRam();
+    const String     wifiPassphrase = settings.getWifiPassphrase().getValueFromRam();
 
     /* Are remote wifi network informations available? */
-    if (true == settings.open(true))
-    {
-        m_wifiSSID       = settings.getWifiSSID().getValue();
-        m_wifiPassphrase = settings.getWifiPassphrase().getValue();
-        m_isQuiet        = settings.getQuietMode().getValue();
-
-        settings.close();
-    }
-    else
-    {
-        m_isQuiet = settings.getQuietMode().getDefault();
-    }
-
     /* No remote wifi network informations available? */
-    if ((0 == m_wifiSSID.length()) ||
-        (0 == m_wifiPassphrase.length()))
+    if ((0 == wifiSSID.length()) ||
+        (0 == wifiPassphrase.length()))
     {
         String infoStr = "No wifi SSID/password set. Reboot to spawn the wifi access point.";
 
@@ -129,23 +118,27 @@ void ConnectingState::process(StateMachine& sm)
     /* No retry mechanism is running? */
     if (false == m_retryTimer.isTimerRunning())
     {
-        const uint32_t DURATION_NON_SCROLLING  = 4000U; /* ms */
-        const uint32_t SCROLLING_REPEAT_NUM    = 1U;
-        wl_status_t    status                  = WL_IDLE_STATUS;
-        String         infoStr                 = "Connecting to ";
+        SettingsService& settings                = SettingsService::getInstance();
+        const String     wifiSSID                = settings.getWifiSSID().getValueFromRam();
+        const String     wifiPassphrase          = settings.getWifiPassphrase().getValueFromRam();
+        const bool       isQuiet                 = settings.getQuietMode().getValueFromRam();
+        const uint32_t   DURATION_NON_SCROLLING  = 4000U; /* ms */
+        const uint32_t   SCROLLING_REPEAT_NUM    = 1U;
+        wl_status_t      status                  = WL_IDLE_STATUS;
+        String           infoStr                 = "Connecting to ";
 
-        infoStr                               += m_wifiSSID;
-        infoStr                               += " ...";
+        infoStr                                 += wifiSSID;
+        infoStr                                 += " ...";
 
         LOG_INFO(infoStr);
 
-        if (false == m_isQuiet)
+        if (false == isQuiet)
         {
             SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
         }
 
         /* Remote wifi network informations are available, try to establish a connection. */
-        status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());
+        status = WiFi.begin(wifiSSID.c_str(), wifiPassphrase.c_str());
 
         /* Connection establishment pending? */
         if (WL_CONNECTED != status)

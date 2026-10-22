@@ -111,6 +111,12 @@ public:
      */
     virtual const char* getKey() const  = 0;
 
+    /**
+     * Update the RAM mirror with the current value from storage.
+     * The storage must be opened before calling this function.
+     */
+    virtual void updateRamMirror()      = 0;
+
 protected:
 
     Preferences* m_preferences; /**< Persistent storage */
@@ -231,14 +237,16 @@ public:
     }
 
     /**
-     * Get value.
+     * Get value from storage.
+     * The storage must be opened before calling this function.
      *
      * @return Value
      */
     virtual T getValue() const     = 0;
 
     /**
-     * Set value.
+     * Set value to storage.
+     * The storage must be opened before calling this function.
      *
      * @param[in] value Value
      */
@@ -254,13 +262,24 @@ public:
         return m_defValue;
     }
 
+    /**
+     * Get value from RAM mirror.
+     *
+     * @return Value from RAM mirror
+     */
+    T getValueFromRam() const
+    {
+        return m_value;
+    }
+
 protected:
 
     const char* m_key;      /**< Key */
     const char* m_name;     /**< Name */
     T           m_defValue; /**< Default value */
-    T           m_min;      /**< Min. length */
-    T           m_max;      /**< Max. length */
+    T           m_min;      /**< Minimum value */
+    T           m_max;      /**< Maximum value */
+    T           m_value;    /**< Current value (RAM mirror) */
 
 private:
 

@@ -96,7 +96,8 @@ public:
         m_name(name),
         m_defValue(defValue),
         m_min(min),
-        m_max(max)
+        m_max(max),
+        m_value(defValue)
     {
     }
 
@@ -138,6 +139,15 @@ public:
     }
 
     /**
+     * Update the RAM mirror with the current value from storage.
+     * The storage must be opened before calling this function.
+     */
+    void updateRamMirror() final
+    {
+        m_value = m_preferences->getString(m_key, getDefault());
+    }
+
+    /**
      * Get minimum string length.
      *
      * @return Minimum string length
@@ -158,7 +168,8 @@ public:
     }
 
     /**
-     * Get value.
+     * Get value from storage.
+     * The storage must be opened before calling this function.
      *
      * @return Value
      */
@@ -168,13 +179,19 @@ public:
     }
 
     /**
-     * Set value.
+     * Set value to storage.
+     * The storage must be opened before calling this function.
      *
      * @param[in] value Value
      */
     void setValue(const String& value)
     {
-        m_preferences->putString(m_key, value);
+        size_t bytesWritten = m_preferences->putString(m_key, value);
+
+        if (0U < bytesWritten)
+        {
+            m_value = value;
+        }
     }
 
     /**
@@ -187,6 +204,16 @@ public:
         return String(m_defValue);
     }
 
+    /**
+     * Get value from RAM mirror.
+     *
+     * @return Value from RAM mirror
+     */
+    String getValueFromRam() const
+    {
+        return m_value;
+    }
+
 private:
 
     const char* m_key;      /**< Key */
@@ -194,6 +221,7 @@ private:
     const char* m_defValue; /**< Default value */
     size_t      m_min;      /**< Min. length */
     size_t      m_max;      /**< Max. length */
+    String      m_value;    /**< Current value (RAM mirror) */
 
     /* An instance shall not be copied. */
     KeyValueJson(const KeyValueJson& kv);

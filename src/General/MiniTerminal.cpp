@@ -325,18 +325,10 @@ void MiniTerminal::cmdGetHostname(const char* par)
 
     UTIL_NOT_USED(par);
 
-    if (false == settings.open(true))
-    {
-        writeError("Failed to open settings.\n");
-    }
-    else
-    {
-        String result(settings.getHostname().getValue());
-        settings.close();
-        result += "\n";
+    String result(settings.getHostname().getValueFromRam());
+    result += "\n";
 
-        writeSuccessful(result.c_str());
-    }
+    writeSuccessful(result.c_str());
 }
 
 void MiniTerminal::cmdGetStatus(const char* par)

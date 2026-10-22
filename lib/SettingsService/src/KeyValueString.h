@@ -78,7 +78,8 @@ public:
         m_defValue(defValue),
         m_min(min),
         m_max(max),
-        m_isSecret(isSecret)
+        m_isSecret(isSecret),
+        m_value(defValue)
     {
     }
 
@@ -100,7 +101,8 @@ public:
         m_defValue(defValue),
         m_min(min),
         m_max(max),
-        m_isSecret(isSecret)
+        m_isSecret(isSecret),
+        m_value(defValue)
     {
     }
 
@@ -142,6 +144,16 @@ public:
     }
 
     /**
+     * Update the RAM mirror with the current value from storage.
+     * The storage must be opened before calling this function.
+     * The default value includes the unique id when no value is stored.
+     */
+    void updateRamMirror() final
+    {
+        m_value = m_preferences->getString(m_key, getDefault());
+    }
+
+    /**
      * Get minimum string length.
      *
      * @return Minimum string length
@@ -162,7 +174,8 @@ public:
     }
 
     /**
-     * Get value.
+     * Get value from storage.
+     * The storage must be opened before calling this function.
      *
      * @return Value
      */
@@ -172,13 +185,19 @@ public:
     }
 
     /**
-     * Set value.
+     * Set value to storage.
+     * The storage must be opened before calling this function.
      *
      * @param[in] value Value
      */
     void setValue(const String& value)
     {
-        m_preferences->putString(m_key, value);
+        size_t bytesWritten = m_preferences->putString(m_key, value);
+
+        if (0U < bytesWritten)
+        {
+            m_value = value;
+        }
     }
 
     /**
@@ -212,7 +231,25 @@ public:
      */
     void setUniqueId(const String& uniqueId)
     {
-        m_uniqueId = uniqueId;
+        const String oldDefault = getDefault();
+        bool         isDefault  = (m_value == oldDefault);
+
+        m_uniqueId              = uniqueId;
+
+        if (true == isDefault)
+        {
+            m_value = getDefault();
+        }
+    }
+
+    /**
+     * Get value from RAM mirror.
+     *
+     * @return Value from RAM mirror
+     */
+    String getValueFromRam() const
+    {
+        return m_value;
     }
 
 private:
@@ -224,6 +261,7 @@ private:
     const size_t m_max;      /**< Max. length */
     const bool   m_isSecret; /**< Is the value a secret value? */
     String       m_uniqueId; /**< Unique id to make the default value unique. */
+    String       m_value;    /**< Current value (RAM mirror) */
 
     /* An instance shall not be copied. */
     KeyValueString(const KeyValueString& kv);

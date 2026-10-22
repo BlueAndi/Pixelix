@@ -478,6 +478,17 @@ static const uint32_t   MAX_VALUE_LINEAR_GRADIENT_LENGTH    = UINT16_MAX;
 
 bool SettingsService::start()
 {
+    if (false == open(true))
+    {
+        LOG_WARNING("Couldn't initialize settings RAM mirror. Using defaults.");
+        m_isRamMirrorInitialized = true;
+    }
+    else
+    {
+        updateRamMirror();
+        close();
+    }
+
     LOG_INFO("Settings service started.");
 
     return true;
@@ -563,6 +574,21 @@ void SettingsService::cleanUp()
     }
 }
 
+void SettingsService::updateRamMirror()
+{
+    std::vector<KeyValue*>::const_iterator it;
+
+    for (it = m_keyValueList.begin(); it != m_keyValueList.end(); ++it)
+    {
+        if (nullptr != *it)
+        {
+            (*it)->updateRamMirror();
+        }
+    }
+
+    m_isRamMirrorInitialized = true;
+}
+
 KeyValue* SettingsService::getSettingByKey(const char* key)
 {
     std::vector<KeyValue*>::const_iterator it;
@@ -594,6 +620,19 @@ bool SettingsService::registerSetting(KeyValue* setting)
         {
             setting->setPersistentStorage(m_preferences);
             m_keyValueList.push_back(setting);
+
+            if (true == m_isRamMirrorInitialized)
+            {
+                if (false == open(true))
+                {
+                    LOG_WARNING("Couldn't initialize RAM mirror for setting %s.", setting->getKey());
+                }
+                else
+                {
+                    setting->updateRamMirror();
+                    close();
+                }
+            }
 
             isSuccessful = true;
         }
@@ -632,6 +671,7 @@ void SettingsService::unregisterSetting(KeyValue* setting)
 SettingsService::SettingsService() :
     m_preferences(),
     m_keyValueList(),
+    m_isRamMirrorInitialized(false),
     m_version                   (m_preferences, KEY_VERSION,                    NAME_VERSION,                   DEFAULT_VERSION,                MIN_VALUE_VERSION,                  MAX_VALUE_VERSION),
     m_wifiSSID                  (m_preferences, KEY_WIFI_SSID,                  NAME_WIFI_SSID,                 DEFAULT_WIFI_SSID,              MIN_VALUE_WIFI_SSID,                MAX_VALUE_WIFI_SSID),
     m_wifiPassphrase            (m_preferences, KEY_WIFI_PASSPHRASE,            NAME_WIFI_PASSPHRASE,           DEFAULT_WIFI_PASSPHRASE,        MIN_VALUE_WIFI_PASSPHRASE,          MAX_VALUE_WIFI_PASSPHRASE,      true),

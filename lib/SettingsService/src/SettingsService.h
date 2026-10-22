@@ -129,6 +129,12 @@ public:
     void cleanUp();
 
     /**
+     * Update the RAM mirror of all key value pairs with the current values from storage.
+     * The storage must be opened before calling this function.
+     */
+    void updateRamMirror();
+
+    /**
      * Get key value pair by key.
      *
      * @param key The key is used to search for the right key value pair.
@@ -173,7 +179,14 @@ public:
      */
     bool clear()
     {
-        return m_preferences.clear();
+        bool isSuccessful = m_preferences.clear();
+
+        if (true == isSuccessful)
+        {
+            updateRamMirror();
+        }
+
+        return isSuccessful;
     }
 
     /**
@@ -437,8 +450,9 @@ public:
 
 private:
 
-    Preferences            m_preferences;  /**< Persistent storage */
-    std::vector<KeyValue*> m_keyValueList; /**< List of key/value pairs, stored in persistent storage. */
+    Preferences            m_preferences;            /**< Persistent storage */
+    std::vector<KeyValue*> m_keyValueList;           /**< List of key/value pairs, stored in persistent storage. */
+    bool                   m_isRamMirrorInitialized; /**< RAM mirror has been initialized. */
 
     KeyValueUInt32         m_version;                /**< Settings version (just an consequtive incremented number) */
     KeyValueString         m_wifiSSID;               /**< Remote wifi network SSID */

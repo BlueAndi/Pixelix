@@ -198,18 +198,8 @@ void RestApi::init(AsyncWebServer& srv)
     String           webLoginPassword;
     SettingsService& settings = SettingsService::getInstance();
 
-    if (false == settings.open(true))
-    {
-        webLoginUser     = settings.getWebLoginUser().getDefault();
-        webLoginPassword = settings.getWebLoginPassword().getDefault();
-    }
-    else
-    {
-        webLoginUser     = settings.getWebLoginUser().getValue();
-        webLoginPassword = settings.getWebLoginPassword().getValue();
-
-        settings.close();
-    }
+    webLoginUser              = settings.getWebLoginUser().getValueFromRam();
+    webLoginPassword          = settings.getWebLoginPassword().getValueFromRam();
 
     /* Register all REST API routes. */
     for (size_t idx = 0; idx < UTIL_ARRAY_NUM(gRestApiRoutes); ++idx)
@@ -920,11 +910,6 @@ static void handleSetting(AsyncWebServerRequest* request)
             RestUtil::prepareRspError(jsonDoc, "Key is missing.");
             httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
-        else if (false == settings.open(true))
-        {
-            RestUtil::prepareRspError(jsonDoc, "Internal error.");
-            httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
-        }
         else
         {
             const String& key     = request->arg("key");
@@ -947,7 +932,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_STRING: {
                     KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
 
-                    dataObj["value"]      = kvStr->getValue();
+                    dataObj["value"]      = kvStr->getValueFromRam();
                     dataObj["minlength"]  = kvStr->getMinLength();
                     dataObj["maxlength"]  = kvStr->getMaxLength();
                     dataObj["isSecret"]   = kvStr->isSecret();
@@ -957,14 +942,14 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_BOOL: {
                     KeyValueBool* kvBool = static_cast<KeyValueBool*>(setting);
 
-                    dataObj["value"]     = kvBool->getValue();
+                    dataObj["value"]     = kvBool->getValueFromRam();
                 }
                 break;
 
                 case KeyValue::TYPE_UINT8: {
                     KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(setting);
 
-                    dataObj["value"]       = kvUInt8->getValue();
+                    dataObj["value"]       = kvUInt8->getValueFromRam();
                     dataObj["min"]         = kvUInt8->getMin();
                     dataObj["max"]         = kvUInt8->getMax();
                 }
@@ -973,7 +958,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_INT32: {
                     KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(setting);
 
-                    dataObj["value"]       = kvInt32->getValue();
+                    dataObj["value"]       = kvInt32->getValueFromRam();
                     dataObj["min"]         = kvInt32->getMin();
                     dataObj["max"]         = kvInt32->getMax();
                 }
@@ -983,7 +968,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                     KeyValueJson*        kvJson   = static_cast<KeyValueJson*>(setting);
                     JsonObject           valueObj = dataObj.createNestedObject("value");
                     PsramJsonDocument    jsonBuffer(JSON_DOC_SIZE);
-                    DeserializationError error = deserializeJson(jsonBuffer, kvJson->getValue());
+                    DeserializationError error = deserializeJson(jsonBuffer, kvJson->getValueFromRam());
 
                     if (DeserializationError::Ok != error.code())
                     {
@@ -1003,7 +988,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_UINT32: {
                     KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(setting);
 
-                    dataObj["value"]         = kvUInt32->getValue();
+                    dataObj["value"]         = kvUInt32->getValueFromRam();
                     dataObj["min"]           = kvUInt32->getMin();
                     dataObj["max"]           = kvUInt32->getMax();
                 }
@@ -1013,8 +998,6 @@ static void handleSetting(AsyncWebServerRequest* request)
                     break;
                 }
             }
-
-            settings.close();
         }
     }
     else if (HTTP_POST == request->method())
@@ -1333,15 +1316,7 @@ static void handleDevice(AsyncWebServerRequest* request)
 
         systemDrv.getChipId(chipIdStr);
 
-        if (false == settings.open(true))
-        {
-            hostname = settings.getHostname().getDefault();
-        }
-        else
-        {
-            hostname = settings.getHostname().getValue();
-            settings.close();
-        }
+        hostname               = settings.getHostname().getValueFromRam();
 
         /* The id is required for identification in Home Assistant.
          * Its used by the Home Assistant integration to uniquely identify the device.
@@ -2084,20 +2059,15 @@ static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus()
     {
         if (KeyValue::TYPE_BOOL == kvHomeAssistantEnableDiscovery->getValueType())
         {
-            if (true == settings.open(true))
+            KeyValueBool* homeAssistantEnableDiscovery = static_cast<KeyValueBool*>(kvHomeAssistantEnableDiscovery);
+
+            if (true == homeAssistantEnableDiscovery->getValueFromRam())
             {
-                KeyValueBool* homeAssistantEnableDiscovery = static_cast<KeyValueBool*>(kvHomeAssistantEnableDiscovery);
-
-                if (true == homeAssistantEnableDiscovery->getValue())
-                {
-                    status = HA_ENABLED;
-                }
-                else
-                {
-                    status = HA_DISABLED;
-                }
-
-                settings.close();
+                status = HA_ENABLED;
+            }
+            else
+            {
+                status = HA_DISABLED;
             }
         }
     }

@@ -71,7 +71,8 @@ public:
      * @param[in] max       Maximum value
      */
     KeyValueUInt8(const char* key, const char* name, uint8_t defValue, size_t min, size_t max) :
-        KeyValueNumber(key, name, defValue, min, max)
+        KeyValueNumber(key, name, defValue, min, max),
+        m_value(defValue)
     {
     }
 
@@ -86,7 +87,8 @@ public:
      * @param[in] max       Maximum value
      */
     KeyValueUInt8(Preferences& pref, const char* key, const char* name, uint8_t defValue, size_t min, size_t max) :
-        KeyValueNumber(pref, key, name, defValue, min, max)
+        KeyValueNumber(pref, key, name, defValue, min, max),
+        m_value(defValue)
     {
     }
 
@@ -108,7 +110,17 @@ public:
     }
 
     /**
-     * Get value.
+     * Update the RAM mirror with the current value from storage.
+     * The storage must be opened before calling this function.
+     */
+    void updateRamMirror() final
+    {
+        m_value = m_preferences->getUChar(m_key, m_defValue);
+    }
+
+    /**
+     * Get value from storage.
+     * The storage must be opened before calling this function.
      *
      * @return Value
      */
@@ -118,16 +130,34 @@ public:
     }
 
     /**
-     * Set value.
+     * Set value to storage.
+     * The storage must be opened before calling this function.
      *
      * @param[in] value Value
      */
     void setValue(uint8_t value) final
     {
-        m_preferences->putUChar(m_key, value);
+        size_t bytesWritten = m_preferences->putUChar(m_key, value);
+
+        if (0U < bytesWritten)
+        {
+            m_value = value;
+        }
+    }
+
+    /**
+     * Get value from RAM mirror.
+     *
+     * @return Value from RAM mirror
+     */
+    uint8_t getValueFromRam() const
+    {
+        return m_value;
     }
 
 private:
+
+    uint8_t m_value; /**< Current value (RAM mirror) */
 
     /* An instance shall not be copied. */
     KeyValueUInt8(const KeyValueUInt8& kv);

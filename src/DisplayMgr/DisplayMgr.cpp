@@ -88,34 +88,20 @@ bool DisplayMgr::begin()
     SettingsService& settings                      = SettingsService::getInstance();
     BrightnessCtrl&  brightnessCtrl                = BrightnessCtrl::getInstance();
 
-    if (false == settings.open(true))
-    {
-        maxSlots                      = settings.getMaxSlots().getDefault();
-        brightnessPercent             = settings.getBrightness().getDefault();
-        minBrightnessSoftLimitPercent = settings.getMinBrightnessSoftLimit().getDefault();
-        maxBrightnessSoftLimitPercent = settings.getMaxBrightnessSoftLimit().getDefault();
-        isAutoBrightnessEnabled       = settings.getAutoBrightnessAdjustment().getDefault();
-        fadeEffect                    = settings.getFadeEffect().getDefault();
-    }
-    else
-    {
-        maxSlots                      = settings.getMaxSlots().getValue();
-        brightnessPercent             = settings.getBrightness().getValue();
-        minBrightnessSoftLimitPercent = settings.getMinBrightnessSoftLimit().getValue();
-        maxBrightnessSoftLimitPercent = settings.getMaxBrightnessSoftLimit().getValue();
-        isAutoBrightnessEnabled       = settings.getAutoBrightnessAdjustment().getValue();
-        fadeEffect                    = settings.getFadeEffect().getValue();
-
-        settings.close();
-    }
+    maxSlots                                       = settings.getMaxSlots().getValueFromRam();
+    brightnessPercent                              = settings.getBrightness().getValueFromRam();
+    minBrightnessSoftLimitPercent                  = settings.getMinBrightnessSoftLimit().getValueFromRam();
+    maxBrightnessSoftLimitPercent                  = settings.getMaxBrightnessSoftLimit().getValueFromRam();
+    isAutoBrightnessEnabled                        = settings.getAutoBrightnessAdjustment().getValueFromRam();
+    fadeEffect                                     = settings.getFadeEffect().getValueFromRam();
 
     /* Derive the hard limits from the min. and max. brightness values. */
-    minBrightnessHardLimitPercent = settings.getBrightness().getMin();
-    maxBrightnessHardLimitPercent = settings.getBrightness().getMax();
-    minBrightnessHardLimit        = (static_cast<uint16_t>(minBrightnessHardLimitPercent) * UINT8_MAX) / PERCENT_100;
-    maxBrightnessHardLimit        = (static_cast<uint16_t>(maxBrightnessHardLimitPercent) * UINT8_MAX) / PERCENT_100;
-    minBrightnessSoftLimit        = (static_cast<uint16_t>(minBrightnessSoftLimitPercent) * UINT8_MAX) / PERCENT_100;
-    maxBrightnessSoftLimit        = (static_cast<uint16_t>(maxBrightnessSoftLimitPercent) * UINT8_MAX) / PERCENT_100;
+    minBrightnessHardLimitPercent                  = settings.getBrightness().getMin();
+    maxBrightnessHardLimitPercent                  = settings.getBrightness().getMax();
+    minBrightnessHardLimit                         = (static_cast<uint16_t>(minBrightnessHardLimitPercent) * UINT8_MAX) / PERCENT_100;
+    maxBrightnessHardLimit                         = (static_cast<uint16_t>(maxBrightnessHardLimitPercent) * UINT8_MAX) / PERCENT_100;
+    minBrightnessSoftLimit                         = (static_cast<uint16_t>(minBrightnessSoftLimitPercent) * UINT8_MAX) / PERCENT_100;
+    maxBrightnessSoftLimit                         = (static_cast<uint16_t>(maxBrightnessSoftLimitPercent) * UINT8_MAX) / PERCENT_100;
 
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.

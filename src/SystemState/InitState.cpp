@@ -232,35 +232,18 @@ void InitState::entry(StateMachine& sm)
             settings.close();
         }
 
-        /* Load some general configuration parameters from persistent memory. */
-        if (true == settings.open(true))
+        /* Remember whether the device is able to connect to a remote wifi
+         * network at all. Without credentials the wifi access point is the
+         * only way for the user to configure the device.
+         */
+        m_hasWifiCredentials = (false == settings.getWifiSSID().getValueFromRam().isEmpty()) &&
+                               (false == settings.getWifiPassphrase().getValueFromRam().isEmpty());
+
+        /* Set text scroll pause for all text widgets. */
+        uint32_t scrollPause = settings.getScrollPause().getValueFromRam();
+        if (false == ScrollContainer::setScrollPause(scrollPause))
         {
-            /* Set text scroll pause for all text widgets. */
-            uint32_t scrollPause = settings.getScrollPause().getValue();
-            if (false == ScrollContainer::setScrollPause(scrollPause))
-            {
-                LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
-            }
-
-            m_isQuiet            = settings.getQuietMode().getValue();
-
-            /* Remember whether the device is able to connect to a remote wifi
-             * network at all. Without credentials the wifi access point is the
-             * only way for the user to configure the device.
-             */
-            m_hasWifiCredentials = (false == settings.getWifiSSID().getValue().isEmpty()) &&
-                                   (false == settings.getWifiPassphrase().getValue().isEmpty());
-
-            settings.close();
-        }
-        else
-        {
-            m_isQuiet            = settings.getQuietMode().getDefault();
-
-            /* Without readable settings no remote wifi network connection is
-             * possible, therefore the wifi access point is used.
-             */
-            m_hasWifiCredentials = false;
+            LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
         }
 
         configureViews();
@@ -272,7 +255,7 @@ void InitState::entry(StateMachine& sm)
         WiFi.persistent(false);
 
         /* Show some informations on the display. */
-        showStartupInfoOnDisplay(m_isQuiet);
+        showStartupInfoOnDisplay(settings.getQuietMode().getValueFromRam());
 
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (false == isFsCompatible())
@@ -285,7 +268,7 @@ void InitState::entry(StateMachine& sm)
 
             LOG_WARNING(errMsg);
 
-            if (false == m_isQuiet)
+            if (false == settings.getQuietMode().getValueFromRam())
             {
                 SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
                 SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
@@ -378,21 +361,7 @@ void InitState::exit(StateMachine& sm)
     {
         SettingsService& settings = SettingsService::getInstance();
         wifi_mode_t      wifiMode = WIFI_MODE_NULL;
-        String           hostname;
-
-        /* Get hostname for mDNS. */
-        if (false == settings.open(true))
-        {
-            LOG_WARNING("Use default hostname.");
-
-            hostname = settings.getHostname().getDefault();
-        }
-        else
-        {
-            hostname = settings.getHostname().getValue();
-
-            settings.close();
-        }
+        String           hostname = settings.getHostname().getValueFromRam();
 
         /* Start wifi and initialize the LwIP stack here. */
         if (false == m_isApModeRequested)
@@ -442,7 +411,7 @@ void InitState::exit(StateMachine& sm)
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
             {
-                if (false == m_isQuiet)
+                if (false == settings.getQuietMode().getValueFromRam())
                 {
                     const uint32_t MIN_WAIT_TIME = 500U; /* Min. wait time in ms to avoid splash screen. */
 
@@ -656,22 +625,17 @@ void InitState::configureViews()
     bool             linearGradientColor1Status = false;
     bool             linearGradientColor2Status = false;
 
-    if (true == settings.open(true))
-    {
-        brushType               = settings.getBrushType().getValue();
-        solidBrushColorStr      = "0x" + settings.getSolidBrushColor().getValue();
-        linearGradientColor1Str = "0x" + settings.getLinearGradientColor1().getValue();
-        linearGradientColor2Str = "0x" + settings.getLinearGradientColor2().getValue();
-        linearGradientOffset    = settings.getLinearGradientOffset().getValue();
-        linearGradientLength    = settings.getLinearGradientLength().getValue();
-        linearGradientVertical  = settings.getLinearGradientVertical().getValue();
+    brushType                                   = settings.getBrushType().getValueFromRam();
+    solidBrushColorStr                          = "0x" + settings.getSolidBrushColor().getValueFromRam();
+    linearGradientColor1Str                     = "0x" + settings.getLinearGradientColor1().getValueFromRam();
+    linearGradientColor2Str                     = "0x" + settings.getLinearGradientColor2().getValueFromRam();
+    linearGradientOffset                        = settings.getLinearGradientOffset().getValueFromRam();
+    linearGradientLength                        = settings.getLinearGradientLength().getValueFromRam();
+    linearGradientVertical                      = settings.getLinearGradientVertical().getValueFromRam();
 
-        settings.close();
-    }
-
-    solidBrushColorStatus      = Util::strToUInt32(solidBrushColorStr, solidBrushColor);
-    linearGradientColor1Status = Util::strToUInt32(linearGradientColor1Str, linearGradientColor1);
-    linearGradientColor2Status = Util::strToUInt32(linearGradientColor2Str, linearGradientColor2);
+    solidBrushColorStatus                       = Util::strToUInt32(solidBrushColorStr, solidBrushColor);
+    linearGradientColor1Status                  = Util::strToUInt32(linearGradientColor1Str, linearGradientColor1);
+    linearGradientColor2Status                  = Util::strToUInt32(linearGradientColor2Str, linearGradientColor2);
 
     if (true == solidBrushColorStatus)
     {
@@ -708,21 +672,8 @@ void InitState::initClockDrv()
     String           timeZone;
     String           ntpServerAddress;
 
-    /* Get the time zone and the NTP server address from persistent memory. */
-    if (false == settings.open(true))
-    {
-        LOG_WARNING("Use default values for NTP request.");
-
-        timeZone         = settings.getTimeZone().getDefault();
-        ntpServerAddress = settings.getNTPServerAddress().getDefault();
-    }
-    else
-    {
-        timeZone         = settings.getTimeZone().getValue();
-        ntpServerAddress = settings.getNTPServerAddress().getValue();
-
-        settings.close();
-    }
+    timeZone         = settings.getTimeZone().getValueFromRam();
+    ntpServerAddress = settings.getNTPServerAddress().getValueFromRam();
 
     if (true == timeZone.isEmpty())
     {

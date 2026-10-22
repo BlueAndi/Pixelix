@@ -157,21 +157,13 @@ String CaptivePortalHandler::captivePortalPageProcessor(const String& var)
     {
         SettingsService& settings = SettingsService::getInstance();
 
-        if (true == settings.open(true))
-        {
-            result = settings.getWifiSSID().getValue();
-            settings.close();
-        }
+        result                    = settings.getWifiSSID().getValueFromRam();
     }
     else if (var == "PASSPHRASE")
     {
         SettingsService& settings = SettingsService::getInstance();
 
-        if (true == settings.open(true))
-        {
-            result = settings.getWifiPassphrase().getValue();
-            settings.close();
-        }
+        result                    = settings.getWifiPassphrase().getValueFromRam();
     }
     else if (var == "MAC_ADDR")
     {

@@ -78,16 +78,7 @@ void PluginMgr::begin()
 {
     SettingsService& settings = SettingsService::getInstance();
 
-    if (false == settings.open(true))
-    {
-        m_deviceId = settings.getHostname().getDefault();
-    }
-    else
-    {
-        m_deviceId = settings.getHostname().getValue();
-
-        settings.close();
-    }
+    m_deviceId                = settings.getHostname().getValueFromRam();
 
     createPluginConfigDirectory();
 }

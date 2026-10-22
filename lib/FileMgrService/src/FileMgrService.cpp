@@ -108,16 +108,9 @@ bool FileMgrService::start()
 
         return false;
     };
+
     /* Use the hostname as physical device id. */
-    if (false == settings.open(true))
-    {
-        m_deviceId = settings.getHostname().getDefault();
-    }
-    else
-    {
-        m_deviceId = settings.getHostname().getValue();
-        settings.close();
-    }
+    m_deviceId = settings.getHostname().getValueFromRam();
 
     /* Register file upload and file remove topic. */
     topicHandlerService.registerTopic(m_deviceId, ENTITY_ID, TOPIC_FILES, jsonExtra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
