@@ -26,6 +26,7 @@
 # Imports
 ################################################################################
 import subprocess
+import shutil
 import json
 import os
 
@@ -212,15 +213,26 @@ def get_version():
 # Main
 ################################################################################
 
-SOFTWARE_VERSION        = "-DSW_VERSION=" + get_version()
-SOFTWARE_REVISION       = "-DSW_REV=" + get_git_revision_hash()
-SOFTWARE_REVISION_SHORT = "-DSW_REV_SHORT=" + get_git_revision_short_hash()
-SOFTWARE_BRANCH         = "-DSW_BRANCH=" + get_current_git_branch()
+SOFTWARE_VERSION        = "-DSW_VERSION=vX.X.X"                 
+SOFTWARE_REVISION       = "-DSW_REV=0"            
+SOFTWARE_REVISION_SHORT = "-DSW_REV_SHORT=0"
+SOFTWARE_BRANCH         = "-DSW_BRANCH=unknown" 
+
+# Update GIT version information from git if git is installed and sandbox contains a repository.
+if shutil.which("git") is None:
+    print("GIT command is missing, cannot determine versions and branches.")
+elif run_git(["rev-parse",  "--is-inside-work-tree"]) is None:
+    print("Project is without git repository, cannot determine versions and branches.")
+else:
+    SOFTWARE_VERSION        = "-DSW_VERSION=" + get_version()
+    SOFTWARE_REVISION       = "-DSW_REV=" + get_git_revision_hash()
+    SOFTWARE_REVISION_SHORT = "-DSW_REV_SHORT=" + get_git_revision_short_hash()
+    SOFTWARE_BRANCH         = "-DSW_BRANCH=" + get_current_git_branch()
+
+    print("Software version       : " + get_version())
+    print("Software revision long : " + get_git_revision_hash())
+    print("Software revision short: " + get_git_revision_short_hash())
+    print("Software branch        : " + get_current_git_branch())
 
 # pylint: disable=undefined-variable
 env.Append(BUILD_FLAGS=[ SOFTWARE_VERSION, SOFTWARE_REVISION, SOFTWARE_REVISION_SHORT, SOFTWARE_BRANCH ]) # type: ignore
-
-print("Software version       : " + get_version())
-print("Software revision long : " + get_git_revision_hash())
-print("Software revision short: " + get_git_revision_short_hash())
-print("Software branch        : " + get_current_git_branch())
