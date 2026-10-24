@@ -1,0 +1,32 @@
+{
+    "name": "libwebp",
+    "version": "1.6.0",
+    "description": "WebP codec is a library to encode and decode images in WebP format. Pruned to the decoder, the demuxer, the DSP kernels and the utilities. See UPDATING.md.",
+    "authors": [{
+        "name": "Google, Inc.",
+        "url": "https://github.com/webmproject/libwebp",
+        "maintainer": true
+    }],
+    "license": "BSD-3-Clause",
+    "build": {
+        "srcDir": "libwebp",
+        "includeDir": "libwebp/src",
+        "srcFilter": [
+            "+<src/dec/*.c>",
+            "+<src/demux/*.c>",
+            "+<src/dsp/*.c>",
+            "-<src/dsp/*enc*.c>",
+            "-<src/dsp/cost*.c>",
+            "-<src/dsp/ssim*.c>",
+            "+<src/utils/*.c>",
+            "-<src/utils/bit_writer_utils.c>",
+            "-<src/utils/huffman_encode_utils.c>",
+            "-<src/utils/quant_levels_utils.c>"
+        ],
+        "unflags": [
+            "-DHAVE_CONFIG_H"
+        ]
+    },
+    "frameworks": "*",
+    "platforms": "*"
+}

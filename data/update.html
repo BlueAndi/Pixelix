@@ -152,6 +152,12 @@
             const restClient = new pixelix.rest.Client();
             const hostname = "~HOSTNAME~";
 
+            /* The firmware's supported image file extensions, as dotted entries
+             * (e.g. ".bmp"). Used to decide which backup entries are binary image
+             * files rather than text, so a board with PNG or WebP icons is backed
+             * up correctly too. */
+            const supportedImageExtensions = "~IMAGE_FILE_EXTENSIONS~".split(",");
+
             /* The device rejects a request with HTTP 503 as long as its internal heap is
              * temporarily too low. Such a request is repeated after a delay instead of
              * aborting the whole operation. Any other error aborts immediately, because
@@ -364,7 +370,7 @@
                         if (filename.endsWith(".json")) {
                             fileType = "text";
                             mimeType = "text/plain";
-                        } else if (filename.endsWith(".bmp") || filename.endsWith(".gif")) {
+                        } else if (supportedImageExtensions.some((ext) => filename.endsWith(ext))) {
                             if (JSZip.support.blob) {
                                 fileType = "blob";
                                 mimeType = "application/octet-stream";

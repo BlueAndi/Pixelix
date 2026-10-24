@@ -1,426 +1,472 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
 
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-        <!-- Styles -->
-        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
-        <script>
-            (function () {
-                const cdnLink = document.getElementById("bootstrap-css");
-                let isLoaded = false;
+    <!-- Styles -->
+    <link id="bootstrap-css" rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+    <script>
+        (function () {
+            const cdnLink = document.getElementById("bootstrap-css");
+            let isLoaded = false;
 
-                if (null === cdnLink) {
-                    return;
-                }
-
-                const useLocalBootstrapCss = function () {
-                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
-                };
-
-                cdnLink.addEventListener("load", function () {
-                    isLoaded = true;
-                });
-
-                cdnLink.addEventListener("error", useLocalBootstrapCss);
-
-                window.setTimeout(function () {
-                    if (false === isLoaded) {
-                        useLocalBootstrapCss();
-                    }
-                }, 3000);
-            })();
-        </script>
-        <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
-
-        <title>PIXELIX</title>
-        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
-    </head>
-
-    <body class="d-flex flex-column h-100">
-        <header>
-            <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md fixed-top bg-dark">
-                <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav me-auto" id="menu">
-                    </ul>
-                </div>
-            </nav>
-        </header>
-
-        <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
-            <!-- Dialog -->
-            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header" id="dialogHeader">
-                            <h5 class="modal-title" id="dialogTitle"></h5>
-                        </div>
-                        <div class="modal-body" id="dialogBody">
-                        </div>
-                        <div class="modal-footer" id="dialogFooter">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Main view -->
-            <div class="container">
-                <h1 class="mt-5">Icons</h1>
-                <h2 class="mt-3">Overview</h2>
-                <p>These icons are stored on the Pixelix device in the <strong>/configuration</strong> directory.</p>
-                <p>They can be used to customize the appearance of some plugins.</p>
-                <p>The number in [ ] brackets represents the icon file id, required by the plugins to display the correct icon.</p>
-                <div class="mb-3">
-                    <label class="form-label">Zoom Level:</label>
-                    <div class="btn-group" role="group" aria-label="Zoom controls">
-                        <input type="radio" class="btn-check" name="zoomOptions" id="zoomOriginal" value="1" checked autocomplete="off">
-                        <label class="btn btn-outline-primary" for="zoomOriginal">Original</label>
-
-                        <input type="radio" class="btn-check" name="zoomOptions" id="zoom2x" value="2" autocomplete="off">
-                        <label class="btn btn-outline-primary" for="zoom2x">2x</label>
-
-                        <input type="radio" class="btn-check" name="zoomOptions" id="zoom4x" value="4" autocomplete="off">
-                        <label class="btn btn-outline-primary" for="zoom4x">4x</label>
-
-                        <input type="radio" class="btn-check" name="zoomOptions" id="zoom8x" value="8" autocomplete="off">
-                        <label class="btn btn-outline-primary" for="zoom8x">8x</label>
-                    </div>
-                </div>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="overview">
-                </div>
-                <h2 class="mt-3">Upload</h2>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myFormIcon" enctype="multipart/form-data">
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="icon">Icon:</label>
-                            <input class="form-control" id="icon" type="file" accept="~IMAGE_FILE_EXTENSIONS~" />
-                        </div>
-                        <input name="submit" type="submit" value="Update" />
-                    </form>
-                </div>
-                <p>Supported are bitmap (.bmp) and GIF (.gif) files.</p>
-                <p>The bitmap files are limited to:</p>
-                <ul>
-                    <li>24 or 32 bits per pixel.</li>
-                    <li>1, 2 or 4 bits per pixel with palette.</li>
-                    <li>1 plane.</li>
-                    <li>No compression.</li>
-                </ul>
-                <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
-                <ul>
-                    <li>Compatibility options: Don't write color informations.</li>
-                    <li>Extended options: Select 24 bit per pixel.</li>
-                </ul>
-                <h2 class="mt-3">LaMetric Icons</h2>
-                <p>Have a look to the <a href="https://developer.lametric.com/icons" target="_blank">LaMetric icon overview</a> and enter the icon id below.</p>
-                <p>Only icons in the GIF format are supported.</p>
-                <p>After you entered the icon id, first click on the preview button. If the preview is successful, you can then click the download button to fetch the icon.</p>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3" id="lametric-icons">
-                    <div class="mb-3">
-                        <label for="lametricIconId" class="form-label">LaMetric Icon ID:</label>
-                        <input type="number" class="form-control" id="lametricIconId" min="1" placeholder="Enter Icon ID" />
-                    </div>
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-primary" id="btnLametricPreview">Show Preview</button>
-                        <button type="button" class="btn btn-success" id="btnLametricDownload" disabled>Download &amp; Upload</button>
-                    </div>
-                    <div id="lametricPreviewArea" class="mt-3"></div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer mt-auto py-3">
-            <div class="container">
-                <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
-            </div>
-        </footer>
-
-        <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
-        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
-        <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
-        <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
-        <!-- Pixelix REST API -->
-
-        <script>
-            const restClient = new pixelix.rest.Client();
-            let lametricIconUrl = "";
-            let lametricIconFileName = "";
-            let currentZoom = 1;
-
-            function applyZoom(img) {
-                if (currentZoom === 1) {
-                    img.style.imageRendering = "auto";
-                    img.style.width = "auto";
-                    img.style.height = "auto";
-                } else {
-                    img.style.imageRendering = "pixelated";
-                    img.style.width = (img.naturalWidth * currentZoom) + "px";
-                    img.style.height = (img.naturalHeight * currentZoom) + "px";
-                }
+            if (null === cdnLink) {
+                return;
             }
 
-            function updateZoom() {
-                currentZoom = Number.parseInt(document.querySelector('input[name="zoomOptions"]:checked').value);
+            const useLocalBootstrapCss = function () {
+                cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+            };
 
-                document.querySelectorAll("#overview img").forEach((img) => applyZoom(img));
-            }
-
-            function enableUI() {
-                utils.enableForm("myFormIcon", true);
-            }
-
-            function disableUI() {
-                utils.enableForm("myFormIcon", false);
-            }
-
-            async function uploadIcon(files) {
-                disableUI();
-
-                try {
-                    if (files.length === 0) {
-                        throw "No file selected.";
-                    }
-
-                    if (files[0].name.toLowerCase().endsWith(".bmp") === true) {
-                        await utils.checkBMPFile(files[0]);
-                    }
-
-                    await restClient.fileMgrUploadFile(files[0], files[0].size);
-                    await dialog.showInfo("<p>Ok.</p>");
-
-                    document.getElementById("overview").textContent = "";
-                    await downloadFileList("overview");
-                } catch (rsp) {
-                    const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
-
-                    await dialog.showError("<p>" + alertMsg + "</p>");
-
-                    /* Re-signal the failure to callers (e.g. the LaMetric flow). */
-                    throw new Error(alertMsg);
-                } finally {
-                    enableUI();
-                }
-            }
-
-            async function downloadFileList(id) {
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url: restClient.getBaseUri() + "/fileMgrService/files",
-                        isJsonResponse: true
-                    });
-                    const overview = document.getElementById(id);
-                    const iconEntries = rsp.data.files.filter((fileName) => fileName.length > 0);
-                    let loadedCount = 0;
-
-                    updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
-
-                    for (const [idx, fileName] of rsp.data.files.entries()) {
-                        if (fileName.length > 0) {
-                            await appendIconTileSequentially(overview, idx, fileName);
-                            ++loadedCount;
-                            updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
-                        }
-                    }
-
-                    updateOverviewLoadStatus(overview, iconEntries.length, iconEntries.length, true);
-                } catch (rsp) {
-                    const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
-
-                    updateOverviewLoadStatus(document.getElementById(id), 0, 0, true);
-                    await dialog.showError("<p>" + alertMsg + "</p>");
-                }
-            }
-
-            function updateOverviewLoadStatus(overview, loadedCount, totalCount, isDone = false) {
-                const statusId = "overview-load-status";
-                let status = document.getElementById(statusId);
-
-                if (isDone === true) {
-                    if (status !== null) {
-                        status.remove();
-                    }
-
-                    return;
-                }
-
-                if (status === null) {
-                    status = document.createElement("p");
-                    status.id = statusId;
-                    status.className = "text-secondary";
-                    overview.parentNode.insertBefore(status, overview);
-                }
-
-                status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
-            }
-
-            async function appendIconTileSequentially(overview, idx, fileName) {
-                const fileId = document.createElement("p");
-                fileId.textContent = "[" + idx + "]";
-
-                const img = document.createElement("img");
-                img.alt = "Preview";
-
-                const name = document.createElement("p");
-                name.textContent = fileName;
-
-                const actionRemove = document.createElement("button");
-                actionRemove.type = "button";
-                actionRemove.className = "btn btn-secondary";
-                actionRemove.textContent = "Remove";
-                actionRemove.addEventListener("click", () => removeFile(idx, fileName));
-
-                const div = document.createElement("div");
-                div.className = "bg-body text-center m-2 p-2 bd-highlight";
-                div.appendChild(fileId);
-                div.appendChild(img);
-                div.appendChild(name);
-                div.appendChild(actionRemove);
-
-                overview.appendChild(div);
-
-                await new Promise((resolve) => {
-                    img.addEventListener("load", function () {
-                        applyZoom(this);
-                        resolve();
-                    }, { once: true });
-
-                    img.addEventListener("error", () => resolve(), { once: true });
-
-                    img.src = fileName;
-                });
-            }
-
-            async function removeFile(fileId, fullPath) {
-                try {
-                    await restClient.fileMgrRemoveFile(fullPath);
-                    await dialog.showInfo("<p>File " + fullPath + " removed.</p>");
-
-                    document.getElementById("overview").textContent = "";
-                    await downloadFileList("overview");
-                } catch (rsp) {
-                    await dialog.showError("<p>" + rsp.error.msg + "</p>");
-                }
-            }
-
-            async function showLametricPreview() {
-                const iconId = document.getElementById("lametricIconId").value;
-                const previewArea = document.getElementById("lametricPreviewArea");
-                const downloadBtn = document.getElementById("btnLametricDownload");
-
-                previewArea.innerHTML = "";
-                downloadBtn.disabled = true;
-                lametricIconUrl = "";
-                lametricIconFileName = "";
-
-                if ((!iconId) || (iconId < 1)) {
-                    previewArea.innerHTML = '<div class="text-danger">Please enter a valid icon ID.</div>';
-                    return;
-                }
-
-                try {
-                    const response = await fetch("https://developer.lametric.com/api/v1/dev/preloadicons?search=" + iconId + "&count=1");
-
-                    if (!response.ok) {
-                        throw new Error("Failed to fetch icon info.");
-                    }
-
-                    const data = await response.json();
-
-                    if ((data) && (data.icons) && (data.icons.length > 0) && (data.icons[0].thumbnail)) {
-                        const thumbnail = "https://developer.lametric.com" + data.icons[0].thumbnail;
-                        const ext = thumbnail.split(".").pop().toLowerCase();
-                        const isValid = ext === "gif";
-                        const imgHtml = '<img src="' + thumbnail + '" alt="LaMetric Icon" class="img-thumbnail" />';
-                        const warnHtml = isValid ? "" : '<div class="text-warning mt-2">Warning: The file type is not supported. Only .bmp or .gif images are allowed.</div>';
-
-                        lametricIconUrl = thumbnail;
-                        lametricIconFileName = "lametric_" + iconId + thumbnail.substring(thumbnail.lastIndexOf("."));
-
-                        previewArea.innerHTML = imgHtml + warnHtml;
-                        downloadBtn.disabled = !isValid;
-                    } else {
-                        previewArea.innerHTML = '<div class="text-danger">Icon not found or invalid response.</div>';
-                    }
-                } catch (err) {
-                    previewArea.innerHTML = '<div class="text-danger">Failed to fetch icon info.</div>';
-                }
-            }
-
-            async function downloadAndUploadLametricIcon() {
-                const iconId = document.getElementById("lametricIconId").value;
-                const previewArea = document.getElementById("lametricPreviewArea");
-                const downloadBtn = document.getElementById("btnLametricDownload");
-
-                if ((!iconId) || (iconId < 1)) {
-                    previewArea.innerHTML = '<div class="text-danger">Please enter a valid icon ID.</div>';
-                    return;
-                }
-
-                const url = "https://developer.lametric.com/content/apps/icon_thumbs/" + iconId + ".gif";
-                const fileName = "lametric_" + iconId + ".gif";
-
-                downloadBtn.disabled = true;
-
-                try {
-                    const response = await fetch(url);
-
-                    if (!response.ok) {
-                        throw new Error("Failed to download icon.");
-                    }
-
-                    const blob = await response.blob();
-                    const file = new File([blob], fileName, { type: blob.type });
-
-                    await uploadIcon([file]);
-                } catch (err) {
-                    previewArea.insertAdjacentHTML("beforeend", '<div class="text-danger mt-2">Error: ' + err.message + '</div>');
-                } finally {
-                    downloadBtn.disabled = false;
-                }
-            }
-
-            function clearLametricPreview() {
-                document.getElementById("lametricPreviewArea").innerHTML = "";
-                document.getElementById("btnLametricDownload").disabled = true;
-            }
-
-            document.addEventListener("DOMContentLoaded", () => {
-                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
-                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
-                menu.create("menu", menu.data);
-
-                document.querySelectorAll('input[name="zoomOptions"]').forEach((radio) => {
-                    radio.addEventListener("change", updateZoom);
-                });
-
-                document.getElementById("myFormIcon").addEventListener("submit", (event) => {
-                    event.preventDefault();
-                    uploadIcon(document.getElementById("icon").files);
-                });
-
-                document.getElementById("lametricIconId").addEventListener("input", clearLametricPreview);
-                document.getElementById("btnLametricPreview").addEventListener("click", showLametricPreview);
-                document.getElementById("btnLametricDownload").addEventListener("click", downloadAndUploadLametricIcon);
-
-                downloadFileList("overview");
+            cdnLink.addEventListener("load", function () {
+                isLoaded = true;
             });
-        </script>
-    </body>
+
+            cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+            window.setTimeout(function () {
+                if (false === isLoaded) {
+                    useLocalBootstrapCss();
+                }
+            }, 3000);
+        })();
+    </script>
+    <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
+
+    <title>PIXELIX</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+</head>
+
+<body class="d-flex flex-column h-100">
+    <header>
+        <!-- Fixed navbar -->
+        <nav class="navbar navbar-expand-md fixed-top bg-dark">
+            <a class="navbar-brand" href="/index.html">
+                <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                    title="~TARGET~ | ~HOSTNAME~" />
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav me-auto" id="menu">
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Begin page content -->
+    <main role="main" class="flex-shrink-0">
+        <!-- Dialog -->
+        <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true"
+            data-bs-keyboard="false" data-bs-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header" id="dialogHeader">
+                        <h5 class="modal-title" id="dialogTitle"></h5>
+                    </div>
+                    <div class="modal-body" id="dialogBody">
+                    </div>
+                    <div class="modal-footer" id="dialogFooter">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Main view -->
+        <div class="container">
+            <h1 class="mt-5">Icons</h1>
+            <h2 class="mt-3">Overview</h2>
+            <p>These icons are stored on the Pixelix device in the <strong>/configuration</strong> directory.</p>
+            <p>They can be used to customize the appearance of some plugins.</p>
+            <p>The number in [ ] brackets represents the icon file id, required by the plugins to display the correct
+                icon.</p>
+            <div class="mb-3">
+                <label class="form-label">Zoom Level:</label>
+                <div class="btn-group" role="group" aria-label="Zoom controls">
+                    <input type="radio" class="btn-check" name="zoomOptions" id="zoomOriginal" value="1" checked
+                        autocomplete="off">
+                    <label class="btn btn-outline-primary" for="zoomOriginal">Original</label>
+
+                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom2x" value="2" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="zoom2x">2x</label>
+
+                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom4x" value="4" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="zoom4x">4x</label>
+
+                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom8x" value="8" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="zoom8x">8x</label>
+                </div>
+            </div>
+            <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="overview">
+            </div>
+            <h2 class="mt-3">Upload</h2>
+            <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                <form id="myFormIcon" enctype="multipart/form-data">
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="icon">Icon:</label>
+                        <input class="form-control" id="icon" type="file" accept="~IMAGE_FILE_EXTENSIONS~" />
+                    </div>
+                    <input name="submit" type="submit" value="Update" />
+                </form>
+            </div>
+            <p id="supportedFormatsText">See the file picker above for the supported image file types.</p>
+            <p>Not every file of a supported type can be shown, see <a
+                    href="https://github.com/BlueAndi/Pixelix/blob/master/doc/ICONS.md#supported-image-formats"
+                    target="_blank">Supported Image Formats</a> for the limitations per format.</p>
+            <p>The bitmap files are limited to:</p>
+            <ul>
+                <li>24 or 32 bits per pixel.</li>
+                <li>1, 2 or 4 bits per pixel with palette.</li>
+                <li>1 plane.</li>
+                <li>No compression.</li>
+            </ul>
+            <p>Note, if you are using <a href="https://www.gimp.org" target="_self">GIMP</a> to create bitmap files,
+                please configure like:</p>
+            <ul>
+                <li>Compatibility options: Don't write color informations.</li>
+                <li>Extended options: Select 24 bit per pixel.</li>
+            </ul>
+            <h2 class="mt-3">LaMetric Icons</h2>
+            <p>Have a look to the <a href="https://developer.lametric.com/icons" target="_blank">LaMetric icon
+                    overview</a> and enter the icon id below.</p>
+            <p id="lametricSupportedFormatsText">Only icons of a supported image file type can be downloaded.</p>
+            <p>After you entered the icon id, first click on the preview button. If the preview is successful, you can
+                then click the download button to fetch the icon.</p>
+            <div class="h-100 p-2 bg-body-tertiary border rounded-3" id="lametric-icons">
+                <div class="mb-3">
+                    <label for="lametricIconId" class="form-label">LaMetric Icon ID:</label>
+                    <input type="number" class="form-control" id="lametricIconId" min="1" placeholder="Enter Icon ID" />
+                </div>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary" id="btnLametricPreview">Show Preview</button>
+                    <button type="button" class="btn btn-success" id="btnLametricDownload" disabled>Download &amp;
+                        Upload</button>
+                </div>
+                <div id="lametricPreviewArea" class="mt-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3">
+        <div class="container">
+            <hr />
+            <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
+            <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT
+                    License</a></span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS bundle -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+    <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
+    <!-- Pixelix menu -->
+    <script type="text/javascript" src="/js/app-menu.js"></script>
+    <!-- Pixelix utilities -->
+    <script type="text/javascript" src="/js/app-api.js"></script>
+    <!-- Pixelix REST API -->
+
+    <script>
+        const restClient = new pixelix.rest.Client();
+
+        /* The firmware's supported image file extensions, as dotted entries
+         * (e.g. ".bmp"), parsed once from the accept attribute the server
+         * already fills in via the ~IMAGE_FILE_EXTENSIONS~ template keyword.
+         * This is the only value in this page that is honest about what a
+         * given board actually supports. */
+        const supportedImageExtensions = document.getElementById("icon").getAttribute("accept").split(",");
+
+        let lametricIconUrl = "";
+        let lametricIconFileName = "";
+        let currentZoom = 1;
+
+        function applyZoom(img) {
+            if (currentZoom === 1) {
+                img.style.imageRendering = "auto";
+                img.style.width = "auto";
+                img.style.height = "auto";
+            } else {
+                img.style.imageRendering = "pixelated";
+                img.style.width = (img.naturalWidth * currentZoom) + "px";
+                img.style.height = (img.naturalHeight * currentZoom) + "px";
+            }
+        }
+
+        function updateZoom() {
+            currentZoom = Number.parseInt(document.querySelector('input[name="zoomOptions"]:checked').value);
+
+            document.querySelectorAll("#overview img").forEach((img) => applyZoom(img));
+        }
+
+        function enableUI() {
+            utils.enableForm("myFormIcon", true);
+        }
+
+        function disableUI() {
+            utils.enableForm("myFormIcon", false);
+        }
+
+        async function uploadIcon(files) {
+            disableUI();
+
+            try {
+                if (files.length === 0) {
+                    throw "No file selected.";
+                }
+
+                if (files[0].name.toLowerCase().endsWith(".bmp") === true) {
+                    await utils.checkBMPFile(files[0]);
+                }
+
+                await restClient.fileMgrUploadFile(files[0], files[0].size);
+                await dialog.showInfo("<p>Ok.</p>");
+
+                document.getElementById("overview").textContent = "";
+                await downloadFileList("overview");
+            } catch (rsp) {
+                const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+
+                await dialog.showError("<p>" + alertMsg + "</p>");
+
+                /* Re-signal the failure to callers (e.g. the LaMetric flow). */
+                throw new Error(alertMsg);
+            } finally {
+                enableUI();
+            }
+        }
+
+        async function downloadFileList(id) {
+            try {
+                const rsp = await utils.makeRequest({
+                    method: "GET",
+                    url: restClient.getBaseUri() + "/fileMgrService/files",
+                    isJsonResponse: true
+                });
+                const overview = document.getElementById(id);
+                const iconEntries = rsp.data.files.filter((fileName) => fileName.length > 0);
+                let loadedCount = 0;
+
+                updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
+
+                for (const [idx, fileName] of rsp.data.files.entries()) {
+                    if (fileName.length > 0) {
+                        await appendIconTileSequentially(overview, idx, fileName);
+                        ++loadedCount;
+                        updateOverviewLoadStatus(overview, loadedCount, iconEntries.length);
+                    }
+                }
+
+                updateOverviewLoadStatus(overview, iconEntries.length, iconEntries.length, true);
+            } catch (rsp) {
+                const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+
+                updateOverviewLoadStatus(document.getElementById(id), 0, 0, true);
+                await dialog.showError("<p>" + alertMsg + "</p>");
+            }
+        }
+
+        function updateOverviewLoadStatus(overview, loadedCount, totalCount, isDone = false) {
+            const statusId = "overview-load-status";
+            let status = document.getElementById(statusId);
+
+            if (isDone === true) {
+                if (status !== null) {
+                    status.remove();
+                }
+
+                return;
+            }
+
+            if (status === null) {
+                status = document.createElement("p");
+                status.id = statusId;
+                status.className = "text-secondary";
+                overview.parentNode.insertBefore(status, overview);
+            }
+
+            status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
+        }
+
+        async function appendIconTileSequentially(overview, idx, fileName) {
+            const fileId = document.createElement("p");
+            fileId.textContent = "[" + idx + "]";
+
+            const img = document.createElement("img");
+            img.alt = "Preview";
+
+            const name = document.createElement("p");
+            name.textContent = fileName;
+
+            const actionRemove = document.createElement("button");
+            actionRemove.type = "button";
+            actionRemove.className = "btn btn-secondary";
+            actionRemove.textContent = "Remove";
+            actionRemove.addEventListener("click", () => removeFile(idx, fileName));
+
+            const div = document.createElement("div");
+            div.className = "bg-body text-center m-2 p-2 bd-highlight";
+            div.appendChild(fileId);
+            div.appendChild(img);
+            div.appendChild(name);
+            div.appendChild(actionRemove);
+
+            overview.appendChild(div);
+
+            await new Promise((resolve) => {
+                img.addEventListener("load", function () {
+                    applyZoom(this);
+                    resolve();
+                }, { once: true });
+
+                img.addEventListener("error", () => resolve(), { once: true });
+
+                img.src = fileName;
+            });
+        }
+
+        async function removeFile(fileId, fullPath) {
+            try {
+                await restClient.fileMgrRemoveFile(fullPath);
+                await dialog.showInfo("<p>File " + fullPath + " removed.</p>");
+
+                document.getElementById("overview").textContent = "";
+                await downloadFileList("overview");
+            } catch (rsp) {
+                await dialog.showError("<p>" + rsp.error.msg + "</p>");
+            }
+        }
+
+        /* LaMetric only gives a "thumbnail" for animated icons; the rest carry
+         * nothing but "thumbnail_image" (a static PNG preview). Prefer
+         * "thumbnail" so an animated icon stays animated, and fall back to
+         * "thumbnail_image" so a static icon can be previewed and imported at
+         * all, instead of always failing with "Icon not found". */
+        function selectLametricThumbnail(icon) {
+            return icon.thumbnail ? icon.thumbnail : icon.thumbnail_image;
+        }
+
+        /* Both API fields point at the 45x45 gallery preview, which is far too
+         * large for a LED matrix. The icon itself is 8x8 and sits next to it,
+         * under the same name without the "_icon_thumb" part:
+         *   .../icon_thumbs/61_icon_thumb.gif  ->  the 45x45 preview
+         *   .../icon_thumbs/61.gif            ->  the 8x8 icon
+         * Show the preview, download the icon. */
+        function lametricThumbnailToIcon(relativeUrl) {
+            return relativeUrl.replace("_icon_thumb", "");
+        }
+
+        async function showLametricPreview() {
+            const iconId = document.getElementById("lametricIconId").value;
+            const previewArea = document.getElementById("lametricPreviewArea");
+            const downloadBtn = document.getElementById("btnLametricDownload");
+
+            previewArea.innerHTML = "";
+            downloadBtn.disabled = true;
+            lametricIconUrl = "";
+            lametricIconFileName = "";
+
+            if ((!iconId) || (iconId < 1)) {
+                previewArea.innerHTML = '<div class="text-danger">Please enter a valid icon ID.</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch("https://developer.lametric.com/api/v1/dev/preloadicons?search=" + iconId + "&count=1");
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch icon info.");
+                }
+
+                const data = await response.json();
+                const relativeUrl = ((data) && (data.icons) && (data.icons.length > 0)) ? selectLametricThumbnail(data.icons[0]) : "";
+
+                if (relativeUrl) {
+                    const thumbnail = "https://developer.lametric.com" + relativeUrl;
+                    const iconUrl = "https://developer.lametric.com" + lametricThumbnailToIcon(relativeUrl);
+                    const ext = iconUrl.split(".").pop().toLowerCase();
+                    const isValid = supportedImageExtensions.includes("." + ext);
+                    const imgHtml = '<img src="' + thumbnail + '" alt="LaMetric Icon" class="img-thumbnail" />';
+                    const warnHtml = isValid ? "" : '<div class="text-warning mt-2">Warning: The file type is not supported. Only ' + supportedImageExtensions.join(", ") + ' images are allowed.</div>';
+
+                    lametricIconUrl = iconUrl;
+                    lametricIconFileName = "lametric_" + iconId + iconUrl.substring(iconUrl.lastIndexOf("."));
+
+                    previewArea.innerHTML = imgHtml + warnHtml;
+                    downloadBtn.disabled = !isValid;
+                } else {
+                    previewArea.innerHTML = '<div class="text-danger">Icon not found or invalid response.</div>';
+                }
+            } catch (err) {
+                previewArea.innerHTML = '<div class="text-danger">Failed to fetch icon info.</div>';
+            }
+        }
+
+        async function downloadAndUploadLametricIcon() {
+            const previewArea = document.getElementById("lametricPreviewArea");
+            const downloadBtn = document.getElementById("btnLametricDownload");
+
+            if (!lametricIconUrl) {
+                previewArea.innerHTML = '<div class="text-danger">Please preview a supported icon first.</div>';
+                return;
+            }
+
+            downloadBtn.disabled = true;
+
+            try {
+                /* Download the thumbnail URL the API actually returned, not a
+                 * guessed one; its extension was already validated against
+                 * supportedImageExtensions in showLametricPreview(). */
+                const response = await fetch(lametricIconUrl);
+
+                if (!response.ok) {
+                    throw new Error("Failed to download icon.");
+                }
+
+                const blob = await response.blob();
+                const file = new File([blob], lametricIconFileName, { type: blob.type });
+
+                await uploadIcon([file]);
+            } catch (err) {
+                previewArea.insertAdjacentHTML("beforeend", '<div class="text-danger mt-2">Error: ' + err.message + '</div>');
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        }
+
+        function clearLametricPreview() {
+            document.getElementById("lametricPreviewArea").innerHTML = "";
+            document.getElementById("btnLametricDownload").disabled = true;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+            menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+            menu.create("menu", menu.data);
+
+            document.getElementById("supportedFormatsText").textContent = "Supported image file types: " + supportedImageExtensions.join(", ") + ".";
+            document.getElementById("lametricSupportedFormatsText").textContent = "Only icons of a supported image file type (" + supportedImageExtensions.join(", ") + ") can be downloaded.";
+
+            document.querySelectorAll('input[name="zoomOptions"]').forEach((radio) => {
+                radio.addEventListener("change", updateZoom);
+            });
+
+            document.getElementById("myFormIcon").addEventListener("submit", (event) => {
+                event.preventDefault();
+                uploadIcon(document.getElementById("icon").files);
+            });
+
+            document.getElementById("lametricIconId").addEventListener("input", clearLametricPreview);
+            document.getElementById("btnLametricPreview").addEventListener("click", showLametricPreview);
+            document.getElementById("btnLametricDownload").addEventListener("click", downloadAndUploadLametricIcon);
+
+            downloadFileList("overview");
+        });
+    </script>
+</body>
 
 </html>

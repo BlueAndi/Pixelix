@@ -550,9 +550,11 @@ jobs:
       - name:
           Run clang-format check
           # Exlcude the imgui library folder, because it is not part of this project and its formatting is not relevant.
+          # Exlcude the libwebp library folder for the same reason, it is vendored upstream source.
         run: |
           find src lib \
             -path 'lib/HalLedMatrixNative/src/imgui' -prune -o \
+            -path 'lib/libwebp' -prune -o \
             \( -iname '*.h' -o \
                -iname '*.hpp' -o \
                -iname '*.cpp' \) \

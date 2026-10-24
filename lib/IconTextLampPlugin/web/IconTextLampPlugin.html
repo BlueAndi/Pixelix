@@ -1,587 +1,596 @@
 <!doctype html>
 <html lang="en" data-bs-theme="dark">
 
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-        <!-- Styles -->
-        <link id="bootstrap-css" rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
-        <script>
-            (function () {
-                const cdnLink = document.getElementById("bootstrap-css");
-                let isLoaded = false;
+    <!-- Styles -->
+    <link id="bootstrap-css" rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" />
+    <script>
+        (function () {
+            const cdnLink = document.getElementById("bootstrap-css");
+            let isLoaded = false;
 
-                if (null === cdnLink) {
-                    return;
+            if (null === cdnLink) {
+                return;
+            }
+
+            const useLocalBootstrapCss = function () {
+                cdnLink.setAttribute("href", "/style/bootstrap.min.css");
+            };
+
+            cdnLink.addEventListener("load", function () {
+                isLoaded = true;
+            });
+
+            cdnLink.addEventListener("error", useLocalBootstrapCss);
+
+            window.setTimeout(function () {
+                if (false === isLoaded) {
+                    useLocalBootstrapCss();
                 }
+            }, 3000);
+        })();
+    </script>
+    <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
 
-                const useLocalBootstrapCss = function () {
-                    cdnLink.setAttribute("href", "/style/bootstrap.min.css");
-                };
+    <title>PIXELIX</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+</head>
 
-                cdnLink.addEventListener("load", function () {
-                    isLoaded = true;
-                });
+<body class="d-flex flex-column h-100">
+    <header>
+        <!-- Fixed navbar -->
+        <nav class="navbar navbar-expand-md fixed-top bg-dark">
+            <a class="navbar-brand" href="/index.html">
+                <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                    title="~TARGET~ | ~HOSTNAME~" />
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav me-auto" id="menu">
+                </ul>
+            </div>
+        </nav>
+    </header>
 
-                cdnLink.addEventListener("error", useLocalBootstrapCss);
+    <!-- Begin page content -->
+    <main role="main" class="flex-shrink-0">
+        <div class="modal fade" id="iconPickerDialog" tabindex="-1" aria-labelledby="iconPickerTitle"
+            aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="iconPickerTitle">Select Icon</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Zoom Level:</label>
+                            <div class="btn-group" role="group" aria-label="Icon zoom controls">
+                                <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoomOriginal"
+                                    value="1" checked autocomplete="off" />
+                                <label class="btn btn-outline-primary" for="iconZoomOriginal">Original</label>
 
-                window.setTimeout(function () {
-                    if (false === isLoaded) {
-                        useLocalBootstrapCss();
-                    }
-                }, 3000);
-            })();
-        </script>
-        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
-        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+                                <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom2x" value="2"
+                                    autocomplete="off" />
+                                <label class="btn btn-outline-primary" for="iconZoom2x">2x</label>
 
-        <title>PIXELIX</title>
-        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
-    </head>
+                                <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom4x" value="4"
+                                    autocomplete="off" />
+                                <label class="btn btn-outline-primary" for="iconZoom4x">4x</label>
 
-    <body class="d-flex flex-column h-100">
-        <header>
-            <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md fixed-top bg-dark">
-                <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav me-auto" id="menu">
-                    </ul>
-                </div>
-            </nav>
-        </header>
-
-        <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
-            <div class="modal fade" id="iconPickerDialog" tabindex="-1" aria-labelledby="iconPickerTitle" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="iconPickerTitle">Select Icon</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Zoom Level:</label>
-                                <div class="btn-group" role="group" aria-label="Icon zoom controls">
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoomOriginal" value="1" checked autocomplete="off" />
-                                    <label class="btn btn-outline-primary" for="iconZoomOriginal">Original</label>
-
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom2x" value="2" autocomplete="off" />
-                                    <label class="btn btn-outline-primary" for="iconZoom2x">2x</label>
-
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom4x" value="4" autocomplete="off" />
-                                    <label class="btn btn-outline-primary" for="iconZoom4x">4x</label>
-
-                                    <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom8x" value="8" autocomplete="off" />
-                                    <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
-                                </div>
+                                <input type="radio" class="btn-check" name="iconZoomOptions" id="iconZoom8x" value="8"
+                                    autocomplete="off" />
+                                <label class="btn btn-outline-primary" for="iconZoom8x">8x</label>
                             </div>
-                            <p class="text-secondary">Click an icon to use its file path.</p>
-                            <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap" id="iconPickerOverview"></div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
+                        <p class="text-secondary">Click an icon to use its file path.</p>
+                        <div class="h-100 p-2 bg-body-tertiary border rounded-3 d-flex flex-wrap"
+                            id="iconPickerOverview"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
-            <div class="container">
-                <h1 class="mt-5">IconTextLampPlugin</h1>
-                <p><img src="IconTextLampPlugin.jpg" alt="Screenshot" /></p>
-                <p>The plugin shows an icon on left side, text on right side and lamps at the bottom.</p>
-                <p>Each part can be set separately via the REST API.</p>
-                <p>Show icon in the specified slot. Supported are GIF files and bitmap files (.bmp) with:</p>
-                <ul>
-                    <li>24 or 32 bits per pixel.</li>
-                    <li>1, 2 or 4 bits per pixel with palette.</li>
-                    <li>1 plane.</li>
-                    <li>No compression.</li>
-                </ul>
-                <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
-                <ul>
-                    <li>Compatibility options: Don't write color informations.</li>
-                    <li>Extended options: Select 24 bit per pixel.</li>
-                </ul>
-                <p>If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.</p>
-                <h2>Text tags</h2>
-                <p>The following tags are supported in the text:</p>
-                <ul>
-                    <li>{#RRGGBB} - Set solid text color (RRGGBB in hex)</li>
-                    <li>{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear vertical gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
-                    <li>{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear horizontal gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
-                    <li>{stc} - Activate solid text color</li>
-                    <li>{lgtc} - Activate linear gradient text color</li>
-                    <li>{hl} - Horizontal alignment left</li>
-                    <li>{hc} - Horizontal alignment center</li>
-                    <li>{hr} - Horizontal alignment right</li>
-                    <li>{vt} - Vertical alignment top</li>
-                    <li>{vc} - Vertical alignment center</li>
-                    <li>{vb} - Vertical alignment bottom</li>
-                    <li>{0xCC} - Special character code (CC in hex)</li>
-                </ul>
-                <h2>Configuration</h2>
-                <h3>Text</h3>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myFormText">
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="pluginAliasText">Plugin:</label>
-                            <select class="form-select" id="pluginAliasText" name="pluginAlias" size="1">
-                            </select>
+        </div>
+        <div class="container">
+            <h1 class="mt-5">IconTextLampPlugin</h1>
+            <p><img src="IconTextLampPlugin.jpg" alt="Screenshot" /></p>
+            <p>The plugin shows an icon on left side, text on right side and lamps at the bottom.</p>
+            <p>Each part can be set separately via the REST API.</p>
+            <p>Show icon in the specified slot. See the <a href="/icons.html">Icons</a> page for the image file types
+                this device supports.</p>
+            <p>If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.</p>
+            <h2>Text tags</h2>
+            <p>The following tags are supported in the text:</p>
+            <ul>
+                <li>{#RRGGBB} - Set solid text color (RRGGBB in hex)</li>
+                <li>{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear vertical gradient text color (RRGGBB in hex, OFFSET
+                    in pixels, LENGTH in pixels)</li>
+                <li>{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear horizontal gradient text color (RRGGBB in hex,
+                    OFFSET in pixels, LENGTH in pixels)</li>
+                <li>{stc} - Activate solid text color</li>
+                <li>{lgtc} - Activate linear gradient text color</li>
+                <li>{hl} - Horizontal alignment left</li>
+                <li>{hc} - Horizontal alignment center</li>
+                <li>{hr} - Horizontal alignment right</li>
+                <li>{vt} - Vertical alignment top</li>
+                <li>{vc} - Vertical alignment center</li>
+                <li>{vb} - Vertical alignment bottom</li>
+                <li>{0xCC} - Special character code (CC in hex)</li>
+            </ul>
+            <h2>Configuration</h2>
+            <h3>Text</h3>
+            <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                <form id="myFormText">
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="pluginAliasText">Plugin:</label>
+                        <select class="form-select" id="pluginAliasText" name="pluginAlias" size="1">
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="justText">Text:</label>
+                        <input class="form-control" type="text" id="justText" name="justText" value="" size="40" />
+                        <small class="form-text">The text to show on the display.</small>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="iconFileName">Icon file name:</label>
+                        <div class="input-group">
+                            <input class="form-control" type="text" id="iconFileName" name="iconFileName" value="" />
+                            <button class="btn btn-outline-primary" type="button"
+                                id="btnIconFileNameSelect">Select...</button>
+                            <button class="btn btn-outline-secondary" type="button"
+                                id="btnIconFileNameClear">Clear</button>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="justText">Text:</label>
-                            <input class="form-control" type="text" id="justText" name="justText" value="" size="40" />
-                            <small class="form-text">The text to show on the display.</small>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="iconFileName">Icon file name:</label>
-                            <div class="input-group">
-                                <input class="form-control" type="text" id="iconFileName" name="iconFileName" value="" />
-                                <button class="btn btn-outline-primary" type="button" id="btnIconFileNameSelect">Select...</button>
-                                <button class="btn btn-outline-secondary" type="button" id="btnIconFileNameClear">Clear</button>
-                            </div>
-                            <small class="form-text">The full path of the icon to show, e.g. /configuration/smiley.bmp. Select it from the icons page or enter a path manually. Empty means no icon.</small>
-                        </div>
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
-                            <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or scroll only the text next to the standing icon (false). This setting is always stored persistent.</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="storeFlag" name="storeFlag" value="0" />
-                            <label class="form-label" for="storeFlag">Store the icon file id and the text persistent (true) or not (false). It will be used after restart.</label>
-                        </div>
-                        <input name="submit" type="submit" value="Update" />
-                    </form>
-                </div>
-                <h3>Lamp</h3>
-                <div class="h-100 p-2 bg-body-tertiary border rounded-3">
-                    <form id="myFormLamp">
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="pluginAliasLamp">Plugin:</label>
-                            <select class="form-select" id="pluginAliasLamp" name="pluginAlias" size="1">
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="lampId">Lamp:</label>
-                            <select class="form-select" id="lampId" size="1">
-                                <option value="0" selected>0</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label" for="lampState">State:</label>
-                            <select class="form-select" id="lampState" size="1">
-                                <option value="off" selected>off</option>
-                                <option value="on">on</option>
-                            </select>
-                        </div>
-                        <input name="submit" type="submit" value="Update" />
-                    </form>
-                </div>
+                        <small class="form-text">The full path of the icon to show, e.g. /configuration/smiley.bmp.
+                            Select it from the icons page or enter a path manually. Empty means no icon.</small>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
+                        <label class="form-label" for="scrollIcon">Scroll the icon together with the text (true) or
+                            scroll only the text next to the standing icon (false). This setting is always stored
+                            persistent.</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="storeFlag" name="storeFlag" value="0" />
+                        <label class="form-label" for="storeFlag">Store the icon file id and the text persistent (true)
+                            or not (false). It will be used after restart.</label>
+                    </div>
+                    <input name="submit" type="submit" value="Update" />
+                </form>
             </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer mt-auto py-3">
-            <div class="container">
-                <hr />
-                <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT License</a></span>
+            <h3>Lamp</h3>
+            <div class="h-100 p-2 bg-body-tertiary border rounded-3">
+                <form id="myFormLamp">
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="pluginAliasLamp">Plugin:</label>
+                        <select class="form-select" id="pluginAliasLamp" name="pluginAlias" size="1">
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="lampId">Lamp:</label>
+                        <select class="form-select" id="lampId" size="1">
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="lampState">State:</label>
+                        <select class="form-select" id="lampState" size="1">
+                            <option value="off" selected>off</option>
+                            <option value="on">on</option>
+                        </select>
+                    </div>
+                    <input name="submit" type="submit" value="Update" />
+                </form>
             </div>
-        </footer>
+        </div>
+    </main>
 
-        <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
-        <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
-        <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
-        <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
-        <!-- Pixelix REST API -->
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3">
+        <div class="container">
+            <hr />
+            <span class="text-secondary">Copyright (c) 2019 - 2026 Andreas Merkle (web@blue-andi.de)</span><br />
+            <span class="text-secondary"><a href="https://github.com/BlueAndi/Pixelix/blob/master/LICENSE">MIT
+                    License</a></span>
+        </div>
+    </footer>
 
-        <script>
+    <!-- Bootstrap JS bundle -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+    <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
+    <!-- Pixelix menu -->
+    <script type="text/javascript" src="/js/app-menu.js"></script>
+    <!-- Pixelix utilities -->
+    <script type="text/javascript" src="/js/app-api.js"></script>
+    <!-- Pixelix REST API -->
 
-            const pluginName = "IconTextLampPlugin";
-            const restClient = new pixelix.rest.Client();
-            let iconPickerModal = null;
-            let iconPickerZoom = 1;
-            let iconPickerTargetInputId = "";
+    <script>
 
-            function applyZoomToImage(image) {
-                if (1 === iconPickerZoom) {
-                    image.style.imageRendering = "auto";
-                    image.style.width = "auto";
-                    image.style.height = "auto";
-                } else {
-                    image.style.imageRendering = "pixelated";
-                    image.style.width = (image.naturalWidth * iconPickerZoom) + "px";
-                    image.style.height = (image.naturalHeight * iconPickerZoom) + "px";
-                }
+        const pluginName = "IconTextLampPlugin";
+        const restClient = new pixelix.rest.Client();
+        let iconPickerModal = null;
+        let iconPickerZoom = 1;
+        let iconPickerTargetInputId = "";
+
+        function applyZoomToImage(image) {
+            if (1 === iconPickerZoom) {
+                image.style.imageRendering = "auto";
+                image.style.width = "auto";
+                image.style.height = "auto";
+            } else {
+                image.style.imageRendering = "pixelated";
+                image.style.width = (image.naturalWidth * iconPickerZoom) + "px";
+                image.style.height = (image.naturalHeight * iconPickerZoom) + "px";
             }
+        }
 
-            function updateIconPickerZoom() {
-                const selectedZoom = Number.parseInt(document.querySelector("input[name='iconZoomOptions']:checked").value, 10);
+        function updateIconPickerZoom() {
+            const selectedZoom = Number.parseInt(document.querySelector("input[name='iconZoomOptions']:checked").value, 10);
 
-                iconPickerZoom = selectedZoom;
+            iconPickerZoom = selectedZoom;
 
-                const images = document.querySelectorAll("#iconPickerOverview img");
+            const images = document.querySelectorAll("#iconPickerOverview img");
 
-                images.forEach((image) => {
-                    applyZoomToImage(image);
-                });
-            }
-
-            function selectIconFileName(fileName) {
-                if ("" !== iconPickerTargetInputId) {
-                    document.getElementById(iconPickerTargetInputId).value = fileName;
-                }
-
-                if (null !== iconPickerModal) {
-                    iconPickerModal.hide();
-                }
-            }
-
-            function clearIconFileName(targetInputId) {
-                document.getElementById(targetInputId).value = "";
-            }
-
-            function updateIconPickerLoadStatus(overview, loadedCount, totalCount, isDone = false) {
-                const statusId = "icon-picker-load-status";
-                let status = document.getElementById(statusId);
-
-                if (isDone === true) {
-                    if (status !== null) {
-                        status.remove();
-                    }
-
-                    return;
-                }
-
-                if (status === null) {
-                    status = document.createElement("p");
-                    status.id = statusId;
-                    status.className = "text-secondary";
-                    overview.parentNode.insertBefore(status, overview);
-                }
-
-                status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
-            }
-
-            async function appendIconTileSequentially(overview, fileId, fullPath) {
-                const fileIdElem = document.createElement("p");
-                fileIdElem.textContent = "[" + fileId + "]";
-
-                const img = document.createElement("img");
-                img.setAttribute("alt", "Icon " + fileId);
-
-                const name = document.createElement("p");
-                name.textContent = fullPath;
-
-                const button = document.createElement("button");
-                button.setAttribute("type", "button");
-                button.setAttribute("class", "btn btn-primary btn-sm");
-                button.textContent = "Use";
-                button.addEventListener("click", () => {
-                    selectIconFileName(fullPath);
-                });
-
-                const card = document.createElement("div");
-                card.setAttribute("class", "bg-body text-center m-2 p-2 bd-highlight border rounded");
-                card.append(fileIdElem);
-                card.append(img);
-                card.append(name);
-                card.append(button);
-
-                overview.append(card);
-
-                await new Promise((resolve) => {
-                    img.addEventListener("load", function () {
-                        applyZoomToImage(this);
-                        resolve();
-                    }, { once: true });
-
-                    img.addEventListener("error", () => resolve(), { once: true });
-
-                    img.src = fullPath;
-                });
-            }
-
-            async function fillIconPicker(files) {
-                const overview = document.getElementById("iconPickerOverview");
-                const validFiles = files.filter((fileName) => 0 < fileName.length);
-                let loadedCount = 0;
-
-                overview.replaceChildren();
-                updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
-
-                for (let idx = 0; idx < files.length; ++idx) {
-                    if (0 < files[idx].length) {
-                        await appendIconTileSequentially(overview, idx, files[idx]);
-                        ++loadedCount;
-                        updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
-                    }
-                }
-
-                updateIconPickerLoadStatus(overview, validFiles.length, validFiles.length, true);
-            }
-
-            async function openIconPickerDialog(targetInputId) {
-                iconPickerTargetInputId = targetInputId;
-
-                try {
-                    if (null === iconPickerModal) {
-                        iconPickerModal = new bootstrap.Modal(document.getElementById("iconPickerDialog"));
-                    }
-
-                    iconPickerModal.show();
-
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url: restClient.getBaseUri() + "/fileMgrService/files",
-                        isJsonResponse: true
-                    });
-
-                    await fillIconPicker(rsp.data.files);
-                } catch (rsp) {
-                    alert("Failed to load icon list. Open the icons page once to initialize it.");
-                }
-            }
-
-            function enableUI() {
-                utils.enableForm("myFormText", true);
-                utils.enableForm("myFormLamp", true);
-            }
-
-            function disableUI() {
-                utils.enableForm("myFormText", false);
-                utils.enableForm("myFormLamp", false);
-            }
-
-            async function getPluginInstances() {
-                try {
-                    const rsp = await restClient.getPluginInstances();
-                    let cnt = 0;
-                    const elements = document.getElementsByName("pluginAlias");
-
-                    for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
-                        if (rsp.data.slots[slotIndex].name === pluginName) {
-
-                            let optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
-
-                            for (let elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
-
-                                const option = document.createElement("option");
-                                option.setAttribute("value", rsp.data.slots[slotIndex].alias);
-                                option.textContent = optionText;
-
-                                elements[elemIndex].append(option);
-                            }
-
-                            ++cnt;
-                        }
-                    }
-
-                    return cnt;
-                } catch (rsp) {
-                    alert("Internal error.");
-                    return 0;
-                }
-            }
-
-            async function getText(pluginAlias, justTextId, iconFileNameId, scrollIconId, storeFlagId) {
-                disableUI();
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
-                        isJsonResponse: true
-                    });
-                    const justTextInput = document.getElementById(justTextId);
-                    const iconFileNameInput = document.getElementById(iconFileNameId);
-                    const scrollIconInput = document.getElementById(scrollIconId);
-                    const storeFlagIdInput = document.getElementById(storeFlagId);
-
-                    justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
-                    iconFileNameInput.value = rsp.data.iconFileName ?? "";
-                    scrollIconInput.checked = rsp.data.scrollIcon;
-                    storeFlagIdInput.checked = false;
-
-                } catch (rsp) {
-                    alert("Internal error.");
-                } finally {
-                    enableUI();
-                }
-            }
-
-            async function setText(pluginAlias, justText, iconFileName, scrollIcon, storeFlag) {
-                disableUI();
-
-                justText = justText.replaceAll("\\n", "\n");
-                justText = justText.replaceAll("\\r", "");
-
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "POST",
-                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
-                        isJsonResponse: true,
-                        parameter: {
-                            text: justText,
-                            iconFileName: iconFileName,
-                            scrollIcon: scrollIcon,
-                            storeFlag: storeFlag
-                        }
-                    });
-                    alert("Ok.");
-                } catch (rsp) {
-                    alert("Failed.");
-                } finally {
-                    enableUI();
-                }
-            }
-
-            async function getLamp(pluginAlias, lampId, lampStateId) {
-                disableUI();
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "GET",
-                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/lamps",
-                        isJsonResponse: true
-                    });
-                    const selectLampState = document.getElementById(lampStateId);
-
-                    if ("off" == rsp.data.lamps[lampId].state) {
-                        selectLampState.selectedIndex = 0;
-                    } else {
-                        selectLampState.selectedIndex = 1;
-                    }
-
-                } catch (rsp) {
-                    alert("Internal error.");
-                } finally {
-                    enableUI();
-                }
-            }
-
-            async function setLamp(pluginAlias, lampId, lampState) {
-                disableUI();
-
-                try {
-                    const rsp = await utils.makeRequest({
-                        method: "POST",
-                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/lamp/" + lampId,
-                        isJsonResponse: true,
-                        parameter: {
-                            state: lampState
-                        }
-                    });
-                    alert("Ok.");
-                } catch (rsp) {
-                    alert("Failed.");
-                } finally {
-                    enableUI();
-                }
-            }
-
-            async function updateForms() {
-                const selectText = document.getElementById("pluginAliasText");
-
-                if (0 <= selectText.selectedIndex) {
-
-                    return getText(
-                        selectText.options[selectText.selectedIndex].value,
-                        "justText",
-                        "iconFileName",
-                        "scrollIcon",
-                        "storeFlag"
-                    );
-                }
-            }
-
-            document.addEventListener("DOMContentLoaded", async () => {
-                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
-                menu.addSubMenu(menu.data, "Services", serviceSubMenu);
-                menu.create("menu", menu.data);
-
-                /* Wire up event handlers. */
-                document.querySelectorAll("input[name='iconZoomOptions']").forEach((radio) => {
-                    radio.addEventListener("change", updateIconPickerZoom);
-                });
-
-                document.getElementById("btnIconFileNameSelect").addEventListener("click", () => {
-                    openIconPickerDialog("iconFileName");
-                });
-
-                document.getElementById("btnIconFileNameClear").addEventListener("click", () => {
-                    clearIconFileName("iconFileName");
-                });
-
-                const pluginAliasText = document.getElementById("pluginAliasText");
-                pluginAliasText.addEventListener("change", () => {
-                    getText(pluginAliasText.options[pluginAliasText.selectedIndex].value, "justText", "iconFileName", "scrollIcon", "storeFlag");
-                });
-
-                const lampIdSelect = document.getElementById("lampId");
-                lampIdSelect.addEventListener("change", () => {
-                    getLamp(pluginAliasText.options[pluginAliasText.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, "lampState");
-                });
-
-                document.getElementById("myFormText").addEventListener("submit", (event) => {
-                    event.preventDefault();
-                    setText(pluginAliasText.options[pluginAliasText.selectedIndex].value, document.getElementById("justText").value, document.getElementById("iconFileName").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
-                });
-
-                document.getElementById("myFormLamp").addEventListener("submit", (event) => {
-                    event.preventDefault();
-                    const pluginAliasLamp = document.getElementById("pluginAliasLamp");
-                    const lampState = document.getElementById("lampState");
-                    setLamp(pluginAliasLamp.options[pluginAliasLamp.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, lampState.options[lampState.selectedIndex].value);
-                });
-
-                /* Disable all forms, until the plugin instances are loaded. */
-                disableUI();
-
-                /* Load all plugin instances. */
-                const cnt = await getPluginInstances();
-                const selectText = document.getElementById("pluginAliasText");
-                const selectLamp = document.getElementById("pluginAliasLamp");
-                const selectLampId = document.getElementById("lampId");
-
-                if (0 < cnt) {
-                    /* Check if the alias was passed in the URL and auto-select it */
-                    const aliasFromUrl = utils.getURLParameter('alias');
-                    if (aliasFromUrl) {
-                        for (let i = 0; i < selectText.options.length; i++) {
-                            if (selectText.options[i].value === aliasFromUrl) {
-                                selectText.selectedIndex = i;
-                                break;
-                            }
-                        }
-                        for (let i = 0; i < selectLamp.options.length; i++) {
-                            if (selectLamp.options[i].value === aliasFromUrl) {
-                                selectLamp.selectedIndex = i;
-                                break;
-                            }
-                        }
-                    }
-
-                    await updateForms();
-                    await getLamp(
-                        selectLamp.options[selectLamp.selectedIndex].value,
-                        selectLampId.options[selectLampId.selectedIndex].value,
-                        "lampState"
-                    );
-                }
+            images.forEach((image) => {
+                applyZoomToImage(image);
             });
-        </script>
-    </body>
+        }
+
+        function selectIconFileName(fileName) {
+            if ("" !== iconPickerTargetInputId) {
+                document.getElementById(iconPickerTargetInputId).value = fileName;
+            }
+
+            if (null !== iconPickerModal) {
+                iconPickerModal.hide();
+            }
+        }
+
+        function clearIconFileName(targetInputId) {
+            document.getElementById(targetInputId).value = "";
+        }
+
+        function updateIconPickerLoadStatus(overview, loadedCount, totalCount, isDone = false) {
+            const statusId = "icon-picker-load-status";
+            let status = document.getElementById(statusId);
+
+            if (isDone === true) {
+                if (status !== null) {
+                    status.remove();
+                }
+
+                return;
+            }
+
+            if (status === null) {
+                status = document.createElement("p");
+                status.id = statusId;
+                status.className = "text-secondary";
+                overview.parentNode.insertBefore(status, overview);
+            }
+
+            status.textContent = "Loading icons " + loadedCount + "/" + totalCount + "...";
+        }
+
+        async function appendIconTileSequentially(overview, fileId, fullPath) {
+            const fileIdElem = document.createElement("p");
+            fileIdElem.textContent = "[" + fileId + "]";
+
+            const img = document.createElement("img");
+            img.setAttribute("alt", "Icon " + fileId);
+
+            const name = document.createElement("p");
+            name.textContent = fullPath;
+
+            const button = document.createElement("button");
+            button.setAttribute("type", "button");
+            button.setAttribute("class", "btn btn-primary btn-sm");
+            button.textContent = "Use";
+            button.addEventListener("click", () => {
+                selectIconFileName(fullPath);
+            });
+
+            const card = document.createElement("div");
+            card.setAttribute("class", "bg-body text-center m-2 p-2 bd-highlight border rounded");
+            card.append(fileIdElem);
+            card.append(img);
+            card.append(name);
+            card.append(button);
+
+            overview.append(card);
+
+            await new Promise((resolve) => {
+                img.addEventListener("load", function () {
+                    applyZoomToImage(this);
+                    resolve();
+                }, { once: true });
+
+                img.addEventListener("error", () => resolve(), { once: true });
+
+                img.src = fullPath;
+            });
+        }
+
+        async function fillIconPicker(files) {
+            const overview = document.getElementById("iconPickerOverview");
+            const validFiles = files.filter((fileName) => 0 < fileName.length);
+            let loadedCount = 0;
+
+            overview.replaceChildren();
+            updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
+
+            for (let idx = 0; idx < files.length; ++idx) {
+                if (0 < files[idx].length) {
+                    await appendIconTileSequentially(overview, idx, files[idx]);
+                    ++loadedCount;
+                    updateIconPickerLoadStatus(overview, loadedCount, validFiles.length);
+                }
+            }
+
+            updateIconPickerLoadStatus(overview, validFiles.length, validFiles.length, true);
+        }
+
+        async function openIconPickerDialog(targetInputId) {
+            iconPickerTargetInputId = targetInputId;
+
+            try {
+                if (null === iconPickerModal) {
+                    iconPickerModal = new bootstrap.Modal(document.getElementById("iconPickerDialog"));
+                }
+
+                iconPickerModal.show();
+
+                const rsp = await utils.makeRequest({
+                    method: "GET",
+                    url: restClient.getBaseUri() + "/fileMgrService/files",
+                    isJsonResponse: true
+                });
+
+                await fillIconPicker(rsp.data.files);
+            } catch (rsp) {
+                alert("Failed to load icon list. Open the icons page once to initialize it.");
+            }
+        }
+
+        function enableUI() {
+            utils.enableForm("myFormText", true);
+            utils.enableForm("myFormLamp", true);
+        }
+
+        function disableUI() {
+            utils.enableForm("myFormText", false);
+            utils.enableForm("myFormLamp", false);
+        }
+
+        async function getPluginInstances() {
+            try {
+                const rsp = await restClient.getPluginInstances();
+                let cnt = 0;
+                const elements = document.getElementsByName("pluginAlias");
+
+                for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                    if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                        let optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
+
+                        for (let elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+
+                            const option = document.createElement("option");
+                            option.setAttribute("value", rsp.data.slots[slotIndex].alias);
+                            option.textContent = optionText;
+
+                            elements[elemIndex].append(option);
+                        }
+
+                        ++cnt;
+                    }
+                }
+
+                return cnt;
+            } catch (rsp) {
+                alert("Internal error.");
+                return 0;
+            }
+        }
+
+        async function getText(pluginAlias, justTextId, iconFileNameId, scrollIconId, storeFlagId) {
+            disableUI();
+            try {
+                const rsp = await utils.makeRequest({
+                    method: "GET",
+                    url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
+                    isJsonResponse: true
+                });
+                const justTextInput = document.getElementById(justTextId);
+                const iconFileNameInput = document.getElementById(iconFileNameId);
+                const scrollIconInput = document.getElementById(scrollIconId);
+                const storeFlagIdInput = document.getElementById(storeFlagId);
+
+                justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
+                iconFileNameInput.value = rsp.data.iconFileName ?? "";
+                scrollIconInput.checked = rsp.data.scrollIcon;
+                storeFlagIdInput.checked = false;
+
+            } catch (rsp) {
+                alert("Internal error.");
+            } finally {
+                enableUI();
+            }
+        }
+
+        async function setText(pluginAlias, justText, iconFileName, scrollIcon, storeFlag) {
+            disableUI();
+
+            justText = justText.replaceAll("\\n", "\n");
+            justText = justText.replaceAll("\\r", "");
+
+            try {
+                const rsp = await utils.makeRequest({
+                    method: "POST",
+                    url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/iconText",
+                    isJsonResponse: true,
+                    parameter: {
+                        text: justText,
+                        iconFileName: iconFileName,
+                        scrollIcon: scrollIcon,
+                        storeFlag: storeFlag
+                    }
+                });
+                alert("Ok.");
+            } catch (rsp) {
+                alert("Failed.");
+            } finally {
+                enableUI();
+            }
+        }
+
+        async function getLamp(pluginAlias, lampId, lampStateId) {
+            disableUI();
+            try {
+                const rsp = await utils.makeRequest({
+                    method: "GET",
+                    url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/lamps",
+                    isJsonResponse: true
+                });
+                const selectLampState = document.getElementById(lampStateId);
+
+                if ("off" == rsp.data.lamps[lampId].state) {
+                    selectLampState.selectedIndex = 0;
+                } else {
+                    selectLampState.selectedIndex = 1;
+                }
+
+            } catch (rsp) {
+                alert("Internal error.");
+            } finally {
+                enableUI();
+            }
+        }
+
+        async function setLamp(pluginAlias, lampId, lampState) {
+            disableUI();
+
+            try {
+                const rsp = await utils.makeRequest({
+                    method: "POST",
+                    url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/lamp/" + lampId,
+                    isJsonResponse: true,
+                    parameter: {
+                        state: lampState
+                    }
+                });
+                alert("Ok.");
+            } catch (rsp) {
+                alert("Failed.");
+            } finally {
+                enableUI();
+            }
+        }
+
+        async function updateForms() {
+            const selectText = document.getElementById("pluginAliasText");
+
+            if (0 <= selectText.selectedIndex) {
+
+                return getText(
+                    selectText.options[selectText.selectedIndex].value,
+                    "justText",
+                    "iconFileName",
+                    "scrollIcon",
+                    "storeFlag"
+                );
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+            menu.addSubMenu(menu.data, "Services", serviceSubMenu);
+            menu.create("menu", menu.data);
+
+            /* Wire up event handlers. */
+            document.querySelectorAll("input[name='iconZoomOptions']").forEach((radio) => {
+                radio.addEventListener("change", updateIconPickerZoom);
+            });
+
+            document.getElementById("btnIconFileNameSelect").addEventListener("click", () => {
+                openIconPickerDialog("iconFileName");
+            });
+
+            document.getElementById("btnIconFileNameClear").addEventListener("click", () => {
+                clearIconFileName("iconFileName");
+            });
+
+            const pluginAliasText = document.getElementById("pluginAliasText");
+            pluginAliasText.addEventListener("change", () => {
+                getText(pluginAliasText.options[pluginAliasText.selectedIndex].value, "justText", "iconFileName", "scrollIcon", "storeFlag");
+            });
+
+            const lampIdSelect = document.getElementById("lampId");
+            lampIdSelect.addEventListener("change", () => {
+                getLamp(pluginAliasText.options[pluginAliasText.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, "lampState");
+            });
+
+            document.getElementById("myFormText").addEventListener("submit", (event) => {
+                event.preventDefault();
+                setText(pluginAliasText.options[pluginAliasText.selectedIndex].value, document.getElementById("justText").value, document.getElementById("iconFileName").value, document.getElementById("scrollIcon").checked, document.getElementById("storeFlag").checked);
+            });
+
+            document.getElementById("myFormLamp").addEventListener("submit", (event) => {
+                event.preventDefault();
+                const pluginAliasLamp = document.getElementById("pluginAliasLamp");
+                const lampState = document.getElementById("lampState");
+                setLamp(pluginAliasLamp.options[pluginAliasLamp.selectedIndex].value, lampIdSelect.options[lampIdSelect.selectedIndex].value, lampState.options[lampState.selectedIndex].value);
+            });
+
+            /* Disable all forms, until the plugin instances are loaded. */
+            disableUI();
+
+            /* Load all plugin instances. */
+            const cnt = await getPluginInstances();
+            const selectText = document.getElementById("pluginAliasText");
+            const selectLamp = document.getElementById("pluginAliasLamp");
+            const selectLampId = document.getElementById("lampId");
+
+            if (0 < cnt) {
+                /* Check if the alias was passed in the URL and auto-select it */
+                const aliasFromUrl = utils.getURLParameter('alias');
+                if (aliasFromUrl) {
+                    for (let i = 0; i < selectText.options.length; i++) {
+                        if (selectText.options[i].value === aliasFromUrl) {
+                            selectText.selectedIndex = i;
+                            break;
+                        }
+                    }
+                    for (let i = 0; i < selectLamp.options.length; i++) {
+                        if (selectLamp.options[i].value === aliasFromUrl) {
+                            selectLamp.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                await updateForms();
+                await getLamp(
+                    selectLamp.options[selectLamp.selectedIndex].value,
+                    selectLampId.options[selectLampId.selectedIndex].value,
+                    "lampState"
+                );
+            }
+        });
+    </script>
+</body>
 
 </html>

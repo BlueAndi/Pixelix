@@ -150,6 +150,7 @@ static const ContentTypeElem contentTypeTable[] = {
     { ".gif", "image/gif" },
     { ".jpg", "image/jpg" },
     { ".ico", "image/x-icon" },
+    { ".webp", "image/webp" },
     { ".gz", "application/x-gzip" }
 };
 
