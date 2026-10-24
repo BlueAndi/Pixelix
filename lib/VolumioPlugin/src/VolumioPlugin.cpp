@@ -420,10 +420,14 @@ bool VolumioPlugin::startHttpRequest()
     return status;
 }
 
-bool VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool                            isSuccessful = false;
-    const size_t                    FILTER_SIZE  = 128U;
+    /* FILTER_SIZE is given in slots instead of byte, because a slot is 16 byte
+     * on the 32 bit target, but 32 byte on a 64 bit host. The filter needs
+     * 6 slots.
+     */
+    RestService::PreProcessResult   result      = RestService::PreProcessResult::FAILED;
+    const size_t                    FILTER_SIZE = JSON_OBJECT_SIZE(8U);
     StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
     jsonFilterDoc["artist"]   = true;
@@ -439,19 +443,10 @@ bool VolumioPlugin::preProcessAsyncWebResponse(const char* payload, size_t paylo
     }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc)));
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void VolumioPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)

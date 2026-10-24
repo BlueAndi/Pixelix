@@ -584,10 +584,10 @@ bool GrabViaRestPlugin::startHttpRequest()
     return status;
 }
 
-bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool                       isSuccessful = false;
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    RestService::PreProcessResult result = RestService::PreProcessResult::FAILED;
+    MutexGuard<MutexRecursive>    guard(m_mutex);
 
     if ((nullptr == payload) ||
         (0U == payloadSize))
@@ -600,19 +600,10 @@ bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
     }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter)));
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantConst filter, JsonArray& values)

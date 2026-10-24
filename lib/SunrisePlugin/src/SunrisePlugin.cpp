@@ -406,9 +406,9 @@ bool SunrisePlugin::startHttpRequest()
     return status;
 }
 
-bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool isSuccessful = false;
+    RestService::PreProcessResult result = RestService::PreProcessResult::FAILED;
 
     if ((nullptr == payload) ||
         (0U == payloadSize))
@@ -448,20 +448,11 @@ bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t paylo
         }
         else
         {
-            DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-            if (DeserializationError::Ok != error.code())
-            {
-                LOG_ERROR("Invalid JSON message received: %s", error.c_str());
-            }
-            else
-            {
-                isSuccessful = true;
-            }
+            result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc)));
         }
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void SunrisePlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)

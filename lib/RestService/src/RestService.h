@@ -70,9 +70,47 @@ class RestService : public IService
 public:
 
     /**
-     * Prototype of a preprocessing callback for a successful response.
+     * Result of a preprocessing callback.
+     *
+     * It tells the REST service whether the response was handled, whether it
+     * is worth another attempt with a larger document, or whether the payload
+     * is unusable.
      */
-    typedef std::function<bool(const char*, size_t, PsramJsonDocument&)> PreProcessCallback;
+    enum class PreProcessResult
+    {
+        OK = 0,     /**< The result is stored in the document. */
+        NEEDS_MORE, /**< The document is too small. Retry with a larger one. */
+        FAILED      /**< The payload is not usable. Do not retry. */
+    };
+
+    /**
+     * Prototype of a preprocessing callback for a successful response.
+     *
+     * The REST service provides a document, which is sized by a heuristic
+     * based on the payload size. The heuristic can be wrong, because the
+     * parsed representation of a structure heavy payload needs more memory
+     * than its JSON text. Therefore a callback, which runs out of document
+     * memory, shall return PreProcessResult::NEEDS_MORE instead of
+     * PreProcessResult::FAILED. The REST service will then call it again with
+     * a larger document, up to DOC_PARSE_ATTEMPTS times.
+     *
+     * Note, the callback may be called more than once for the same response.
+     * It must not have any side effect outside of the given document.
+     */
+    typedef std::function<PreProcessResult(const char*, size_t, PsramJsonDocument&)> PreProcessCallback;
+
+    /**
+     * Map a deserialization error to a preprocessing result.
+     *
+     * A document which ran out of memory is worth another attempt with a
+     * larger one, therefore it is mapped to PreProcessResult::NEEDS_MORE.
+     * Any other error is final and gets logged.
+     *
+     * @param[in] error Deserialization error
+     *
+     * @return Preprocessing result
+     */
+    static PreProcessResult toPreProcessResult(const DeserializationError& error);
 
     /**
      * Get the REST service instance.
@@ -296,14 +334,54 @@ private:
     /** Response Queue */
     typedef std::vector<Response> ResponseQueue;
 
-    RequestQueue                  m_requestQueue;             /**< Stores requests for sequential execution. */
-    ResponseQueue                 m_responseQueue;            /**< Saves responses to outgoing requests. */
-    bool                          m_isRunning;                /**< Signals the status of the service. True means it is running, false means it is stopped. */
-    uint32_t                      m_restIdCounter;            /**< Used to generate restIds. */
-    uint32_t                      m_activeRestId;             /**< Saves the restId of the in-flight request. */
-    HttpJobId                     m_activeHttpJobId;          /**< Saves the HTTP service job id of the in-flight request. */
-    PreProcessCallback            m_activePreProcessCallback; /**< Saves the callback sent by a request until the response arrives. */
-    Mutex                         m_mutex;                    /**< Mutex to protect against concurrent access. */
+    /**
+     * Slot size in byte of a 32 bit target, which the payload size based
+     * document sizing is calibrated for.
+     */
+    static const size_t JSON_SLOT_SIZE_32_BIT = 16U;
+
+    /**
+     * Ratio between the slot size of the build platform and the one of a
+     * 32 bit target. It is 1 on the target itself and 2 on a 64 bit host,
+     * where every slot costs twice as much.
+     */
+    static const size_t DOC_SIZE_SLOT_RATIO   = (JSON_OBJECT_SIZE(1U) + JSON_SLOT_SIZE_32_BIT - 1U) / JSON_SLOT_SIZE_32_BIT;
+
+    /**
+     * Lower limit for the response document size in byte. It covers small
+     * payloads, whose parsed representation is a multiple of their text.
+     */
+    static const size_t DOC_SIZE_MIN          = 512U;
+
+    /**
+     * Upper limit for the response document size in byte. It stops a runaway
+     * allocation if a callback keeps asking for more.
+     *
+     * A target without PSRAM has to share its internal RAM with the WiFi and
+     * TLS buffers, therefore the budget is much smaller there. Note, the limit
+     * never undercuts the payload size, see getMaxDocSize().
+     */
+#if defined(BOARD_HAS_PSRAM) || defined(NATIVE)
+    static const size_t DOC_SIZE_MAX = 128U * 1024U;
+#else
+    static const size_t DOC_SIZE_MAX = 16U * 1024U;
+#endif /* defined(BOARD_HAS_PSRAM) || defined(NATIVE) */
+
+    /**
+     * Max. number of attempts to preprocess a response. Every attempt doubles
+     * the document size, therefore the document grows up to
+     * 2^(DOC_PARSE_ATTEMPTS - 1) times the initial size.
+     */
+    static const uint8_t DOC_PARSE_ATTEMPTS = 4U;
+
+    RequestQueue         m_requestQueue;             /**< Stores requests for sequential execution. */
+    ResponseQueue        m_responseQueue;            /**< Saves responses to outgoing requests. */
+    bool                 m_isRunning;                /**< Signals the status of the service. True means it is running, false means it is stopped. */
+    uint32_t             m_restIdCounter;            /**< Used to generate restIds. */
+    uint32_t             m_activeRestId;             /**< Saves the restId of the in-flight request. */
+    HttpJobId            m_activeHttpJobId;          /**< Saves the HTTP service job id of the in-flight request. */
+    PreProcessCallback   m_activePreProcessCallback; /**< Saves the callback sent by a request until the response arrives. */
+    Mutex                m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Constructs the service instance.
@@ -339,6 +417,35 @@ private:
      * @param[in] httpRsp HTTP response.
      */
     void handleHttpResponse(const HttpRsp& httpRsp);
+
+    /**
+     * Determine the size of the first response document for a given payload.
+     *
+     * @param[in] payloadSize Payload size in byte
+     *
+     * @return Document size in byte
+     */
+    static size_t getInitialDocSize(size_t payloadSize);
+
+    /**
+     * Determine the upper limit of the response document for a given payload.
+     *
+     * @param[in] payloadSize Payload size in byte
+     *
+     * @return Max. document size in byte
+     */
+    static size_t getMaxDocSize(size_t payloadSize);
+
+    /**
+     * Preprocess a response payload, growing the document on demand.
+     *
+     * @param[in]  payload     Response payload
+     * @param[in]  payloadSize Payload size in byte
+     * @param[out] jsonDoc     Document which receives the result
+     *
+     * @return If successful it will return true otherwise false.
+     */
+    bool preProcessResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 
     /**
      * Generates a valid restId.

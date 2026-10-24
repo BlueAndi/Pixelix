@@ -378,7 +378,7 @@ bool GruenbeckPlugin::startHttpRequest()
     return status;
 }
 
-bool GruenbeckPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult GruenbeckPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     /* Structure of response-payload for requesting D_Y_10_1
      *
@@ -395,19 +395,38 @@ bool GruenbeckPlugin::preProcessAsyncWebResponse(const char* payload, size_t pay
     /* Length of relevant data */
     const uint32_t RELEVANT_DATA_LENGTH         = 3U;
 
-    bool           isSuccessful                 = false;
-    char           restCapacity[RELEVANT_DATA_LENGTH + 1];
+    /* Size of the document, which holds one member with a copy of the relevant
+     * data. The slot part is given in slots, because a slot is 16 byte on the
+     * 32 bit target, but 32 byte on a 64 bit host.
+     */
+    const size_t                  DOC_SIZE      = JSON_OBJECT_SIZE(1U) + RELEVANT_DATA_LENGTH + 1U;
+
+    RestService::PreProcessResult result        = RestService::PreProcessResult::FAILED;
+    char                          restCapacity[RELEVANT_DATA_LENGTH + 1];
 
     if ((nullptr != payload) &&
         (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH)))
     {
         memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
         restCapacity[RELEVANT_DATA_LENGTH] = '\0';
+
+        /* The REST service sizes the document to the payload size, which is
+         * only by coincidence sufficient. Size it to what is really stored.
+         */
+        jsonDoc                            = PsramJsonDocument(DOC_SIZE);
         jsonDoc["restCapacity"]            = restCapacity;
-        isSuccessful                       = true;
+
+        if (true == jsonDoc.overflowed())
+        {
+            LOG_ERROR("JSON document size exceeded.");
+        }
+        else
+        {
+            result = RestService::PreProcessResult::OK;
+        }
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void GruenbeckPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)

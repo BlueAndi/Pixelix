@@ -465,7 +465,8 @@ bool SignalDetectorPlugin::startHttpRequest()
 
         LOG_INFO("Signal detection reported.");
 
-        return true;
+        /* The response content is not of interest, only that it arrived. */
+        return RestService::PreProcessResult::OK;
     };
 
     if (false == m_pushUrl.isEmpty())

@@ -491,11 +491,11 @@ bool OpenMeteoPlugin::startHttpRequest()
     return status;
 }
 
-bool OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool              isSuccessful = false;
-    const size_t      FILTER_SIZE  = 640U;
-    PsramJsonDocument jsonFilterDoc(FILTER_SIZE);
+    RestService::PreProcessResult result      = RestService::PreProcessResult::FAILED;
+    const size_t                  FILTER_SIZE = 640U;
+    PsramJsonDocument             jsonFilterDoc(FILTER_SIZE);
 
     /* Example:
         {
@@ -596,19 +596,10 @@ bool OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t pay
     }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc)));
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void OpenMeteoPlugin::setViewUnits()

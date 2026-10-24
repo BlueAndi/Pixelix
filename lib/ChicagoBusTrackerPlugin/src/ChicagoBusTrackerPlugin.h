@@ -349,8 +349,12 @@ private:
 
     /**
      * JSON filter document size used by preProcessAsyncWebResponse and preProcessProxyResponse.
+     *
+     * Given in slots instead of byte, because a slot is 16 byte on the 32 bit
+     * target, but 32 byte on a 64 bit host. The largest filter is the one of
+     * the arrival predictions and needs 8 slots.
      */
-    static const size_t FILTER_SIZE            = 192U;
+    static const size_t FILTER_SIZE            = JSON_OBJECT_SIZE(12U);
 
     /**
      * Static String holds one API key for all Bus Tracker instances
@@ -409,7 +413,7 @@ private:
      *
      * @return If successful it will return true otherwise false.
      */
-    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
+    RestService::PreProcessResult preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 
     /**
      * Handle a web response from the server.
@@ -439,7 +443,7 @@ private:
      *
      * @return If successful it will return true otherwise false.
      */
-    bool preProcessProxyResponse(const String& path, const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
+    RestService::PreProcessResult preProcessProxyResponse(const String& path, const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 };
 
 /******************************************************************************

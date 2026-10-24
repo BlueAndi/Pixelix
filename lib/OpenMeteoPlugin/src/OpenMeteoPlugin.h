@@ -379,7 +379,7 @@ private:
      *
      * @return If successful it will return true otherwise false.
      */
-    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
+    RestService::PreProcessResult preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 
     /**
      * Set the view units for temperature and wind speed,

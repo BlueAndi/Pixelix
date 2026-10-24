@@ -582,10 +582,10 @@ bool ChicagoBusTrackerPlugin::startHttpRequest()
     return status;
 }
 
-bool ChicagoBusTrackerPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult ChicagoBusTrackerPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool                isSuccessful = false;
-    DynamicJsonDocument jsonFilterDoc(FILTER_SIZE);
+    RestService::PreProcessResult result = RestService::PreProcessResult::FAILED;
+    DynamicJsonDocument           jsonFilterDoc(FILTER_SIZE);
 
     /* Example:
     {
@@ -639,19 +639,10 @@ bool ChicagoBusTrackerPlugin::preProcessAsyncWebResponse(const char* payload, si
     }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc)));
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void ChicagoBusTrackerPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
@@ -832,10 +823,11 @@ bool ChicagoBusTrackerPlugin::startProxyRequest(const String& path)
     return isSuccessful;
 }
 
-bool ChicagoBusTrackerPlugin::preProcessProxyResponse(const String& path, const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult ChicagoBusTrackerPlugin::preProcessProxyResponse(const String& path, const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool                isSuccessful = false;
-    DynamicJsonDocument filter(FILTER_SIZE);
+    RestService::PreProcessResult result           = RestService::PreProcessResult::FAILED;
+    bool                          isFilterRequired = true;
+    DynamicJsonDocument           filter(FILTER_SIZE);
 
     if (true == path.startsWith("/getroutes"))
     {
@@ -854,39 +846,23 @@ bool ChicagoBusTrackerPlugin::preProcessProxyResponse(const String& path, const 
     else
     {
         /* Unknown endpoint — pass through without filtering. */
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize);
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("Proxy JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
-
-        return isSuccessful;
+        isFilterRequired = false;
     }
 
-    if (true == filter.overflowed())
+    if ((true == isFilterRequired) && (true == filter.overflowed()))
     {
         LOG_ERROR("Proxy: filter document overflowed.");
     }
+    else if (false == isFilterRequired)
+    {
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize));
+    }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("Proxy JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter)));
     }
 
-    return isSuccessful;
+    return result;
 }
 
 
