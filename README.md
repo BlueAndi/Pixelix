@@ -77,7 +77,7 @@ It doesn't require any cloud connection, even its not required to have a smartho
 
 - Supports 32x8, 32x16 and 64x64 LED matrix size out of the box.
 - Supports some small TFT displays to simulate a LED matrix in retro style.
-- Display static or scrolling text, as well as static (BMP and GIF) or animated icons (GIF).
+- Display static or scrolling text, as well as static or animated icons (BMP, GIF and additional for boards with PSRAM PNG and WEBP).
 - Includes a web interface for configuration and control.
 - Supports REST and MQTT API for remote control and integration with other systems, like [Home Assistant](https://www.home-assistant.io/).
 - Extendable with custom effects and animations by plugins. See list of [plugins](./doc/PLUGINS.md).
