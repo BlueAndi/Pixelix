@@ -479,13 +479,17 @@ void LedGridSim::renderMenuBar() const
              * does not promise something it cannot deliver.
              */
             const bool isAudioAvailable = m_buzzerDrv->isAudioAvailable();
-            bool       isMuted          = m_buzzerDrv->isMuted();
+            const bool isMuted          = m_buzzerDrv->isMuted();
+            /* The entry is labelled with the action it performs. Therefore the
+             * current buzzer state can be derived from it without a check mark.
+             */
+            const char* label           = (false == isMuted) ? "Mute" : "Unmute";
 
             ImGui::BeginDisabled(false == isAudioAvailable);
 
-            if (true == ImGui::MenuItem("Mute", nullptr, &isMuted))
+            if (true == ImGui::MenuItem(label))
             {
-                m_buzzerDrv->setMuted(isMuted);
+                m_buzzerDrv->setMuted(false == isMuted);
             }
 
             ImGui::EndDisabled();
