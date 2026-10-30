@@ -41,6 +41,7 @@
 #include <math.h>
 #include <string.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -117,7 +118,7 @@ bool OpenMeteoPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg             = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonUpdatePeriod    = value["updatePeriod"];
@@ -494,7 +495,7 @@ bool OpenMeteoPlugin::startHttpRequest()
 RestService::PreProcessResult OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
     RestService::PreProcessResult result      = RestService::PreProcessResult::FAILED;
-    const size_t                  FILTER_SIZE = 640U;
+    const size_t                  FILTER_SIZE = Json::getJsonSize(640U);
     PsramJsonDocument             jsonFilterDoc(FILTER_SIZE);
 
     /* Example:

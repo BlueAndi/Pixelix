@@ -43,6 +43,7 @@
 #include <Util.h>
 #include <TopicHandlerService.h>
 #include <SettingsService.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -273,7 +274,7 @@ bool SensorDataProvider::load()
 {
     bool              status = false;
     JsonFile          jsonFile(FILESYSTEM);
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (true == jsonFile.load(SENSOR_CALIB_FILE_NAME, jsonDoc))
@@ -320,7 +321,7 @@ bool SensorDataProvider::load()
 bool SensorDataProvider::save()
 {
     JsonFile          jsonFile(FILESYSTEM);
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint8_t           sensorIdx  = 0U;
     const uint8_t     SENSOR_CNT = m_impl->getNumSensors();
@@ -531,7 +532,7 @@ void SensorDataProvider::createCalibrationFile()
                 }
                 else
                 {
-                    const size_t      JSON_DOC_SIZE = 256U;
+                    const size_t      JSON_DOC_SIZE = Json::getJsonSize(256U);
                     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
                     if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
@@ -550,7 +551,7 @@ void SensorDataProvider::registerSensorTopics()
 {
     uint8_t              index               = 0U;
     TopicHandlerService& topicHandlerService = TopicHandlerService::getInstance();
-    const size_t         JSON_DOC_SIZE       = 256U;
+    const size_t         JSON_DOC_SIZE       = Json::getJsonSize(256U);
     PsramJsonDocument    jsonDocExtra(JSON_DOC_SIZE);
 
     for (index = 0U; index < UTIL_ARRAY_NUM(gSensorTopics); ++index)

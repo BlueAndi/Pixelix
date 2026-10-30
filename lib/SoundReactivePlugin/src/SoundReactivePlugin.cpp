@@ -37,6 +37,7 @@
 #include "AudioService.h"
 
 #include <Logging.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -109,7 +110,7 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& v
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(512U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg         = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonFreqBandLen = value["freqBandLen"];

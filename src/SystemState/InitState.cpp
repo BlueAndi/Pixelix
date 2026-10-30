@@ -70,6 +70,7 @@
 #include <ESPmDNS.h>
 #include <SettingsService.h>
 #include <WiFiUtil.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -569,7 +570,7 @@ bool InitState::isFsCompatible()
 {
     bool              isCompatible = false;
     JsonFile          jsonFile(FILESYSTEM);
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))

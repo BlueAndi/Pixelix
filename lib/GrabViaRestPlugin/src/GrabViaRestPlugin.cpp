@@ -40,6 +40,7 @@
 #include <HttpStatus.h>
 #include <Util.h>
 #include <PsramJsonDocument.hpp>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -106,7 +107,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 1024U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(1024U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonMethod       = value["method"];
@@ -155,7 +156,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             }
             else if (true == jsonFilter.is<String>())
             {
-                const size_t         JSON_DOC_FILTER_SIZE = 256U;
+                const size_t         JSON_DOC_FILTER_SIZE = Json::getJsonSize(256U);
                 PsramJsonDocument    jsonDocFilter(JSON_DOC_FILTER_SIZE);
                 DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<const char*>());
 
@@ -667,7 +668,7 @@ void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantCo
 void GrabViaRestPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
     const size_t      BUFFER_SIZE   = 128U;
-    const size_t      JSON_DOC_SIZE = 1024U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDocValues(JSON_DOC_SIZE);
     JsonArray         jsonValuesArray = jsonDocValues.to<JsonArray>();
     size_t            index           = 0U;

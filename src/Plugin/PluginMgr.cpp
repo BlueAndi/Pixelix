@@ -46,6 +46,7 @@
 #include <PluginAlias.hpp>
 #include <SettingsService.h>
 #include <TopicHandlerService.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -180,7 +181,7 @@ bool PluginMgr::load()
 {
     bool              isSuccessful = true;
     JsonFile          jsonFile(FILESYSTEM);
-    const size_t      JSON_DOC_SIZE = 4096U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(4096U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     String            fullConfigFileName  = Plugin::CONFIG_PATH;
 
@@ -233,7 +234,7 @@ void PluginMgr::save()
 {
     String            installation;
     uint8_t           slotId        = 0;
-    const size_t      JSON_DOC_SIZE = 4096U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(4096U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonArray         jsonSlots = jsonDoc.createNestedArray("slotConfiguration");
     JsonFile          jsonFile(FILESYSTEM);

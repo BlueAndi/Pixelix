@@ -58,6 +58,7 @@
 #include <PsramJsonDocument.hpp>
 #include <esp_core_dump.h>
 #include <esp_partition.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -226,7 +227,7 @@ void RestApi::init(AsyncWebServer& srv)
  */
 void RestApi::error(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
@@ -284,7 +285,7 @@ static bool parseStringBool(const String& str, bool& outValue)
 static void handleFadeEffect(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -354,7 +355,7 @@ static void handleSlots(AsyncWebServerRequest* request)
     /* Every slot is part of the response, therefore the required document size
      * depends on the number of slots.
      */
-    const size_t      JSON_DOC_SIZE = 512U + (static_cast<size_t>(maxSlots) * SLOT_INFO_DOC_SIZE);
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U + (static_cast<size_t>(maxSlots) * SLOT_INFO_DOC_SIZE));
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -397,7 +398,7 @@ static void handleSlots(AsyncWebServerRequest* request)
 static void handleSlot(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 1024U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -577,7 +578,7 @@ static void handleSlot(AsyncWebServerRequest* request)
  */
 static void handlePluginInstall(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -647,7 +648,7 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
  */
 static void handlePluginUninstall(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -737,7 +738,7 @@ static void handlePlugins(AsyncWebServerRequest* request)
     /* The name of every plugin type is part of the response, therefore the
      * required document size depends on the number of plugin types.
      */
-    const size_t      JSON_DOC_SIZE                 = 512U + JSON_ARRAY_SIZE(pluginTypeListLength);
+    const size_t      JSON_DOC_SIZE                 = Json::getJsonSize(512U) + JSON_ARRAY_SIZE(pluginTypeListLength);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -779,7 +780,7 @@ static void handlePlugins(AsyncWebServerRequest* request)
  */
 static void handleSensors(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 2048U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(2048U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -846,7 +847,7 @@ static void handleSensors(AsyncWebServerRequest* request)
  */
 static void handleSettings(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 1024U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -894,7 +895,7 @@ static void handleSettings(AsyncWebServerRequest* request)
  */
 static void handleSetting(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 2048U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(2048U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
     SettingsService&  settings       = SettingsService::getInstance();
@@ -1293,7 +1294,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
 static void handleDevice(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 1024U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1422,7 +1423,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
      */
     String            content;
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 4096U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(4096U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1489,7 +1490,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
  */
 static void handleFileGet(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1572,7 +1573,7 @@ static const char* getContentType(const String& filename)
 static void handleFilePost(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1668,7 +1669,7 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
 static void handleFileDelete(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1905,7 +1906,7 @@ static bool isValidHostname(const String& hostname)
 static void handlePartitionChange(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     const uint32_t    RESTART_DELAY = 100U; /* ms */
 
@@ -2003,7 +2004,7 @@ static HomeAssistantDiscoveryStatus disableHomeAssistantAutomaticDiscovery()
 static void handleHomeAssistantAutomaticDiscoveryDisable(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -2088,7 +2089,7 @@ static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus()
 static void handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -2141,7 +2142,7 @@ static void handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* r
 static void handleCoredump(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 2048U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(2048U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)

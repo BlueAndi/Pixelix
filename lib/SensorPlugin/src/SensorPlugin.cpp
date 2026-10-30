@@ -39,6 +39,7 @@
 #include <ArduinoJson.h>
 #include <SensorDataProvider.h>
 #include <SensorChannelType.hpp>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -91,7 +92,7 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(512U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonSensorIndex  = value["sensorIndex"];

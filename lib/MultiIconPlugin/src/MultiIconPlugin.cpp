@@ -38,6 +38,7 @@
 
 #include <Logging.h>
 #include <Util.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -157,7 +158,7 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
         if ((true == status) &&
             (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
-            const size_t        JSON_DOC_SIZE = 512U;
+            const size_t        JSON_DOC_SIZE = Json::getJsonSize(512U);
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
             JsonObject          jsonCfg      = jsonDoc.to<JsonObject>();
             JsonVariantConst    jsonFileName = value["fileName"];
@@ -189,7 +190,7 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     }
     else if (true == topic.equals(TOPIC_SLOTS))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(512U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg   = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonSlots = value["slots"];

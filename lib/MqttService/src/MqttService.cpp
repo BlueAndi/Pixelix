@@ -41,6 +41,7 @@
 #include <SettingsService.h>
 #include <Util.h>
 #include <Logging.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -276,7 +277,7 @@ void MqttService::clear()
 bool MqttService::loadSettings()
 {
     bool                isSuccessful = false;
-    const size_t        JSON_SIZE    = 8192U;
+    const size_t        JSON_SIZE    = Json::getJsonSize(8192U);
     DynamicJsonDocument jsonDoc(JSON_SIZE);
     JsonFile            jsonFile(FILESYSTEM);
 
@@ -328,7 +329,7 @@ bool MqttService::loadSettings()
 bool MqttService::saveSettings()
 {
     bool                isSuccessful = false;
-    const size_t        JSON_SIZE    = 8192U;
+    const size_t        JSON_SIZE    = Json::getJsonSize(8192U);
     DynamicJsonDocument jsonDoc(JSON_SIZE);
     JsonArray           jsonMqttSettings = jsonDoc.createNestedArray("mqttSettings");
     JsonFile            jsonFile(FILESYSTEM);

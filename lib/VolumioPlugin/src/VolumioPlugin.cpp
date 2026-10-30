@@ -38,6 +38,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -90,7 +91,7 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonHost       = value["host"];

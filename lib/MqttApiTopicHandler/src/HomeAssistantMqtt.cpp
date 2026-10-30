@@ -47,6 +47,7 @@
 #include <Board.h>
 #include <Util.h>
 #include <string.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -597,7 +598,7 @@ bool HomeAssistantMqtt::loadDiscoveryInfo(JsonDocument& jsonDoc, const String& f
 
 void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscoveryInfo)
 {
-    const size_t        JSON_DISCOVERY_INFO_DOC_SIZE = 1024U;
+    const size_t        JSON_DISCOVERY_INFO_DOC_SIZE = Json::getJsonSize(1024U);
     DynamicJsonDocument jsonDiscoveryInfoDoc(JSON_DISCOVERY_INFO_DOC_SIZE);
 
     /* Read the discovery info from file. */
@@ -609,7 +610,7 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
     else
     {
         MqttService&        mqttService   = MqttService::getInstance();
-        const size_t        JSON_DOC_SIZE = 2048U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(2048U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonArrayConst      jsonDiscoveryInfoArray  = jsonDiscoveryInfoDoc.as<JsonArrayConst>();
         size_t              discoveryInfoArrayCount = jsonDiscoveryInfoArray.size();

@@ -44,6 +44,7 @@
 #include <Util.h>
 #include <math.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -104,7 +105,7 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonSourceId     = value["sourceId"];

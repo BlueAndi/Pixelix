@@ -17,6 +17,8 @@
         "name": "MqttService"
     }, {
         "name": "Plugin"
+    }, {
+        "name": "Utilities"
     }],
     "frameworks": "*",
     "platforms": "*"

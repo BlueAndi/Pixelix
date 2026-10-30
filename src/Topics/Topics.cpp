@@ -38,6 +38,7 @@
 #include <TopicHandlerService.h>
 #include <Util.h>
 #include <PsramJsonDocument.hpp>
+#include <Json.hpp>
 #include "DisplayMgr.h"
 #include "RestartMgr.h"
 #include "ButtonActions.h"
@@ -228,7 +229,7 @@ static bool gLastAutoBrightnessState = false;
 void Topics::begin()
 {
     SettingsService&  settings      = SettingsService::getInstance();
-    const size_t      JSON_DOC_SIZE = 256U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(256U);
     PsramJsonDocument jsonDocExtra(JSON_DOC_SIZE);
     size_t            idx;
 

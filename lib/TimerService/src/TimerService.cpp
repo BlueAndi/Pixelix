@@ -43,6 +43,7 @@
 #include <SettingsService.h>
 #include <Util.h>
 #include <Logging.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -229,7 +230,7 @@ void TimerService::clear()
 bool TimerService::loadSettings()
 {
     bool                isSuccessful = false;
-    const size_t        JSON_SIZE    = 4096U;
+    const size_t        JSON_SIZE    = Json::getJsonSize(4096U);
     DynamicJsonDocument jsonDoc(JSON_SIZE);
     JsonFile            jsonFile(FILESYSTEM);
 
@@ -281,7 +282,7 @@ bool TimerService::loadSettings()
 bool TimerService::saveSettings()
 {
     bool                isSuccessful = false;
-    const size_t        JSON_SIZE    = 4096U;
+    const size_t        JSON_SIZE    = Json::getJsonSize(4096U);
     DynamicJsonDocument jsonDoc(JSON_SIZE);
     JsonArray           jsonTimerSettings = jsonDoc.createNestedArray("timerSettings");
     JsonFile            jsonFile(FILESYSTEM);

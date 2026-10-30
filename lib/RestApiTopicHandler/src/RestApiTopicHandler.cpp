@@ -43,6 +43,8 @@
 #include <Logging.h>
 #include <Util.h>
 #include <SettingsService.h>
+#include <PsramJsonDocument.hpp>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -181,12 +183,12 @@ String RestApiTopicHandler::getUri(const String& entityId, const String& topic) 
 
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData)
 {
-    String              content;
-    const size_t        JSON_DOC_SIZE     = 9216U;
-    const size_t        JSON_PAR_DOC_SIZE = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonObject          dataObj        = jsonDoc.createNestedObject("data");
-    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    String            content;
+    const size_t      JSON_DOC_SIZE     = Json::getJsonSize(9216U);
+    const size_t      JSON_PAR_DOC_SIZE = Json::getJsonSize(512U);
+    PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+    JsonObject        dataObj        = jsonDoc.createNestedObject("data");
+    uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if ((nullptr == request) ||
         (nullptr == topicMetaData))

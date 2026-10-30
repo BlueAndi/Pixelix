@@ -41,6 +41,7 @@
 #include <Util.h>
 #include <math.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -142,7 +143,7 @@ bool ChicagoBusTrackerPlugin::setTopic(const String& topic, const JsonObjectCons
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 256U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(256U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
         JsonObject          jsonCfg    = jsonDoc.to<JsonObject>();

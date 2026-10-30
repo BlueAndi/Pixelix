@@ -41,6 +41,7 @@
 #include <Logging.h>
 #include <MqttService.h>
 #include <mbedtls/base64.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -388,7 +389,7 @@ void MqttApiTopicHandler::publishTopicStatesOnDemand()
 
 void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    const size_t         JSON_DOC_SIZE = 4096U;
+    const size_t         JSON_DOC_SIZE = Json::getJsonSize(4096U);
     DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
     DeserializationError error = deserializeJson(jsonDoc, payload, size);
 
@@ -480,7 +481,7 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 {
     if (nullptr != getTopicFunc)
     {
-        const size_t        JSON_DOC_SIZE = 4096U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(4096U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonObj       = jsonDoc.createNestedObject("data");
         String              mqttTopicBase = getMqttBaseTopic(deviceId, entityId, topic);

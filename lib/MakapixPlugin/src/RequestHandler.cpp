@@ -38,6 +38,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include "MqttTopic.h"
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -201,7 +202,7 @@ bool RequestHandler::request(const RequestData& requestData)
         }
         else
         {
-            const size_t        JSON_DOC_SIZE = 2048U;
+            const size_t        JSON_DOC_SIZE = Json::getJsonSize(2048U);
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
             String              requestTopic;
             JsonArray           jsonIncludeFields     = jsonDoc.createNestedArray("include_fields");
@@ -288,7 +289,7 @@ void RequestHandler::mqttTopicCallback(const String& topic, const uint8_t* paylo
     }
     else
     {
-        const size_t         JSON_DOC_SIZE = 4096U;
+        const size_t         JSON_DOC_SIZE = Json::getJsonSize(4096U);
         DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
         DeserializationError error = deserializeJson(jsonDoc, payload, size);
 

@@ -40,6 +40,7 @@
 #include <ArduinoJson.h>
 #include <Logging.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -100,7 +101,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonLongitude  = value["longitude"];
@@ -417,7 +418,7 @@ RestService::PreProcessResult SunrisePlugin::preProcessAsyncWebResponse(const ch
     }
     else
     {
-        const size_t                    FILTER_SIZE = 128U;
+        const size_t                    FILTER_SIZE = Json::getJsonSize(128U);
         StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
         /* Example:
