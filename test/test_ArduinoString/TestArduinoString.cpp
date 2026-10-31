@@ -258,6 +258,19 @@ static void testConcat()
     str += static_cast<const char*>(nullptr);
     TEST_ASSERT_EQUAL_STRING("value=42", str.c_str());
 
+    /* A floating point number is appended with 2 decimal places, like the
+     * concat and the Arduino do.
+     */
+    str  = "pi=";
+    str += 3.14159F;
+    TEST_ASSERT_EQUAL_STRING("pi=3.14", str.c_str());
+
+    str  = "pi=";
+    str += 3.14159;
+    TEST_ASSERT_EQUAL_STRING("pi=3.14", str.c_str());
+    TEST_ASSERT_TRUE(str.concat(2.71828));
+    TEST_ASSERT_EQUAL_STRING("pi=3.142.72", str.c_str());
+
     TEST_ASSERT_EQUAL_STRING("a1", (String("a") + 1).c_str());
     TEST_ASSERT_EQUAL_STRING("1a", (String("1") + String("a")).c_str());
     TEST_ASSERT_EQUAL_STRING("prefix/", ("prefix" + String("/")).c_str());

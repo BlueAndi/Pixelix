@@ -444,7 +444,7 @@ public:
      */
     String& operator+=(float number)
     {
-        m_stdStr += std::to_string(number);
+        (void)concat(number);
 
         return *this;
     }
@@ -458,7 +458,7 @@ public:
      */
     String& operator+=(double number)
     {
-        m_stdStr += std::to_string(number);
+        (void)concat(number);
 
         return *this;
     }
