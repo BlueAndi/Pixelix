@@ -144,6 +144,22 @@ public:
     }
 
     /**
+     * Set widget width.
+     *
+     * @param[in] width Width in pixel
+     */
+    void setWidth(uint16_t width) override
+    {
+        Widget::setWidth(width);
+
+        /* Only a text size which was limited by the widget width depends on it. */
+        if (true == m_isTextSizeLimited)
+        {
+            m_isTextSizeValid = false;
+        }
+    }
+
+    /**
      * Set the text string. It can contain format tags like "#RRGGBB" color
      * information in RGB888 format.
      *
@@ -182,6 +198,11 @@ public:
     /**
      * Get the bounding box of the text which is currently shown. A pending new
      * text is not considered, because it is shown after the transition only.
+     *
+     * The size is cached, because it is requested every display update by a
+     * scrollable view and changes only with the text, the font or the widget
+     * width. Without the cache the plain text would be rebuilt into a new
+     * string on every update, which churns the heap.
      *
      * @param[out] width  Text width in pixels.
      * @param[out] height Text height in pixels.
@@ -316,7 +337,8 @@ public:
     void setFont(const YAFont& font)
     {
         m_gfxText.setFont(font);
-        m_prepareNewText = true;
+        m_prepareNewText  = true;
+        m_isTextSizeValid = false;
     }
 
     /**
@@ -444,6 +466,11 @@ private:
     bool                     m_prepareNewText;      /**< User set new text, which shall be prepared. */
     bool                     m_updateText;          /**< New text is prepared shall be updated. */
     bool                     m_isTextChanged;       /**< The shown text was replaced and the change is not acknowledged yet. */
+    bool                     m_isTextSizeValid;     /**< Is the cached text size valid? */
+    bool                     m_isTextSizeLimited;   /**< Was the cached text size determined with the widget width as limit? */
+    bool                     m_textSizeStatus;      /**< Cached result of the text size determination. */
+    uint16_t                 m_textSizeWidth;       /**< Cached text width in pixel. */
+    uint16_t                 m_textSizeHeight;      /**< Cached text height in pixel. */
     TWAbstractSyntaxTree     m_ast;                 /**< AST for the current format string. Encoding: Internal */
     TWAbstractSyntaxTree     m_astNew;              /**< AST for the new format string. Encoding: Internal */
     YAGfxSolidBrush          m_solidBrush;          /**< Solid text color brush. */

@@ -106,6 +106,11 @@ TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
     m_prepareNewText(false),
     m_updateText(false),
     m_isTextChanged(false),
+    m_isTextSizeValid(false),
+    m_isTextSizeLimited(false),
+    m_textSizeStatus(false),
+    m_textSizeWidth(0U),
+    m_textSizeHeight(0U),
     m_ast(),
     m_astNew(),
     m_solidBrush(DEFAULT_TEXT_COLOR),
@@ -139,6 +144,11 @@ TextWidget::TextWidget(const String& str, const Color& color) :
     m_prepareNewText(true),
     m_updateText(false),
     m_isTextChanged(false),
+    m_isTextSizeValid(false),
+    m_isTextSizeLimited(false),
+    m_textSizeStatus(false),
+    m_textSizeWidth(0U),
+    m_textSizeHeight(0U),
     m_ast(),
     m_astNew(),
     m_solidBrush(DEFAULT_TEXT_COLOR),
@@ -184,6 +194,11 @@ TextWidget::TextWidget(const TextWidget& widget) :
     m_prepareNewText(widget.m_prepareNewText),
     m_updateText(widget.m_updateText),
     m_isTextChanged(widget.m_isTextChanged),
+    m_isTextSizeValid(widget.m_isTextSizeValid),
+    m_isTextSizeLimited(widget.m_isTextSizeLimited),
+    m_textSizeStatus(widget.m_textSizeStatus),
+    m_textSizeWidth(widget.m_textSizeWidth),
+    m_textSizeHeight(widget.m_textSizeHeight),
     m_ast(widget.m_ast),
     m_astNew(widget.m_astNew),
     m_solidBrush(widget.m_solidBrush),
@@ -211,6 +226,11 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
         m_prepareNewText      = widget.m_prepareNewText;
         m_updateText          = widget.m_updateText;
         m_isTextChanged       = widget.m_isTextChanged;
+        m_isTextSizeValid     = widget.m_isTextSizeValid;
+        m_isTextSizeLimited   = widget.m_isTextSizeLimited;
+        m_textSizeStatus      = widget.m_textSizeStatus;
+        m_textSizeWidth       = widget.m_textSizeWidth;
+        m_textSizeHeight      = widget.m_textSizeHeight;
         m_ast                 = widget.m_ast;
         m_astNew              = widget.m_astNew;
         m_solidBrush          = widget.m_solidBrush;
@@ -260,10 +280,11 @@ void TextWidget::clear()
     m_textHeight = 0U;
 
     m_formatStrNewUtf8.clear();
-    m_textHeightNew  = 0U;
+    m_textHeightNew   = 0U;
 
-    m_prepareNewText = false;
-    m_isTextChanged  = false;
+    m_prepareNewText  = false;
+    m_isTextChanged   = false;
+    m_isTextSizeValid = false;
 
     m_ast.clear();
 
@@ -289,31 +310,41 @@ String TextWidget::getStr() const
 
 bool TextWidget::getTextSize(uint16_t& width, uint16_t& height, bool limitWidth)
 {
-    String     text;
-    uint16_t   maxLineWidth      = getWidth();
-    const bool isTextWrapEnabled = m_gfxText.isTextWrapEnabled();
-    bool       status            = false;
-
-    /* The size of the text which is currently shown is determined and not the
-     * size of a pending new text. Otherwise the layout would be adapted to the
-     * new text, while the old one is still shown and faded out.
-     */
-    getText(text, m_ast);
-
-    if (false == limitWidth)
+    /* Is the cached size valid and was it determined the same way? */
+    if ((false == m_isTextSizeValid) ||
+        (limitWidth != m_isTextSizeLimited))
     {
-        maxLineWidth = UINT16_MAX;
-        m_gfxText.setTextWrap(false);
+        String     text;
+        uint16_t   maxLineWidth      = getWidth();
+        const bool isTextWrapEnabled = m_gfxText.isTextWrapEnabled();
+
+        /* The size of the text which is currently shown is determined and not the
+         * size of a pending new text. Otherwise the layout would be adapted to the
+         * new text, while the old one is still shown and faded out.
+         */
+        getText(text, m_ast);
+
+        if (false == limitWidth)
+        {
+            maxLineWidth = UINT16_MAX;
+            m_gfxText.setTextWrap(false);
+        }
+
+        m_textSizeStatus = m_gfxText.getTextBoundingBox(maxLineWidth, text.c_str(), m_textSizeWidth, m_textSizeHeight);
+
+        if (false == limitWidth)
+        {
+            m_gfxText.setTextWrap(isTextWrapEnabled);
+        }
+
+        m_isTextSizeLimited = limitWidth;
+        m_isTextSizeValid   = true;
     }
 
-    status = m_gfxText.getTextBoundingBox(maxLineWidth, text.c_str(), width, height);
+    width  = m_textSizeWidth;
+    height = m_textSizeHeight;
 
-    if (false == limitWidth)
-    {
-        m_gfxText.setTextWrap(isTextWrapEnabled);
-    }
-
-    return status;
+    return m_textSizeStatus;
 }
 
 /******************************************************************************
@@ -537,11 +568,12 @@ void TextWidget::paint(YAGfx& gfx)
     /* Update of current text requested? */
     if (true == m_updateText)
     {
-        m_updateText    = false;
-        m_isTextChanged = true;
-        m_formatStrUtf8 = m_formatStrNewUtf8;
-        m_textHeight    = m_textHeightNew;
-        m_ast           = std::move(m_astNew);
+        m_updateText      = false;
+        m_isTextChanged   = true;
+        m_isTextSizeValid = false;
+        m_formatStrUtf8   = m_formatStrNewUtf8;
+        m_textHeight      = m_textHeightNew;
+        m_ast             = std::move(m_astNew);
 
         alignTextVertical();
     }
