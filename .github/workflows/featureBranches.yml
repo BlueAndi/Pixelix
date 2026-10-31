@@ -54,6 +54,7 @@ jobs:
             "lilygo-ttgo-t-display-TFT-32x8",
             "lilygo-t-display-s3-TFT-32x8",
             "lilygo-t-display-s3-TFT-64x16",
+            "lilygo-t-display-s3-TFT-64x16-makapix",
             "m5stack_core-TFT-32x8",
             "ulanzi-tc001-LED-32x8",
             "wemos_lolin_s2_mini-LED-32x8",
