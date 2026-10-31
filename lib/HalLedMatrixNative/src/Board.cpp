@@ -75,6 +75,7 @@ bool Board::init()
     bool isSuccess = true;
 
     Pin::init();
+    m_systemDrv.init();
 
     isSuccess = m_buttonDrv.init(Pin::buttonOkIn, Pin::buttonLeftIn, Pin::buttonRightIn);
     m_buzzerDrv.init(Pin::buzzerOut);
