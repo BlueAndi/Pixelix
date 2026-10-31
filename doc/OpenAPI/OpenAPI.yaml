@@ -42,8 +42,6 @@ tags:
     description: Plugin specific API
   - name: DateTimePlugin
     description: Plugin specific API
-  - name: GithubPlugin
-    description: Plugin specific API
   - name: GrabViaRestPlugin
     description: Plugin specific API
   - name: GruenbeckPlugin
@@ -404,30 +402,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /display/plugin/{alias}/chicagobusroutes:
+  /display/plugin/{alias}/chicagobusrequest:
     parameters:
       - $ref: "#/components/parameters/alias"
     get:
       tags:
         - ChicagoBusTrackerPlugin
-      summary: Get list of bus routes
+      summary: Poll the result of a proxied CTA Bus Tracker API request
       description: |
-        Returns a list of all CTA bus routes with 
-        their ID (55, X49, etc) 
-        and name ("Garfield", "Western Express", etc).
+        Returns the result of the CTA Bus Tracker API request which was started by the POST request.
+        The data object contains exactly one of the following:
+        * `pending: true` while the request is in progress. Poll again later, the web page polls every 100 ms up to 20 times.
+        * `error` if the request failed. The error is reported once, the next poll answers with `pending: false`.
+        * The CTA Bus Tracker API JSON response (`bustime-response`). For `/getroutes`, `/getdirections` and `/getstops`
+          it is reduced to the fields listed in the schema, every other path is passed through unfiltered.
+          The result is consumed by this request and can not be read twice.
+        * `pending: false` if no request is in progress and no result is available.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusroutes
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
         ```
-      operationId: getChicagoBusRoutes
+      operationId: getChicagoBusRequest
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChicagoBusRoutes"
+                $ref: "#/components/schemas/ChicagoBusRequest"
         "404":
           description: Plugin alias or topic is unknown
           content:
@@ -436,81 +439,42 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/plugin/{alias}/chicagobusdirections:
-    parameters:
-      - $ref: "#/components/parameters/alias"
-      - in: query
-        name: rte
-        schema:
-          type: string
-        required: true
-        description: CTA Bus route ID (e.g. 55, X49, 111A)
-    get:
+    post:
       tags:
         - ChicagoBusTrackerPlugin
-      summary: Get list of directions for a given bus route ID
+      summary: Start a proxied CTA Bus Tracker API request
       description: |
-        Returns a list of valid directions for a given bus route.
-        This is always a pair of strings, either
-        `["Northbound", "Southbound"]` or `["Eastbound", "Westbound"]`
+        Starts a request to the CTA Bus Tracker API v3 (`http://ctabustracker.com/bustime/api/v3`) on behalf of the caller.
+        The device appends the API key of the plugin configuration and `format=json` to the given path, therefore the
+        API key must be configured first (see `/display/plugin/{alias}/chicagobus`), otherwise the request is rejected.
+        A request which is still in progress is aborted by a new one. The result is retrieved by polling with GET.
+
+        The path is restricted to prevent open proxy abuse. It is rejected if it does not start with `/get`,
+        contains `://` or contains `key=`.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusdirections?rte=55
+        $ curl -u luke:skywalker -d "path=/getroutes" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
+        $ curl -u luke:skywalker -d "path=/getdirections?rt=55" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
+        $ curl -u luke:skywalker -d "path=/getstops?rt=55&dir=Eastbound" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
         ```
-      operationId: getChicagoBusDirections
+      operationId: setChicagoBusRequest
+      parameters:
+        - in: query
+          name: path
+          schema:
+            type: string
+          required: true
+          description: Relative CTA Bus Tracker API v3 path including its query parameters, e.g. `/getroutes`, `/getdirections?rt=55` or `/getstops?rt=55&dir=Eastbound`. Must start with `/get`.
       responses:
         "200":
-          description: Ok
+          description: Ok, the request was started.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChicagoBusDirections"
+                $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin alias or topic is unknown
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - pixelixAuth: []
-  /display/plugin/{alias}/chicagobusstops:
-    parameters:
-      - $ref: "#/components/parameters/alias"
-      - in: query
-        name: rte
-        schema:
-          type: string
-        required: true
-        description: CTA Bus route ID (e.g. 55, X49, 111A)
-      - in: query
-        name: dir
-        schema:
-          type: string
-          enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
-        required: true
-        description: Direction to list stop IDs for
-    get:
-      tags:
-        - ChicagoBusTrackerPlugin
-      summary: Get list of stops for a given bus route ID and direction
-      description: |
-        Returns a list of bus stop IDs for a given route and direction
-
-        Example:
-        ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusstops?rte=55&dir=Eastbound
-        ```
-      operationId: getChicagoBusStops
-      responses:
-        "200":
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ChicagoBusStops"
-        "404":
-          description: Plugin alias or topic is unknown
+          description: Plugin alias or topic is unknown, the path is missing or rejected, or no API key is configured.
           content:
             application/json:
               schema:
@@ -979,76 +943,6 @@ paths:
             type: string
           required: true
           description: The IP address of the system.
-      responses:
-        "200":
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Ok"
-        "404":
-          description: Plugin alias or topic is unknown
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - pixelixAuth: []
-  /display/plugin/{alias}/github:
-    parameters:
-      - $ref: "#/components/parameters/alias"
-    get:
-      tags:
-        - GithubPlugin
-      summary: Get github user and repository name
-      description: |
-        Get github user and repository name.
-
-        Example:
-        ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/github
-        ```
-      operationId: getUserAndRepositoryName
-      responses:
-        "200":
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Github"
-        "404":
-          description: Plugin alias or topic is unknown
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - pixelixAuth: []
-    post:
-      tags:
-        - GithubPlugin
-      summary: Set github user and repository name
-      description: |
-        Set github user and repository name.
-
-        Example:
-        ```bash
-        $ curl -u luke:skywalker -d "user=BlueAndi" -d "repository=Pixelix" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/github
-        ```
-      operationId: setUserAndRepositoryName
-      parameters:
-        - in: query
-          name: user
-          schema:
-            type: string
-          required: true
-          description: The github user name.
-        - in: query
-          name: repository
-          schema:
-            type: string
-          required: true
-          description: The github repository name.
       responses:
         "200":
           description: Ok
@@ -3461,52 +3355,66 @@ components:
           type: string
           description: The request result.
           example: ok
-    ChicagoBusDirections:
+    ChicagoBusRequest:
       type: object
+      required:
+        - data
+        - status
       properties:
         data:
           type: object
+          description: Contains either the pending flag, an error or the CTA Bus Tracker API response.
           properties:
-            dirs:
-              type: array
-              items:
-                type: string
-                enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
-              description: Valid directions for a given route
-    ChicagoBusRoutes:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            routes:
-              type: array
-              items:
-                type: object
-                properties:
-                  rt:
-                    type: string
-                    description: Route ID (e.g. 55, X49, 111A)
-                  rtnm:
-                    type: string
-                    description: Route name (e.g. Garfield, Western Express)
-    ChicagoBusStops:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            stops:
-              type: array
-              items:
-                type: object
-                properties:
-                  stpid:
-                    type: string
-                    description: Stop ID (usually a number up to 6 digits)
-                  stpnm:
-                    type: string
-                    description: Stop name (e.g. 55th Street & St. Louis)
+            pending:
+              type: boolean
+              description: True while the request is in progress, false if no request is in progress and no result is available.
+              example: true
+            error:
+              type: string
+              description: The request failed. Reported only once.
+              example: Request failed.
+            bustime-response:
+              type: object
+              description: The CTA Bus Tracker API v3 response. Reduced to the listed fields for /getroutes, /getdirections and /getstops, otherwise passed through unfiltered.
+              properties:
+                routes:
+                  type: array
+                  description: Result of /getroutes.
+                  items:
+                    type: object
+                    properties:
+                      rt:
+                        type: string
+                        description: Route ID (e.g. 55, X49, 111A)
+                      rtnm:
+                        type: string
+                        description: Route name (e.g. Garfield, Western Express)
+                directions:
+                  type: array
+                  description: Result of /getdirections.
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+                        description: Valid direction for the given route
+                stops:
+                  type: array
+                  description: Result of /getstops.
+                  items:
+                    type: object
+                    properties:
+                      stpid:
+                        type: string
+                        description: Stop ID (usually a number up to 6 digits)
+                      stpnm:
+                        type: string
+                        description: Stop name (e.g. 55th Street & St. Louis)
+        status:
+          type: string
+          description: The request result.
+          example: ok
     Countdown:
       type: object
       required:
@@ -3644,28 +3552,6 @@ components:
               "size": 8330,
               "type": "file"
             }]
-        status:
-          type: string
-          description: The request result.
-          example: ok
-    Github:
-      type: object
-      required:
-        - data
-        - status
-      properties:
-        data:
-          type: object
-          properties:
-            user:
-              type: string
-            repository:
-              type: string
-          example: |
-            {
-              "user": "BlueAndi",
-              "repository": "Pixelix"
-            }
         status:
           type: string
           description: The request result.
