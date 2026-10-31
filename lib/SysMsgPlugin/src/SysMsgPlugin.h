@@ -97,6 +97,7 @@ public:
         m_messages(),
         m_wrIndex(0U),
         m_rdIndex(0U),
+        m_isNextMsgPending(false),
         m_melodyHandler(nullptr),
         m_mutex()
     {
@@ -241,10 +242,16 @@ public:
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        if (false == nextMessage())
+        /* Queue empty? */
+        if (m_rdIndex == m_wrIndex)
         {
             m_view.clear();
             disable();
+        }
+        else
+        {
+            /* The next message is taken over by the display update. */
+            m_isNextMsgPending = true;
         }
     }
 
@@ -297,6 +304,7 @@ private:
     SysMsg              m_messages[MAX_SYS_MSG]; /**< System message buffer */
     size_t              m_wrIndex;               /**< System message buffer write index. */
     size_t              m_rdIndex;               /**< System message buffer read index. */
+    bool                m_isNextMsgPending;      /**< A queued message shall be taken over by the next display update. */
     MelodyHandler       m_melodyHandler;         /**< Plays the melody of a notification. May be empty. */
 
     /** Mutex to protect against concurrent access. A notification may arrive from a different task than the display update. */

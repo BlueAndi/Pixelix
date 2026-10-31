@@ -81,16 +81,28 @@ void SysMsgPlugin::inactive()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* User selected next slot. Skip showing current information further. */
-    disable();
-
     /* Clear information to avoid that old information is later shown again,
      * caused by scrolling feature of the underlying text widget or by the
      * queued system messages.
      */
     m_view.clear();
     m_timer.stop();
-    m_rdIndex = m_wrIndex;
+
+    /* A message may have been queued from another task after the plugin
+     * disabled itself and before the display manager called inactive(). It
+     * must not be dropped, the slot is activated again for it.
+     */
+    if (true == m_isNextMsgPending)
+    {
+        /* Keep the queue and stay enabled. */
+        ;
+    }
+    else
+    {
+        /* User selected next slot. Skip showing current information further. */
+        disable();
+        m_rdIndex = m_wrIndex;
+    }
 }
 
 void SysMsgPlugin::update(YAGfx& gfx)
@@ -99,6 +111,16 @@ void SysMsgPlugin::update(YAGfx& gfx)
     bool                       isScrollingEnabled = false;
     uint32_t                   scrollingCnt       = 0U;
     bool                       status             = false;
+
+    /* A queued message is taken over here and not in the task which queued
+     * it, because loading the icon and starting the melody belong to the
+     * display update.
+     */
+    if (true == m_isNextMsgPending)
+    {
+        m_isNextMsgPending = false;
+        (void)nextMessage();
+    }
 
     m_view.update(gfx);
 
@@ -145,8 +167,12 @@ void SysMsgPlugin::update(YAGfx& gfx)
             m_isInit = false;
         }
     }
-    /* Is timer running for non-scrolled text? */
-    else if (true == m_timer.isTimerRunning())
+
+    /* A running timer ends the message independent of the initialization
+     * phase, otherwise a hard duration would not be applied as long as the
+     * view reports no scroll information.
+     */
+    if (true == m_timer.isTimerRunning())
     {
         if (true == m_timer.isTimeout())
         {
@@ -156,6 +182,12 @@ void SysMsgPlugin::update(YAGfx& gfx)
                 disable();
             }
         }
+    }
+    /* Still in initialization phase? */
+    else if (true == m_isInit)
+    {
+        /* Wait for the scroll information. */
+        ;
     }
     /* Shall scrolling text be shown a specific number of times? */
     else if (0U < m_max)
@@ -234,10 +266,12 @@ bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, c
         m_wrIndex                            = nextWrIndex;
         isQueued                             = true;
 
-        /* If plugin is disabled, it will be enabled and next is shown. */
+        /* If plugin is disabled, it will be enabled and the next message is
+         * taken over by the next display update.
+         */
         if (false == isEnabled())
         {
-            nextMessage();
+            m_isNextMsgPending = true;
             enable();
         }
     }
