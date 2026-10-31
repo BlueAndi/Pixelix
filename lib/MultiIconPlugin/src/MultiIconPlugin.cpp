@@ -405,8 +405,19 @@ bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
         MutexGuard<MutexRecursive> guard(m_mutex);
         uint8_t                    slotId = 0U;
 
+        status                            = true;
+
+        /* Every array element belongs to its slot, therefore the slot id is
+         * advanced for every element. Otherwise a skipped element would shift
+         * the following icons to lower slots.
+         */
         for (JsonVariantConst jsonSlot : jsonSlots.as<JsonArrayConst>())
         {
+            if (_MultiIconPlugin::View::MAX_ICON_SLOTS <= slotId)
+            {
+                break;
+            }
+
             if (true == jsonSlot.is<String>())
             {
                 const String iconFileName = jsonSlot.as<const char*>();
@@ -415,16 +426,21 @@ bool MultiIconPlugin::setConfiguration(const JsonObjectConst& jsonCfg)
                 {
                     (void)loadIcon(slotId, iconFileName);
                 }
-
-                ++slotId;
-                if (_MultiIconPlugin::View::MAX_ICON_SLOTS <= slotId)
-                {
-                    break;
-                }
             }
-        }
+            /* A null element clears the slot. */
+            else if (true == jsonSlot.isNull())
+            {
+                clearIcon(slotId);
+            }
+            /* Any other type is invalid, e.g. a numeric file id of a previous version. */
+            else
+            {
+                LOG_WARNING("Slot %u has an invalid icon type.", slotId);
+                status = false;
+            }
 
-        status = true;
+            ++slotId;
+        }
     }
 
     return status;
