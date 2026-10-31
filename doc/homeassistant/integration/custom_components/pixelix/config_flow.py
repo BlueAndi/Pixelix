@@ -131,24 +131,32 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST].strip()
-            port = user_input[CONF_PORT]
+            error: str | None = "invalid_host"
+            device_id = ""
 
-            error, device_id = await self._async_authenticate(
-                host,
-                port,
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
+            try:
+                host, port = _parse_host(
+                    user_input[CONF_HOST], user_input[CONF_PORT]
+                )
+            except ValueError:
+                host = user_input[CONF_HOST]
+                port = user_input[CONF_PORT]
+            else:
+                # The form shows the normalized values on an error.
+                user_input = {**user_input, CONF_HOST: host, CONF_PORT: port}
+                error, device_id = await self._async_authenticate(
+                    host,
+                    port,
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+
             if error is None:
                 await self.async_set_unique_id(normalize_name(device_id))
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: host, CONF_PORT: port}
                 )
-                return self.async_create_entry(
-                    title=host,
-                    data={**user_input, CONF_HOST: host},
-                )
+                return self.async_create_entry(title=host, data=user_input)
             errors["base"] = error
 
         return self.async_show_form(
@@ -319,18 +327,25 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         Returns:
             The error key of the form and the device id of the device.
             The error is None if the device is usable. Otherwise it is
+            ``invalid_host`` (no URL can be built from the host),
             ``invalid_auth`` (login rejected), ``cannot_connect`` (device
             not reachable) or ``unexpected_response`` (the device is not a
             compatible Pixelix device). The device id is empty on error.
         """
-        client = PixelixClient(
-            async_get_clientsession(self.hass), host, port, username, password
-        )
         error = None
         device_id = ""
 
         try:
+            client = PixelixClient(
+                async_get_clientsession(self.hass),
+                host,
+                port,
+                username,
+                password,
+            )
             device_id = await client.async_get_device_id()
+        except ValueError:
+            error = "invalid_host"
         except PixelixAuthError:
             error = "invalid_auth"
         except PixelixConnectionError:
@@ -344,6 +359,47 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
 ###############################################################################
 # Functions
 ###############################################################################
+
+
+def _parse_host(value: str, default_port: int) -> tuple[str, int]:
+    """Reduce the host which the user entered to a bare host and a port.
+
+    A user tends to paste the address of the web interface. The scheme, a
+    path and a trailing slash are removed. A port which is part of the host
+    (``pixelix.local:8080``) replaces the port of the port field.
+
+    Args:
+        value: The host as it was entered, e.g. ``http://192.168.1.10/``.
+        default_port: The port to use if the host does not contain one.
+
+    Returns:
+        The host name or IP address without decoration, and the port.
+
+    Raises:
+        ValueError: The host is empty, or the port which is part of the
+            host is not a port number.
+    """
+    host = value.strip()
+
+    for prefix in ("http://", "https://"):
+        if host.lower().startswith(prefix):
+            host = host[len(prefix):]
+            break
+
+    host = host.split("/", 1)[0]
+    port = default_port
+
+    # An IPv6 address contains several colons and is not split.
+    if 1 == host.count(":"):
+        host, _, port_text = host.partition(":")
+        port = int(port_text)
+        if not 1 <= port <= 65535:
+            raise ValueError(f"{port} is not a valid port.")
+
+    if not host:
+        raise ValueError("The host is empty.")
+
+    return host, port
 
 
 def _select_host(discovery_info: ZeroconfServiceInfo) -> str:

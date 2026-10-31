@@ -46,6 +46,7 @@
         },
         "error": {
             "cannot_connect": "The device is not reachable.",
+            "invalid_host": "The host is not valid. Enter only the host name or the IP address of the device, e.g. 192.168.1.10 or pixelix-ffffffff.local.",
             "invalid_auth": "The web login was rejected.",
             "unexpected_response": "The device answered unexpectedly. Is it a Pixelix device with a compatible firmware?"
         },

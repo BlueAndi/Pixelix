@@ -141,6 +141,80 @@ async def test_manual_flow(
     assert entry.version == 2
 
 
+@pytest.mark.parametrize(
+    ("host", "port"),
+    [
+        (f"http://{HOST_A}", 80),
+        (f"HTTPS://{HOST_A}/", 80),
+        (f"http://{HOST_A}/rest/api/v1/", 80),
+        (f" {HOST_A} ", 80),
+        (f"{HOST_A}:80", 80),
+        (f"http://{HOST_A}:8080/", 8080),
+    ],
+)
+async def test_manual_flow_normalizes_host(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    host: str,
+    port: int,
+) -> None:
+    """A pasted address is reduced to the host, its port replaces the field.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+        host: The host as the user entered it.
+        port: The port which the device is expected to be contacted at.
+
+    Returns:
+        None.
+    """
+    address = HOST_A if port == 80 else f"{HOST_A}:{port}"
+    mock_device_status(aioclient_mock, address, DEVICE_ID_A)
+
+    result = await add_manually(hass, {**USER_INPUT, CONF_HOST: host})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**USER_INPUT, CONF_PORT: port}
+    # The flow and the setup of the entry contact the normalized address.
+    assert aioclient_mock.mock_calls
+    assert all(
+        str(url).startswith(f"http://{address}/")
+        for _, url, _, _ in aioclient_mock.mock_calls
+    )
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "",
+        "http://",
+        f"{HOST_A}:99999",
+        f"{HOST_A}:http",
+        "pixelix local",
+    ],
+)
+async def test_manual_flow_invalid_host(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, host: str
+) -> None:
+    """A host from which no URL can be built is reported as such.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+        host: The host as the user entered it.
+
+    Returns:
+        None.
+    """
+    result = await add_manually(hass, {**USER_INPUT, CONF_HOST: host})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+    assert not aioclient_mock.mock_calls
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
 async def test_manual_flow_invalid_auth(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

@@ -26,7 +26,7 @@ Pixelix devices announce themselves by mDNS (`_pixelix._tcp`). Home Assistant sh
 
 ### Manual configuration
 
-If a device is not found, e.g. because mDNS is not forwarded to Home Assistant, add it manually: **Settings → Devices & services → Add integration → Pixelix**. Enter the host name or IP address, the port (default 80) and the web login. An IP address is more reliable than a host name.
+If a device is not found, e.g. because mDNS is not forwarded to Home Assistant, add it manually: **Settings → Devices & services → Add integration → Pixelix**. Enter the host name or IP address, the port (default 80) and the web login. An IP address is more reliable than a host name. A pasted address of the web interface such as `http://192.168.1.10:80/` is accepted too, the scheme and the path are removed and a port which is part of it replaces the port field.
 
 ### Device identity
 

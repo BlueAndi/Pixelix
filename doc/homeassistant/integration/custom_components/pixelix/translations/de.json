@@ -46,6 +46,7 @@
         },
         "error": {
             "cannot_connect": "Das Gerät ist nicht erreichbar.",
+            "invalid_host": "Der Host ist ungültig. Gib nur den Hostnamen oder die IP-Adresse des Geräts ein, z. B. 192.168.1.10 oder pixelix-ffffffff.local.",
             "invalid_auth": "Die Web-Anmeldedaten wurden abgelehnt.",
             "unexpected_response": "Das Gerät hat unerwartet geantwortet. Ist es ein Pixelix-Gerät mit kompatibler Firmware?"
         },
