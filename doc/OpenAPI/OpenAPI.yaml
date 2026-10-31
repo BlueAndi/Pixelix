@@ -2503,7 +2503,7 @@ paths:
 
         Example:
         ```bash
-        curl -u luke:skywalker -d "name=IconTextPlugin&slot=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/uninstall
+        curl -u luke:skywalker -d "name=IconTextPlugin&slotId=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/uninstall
         ```
       operationId: uninstallPlugin
       parameters:
@@ -2514,11 +2514,11 @@ paths:
           required: true
           description: The plugin name.
         - in: query
-          name: slot
+          name: slotId
           schema:
             type: number
           required: true
-          description: The slot where the plugin is currently installed.
+          description: The id of the slot where the plugin is currently installed.
       responses:
         "200":
           description: Ok
