@@ -71,8 +71,12 @@ public:
     ButtonDrv() :
         IButtonDrv(),
         m_observer(nullptr),
-        m_state{ BUTTON_STATE_UNKNOWN, BUTTON_STATE_UNKNOWN, BUTTON_STATE_UNKNOWN }
+        m_state{ BUTTON_STATE_RELEASED, BUTTON_STATE_RELEASED, BUTTON_STATE_RELEASED }
     {
+        /* The simulated buttons are never pressed at startup, therefore the
+         * initial state is "released". The button handler ignores all states
+         * of a button until it has seen a released state once.
+         */
     }
 
     /**
@@ -105,7 +109,7 @@ public:
      *
      * @param[in] buttonId  Id of the button.
      *
-     * @return Always released, there are no buttons on the host.
+     * @return Button state, which is set via updateButton(). Released after initialization.
      */
     ButtonState getState(ButtonId buttonId) final
     {
@@ -120,12 +124,22 @@ public:
 
     /**
      * Register an observer, which is notified about button state changes.
+     * Like the ESP32 button driver, the observer is notified once about the
+     * current state of every button right after registration.
      *
      * @param[in] observer  The observer.
      */
     void registerObserver(IButtonObserver& observer) final
     {
-        m_observer = &observer;
+        uint8_t buttonIdx = 0U;
+
+        m_observer        = &observer;
+
+        while (BUTTON_ID_CNT > buttonIdx)
+        {
+            m_observer->notify(static_cast<ButtonId>(buttonIdx), m_state[buttonIdx]);
+            ++buttonIdx;
+        }
     }
 
     /**
