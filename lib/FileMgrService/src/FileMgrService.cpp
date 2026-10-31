@@ -148,14 +148,15 @@ void FileMgrService::process()
 
 bool FileMgrService::hasTopicChanged(const String& topic)
 {
-    bool hasChanged = m_hasFileTableChanged;
+    /* Read and clear in one step, otherwise a change which is set by the
+     * web server task in between would be lost.
+     */
+    bool hasChanged = m_hasFileTableChanged.exchange(false);
 
     /* The callback is dedicated to a topic, therefore the
      * topic parameter is not used.
      */
     UTIL_NOT_USED(topic);
-
-    m_hasFileTableChanged = false;
 
     return hasChanged;
 }
