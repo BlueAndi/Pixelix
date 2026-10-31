@@ -88,10 +88,10 @@ private:
     static const TickType_t MAX_WAIT_TIME                         = pdMS_TO_TICKS(100U);
 
     /**
-     * Period the worker sleeps between two polls of the worker data.
+     * Period in ms the worker sleeps between two polls of the worker data.
      * It determines the max. latency until a new HTTP request is started.
      */
-    static const TickType_t POLL_PERIOD                           = pdMS_TO_TICKS(10U);
+    static const uint32_t POLL_PERIOD                             = 10U;
 
     /**
      * Copy constructor not allowed.
