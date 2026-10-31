@@ -246,6 +246,8 @@ This is the most flexible, but also the most laborious way: every command has to
 
 Setup corresponding entities in the Home Assistant `configuration.yaml` and use them via the automation wizard or manually in the `automations.yaml`.
 
+Every REST route is protected by HTTP basic authentication, which can not be disabled. Therefore each REST command needs the web login of the Pixelix device (default: user `luke`, password `skywalker`), otherwise the device answers with HTTP 401.
+
 A simple REST command example looks like:
 
 ```yaml
@@ -253,6 +255,8 @@ rest_command:
   pixelix_notify:
     url: 'http://<IP-ADDRESS>/rest/api/v1/display/plugin/{{ alias }}/iconText?text={{ text | urlencode() }}'
     method: POST
+    username: 'luke'
+    password: 'skywalker'
 ```
 
 The REST API is described in detail on [SwaggerHub](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0).
@@ -292,13 +296,15 @@ For a simpler approach without writing YAML manually, see the [Automation Bluepr
 
 Alternatively, copy [pixelix_send_sensor_data.yaml](./homeassistant/blueprint/pixelix_send_sensor_data.yaml), [pixelix_multi_icon_plugin.yaml](./homeassistant/blueprint/pixelix_multi_icon_plugin.yaml) and [pixelix_notification.yaml](./homeassistant/blueprint/pixelix_notification.yaml) to `/config/blueprints/automation/homeassistant/`.
 
-When using the REST API, also add the following REST command to `configuration.yaml`:
+When using the REST API, also add the following REST command to `configuration.yaml`. Replace the `username` and `password` with the web login of the Pixelix device, because the REST API is protected by HTTP basic authentication:
 
 ```yaml
 rest_command:
   pixelix_plugin_command:
     url: "http://{{ hostname }}{{ endpoint }}?{{ url_parameter }}"
     method: POST
+    username: "luke"
+    password: "skywalker"
 ```
 
 ## Issues, Ideas And Bugs

@@ -91,11 +91,17 @@ blueprint:
         For the REST API add the following REST command to your configuration.yaml in Home Assistant.
         It will be called by the automation blueprint.
 
+        The REST API is protected by HTTP basic authentication, which can not be disabled. Use the web login
+        of the Pixelix device (default: user `luke`, password `skywalker`), otherwise the device answers with
+        HTTP 401 and nothing is shown.
+
         ```yaml
           rest_command:
             pixelix_plugin_command:
               url: "http://{{ hostname }}{{ endpoint }}?{{ url_parameter }}"
               method: POST
+              username: "luke"
+              password: "skywalker"
         ```
       input:
         protocol:
