@@ -464,6 +464,15 @@ static void testRamMirror()
     TEST_ASSERT_EQUAL_INT32(-12, gradientOffset.getValueFromRam());
     TEST_ASSERT_TRUE(quietMode.getValueFromRam());
 
+    /* An empty string is a valid value (e.g. a cleared notify URL) and must
+     * reach the mirror too, although 0 bytes are written.
+     */
+    settings.getNotifyURL().setValue("some-url");
+    TEST_ASSERT_EQUAL_STRING("some-url", settings.getNotifyURL().getValueFromRam().c_str());
+    settings.getNotifyURL().setValue("");
+    TEST_ASSERT_EQUAL_STRING("", settings.getNotifyURL().getValueFromRam().c_str());
+    TEST_ASSERT_EQUAL_STRING("", settings.getNotifyURL().getValue().c_str());
+
     settings.updateRamMirror();
 
     mirroredHostname = hostname.getValueFromRam();

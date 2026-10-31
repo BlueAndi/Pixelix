@@ -188,7 +188,10 @@ public:
     {
         size_t bytesWritten = m_preferences->putString(m_key, value);
 
-        if (0U < bytesWritten)
+        /* The number of written bytes is the string length, therefore an
+         * empty string is written successfully with 0 bytes.
+         */
+        if (bytesWritten == value.length())
         {
             m_value = value;
         }
