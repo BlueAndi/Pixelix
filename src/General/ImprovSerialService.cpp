@@ -85,6 +85,7 @@ ImprovSerialService::ImprovSerialService(Stream& stream, MiniTerminal& miniTermi
     m_previousButtonStates{ BUTTON_STATE_UNKNOWN, BUTTON_STATE_UNKNOWN, BUTTON_STATE_UNKNOWN },
     m_authorizedAt(0U),
     m_lastActivityAt(0U),
+    m_lastFrameByteAt(0U),
     m_state(STATE_AWAITING_AUTH),
     m_isAuthorized(false),
     m_isSessionActive(false),
@@ -139,6 +140,7 @@ void ImprovSerialService::consumeByte(uint8_t value)
             {
                 m_frame[m_frameLength] = value;
                 ++m_frameLength;
+                m_lastFrameByteAt = millis();
 
                 if (FRAME_HEADER_SIZE == m_frameLength)
                 {
@@ -164,6 +166,7 @@ void ImprovSerialService::consumeByte(uint8_t value)
                 m_frame[m_frameLength] = value;
                 ++m_frameLength;
                 ++m_headerMatchLength;
+                m_lastFrameByteAt = millis();
 
                 if (HEADER_SIZE == m_headerMatchLength)
                 {
@@ -182,6 +185,7 @@ void ImprovSerialService::consumeByte(uint8_t value)
                     m_frame[0]          = value;
                     m_frameLength       = 1U;
                     m_headerMatchLength = 1U;
+                    m_lastFrameByteAt   = millis();
                 }
                 else
                 {
@@ -194,6 +198,7 @@ void ImprovSerialService::consumeByte(uint8_t value)
             m_frame[0]          = value;
             m_frameLength       = 1U;
             m_headerMatchLength = 1U;
+            m_lastFrameByteAt   = millis();
         }
         else
         {
@@ -382,6 +387,21 @@ void ImprovSerialService::processTimeouts()
     {
         leaveProtocolMode();
     }
+
+    /* A partial frame which is not continued is dropped, otherwise every
+     * following serial byte would be swallowed until the frame is complete.
+     * A partial header match is handed over to the terminal, because it was
+     * terminal input.
+     */
+    if ((0U < m_frameLength) && ((currentTime - m_lastFrameByteAt) >= FRAME_TIMEOUT_MS))
+    {
+        if (0U == m_expectedFrameLength)
+        {
+            m_miniTerminal.process(m_frame, m_frameLength);
+        }
+
+        resetFrame();
+    }
 }
 
 void ImprovSerialService::sendState(uint8_t state)
@@ -521,6 +541,9 @@ void ImprovSerialService::leaveProtocolMode()
         m_isSessionActive     = false;
         m_previousLogSink     = "";
     }
+
+    /* A frame which was started in the session is not continued. */
+    resetFrame();
 }
 
 void ImprovSerialService::resetFrame()
