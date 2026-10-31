@@ -337,7 +337,8 @@
                 document.getElementById("overview").textContent = "";
                 await downloadFileList("overview");
             } catch (rsp) {
-                await dialog.showError("<p>" + rsp.error.msg + "</p>");
+                const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                await dialog.showError("<p>" + alertMsg + "</p>");
             }
         }
 
