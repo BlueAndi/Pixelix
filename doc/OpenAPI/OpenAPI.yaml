@@ -2011,32 +2011,26 @@ paths:
           $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/slot/{id}:
-    post:
+  /display/slot/{slotId}:
+    parameters:
+      - in: path
+        name: slotId
+        schema:
+          type: number
+        required: true
+        description: The slot id.
+    get:
       tags:
         - Display
-      summary: Set slot parameter
+      summary: Get slot information
       description: |
-        Set slot parameters.
+        Get the information of a single slot, see `/display/slots` for the content.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "sticky=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
         ```
-      operationId: setSlot
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: number
-          required: true
-          description: The slot id.
-        - in: query
-          name: sticky
-          schema:
-            type: boolean
-          required: false
-          description: Set/Clear sticky flag.
+      operationId: getSlot
       responses:
         "200":
           description: Ok
@@ -2044,8 +2038,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Slot"
-        "404":
-          description: Invalid or missing data
+        "405":
+          description: Invalid slot id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Display
+      summary: Activate slot or set slot parameters
+      description: |
+        Without any parameter the slot is activated, i.e. the display switches to it. The response contains an
+        empty data object.
+
+        With the `sticky` and/or `disable` parameter the slot parameters are changed instead and persisted.
+        The response contains the slot information. The `sticky` parameter is handled before the `disable`
+        parameter. A parameter value must be exactly `true` or `false`.
+
+        * `sticky=true`: The slot is shown permanently. Rejected if the slot is empty or disabled.
+        * `sticky=false`: Clears the sticky flag. Rejected if the slot is not the sticky one.
+        * `disable=true`: The slot is skipped by the slot cycling. Rejected if the slot is sticky.
+        * `disable=false`: The slot takes part in the slot cycling again.
+
+        Examples:
+        ```bash
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        $ curl -u luke:skywalker -d "sticky=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        $ curl -u luke:skywalker -d "disable=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        ```
+      operationId: setSlot
+      parameters:
+        - in: query
+          name: sticky
+          schema:
+            type: boolean
+          required: false
+          description: Set (true) or clear (false) the sticky flag.
+        - in: query
+          name: disable
+          schema:
+            type: boolean
+          required: false
+          description: Disable (true) or enable (false) the slot.
+      responses:
+        "200":
+          description: Ok. The data object is empty if the slot was activated, otherwise it contains the slot information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+        "405":
+          description: Invalid slot id, invalid parameter value or the request was rejected (see description).
           content:
             application/json:
               schema:
@@ -4411,6 +4459,34 @@ components:
       properties:
         data:
           type: object
+          description: The slot information. Empty after a slot was activated.
+          properties:
+            name:
+              type: string
+              description: The name of the installed plugin. Empty if the slot is empty.
+              example: SysMsgPlugin
+            uid:
+              type: number
+              description: The unique id of the installed plugin.
+              example: 372
+            alias:
+              type: string
+              description: The alias name of the installed plugin. Empty if the slot is empty.
+              example: SysMsg1
+            isSticky:
+              type: boolean
+              example: false
+            isLocked:
+              type: boolean
+              example: true
+            duration:
+              type: number
+              description: Slot duration in ms.
+              example: 10000
+            isDisabled:
+              type: boolean
+              description: Whether the slot is disabled, i.e. skipped by the slot cycling.
+              example: false
         status:
           type: string
           description: The request result.
