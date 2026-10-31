@@ -1812,7 +1812,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - pixelixAuth: []
-  /display/plugin/{alias}/text:
+  /display/plugin/{alias}/iconText:
     parameters:
       - $ref: "#/components/parameters/alias"
     get:
@@ -1821,20 +1821,20 @@ paths:
         - IconTextPlugin
       summary: Get text
       description: |
-        Get the shown text and icon file name.
+        Get the shown text, the icon file name and whether the icon is scrolled with the text.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/text
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/iconText
         ```
-      operationId: getText
+      operationId: getIconText
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Text"
+                $ref: "#/components/schemas/IconText"
         "404":
           description: Plugin alias or topic is unknown
           content:
@@ -1849,13 +1849,14 @@ paths:
         - IconTextPlugin
       summary: Set text
       description: |
-        Set text which to show and/or icon file name.
+        Set the text which to show, the icon file name and/or whether the icon is scrolled with the text.
+        At least one of the parameters must be given, otherwise the request is rejected.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "text=Test" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/text
+        $ curl -u luke:skywalker -d "text=Test" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/iconText
         ```
-      operationId: setText
+      operationId: setIconText
       parameters:
         - in: query
           name: text
@@ -1870,11 +1871,17 @@ paths:
           required: false
           description: The full path of the icon, e.g. /configuration/smiley.bmp. The icon is loaded exactly from this path.
         - in: query
+          name: scrollIcon
+          schema:
+            type: boolean
+          required: false
+          description: Whether the icon is scrolled together with the text (true) or stays fixed on the left side (false). The value is accepted as boolean or as the string "true" / "false".
+        - in: query
           name: storeFlag
           schema:
             type: boolean
           required: false
-          description: Force persistent storage of the configuration (default is false to avoid flash wear).
+          description: Force persistent storage of the configuration (default is false to avoid flash wear). The value is accepted as boolean or as the string "true" / "false".
       responses:
         "200":
           description: Ok
@@ -4481,7 +4488,7 @@ components:
           type: string
           description: The request result.
           example: ok
-    Text:
+    IconText:
       type: object
       required:
         - data
@@ -4491,6 +4498,8 @@ components:
           type: object
           required:
             - text
+            - iconFileName
+            - scrollIcon
           properties:
             text:
               type: string
@@ -4498,6 +4507,10 @@ components:
             iconFileName:
               type: string
               example: /configuration/smiley.bmp
+            scrollIcon:
+              type: boolean
+              description: Whether the icon is scrolled together with the text.
+              example: false
         status:
           type: string
           description: The request result.
