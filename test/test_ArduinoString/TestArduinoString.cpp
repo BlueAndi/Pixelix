@@ -171,6 +171,11 @@ static void testConstruction()
     empty = "Other";
     TEST_ASSERT_EQUAL_STRING("Other", empty.c_str());
 
+    /* A nullptr assignment results in an empty string and must not crash. */
+    empty = static_cast<const char*>(nullptr);
+    TEST_ASSERT_TRUE(empty.isEmpty());
+    TEST_ASSERT_EQUAL_STRING("", empty.c_str());
+
     TEST_ASSERT_TRUE(fromLiteral == copy);
     TEST_ASSERT_TRUE(fromLiteral != empty);
 
@@ -247,6 +252,10 @@ static void testConcat()
     /* The operators behave like the concat. */
     str  = "value=";
     str += 42;
+    TEST_ASSERT_EQUAL_STRING("value=42", str.c_str());
+
+    /* A nullptr is not appended and must not crash. */
+    str += static_cast<const char*>(nullptr);
     TEST_ASSERT_EQUAL_STRING("value=42", str.c_str());
 
     TEST_ASSERT_EQUAL_STRING("a1", (String("a") + 1).c_str());
@@ -414,6 +423,11 @@ static void testConversion()
     TEST_ASSERT_TRUE(String("Pixelix").equals(String("Pixelix")));
     TEST_ASSERT_TRUE(String("Pixelix").equals("Pixelix"));
     TEST_ASSERT_FALSE(String("Pixelix").equals("pixelix"));
+
+    /* A nullptr equals an empty string only, like on the Arduino. */
+    TEST_ASSERT_TRUE(String().equals(static_cast<const char*>(nullptr)));
+    TEST_ASSERT_FALSE(String("Pixelix").equals(static_cast<const char*>(nullptr)));
+    TEST_ASSERT_TRUE(String().equals(""));
     TEST_ASSERT_TRUE(String("Pixelix").equalsIgnoreCase(String("pIXELIX")));
     TEST_ASSERT_FALSE(String("Pixelix").equalsIgnoreCase(String("Pixeli")));
 

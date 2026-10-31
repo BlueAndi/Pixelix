@@ -248,14 +248,22 @@ public:
 
     /**
      * Assign a string.
+     * Like on the Arduino, a nullptr results in an empty string.
      *
-     * @param[in] other String, which to assign.
+     * @param[in] other String, which to assign. May be nullptr.
      *
      * @return String
      */
     String& operator=(const char* other)
     {
-        m_stdStr = other;
+        if (nullptr == other)
+        {
+            m_stdStr.clear();
+        }
+        else
+        {
+            m_stdStr = other;
+        }
 
         return *this;
     }
@@ -321,9 +329,17 @@ public:
         return singleChar;
     }
 
+    /**
+     * Append a string.
+     * Like on the Arduino, a nullptr is not appended.
+     *
+     * @param[in] other String to append. May be nullptr.
+     *
+     * @return String
+     */
     String& operator+=(const char* other)
     {
-        m_stdStr += other;
+        (void)concat(other);
 
         return *this;
     }
@@ -830,6 +846,7 @@ public:
 
     /**
      * Compare string.
+     * Like on the Arduino, a nullptr equals an empty string only.
      *
      * @param[in] other String to compare with. May be nullptr.
      *
@@ -841,7 +858,7 @@ public:
 
         if (nullptr == other)
         {
-            /* Guard: a nullptr never equals a string. */
+            isEqual = m_stdStr.empty();
         }
         else
         {
