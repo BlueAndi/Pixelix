@@ -319,7 +319,7 @@ void ButtonDrv::attachButtonsToInterrupt()
         {
             attachInterruptArg(m_buttonPin[buttonIdx]->getPinNo(),
                 isrButton,
-                &m_buttonPin[buttonIdx],
+                &gButtonId[buttonIdx],
                 CHANGE);
 
             /* Start the debouncing to get a stable initial button state. */
