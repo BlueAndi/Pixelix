@@ -89,6 +89,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Button"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/fadeEffect:
@@ -111,6 +113,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FadeEffect"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -132,6 +136,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FadeEffect"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/power:
@@ -154,6 +160,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DisplayPowerState"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -205,6 +213,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/autoBrightness:
@@ -228,6 +238,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DisplayAutoBrightnessState"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -266,6 +278,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/channel:
@@ -296,6 +310,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -336,6 +352,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/chicagobus:
@@ -367,6 +385,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -402,6 +422,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /display/plugin/{alias}/chicagobusrequest:
     parameters:
       - $ref: "#/components/parameters/alias"
@@ -437,6 +459,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -479,6 +503,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/config:
@@ -510,6 +536,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -546,6 +574,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/countdown:
@@ -576,6 +606,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -634,6 +666,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/dateTime:
@@ -664,6 +698,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -728,6 +764,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/grabConfig:
@@ -758,6 +796,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -828,6 +868,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/host:
@@ -858,6 +900,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -892,6 +936,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/ipAddress:
@@ -922,6 +968,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -956,6 +1004,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/lamp/{lampId}:
@@ -993,6 +1043,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1034,6 +1086,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/lamps:
@@ -1064,6 +1118,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/location:
@@ -1094,6 +1150,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1134,6 +1192,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/makapixCfg:
@@ -1164,6 +1224,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1204,6 +1266,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/makapixPlayCtrl:
@@ -1234,6 +1298,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1300,6 +1366,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/makapixProvision:
@@ -1330,6 +1398,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1363,6 +1433,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/omweather:
@@ -1393,6 +1465,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1459,6 +1533,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/signalDetector:
@@ -1489,6 +1565,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1565,6 +1643,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/slots:
@@ -1595,6 +1675,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - MultiIconPlugin
@@ -1602,9 +1684,13 @@ paths:
       description: |
         Set all slot file names.
 
+        An array is passed as HTTP parameters with the index notation `slots._<index>_=<value>`, which the REST API
+        converts to a JSON array. Alternatively send a JSON body `{ "slots": [ "...", "..." ] }` with the content type
+        `application/json`.
+
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "slots[]=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots
+        $ curl -u luke:skywalker -d "slots._0_=/configuration/smiley.bmp" -d "slots._1_=/configuration/github.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots
         ```
       operationId: setSlotsFileName
       parameters:
@@ -1615,7 +1701,7 @@ paths:
             items:
               type: string
           required: false
-          description: The full path of the icon of every slot, e.g. /configuration/smiley.bmp.
+          description: The full path of the icon of every slot, e.g. /configuration/smiley.bmp. Passed as slots._0_=..., slots._1_=..., etc.
       responses:
         "200":
           description: Ok
@@ -1629,6 +1715,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/slot/{id}:
@@ -1666,6 +1754,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - MultiIconPlugin
@@ -1704,6 +1794,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/iconText:
@@ -1735,6 +1827,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1789,6 +1883,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/plugin/{alias}/weather:
@@ -1819,6 +1915,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1878,6 +1976,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/slots:
@@ -1889,9 +1989,11 @@ paths:
         Slot information:
         * Max. number of slots.
         * Per slot:
-          * The current installed plugin.
+          * The current installed plugin (name, unique id and alias).
+          * Whether the slot is sticky or not.
           * Whether the slot is locked or not.
           * Slot duration in ms. The plugins are listed in the ascending order of the slots.
+          * Whether the slot is disabled or not.
 
         Example:
         ```bash
@@ -1905,6 +2007,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Slots"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/slot/{id}:
@@ -1946,6 +2050,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fileMgrService/files:
@@ -1976,6 +2082,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fileMgrService/upload:
@@ -2007,6 +2115,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fileMgrService/remove:
@@ -2035,6 +2145,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fs:
@@ -2071,6 +2183,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Fs"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fs/file:
@@ -2120,6 +2234,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2143,6 +2259,8 @@ paths:
               schema:
                 type: string
                 example: Upload aborted.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     delete:
@@ -2150,8 +2268,23 @@ paths:
         - Filesystem
       summary: Delete file
       description: |
-        Delte a file in the filesystem.
+        Delete a file in the filesystem.
+
+        The file name part of the path may contain a `*` wildcard (e.g. `/configuration/*.bmp`), then every
+        matching file in the directory is deleted. The directory part must not contain a wildcard.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X DELETE "http://pixelix-FFFFFFFF/rest/api/v1/fs/file?path=/configuration/smiley.bmp"
+        ```
       operationId: deleteFile
+      parameters:
+        - in: query
+          name: path
+          schema:
+            type: string
+          required: true
+          description: The full path of the file to delete, e.g. /configuration/smiley.bmp.
       responses:
         "200":
           description: Ok
@@ -2159,12 +2292,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
-        "404":
-          description: File not found
+        "400":
+          description: Invalid path (directory traversal) or wildcard in the directory part
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "404":
+          description: File or directory not found, or no file matches the wildcard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /mqttService/mqtt:
@@ -2187,6 +2328,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MqttServiceSettings"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2269,6 +2412,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /notify:
@@ -2345,6 +2490,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /plugin/install:
@@ -2381,17 +2528,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PluginInstall"
         "404":
-          description: Plugin name is missing
+          description: Plugin name is missing or plugin unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        "405":
-          description: Plugin name not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /plugin/uninstall:
@@ -2439,6 +2582,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /plugins:
@@ -2461,6 +2606,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Plugins"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /restart:
@@ -2483,6 +2630,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Restart"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors:
@@ -2505,6 +2654,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Sensors"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/0/temperature:
@@ -2527,6 +2678,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Temperature"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/1/humidity:
@@ -2549,6 +2702,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Humidity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/2/illuminance:
@@ -2571,6 +2726,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Illuminance"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/3/soc:
@@ -2593,6 +2750,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SOC"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/4/freeHeap:
@@ -2615,6 +2774,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Heap"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/5/minFreeHeap:
@@ -2637,6 +2798,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Heap"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/6/maxAllocHeap:
@@ -2659,6 +2822,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Heap"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/7/signalStrength:
@@ -2681,6 +2846,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SignalStrength"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/8/uptime:
@@ -2703,6 +2870,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Uptime"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /setting:
@@ -2738,6 +2907,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2788,6 +2959,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /settings:
     get:
       tags:
@@ -2808,6 +2981,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Settings"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /device:
@@ -2836,6 +3011,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Device"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /timerService/timer:
@@ -2858,6 +3035,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TimerServiceTimer"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2959,6 +3138,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /coredump:
@@ -3245,6 +3426,13 @@ components:
         type: string
       required: true
       description: The plugin alias name. 3 to 20 characters of A-Z, a-z, 0-9, _ and -. Unique per device.
+  responses:
+    InternalServerError:
+      description: Internal error, e.g. the JSON response exceeds the size which the firmware reserved for it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     Button:
       type: object
@@ -4243,10 +4431,16 @@ components:
                 properties:
                   name:
                     type: string
+                    description: The name of the installed plugin. Empty if the slot is empty.
                     example: SysMsgPlugin
                   uid:
                     type: number
+                    description: The unique id of the installed plugin.
                     example: 372
+                  alias:
+                    type: string
+                    description: The alias name of the installed plugin. Empty if the slot is empty.
+                    example: SysMsg1
                   isLocked:
                     type: boolean
                     example: true
@@ -4255,7 +4449,12 @@ components:
                     example: false
                   duration:
                     type: number
+                    description: Slot duration in ms.
                     example: 10000
+                  isDisabled:
+                    type: boolean
+                    description: Whether the slot is disabled, i.e. skipped by the slot cycling.
+                    example: false
             maxSlots:
               type: number
               example: 1
