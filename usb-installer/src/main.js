@@ -144,6 +144,7 @@ function updateSerialControls() {
     elements.flashButton.textContent = elements.keepSettings.checked ? "Install, keep settings" : "Erase and install";
     elements.keepSettings.disabled = isFlashing;
     elements.wifiConnectButton.disabled = !devicePortReady || Boolean(improv || isFlashing);
+    elements.boardSelect.disabled = !manifest || isFlashing;
 }
 
 /**
@@ -244,13 +245,21 @@ async function loadManifest() {
 
 /**
  * Handle a board/display target selection change.
+ * A flasher session belongs to the chip check of the previously selected
+ * target, therefore it is closed and the device has to be connected again.
  * @param {Event} event Change event from the board selector
- * @returns {void}
+ * @returns {Promise<void>}
  */
-function handleBoardSelection(event) {
+async function handleBoardSelection(event) {
     const selector = /** @type {HTMLSelectElement} */ (event.currentTarget);
     selectedTarget = findTarget(selector.value);
     devicePortReady = false;
+
+    if (transport) {
+        await disconnectFlasher();
+        appendTerminalOutput("\r\n[Board changed; connect the device again to detect its chip.]\r\n");
+    }
+
     setStepState("connect", "Waiting");
     setStepState("flash", "Waiting");
     elements.chipStatus.textContent = "Select the USB device to detect its chip.";
@@ -419,6 +428,11 @@ async function flashBoard() {
     setStepState("flash", "Preparing");
 
     try {
+        const detectedChip = loader.chip.CHIP_NAME;
+        if (!expectedChipMatches(selectedTarget.chip, detectedChip)) {
+            throw new Error(`Selected target needs ${selectedTarget.chip}; detected ${detectedChip}.`);
+        }
+
         const files = await Promise.all(selectedTarget.images.map(fetchImage));
         const totalBytes = getTotalImageBytes(files);
         const eraseAll = selectedTarget.eraseAll && !elements.keepSettings.checked;
