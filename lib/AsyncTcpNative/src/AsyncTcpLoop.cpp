@@ -63,6 +63,9 @@
  * Local Variables
  *****************************************************************************/
 
+/** Is the current thread the loop thread? */
+static thread_local bool isLoopThread = false;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -110,13 +113,22 @@ void AsyncTcpLoop::registerClient(AsyncClient* client)
 
 void AsyncTcpLoop::unregisterClient(AsyncClient* client)
 {
-    std::lock_guard<std::mutex>         guard(m_mutex);
-    std::vector<AsyncClient*>::iterator it = std::find(m_clients.begin(), m_clients.end(), client);
+    /* Lock order: dispatch mutex first, like in process(). It waits until the
+     * loop finished with the client, so the caller may destroy it afterwards.
+     */
+    std::lock_guard<std::recursive_mutex> dispatchGuard(m_dispatchMutex);
+    std::lock_guard<std::mutex>           guard(m_mutex);
+    std::vector<AsyncClient*>::iterator   it = std::find(m_clients.begin(), m_clients.end(), client);
 
     if (m_clients.end() != it)
     {
         (void)m_clients.erase(it);
     }
+}
+
+bool AsyncTcpLoop::isInLoopThread() const
+{
+    return isLoopThread;
 }
 
 /******************************************************************************
@@ -156,8 +168,17 @@ void AsyncTcpLoop::stop()
     }
 }
 
+bool AsyncTcpLoop::isRegistered(const AsyncClient* client)
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+
+    return (m_clients.end() != std::find(m_clients.begin(), m_clients.end(), client));
+}
+
 void AsyncTcpLoop::process()
 {
+    isLoopThread = true;
+
     while (true == m_isRunning)
     {
         fd_set                    readSet;
@@ -169,58 +190,63 @@ void AsyncTcpLoop::process()
         bool                      isPollDue    = false;
         bool                      isAckPending = false;
 
-        /* Work on a copy, because a callback may register or unregister a
-         * client and would modify the list while it is iterated.
-         */
-        {
-            std::lock_guard<std::mutex> guard(m_mutex);
-
-            servers = m_servers;
-            clients = m_clients;
-        }
-
         FD_ZERO(&readSet);
         FD_ZERO(&writeSet);
 
-        for (AsyncServer* server : servers)
+        /* Work on a copy, because a callback may register or unregister a
+         * client and would modify the list while it is iterated. The dispatch
+         * mutex keeps the clients alive while they are accessed.
+         */
         {
-            SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(server->getSocket());
+            std::lock_guard<std::recursive_mutex> dispatchGuard(m_dispatchMutex);
 
-            if (SocketCompat::INVALID_SOCKET_HANDLE != sock)
             {
-                FD_SET(sock, &readSet);
+                std::lock_guard<std::mutex> guard(m_mutex);
 
-                if (maxSocket < sock)
+                servers = m_servers;
+                clients = m_clients;
+            }
+
+            for (AsyncServer* server : servers)
+            {
+                SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(server->getSocket());
+
+                if (SocketCompat::INVALID_SOCKET_HANDLE != sock)
                 {
-                    maxSocket = sock;
+                    FD_SET(sock, &readSet);
+
+                    if (maxSocket < sock)
+                    {
+                        maxSocket = sock;
+                    }
                 }
             }
-        }
 
-        for (AsyncClient* client : clients)
-        {
-            SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(client->getSocket());
-
-            if (SocketCompat::INVALID_SOCKET_HANDLE != sock)
+            for (AsyncClient* client : clients)
             {
-                FD_SET(sock, &readSet);
+                SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(client->getSocket());
 
-                /* Only watch for writability if there is something to send,
-                 * otherwise select() would return immediately all the time.
-                 */
-                if (true == client->hasPendingTxData())
+                if (SocketCompat::INVALID_SOCKET_HANDLE != sock)
                 {
-                    FD_SET(sock, &writeSet);
-                }
+                    FD_SET(sock, &readSet);
 
-                if (true == client->hasPendingAck())
-                {
-                    isAckPending = true;
-                }
+                    /* Only watch for writability if there is something to send,
+                     * otherwise select() would return immediately all the time.
+                     */
+                    if (true == client->hasPendingTxData())
+                    {
+                        FD_SET(sock, &writeSet);
+                    }
 
-                if (maxSocket < sock)
-                {
-                    maxSocket = sock;
+                    if (true == client->hasPendingAck())
+                    {
+                        isAckPending = true;
+                    }
+
+                    if (maxSocket < sock)
+                    {
+                        maxSocket = sock;
+                    }
                 }
             }
         }
@@ -241,68 +267,63 @@ void AsyncTcpLoop::process()
 
         (void)select(static_cast<int>(maxSocket) + 1, &readSet, &writeSet, nullptr, &timeout);
 
-        /* A pending connection is accepted first, so a new client is served in
-         * the same cycle.
+        /* A client may be unregistered and destroyed by another thread during
+         * select(). The dispatch mutex ensures that it does not happen while
+         * the loop works with it, therefore the registration is checked again
+         * before every access.
          */
-        for (AsyncServer* server : servers)
         {
-            SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(server->getSocket());
+            std::lock_guard<std::recursive_mutex> dispatchGuard(m_dispatchMutex);
 
-            if ((SocketCompat::INVALID_SOCKET_HANDLE != sock) &&
-                (0 != FD_ISSET(sock, &readSet)))
+            /* A pending connection is accepted first, so a new client is served
+             * in the same cycle.
+             */
+            for (AsyncServer* server : servers)
             {
-                server->acceptClient();
-            }
-        }
+                SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(server->getSocket());
 
-        for (AsyncClient* client : clients)
-        {
-            SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(client->getSocket());
-
-            if (SocketCompat::INVALID_SOCKET_HANDLE != sock)
-            {
-                bool isReadable = (0 != FD_ISSET(sock, &readSet));
-                bool isWritable = (0 != FD_ISSET(sock, &writeSet));
-
-                if ((true == isReadable) ||
-                    (true == isWritable))
+                if ((SocketCompat::INVALID_SOCKET_HANDLE != sock) &&
+                    (0 != FD_ISSET(sock, &readSet)))
                 {
-                    client->process(isReadable, isWritable);
+                    server->acceptClient();
                 }
             }
-        }
 
-        /* The webserver expects a periodic poll, e.g. to send the next chunk of
-         * a response or to detect a timeout.
-         */
-        if (POLL_PERIOD <= (millis() - m_lastPoll))
-        {
-            isPollDue  = true;
-            m_lastPoll = millis();
-        }
+            for (AsyncClient* client : clients)
+            {
+                if (true == isRegistered(client))
+                {
+                    SocketCompat::Socket sock = static_cast<SocketCompat::Socket>(client->getSocket());
 
-        /* The list is read again, because a client may have been closed by the
-         * processing above.
-         */
-        {
-            std::lock_guard<std::mutex> guard(m_mutex);
+                    if (SocketCompat::INVALID_SOCKET_HANDLE != sock)
+                    {
+                        bool isReadable = (0 != FD_ISSET(sock, &readSet));
+                        bool isWritable = (0 != FD_ISSET(sock, &writeSet));
 
-            clients = m_clients;
-        }
+                        /* A close requested by another thread is performed by
+                         * the client processing, see AsyncClient::close().
+                         */
+                        if ((true == isReadable) ||
+                            (true == isWritable) ||
+                            (true == client->isCloseRequested()))
+                        {
+                            client->process(isReadable, isWritable);
+                        }
+                    }
+                }
+            }
 
-        /* The acknowledge is notified here and not inside the write, like on
-         * the target where the TCP/IP task notifies it. See
-         * AsyncClient::notifyAck().
-         */
-        for (AsyncClient* client : clients)
-        {
-            client->notifyAck();
-        }
+            /* The webserver expects a periodic poll, e.g. to send the next chunk
+             * of a response or to detect a timeout.
+             */
+            if (POLL_PERIOD <= (millis() - m_lastPoll))
+            {
+                isPollDue  = true;
+                m_lastPoll = millis();
+            }
 
-        if (true == isPollDue)
-        {
-            /* The list is read again, because the acknowledge notification may
-             * have closed a client.
+            /* The list is read again, because a client may have been closed by
+             * the processing above.
              */
             {
                 std::lock_guard<std::mutex> guard(m_mutex);
@@ -310,9 +331,36 @@ void AsyncTcpLoop::process()
                 clients = m_clients;
             }
 
+            /* The acknowledge is notified here and not inside the write, like on
+             * the target where the TCP/IP task notifies it. See
+             * AsyncClient::notifyAck().
+             */
             for (AsyncClient* client : clients)
             {
-                client->notifyPoll();
+                if (true == isRegistered(client))
+                {
+                    client->notifyAck();
+                }
+            }
+
+            if (true == isPollDue)
+            {
+                /* The list is read again, because the acknowledge notification
+                 * may have closed a client.
+                 */
+                {
+                    std::lock_guard<std::mutex> guard(m_mutex);
+
+                    clients = m_clients;
+                }
+
+                for (AsyncClient* client : clients)
+                {
+                    if (true == isRegistered(client))
+                    {
+                        client->notifyPoll();
+                    }
+                }
             }
         }
     }

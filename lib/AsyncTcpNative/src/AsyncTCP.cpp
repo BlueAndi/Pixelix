@@ -74,6 +74,7 @@ static IPAddress toIPAddress(uint32_t netOrderAddr);
 
 AsyncClient::AsyncClient(int sock) :
     m_socket(sock),
+    m_isCloseRequested(false),
     m_isNoDelay(false),
     m_isAckPending(false),
     m_rxTimeout(0U),
@@ -219,7 +220,7 @@ bool AsyncClient::send()
      */
     if (true == isPeerLost)
     {
-        handleDisconnect();
+        requestClose();
     }
 
     return isSuccessful;
@@ -268,12 +269,12 @@ bool AsyncClient::canSend() const
 
 void AsyncClient::close()
 {
-    handleDisconnect();
+    requestClose();
 }
 
 int8_t AsyncClient::abort()
 {
-    handleDisconnect();
+    requestClose();
 
     return -1;
 }
@@ -439,6 +440,11 @@ void AsyncClient::process(bool isReadable, bool isWritable)
     if (-1 == m_socket)
     {
         /* Guard: no connection. */
+    }
+    /* Another thread requested the close, see requestClose(). */
+    else if (true == m_isCloseRequested)
+    {
+        handleDisconnect();
     }
     else if (true == isReadable)
     {
@@ -720,6 +726,22 @@ void AsyncServer::acceptClient()
  * Private Methods
  *****************************************************************************/
 
+void AsyncClient::requestClose()
+{
+    if (true == AsyncTcpLoop::getInstance().isInLoopThread())
+    {
+        handleDisconnect();
+    }
+    else
+    {
+        /* The disconnect handler may destroy this client, which must not
+         * happen while the event loop works with it. Therefore the close is
+         * performed by the event loop thread, see process().
+         */
+        m_isCloseRequested = true;
+    }
+}
+
 void AsyncClient::handleDisconnect()
 {
     int sock = -1;
@@ -730,10 +752,11 @@ void AsyncClient::handleDisconnect()
         /* Claim the socket, so a concurrent disconnect notifies the handler
          * only once. Otherwise the client would be destroyed twice.
          */
-        sock             = m_socket;
-        m_socket         = -1;
-        m_txBufferLength = 0U;
-        m_pendingAck     = 0U;
+        sock               = m_socket;
+        m_socket           = -1;
+        m_isCloseRequested = false;
+        m_txBufferLength   = 0U;
+        m_pendingAck       = 0U;
     }
 
     if (-1 != sock)
