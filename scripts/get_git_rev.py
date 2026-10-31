@@ -98,6 +98,16 @@ def is_detached_head():
     # Fails with exit code 1 if HEAD is detached.
     return run_git(['symbolic-ref', '--quiet', 'HEAD']) is None
 
+def is_tagged_head():
+    """Checks whether a tag points exactly at HEAD, which identifies a release build.
+
+    Returns:
+        bool: If a tag points at HEAD, it will return True otherwise False.
+    """
+    result = run_git(['for-each-ref', '--points-at', 'HEAD', 'refs/tags'])
+
+    return (result is not None) and (len(result) > 0)
+
 def get_detached_branch_name():
     """Get a branch name for a detached HEAD.
     A local or remote branch pointing to HEAD is preferred, then the
@@ -163,6 +173,7 @@ def any_local_change():
 
 def any_unpushed_commit(upstream):
     """Checks whether there is any commit, which is not pushed to the remote repository.
+    A tagged HEAD is considered as pushed, because a release is built from a tag.
     If HEAD is detached, it checks whether HEAD is reachable from any remote branch.
 
     Args:
@@ -171,7 +182,11 @@ def any_unpushed_commit(upstream):
     Returns:
         bool: If there is any unpushed commit, it will return True otherwise False.
     """
-    if is_detached_head() is True:
+    if is_tagged_head() is True:
+        # A release checkout of a tag with depth 1 (CI) has no remote branches at all,
+        # therefore the remote branch check below would report an unpushed commit.
+        is_unpushed_commit_available = False
+    elif is_detached_head() is True:
         result = run_git(['rev-list', '--count', 'HEAD', '--not', '--remotes'])
         is_unpushed_commit_available = (result is not None) and (result != "0")
     else:
@@ -201,7 +216,9 @@ def get_version():
         if True is any_local_change():
             version = version + ":lc"
 
-        if branch_name != "master":
+        # A release is built from a tag. The branch name is unknown or just the
+        # branch which dispatched the CI workflow, therefore it is not marked.
+        if (branch_name != "master") and (is_tagged_head() is False):
             version = version + ":b"
 
     except FileNotFoundError:
