@@ -432,69 +432,90 @@ void AsyncClient::onPoll(AcConnectHandler cb, void* arg)
 
 void AsyncClient::process(bool isReadable, bool isWritable)
 {
+    /* Every handler may close the connection and destroy this client,
+     * therefore a handler is always the very last action of its path and
+     * no member is touched afterwards.
+     */
     if (-1 == m_socket)
     {
         /* Guard: no connection. */
     }
-    else
+    else if (true == isReadable)
     {
-        if (true == isReadable)
+        char rxBuffer[RX_BUFFER_SIZE];
+        int  received = SocketCompat::receiveData(static_cast<SocketCompat::Socket>(m_socket), rxBuffer, sizeof(rxBuffer));
+
+        if (0 < received)
         {
-            char rxBuffer[RX_BUFFER_SIZE];
-            int  received = SocketCompat::receiveData(static_cast<SocketCompat::Socket>(m_socket), rxBuffer, sizeof(rxBuffer));
+            m_lastRxTime = millis();
 
-            if (0 < received)
+            /* Pending transmit data is sent in the next cycle, because the
+             * data handler may have destroyed this client.
+             */
+            if (nullptr != m_dataHandler)
             {
-                m_lastRxTime = millis();
-
-                if (nullptr != m_dataHandler)
-                {
-                    m_dataHandler(m_dataArg, this, rxBuffer, static_cast<size_t>(received));
-                }
-            }
-            /* The peer closed the connection. */
-            else if (0 == received)
-            {
-                handleDisconnect();
-            }
-            else if (false == SocketCompat::wouldBlock())
-            {
-                handleDisconnect();
-            }
-            else
-            {
-                /* Nothing available, try again later. */
-                ;
+                m_dataHandler(m_dataArg, this, rxBuffer, static_cast<size_t>(received));
             }
         }
-
-        if ((-1 != m_socket) &&
-            (true == isWritable))
+        /* The peer closed the connection. */
+        else if (0 == received)
+        {
+            handleDisconnect();
+        }
+        else if (false == SocketCompat::wouldBlock())
+        {
+            handleDisconnect();
+        }
+        /* Nothing available, try again later. */
+        else if (true == isWritable)
         {
             (void)send();
         }
+        else
+        {
+            ;
+        }
+    }
+    else if (true == isWritable)
+    {
+        (void)send();
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 }
 
 void AsyncClient::notifyPoll()
 {
-    if (-1 != m_socket)
+    /* Every handler may close the connection and destroy this client,
+     * therefore a handler is always the very last action of its path and
+     * no member is touched afterwards.
+     */
+    if (-1 == m_socket)
     {
-        /* The webserver closes a connection which is idle for too long. */
-        if ((0U < m_rxTimeout) &&
-            ((m_rxTimeout * 1000U) < (millis() - m_lastRxTime)))
+        /* Guard: no connection. */
+    }
+    /* The webserver closes a connection which is idle for too long. Like
+     * the AsyncTCP counterpart, the poll handler is skipped in this case.
+     */
+    else if ((0U < m_rxTimeout) &&
+             ((m_rxTimeout * 1000U) < (millis() - m_lastRxTime)))
+    {
+        if (nullptr != m_timeoutHandler)
         {
-            if (nullptr != m_timeoutHandler)
-            {
-                m_timeoutHandler(m_timeoutArg, this, millis() - m_lastRxTime);
-            }
+            m_timeoutHandler(m_timeoutArg, this, millis() - m_lastRxTime);
         }
-
-        if ((-1 != m_socket) &&
-            (nullptr != m_pollHandler))
-        {
-            m_pollHandler(m_pollArg, this);
-        }
+    }
+    else if (nullptr != m_pollHandler)
+    {
+        m_pollHandler(m_pollArg, this);
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 }
 
