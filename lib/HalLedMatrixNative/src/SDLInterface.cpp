@@ -91,6 +91,15 @@ bool SDLInterface::initialize(int width, int height)
     }
     else
     {
+        /* By default SDL swallows the mouse click, which gives the window the focus.
+         * The user expects that the first click on a simulated button works, even if
+         * the window was not focused before.
+         */
+        if (false == SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1"))
+        {
+            LOG_WARNING("SDL_SetHint(%s) failed: %s", SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, SDL_GetError());
+        }
+
         if (false == SDL_Init(SDL_INIT_VIDEO))
         {
             LOG_WARNING("SDL_Init failed: %s", SDL_GetError());
