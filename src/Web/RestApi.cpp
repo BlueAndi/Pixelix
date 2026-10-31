@@ -159,7 +159,7 @@ static const ContentTypeElem contentTypeTable[] = {
 static const RestApiRoute gRestApiRoutes[] = {
     { "/display/fadeEffect", HTTP_GET | HTTP_POST, handleFadeEffect, nullptr, nullptr },
     { "/display/slots", HTTP_GET, handleSlots, nullptr, nullptr },
-    { "/display/slot/*", HTTP_GET, handleSlot, nullptr, nullptr },
+    { "/display/slot/*", HTTP_GET | HTTP_POST, handleSlot, nullptr, nullptr },
     { "/plugin/install", HTTP_POST, handlePluginInstall, nullptr, nullptr },
     { "/plugin/uninstall", HTTP_POST, handlePluginUninstall, nullptr, nullptr },
     { "/plugins", HTTP_GET, handlePlugins, nullptr, nullptr },
@@ -435,7 +435,7 @@ static void handleSlot(AsyncWebServerRequest* request)
                 httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
             }
             /* GET request? */
-            else if (HTTP_GET != request->method())
+            else if (HTTP_GET == request->method())
             {
                 JsonObject dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
