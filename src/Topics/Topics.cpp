@@ -138,10 +138,10 @@ static bool notify(const String& topic, const JsonObjectConst& value);
  *****************************************************************************/
 
 /** Default duration of a notification in ms, if none or 0 is given. */
-static const uint32_t NOTIFY_DURATION_DEFAULT    = 10000U;
+static const uint32_t NOTIFY_DURATION_DEFAULT        = 10000U;
 
 /** Maximum duration of a notification in ms. A greater value will be limited. */
-static const uint32_t NOTIFY_DURATION_MAX        = 60000U;
+static const uint32_t NOTIFY_DURATION_MAX            = 60000U;
 
 /**
  * Maximum length of a notification text in characters.
@@ -151,7 +151,15 @@ static const uint32_t NOTIFY_DURATION_MAX        = 60000U;
  * without PSRAM. A too long text is rejected and not truncated, so the sender
  * notices it instead of seeing a cut off message.
  */
-static const size_t NOTIFY_TEXT_MAX_LENGTH       = 256U;
+static const size_t NOTIFY_TEXT_MAX_LENGTH           = 256U;
+
+/**
+ * Maximum length of a notification icon file name in characters. It is queued
+ * together with the text, see NOTIFY_TEXT_MAX_LENGTH. A too long file name is
+ * ignored, because it can not be a valid path anyway, but the notification
+ * itself is shown.
+ */
+static const size_t NOTIFY_ICON_FILE_NAME_MAX_LENGTH = 128U;
 
 /**
  * Minimum brightness difference which is reported as a change.
@@ -160,7 +168,7 @@ static const size_t NOTIFY_TEXT_MAX_LENGTH       = 256U;
  * ambient light. Without a threshold every single step would be published,
  * which would spam the MQTT broker and the Home Assistant history.
  */
-static const uint8_t BRIGHTNESS_CHANGE_THRESHOLD = 8U;
+static const uint8_t BRIGHTNESS_CHANGE_THRESHOLD     = 8U;
 
 /**
  * Device id, which is unique for each device.
@@ -721,7 +729,16 @@ static bool notify(const String& topic, const JsonObjectConst& value)
         {
             const char* iconFileNamePtr = jsonIconFileName.as<const char*>();
 
-            if (nullptr != iconFileNamePtr)
+            if (nullptr == iconFileNamePtr)
+            {
+                /* No icon. */
+                ;
+            }
+            else if (NOTIFY_ICON_FILE_NAME_MAX_LENGTH < strlen(iconFileNamePtr))
+            {
+                LOG_WARNING("Notification icon file name too long.");
+            }
+            else
             {
                 iconFileName = iconFileNamePtr;
             }
