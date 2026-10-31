@@ -247,7 +247,7 @@ private:
     uint8_t*                                     m_webpData;       /**< WebP file data in memory. */
     size_t                                       m_webpDataSize;   /**< Size of WebP file data in bytes. */
     WebPAnimDecoder*                             m_animDecoder;    /**< WebP animation decoder. Only used for animations. */
-    YAGfxDynamicBitmap                           m_bitmap;         /**< The bitmap contains the current frame. */
+    YAGfxDynamicBitmap                           m_bitmap;         /**< The bitmap contains the static image. An animation is drawn from the decoder frame instead. */
     int16_t                                      m_width;          /**< Image width in pixels. */
     int16_t                                      m_height;         /**< Image height in pixels. */
     bool                                         m_isAnimation;    /**< WebP contains several frames which to animate. */
@@ -259,6 +259,7 @@ private:
     SimpleTimer                                  m_timer;          /**< Timer used for animations. */
     int32_t                                      m_lastTimestamp;  /**< Timestamp of the last decoded frame in ms. */
     bool                                         m_hasMoreFrames;  /**< Indicates if more frames are available. */
+    const uint8_t*                               m_frameRgba;      /**< Current animation frame as premultiplied RGBA pixels, owned by the decoder. */
 
     /**
      * Clean-up and release all allocated memory. The player is reset to the
@@ -338,6 +339,19 @@ private:
      * @param[in] stride    Stride in bytes from one scanline to the next.
      */
     void copyPixelsToBitmap(const uint8_t* rgba, size_t stride);
+
+    /**
+     * Draw decoded premultiplied RGBA pixels directly to the canvas. The
+     * animation decoder keeps the current frame in its own canvas, therefore
+     * no additional bitmap copy of it is held.
+     *
+     * @param[in] gfx       Graphic functions of the parent canvas.
+     * @param[in] x         x-coordinate of the parent canvas.
+     * @param[in] y         y-coordinate of the parent canvas.
+     * @param[in] rgba      Decoded premultiplied RGBA pixels. Must not be nullptr.
+     * @param[in] stride    Stride in bytes from one scanline to the next.
+     */
+    void drawRgba(YAGfx& gfx, int16_t x, int16_t y, const uint8_t* rgba, size_t stride) const;
 };
 
 /******************************************************************************

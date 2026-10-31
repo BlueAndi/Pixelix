@@ -93,7 +93,8 @@ WebpImgPlayer::WebpImgPlayer() :
     m_isInfiniteLoop(false),
     m_timer(),
     m_lastTimestamp(0),
-    m_hasMoreFrames(false)
+    m_hasMoreFrames(false),
+    m_frameRgba(nullptr)
 {
 }
 
@@ -113,7 +114,8 @@ WebpImgPlayer::WebpImgPlayer(const WebpImgPlayer& player) :
     m_isInfiniteLoop(false),
     m_timer(),
     m_lastTimestamp(0),
-    m_hasMoreFrames(false)
+    m_hasMoreFrames(false),
+    m_frameRgba(nullptr)
 {
     copyFrom(player);
 }
@@ -207,7 +209,11 @@ bool WebpImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
             /* The current frame is still on time. */
         }
 
-        gfx.drawBitmap(x, y, m_bitmap);
+        if (nullptr != m_frameRgba)
+        {
+            drawRgba(gfx, x, y, m_frameRgba, static_cast<size_t>(m_width) * BYTES_PER_PIXEL);
+        }
+
         isSuccessful = true;
     }
 
@@ -224,6 +230,9 @@ bool WebpImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
 
 void WebpImgPlayer::cleanup()
 {
+    /* The frame belongs to the decoder, it is invalid after its deletion. */
+    m_frameRgba = nullptr;
+
     if (nullptr != m_animDecoder)
     {
         WebPAnimDecoderDelete(m_animDecoder);
@@ -472,11 +481,9 @@ WebpImgPlayer::Ret WebpImgPlayer::initAnimatedImage()
             LOG_ERROR("WebP canvas size mismatch.");
             ret = RET_FILE_FORMAT_INVALID;
         }
-        else if (false == m_bitmap.create(static_cast<uint16_t>(m_width), static_cast<uint16_t>(m_height)))
-        {
-            LOG_ERROR("WebP image is too big for the available memory.");
-            ret = RET_IMG_TOO_BIG;
-        }
+        /* No own bitmap for an animation: the decoder keeps the current frame
+         * in its canvas and the player draws from it.
+         */
         else
         {
             m_loopCount     = animInfo.loop_count;
@@ -551,7 +558,10 @@ bool WebpImgPlayer::decodeNextFrame()
              */
             const int32_t duration = timestamp - m_lastTimestamp;
 
-            copyPixelsToBitmap(buffer, static_cast<size_t>(m_width) * BYTES_PER_PIXEL);
+            /* The buffer is owned by the decoder and valid until the next
+             * frame is decoded or the decoder is deleted.
+             */
+            m_frameRgba            = buffer;
 
             if (0 < duration)
             {
@@ -607,6 +617,32 @@ void WebpImgPlayer::copyPixelsToBitmap(const uint8_t* rgba, size_t stride)
                 const Color color(line[idx + 0U], line[idx + 1U], line[idx + 2U]);
 
                 m_bitmap.drawPixel(x, y, color);
+            }
+        }
+    }
+}
+
+void WebpImgPlayer::drawRgba(YAGfx& gfx, int16_t x, int16_t y, const uint8_t* rgba, size_t stride) const
+{
+    if (nullptr != rgba)
+    {
+        int16_t dy;
+
+        for (dy = 0; dy < m_height; ++dy)
+        {
+            const uint8_t* line = &rgba[static_cast<size_t>(dy) * stride];
+            int16_t        dx;
+
+            for (dx = 0; dx < m_width; ++dx)
+            {
+                const size_t idx = static_cast<size_t>(dx) * BYTES_PER_PIXEL;
+
+                /* The alpha channel is dropped, because the decoder delivers
+                 * premultiplied pixels, which are composited against black.
+                 */
+                const Color color(line[idx + 0U], line[idx + 1U], line[idx + 2U]);
+
+                gfx.drawPixel(x + dx, y + dy, color);
             }
         }
     }
