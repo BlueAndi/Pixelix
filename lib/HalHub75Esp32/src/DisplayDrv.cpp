@@ -119,20 +119,28 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
 
         for (int16_t y = 0; y < height; ++y)
         {
-            for (int16_t x = 0; x < width; ++x)
+            /* One virtual call per row instead of one per pixel. */
+            uint16_t     offset = 0U;
+            const Color* row    = bitmap.getFrameBufferXAddr(0, y, static_cast<uint16_t>(width), offset);
+
+            if (nullptr != row)
             {
-                const Color& color = bitmap.getColor(x, y);
+                for (int16_t x = 0; x < width; ++x)
+                {
+                    const Color& color = *row;
 
 #if CONFIG_DISPLAY_ROTATE180 != 0
-                m_panel.drawPixelRGB888(
-                    width - x - 1,
-                    height - y - 1,
-                    color.getRed(),
-                    color.getGreen(),
-                    color.getBlue());
+                    m_panel.drawPixelRGB888(
+                        width - x - 1,
+                        height - y - 1,
+                        color.getRed(),
+                        color.getGreen(),
+                        color.getBlue());
 #else
-                m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
+                    m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
 #endif
+                    row += offset;
+                }
             }
         }
     }
