@@ -12,6 +12,8 @@ For MQTT delivery, enable MQTT on the Pixelix device and connect it to the same 
 
 ## Installation
 
+The integration needs a Pixelix firmware **v11.0.0 or newer**, because it identifies a device by the REST `GET /rest/api/v1/device` response, which older firmware does not provide (see [Device identity](#device-identity)).
+
 1. Copy the folder `custom_components/pixelix` (the inner one, containing `manifest.json`) to `<HA configuration directory>/custom_components/pixelix` (create the directory if necessary). The `<HA configuration directory>` is the one which contains `configuration.yaml`.
 2. Restart Home Assistant.
 3. Add the devices, see below.
@@ -28,11 +30,15 @@ If a device is not found, e.g. because mDNS is not forwarded to Home Assistant, 
 
 ### Device identity
 
-A device is identified by its unique device id (the ESP chip id) which it reports in the REST `/status` response (`device.id`). Manual setup and mDNS discovery therefore lead to the same device, and it is added only once. If its IP address changes, the address is updated automatically when it is discovered again. The IP address and host name are never used as the unique id.
+A device is identified by its unique device id (the ESP chip id) which it reports in the REST `/device` response (`device.id`). Manual setup and mDNS discovery therefore lead to the same device, and it is added only once. The IP address and host name are never used as the unique id.
+
+The `/device` endpoint exists since firmware v11.0.0. An older firmware (e.g. v10.0.0) answers `404`, the integration reports *The device answered unexpectedly* and the device can not be added.
+
+If the IP address of a device changes, it is not updated on its own: the mDNS discovery knows a device only by its host name, while the entry is identified by the chip id. Therefore a device which is discovered again at a new address appears as a **new discovery card**. Confirm it with the web login: the integration then reads the chip id, recognises the existing entry, updates its address and keeps it, no second device is created. A fixed IP address (DHCP reservation) avoids this.
 
 ### Device information
 
-The device page under **Settings → Devices & services → Pixelix** shows what the device reports in its REST `/status` response:
+The device page under **Settings → Devices & services → Pixelix** shows what the device reports in its REST `/device` response:
 
 | Shown as    | Source (`device.*`) | Example               |
 | ----------- | ------------------- | --------------------- |
@@ -44,7 +50,7 @@ The hardware is the PlatformIO target name of the firmware, which identifies the
 
 The MAC address is registered as a device connection. Home Assistant treats two devices which share a connection as one, so the device of this integration and the device created by the MQTT discovery of the firmware are merged into a single device instead of appearing twice.
 
-These details need a firmware which reports them. The firmware version and the hardware have been part of `/status` for a long time; the MAC address was added together with this feature. A device with an older firmware simply does not show the MAC address and works as before. A detail is only updated while the device is reachable — if it is offline during a restart of Home Assistant, the last known values are kept.
+All of them are part of the `/device` response since firmware v11.0.0, the minimum firmware version of the integration. A detail is only updated while the device is reachable — if it is offline during a restart of Home Assistant, the last known values are kept.
 
 ### Several devices
 
@@ -116,7 +122,7 @@ If a device is not reachable or rejects the notification, the action fails with 
 | The device is not discovered             | mDNS is not forwarded to Home Assistant (e.g. other network, container). Add the device manually by its IP address.                          |
 | *The device is not reachable*            | Wrong host, port or the device is off. Check `http://<HOST>/` in a browser. A host name needs working name resolution, use the IP address.   |
 | *The web login was rejected*             | The user or password differ from the settings of the device. Enter them again. For a configured device Home Assistant offers to update them. |
-| *The device answered unexpectedly*       | The address belongs to another device, or the firmware is too old for the REST API v1 (`/setting`).                                          |
+| *The device answered unexpectedly*       | The address belongs to another device, or the firmware is older than v11.0.0 and has no `/rest/api/v1/device` endpoint. Update it.           |
 | Reauthentication says *another device*   | The device now reports another host name. Remove the device and add it again.                                                                |
 | A notification is rejected by the device | Text and melody together exceed the memory which the firmware reserves for a request (about 500 bytes). Shorten them.                        |
 | The same device exists twice             | It was added with an earlier version and was not reachable during the update. Remove the entry which uses the IP address.                    |
@@ -128,7 +134,7 @@ Set `custom_components.pixelix: debug` in the `logger` configuration for details
 The tests mock all HTTP requests. No hardware is required. Home Assistant needs a POSIX system and the Python version of its current release (Linux, macOS or WSL).
 
 ```bash
-cd doc/homeassistant/integration/pixelix
+cd doc/homeassistant/integration
 pip install -r requirements_test.txt
 pytest
 ```

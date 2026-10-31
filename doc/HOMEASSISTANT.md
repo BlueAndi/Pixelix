@@ -78,7 +78,7 @@ Only if MQTT is not available, choose one of the other ways:
 
 Both ways may be used at the same time. The firmware reports its MAC address via MQTT discovery and the integration registers the same MAC address as a device connection. Home Assistant treats two devices which share a connection as one device, therefore a Pixelix device which is discovered via MQTT **and** added by the integration is shown as a **single** device with the entities of the MQTT discovery and the `pixelix.notify` action of the integration.
 
-This needs a firmware which reports its MAC address in the REST `/status` response. Older firmware simply does not report it, and then both appear as two separate devices.
+The MAC address is part of the REST `/device` response, which the integration requires anyway (firmware v11.0.0 or newer).
 
 In practice this combination is rarely necessary, because the MQTT API already provides a notification entity.
 
@@ -205,6 +205,8 @@ The complete documentation is in the [integration README](./homeassistant/integr
 - **No acknowledgement for MQTT delivery.** MQTT does not provide a device-side acknowledgement, only REST responses can confirm that a notification was accepted.
 
 ### Installation (Integration)
+
+The integration needs a Pixelix firmware v11.0.0 or newer, which provides the REST `/device` endpoint used to identify the device. An older firmware can not be added.
 
 1. Copy the folder [custom_components/pixelix](./homeassistant/integration/custom_components/pixelix) (the inner one, containing `manifest.json`) to `<HA configuration directory>/custom_components/pixelix`.
 2. Restart Home Assistant.
