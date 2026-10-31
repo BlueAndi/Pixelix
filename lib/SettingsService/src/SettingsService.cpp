@@ -619,6 +619,7 @@ bool SettingsService::registerSetting(KeyValue* setting)
         if (std::find(m_keyValueList.begin(), m_keyValueList.end(), setting) == m_keyValueList.end())
         {
             setting->setPersistentStorage(m_preferences);
+            setting->setMutex(m_mutex);
             m_keyValueList.push_back(setting);
 
             if (true == m_isRamMirrorInitialized)
@@ -697,8 +698,13 @@ SettingsService::SettingsService() :
     m_linearGradientColor2      (m_preferences, KEY_LINEAR_GRADIENT_COLOR2,     NAME_LINEAR_GRADIENT_COLOR2,    DEFAULT_LINEAR_GRADIENT_COLOR2, MIN_VALUE_LINEAR_GRADIENT_COLOR2,   MAX_VALUE_LINEAR_GRADIENT_COLOR2),
     m_linearGradientOffset      (m_preferences, KEY_LINEAR_GRADIENT_OFFSET,     NAME_LINEAR_GRADIENT_OFFSET,    DEFAULT_LINEAR_GRADIENT_OFFSET, MIN_VALUE_LINEAR_GRADIENT_OFFSET,   MAX_VALUE_LINEAR_GRADIENT_OFFSET),
     m_linearGradientLength      (m_preferences, KEY_LINEAR_GRADIENT_LENGTH,     NAME_LINEAR_GRADIENT_LENGTH,    DEFAULT_LINEAR_GRADIENT_LENGTH, MIN_VALUE_LINEAR_GRADIENT_LENGTH,   MAX_VALUE_LINEAR_GRADIENT_LENGTH),
-    m_linearGradientVertical    (m_preferences, KEY_LINEAR_GRADIENT_VERTICAL,   NAME_LINEAR_GRADIENT_VERTICAL,  DEFAULT_LINEAR_GRADIENT_VERTICAL)
+    m_linearGradientVertical    (m_preferences, KEY_LINEAR_GRADIENT_VERTICAL,   NAME_LINEAR_GRADIENT_VERTICAL,  DEFAULT_LINEAR_GRADIENT_VERTICAL),
+    m_mutex()
 {
+    std::vector<KeyValue*>::const_iterator it;
+
+    (void)m_mutex.create();
+
     /* Skip m_version, because it shall not be modified by the user. */
     m_keyValueList.push_back(&m_wifiSSID);
     m_keyValueList.push_back(&m_wifiPassphrase);
@@ -725,11 +731,22 @@ SettingsService::SettingsService() :
     m_keyValueList.push_back(&m_linearGradientOffset);
     m_keyValueList.push_back(&m_linearGradientLength);
     m_keyValueList.push_back(&m_linearGradientVertical);
+
+    m_version.setMutex(m_mutex);
+
+    for (it = m_keyValueList.begin(); it != m_keyValueList.end(); ++it)
+    {
+        if (nullptr != *it)
+        {
+            (*it)->setMutex(m_mutex);
+        }
+    }
 }
 /* clang-format on */
 
 SettingsService::~SettingsService()
 {
+    m_mutex.destroy();
 }
 
 /******************************************************************************

@@ -76,7 +76,8 @@ public:
         m_name(name),
         m_defValue(defValue),
         m_min(min),
-        m_max(max)
+        m_max(max),
+        m_value(defValue)
     {
     }
 
@@ -144,7 +145,9 @@ public:
      */
     void updateRamMirror() final
     {
+        lock();
         m_value = m_preferences->getString(m_key, getDefault());
+        unlock();
     }
 
     /**
@@ -193,7 +196,9 @@ public:
          */
         if (bytesWritten == value.length())
         {
+            lock();
             m_value = value;
+            unlock();
         }
     }
 
@@ -214,7 +219,13 @@ public:
      */
     String getValueFromRam() const
     {
-        return m_value;
+        String value;
+
+        lock();
+        value = m_value;
+        unlock();
+
+        return value;
     }
 
 private:

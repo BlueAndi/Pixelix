@@ -150,7 +150,9 @@ public:
      */
     void updateRamMirror() final
     {
+        lock();
         m_value = m_preferences->getString(m_key, getDefault());
+        unlock();
     }
 
     /**
@@ -199,7 +201,9 @@ public:
          */
         if (bytesWritten == value.length())
         {
+            lock();
             m_value = value;
+            unlock();
         }
     }
 
@@ -235,14 +239,19 @@ public:
     void setUniqueId(const String& uniqueId)
     {
         const String oldDefault = getDefault();
-        bool         isDefault  = (m_value == oldDefault);
+        bool         isDefault  = false;
 
-        m_uniqueId              = uniqueId;
+        lock();
+
+        isDefault  = (m_value == oldDefault);
+        m_uniqueId = uniqueId;
 
         if (true == isDefault)
         {
             m_value = getDefault();
         }
+
+        unlock();
     }
 
     /**
@@ -252,7 +261,13 @@ public:
      */
     String getValueFromRam() const
     {
-        return m_value;
+        String value;
+
+        lock();
+        value = m_value;
+        unlock();
+
+        return value;
     }
 
 private:

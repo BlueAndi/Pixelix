@@ -480,6 +480,7 @@ private:
     KeyValueInt32          m_linearGradientOffset;   /**< Linear gradient offset */
     KeyValueUInt32         m_linearGradientLength;   /**< Linear gradient length */
     KeyValueBool           m_linearGradientVertical; /**< Linear gradient vertical */
+    MutexRecursive         m_mutex;                  /**< Protects the RAM mirrors, which are accessed by different tasks. */
 
     /**
      * Constructs the settings service instance.
