@@ -33,6 +33,8 @@ const SERIAL_BAUD_RATE = 115200;
 /** ESP32 ROM/stub baud rate used to accelerate firmware flashing. */
 const FLASH_BAUD_RATE = 460800;
 const MAX_TERMINAL_OUTPUT_LENGTH = 48000;
+/** Number of leading SHA-256 hex digits used as cache-busting query of an image URL. */
+const IMAGE_CACHE_KEY_LENGTH = 16;
 const WIFI_CREDENTIAL_COMMAND = /^write\s+wifi\s+(ssid|passphrase)\b/i;
 
 const elements = {
@@ -342,12 +344,16 @@ async function connectToBoard() {
 
 /**
  * Fetch a firmware image and verify its SHA-256 digest before flashing.
+ * The image URL is the same for every release of a board, therefore a part of
+ * the manifest digest is appended as query, so that a cached image of a
+ * previous release is never served for a new one.
  * @param {{file: string, url: string, sha256: string, offset: number}} image Manifest image
  * @returns {Promise<{data: Uint8Array, address: number}>} Verified bytes and flash offset
  * @throws {Error} If fetching or checksum validation fails
  */
 async function fetchImage(image) {
-    const response = await fetch(`./${image.url}`, { cache: "force-cache" });
+    const cacheKey = image.sha256.slice(0, IMAGE_CACHE_KEY_LENGTH);
+    const response = await fetch(`./${image.url}?v=${cacheKey}`);
     if (!response.ok) {
         throw new Error(`Could not download ${image.file} (${response.status}).`);
     }
