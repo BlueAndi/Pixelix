@@ -39,7 +39,11 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -53,7 +57,12 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.target import (
+    TargetSelection,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .api import PixelixAuthError, PixelixClient, PixelixError
@@ -106,11 +115,22 @@ NOTIFY_PARAMS = (
     (ATTR_VOLUME, "volume"),
 )
 
+# The fields which the target picker of the action merges into the data of
+# a service call. Any of them means that the user selected a target.
+TARGET_FIELDS = (
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_AREA_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+)
+
 # The ranges match what the Pixelix firmware accepts. A duration of 0 is
-# handled by the firmware (defaults to 10 s).
+# handled by the firmware (defaults to 10 s). The target fields are the
+# standard ones of Home Assistant, see TARGET_FIELDS.
 NOTIFY_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        **cv.TARGET_SERVICE_FIELDS,
         vol.Required(ATTR_MESSAGE): vol.All(
             cv.string, vol.Length(min=1), max_bytes(MAX_TEXT_BYTES)
         ),
@@ -450,7 +470,8 @@ async def _async_notify(call: ServiceCall) -> None:
 
     Args:
         call: The service call, validated by ``NOTIFY_SCHEMA``. It provides
-            ``message`` and optionally the target ``device_id``,
+            ``message`` and optionally the target (``device_id``,
+            ``area_id``, ``floor_id``, ``label_id`` or ``entity_id``),
             ``duration`` in ms, ``icon_file_name``, ``melody`` in RTTTL
             format and ``volume``.
 
@@ -458,8 +479,9 @@ async def _async_notify(call: ServiceCall) -> None:
         None.
 
     Raises:
-        ServiceValidationError: The target is empty or contains a device
-            which is not a loaded Pixelix device. Nothing is sent then.
+        ServiceValidationError: The target is empty, contains a device
+            which is not a loaded Pixelix device or does not lead to any
+            Pixelix device. Nothing is sent then.
         HomeAssistantError: At least one device did not show the
             notification. The message names every failed device. A device
             which rejected the web login starts the reauthentication.
@@ -524,54 +546,72 @@ async def _async_notify(call: ServiceCall) -> None:
 def _select_entries(call: ServiceCall) -> list[PixelixConfigEntry]:
     """Get the config entries which a service call addresses.
 
+    The target picker of Home Assistant selects devices, areas, floors,
+    labels and entities. An area, a floor or a label stands for the devices
+    in it, an entity for its device. A device which is not a Pixelix device
+    is skipped if it is only part of such a group, because a group usually
+    contains other devices too. A device which is selected directly must be
+    a Pixelix device.
+
     Args:
-        call: The service call, which may contain target device ids.
+        call: The service call, which may contain a target.
 
     Returns:
         The loaded entries of the target devices, or of all devices if the
         call has no target at all.
 
     Raises:
-        ServiceValidationError: There is no device, the target is empty or
-            one of the target devices is unknown. It never falls back to
-            all devices in these cases.
+        ServiceValidationError: There is no device, the target is empty,
+            one of the directly selected devices is unknown or the target
+            does not lead to any Pixelix device. It never falls back to all
+            devices in these cases.
     """
     loaded = {
         entry.entry_id: entry
         for entry in call.hass.config_entries.async_loaded_entries(DOMAIN)
     }
-    device_ids = call.data.get(ATTR_DEVICE_ID)
 
-    if device_ids is None:
+    if not any(field in call.data for field in TARGET_FIELDS):
         entries = list(loaded.values())
         if not entries:
             raise ServiceValidationError("No Pixelix device is configured.")
         return entries
 
-    if not device_ids:
+    selection = TargetSelection(call.data)
+    if not selection.has_any_target:
         raise ServiceValidationError("No target device is selected.")
 
-    registry = dr.async_get(call.hass)
-    entries = []
-    unknown = []
+    selected = async_extract_referenced_entity_ids(
+        call.hass, selection, expand_group=False
+    )
+    entity_registry = er.async_get(call.hass)
+    device_ids = set(selection.device_ids) | selected.referenced_devices
 
-    for device_id in device_ids:
-        device = registry.async_get(device_id)
+    for entity_id in selected.referenced:
+        entity = entity_registry.async_get(entity_id)
+        if entity is not None and entity.device_id is not None:
+            device_ids.add(entity.device_id)
+
+    device_registry = dr.async_get(call.hass)
+    entries: list[PixelixConfigEntry] = []
+    unknown: list[str] = []
+
+    for device_id in sorted(device_ids):
+        device = device_registry.async_get(device_id)
         entry = None
         if device is not None:
             entry = next(
                 (
-                    candidate
-                    for candidate in loaded.values()
-                    if device in dr.async_entries_for_config_entry(
-                        registry, candidate.entry_id
-                    )
+                    loaded[entry_id]
+                    for entry_id in device.config_entries
+                    if entry_id in loaded
                 ),
                 None,
             )
 
         if entry is None:
-            unknown.append(device_id)
+            if device_id in selection.device_ids:
+                unknown.append(device_id)
         elif entry not in entries:
             entries.append(entry)
 
@@ -579,6 +619,11 @@ def _select_entries(call: ServiceCall) -> list[PixelixConfigEntry]:
         raise ServiceValidationError(
             "Not a Pixelix device or the device is not loaded: "
             + ", ".join(unknown)
+        )
+
+    if not entries:
+        raise ServiceValidationError(
+            "The selected target does not contain a Pixelix device."
         )
 
     return entries

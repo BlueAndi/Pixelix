@@ -1,6 +1,6 @@
 notify:
   name: Send notification
-  description: Send a Pixelix notification with optional display duration, icon and RTTTL melody. Without a target device, all Pixelix devices show it.
+  description: Send a Pixelix notification with optional display duration, icon and RTTTL melody. The target may be Pixelix devices, or areas, floors or labels which contain them. Without a target, all Pixelix devices show it.
   target:
     device:
       integration: pixelix

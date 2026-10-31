@@ -34,13 +34,23 @@ import aiohttp
 import pytest
 import voluptuous as vol
 from homeassistant.components import mqtt
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import floor_registry as fr
+from homeassistant.helpers import label_registry as lr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import (
     AiohttpClientMocker,
@@ -408,6 +418,223 @@ async def test_target_device(
     assert notify_payloads(aioclient_mock, HOST_B) == []
 
 
+def _foreign_device(hass: HomeAssistant) -> dr.DeviceEntry:
+    """Create a device of another integration.
+
+    Args:
+        hass: The Home Assistant instance.
+
+    Returns:
+        The device, which is not a Pixelix device.
+    """
+    other = MockConfigEntry(domain="other")
+    other.add_to_hass(hass)
+
+    return dr.async_get(hass).async_get_or_create(
+        config_entry_id=other.entry_id, identifiers={("other", "1")}
+    )
+
+
+async def test_target_area(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """An area as target addresses the Pixelix devices in it.
+
+    The target picker of Home Assistant merges the area into the data of
+    the service call, which the action must accept.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+
+    Returns:
+        None.
+    """
+    entry_a = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
+    await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
+    mock_notify(aioclient_mock, HOST_A)
+    mock_notify(aioclient_mock, HOST_B)
+    area = ar.async_get(hass).async_get_or_create("Kitchen")
+    registry = dr.async_get(hass)
+    registry.async_update_device(device_id(hass, entry_a), area_id=area.id)
+    registry.async_update_device(_foreign_device(hass).id, area_id=area.id)
+
+    await notify(hass, {"message": "Hello", ATTR_AREA_ID: area.id})
+
+    assert notify_payloads(aioclient_mock, HOST_A) == [{"text": "Hello"}]
+    assert notify_payloads(aioclient_mock, HOST_B) == []
+
+
+async def test_target_floor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A floor as target addresses the devices in its areas.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+
+    Returns:
+        None.
+    """
+    entry_a = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
+    await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
+    mock_notify(aioclient_mock, HOST_A)
+    mock_notify(aioclient_mock, HOST_B)
+    floor = fr.async_get(hass).async_create("Ground floor")
+    area = ar.async_get(hass).async_get_or_create("Kitchen")
+    ar.async_get(hass).async_update(area.id, floor_id=floor.floor_id)
+    dr.async_get(hass).async_update_device(
+        device_id(hass, entry_a), area_id=area.id
+    )
+
+    await notify(hass, {"message": "Hello", ATTR_FLOOR_ID: floor.floor_id})
+
+    assert notify_payloads(aioclient_mock, HOST_A) == [{"text": "Hello"}]
+    assert notify_payloads(aioclient_mock, HOST_B) == []
+
+
+async def test_target_label(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A label as target addresses the devices which carry it.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+
+    Returns:
+        None.
+    """
+    entry_a = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
+    await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
+    mock_notify(aioclient_mock, HOST_A)
+    mock_notify(aioclient_mock, HOST_B)
+    label = lr.async_get(hass).async_create("Displays")
+    dr.async_get(hass).async_update_device(
+        device_id(hass, entry_a), labels={label.label_id}
+    )
+
+    await notify(hass, {"message": "Hello", ATTR_LABEL_ID: label.label_id})
+
+    assert notify_payloads(aioclient_mock, HOST_A) == [{"text": "Hello"}]
+    assert notify_payloads(aioclient_mock, HOST_B) == []
+
+
+async def test_target_entity_of_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """An entity as target addresses its device.
+
+    The device of the integration is merged with the device of the MQTT
+    discovery, so the entities of the MQTT discovery belong to it.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+
+    Returns:
+        None.
+    """
+    entry_a = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
+    await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
+    mock_notify(aioclient_mock, HOST_A)
+    mock_notify(aioclient_mock, HOST_B)
+    entity = er.async_get(hass).async_get_or_create(
+        "light", "mqtt", "display", device_id=device_id(hass, entry_a)
+    )
+
+    await notify(
+        hass, {"message": "Hello", ATTR_ENTITY_ID: entity.entity_id}
+    )
+
+    assert notify_payloads(aioclient_mock, HOST_A) == [{"text": "Hello"}]
+    assert notify_payloads(aioclient_mock, HOST_B) == []
+
+
+async def test_target_device_and_area_once(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A device which is selected directly and by its area is notified once.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+
+    Returns:
+        None.
+    """
+    entry_a = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
+    mock_notify(aioclient_mock, HOST_A)
+    area = ar.async_get(hass).async_get_or_create("Kitchen")
+    dr.async_get(hass).async_update_device(
+        device_id(hass, entry_a), area_id=area.id
+    )
+
+    await notify(
+        hass,
+        {
+            "message": "Hello",
+            ATTR_DEVICE_ID: device_id(hass, entry_a),
+            ATTR_AREA_ID: area.id,
+        },
+    )
+
+    assert notify_payloads(aioclient_mock, HOST_A) == [{"text": "Hello"}]
+
+
+@pytest.mark.parametrize("field", [ATTR_AREA_ID, ATTR_LABEL_ID])
+async def test_target_without_pixelix_device_sends_nothing(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, field: str
+) -> None:
+    """An area or label without a Pixelix device is an error.
+
+    The action never falls back to all devices.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+        field: The target field, which selects an area or a label.
+
+    Returns:
+        None.
+    """
+    await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
+    mock_notify(aioclient_mock, HOST_A)
+    area = ar.async_get(hass).async_get_or_create("Garage")
+    label = lr.async_get(hass).async_create("Garden")
+    dr.async_get(hass).async_update_device(
+        _foreign_device(hass).id, area_id=area.id, labels={label.label_id}
+    )
+    target = area.id if field == ATTR_AREA_ID else label.label_id
+
+    with pytest.raises(ServiceValidationError, match="Pixelix device"):
+        await notify(hass, {"message": "Hello", field: target})
+
+    assert not notify_payloads(aioclient_mock, HOST_A)
+
+
+async def test_unknown_area_sends_nothing(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """An area which does not exist is an error.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+
+    Returns:
+        None.
+    """
+    await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
+    mock_notify(aioclient_mock, HOST_A)
+
+    with pytest.raises(ServiceValidationError):
+        await notify(hass, {"message": "Hello", ATTR_AREA_ID: "nowhere"})
+
+    assert not notify_payloads(aioclient_mock, HOST_A)
+
+
 async def test_without_any_device(hass: HomeAssistant) -> None:
     """The action is available, but fails clearly without a device."""
     entry = await setup_entry(hass)
@@ -468,11 +695,7 @@ async def test_device_of_other_integration_is_invalid(
     """A device of another integration is not a valid target."""
     await setup_entry(hass, HOST_A, HOSTNAME_A)
     mock_notify(aioclient_mock, HOST_A)
-    other = MockConfigEntry(domain="other")
-    other.add_to_hass(hass)
-    foreign = dr.async_get(hass).async_get_or_create(
-        config_entry_id=other.entry_id, identifiers={("other", "1")}
-    )
+    foreign = _foreign_device(hass)
 
     with pytest.raises(ServiceValidationError):
         await notify(

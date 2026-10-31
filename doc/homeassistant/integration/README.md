@@ -54,7 +54,7 @@ All of them are part of the `/device` response since firmware v11.0.0, the minim
 
 ### Several devices
 
-Every device is an own entry with an own device in Home Assistant. Select one or more of them as target of the action. Without a target, all configured devices show the notification. The devices are contacted in parallel. An unreachable device only delays itself, its request ends after 10 s at the latest.
+Every device is an own entry with an own device in Home Assistant. Select one or more of them as target of the action, or an area, a floor or a label which contains them. Without a target, all configured devices show the notification. The devices are contacted in parallel. An unreachable device only delays itself, its request ends after 10 s at the latest.
 
 ## Action `pixelix.notify`
 
@@ -110,7 +110,7 @@ automation:
           volume: 5
 ```
 
-A target which is not a loaded Pixelix device is an error, nothing is sent then. The action never falls back to all devices.
+The target may also be an area, a floor or a label (`area_id`, `floor_id`, `label_id`), which stands for the Pixelix devices in it, or an entity of a Pixelix device (`entity_id`), e.g. one of its MQTT discovery entities. Other devices in such a group are skipped. A device which is selected directly but is not a loaded Pixelix device is an error, as is a target without any Pixelix device, nothing is sent then. The action never falls back to all devices.
 
 If a device is not reachable or rejects the notification, the action fails with a message which names the device. The other devices still show the notification.
 
