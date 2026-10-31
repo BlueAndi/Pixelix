@@ -36,6 +36,7 @@
 #include "SysMsgPlugin.h"
 
 #include <Logging.h>
+#include <utility>
 
 /******************************************************************************
  * Compiler Switches
@@ -52,6 +53,8 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
+
+static void releaseString(String& str);
 
 /******************************************************************************
  * Local Variables
@@ -323,9 +326,9 @@ bool SysMsgPlugin::nextMessage()
         }
 
         /* Release the message, it is handed over to the view now. */
-        sysMsg.msg.clear();
-        sysMsg.iconFileName.clear();
-        sysMsg.melody.clear();
+        releaseString(sysMsg.msg);
+        releaseString(sysMsg.iconFileName);
+        releaseString(sysMsg.melody);
 
         ++m_rdIndex;
         m_rdIndex      %= MAX_SYS_MSG;
@@ -343,3 +346,20 @@ bool SysMsgPlugin::nextMessage()
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Release the heap buffer of a string.
+ *
+ * String::clear() only sets the length to 0 and keeps the buffer, so a burst
+ * of long notifications would pin their buffers in the queue entries forever.
+ * The buffer is moved to a temporary string, which frees it when it leaves
+ * the scope.
+ *
+ * @param[in,out] str   String which to release.
+ */
+static void releaseString(String& str)
+{
+    String released;
+
+    std::swap(str, released);
+}
