@@ -205,7 +205,32 @@ public:
     {
         return (true == m_prepareNewText) ||
                (true == m_updateText) ||
-               (FADE_STATE_OUT == m_fadeState);
+               (FADE_STATE_OUT == m_fadeState) ||
+               (true == m_isTextChanged);
+    }
+
+    /**
+     * Was the shown text replaced by a new one since the last acknowledge?
+     *
+     * The text is replaced during the paint. A layout which is derived from
+     * the text size, e.g. the scrolling content, is therefore based on the
+     * previous text until it is measured again. The transition is considered
+     * active until the change is acknowledged, see clearTextChanged().
+     *
+     * @return If the text was replaced, it will return true otherwise false.
+     */
+    bool isTextChanged() const
+    {
+        return m_isTextChanged;
+    }
+
+    /**
+     * Acknowledge the text change, after the layout was adapted to the new
+     * text.
+     */
+    void clearTextChanged()
+    {
+        m_isTextChanged = false;
     }
 
     /**
@@ -418,6 +443,7 @@ private:
     uint16_t                 m_textHeightNew;       /**< Text height in pixel for new text */
     bool                     m_prepareNewText;      /**< User set new text, which shall be prepared. */
     bool                     m_updateText;          /**< New text is prepared shall be updated. */
+    bool                     m_isTextChanged;       /**< The shown text was replaced and the change is not acknowledged yet. */
     TWAbstractSyntaxTree     m_ast;                 /**< AST for the current format string. Encoding: Internal */
     TWAbstractSyntaxTree     m_astNew;              /**< AST for the new format string. Encoding: Internal */
     YAGfxSolidBrush          m_solidBrush;          /**< Solid text color brush. */

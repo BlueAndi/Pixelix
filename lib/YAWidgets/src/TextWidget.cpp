@@ -105,6 +105,7 @@ TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
     m_textHeightNew(0U),
     m_prepareNewText(false),
     m_updateText(false),
+    m_isTextChanged(false),
     m_ast(),
     m_astNew(),
     m_solidBrush(DEFAULT_TEXT_COLOR),
@@ -137,6 +138,7 @@ TextWidget::TextWidget(const String& str, const Color& color) :
     m_textHeightNew(0U),
     m_prepareNewText(true),
     m_updateText(false),
+    m_isTextChanged(false),
     m_ast(),
     m_astNew(),
     m_solidBrush(DEFAULT_TEXT_COLOR),
@@ -181,6 +183,7 @@ TextWidget::TextWidget(const TextWidget& widget) :
     m_textHeightNew(widget.m_textHeightNew),
     m_prepareNewText(widget.m_prepareNewText),
     m_updateText(widget.m_updateText),
+    m_isTextChanged(widget.m_isTextChanged),
     m_ast(widget.m_ast),
     m_astNew(widget.m_astNew),
     m_solidBrush(widget.m_solidBrush),
@@ -207,6 +210,7 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
         m_textHeightNew       = widget.m_textHeightNew;
         m_prepareNewText      = widget.m_prepareNewText;
         m_updateText          = widget.m_updateText;
+        m_isTextChanged       = widget.m_isTextChanged;
         m_ast                 = widget.m_ast;
         m_astNew              = widget.m_astNew;
         m_solidBrush          = widget.m_solidBrush;
@@ -259,6 +263,7 @@ void TextWidget::clear()
     m_textHeightNew  = 0U;
 
     m_prepareNewText = false;
+    m_isTextChanged  = false;
 
     m_ast.clear();
 
@@ -533,6 +538,7 @@ void TextWidget::paint(YAGfx& gfx)
     if (true == m_updateText)
     {
         m_updateText    = false;
+        m_isTextChanged = true;
         m_formatStrUtf8 = m_formatStrNewUtf8;
         m_textHeight    = m_textHeightNew;
         m_ast           = std::move(m_astNew);

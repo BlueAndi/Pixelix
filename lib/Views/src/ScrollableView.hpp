@@ -150,6 +150,11 @@ public:
         bool     isMultiLine          = (1U < textWidget.getLineCount());
         bool     isTextWidgetEnlarged = false;
 
+        /* The text may have been replaced during the last paint, therefore the
+         * scrolling content is measured again right now and the change is
+         * acknowledged.
+         */
+        textWidget.clearTextChanged();
         textWidget.getPos(textOffsetX, textOffsetY);
 
         /* Only a multi-line text widget wraps the text around. Therefore its
