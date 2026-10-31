@@ -134,7 +134,8 @@ async def test_manual_flow(
     result = await add_manually(hass, USER_INPUT)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST_A
+    # The host name names the entry, the address is kept in the data.
+    assert result["title"] == HOSTNAME_A
     assert result["data"] == USER_INPUT
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == DEVICE_ID_A.lower()
@@ -271,6 +272,32 @@ async def test_zeroconf_flow(
     assert result["data"][CONF_HOST] == HOST_A
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == DEVICE_ID_A.lower()
+
+
+async def test_zeroconf_flow_title_is_reported_hostname(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """The entry is named by the host name as the device reports it.
+
+    The mDNS name differs from it at most in the case. The MQTT topics of
+    the device are built from the reported spelling.
+
+    Args:
+        hass: The Home Assistant instance.
+        aioclient_mock: The HTTP client mock.
+
+    Returns:
+        None.
+    """
+    mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
+
+    result = await discover(hass, HOSTNAME_A.lower(), HOST_A)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], CREDENTIALS
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOSTNAME_A
 
 
 async def test_zeroconf_flow_invalid_auth(

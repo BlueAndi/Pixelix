@@ -28,6 +28,7 @@
 # Home Assistant and pytest are provided by the test environment only.
 # pylint: disable=import-error
 import pytest
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from pytest_homeassistant_custom_component.test_util.aiohttp import (
@@ -164,6 +165,82 @@ async def test_older_firmware_without_details_still_sets_up(
         assert device.sw_version is None
     if "hwVersion" in omitted:
         assert device.hw_version is None
+
+
+async def test_device_and_entry_are_named_by_hostname(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """The device and an entry titled by its address get the host name.
+
+    The MQTT discovery of the firmware names its device by the host name
+    too, and the MQTT blueprints build their topics from the device name.
+    An entry of an older version is titled by the address which the user
+    entered, it follows the host name once the device answers.
+
+    Args:
+        hass: The Home Assistant test instance.
+        aioclient_mock: The mock of the aiohttp client.
+
+    Returns:
+        None.
+    """
+    mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
+
+    entry = await setup_entry(hass, title=HOST_A)
+
+    assert HOSTNAME_A == _device(hass, entry.entry_id).name
+    assert HOSTNAME_A == entry.title
+    assert HOST_A == entry.data[CONF_HOST]
+
+
+async def test_renamed_entry_keeps_its_title(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A title which the user chose is kept, the device is still named.
+
+    Args:
+        hass: The Home Assistant test instance.
+        aioclient_mock: The mock of the aiohttp client.
+
+    Returns:
+        None.
+    """
+    mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
+
+    entry = await setup_entry(hass, title="Kitchen display")
+
+    assert "Kitchen display" == entry.title
+    assert HOSTNAME_A == _device(hass, entry.entry_id).name
+
+
+async def test_offline_device_keeps_name(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """An offline device keeps the host name of an earlier, online setup.
+
+    Args:
+        hass: The Home Assistant test instance.
+        aioclient_mock: The mock of the aiohttp client.
+
+    Returns:
+        None.
+    """
+    mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
+    entry = await setup_entry(hass, title="Kitchen display")
+
+    # The device is offline on the next setup.
+    aioclient_mock.clear_requests()
+    mock_device_status(
+        aioclient_mock, HOST_A, DEVICE_ID_A, exc=TimeoutError()
+    )
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert HOSTNAME_A == _device(hass, entry.entry_id).name
 
 
 async def test_offline_device_keeps_known_details(

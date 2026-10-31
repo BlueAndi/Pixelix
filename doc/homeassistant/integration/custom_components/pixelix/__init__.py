@@ -226,13 +226,20 @@ async def async_setup_entry(
     runtime_data.hostname = client.hostname or entry.title
     await _async_subscribe_to_availability(hass, runtime_data)
 
-    dr.async_get(hass).async_get_or_create(
+    # An entry of an older version is titled by the address which the user
+    # entered. It follows the host name. A title which the user chose stays.
+    if client.hostname is not None and entry.title == entry.data[CONF_HOST]:
+        hass.config_entries.async_update_entry(entry, title=client.hostname)
+
+    registry = dr.async_get(hass)
+    identifiers = {(DOMAIN, entry.unique_id or entry.entry_id)}
+    registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
-        name=entry.title,
+        identifiers=identifiers,
         manufacturer=MANUFACTURER,
         model=MODEL,
         configuration_url=client.base_url,
+        **_device_name(registry, identifiers, client, entry),
         **_device_details(client),
     )
     return True
@@ -339,6 +346,39 @@ def _create_client(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )
+
+
+def _device_name(
+    registry: dr.DeviceRegistry,
+    identifiers: set[tuple[str, str]],
+    client: PixelixClient,
+    entry: PixelixConfigEntry,
+) -> dict[str, str]:
+    """Select the name of the device for the device registry.
+
+    The host name which the device reports is its name. The MQTT discovery
+    of the firmware names its device the same, so the device which both
+    share has one name, and the MQTT blueprints build their topics from
+    the device name. While the device is offline, a known device keeps its
+    name and a new one is named by the title of its entry.
+
+    Args:
+        registry: The device registry.
+        identifiers: The identifiers of the device in the registry.
+        client: The client of the device, after its status was read.
+        entry: The config entry of the device.
+
+    Returns:
+        The keyword argument ``name`` for the device registry, or no
+        argument at all if a known name must not be overwritten.
+    """
+    if client.hostname is not None:
+        return {"name": client.hostname}
+
+    if registry.async_get_device(identifiers=identifiers) is None:
+        return {"name": entry.title}
+
+    return {}
 
 
 def _device_details(client: PixelixClient) -> dict[str, Any]:

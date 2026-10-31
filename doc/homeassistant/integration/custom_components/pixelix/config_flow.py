@@ -133,6 +133,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             error: str | None = "invalid_host"
             device_id = ""
+            hostname: str | None = None
 
             try:
                 host, port = _parse_host(
@@ -144,7 +145,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 # The form shows the normalized values on an error.
                 user_input = {**user_input, CONF_HOST: host, CONF_PORT: port}
-                error, device_id = await self._async_authenticate(
+                error, device_id, hostname = await self._async_authenticate(
                     host,
                     port,
                     user_input[CONF_USERNAME],
@@ -156,7 +157,10 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: host, CONF_PORT: port}
                 )
-                return self.async_create_entry(title=host, data=user_input)
+                # The host name names the device, the address may change.
+                return self.async_create_entry(
+                    title=hostname or host, data=user_input
+                )
             errors["base"] = error
 
         return self.async_show_form(
@@ -214,7 +218,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            error, device_id = await self._async_authenticate(
+            error, device_id, hostname = await self._async_authenticate(
                 self._host,
                 self._port,
                 user_input[CONF_USERNAME],
@@ -226,7 +230,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
                     updates={CONF_HOST: self._host, CONF_PORT: self._port}
                 )
                 return self.async_create_entry(
-                    title=self._name or device_id,
+                    title=hostname or self._name or device_id,
                     data={
                         CONF_HOST: self._host,
                         CONF_PORT: self._port,
@@ -281,7 +285,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            error, device_id = await self._async_authenticate(
+            error, device_id, _ = await self._async_authenticate(
                 entry.data[CONF_HOST],
                 entry.data[CONF_PORT],
                 user_input[CONF_USERNAME],
@@ -315,8 +319,8 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_authenticate(
         self, host: str, port: int, username: str, password: str
-    ) -> tuple[str | None, str]:
-        """Check the device and read its device id.
+    ) -> tuple[str | None, str, str | None]:
+        """Check the device and read its device id and host name.
 
         Args:
             host: Host name or IP address of the device.
@@ -325,15 +329,18 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
             password: Web login password.
 
         Returns:
-            The error key of the form and the device id of the device.
-            The error is None if the device is usable. Otherwise it is
-            ``invalid_host`` (no URL can be built from the host),
-            ``invalid_auth`` (login rejected), ``cannot_connect`` (device
-            not reachable) or ``unexpected_response`` (the device is not a
-            compatible Pixelix device). The device id is empty on error.
+            The error key of the form, the device id of the device and the
+            host name which the device reports. The error is None if the
+            device is usable. Otherwise it is ``invalid_host`` (no URL can
+            be built from the host), ``invalid_auth`` (login rejected),
+            ``cannot_connect`` (device not reachable) or
+            ``unexpected_response`` (the device is not a compatible Pixelix
+            device). The device id is empty on error, the host name is None
+            on error or if the device does not report one.
         """
         error = None
         device_id = ""
+        hostname = None
 
         try:
             client = PixelixClient(
@@ -344,6 +351,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
                 password,
             )
             device_id = await client.async_get_device_id()
+            hostname = client.hostname
         except ValueError:
             error = "invalid_host"
         except PixelixAuthError:
@@ -353,7 +361,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         except PixelixError:
             error = "unexpected_response"
 
-        return error, device_id
+        return error, device_id, hostname
 
 
 ###############################################################################

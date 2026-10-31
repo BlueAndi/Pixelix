@@ -36,6 +36,8 @@ The `/device` endpoint exists since firmware v11.0.0. An older firmware (e.g. v1
 
 If the IP address of a device changes, it is not updated on its own: the mDNS discovery knows a device only by its host name, while the entry is identified by the chip id. Therefore a device which is discovered again at a new address appears as a **new discovery card**. Confirm it with the web login: the integration then reads the chip id, recognises the existing entry, updates its address and keeps it, no second device is created. A fixed IP address (DHCP reservation) avoids this.
 
+The device and its entry are named by the host name which the device reports, e.g. `pixelix-FFFFFFFF`, not by the address which was entered. The MQTT discovery of the firmware names its device the same, so the merged device has one name, and the MQTT blueprints build their topics from the device name. An entry which an older version of the integration titled by its address gets the host name as soon as the device answers. A title which you chose yourself is kept.
+
 ### Device information
 
 The device page under **Settings → Devices & services → Pixelix** shows what the device reports in its REST `/device` response:
