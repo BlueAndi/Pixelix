@@ -149,6 +149,7 @@ public:
         uint16_t textWidgetHeight     = textWidget.getHeight();
         bool     isMultiLine          = (1U < textWidget.getLineCount());
         bool     isTextWidgetEnlarged = false;
+        bool     isTextChanged        = textWidget.isTextChanged();
 
         /* The text may have been replaced during the last paint, therefore the
          * scrolling content is measured again right now and the change is
@@ -203,6 +204,15 @@ public:
                 textWidget.setWidth(textWidth);
                 isTextWidgetEnlarged = true;
             }
+        }
+
+        /* A new text starts to scroll from the begin, even if it has the same
+         * size as the previous one. Otherwise it would inherit the scroll
+         * position and the number of completed scroll cycles.
+         */
+        if (true == isTextChanged)
+        {
+            m_scrollContainer.restartScrolling();
         }
 
         m_scrollContainer.update(gfx);
