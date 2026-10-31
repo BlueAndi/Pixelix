@@ -525,6 +525,17 @@
                 const select = document.getElementById("pluginAlias");
 
                 if (0 < cnt) {
+                    /* Check if the alias was passed in the URL and auto-select it */
+                    const aliasFromUrl = utils.getURLParameter('alias');
+                    if (aliasFromUrl) {
+                        for (let i = 0; i < select.options.length; i++) {
+                            if (select.options[i].value === aliasFromUrl) {
+                                select.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+
                     rootPluginAlias = select.options[select.selectedIndex].value
                     await getConfig(rootPluginAlias);
                 }
