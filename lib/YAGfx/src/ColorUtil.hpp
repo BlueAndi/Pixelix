@@ -68,6 +68,9 @@
 
 /**
  * Color utility functions.
+ *
+ * All functions are constexpr, so that a color can be constructed at compile
+ * time and e.g. a color palette can be placed in flash.
  */
 namespace ColorUtil
 {
@@ -79,7 +82,7 @@ namespace ColorUtil
  *
  * @return uint8_t Red component [0; 255]
  */
-static inline uint8_t rgb565Red(uint16_t value)
+static constexpr uint8_t rgb565Red(uint16_t value)
 {
     return ((value >> 11U) & 0x1fU) << 3U;
 }
@@ -91,7 +94,7 @@ static inline uint8_t rgb565Red(uint16_t value)
  *
  * @return uint8_t Green component [0; 255]
  */
-static inline uint8_t rgb565Green(uint16_t value)
+static constexpr uint8_t rgb565Green(uint16_t value)
 {
     return ((value >> 5U) & 0x3fU) << 2U;
 }
@@ -103,7 +106,7 @@ static inline uint8_t rgb565Green(uint16_t value)
  *
  * @return uint8_t Blue component [0; 255]
  */
-static inline uint8_t rgb565Blue(uint16_t value)
+static constexpr uint8_t rgb565Blue(uint16_t value)
 {
     return ((value >> 0U) & 0x1fU) << 3U;
 }
@@ -115,7 +118,7 @@ static inline uint8_t rgb565Blue(uint16_t value)
  *
  * @return uint8_t Red component [0; 255]
  */
-static inline uint8_t rgb888Red(uint32_t value)
+static constexpr uint8_t rgb888Red(uint32_t value)
 {
     return (value >> 16U) & 0xffU;
 }
@@ -127,7 +130,7 @@ static inline uint8_t rgb888Red(uint32_t value)
  *
  * @return uint8_t Green component [0; 255]
  */
-static inline uint8_t rgb888Green(uint32_t value)
+static constexpr uint8_t rgb888Green(uint32_t value)
 {
     return (value >> 8U) & 0xffU;
 }
@@ -139,7 +142,7 @@ static inline uint8_t rgb888Green(uint32_t value)
  *
  * @return uint8_t Blue component [0; 255]
  */
-static inline uint8_t rgb888Blue(uint32_t value)
+static constexpr uint8_t rgb888Blue(uint32_t value)
 {
     return (value >> 0U) & 0xffU;
 }
@@ -153,7 +156,7 @@ static inline uint8_t rgb888Blue(uint32_t value)
  *
  * @return uint16_t RGB565 color value
  */
-static inline uint16_t to565(uint8_t red, uint8_t green, uint8_t blue)
+static constexpr uint16_t to565(uint8_t red, uint8_t green, uint8_t blue)
 {
     const uint16_t RED5   = red >> 3U;   /* 5 bit */
     const uint16_t GREEN6 = green >> 2U; /* 6 bit */
@@ -171,7 +174,7 @@ static inline uint16_t to565(uint8_t red, uint8_t green, uint8_t blue)
  *
  * @return uint32_t RGB888 color value
  */
-static inline uint32_t to888(uint8_t red, uint8_t green, uint8_t blue)
+static constexpr uint32_t to888(uint8_t red, uint8_t green, uint8_t blue)
 {
     const uint32_t RED8   = red;   /* 8 bit */
     const uint32_t GREEN8 = green; /* 8 bit */
@@ -187,7 +190,7 @@ static inline uint32_t to888(uint8_t red, uint8_t green, uint8_t blue)
  *
  * @return uint16_t RGB565 color value
  */
-static inline uint16_t to565(uint32_t rgb888)
+static constexpr uint16_t to565(uint32_t rgb888)
 {
     return to565(rgb888Red(rgb888), rgb888Green(rgb888), rgb888Blue(rgb888));
 }
@@ -199,7 +202,7 @@ static inline uint16_t to565(uint32_t rgb888)
  *
  * @return RGB888 color value
  */
-static inline uint32_t to888(uint16_t rgb565)
+static constexpr uint32_t to888(uint16_t rgb565)
 {
     const uint8_t RED8   = rgb565Red(rgb565);
     const uint8_t GREEN8 = rgb565Green(rgb565);

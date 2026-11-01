@@ -61,6 +61,10 @@
  *
  * The color intensity is not stored per pixel. Dimming is applied destructively
  * via dim(), which keeps the color as small as possible in memory.
+ *
+ * The class is a literal type: all constructors are constexpr and there is no
+ * user-provided destructor. A constexpr color or a constexpr color palette is
+ * therefore constructed at compile time and placed in flash instead of RAM.
  */
 class Rgb888
 {
@@ -75,17 +79,10 @@ public:
     /**
      * Constructs the color black.
      */
-    Rgb888() :
+    constexpr Rgb888() :
         m_red(0U),
         m_green(0U),
         m_blue(0U)
-    {
-    }
-
-    /**
-     * Destroys the color.
-     */
-    ~Rgb888()
     {
     }
 
@@ -96,7 +93,7 @@ public:
      * @param[in] green Green value
      * @param[in] blue  Blue value
      */
-    Rgb888(uint8_t red, uint8_t green, uint8_t blue) :
+    constexpr Rgb888(uint8_t red, uint8_t green, uint8_t blue) :
         m_red(red),
         m_green(green),
         m_blue(blue)
@@ -108,7 +105,7 @@ public:
      *
      * @param[in] value Color value in 24 bit format
      */
-    Rgb888(uint32_t value) :
+    constexpr Rgb888(uint32_t value) :
         m_red(ColorUtil::rgb888Red(value)),
         m_green(ColorUtil::rgb888Green(value)),
         m_blue(ColorUtil::rgb888Blue(value))
@@ -120,7 +117,7 @@ public:
      *
      * @param[in] color Color, which to copy
      */
-    Rgb888(const Rgb888& color) :
+    constexpr Rgb888(const Rgb888& color) :
         m_red(color.m_red),
         m_green(color.m_green),
         m_blue(color.m_blue)
@@ -223,7 +220,7 @@ public:
      *
      * @return Red value
      */
-    uint8_t getRed() const
+    constexpr uint8_t getRed() const
     {
         return m_red;
     }
@@ -233,7 +230,7 @@ public:
      *
      * @return Green value
      */
-    uint8_t getGreen() const
+    constexpr uint8_t getGreen() const
     {
         return m_green;
     }
@@ -243,7 +240,7 @@ public:
      *
      * @return Blue value
      */
-    uint8_t getBlue() const
+    constexpr uint8_t getBlue() const
     {
         return m_blue;
     }
@@ -305,7 +302,7 @@ public:
      *
      * @return Color value (RGB) in 16 bit format
      */
-    uint16_t toRgb565() const
+    constexpr uint16_t toRgb565() const
     {
         return ColorUtil::to565(m_red, m_green, m_blue);
     }

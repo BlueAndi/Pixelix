@@ -58,6 +58,7 @@
 static void testColorUtil();
 static void testColor888();
 static void testColor565();
+static void testColorConstexpr();
 
 /******************************************************************************
  * Local Variables
@@ -95,6 +96,7 @@ extern int main(int argc, char** argv)
     RUN_TEST(testColorUtil);
     RUN_TEST(testColor888);
     RUN_TEST(testColor565);
+    RUN_TEST(testColorConstexpr);
 
     return UNITY_END();
 }
@@ -301,4 +303,45 @@ static void testColor565()
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getBlue());
+}
+
+/**
+ * Test that both color classes are constructed at compile time, which is the
+ * precondition for color palettes in flash. A constexpr palette does not
+ * compile, if a constructor is not usable in a constant expression.
+ */
+static void testColorConstexpr()
+{
+    static constexpr Rgb888 PALETTE_888[] = {
+        Rgb888(),
+        Rgb888(0x12U, 0x34U, 0x56U),
+        Rgb888(ColorDef::TOMATO),
+        Rgb888(Rgb888(ColorDef::BLUE))
+    };
+    static constexpr Rgb565 PALETTE_565[] = {
+        Rgb565(),
+        Rgb565(0x12U, 0x34U, 0x56U),
+        Rgb565(ColorDef::TOMATO),
+        Rgb565(Rgb565(ColorDef::BLUE))
+    };
+
+    /* Evaluated at compile time. */
+    static_assert(0x00U == PALETTE_888[0].getRed(), "Default color is black.");
+    static_assert(0x12U == PALETTE_888[1].getRed(), "Red base color.");
+    static_assert(0x34U == PALETTE_888[1].getGreen(), "Green base color.");
+    static_assert(0x56U == PALETTE_888[1].getBlue(), "Blue base color.");
+    static_assert(ColorUtil::rgb888Red(ColorDef::TOMATO) == PALETTE_888[2].getRed(), "Color by RGB888 value.");
+    static_assert(0xffU == PALETTE_888[3].getBlue(), "Color by copy.");
+    static_assert(ColorUtil::to565(ColorDef::TOMATO) == PALETTE_888[2].toRgb565(), "RGB565 conversion.");
+
+    static_assert(0x0000U == PALETTE_565[0].toRgb565(), "Default color is black.");
+    static_assert(0x10U == PALETTE_565[1].getRed(), "Red base color, quantized to 5 bit.");
+    static_assert(0x34U == PALETTE_565[1].getGreen(), "Green base color, quantized to 6 bit.");
+    static_assert(0x50U == PALETTE_565[1].getBlue(), "Blue base color, quantized to 5 bit.");
+    static_assert(ColorUtil::to565(ColorDef::TOMATO) == PALETTE_565[2].toRgb565(), "Color by RGB888 value.");
+    static_assert(0x001fU == PALETTE_565[3].toRgb565(), "Color by copy.");
+
+    /* The palette is usable at runtime like any other color. */
+    TEST_ASSERT_EQUAL_UINT8(0x12U, PALETTE_888[1].getRed());
+    TEST_ASSERT_EQUAL_UINT16(0x0821U, Rgb565(0x00080408U).toRgb565());
 }
