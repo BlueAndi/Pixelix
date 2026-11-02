@@ -43,8 +43,10 @@
 #include <ArduinoJson.h>
 #include <PsramJsonDocument.hpp>
 #include <Util.h>
+#include <PluginAlias.hpp>
 #include <SettingsService.h>
 #include <TopicHandlerService.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -67,8 +69,7 @@
  *****************************************************************************/
 
 /* Initialize static members */
-const char* PluginMgr::CONFIG_FILE_NAME        = "slotConfig.json";
-const char* PluginMgr::MQTT_SPECIAL_CHARACTERS = "+#*>$"; /* See MQTT specification */
+const char* PluginMgr::CONFIG_FILE_NAME = "slotConfig.json";
 
 /******************************************************************************
  * Public Methods
@@ -78,26 +79,19 @@ void PluginMgr::begin()
 {
     SettingsService& settings = SettingsService::getInstance();
 
-    if (false == settings.open(true))
-    {
-        m_deviceId = settings.getHostname().getDefault();
-    }
-    else
-    {
-        m_deviceId = settings.getHostname().getValue();
-
-        settings.close();
-    }
+    m_deviceId                = settings.getHostname().getValueFromRam();
 
     createPluginConfigDirectory();
 }
 
-IPluginMaintenance* PluginMgr::install(const char* name, uint8_t slotId)
+IPluginMaintenance* PluginMgr::install(const char* name, uint8_t slotId, const String& alias)
 {
     IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
 
     if (nullptr != plugin)
     {
+        plugin->setAlias(determineAlias(name, alias, plugin));
+
         if (false == install(plugin, slotId))
         {
             m_pluginFactory.destroyPlugin(plugin);
@@ -118,8 +112,7 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            unregisterTopicsByUID(m_deviceId, plugin, true);
-            unregisterTopicsByAlias(m_deviceId, plugin, true);
+            unregisterTopics(m_deviceId, plugin, true);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
@@ -128,27 +121,47 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
     return status;
 }
 
-bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
+PluginAlias::Result PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
 {
-    bool isSuccessful = false;
+    PluginAlias::Result result    = PluginAlias::RESULT_INVALID;
+    String              candidate = PluginAlias::sanitize(alias);
 
-    if ((nullptr != plugin) &&
-        (plugin->getAlias() != alias) &&
-        (true == isPluginAliasValid(alias)))
+    if (nullptr == plugin)
     {
-        /* First remove current registered topics. */
-        unregisterTopicsByAlias(m_deviceId, plugin, true);
+        /* Guard path: nothing to rename. */
+        ;
+    }
+    else if (false == PluginAlias::isValid(candidate))
+    {
+        /* Guard path: result is already RESULT_INVALID. */
+        ;
+    }
+    else if (true == m_pluginFactory.isAliasInUse(candidate, plugin))
+    {
+        result = PluginAlias::RESULT_IN_USE;
+    }
+    else if (candidate == plugin->getAlias())
+    {
+        /* No change, so no topic churn and no Home Assistant entity churn. */
+        result = PluginAlias::RESULT_OK;
+    }
+    else
+    {
+        /* First remove the currently registered topics, so the old Home Assistant
+         * entity is purged before the new one is announced.
+         */
+        unregisterTopics(m_deviceId, plugin, true);
 
         /* Set new alias */
-        plugin->setAlias(alias);
+        plugin->setAlias(candidate);
 
         /* Register web API, based on new alias. */
-        registerTopicsByAlias(m_deviceId, plugin);
+        registerTopics(m_deviceId, plugin);
 
-        isSuccessful = true;
+        result = PluginAlias::RESULT_OK;
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void PluginMgr::unregisterAllPluginTopics()
@@ -160,8 +173,7 @@ void PluginMgr::unregisterAllPluginTopics()
     {
         IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
-        unregisterTopicsByUID(m_deviceId, plugin, false);
-        unregisterTopicsByAlias(m_deviceId, plugin, false);
+        unregisterTopics(m_deviceId, plugin, false);
     }
 }
 
@@ -169,7 +181,7 @@ bool PluginMgr::load()
 {
     bool              isSuccessful = true;
     JsonFile          jsonFile(FILESYSTEM);
-    const size_t      JSON_DOC_SIZE = 4096U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(4096U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     String            fullConfigFileName  = Plugin::CONFIG_PATH;
 
@@ -192,6 +204,8 @@ bool PluginMgr::load()
         uint8_t       slotId    = 0;
         const uint8_t MAX_SLOTS = DisplayMgr::getInstance().getMaxSlots();
 
+        m_isSlotConfigRepaired  = false;
+
         for (JsonObject jsonSlot : jsonSlots)
         {
             prepareSlotByConfiguration(slotId, jsonSlot);
@@ -202,6 +216,15 @@ bool PluginMgr::load()
                 break;
             }
         }
+
+        /* Keep the repaired aliases, so the next power cycle doesn't repair again
+         * and the user sees the effective names.
+         */
+        if (true == m_isSlotConfigRepaired)
+        {
+            LOG_INFO("Slot configuration repaired, saving it.");
+            save();
+        }
     }
 
     return isSuccessful;
@@ -211,7 +234,7 @@ void PluginMgr::save()
 {
     String            installation;
     uint8_t           slotId        = 0;
-    const size_t      JSON_DOC_SIZE = 4096U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(4096U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonArray         jsonSlots = jsonDoc.createNestedArray("slotConfiguration");
     JsonFile          jsonFile(FILESYSTEM);
@@ -348,12 +371,18 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
                 else
                 {
-                    String          alias         = jsonAlias.as<const char*>();
-                    String          filteredAlias = filterPluginAlias(alias);
-                    String          fontTypeStr   = jsonFontType.as<const char*>();
-                    Fonts::FontType fontType      = Fonts::strToFontType(fontTypeStr.c_str());
+                    String          requestedAlias = jsonAlias.as<const char*>();
+                    String          alias          = determineAlias(name, requestedAlias, plugin);
+                    String          fontTypeStr    = jsonFontType.as<const char*>();
+                    Fonts::FontType fontType       = Fonts::strToFontType(fontTypeStr.c_str());
 
-                    plugin->setAlias(filteredAlias);
+                    if (alias != requestedAlias)
+                    {
+                        LOG_WARNING("Slot %u: Alias %s replaced by %s.", slotId, requestedAlias.c_str(), alias.c_str());
+                        m_isSlotConfigRepaired = true;
+                    }
+
+                    plugin->setAlias(alias);
                     plugin->setFontType(fontType);
 
                     if (false == install(plugin, slotId))
@@ -406,8 +435,7 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            registerTopicsByUID(m_deviceId, plugin);
-            registerTopicsByAlias(m_deviceId, plugin);
+            registerTopics(m_deviceId, plugin);
         }
     }
 
@@ -452,98 +480,91 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
     return status;
 }
 
-bool PluginMgr::isPluginAliasValid(const String& alias)
+String PluginMgr::findFreeAlias(const char* pluginTypeName) const
 {
-    const size_t MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
-    bool         isValid                     = true;
-    size_t       idx                         = 0U;
+    String  alias;
+    uint8_t index = 1U;
 
-    while ((MQTT_SPECIAL_CHARACTERS_LEN > idx) && (true == isValid))
+    while ((MAX_ALIAS_SEARCH >= index) && (true == alias.isEmpty()))
     {
-        if (0 <= alias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]))
+        String candidate = PluginAlias::makeDefault(pluginTypeName, index);
+
+        if (false == m_pluginFactory.isAliasInUse(candidate, nullptr))
         {
-            isValid = false;
+            alias = candidate;
         }
         else
         {
-            ++idx;
+            ++index;
         }
     }
 
-    return isValid;
-}
-
-String PluginMgr::filterPluginAlias(const String& alias)
-{
-    const size_t MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
-    size_t       idx                         = 0U;
-    String       filteredPluginAlias         = alias;
-
-    while (MQTT_SPECIAL_CHARACTERS_LEN > idx)
+    /* Fallback: the search is bounded, but there are far less slots than
+     * MAX_ALIAS_SEARCH. Reaching this means the plugin list is inconsistent.
+     * Use the last candidate instead of returning an empty alias, which would
+     * break the topic registration.
+     */
+    if (true == alias.isEmpty())
     {
-        int pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
-
-        while (0 <= pos)
-        {
-            filteredPluginAlias.remove(pos, 1U);
-            pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
-        }
-
-        ++idx;
+        LOG_ERROR("No free alias for %s found.", pluginTypeName);
+        alias = PluginAlias::makeDefault(pluginTypeName, MAX_ALIAS_SEARCH);
     }
 
-    return filteredPluginAlias;
+    return alias;
 }
 
-String PluginMgr::getEntityIdByPluginUid(uint16_t uid)
+String PluginMgr::determineAlias(const char* pluginTypeName, const String& requestedAlias, const IPluginMaintenance* plugin) const
 {
-    return String("display/uid/") + uid;
+    String alias = PluginAlias::sanitize(requestedAlias);
+
+    if (false == PluginAlias::isValid(alias))
+    {
+        alias = findFreeAlias(pluginTypeName);
+    }
+    else if (true == m_pluginFactory.isAliasInUse(alias, plugin))
+    {
+        LOG_WARNING("Alias %s is already in use.", alias.c_str());
+        alias = findFreeAlias(pluginTypeName);
+    }
+    else
+    {
+        /* Requested alias is valid and free. */
+        ;
+    }
+
+    return alias;
 }
 
-String PluginMgr::getEntityIdByPluginAlias(const String& alias)
+String PluginMgr::getEntityId(const IPluginMaintenance* plugin) const
 {
-    return String("display/alias/") + alias;
+    String entityId;
+
+    if (nullptr != plugin)
+    {
+        entityId  = "display/plugin/";
+        entityId += plugin->getAlias();
+    }
+
+    return entityId;
 }
 
-void PluginMgr::registerTopicsByUID(const String& deviceId, IPluginMaintenance* plugin)
+void PluginMgr::registerTopics(const String& deviceId, IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        String entityId = getEntityIdByPluginUid(plugin->getUID());
+        String entityId = getEntityId(plugin);
 
-        TopicHandlerService::getInstance().registerTopics(m_deviceId, entityId.c_str(), plugin);
+        TopicHandlerService::getInstance().registerTopics(deviceId, entityId.c_str(), plugin);
     }
 }
 
-void PluginMgr::unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge)
+void PluginMgr::unregisterTopics(const String& deviceId, IPluginMaintenance* plugin, bool purge)
 {
     if (nullptr != plugin)
     {
-        String entityId = getEntityIdByPluginUid(plugin->getUID());
+        String entityId = getEntityId(plugin);
 
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
-    }
-}
-
-void PluginMgr::registerTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin)
-{
-    if ((nullptr != plugin) &&
-        (false == plugin->getAlias().isEmpty()))
-    {
-        String entityId = getEntityIdByPluginAlias(plugin->getAlias());
-
-        TopicHandlerService::getInstance().registerTopics(m_deviceId, entityId.c_str(), plugin);
-    }
-}
-
-void PluginMgr::unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge)
-{
-    if ((nullptr != plugin) &&
-        (false == plugin->getAlias().isEmpty()))
-    {
-        String entityId = getEntityIdByPluginAlias(plugin->getAlias());
-
-        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, entityId.c_str(), plugin, purge);
+        TopicHandlerService::getInstance().unregisterTopics(deviceId, entityId.c_str(), plugin, purge);
     }
 }
 

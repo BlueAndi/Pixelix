@@ -2,8 +2,9 @@
     {
         "component": "text",
         "discovery": {
-            "name": "IconTextLampPlugin Text",
+            "name": "%ALIAS% text",
             "ic": "mdi:form-textbox",
+            "max": 255,
             "cmd_tpl": "{\"text\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.text }}"
         }
@@ -11,8 +12,9 @@
     {
         "component": "text",
         "discovery": {
-            "name": "IconTextLampPlugin Icon",
+            "name": "%ALIAS% icon",
             "ic": "mdi:image-outline",
+            "max": 255,
             "cmd_tpl": "{\"iconFileName\": \"{{ value }}\" }",
             "val_tpl": "{{ value_json.iconFileName }}"
         }

@@ -12,6 +12,8 @@
     "dependencies": [{
         "name": "Logging"
     }, {
+        "name": "Os"
+    }, {
         "name": "Plugin"
     }, {
         "name": "Utilities"

@@ -88,7 +88,8 @@ public:
         KeyValue(pref),
         m_key(key),
         m_name(name),
-        m_defValue(defValue)
+        m_defValue(defValue),
+        m_value(defValue)
     {
     }
 
@@ -130,7 +131,17 @@ public:
     }
 
     /**
-     * Get value.
+     * Update the RAM mirror with the current value from storage.
+     * The storage must be opened before calling this function.
+     */
+    void updateRamMirror() final
+    {
+        m_value = m_preferences->getBool(m_key, getDefault());
+    }
+
+    /**
+     * Get value from storage.
+     * The storage must be opened before calling this function.
      *
      * @return Value
      */
@@ -140,13 +151,19 @@ public:
     }
 
     /**
-     * Set value.
+     * Set value to storage.
+     * The storage must be opened before calling this function.
      *
      * @param[in] value Value
      */
     void setValue(bool value)
     {
-        m_preferences->putBool(m_key, value);
+        size_t bytesWritten = m_preferences->putBool(m_key, value);
+
+        if (0U < bytesWritten)
+        {
+            m_value = value;
+        }
     }
 
     /**
@@ -159,11 +176,22 @@ public:
         return m_defValue;
     }
 
+    /**
+     * Get value from RAM mirror.
+     *
+     * @return Value from RAM mirror
+     */
+    bool getValueFromRam() const
+    {
+        return m_value;
+    }
+
 private:
 
     const char* m_key;      /**< Key */
     const char* m_name;     /**< Name */
     bool        m_defValue; /**< Default value */
+    bool        m_value;    /**< Current value (RAM mirror) */
 
     /* An instance shall not be copied. */
     KeyValueBool(const KeyValueBool& kv);

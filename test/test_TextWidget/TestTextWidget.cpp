@@ -59,6 +59,7 @@
 
 static void testTokenizer();
 static void testTextWidget();
+static void testTextChange();
 
 /******************************************************************************
  * Local Variables
@@ -95,6 +96,7 @@ extern int main(int argc, char** argv)
 
     RUN_TEST(testTokenizer);
     RUN_TEST(testTextWidget);
+    RUN_TEST(testTextChange);
 
     return UNITY_END();
 }
@@ -222,11 +224,11 @@ static void testTokenizer()
  */
 static void testTextWidget()
 {
-    YAGfxTest       testGfx;
-    TextWidget      textWidget(YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
-    String          testStr     = "test";
-    const Color     TEXT_COLOR  = 0x123456;
-    const char*     WIDGET_NAME = "textWidgetName";
+    YAGfxTest   testGfx;
+    TextWidget  textWidget(YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    String      testStr     = "test";
+    const Color TEXT_COLOR  = 0x123456;
+    const char* WIDGET_NAME = "textWidgetName";
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(TextWidget::WIDGET_TYPE, textWidget.getType());
@@ -308,4 +310,63 @@ static void testTextWidget()
     /* Set text with character coe format keyword and get text without format keyword back. */
     textWidget.setFormatStr("{0x41} Hello World!");
     TEST_ASSERT_EQUAL_STRING("A Hello World!", textWidget.getStr().c_str());
+}
+
+/**
+ * A text change is reported until it is acknowledged, because a layout which
+ * depends on the text size is based on the previous text until it is measured
+ * again. The transition must be considered active as long as that.
+ */
+static void testTextChange()
+{
+    const uint32_t MAX_UPDATES = 100U;
+    YAGfxTest      testGfx;
+    TextWidget     textWidget(YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
+    uint32_t       updateCnt = 0U;
+
+    /* Nothing changed yet. */
+    TEST_ASSERT_FALSE(textWidget.isTextChanged());
+    TEST_ASSERT_FALSE(textWidget.isTransitionActive());
+
+    textWidget.setFormatStr("first");
+    TEST_ASSERT_TRUE(textWidget.isTransitionActive());
+
+    /* The text is replaced during a paint, which may take several updates
+     * because of the fade effect.
+     */
+    while ((MAX_UPDATES > updateCnt) && (false == textWidget.isTextChanged()))
+    {
+        textWidget.update(testGfx);
+        ++updateCnt;
+    }
+
+    TEST_ASSERT_TRUE(textWidget.isTextChanged());
+    TEST_ASSERT_TRUE(textWidget.isTransitionActive());
+
+    /* Acknowledged, the transition ends once the fade in is finished. */
+    textWidget.clearTextChanged();
+    TEST_ASSERT_FALSE(textWidget.isTextChanged());
+
+    updateCnt = 0U;
+    while ((MAX_UPDATES > updateCnt) && (true == textWidget.isTransitionActive()))
+    {
+        textWidget.update(testGfx);
+        ++updateCnt;
+    }
+
+    TEST_ASSERT_FALSE(textWidget.isTransitionActive());
+    TEST_ASSERT_FALSE(textWidget.isTextChanged());
+
+    /* A cleared widget has nothing to acknowledge. */
+    textWidget.setFormatStr("second");
+    updateCnt = 0U;
+    while ((MAX_UPDATES > updateCnt) && (false == textWidget.isTextChanged()))
+    {
+        textWidget.update(testGfx);
+        ++updateCnt;
+    }
+    TEST_ASSERT_TRUE(textWidget.isTextChanged());
+
+    textWidget.clear();
+    TEST_ASSERT_FALSE(textWidget.isTextChanged());
 }

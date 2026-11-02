@@ -2,6 +2,8 @@
 
 title Hardware Abstraction Layer (HAL)
 
+' A C++ namespace maps to a UML Package, not to a Class.
+
 package "HAL contracts" as contractsPkg {
 
     package "GPIO" as gpioPkg {
@@ -38,10 +40,10 @@ package "HAL implementations" as halPkg {
         class "DisplayDrv\n(HalTftDisplay)" as tftDisplayDrv
     }
 
-    package "Sensors" as sensorsPkg {
-        class "Sensors" as sensors <<namespace>>
+    package "Sensors (namespace)" as sensorsPkg {
         class "SensorBattery" as sensorBattery
         class "SensorDhtX" as sensorDhtX
+        class "SensorHeap" as sensorHeap
         class "SensorLdr" as sensorLdr
         class "SensorSht3X" as sensorSht3X
     }
@@ -74,14 +76,11 @@ package "HAL implementations" as halPkg {
     sensorLdr --> analogPin
     sensorSht3X --> dInPin
 
-    sensors *--> sensorBattery
-    sensors *--> sensorDhtX
-    sensors *--> sensorLdr
-    sensors *--> sensorSht3X
     sensorBattery ..|> iSensor
     sensorDhtX ..|> iSensor
     sensorLdr ..|> iSensor
     sensorSht3X ..|> iSensor
+    sensorHeap ..|> iSensor
 }
 
 package "Application" as appPkg {
@@ -92,6 +91,6 @@ package "Application" as appPkg {
 
 display ....> iDisplayDrv: <<use>>
 app ....> iBoard: <<use>>
-sensorDataProvider ...> sensors: <<use>>
+sensorDataProvider ...> iSensor: <<use>>
 
 @enduml

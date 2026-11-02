@@ -36,6 +36,10 @@
  * task and the webserver is written for that guarantee. A thread per connection
  * would deliver the callbacks concurrently and corrupt its internal state.
  *
+ * The dispatch mutex is held while the clients are accessed and their callbacks
+ * are called. A client which is unregistered by another thread waits for it,
+ * so it is never destroyed while the loop works with it.
+ *
  * @addtogroup TEST
  *
  * @{
@@ -110,10 +114,20 @@ public:
 
     /**
      * Unregister a client.
+     * It waits until a running callback of any client returned, so the
+     * caller may destroy the client afterwards. Calling it from inside a
+     * callback is allowed.
      *
      * @param[in] client    The client.
      */
     void unregisterClient(AsyncClient* client);
+
+    /**
+     * Is the calling thread the event loop thread?
+     *
+     * @return If called in the event loop thread, it will return true otherwise false.
+     */
+    bool isInLoopThread() const;
 
 private:
 
@@ -127,18 +141,20 @@ private:
     /** Max. time the loop waits for a socket event in ms. */
     static const uint32_t     SELECT_PERIOD = 25U;
 
-    std::mutex                m_mutex;     /**< Protects the server and client lists. */
-    std::vector<AsyncServer*> m_servers;   /**< The registered servers. */
-    std::vector<AsyncClient*> m_clients;   /**< The registered clients. */
-    std::thread               m_thread;    /**< The thread which runs the loop. */
-    bool                      m_isRunning; /**< Is the loop running? */
-    uint32_t                  m_lastPoll;  /**< Timestamp of the last poll notification in ms. */
+    std::mutex                m_mutex;         /**< Protects the server and client lists. */
+    std::recursive_mutex      m_dispatchMutex; /**< Held while the clients are accessed and their callbacks are called. Lock order: always before m_mutex. */
+    std::vector<AsyncServer*> m_servers;       /**< The registered servers. */
+    std::vector<AsyncClient*> m_clients;       /**< The registered clients. */
+    std::thread               m_thread;        /**< The thread which runs the loop. */
+    bool                      m_isRunning;     /**< Is the loop running? */
+    uint32_t                  m_lastPoll;      /**< Timestamp of the last poll notification in ms. */
 
     /**
      * Constructs the event loop.
      */
     AsyncTcpLoop() :
         m_mutex(),
+        m_dispatchMutex(),
         m_servers(),
         m_clients(),
         m_thread(),
@@ -167,6 +183,17 @@ private:
      * Stop the thread.
      */
     void stop();
+
+    /**
+     * Is the given client registered?
+     * The caller must own m_dispatchMutex, otherwise the result is outdated
+     * immediately.
+     *
+     * @param[in] client    The client.
+     *
+     * @return If registered, it will return true otherwise false.
+     */
+    bool isRegistered(const AsyncClient* client);
 
     /**
      * The loop itself, which watches every socket.

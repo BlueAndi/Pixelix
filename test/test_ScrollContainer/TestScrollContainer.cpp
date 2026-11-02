@@ -137,6 +137,7 @@ static void testScrollingState();
 static void testStaticContent();
 static void testHorizontalScrolling();
 static void testVerticalScrolling();
+static void testRestartScrolling();
 
 /******************************************************************************
  * Local Variables
@@ -200,6 +201,7 @@ extern int main(int argc, char** argv)
     RUN_TEST(testStaticContent);
     RUN_TEST(testHorizontalScrolling);
     RUN_TEST(testVerticalScrolling);
+    RUN_TEST(testRestartScrolling);
 
     return UNITY_END();
 }
@@ -569,6 +571,56 @@ static void testVerticalScrolling()
     TEST_ASSERT_TRUE(container.isScrollingEnabled());
 
     /* Scrolling starts outside of the visible area, therefore nothing is shown. */
+    testGfx.fillScreen(COLOR_BACKGROUND);
+    container.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(CONTAINER_X, CONTAINER_Y, CONTAINER_WIDTH, CONTAINER_HEIGHT, COLOR_BACKGROUND));
+
+    scrollAndObserve(container, testGfx, isHeadShown, isTailShown, isOutsideKept);
+
+    TEST_ASSERT_TRUE(isHeadShown);
+    TEST_ASSERT_TRUE(isTailShown);
+    TEST_ASSERT_TRUE(isOutsideKept);
+}
+
+/**
+ * Test the restart of the scrolling. After a complete scroll cycle the restart
+ * must reset the scroll count and the content must start again outside of the
+ * visible area, although the content size is unchanged.
+ */
+static void testRestartScrolling()
+{
+    YAGfxTest       testGfx;
+    const uint16_t  CONTENT_WIDTH = 2U * CONTAINER_WIDTH;
+    ScrollContainer container(CONTAINER_WIDTH, CONTAINER_HEIGHT, CONTAINER_X, CONTAINER_Y);
+    ColorWidget     head(CONTAINER_WIDTH, CONTAINER_HEIGHT, 0, 0);
+    ColorWidget     tail(CONTAINER_WIDTH, CONTAINER_HEIGHT, static_cast<int16_t>(CONTAINER_WIDTH), 0);
+    bool            isHeadShown   = false;
+    bool            isTailShown   = false;
+    bool            isOutsideKept = false;
+
+    head.setColor(COLOR_HEAD);
+    tail.setColor(COLOR_TAIL);
+    (void)container.add(head);
+    (void)container.add(tail);
+
+    container.setContentSize(CONTENT_WIDTH);
+    container.enableScrolling(ScrollController::DIRECTION_HORIZONTAL);
+    TEST_ASSERT_TRUE(container.isScrollingEnabled());
+
+    scrollAndObserve(container, testGfx, isHeadShown, isTailShown, isOutsideKept);
+    TEST_ASSERT_EQUAL_UINT32(1U, container.getScrollingCount());
+
+    /* Enabling scrolling again with the same content size changes nothing. */
+    container.enableScrolling(ScrollController::DIRECTION_HORIZONTAL);
+    TEST_ASSERT_EQUAL_UINT32(1U, container.getScrollingCount());
+
+    /* The restart resets the count and the content starts outside of the
+     * visible area again, therefore nothing is shown.
+     */
+    container.restartScrolling();
+    TEST_ASSERT_EQUAL_UINT32(0U, container.getScrollingCount());
+    TEST_ASSERT_TRUE(container.isScrollingEnabled());
+
     testGfx.fillScreen(COLOR_BACKGROUND);
     container.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(CONTAINER_X, CONTAINER_Y, CONTAINER_WIDTH, CONTAINER_HEIGHT, COLOR_BACKGROUND));

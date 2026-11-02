@@ -87,25 +87,38 @@ void DisplayDrv::show(const YAGfxBitmap& bitmap)
 
     for (int16_t y = 0; y < height; ++y)
     {
-        for (int16_t x = 0; x < width; ++x)
-        {
 #if CONFIG_DISPLAY_ROTATE180 != 0
-            Color brightnessAdjustedColor = bitmap.getColor(width - x - 1, height - y - 1);
+        const int16_t srcY = height - y - 1;
 #else
-            Color brightnessAdjustedColor = bitmap.getColor(x, y);
+        const int16_t srcY = y;
 #endif
-            const int32_t xNative = y * (PIXEL_HEIGHT + PIXEL_DISTANCE) + BORDER_Y;
-            const int32_t yNative = TFT_HEIGHT - (x * (PIXEL_WIDTH + PIXEL_DISTANCE) + BORDER_X) - 1;
+        /* One virtual call per row instead of one per pixel. */
+        uint16_t     offset = 0U;
+        const Color* row    = bitmap.getFrameBufferXAddr(0, srcY, static_cast<uint16_t>(width), offset);
 
-            /* Apply the display brightness on the base color, as it is no longer stored as a per-pixel intensity. */
-            brightnessAdjustedColor.dim(m_brightness);
+        if (nullptr != row)
+        {
+            for (int16_t x = 0; x < width; ++x)
+            {
+#if CONFIG_DISPLAY_ROTATE180 != 0
+                const int16_t srcX = width - x - 1;
+#else
+                const int16_t srcX = x;
+#endif
+                Color         brightnessAdjustedColor = row[static_cast<size_t>(srcX) * offset];
+                const int32_t xNative                 = y * (PIXEL_HEIGHT + PIXEL_DISTANCE) + BORDER_Y;
+                const int32_t yNative                 = TFT_HEIGHT - (x * (PIXEL_WIDTH + PIXEL_DISTANCE) + BORDER_X) - 1;
 
-            m_tft.fillRect(
-                xNative,
-                yNative,
-                PIXEL_HEIGHT,
-                PIXEL_WIDTH,
-                brightnessAdjustedColor.toRgb565());
+                /* Apply the display brightness on the base color, as it is no longer stored as a per-pixel intensity. */
+                brightnessAdjustedColor.dim(m_brightness);
+
+                m_tft.fillRect(
+                    xNative,
+                    yNative,
+                    PIXEL_HEIGHT,
+                    PIXEL_WIDTH,
+                    brightnessAdjustedColor.toRgb565());
+            }
         }
     }
 }

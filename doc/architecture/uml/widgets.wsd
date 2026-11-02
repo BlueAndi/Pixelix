@@ -1,43 +1,51 @@
 @startuml widgets
 
+title Widgets
+
 class YAGfx
 class YAGfxCanvas
 
 note left of YAGfxCanvas
-    The widget uses the canvas to draw itself.
+    A widget draws itself on the canvas.
 end note
 
-class Widget {
+abstract class Widget {
     - m_canvas : YAGfxCanvas
-    - {abstract} paint(gfx : YAGfx&) : void
     + update(gfx : YAGfx&) : void
+    # {abstract} paint(gfx : YAGfx&) = 0 : void
 }
 
 note left of Widget
-    The base widget provides the common widget functionality.
-    It contains the width, height and position in the parent canvas.
+    The base widget provides the common widget
+    functionality. It holds the width, height and
+    the position inside the parent canvas.
 end note
 
 YAGfx <|-- YAGfxCanvas
-YAGfxCanvas <-- Widget
+Widget *--> YAGfxCanvas
 
 class BitmapWidget {
-    - paint(gfx : YAGfx&) : void
+    # paint(gfx : YAGfx&) : void
 }
+
 class CanvasWidget {
-    - paint(gfx : YAGfx&) : void
+    # paint(gfx : YAGfx&) : void
 }
 
 class LampWidget {
-    - paint(gfx : YAGfx&) : void
+    # paint(gfx : YAGfx&) : void
 }
 
 class ProgressBar {
-    - paint(gfx : YAGfx&) : void
+    # paint(gfx : YAGfx&) : void
 }
 
 class TextWidget {
-    - paint(gfx : YAGfx&) : void
+    # paint(gfx : YAGfx&) : void
+}
+
+class ScrollContainer {
+    # paint(gfx : YAGfx&) : void
 }
 
 Widget <|-- BitmapWidget
@@ -45,5 +53,19 @@ Widget <|-- CanvasWidget
 Widget <|-- LampWidget
 Widget <|-- ProgressBar
 Widget <|-- TextWidget
+Widget <|-- ScrollContainer
+
+YAGfx <|-- CanvasWidget
+
+note bottom of CanvasWidget
+    A canvas widget is a widget and a graphics
+    context at the same time, so other widgets
+    can be drawn inside it.
+end note
+
+note bottom of ScrollContainer
+    Scrolls its content horizontally or
+    vertically if it does not fit.
+end note
 
 @enduml

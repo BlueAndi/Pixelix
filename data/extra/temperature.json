@@ -4,8 +4,8 @@
         "discovery": {
             "name": "Temperature",
             "unit_of_meas": "°C",
-            "ic": "mdi:thermometer",
             "dev_cla": "temperature",
+            "stat_cla": "measurement",
             "val_tpl": "{{ value_json.value }}"
         }
     }

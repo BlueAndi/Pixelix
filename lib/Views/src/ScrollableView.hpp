@@ -149,7 +149,13 @@ public:
         uint16_t textWidgetHeight     = textWidget.getHeight();
         bool     isMultiLine          = (1U < textWidget.getLineCount());
         bool     isTextWidgetEnlarged = false;
+        bool     isTextChanged        = textWidget.isTextChanged();
 
+        /* The text may have been replaced during the last paint, therefore the
+         * scrolling content is measured again right now and the change is
+         * acknowledged.
+         */
+        textWidget.clearTextChanged();
         textWidget.getPos(textOffsetX, textOffsetY);
 
         /* Only a multi-line text widget wraps the text around. Therefore its
@@ -200,6 +206,15 @@ public:
             }
         }
 
+        /* A new text starts to scroll from the begin, even if it has the same
+         * size as the previous one. Otherwise it would inherit the scroll
+         * position and the number of completed scroll cycles.
+         */
+        if (true == isTextChanged)
+        {
+            m_scrollContainer.restartScrolling();
+        }
+
         m_scrollContainer.update(gfx);
 
         /* Restore the original text widget size, because the enlarged size is
@@ -218,18 +233,6 @@ public:
     void disableScrolling()
     {
         m_scrollContainer.disableScrolling();
-    }
-
-    /**
-     * Gets scroll information.
-     *
-     * @param[out] isScrollingEnabled True if scrolling is enabled.
-     * @param[out] scrollingCnt Number of completed cycles.
-     * @return True when information is available.
-     */
-    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt) const
-    {
-        return m_scrollContainer.getScrollInfo(isScrollingEnabled, scrollingCnt);
     }
 
     /**
@@ -257,6 +260,22 @@ public:
     }
 
 protected:
+
+    /**
+     * Gets scroll information without considering a text transition.
+     *
+     * It is protected on purpose. A view which shows a text must use the
+     * overload taking the text widget, otherwise it would report the scroll
+     * information of the text which is replaced right now.
+     *
+     * @param[out] isScrollingEnabled True if scrolling is enabled.
+     * @param[out] scrollingCnt Number of completed cycles.
+     * @return True when information is available.
+     */
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt) const
+    {
+        return m_scrollContainer.getScrollInfo(isScrollingEnabled, scrollingCnt);
+    }
 
     ScrollContainer m_scrollContainer; /**< Shared scroll container. */
     uint16_t        m_width;           /**< View width. */

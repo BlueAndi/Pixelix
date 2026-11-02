@@ -59,6 +59,27 @@
  * Public Methods
  *****************************************************************************/
 
+RestService::PreProcessResult RestService::toPreProcessResult(const DeserializationError& error)
+{
+    PreProcessResult result;
+
+    if (DeserializationError::Ok == error.code())
+    {
+        result = PreProcessResult::OK;
+    }
+    else if (DeserializationError::NoMemory == error.code())
+    {
+        result = PreProcessResult::NEEDS_MORE;
+    }
+    else
+    {
+        LOG_WARNING("JSON parse error: %s", error.c_str());
+        result = PreProcessResult::FAILED;
+    }
+
+    return result;
+}
+
 bool RestService::start()
 {
     bool isSuccessful = true;
@@ -383,38 +404,18 @@ void RestService::handleHttpResponse(const HttpRsp& httpRsp)
             LOG_ERROR("No payload.");
             isError = true;
         }
-        /* If a callback is found, it shall be applied. */
-        else if (nullptr != m_activePreProcessCallback)
+        /* The preprocessing applies the callback if one is given, otherwise it
+         * just deserializes. In both cases the document grows on demand.
+         */
+        else if (true == preProcessResponse(payload, payloadSize, rsp.jsonDocData))
         {
-            rsp.jsonDocData = PsramJsonDocument(payloadSize);
-
-            if (true == m_activePreProcessCallback(payload, payloadSize, rsp.jsonDocData))
-            {
-                rsp.isRsp = true;
-                m_responseQueue.push_back(std::move(rsp));
-            }
-            else
-            {
-                isError = true;
-                LOG_ERROR("Error while preprocessing!");
-            }
+            rsp.isRsp = true;
+            m_responseQueue.push_back(std::move(rsp));
         }
         else
         {
-            rsp.jsonDocData            = PsramJsonDocument(payloadSize);
-
-            DeserializationError error = deserializeJson(rsp.jsonDocData, payload, payloadSize);
-
-            if (DeserializationError::Ok != error.code())
-            {
-                LOG_WARNING("JSON parse error: %s", error.c_str());
-                isError = true;
-            }
-            else
-            {
-                rsp.isRsp = true;
-                m_responseQueue.push_back(std::move(rsp));
-            }
+            isError = true;
+            LOG_ERROR("Error while preprocessing!");
         }
     }
     else
@@ -429,6 +430,99 @@ void RestService::handleHttpResponse(const HttpRsp& httpRsp)
         rsp.jsonDocData.clear();
         m_responseQueue.push_back(std::move(rsp));
     }
+}
+
+size_t RestService::getInitialDocSize(size_t payloadSize)
+{
+    size_t docSize    = payloadSize * DOC_SIZE_SLOT_RATIO;
+    size_t docSizeMax = getMaxDocSize(payloadSize);
+
+    if (DOC_SIZE_MIN > docSize)
+    {
+        docSize = DOC_SIZE_MIN;
+    }
+
+    if (docSizeMax < docSize)
+    {
+        docSize = docSizeMax;
+    }
+
+    return docSize;
+}
+
+size_t RestService::getMaxDocSize(size_t payloadSize)
+{
+    size_t docSizeMax = DOC_SIZE_MAX;
+
+    /* The payload is already in RAM and a document of the payload size is what
+     * the service allocated before this limit existed. Therefore the limit
+     * shall never undercut it, otherwise a large response would be handled
+     * worse than before.
+     */
+    if (docSizeMax < payloadSize)
+    {
+        docSizeMax = payloadSize;
+    }
+
+    return docSizeMax;
+}
+
+bool RestService::preProcessResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+{
+    bool    isSuccessful = false;
+    bool    isDone       = false;
+    size_t  docSize      = getInitialDocSize(payloadSize);
+    size_t  docSizeMax   = getMaxDocSize(payloadSize);
+    uint8_t attempt      = 0U;
+
+    while ((false == isDone) && (DOC_PARSE_ATTEMPTS > attempt))
+    {
+        PreProcessResult result;
+
+        jsonDoc = PsramJsonDocument(docSize);
+
+        if (nullptr != m_activePreProcessCallback)
+        {
+            result = m_activePreProcessCallback(payload, payloadSize, jsonDoc);
+        }
+        else
+        {
+            result = toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize));
+        }
+
+        if (PreProcessResult::OK == result)
+        {
+            isSuccessful = true;
+            isDone       = true;
+        }
+        else if (PreProcessResult::FAILED == result)
+        {
+            isDone = true;
+        }
+        else if (docSizeMax <= docSize)
+        {
+            LOG_ERROR("Response document limit of %u byte reached.", static_cast<uint32_t>(docSizeMax));
+            isDone = true;
+        }
+        else
+        {
+            docSize *= 2U;
+
+            if (docSizeMax < docSize)
+            {
+                docSize = docSizeMax;
+            }
+        }
+
+        ++attempt;
+    }
+
+    if ((false == isSuccessful) && (false == isDone))
+    {
+        LOG_ERROR("Response document still too small after %u attempts.", attempt);
+    }
+
+    return isSuccessful;
 }
 
 uint32_t RestService::getRestId()

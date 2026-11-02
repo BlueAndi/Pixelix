@@ -38,6 +38,7 @@
 #include <JsonEscape.hpp>
 
 #include <Logging.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -102,6 +103,8 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
     if (true == jsonDoc.overflowed())
     {
         LOG_ERROR("JSON document size exceeded.");
+
+        httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
     }
 
     if (nullptr != request)

@@ -41,6 +41,7 @@
 #include <math.h>
 #include <string.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -117,7 +118,7 @@ bool OpenMeteoPlugin::setTopic(const String& topic, const JsonObjectConst& value
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg             = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonUpdatePeriod    = value["updatePeriod"];
@@ -491,11 +492,11 @@ bool OpenMeteoPlugin::startHttpRequest()
     return status;
 }
 
-bool OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool              isSuccessful = false;
-    const size_t      FILTER_SIZE  = 640U;
-    PsramJsonDocument jsonFilterDoc(FILTER_SIZE);
+    RestService::PreProcessResult result      = RestService::PreProcessResult::FAILED;
+    const size_t                  FILTER_SIZE = Json::getJsonSize(640U);
+    PsramJsonDocument             jsonFilterDoc(FILTER_SIZE);
 
     /* Example:
         {
@@ -596,19 +597,10 @@ bool OpenMeteoPlugin::preProcessAsyncWebResponse(const char* payload, size_t pay
     }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc)));
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void OpenMeteoPlugin::setViewUnits()

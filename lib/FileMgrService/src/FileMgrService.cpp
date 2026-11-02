@@ -108,16 +108,9 @@ bool FileMgrService::start()
 
         return false;
     };
+
     /* Use the hostname as physical device id. */
-    if (false == settings.open(true))
-    {
-        m_deviceId = settings.getHostname().getDefault();
-    }
-    else
-    {
-        m_deviceId = settings.getHostname().getValue();
-        settings.close();
-    }
+    m_deviceId = settings.getHostname().getValueFromRam();
 
     /* Register file upload and file remove topic. */
     topicHandlerService.registerTopic(m_deviceId, ENTITY_ID, TOPIC_FILES, jsonExtra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
@@ -155,14 +148,15 @@ void FileMgrService::process()
 
 bool FileMgrService::hasTopicChanged(const String& topic)
 {
-    bool hasChanged = m_hasFileTableChanged;
+    /* Read and clear in one step, otherwise a change which is set by the
+     * web server task in between would be lost.
+     */
+    bool hasChanged = m_hasFileTableChanged.exchange(false);
 
     /* The callback is dedicated to a topic, therefore the
      * topic parameter is not used.
      */
     UTIL_NOT_USED(topic);
-
-    m_hasFileTableChanged = false;
 
     return hasChanged;
 }

@@ -1,54 +1,64 @@
 @startuml audio_service
 
-package "HAL" {
+title Audio Service
 
-    interface AudioObserver
-    class AudioDrv<<singleton>>
-    class "IDF I2S driver" as I2SDrv
-}
+package "AudioService" as audioServicePckg {
 
-package "lib" {
-    package "AudioService" {
-        class SpectrumAnalyzer
-        class AudioToneDetector
-        class AudioService<<singleton>>
+    interface IAudioObserver {
+        + {abstract} notify(data : int32_t*, size : size_t) = 0 : void
     }
+
+    class AudioDrv <<singleton>> {
+        + start() : bool
+        + stop() : void
+        + registerObserver(observer : IAudioObserver&) : bool
+        + unregisterObserver(observer : IAudioObserver&) : void
+    }
+
+    class SpectrumAnalyzer
+    class AudioToneDetector
+    class AudioService <<singleton>>
 }
 
-class Plugin
+package "HAL / Platform" as halPckg {
+    class "I2S (ESP-IDF driver)" as i2sDrv
+}
 
-AudioObserver "0..3" <--o AudioDrv
-AudioObserver <|... SpectrumAnalyzer: <<realize>>
-AudioObserver <|... AudioToneDetector: <<realize>>
+class ConcretePlugin
 
-AudioDrv <.... AudioService: <<use>>
-SpectrumAnalyzer <--* AudioService
-AudioToneDetector "2" <--* AudioService
+AudioDrv o--> "0..3" IAudioObserver
+IAudioObserver <|.. SpectrumAnalyzer
+IAudioObserver <|.. AudioToneDetector
 
-AudioService <.. "*" Plugin: <<use>>
+AudioService ..> AudioDrv: <<use>>
+AudioService *--> "1" SpectrumAnalyzer
+AudioService *--> "2" AudioToneDetector
 
-AudioDrv ..> I2SDrv: <<use>>
+ConcretePlugin ..> AudioService: <<use>>
+
+AudioDrv ..> i2sDrv: <<use>>
 
 note top of SpectrumAnalyzer
-    Provides the frequency spectrum by using
-    the FFT algorithm.
+    Provides the frequency spectrum
+    by using the FFT algorithm.
 end note
 
 note top of AudioToneDetector
-    Audio tone detector by using the
-    Goertzel algorithm.
+    Detects a single tone by using
+    the Goertzel algorithm.
 end note
 
-note right of Plugin
-    Several plugins can use the audio service.
+note right of ConcretePlugin
+    Several plugins may use the audio service.
 
-    Attention: Every plugin may re-configure!
+    Attention: every plugin may reconfigure the
+    tone detectors, so they are shared state.
 end note
 
 note right of AudioService
-    Start/stop the audio driver.
-    Provides the spectrum analyzer and tone
-    detector instances to plugins.
+    Starts and stops the audio driver and provides
+    the spectrum analyzer and the tone detector
+    instances to the plugins.
 end note
 
 @enduml

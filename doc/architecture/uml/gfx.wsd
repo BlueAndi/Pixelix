@@ -1,5 +1,10 @@
 @startuml gfx
 
+title Graphic Base Functionality
+
+' A C++ template alias is a UML TemplateBinding, which is a dependency
+' stereotyped <<bind>>, never a generalization.
+
 package "Adafruit" {
 
     class "GFXglyph" as gfxGlyph
@@ -169,7 +174,7 @@ note right of baseGfxPen
     the pen.
 end note
 
-baseGfx <- baseGfxPen: <<draw>>
+baseGfxPen ..> baseGfx: <<use>>
 
 class YAGfx <<typedef>>
 hide YAGfx members
@@ -179,9 +184,9 @@ note left of YAGfx
     color type according to display type.
 end note
 
-baseGfx <|-- YAGfx: <<bind>>\nTColor -> Color
+YAGfx ..> baseGfx: <<bind>>\n<TColor -> Color>
 
-class "IDisplay" as iDisplay {
+abstract class "IDisplay" as iDisplay {
     + {abstract} begin() = 0 : bool
     + {abstract} show() = 0 : void
     + {abstract} isReady() = 0 : bool
@@ -190,12 +195,13 @@ class "IDisplay" as iDisplay {
 }
 
 note left of iDisplay
-    The interface for physical display adapters.
+    Abstract base for physical display adapters.
+    It is a YAGfx, so a plugin can draw into it.
 end note
 
 YAGfx <|-- iDisplay
 
-package "HAL" {
+package "DisplayMgr" {
 
     class "Board" as board
 
@@ -219,9 +225,9 @@ package "HAL" {
         provides the GFX interface to draw inside.
     end note
 
-    iDisplay <|.... display: <<realize>>
-    3rdPartyLibs <-- display
-    board <.. display: <<use>>
+    iDisplay <|---- display
+    display ..> 3rdPartyLibs: <<use>>
+    display ..> board: <<use>>
 }
 
 class "DisplayMgr" as displayMgr

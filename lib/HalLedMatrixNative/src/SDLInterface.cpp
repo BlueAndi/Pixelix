@@ -39,6 +39,7 @@
 #include "Logging.h"
 
 #include <array>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -53,26 +54,20 @@ struct ImageEntry
     SDLInterface::ImageId id;             /**< Image identifier. */
     const char*           path = nullptr; /**< Path to the image file. */
 };
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
-/**
- * @brief   Gets the default window height based on the number of pixel rows.
- * @param[in] pixelrows The number of pixel rows.
- * @return  The default window height in pixels.
- */
-static uint32_t getDefaultWindowHeight(uint32_t pixelrows);
-
 /******************************************************************************
  * Local Variables
-
  *****************************************************************************/
+
 /**
  * @brief   Image entry for the SDL interface.
  * @details Contains the path and surface of a registered image.
  */
-std::array<ImageEntry, static_cast<std::size_t>(SDLInterface::ImageId::IMG_ID_COUNT)> gImages = {
+static const std::array<ImageEntry, static_cast<std::size_t>(SDLInterface::ImageId::IMG_ID_COUNT)> gImages = {
     { { SDLInterface::ImageId::IMG_ID_WINDOW_ICON, "data/favicon.png" },
         { SDLInterface::ImageId::IMG_ID_ABOUT_LOGO, "data/images/LogoSmall.png" } }
 };
@@ -96,6 +91,15 @@ bool SDLInterface::initialize(int width, int height)
     }
     else
     {
+        /* By default SDL swallows the mouse click, which gives the window the focus.
+         * The user expects that the first click on a simulated button works, even if
+         * the window was not focused before.
+         */
+        if (false == SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1"))
+        {
+            LOG_WARNING("SDL_SetHint(%s) failed: %s", SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, SDL_GetError());
+        }
+
         if (false == SDL_Init(SDL_INIT_VIDEO))
         {
             LOG_WARNING("SDL_Init failed: %s", SDL_GetError());
@@ -120,7 +124,7 @@ bool SDLInterface::initialize(int width, int height)
             else
             {
                 /* Load all images from registry to SDL surfaces.*/
-                for (auto imgEntry : gImages)
+                for (const ImageEntry& imgEntry : gImages)
                 {
                     auto surface = SDL_LoadPNG(imgEntry.path);
                     if (nullptr == surface)
@@ -183,7 +187,15 @@ void SDLInterface::shutdown()
 
     if (false != m_sdl_initialized)
     {
-        SDL_Quit();
+        /* Only the video subsystem is released, because only that one was
+         * initialized here. SDL_Quit() would tear down every subsystem,
+         * regardless of its reference count, and the buzzer driver owns the
+         * audio subsystem independently. Note that shutdown() is not only
+         * called at the end of the application, but also when the window or
+         * the renderer could not be created, while the application
+         * deliberately keeps running.
+         */
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         m_sdl_initialized = false;
     }
 }
@@ -201,7 +213,7 @@ SDL_Surface* SDLInterface::getImageSurface(ImageId id) const
     return surface;
 }
 
-void SDLInterface::beginUpdate()
+void SDLInterface::beginUpdate() const
 {
     if (true == m_sdl_initialized)
     {
@@ -210,7 +222,7 @@ void SDLInterface::beginUpdate()
     }
 }
 
-void SDLInterface::finishUpdate()
+void SDLInterface::finishUpdate() const
 {
     if (true == m_sdl_initialized)
     {

@@ -74,6 +74,7 @@ static IPAddress toIPAddress(uint32_t netOrderAddr);
 
 AsyncClient::AsyncClient(int sock) :
     m_socket(sock),
+    m_isCloseRequested(false),
     m_isNoDelay(false),
     m_isAckPending(false),
     m_rxTimeout(0U),
@@ -219,7 +220,7 @@ bool AsyncClient::send()
      */
     if (true == isPeerLost)
     {
-        handleDisconnect();
+        requestClose();
     }
 
     return isSuccessful;
@@ -268,12 +269,12 @@ bool AsyncClient::canSend() const
 
 void AsyncClient::close()
 {
-    handleDisconnect();
+    requestClose();
 }
 
 int8_t AsyncClient::abort()
 {
-    handleDisconnect();
+    requestClose();
 
     return -1;
 }
@@ -432,69 +433,95 @@ void AsyncClient::onPoll(AcConnectHandler cb, void* arg)
 
 void AsyncClient::process(bool isReadable, bool isWritable)
 {
+    /* Every handler may close the connection and destroy this client,
+     * therefore a handler is always the very last action of its path and
+     * no member is touched afterwards.
+     */
     if (-1 == m_socket)
     {
         /* Guard: no connection. */
     }
-    else
+    /* Another thread requested the close, see requestClose(). */
+    else if (true == m_isCloseRequested)
     {
-        if (true == isReadable)
+        handleDisconnect();
+    }
+    else if (true == isReadable)
+    {
+        char rxBuffer[RX_BUFFER_SIZE];
+        int  received = SocketCompat::receiveData(static_cast<SocketCompat::Socket>(m_socket), rxBuffer, sizeof(rxBuffer));
+
+        if (0 < received)
         {
-            char rxBuffer[RX_BUFFER_SIZE];
-            int  received = SocketCompat::receiveData(static_cast<SocketCompat::Socket>(m_socket), rxBuffer, sizeof(rxBuffer));
+            m_lastRxTime = millis();
 
-            if (0 < received)
+            /* Pending transmit data is sent in the next cycle, because the
+             * data handler may have destroyed this client.
+             */
+            if (nullptr != m_dataHandler)
             {
-                m_lastRxTime = millis();
-
-                if (nullptr != m_dataHandler)
-                {
-                    m_dataHandler(m_dataArg, this, rxBuffer, static_cast<size_t>(received));
-                }
-            }
-            /* The peer closed the connection. */
-            else if (0 == received)
-            {
-                handleDisconnect();
-            }
-            else if (false == SocketCompat::wouldBlock())
-            {
-                handleDisconnect();
-            }
-            else
-            {
-                /* Nothing available, try again later. */
-                ;
+                m_dataHandler(m_dataArg, this, rxBuffer, static_cast<size_t>(received));
             }
         }
-
-        if ((-1 != m_socket) &&
-            (true == isWritable))
+        /* The peer closed the connection. */
+        else if (0 == received)
+        {
+            handleDisconnect();
+        }
+        else if (false == SocketCompat::wouldBlock())
+        {
+            handleDisconnect();
+        }
+        /* Nothing available, try again later. */
+        else if (true == isWritable)
         {
             (void)send();
         }
+        else
+        {
+            ;
+        }
+    }
+    else if (true == isWritable)
+    {
+        (void)send();
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 }
 
 void AsyncClient::notifyPoll()
 {
-    if (-1 != m_socket)
+    /* Every handler may close the connection and destroy this client,
+     * therefore a handler is always the very last action of its path and
+     * no member is touched afterwards.
+     */
+    if (-1 == m_socket)
     {
-        /* The webserver closes a connection which is idle for too long. */
-        if ((0U < m_rxTimeout) &&
-            ((m_rxTimeout * 1000U) < (millis() - m_lastRxTime)))
+        /* Guard: no connection. */
+    }
+    /* The webserver closes a connection which is idle for too long. Like
+     * the AsyncTCP counterpart, the poll handler is skipped in this case.
+     */
+    else if ((0U < m_rxTimeout) &&
+             ((m_rxTimeout * 1000U) < (millis() - m_lastRxTime)))
+    {
+        if (nullptr != m_timeoutHandler)
         {
-            if (nullptr != m_timeoutHandler)
-            {
-                m_timeoutHandler(m_timeoutArg, this, millis() - m_lastRxTime);
-            }
+            m_timeoutHandler(m_timeoutArg, this, millis() - m_lastRxTime);
         }
-
-        if ((-1 != m_socket) &&
-            (nullptr != m_pollHandler))
-        {
-            m_pollHandler(m_pollArg, this);
-        }
+    }
+    else if (nullptr != m_pollHandler)
+    {
+        m_pollHandler(m_pollArg, this);
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 }
 
@@ -699,6 +726,22 @@ void AsyncServer::acceptClient()
  * Private Methods
  *****************************************************************************/
 
+void AsyncClient::requestClose()
+{
+    if (true == AsyncTcpLoop::getInstance().isInLoopThread())
+    {
+        handleDisconnect();
+    }
+    else
+    {
+        /* The disconnect handler may destroy this client, which must not
+         * happen while the event loop works with it. Therefore the close is
+         * performed by the event loop thread, see process().
+         */
+        m_isCloseRequested = true;
+    }
+}
+
 void AsyncClient::handleDisconnect()
 {
     int sock = -1;
@@ -709,10 +752,11 @@ void AsyncClient::handleDisconnect()
         /* Claim the socket, so a concurrent disconnect notifies the handler
          * only once. Otherwise the client would be destroyed twice.
          */
-        sock             = m_socket;
-        m_socket         = -1;
-        m_txBufferLength = 0U;
-        m_pendingAck     = 0U;
+        sock               = m_socket;
+        m_socket           = -1;
+        m_isCloseRequested = false;
+        m_txBufferLength   = 0U;
+        m_pendingAck       = 0U;
     }
 
     if (-1 != sock)

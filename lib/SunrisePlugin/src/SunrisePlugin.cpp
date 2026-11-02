@@ -40,6 +40,7 @@
 #include <ArduinoJson.h>
 #include <Logging.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -100,7 +101,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg        = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonLongitude  = value["longitude"];
@@ -406,9 +407,9 @@ bool SunrisePlugin::startHttpRequest()
     return status;
 }
 
-bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool isSuccessful = false;
+    RestService::PreProcessResult result = RestService::PreProcessResult::FAILED;
 
     if ((nullptr == payload) ||
         (0U == payloadSize))
@@ -417,7 +418,7 @@ bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t paylo
     }
     else
     {
-        const size_t                    FILTER_SIZE = 128U;
+        const size_t                    FILTER_SIZE = Json::getJsonSize(128U);
         StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
         /* Example:
@@ -448,20 +449,11 @@ bool SunrisePlugin::preProcessAsyncWebResponse(const char* payload, size_t paylo
         }
         else
         {
-            DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-            if (DeserializationError::Ok != error.code())
-            {
-                LOG_ERROR("Invalid JSON message received: %s", error.c_str());
-            }
-            else
-            {
-                isSuccessful = true;
-            }
+            result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc)));
         }
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void SunrisePlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)

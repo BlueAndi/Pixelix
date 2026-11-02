@@ -36,6 +36,7 @@
 #include "SysMsgPlugin.h"
 
 #include <Logging.h>
+#include <utility>
 
 /******************************************************************************
  * Compiler Switches
@@ -52,6 +53,8 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
+
+static void releaseString(String& str);
 
 /******************************************************************************
  * Local Variables
@@ -79,22 +82,48 @@ void SysMsgPlugin::active(YAGfx& gfx)
 
 void SysMsgPlugin::inactive()
 {
-    /* User selected next slot. Skip showing current information further. */
-    disable();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Clear information to avoid that old information is later shown again,
      * caused by scrolling feature of the underlying text widget or by the
      * queued system messages.
      */
     m_view.clear();
-    m_rdIndex = m_wrIndex;
+    m_timer.stop();
+
+    /* A message may have been queued from another task after the plugin
+     * disabled itself and before the display manager called inactive(). It
+     * must not be dropped, the slot is activated again for it.
+     */
+    if (true == m_isNextMsgPending)
+    {
+        /* Keep the queue and stay enabled. */
+        ;
+    }
+    else
+    {
+        /* User selected next slot. Skip showing current information further. */
+        disable();
+        m_rdIndex = m_wrIndex;
+    }
 }
 
 void SysMsgPlugin::update(YAGfx& gfx)
 {
-    bool     isScrollingEnabled = false;
-    uint32_t scrollingCnt       = 0U;
-    bool     status             = false;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+    bool                       isScrollingEnabled = false;
+    uint32_t                   scrollingCnt       = 0U;
+    bool                       status             = false;
+
+    /* A queued message is taken over here and not in the task which queued
+     * it, because loading the icon and starting the melody belong to the
+     * display update.
+     */
+    if (true == m_isNextMsgPending)
+    {
+        m_isNextMsgPending = false;
+        (void)nextMessage();
+    }
 
     m_view.update(gfx);
 
@@ -103,13 +132,36 @@ void SysMsgPlugin::update(YAGfx& gfx)
     /* In initialization phase? */
     if (true == m_isInit)
     {
-        m_timer.stop();
+        /* A hard duration ends the message independent of the scrolling. It is
+         * started immediately and not only once the scroll info is available,
+         * otherwise a view which never reports it could block the display.
+         */
+        if (true == m_isDurationHard)
+        {
+            if ((0U < m_duration) &&
+                (false == m_timer.isTimerRunning()))
+            {
+                m_timer.start(m_duration);
+            }
+        }
+        else
+        {
+            m_timer.stop();
+        }
 
         /* Is the scroll info ready? */
         if (true == status)
         {
-            /* Start timer if text doesn't scroll and shall not be shown infinite. */
-            if ((false == isScrollingEnabled) &&
+            /* Start timer if the message shall not be shown infinite.
+             *
+             * A scrolling message is ended by the number of times it was
+             * scrolled, but only if such a number is given. Without it the
+             * duration is the only criteria to end it. Otherwise the message
+             * would be shown forever and block the plugin, which never would
+             * be disabled again.
+             */
+            if ((false == m_isDurationHard) &&
+                ((false == isScrollingEnabled) || (0U == m_max)) &&
                 (0U < m_duration))
             {
                 m_timer.start(m_duration);
@@ -118,8 +170,12 @@ void SysMsgPlugin::update(YAGfx& gfx)
             m_isInit = false;
         }
     }
-    /* Is timer running for non-scrolled text? */
-    else if (true == m_timer.isTimerRunning())
+
+    /* A running timer ends the message independent of the initialization
+     * phase, otherwise a hard duration would not be applied as long as the
+     * view reports no scroll information.
+     */
+    if (true == m_timer.isTimerRunning())
     {
         if (true == m_timer.isTimeout())
         {
@@ -129,6 +185,12 @@ void SysMsgPlugin::update(YAGfx& gfx)
                 disable();
             }
         }
+    }
+    /* Still in initialization phase? */
+    else if (true == m_isInit)
+    {
+        /* Wait for the scroll information. */
+        ;
     }
     /* Shall scrolling text be shown a specific number of times? */
     else if (0U < m_max)
@@ -154,8 +216,38 @@ void SysMsgPlugin::update(YAGfx& gfx)
     }
 }
 
-void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
+bool SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    return enqueue(msg, duration, max, String(), String(), 0U, false);
+}
+
+bool SysMsgPlugin::showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    return enqueue(msg, duration, 0U, iconFileName, melody, volume, true);
+}
+
+void SysMsgPlugin::registerMelodyHandler(MelodyHandler handler)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_melodyHandler = handler;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+bool SysMsgPlugin::enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, const String& melody, uint8_t volume, bool isDurationHard)
+{
+    bool   isQueued     = false;
     size_t nextWrIndex  = m_wrIndex + 1U;
     nextWrIndex        %= MAX_SYS_MSG;
 
@@ -166,28 +258,29 @@ void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
     }
     else
     {
-        m_messages[m_wrIndex].msg      = msg;
-        m_messages[m_wrIndex].duration = duration;
-        m_messages[m_wrIndex].max      = max;
+        m_messages[m_wrIndex].msg            = msg;
+        m_messages[m_wrIndex].duration       = duration;
+        m_messages[m_wrIndex].max            = max;
+        m_messages[m_wrIndex].iconFileName   = iconFileName;
+        m_messages[m_wrIndex].melody         = melody;
+        m_messages[m_wrIndex].volume         = volume;
+        m_messages[m_wrIndex].isDurationHard = isDurationHard;
 
-        m_wrIndex                      = nextWrIndex;
+        m_wrIndex                            = nextWrIndex;
+        isQueued                             = true;
 
-        /* If plugin is disabled, it will be enabled and next is shown. */
+        /* If plugin is disabled, it will be enabled and the next message is
+         * taken over by the next display update.
+         */
         if (false == isEnabled())
         {
-            nextMessage();
+            m_isNextMsgPending = true;
             enable();
         }
     }
+
+    return isQueued;
 }
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
 
 bool SysMsgPlugin::nextMessage()
 {
@@ -199,9 +292,43 @@ bool SysMsgPlugin::nextMessage()
         SysMsg& sysMsg = m_messages[m_rdIndex];
 
         m_view.setFormatText(sysMsg.msg);
-        m_duration = sysMsg.duration;
-        m_max      = sysMsg.max;
-        m_isInit   = true;
+
+        if (true == sysMsg.iconFileName.isEmpty())
+        {
+            m_view.clearIcon();
+        }
+        else if (false == m_view.loadIcon(sysMsg.iconFileName))
+        {
+            LOG_ERROR("Icon not found: %s", sysMsg.iconFileName.c_str());
+        }
+        else
+        {
+            /* Icon successful loaded. */
+            ;
+        }
+
+        m_duration       = sysMsg.duration;
+        m_max            = sysMsg.max;
+        m_isDurationHard = sysMsg.isDurationHard;
+        m_isInit         = true;
+
+        /* An expired timer of the previous message must not end this one. */
+        m_timer.stop();
+
+        /* The melody belongs to this message and starts now, together with it.
+         * Starting it already when the message is queued would play it to the
+         * previous message or to a message which is never shown at all.
+         */
+        if ((false == sysMsg.melody.isEmpty()) &&
+            (nullptr != m_melodyHandler))
+        {
+            m_melodyHandler(sysMsg.melody, sysMsg.volume);
+        }
+
+        /* Release the message, it is handed over to the view now. */
+        releaseString(sysMsg.msg);
+        releaseString(sysMsg.iconFileName);
+        releaseString(sysMsg.melody);
 
         ++m_rdIndex;
         m_rdIndex      %= MAX_SYS_MSG;
@@ -219,3 +346,20 @@ bool SysMsgPlugin::nextMessage()
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Release the heap buffer of a string.
+ *
+ * String::clear() only sets the length to 0 and keeps the buffer, so a burst
+ * of long notifications would pin their buffers in the queue entries forever.
+ * The buffer is moved to a temporary string, which frees it when it leaves
+ * the scope.
+ *
+ * @param[in,out] str   String which to release.
+ */
+static void releaseString(String& str)
+{
+    String released;
+
+    std::swap(str, released);
+}

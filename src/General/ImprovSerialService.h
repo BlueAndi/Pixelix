@@ -101,6 +101,7 @@ private:
     static const uint32_t AUTH_TIMEOUT_MS      = 60000U; /**< Authorization lifetime in ms. */
     static const uint32_t RESTART_DELAY_MS     = 2500U;  /**< Delay before applying Wi-Fi settings. */
     static const uint32_t SESSION_TIMEOUT_MS   = 30000U; /**< Idle time before restoring serial logs. */
+    static const uint32_t FRAME_TIMEOUT_MS     = 1000U;  /**< Max. gap between two bytes of one frame. */
 
     Stream&               m_stream;                              /**< Serial transport. */
     MiniTerminal&         m_miniTerminal;                        /**< Text terminal. */
@@ -111,6 +112,7 @@ private:
     ButtonState           m_previousButtonStates[BUTTON_ID_CNT]; /**< Last sampled button states. */
     uint32_t              m_authorizedAt;                        /**< Time authorization began. */
     uint32_t              m_lastActivityAt;                      /**< Last valid Improv activity. */
+    uint32_t              m_lastFrameByteAt;                     /**< Time the last byte of a partial frame arrived. */
     uint8_t               m_state;                               /**< Current Improv state. */
     bool                  m_isAuthorized;                        /**< Credentials may be accepted. */
     bool                  m_isSessionActive;                     /**< Improv traffic was detected. */

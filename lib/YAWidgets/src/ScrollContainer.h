@@ -109,6 +109,13 @@ public:
     void disableScrolling();
 
     /**
+     * Restarts scrolling from the start position and resets the number of
+     * completed scroll cycles. Required if the content was replaced by a new
+     * one of the same size, which enableScrolling() can not detect.
+     */
+    void restartScrolling();
+
+    /**
      * Gets whether scrolling is enabled.
      *
      * @return True if scrolling is enabled, otherwise false.

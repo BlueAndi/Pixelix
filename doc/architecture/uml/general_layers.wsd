@@ -1,9 +1,8 @@
 @startuml general_layers
 
-skinparam component {
-    BackgroundColor<<Arduino>> Lightgreen
-    BackgroundColor<<Future>> White
-}
+title Layering
+
+' A layer may only use the layers below it. There is no upward dependency.
 
 package "Application" as appLayer {
 }
@@ -14,7 +13,8 @@ package "Service" as serviceLayer {
 package "HAL" as halLayer {
 }
 
-rectangle "General" {
+package "General" as generalLayer {
+
     package "Utilities" as utilLayer {
     }
 
@@ -22,25 +22,33 @@ rectangle "General" {
     }
 }
 
-appLayer ..> serviceLayer
-appLayer ...> halLayer
+appLayer ..> serviceLayer: <<use>>
+appLayer ...> halLayer: <<use>>
 
-serviceLayer ..> halLayer
+serviceLayer ..> halLayer: <<use>>
 
-note top of appLayer
-    Main business logic
+serviceLayer ..> generalLayer: <<use>>
+halLayer ..> generalLayer: <<use>>
+
+note right of appLayer
+    Main business logic: system state machine,
+    display manager, plugin manager, button
+    handling and the web frontend.
 end note
 
 note left of serviceLayer
-    Services provide functionality which can
-    be used for different purposes by the
-    application. They are controlled and
-    used by the application.
+    Services provide functionality which can be
+    used for different purposes by the application.
+    They are controlled and used by the application.
 end note
 
 note left of halLayer
     The hardware abstraction layer provides access to
     MCU or development board specific peripherals.
+end note
+
+note left of generalLayer
+    Utilities and OS abstractions, usable by every layer.
 end note
 
 @enduml

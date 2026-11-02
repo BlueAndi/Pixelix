@@ -49,6 +49,7 @@
 #include <SimpleTimer.hpp>
 #include <JsonFile.h>
 #include <ArduinoJson.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Macros
@@ -270,7 +271,7 @@ protected:
     {
         bool                status = true;
         JsonFile            jsonFile(m_fs);
-        const size_t        JSON_DOC_SIZE = 1024U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(1024U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonRootObject        = jsonDoc.to<JsonObject>();
         String              configurationFilename = getFullPathToConfiguration();
@@ -298,7 +299,7 @@ protected:
     {
         bool                status = true;
         JsonFile            jsonFile(m_fs);
-        const size_t        JSON_DOC_SIZE = 1024U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(1024U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObjectConst     jsonRootObject        = jsonDoc.to<JsonObject>();
         String              configurationFilename = getFullPathToConfiguration();

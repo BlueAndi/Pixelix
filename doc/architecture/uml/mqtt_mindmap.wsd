@@ -1,4 +1,4 @@
-@startmindmap mqtt_mindmap.wsd
+@startmindmap mqtt_mindmap
 
 + MQTT
 
@@ -19,19 +19,9 @@
 ++++ display
 +++++ /
 
-++++++ uid
-+++++++ /
-++++++++ <PLUGIN-UID>
-+++++++++ /
-++++++++++ <PLUGIN-TOPIC>
-+++++++++++ /
-++++++++++++ set
-+++++++++++++_ See plugin documentation.
-++++++++++++ state
-+++++++++++++_ See plugin documentation.
-
-++++++ alias
-+++++++_ Only if plugin has an alias set.
+++++++ plugin
++++++++_ Every plugin always has a unique alias.
++++++++_ The alias is the only plugin address in a topic path.
 +++++++ /
 ++++++++ <PLUGIN-ALIAS>
 +++++++++ /

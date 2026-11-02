@@ -131,6 +131,11 @@ void ScrollContainer::disableScrolling()
     m_scrollController.disable();
 }
 
+void ScrollContainer::restartScrolling()
+{
+    m_scrollController.reset(m_canvasSize);
+}
+
 bool ScrollContainer::isScrollingEnabled() const
 {
     return m_scrollController.isEnabled();

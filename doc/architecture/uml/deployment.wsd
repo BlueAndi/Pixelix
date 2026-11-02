@@ -1,57 +1,68 @@
 @startuml deployment
 
-title SW Deployment
+title Task Deployment
 
-node "ESP32" {
+' UML 2.5.1 (section 19.3.3): a Component is never deployed, only an Artifact is.
+' A FreeRTOS task is therefore modelled as an Artifact, deployed by nesting it
+' into the ExecutionEnvironment which schedules it.
 
-    node "Core 0\n(Protocol CPU, PRO_CPU)" as proCpu {
+skinparam nodesep 12
+skinparam ranksep 30
 
-        component "IDLE0\n(prio 0)" as idle1Task
-        component "Tmr Svc\n(prio 1)" as tmrSvcTask
-        component "mdns\n(prio 1)" as mdnsTask
-        component "tiT\n(prio 18)" as tiTTask
-        component "eventTask\n(prio 20)" as eventTask
-        component "esp_timer\n(prio 22)" as espTimerTask
-        component "wifi\n(prio 23)" as wifiTask
-        component "ipc0\n(prio 24)" as ipc0Task
+legend top right
+    <&cog> «task» is a project specific stereotype on Artifact.
+    It denotes a FreeRTOS task. The number in brackets is its priority.
+endlegend
+
+node "ESP32" <<device>> as esp32 {
+
+    node "Core 0\n(Protocol CPU, PRO_CPU)" <<executionEnvironment>> as proCpu {
+
+        artifact "IDLE0 (0)" <<task>> as idle0Task
+        artifact "Tmr Svc (1)" <<task>> as tmrSvcTask
+        artifact "mdns (1)" <<task>> as mdnsTask
+        artifact "tiT (18)" <<task>> as tiTTask
+        artifact "eventTask (20)" <<task>> as eventTask
+        artifact "esp_timer (22)" <<task>> as espTimerTask
+        artifact "wifi (23)" <<task>> as wifiTask
+        artifact "ipc0 (24)" <<task>> as ipc0Task
+        artifact "AudioDrvTask (1)" <<task>> as audioDrvTask
     }
 
-    node "Core 1\n(Application CPU, APP_CPU)" as appCpu {
+    node "Core 1\n(Application CPU, APP_CPU)" <<executionEnvironment>> as appCpu {
 
-        component "IDLE1\n(prio 0)" as idle0Task
-        component "loopTask\n(prio 1)" as loopTask
-        component "buttonTask\n(prio 1)" as buttonTask
-        component "processTask\n(prio 1)" as processTask
-        component "network_event\n(prio 19)" as networkEventTask
-        component "async_tcp\n(prio 3)" as asyncTcpTask
-
-        component "arduino_events\n(prio 24)" as arduinoEvents
-
-        component "ipc1\n(prio 24)" as ipc1Task
-        component "spectrumAnalyzerTask\n(prio 1)" as spectrumAnalyzerTask
-        component "AsyncHttpClientTask\n(prio 1)" as asyncHttpClientTask
+        artifact "IDLE1 (0)" <<task>> as idle1Task
+        artifact "loopTask (1)" <<task>> as loopTask
+        artifact "buttonTask (1)" <<task>> as buttonTask
+        artifact "processTask (1)" <<task>> as processTask
+        artifact "HttpSrvWork (1)" <<task>> as httpSrvWorkTask
+        artifact "async_tcp (3)" <<task>> as asyncTcpTask
+        artifact "network_event (19)" <<task>> as networkEventTask
+        artifact "arduino_events (24)" <<task>> as arduinoEventsTask
+        artifact "ipc1 (24)" <<task>> as ipc1Task
     }
 
-    package "Floating tasks" as floatingTasks {
-        component "updateTask\n(prio 4)" as updateTask
+    node "No task affinity" <<executionEnvironment>> as floating {
+
+        artifact "updateTask (4)" <<task>> as updateTask
     }
 
     note top of proCpu
-        The CPU core 0 controls the WiFi, Bluetooth and
-        other internal peripherals such as SPI, I2C, ADC, etc.
+        Core 0 controls the WiFi, Bluetooth and other
+        internal peripherals such as SPI, I2C, ADC, etc.
     end note
 
     note top of appCpu
-        The CPU core 1 is available to the application specific part.
+        Core 1 is available to the application specific part.
     end note
 
-    note bottom of floatingTasks
-        Floating tasks have no task affinity. That means the scheduler
-        decides in every cycle on which core they shall run.
+    note bottom of floating
+        Tasks without affinity are not pinned to a core. The
+        scheduler decides in every cycle on which core they run.
     end note
 
-    proCpu -[hidden]- appCpu
-    proCpu -[hidden]--- floatingTasks
+    proCpu -[hidden]right- appCpu
+    proCpu -[hidden]--- floating
 }
 
 @enduml

@@ -40,6 +40,7 @@
 #include <HttpStatus.h>
 #include <Util.h>
 #include <PsramJsonDocument.hpp>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -106,7 +107,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 1024U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(1024U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonMethod       = value["method"];
@@ -155,7 +156,7 @@ bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObjectConst& val
             }
             else if (true == jsonFilter.is<String>())
             {
-                const size_t         JSON_DOC_FILTER_SIZE = 256U;
+                const size_t         JSON_DOC_FILTER_SIZE = Json::getJsonSize(256U);
                 PsramJsonDocument    jsonDocFilter(JSON_DOC_FILTER_SIZE);
                 DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<const char*>());
 
@@ -584,10 +585,10 @@ bool GrabViaRestPlugin::startHttpRequest()
     return status;
 }
 
-bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool                       isSuccessful = false;
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    RestService::PreProcessResult result = RestService::PreProcessResult::FAILED;
+    MutexGuard<MutexRecursive>    guard(m_mutex);
 
     if ((nullptr == payload) ||
         (0U == payloadSize))
@@ -600,19 +601,10 @@ bool GrabViaRestPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
     }
     else
     {
-        DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter)));
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantConst filter, JsonArray& values)
@@ -676,7 +668,7 @@ void GrabViaRestPlugin::getJsonValueByFilter(JsonVariantConst src, JsonVariantCo
 void GrabViaRestPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)
 {
     const size_t      BUFFER_SIZE   = 128U;
-    const size_t      JSON_DOC_SIZE = 1024U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDocValues(JSON_DOC_SIZE);
     JsonArray         jsonValuesArray = jsonDocValues.to<JsonArray>();
     size_t            index           = 0U;

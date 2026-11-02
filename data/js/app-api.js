@@ -285,8 +285,82 @@ dialog.showYesNo = function (title, message, onYes, onNo, isBlocking) {
     return dialog._show(title, message, isBlocking);
 };
 
+dialog.showPrompt = function (title, message, value, maxLength) {
+    return new Promise((resolve) => {
+        const modalElement = document.getElementById("modalDialog");
+        const okButton = document.createElement("button");
+        const cancelButton = document.createElement("button");
+        let result = null;
+
+        okButton.type = "button";
+        okButton.className = "btn btn-secondary";
+        okButton.setAttribute("data-bs-dismiss", "modal");
+        okButton.textContent = "Ok";
+        okButton.addEventListener("click", () => {
+            result = document.getElementById("dialogInput").value;
+        }, { once: true });
+
+        cancelButton.type = "button";
+        cancelButton.className = "btn btn-secondary";
+        cancelButton.setAttribute("data-bs-dismiss", "modal");
+        cancelButton.textContent = "Cancel";
+
+        dialog._prepare("modal-header bg-dark text-white", [cancelButton, okButton]);
+
+        document.getElementById("dialogTitle").textContent = title;
+        document.getElementById("dialogBody").innerHTML =
+            "<p>" + message + "</p>" +
+            "<input class=\"form-control\" id=\"dialogInput\" type=\"text\" maxlength=\"" + maxLength + "\">";
+        document.getElementById("dialogInput").value = value;
+
+        /* Resolve on hide, so both the Ok and the Cancel path end the promise.
+         * result stays null unless Ok was pressed.
+         */
+        modalElement.addEventListener("hidden.bs.modal", () => resolve(result), { once: true });
+
+        dialog._getModal().show();
+    });
+};
+
 dialog.updateMessage = function (message) {
     document.getElementById("dialogBody").innerHTML = message;
+};
+
+/* Time in s the device gets to restart, before the page is reloaded. */
+dialog.RELOAD_COUNTDOWN = 10;
+
+/* Show the given information together with a countdown and reload the page
+ * afterwards. The device needs the time to restart, before it can answer again.
+ * Closing the dialog skips the countdown and reloads immediately.
+ */
+dialog.showCountdownAndReload = async function (info, countdown) {
+    const text = (typeof info === "string") ? info : "";
+    let seconds = (typeof countdown === "number") ? countdown : dialog.RELOAD_COUNTDOWN;
+
+    await dialog.showInfo(text + "<p>Reload in " + seconds + "s</p>");
+
+    await new Promise((resolve) => {
+        const intervalId = setInterval(() => {
+            if (seconds > 0) {
+                seconds--;
+                dialog.updateMessage(text + "<p>Reload in " + seconds + "s</p>");
+            }
+
+            if (seconds === 0) {
+                clearInterval(intervalId);
+                resolve();
+            }
+        }, 1000);
+
+        document.querySelectorAll("#modalDialog .btn-secondary").forEach((button) => {
+            button.addEventListener("click", () => {
+                clearInterval(intervalId);
+                resolve();
+            }, { once: true });
+        });
+    });
+
+    location.reload();
 };
 
 /* "pixelix" is a shared namespace that ws.js also declares as a top-level name.

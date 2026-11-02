@@ -17,6 +17,7 @@
   - [Get plugins information](#get-plugins-information)
 - [Install a plugin](#install-a-plugin)
 - [Uninstall a plugin](#uninstall-a-plugin)
+- [Get/Set the plugin alias](#getset-the-plugin-alias)
 - [Move a plugin](#move-a-plugin)
 - [Enable/Disable logging](#enabledisable-logging)
   - [Is logging enabled?](#is-logging-enabled)
@@ -135,18 +136,20 @@ Response:
 
 ## Install a plugin
 
-Command: ```INSTALL;<plugin-name>```
+Command: ```INSTALL;<plugin-name>;<plugin-alias>```
 
 Parameter:
 
 * ```<plugin-name>```: Name of the plugin to install.
+* ```<plugin-alias>```: Optional. The alias to assign. If omitted, invalid or already in use, a default is generated from the plugin type name.
 
 Response:
 
 * Successful:
-  * ```ACK;<slot-id>```
+  * ```ACK;<slot-id>;<plugin-uid>;<plugin-alias>```
   * ```<slot-id>```: The id of the slot, where the plugin was installed.
   * ```<plugin-uid>```: The plugin UID.
+  * ```<plugin-alias>```: The alias the plugin was installed with, which may differ from the requested one.
 * Failed:
   * ```NACK```
 
@@ -164,6 +167,27 @@ Response:
   * ```ACK```
 * Failed:
   * ```NACK```
+
+## Get/Set the plugin alias
+
+Command: ```ALIAS;<plugin-uid>;<plugin-alias>```
+
+Parameter:
+
+* ```<plugin-uid>```: UID of the plugin, which alias shall be read or changed.
+* ```<plugin-alias>```: Optional. If given, the alias is changed. If omitted, the current alias is only read.
+
+An alias is 3 to 20 characters long and may contain ```A-Z```, ```a-z```, ```0-9```, ```_``` and ```-```. It must be unique per device, because it addresses the plugin over REST and MQTT.
+
+Response:
+
+* Successful:
+  * ```ACK;"<plugin-alias>"```
+  * ```<plugin-alias>```: The current alias.
+* Failed:
+  * ```NACK;"Alias invalid."```: The alias violates the length or the character set.
+  * ```NACK;"Alias already in use."```: Another plugin instance uses this alias.
+  * ```NACK;"Parameter invalid."```: The parameters could not be parsed.
 
 ## Move a plugin
 

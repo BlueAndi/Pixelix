@@ -203,18 +203,8 @@ void Pages::init(AsyncWebServer& srv)
     String                     webLoginPassword;
     SettingsService&           settings = SettingsService::getInstance();
 
-    if (false == settings.open(true))
-    {
-        webLoginUser     = settings.getWebLoginUser().getDefault();
-        webLoginPassword = settings.getWebLoginPassword().getDefault();
-    }
-    else
-    {
-        webLoginUser     = settings.getWebLoginUser().getValue();
-        webLoginPassword = settings.getWebLoginPassword().getValue();
-
-        settings.close();
-    }
+    webLoginUser                        = settings.getWebLoginUser().getValueFromRam();
+    webLoginPassword                    = settings.getWebLoginPassword().getValueFromRam();
 
     /* Serve standard HTML pages. */
     while (UTIL_ARRAY_NUM(gHtmlPageRoutes) > idx)

@@ -1,0 +1,15 @@
+[
+    {
+        "component": "switch",
+        "discovery": {
+            "name": "Automatic brightness",
+            "ic": "mdi:brightness-auto",
+            "ent_cat": "config",
+            "val_tpl": "{{ value_json.state }}",
+            "stat_on": "on",
+            "stat_off": "off",
+            "pl_on": "{\"state\":\"on\"}",
+            "pl_off": "{\"state\":\"off\"}"
+        }
+    }
+]

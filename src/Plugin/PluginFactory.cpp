@@ -126,6 +126,29 @@ void PluginFactory::destroyPlugin(const IPluginMaintenance* plugin)
     }
 }
 
+bool PluginFactory::isAliasInUse(const String& alias, const IPluginMaintenance* except) const
+{
+    bool                          isInUse = false;
+    ListOfPlugins::const_iterator it      = m_plugins.begin();
+
+    while ((it != m_plugins.end()) && (false == isInUse))
+    {
+        const IPluginMaintenance* currentPlugin = *it;
+
+        if ((currentPlugin != except) &&
+            (alias == currentPlugin->getAlias()))
+        {
+            isInUse = true;
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    return isInUse;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

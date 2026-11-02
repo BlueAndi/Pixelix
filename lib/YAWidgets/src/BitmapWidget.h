@@ -53,6 +53,14 @@
 #include "GifImgPlayer.h"
 #include "Alignment.h"
 
+/* The WebP image player is only available if the build switch is enabled. Its
+ * header pulls in the libwebp headers, therefore the include must stay inside
+ * the guard.
+ */
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+#include "WebpImgPlayer.h"
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -66,6 +74,8 @@
  * Supported are the following formats:
  * - Bitmap (.bmp)
  * - GIF image (.gif)
+ * - PNG image (.png), only if CONFIG_IMAGE_FORMAT_PNG_ENABLE is enabled.
+ * - WebP image (.webp), only if CONFIG_IMAGE_FORMAT_WEBP_ENABLE is enabled.
  */
 class BitmapWidget : public Widget
 {
@@ -89,9 +99,18 @@ public:
         m_hAlignPosX(0),
         m_vAlignPosY(0),
         m_gifFileLoader()
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+        ,
+        m_webpPlayer()
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
     {
         /* Animated GIF images shall run infinite by default. */
         m_gifPlayer.setInfiniteAnimation(true);
+
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+        /* Animated WebP images shall run infinite by default, same as GIF. */
+        m_webpPlayer.setInfiniteAnimation(true);
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
     }
 
     /**
@@ -109,6 +128,10 @@ public:
         m_hAlignPosX(widget.m_hAlignPosX),
         m_vAlignPosY(widget.m_vAlignPosY),
         m_gifFileLoader(widget.m_gifFileLoader)
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+        ,
+        m_webpPlayer(widget.m_webpPlayer)
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
     {
     }
 
@@ -244,6 +267,24 @@ public:
      */
     static const char* FILE_EXT_GIF;
 
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+
+    /**
+     * Filename extension of PNG image file.
+     */
+    static const char* FILE_EXT_PNG;
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+
+    /**
+     * Filename extension of WebP image file.
+     */
+    static const char* FILE_EXT_WEBP;
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
+
     /**
      * Supported image file extensions.
      */
@@ -263,7 +304,13 @@ private:
     {
         IMG_TYPE_NO_IMAGE = 0, /**< No image */
         IMG_TYPE_BMP,          /**< BMP image */
-        IMG_TYPE_GIF           /**< GIF image */
+        IMG_TYPE_GIF,          /**< GIF image */
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+        IMG_TYPE_PNG, /**< PNG image */
+#endif                /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+        IMG_TYPE_WEBP, /**< WebP image */
+#endif                 /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
     };
 
     ImgType               m_imgType;    /**< Current image type. */
@@ -280,6 +327,10 @@ private:
     GifFileLoader m_gifFileLoader; /**< GIF file loader used to read the file from filesystem. */
 #endif                                  /* CONFIG_ENABLE_FILE_TO_MEM_LOADER */
 
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+    WebpImgPlayer m_webpPlayer; /**< WebP image player. */
+#endif                          /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
+
     /**
      * Paint the widget with the given graphics interface.
      *
@@ -291,10 +342,23 @@ private:
         {
             gfx.drawBitmap(m_hAlignPosX, m_vAlignPosY, m_bitmap);
         }
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+        /* A PNG image is decoded into the same bitmap as a BMP image. */
+        else if (IMG_TYPE_PNG == m_imgType)
+        {
+            gfx.drawBitmap(m_hAlignPosX, m_vAlignPosY, m_bitmap);
+        }
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
         else if (IMG_TYPE_GIF == m_imgType)
         {
             (void)m_gifPlayer.play(gfx, m_hAlignPosX, m_vAlignPosY);
         }
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+        else if (IMG_TYPE_WEBP == m_imgType)
+        {
+            (void)m_webpPlayer.play(gfx, m_hAlignPosX, m_vAlignPosY);
+        }
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
         else
         {
             ;
@@ -326,6 +390,46 @@ private:
      * @return If successful loaded it will return true otherwise false.
      */
     bool loadGIF(FS& fs, const String& filename);
+
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+
+    /**
+     * Load PNG image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadPNG(FS& fs, const String& filename);
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+
+    /**
+     * Load WebP image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadWEBP(FS& fs, const String& filename);
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
+
+    /**
+     * Release the memory which the WebP image player holds.
+     *
+     * Without WebP support there is no player and nothing is released.
+     */
+    void releaseWebp()
+    {
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+        m_webpPlayer.close();
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
+    }
 };
 
 /******************************************************************************

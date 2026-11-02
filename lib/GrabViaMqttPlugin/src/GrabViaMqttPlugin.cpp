@@ -39,6 +39,7 @@
 #include <ArduinoJson.h>
 #include <MqttService.h>
 #include <PsramJsonDocument.hpp>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -105,7 +106,7 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 1024U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(1024U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonPath         = value["path"];
@@ -147,7 +148,7 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
             }
             else if (true == jsonFilter.is<String>())
             {
-                const size_t         JSON_DOC_FILTER_SIZE = 256U;
+                const size_t         JSON_DOC_FILTER_SIZE = Json::getJsonSize(256U);
                 PsramJsonDocument    jsonDocFilter(JSON_DOC_FILTER_SIZE);
                 DeserializationError result = deserializeJson(jsonDocFilter, jsonFilter.as<const char*>());
 
@@ -514,7 +515,7 @@ void GrabViaMqttPlugin::unsubscribe()
 
 void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* payload, size_t size)
 {
-    const size_t         JSON_DOC_SIZE = 1024U;
+    const size_t         JSON_DOC_SIZE = Json::getJsonSize(1024U);
     DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
     DeserializationError error = deserializeJson(jsonDoc, payload, size);
 

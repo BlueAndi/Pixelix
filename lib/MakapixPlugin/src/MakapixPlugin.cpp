@@ -41,6 +41,7 @@
 #include <HttpService.h>
 #include <FileSystem.h>
 #include <Version.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -190,7 +191,7 @@ bool MakapixPlugin::setTopic(const String& topic, const JsonObjectConst& value)
     /* Configuration topic? */
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE = 1024U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(1024U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonPlayerKey    = value["playerKey"];
@@ -1149,7 +1150,7 @@ void MakapixPlugin::processProvision()
             }
             else
             {
-                DynamicJsonDocument  jsonDoc(1024U);
+                DynamicJsonDocument  jsonDoc(Json::getJsonSize(1024U));
                 DeserializationError error = deserializeJson(jsonDoc, httpResponse.payload);
 
                 if (DeserializationError::Ok != error)

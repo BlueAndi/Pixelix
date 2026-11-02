@@ -49,6 +49,7 @@
 #include "PluginFactory.h"
 
 #include <IPluginMaintenance.hpp>
+#include <PluginAlias.hpp>
 
 /******************************************************************************
  * Macros
@@ -87,13 +88,16 @@ public:
     /**
      * Install plugin.
      * If no slot id is given, the plugin will be installed in the next available slot.
+     * If no alias is given, or the given alias is invalid or already in use, a default
+     * alias is generated from the plugin type name.
      *
      * @param[in] name      Plugin name
      * @param[in] slotId    Optional slot id
+     * @param[in] alias     Optional plugin alias name
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    IPluginMaintenance* install(const char* name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
+    IPluginMaintenance* install(const char* name, uint8_t slotId = SlotList::SLOT_ID_INVALID, const String& alias = String());
 
     /**
      * Uninstall plugin.
@@ -107,13 +111,14 @@ public:
 
     /**
      * Set the alias name of a plugin.
-     * If the plugin has registered a topic handler, the corresponding URIs will be updated.
+     * The registered topics will be moved to the new alias.
      *
      * @param[in] plugin    Plugin which to assign the alias name
      * @param[in] alias     Plugin alias name
-     * @return If successful, it will return true otherwise false.
+     *
+     * @return The result of the assignment.
      */
-    bool setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
+    PluginAlias::Result setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
 
     /**
      * Unregister all plugin topics from the topic handler service.
@@ -145,18 +150,20 @@ public:
 
 private:
 
-    /** MQTT special characters, which shall not be part of a plugin alias. */
-    static const char* MQTT_SPECIAL_CHARACTERS;
+    /** Upper bound for the default alias index search. */
+    static const uint8_t MAX_ALIAS_SEARCH = 100U;
 
-    PluginFactory      m_pluginFactory; /**< The plugin factory with the plugin type registry. */
-    String             m_deviceId;      /**< Device id, used for topic registration. */
+    PluginFactory        m_pluginFactory;        /**< The plugin factory with the plugin type registry. */
+    String               m_deviceId;             /**< Device id, used for topic registration. */
+    bool                 m_isSlotConfigRepaired; /**< Was any alias repaired while loading the slot configuration? */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
         m_pluginFactory(),
-        m_deviceId()
+        m_deviceId(),
+        m_isSlotConfigRepaired(false)
     {
     }
 
@@ -216,75 +223,53 @@ private:
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
     /**
-     * Checks whether the alias is valid. It will check for not compliant
-     * special characters.
+     * Find a free default alias for the given plugin type name.
      *
-     * @param[in] alias Plugin alias
+     * The index is increased until the resulting alias is not in use. The search is
+     * bounded by MAX_ALIAS_SEARCH; see the implementation for the fallback.
      *
-     * @return If plugin alias is valid, it will return true otherwise false.
+     * @param[in] pluginTypeName    Plugin type name
+     *
+     * @return A valid alias, which is not in use.
      */
-    bool isPluginAliasValid(const String& alias);
+    String findFreeAlias(const char* pluginTypeName) const;
 
     /**
-     * Filters not allowed characters out of the plugin alias.
+     * Determine the alias of a plugin instance, falling back to a generated default.
      *
-     * @param[in] alias Plugin alias
+     * @param[in] pluginTypeName    Plugin type name
+     * @param[in] requestedAlias    The requested alias, may be empty or invalid
+     * @param[in] plugin            The plugin instance, which is skipped in the uniqueness check
      *
-     * @return Filtered plugin alias
+     * @return A valid alias, which is not in use.
      */
-    String filterPluginAlias(const String& alias);
+    String determineAlias(const char* pluginTypeName, const String& requestedAlias, const IPluginMaintenance* plugin) const;
 
     /**
-     * Get the entity id by plugin UID.
+     * Get the entity id of the given plugin.
      *
-     * @param[in] uid   Plugin UID
+     * @param[in] plugin    The plugin
      *
      * @return Entity id
      */
-    String getEntityIdByPluginUid(uint16_t uid);
+    String getEntityId(const IPluginMaintenance* plugin) const;
 
     /**
-     * Get the entity id by plugin alias.
-     *
-     * @param[in] alias Plugin alias
-     *
-     * @return Entity id
-     */
-    String getEntityIdByPluginAlias(const String& alias);
-
-    /**
-     * Register all topics of the given plugin by its UID.
+     * Register all topics of the given plugin.
      *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics shall be registered.
      */
-    void registerTopicsByUID(const String& deviceId, IPluginMaintenance* plugin);
+    void registerTopics(const String& deviceId, IPluginMaintenance* plugin);
 
     /**
-     * Unregister all topics of the given plugin by its UID.
+     * Unregister all topics of the given plugin.
      *
      * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics shall be unregistered.
      * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
      */
-    void unregisterTopicsByUID(const String& deviceId, IPluginMaintenance* plugin, bool purge);
-
-    /**
-     * Register all topics of the given plugin by its alias.
-     *
-     * @param[in] deviceId  The device id which represents the physical device.
-     * @param[in] plugin    The plugin, which topics shall be registered.
-     */
-    void registerTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin);
-
-    /**
-     * Unregister all topics of the given plugin by its alias.
-     *
-     * @param[in] deviceId  The device id which represents the physical device.
-     * @param[in] plugin    The plugin, which topics shall be unregistered.
-     * @param[in] purge     If true, the topic handler will purge the topics like they never existed.
-     */
-    void unregisterTopicsByAlias(const String& deviceId, IPluginMaintenance* plugin, bool purge);
+    void unregisterTopics(const String& deviceId, IPluginMaintenance* plugin, bool purge);
 };
 
 /******************************************************************************

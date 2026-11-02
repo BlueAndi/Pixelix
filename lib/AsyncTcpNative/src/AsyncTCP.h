@@ -41,6 +41,12 @@
  * sent from the application task. Therefore the transmit buffer and everything
  * derived from it is protected by a mutex, see AsyncClient::m_txMutex.
  *
+ * A connection is closed by the event loop thread only. If the application
+ * thread closes a client or its send fails, the close is just requested and
+ * performed by the event loop thread. Otherwise the disconnect handler would
+ * destroy the client in the application thread, while the event loop still
+ * works with it.
+ *
  * @addtogroup TEST
  *
  * @{
@@ -60,6 +66,7 @@
 #include <stddef.h>
 #include <functional>
 #include <mutex>
+#include <atomic>
 
 /* Note, Arduino.h is deliberately not included here. It defines the F() macro
  * and a boolean type, which collide with the Windows SDK headers that winsock
@@ -172,6 +179,9 @@ public:
 
     /**
      * Close the connection.
+     * In the event loop thread the connection is closed immediately and the
+     * disconnect handler is called. In any other thread the close is just
+     * requested and performed by the event loop thread afterwards.
      */
     void close();
 
@@ -197,6 +207,7 @@ public:
 
     /**
      * Abort the connection.
+     * It behaves like close(), see there.
      *
      * @return Always -1, like the AsyncTCP counterpart.
      */
@@ -373,11 +384,23 @@ public:
 
     /**
      * Process the connection. Called by the event loop only.
+     * A requested close is performed here.
      *
      * @param[in] isReadable    Is data available?
      * @param[in] isWritable    Can data be written?
      */
     void process(bool isReadable, bool isWritable);
+
+    /**
+     * Is a close requested by another thread, which the event loop shall
+     * perform? Called by the event loop only.
+     *
+     * @return If a close is requested, it will return true otherwise false.
+     */
+    bool isCloseRequested() const
+    {
+        return m_isCloseRequested;
+    }
 
     /**
      * Notify the poll handler. Called by the event loop only.
@@ -423,7 +446,8 @@ private:
     /** Max. size of a single receive in byte. */
     static const size_t RX_BUFFER_SIZE = 1436U;
 
-    int                 m_socket;                   /**< Socket of the connection. */
+    std::atomic<int>    m_socket;                   /**< Socket of the connection. Read by every thread, written by the event loop thread only, see handleDisconnect(). */
+    std::atomic<bool>   m_isCloseRequested;         /**< Is a close requested by another thread, which the event loop thread shall perform? */
     bool                m_isNoDelay;                /**< Is the nagle algorithm disabled? */
     bool                m_isAckPending;             /**< Shall the received data be acknowledged later? */
     uint32_t            m_rxTimeout;                /**< Timeout for receiving data in s. */
@@ -471,7 +495,15 @@ private:
     bool sendLocked(bool& isPeerLost);
 
     /**
+     * Close the connection in the event loop thread or request it from any
+     * other thread, see close().
+     */
+    void requestClose();
+
+    /**
      * Close the socket and notify the disconnect handler.
+     * Must be called in the event loop thread only, because the disconnect
+     * handler may destroy this client.
      */
     void handleDisconnect();
 };

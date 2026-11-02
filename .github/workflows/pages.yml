@@ -1,0 +1,122 @@
+name: Publish GitHub Pages
+
+on:
+    # Called by the release pipeline, right after the release was created.
+    workflow_call:
+        inputs:
+            source_ref:
+                description: Branch or tag the installer frontend is built from.
+                required: true
+                type: string
+            release_tag:
+                description: Stable release tag preselected in the installer. Empty uses the latest stable release.
+                required: false
+                default: ""
+                type: string
+
+    # Allows you to publish the installer manually from the Actions tab,
+    # e.g. after a frontend change without a new firmware release.
+    workflow_dispatch:
+        inputs:
+            source_ref:
+                description: Branch or tag the installer frontend is built from.
+                required: true
+                type: string
+                default: Development
+            release_tag:
+                description: Stable release tag preselected in the installer. Empty uses the latest stable release.
+                required: false
+                type: string
+                default: ""
+
+concurrency:
+    group: github-pages
+    cancel-in-progress: false
+
+jobs:
+    deploy_pages:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: Checkout selected branch or tag
+              uses: actions/checkout@v6
+              with:
+                  ref: ${{ inputs.source_ref }}
+
+            - name: Configure GitHub Pages
+              uses: actions/configure-pages@v5
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+                  cache: npm
+                  cache-dependency-path: usb-installer/package-lock.json
+
+            - name: Build installer
+              working-directory: usb-installer
+              run: |
+                  npm ci
+                  npm run build
+
+            - name: List releases
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --exclude-drafts \
+                    --json tagName,isPrerelease,publishedAt > releases-meta.json
+
+            - name: Download release USB packages
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  # Releases without USB flash packages archive are skipped by the assembly script.
+                  for TAG in $(python scripts/prepare_usb_installer.py list-tags --releases-meta releases-meta.json); do
+                    ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${TAG}-usb-flash-packages.zip"
+                    if gh release download "$TAG" \
+                      --repo "$GITHUB_REPOSITORY" \
+                      --pattern "$ARCHIVE_NAME" \
+                      --dir "downloads/$TAG"; then
+                      mkdir -p "releases/$TAG"
+                      unzip -q "downloads/$TAG/$ARCHIVE_NAME" -d "releases/$TAG"
+                    else
+                      echo "::warning::No USB flash packages for release $TAG"
+                    fi
+                  done
+
+            - name: Assemble Pages site
+              env:
+                  DEFAULT_TAG: ${{ inputs.release_tag }}
+              run: |
+                  python scripts/prepare_usb_installer.py assemble \
+                    --releases-dir releases \
+                    --releases-meta releases-meta.json \
+                    --site-dir site \
+                    --default-tag "$DEFAULT_TAG"
+
+            - name: Check Pages size
+              run: |
+                  SIZE_MB=$(du -sm site | cut -f1)
+                  echo "Pages site size: ${SIZE_MB} MB"
+                  if [ "$SIZE_MB" -gt 800 ]; then
+                    echo "Pages site exceeds 800 MB (GitHub Pages limit is 1 GB); reduce the number of offered releases." >&2
+                    exit 1
+                  fi
+
+            - name: Add Home Assistant blueprints
+              run: cp doc/homeassistant/blueprint/*.yaml site/
+
+            - name: Upload Pages artifact
+              uses: actions/upload-pages-artifact@v4
+              with:
+                  path: site
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

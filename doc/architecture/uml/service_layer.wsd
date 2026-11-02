@@ -1,98 +1,102 @@
 @startuml service_layer
 
-skinparam component {
-    BackgroundColor<<Arduino>> Lightgreen
-    BackgroundColor<<Future>> White
-    BackgroundColor<<Generated>> Orange
+title Service Layer
+
+' Every component in the "Services" package realizes IService.
+' The lifecycle itself is shown in service_lifecycle.wsd.
+
+skinparam nodesep 20
+skinparam ranksep 45
+
+<style>
+component {
+    .arduino {
+        BackGroundColor Lightgreen
+    }
+    .generated {
+        BackGroundColor Orange
+    }
 }
+</style>
 
 package "Service" as servicePckg {
-    component "RestApi" as restApi
-    component "RestUtil" as restUtil
-    component "WebSocket" as webSocket
 
-    package "MqttService" {
-        component "MqttService" as mqttService
-    }
+    package "Services\n(all realize IService)" as servicesPckg {
 
-    package "SettingsService" {
         component "SettingsService" as settingsService
-    }
-
-    package "RestService" {
+        component "FileMgrService" as fileMgrService
+        component "HttpService" as httpService
         component "RestService" as restService
-    }
-
-    component "MyWebServer" as myWebServer
-    component "Pages" as pages
-    component "AsyncHttpClient" as asyncHttpClient
-    component "CaptivePortalHandler" as captivePortalHandler
-
-    package "AudioService" as audioServicePckg {
-        component "SpectrumAnalyzer" as spectrumAnalyzer
-        component "AudioToneDetector" as audioToneDetector
-        component "AudioService" as audioService
-
-        audioService ..> spectrumAnalyzer
-        audioService ..> audioToneDetector
-    }
-
-    package "TopicHandlerService" as topicHandlerServicePckg {
+        component "MqttService" as mqttService
+        component "MelodyService" as melodyService
+        component "TimerService" as timerService
         component "TopicHandlerService" as topicHandlerService
-        component "TopicHandlers" as topicHandler <<Generated>>
-
-        topicHandlerService ..> topicHandler
+        component "AudioService" as audioService
     }
 
-    package FadeEffects    
-    package YAWidgets
-    package YAGfx
-    package BaseGfx
+    package "Topic handling" as topicHandlingPckg {
 
-    FadeEffects ..> YAGfx
-    YAWidgets ..> YAGfx
-    YAGfx ..> BaseGfx
+        interface "ITopicHandler" as iTopicHandler
+        component "RestApiTopicHandler" as restApiTopicHandler
+        component "MqttApiTopicHandler" as mqttApiTopicHandler
+        component "TopicHandlers" <<generated>> as topicHandlers
+    }
 
-    package "3rd party" as service3rdPartyPckg {
+    package "Graphics" as gfxPckg {
+
+        component "BaseGfx" as baseGfx
+        component "YAGfx" as yaGfx
+        component "YAWidgets" as yaWidgets
+        component "Views" as views
+        component "FadeEffects" as fadeEffects
+        component "Fonts" as fonts
+    }
+
+    package "3rd party" as thirdPartyPckg {
+
+        component "Preferences" <<arduino>> as preferences
+        component "FS" <<arduino>> as fs
         component "PubSubClient" as pubSubClient
-        component "FS" as fs <<Arduino>>
-        component "Preferences" as preferences <<Arduino>>
-        component "NTP" as ntp <<Arduino>>
-
-        component "EspAsyncWebServer" as webServer
-        component "AsyncTcpSock" as tcp
-        component "mDNS" as dns <<Arduino>>
-        component "LwIP" <<Arduino>> as lwip
-        component "ArduinoFFT" as fft
-
-        webServer ..> tcp
-        pubSubClient ..> tcp
-        tcp ..> lwip
-        dns ..> lwip
-        ntp ..> lwip
+        component "HTTPClient" <<arduino>> as httpClient
+        component "ArduinoFFT" as arduinoFft
     }
-
-    package "WsCommand" as wsCommand {
-    }
-
-    myWebServer ...> webServer
-    pages ...> webServer
-    asyncHttpClient ....> tcp
-    captivePortalHandler ...> webServer
-
-    spectrumAnalyzer ....> fft
-
-    restApi ...> webServer
-    mqttService ......> pubSubClient
-    webSocket ...> webServer
-    settingsService ......> preferences
-    restService ...> asyncHttpClient
-
-    restApi ..> restUtil
-
-    webSocket ..> wsCommand
-
-    wsCommand ..> webServer
 }
+
+' --- Topic handling ---
+
+restApiTopicHandler ..|> iTopicHandler
+mqttApiTopicHandler ..|> iTopicHandler
+topicHandlers ..> restApiTopicHandler: <<use>>
+topicHandlers ..> mqttApiTopicHandler: <<use>>
+topicHandlerService o-right-> iTopicHandler
+mqttApiTopicHandler ..> mqttService: <<use>>
+
+' --- Service collaboration ---
+
+settingsService ..> preferences: <<use>>
+fileMgrService ..> fs: <<use>>
+fileMgrService ..> topicHandlerService: <<use>>
+mqttService ..> pubSubClient: <<use>>
+restService ..> httpService: <<use>>
+httpService ..> httpClient: <<use>>
+audioService ..> arduinoFft: <<use>>
+timerService ..> settingsService: <<use>>
+mqttService ..> settingsService: <<use>>
+
+' --- Graphics stack ---
+
+yaGfx ..> baseGfx: <<use>>
+yaWidgets ..> yaGfx: <<use>>
+yaWidgets ..> fonts: <<use>>
+views ..> yaWidgets: <<use>>
+fadeEffects ..> yaGfx: <<use>>
+
+legend bottom
+    AudioService is the only service which is not started by the generated
+    Services facade. Plugins which need audio start and stop it on demand.
+    ----
+    The graphics stack is passive. It is used by the display manager
+    and by the plugin views.
+endlegend
 
 @enduml

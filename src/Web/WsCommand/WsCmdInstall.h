@@ -67,7 +67,8 @@ public:
     WsCmdInstall() :
         WsCmd("INSTALL"),
         m_isError(false),
-        m_pluginName()
+        m_pluginName(),
+        m_alias()
     {
     }
 
@@ -97,6 +98,7 @@ private:
 
     bool   m_isError;    /**< Any error happened during parameter reception? */
     String m_pluginName; /**< Plugin name, which shall be installed. */
+    String m_alias;      /**< Plugin alias name, optional. */
 
     WsCmdInstall(const WsCmdInstall& cmd);
     WsCmdInstall& operator=(const WsCmdInstall& cmd);

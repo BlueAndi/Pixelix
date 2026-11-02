@@ -40,8 +40,24 @@
             </section>
 
             <section class="setup-flow" aria-label="Device setup">
-                <article class="step" id="step-board">
+                <article class="step" id="step-version">
                     <div class="step-number">01</div>
+                    <div class="step-body">
+                        <h2>Choose the version</h2>
+                        <label class="form-label" for="version-select">Pixelix version</label>
+                        <select class="form-select" id="version-select" disabled>
+                            <option>Loading versions…</option>
+                        </select>
+                        <p class="step-note" id="version-note">The latest stable release is preselected.</p>
+                        <div class="alert alert-warning" id="prerelease-warning" role="alert" hidden>
+                            <strong>Pre-release.</strong> This version is not recommended for productive use.
+                        </div>
+                    </div>
+                    <span class="step-state" id="version-state">WAITING</span>
+                </article>
+
+                <article class="step" id="step-board">
+                    <div class="step-number">02</div>
                     <div class="step-body">
                         <h2>Choose your board</h2>
                         <label class="form-label" for="board-select">Board and display configuration</label>
@@ -54,21 +70,27 @@
                 </article>
 
                 <article class="step" id="step-connect">
-                    <div class="step-number">02</div>
+                    <div class="step-number">03</div>
                     <div class="step-body">
                         <h2>Connect over USB</h2>
-                        <p>Use a data-capable USB cable. If automatic connection fails, hold BOOT while reconnecting the board.</p>
+                        <p>Use a data-capable USB cable and choose the device once. For ESP32 DevKit V1, see the bootloader steps below if automatic sync fails.</p>
                         <button class="btn button button-dark" id="connect-button" type="button" disabled>Choose USB device</button>
-                        <p class="step-note" id="chip-status" role="status">Chrome or Edge on desktop is required.</p>
+                        <p class="step-note" id="chip-status" role="status">A Chromium based desktop browser (Chrome, Edge, Opera, Brave) is required.</p>
+                        <p class="bootloader-note" id="bootloader-help">Most boards enter download mode automatically. If sync fails, follow the board-specific BOOT/RESET sequence.</p>
                     </div>
                     <span class="step-state" id="connect-state">WAITING</span>
                 </article>
 
                 <article class="step" id="step-flash">
-                    <div class="step-number">03</div>
+                    <div class="step-number">04</div>
                     <div class="step-body">
                         <h2>Install firmware</h2>
-                        <p>This erases the current flash, including stored settings. Keep the USB cable connected while Pixelix restarts.</p>
+                        <p>By default the complete flash is erased, which removes every setting of a previous installation. Keep the USB cable connected while Pixelix restarts.</p>
+                        <div class="form-check keep-settings">
+                            <input class="form-check-input" id="keep-settings" type="checkbox" />
+                            <label class="form-check-label" for="keep-settings">Keep settings (not recommended for initial Pixelix installation)</label>
+                        </div>
+                        <p class="step-note">Keeps the device settings stored in NVS: WiFi credentials, hostname, web login, brightness, timezone and so on. Slot configuration, MQTT, sensor calibration, timers and plugin configuration are reset in any case, because the filesystem image is always written.</p>
                         <button class="btn button button-accent" id="flash-button" type="button" disabled>Erase and install</button>
                         <div class="progress-wrap" id="progress-wrap" hidden>
                             <progress id="flash-progress" max="100" value="0"></progress>
@@ -79,10 +101,10 @@
                 </article>
 
                 <article class="step" id="step-wifi">
-                    <div class="step-number">04</div>
+                    <div class="step-number">05</div>
                     <div class="step-body">
                         <h2>Set up Wi-Fi</h2>
-                        <p id="wifi-intro">Keep the cable connected. After restart, reopen the serial port here; no unplugging is needed. If the browser asks, select the same device.</p>
+                        <p id="wifi-intro">Choose the USB device first. After firmware restart, this page reopens the same serial port; keep the cable connected. Some boards may ask you to select the device again.</p>
                         <button class="btn button button-dark" id="wifi-connect-button" type="button" disabled>Continue to Wi-Fi setup</button>
                         <p id="authorization-status" class="step-note" role="status"></p>
                         <form id="wifi-form" hidden>

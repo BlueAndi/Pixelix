@@ -1,86 +1,114 @@
 @startuml hal_layer
 
-skinparam component {
-    BackgroundColor<<Arduino>> Lightgreen
-}
+title Hardware Abstraction Layer
 
-package "Application" as appPkg {
+' A realization is a dashed line with a hollow triangle (UML 2.5.1, 11.6.4),
+' not a dependency with an <<implement>> keyword.
+
+skinparam nodesep 20
+skinparam ranksep 40
+
+<style>
+component {
+    .arduino {
+        BackGroundColor Lightgreen
+    }
+}
+</style>
+
+package "Application / Service" as userPckg {
     component "Display" as display
     component "SensorDataProvider" as sensorDataProvider
     component "AudioService" as audioService
 }
 
-package "HAL" as halPkg {
+package "HAL" as halPckg {
 
-    package "HalInterface" as halInterfacePkg {
-        component "IBoard" as iBoard
-        component "IDisplayDrv" as iDisplayDrv
-        component "IButtonDrv" as iButtonDrv
-        component "IBuzzerDrv" as iBuzzerDrv
-        component "ILedDrv" as iLedDrv
-        component "ISystemDrv" as iSystemDrv
+    package "HalInterface" as halInterfacePckg {
+        interface "IBoard" as iBoard
+        interface "IDisplayDrv" as iDisplayDrv
+        interface "IButtonDrv" as iButtonDrv
+        interface "IBuzzerDrv" as iBuzzerDrv
+        interface "ILedDrv" as iLedDrv
+        interface "ISystemDrv" as iSystemDrv
+        interface "ISensor" as iSensor
         component "Io" as io
     }
 
-    package "Common ESP32 drivers" as commonDriversPkg {
+    package "Common ESP32 drivers" as commonDriversPckg {
         component "ButtonDrv\n(HalEsp32)" as buttonDrv
         component "BuzzerDrv\n(HalEsp32)" as buzzerDrv
         component "SystemDrv\n(HalEsp32)" as systemDrv
         component "LedDrv\n(HalCommon)" as ledDrv
     }
 
-    package "Display HAL\n(selected at build time)" as displayHalPkg {
+    package "Board and display HAL\n(selected at build time)" as displayHalPckg {
         component "Board" as board
         component "DisplayDrv\n(HalLedMatrix)" as ledMatrixDisplayDrv
         component "DisplayDrv\n(HalHub75Esp32)" as hub75DisplayDrv
         component "DisplayDrv\n(HalTftDisplay)" as tftDisplayDrv
     }
 
-    package "Sensors" as sensorsPkg {
-        component "Sensors" as sensors
+    package "Sensors" as sensorsPckg {
         component "SensorBattery" as sensorBattery
         component "SensorDhtX" as sensorDhtX
         component "SensorLdr" as sensorLdr
         component "SensorSht3X" as sensorSht3X
     }
 
-    package "Platform libraries" as platformPkg {
-        component "NeoPixelBus" <<Arduino>> as neoPixelBus
-        component "ESP32-HUB75\nMatrixPanel-I2S-DMA" as hub75Library
-        component "TFT_eSPI" <<Arduino>> as tftEsPi
-        component "TwoWire" <<Arduino>> as twoWire
-        component "OneWire\n(Proprietary)" as oneWire
-        component "I2S" <<Arduino>> as i2s
+    package "Platform libraries" as platformPckg {
+        component "NeoPixelBus" <<arduino>> as neoPixelBus
+        component "ESP32-HUB75-\nMatrixPanel-I2S-DMA" as hub75Library
+        component "TFT_eSPI" <<arduino>> as tftEsPi
+        component "TwoWire" <<arduino>> as twoWire
+        component "OneWire" as oneWire
+        component "I2S" <<arduino>> as i2s
     }
-
-    board ..> iBoard: <<implement>>
-    board *--> buttonDrv
-    board *--> buzzerDrv
-    board *--> systemDrv
-    board *--> ledDrv
-    board o--> iDisplayDrv: selected driver
-
-    buttonDrv ..> iButtonDrv: <<implement>>
-    buzzerDrv ..> iBuzzerDrv: <<implement>>
-    systemDrv ..> iSystemDrv: <<implement>>
-    ledDrv ..> iLedDrv: <<implement>>
-    ledMatrixDisplayDrv ..> iDisplayDrv: <<implement>>
-    hub75DisplayDrv ..> iDisplayDrv: <<implement>>
-    tftDisplayDrv ..> iDisplayDrv: <<implement>>
-    ledMatrixDisplayDrv ..> neoPixelBus
-    hub75DisplayDrv ..> hub75Library
-    tftDisplayDrv ..> tftEsPi
-
-    sensorDataProvider ..> sensors
-    sensors *--> sensorBattery
-    sensors *--> sensorDhtX
-    sensors *--> sensorLdr
-    sensors *--> sensorSht3X
-    sensorSht3X ..> twoWire
-    sensorDhtX ..> oneWire
-
-    display ..> iDisplayDrv: <<use>>
-    audioService .....> i2s
 }
+
+' --- Realizations ---
+
+board ..|> iBoard
+
+buttonDrv ..|> iButtonDrv
+buzzerDrv ..|> iBuzzerDrv
+systemDrv ..|> iSystemDrv
+ledDrv ..|> iLedDrv
+
+ledMatrixDisplayDrv ..|> iDisplayDrv
+hub75DisplayDrv ..|> iDisplayDrv
+tftDisplayDrv ..|> iDisplayDrv
+
+sensorBattery ..|> iSensor
+sensorDhtX ..|> iSensor
+sensorLdr ..|> iSensor
+sensorSht3X ..|> iSensor
+
+' --- Composition and selection ---
+
+board *--> buttonDrv
+board *--> buzzerDrv
+board *--> systemDrv
+board *--> ledDrv
+board o--> "1" iDisplayDrv: selected driver
+
+' --- Usage ---
+
+display ..> iDisplayDrv: <<use>>
+sensorDataProvider ..> iSensor: <<use>>
+audioService ..> i2s: <<use>>
+
+ledMatrixDisplayDrv ..> neoPixelBus: <<use>>
+hub75DisplayDrv ..> hub75Library: <<use>>
+tftDisplayDrv ..> tftEsPi: <<use>>
+sensorSht3X ..> twoWire: <<use>>
+sensorDhtX ..> oneWire: <<use>>
+buttonDrv ..> io: <<use>>
+ledDrv ..> io: <<use>>
+
+legend bottom
+    Exactly one DisplayDrv is compiled in. Which one is decided by the
+    board environment in platformio.ini and config/display.ini.
+endlegend
 
 @enduml

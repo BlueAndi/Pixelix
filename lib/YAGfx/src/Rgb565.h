@@ -62,6 +62,10 @@
  *
  * The color intensity is not stored per pixel. Dimming is applied destructively
  * via dim().
+ *
+ * The class is a literal type: all constructors are constexpr and there is no
+ * user-provided destructor. A constexpr color or a constexpr color palette is
+ * therefore constructed at compile time and placed in flash instead of RAM.
  */
 class Rgb565
 {
@@ -76,15 +80,8 @@ public:
     /**
      * Constructs the color black.
      */
-    Rgb565() :
+    constexpr Rgb565() :
         m_color565(0U)
-    {
-    }
-
-    /**
-     * Destroys the color.
-     */
-    ~Rgb565()
     {
     }
 
@@ -95,7 +92,7 @@ public:
      * @param[in] green Green value
      * @param[in] blue  Blue value
      */
-    Rgb565(uint8_t red, uint8_t green, uint8_t blue) :
+    constexpr Rgb565(uint8_t red, uint8_t green, uint8_t blue) :
         m_color565(ColorUtil::to565(red, green, blue))
     {
     }
@@ -105,7 +102,7 @@ public:
      *
      * @param[in] value Color value in 24 bit format
      */
-    Rgb565(uint32_t value) :
+    constexpr Rgb565(uint32_t value) :
         m_color565(ColorUtil::to565(value))
     {
     }
@@ -115,7 +112,7 @@ public:
      *
      * @param[in] color Color, which to copy
      */
-    Rgb565(const Rgb565& color) :
+    constexpr Rgb565(const Rgb565& color) :
         m_color565(color.m_color565)
     {
     }
@@ -210,7 +207,7 @@ public:
      *
      * @return Red value
      */
-    uint8_t getRed() const
+    constexpr uint8_t getRed() const
     {
         return ColorUtil::rgb565Red(m_color565);
     }
@@ -220,7 +217,7 @@ public:
      *
      * @return Green value
      */
-    uint8_t getGreen() const
+    constexpr uint8_t getGreen() const
     {
         return ColorUtil::rgb565Green(m_color565);
     }
@@ -230,7 +227,7 @@ public:
      *
      * @return Blue value
      */
-    uint8_t getBlue() const
+    constexpr uint8_t getBlue() const
     {
         return ColorUtil::rgb565Blue(m_color565);
     }
@@ -294,7 +291,7 @@ public:
      *
      * @return Color value (RGB) in 16 bit format
      */
-    uint16_t toRgb565() const
+    constexpr uint16_t toRgb565() const
     {
         return m_color565;
     }

@@ -44,6 +44,7 @@
 #include <Util.h>
 #include <math.h>
 #include <HttpStatus.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -104,7 +105,7 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst  jsonSourceId     = value["sourceId"];
@@ -582,11 +583,11 @@ bool OpenWeatherPlugin::startHttpRequest(const IOpenWeatherGeneric* source)
     return status;
 }
 
-bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
+RestService::PreProcessResult OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc)
 {
-    bool                       isSuccessful = false;
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    const IOpenWeatherGeneric* source = getWeatherSourceByStatus();
+    RestService::PreProcessResult result = RestService::PreProcessResult::FAILED;
+    MutexGuard<MutexRecursive>    guard(m_mutex);
+    const IOpenWeatherGeneric*    source = getWeatherSourceByStatus();
 
     if ((nullptr == payload) ||
         (0U == payloadSize))
@@ -595,7 +596,11 @@ bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
     }
     else if (nullptr != source)
     {
-        const size_t                    FILTER_SIZE = 640U;
+        /* Given in slots instead of byte, because a slot is 16 byte on the
+         * 32 bit target, but 32 byte on a 64 bit host. The largest filter is
+         * the one of the forecast sources and needs 36 slots.
+         */
+        const size_t                    FILTER_SIZE = JSON_OBJECT_SIZE(40U);
         StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
         source->getFilter(jsonFilterDoc);
@@ -606,16 +611,7 @@ bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
         }
         else
         {
-            DeserializationError error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-            if (DeserializationError::Ok != error.code())
-            {
-                LOG_WARNING("JSON parse error: %s", error.c_str());
-            }
-            else
-            {
-                isSuccessful = true;
-            }
+            result = RestService::toPreProcessResult(deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc)));
         }
     }
     else
@@ -623,7 +619,7 @@ bool OpenWeatherPlugin::preProcessAsyncWebResponse(const char* payload, size_t p
         LOG_WARNING("No active OpenWeather source for response preprocessing.");
     }
 
-    return isSuccessful;
+    return result;
 }
 
 void OpenWeatherPlugin::handleWebResponse(const PsramJsonDocument& jsonDoc)

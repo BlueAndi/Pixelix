@@ -40,6 +40,7 @@
 #include <Util.h>
 
 #include "../common/YAGfxTest.hpp"
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -266,7 +267,7 @@ static void testConfigPersistence()
  */
 static void testTopics()
 {
-    const size_t        JSON_DOC_SIZE = 1024U;
+    const size_t        JSON_DOC_SIZE = Json::getJsonSize(1024U);
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     IconTextPlugin      plugin(PLUGIN_NAME, PLUGIN_UID);
 

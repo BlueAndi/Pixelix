@@ -8,6 +8,8 @@
 
 - [What must be done?](#what-must-be-done)
 - [Optional](#optional)
+- [Home Assistant MQTT discovery](#home-assistant-mqtt-discovery)
+  - [Placeholders](#placeholders)
 - [Rules](#rules)
 - [Recommendations](#recommendations)
 - [Typical use cases](#typical-use-cases)
@@ -77,6 +79,61 @@ Example:
 ```
 
 Note, the file paths are relative from ```/lib/<plugin-name>```.
+
+## Home Assistant MQTT discovery
+
+A plugin topic can provide the information which Home Assistant needs for its [MQTT discovery](https://www.home-assistant.io/integrations/mqtt). Add the ```extra``` key with the ```ha``` sub-key to the topic in the ```getTopics()``` method and let it point to a discovery file in the filesystem:
+
+```cpp
+void MultiIconPlugin::getTopics(JsonArray& topics) const
+{
+    uint8_t slotId;
+
+    for (slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+    {
+        JsonObject jsonSlot     = topics.createNestedObject();
+
+        jsonSlot["name"]        = String(TOPIC_SLOT) + "/" + slotId;
+        jsonSlot["extra"]["ha"] = TOPIC_SLOT_EXTRA_HA_FILE_NAME; /* "/extra/multiIconPlugin.json" */
+    }
+}
+```
+
+The discovery files are located in ```/data/extra``` and are part of the filesystem image. After a change the filesystem image must be built and uploaded again, see ```--target buildfs``` and ```--target uploadfs```.
+
+A discovery file is a JSON array. Every array element describes one Home Assistant entity, therefore a single topic may be shown as several entities. The ```component``` is the Home Assistant component type and the ```discovery``` object is taken over unchanged into the discovery message. See the [Home Assistant discovery payload](https://www.home-assistant.io/integrations/mqtt/#discovery-payload) for the supported (abbreviated) keys.
+
+```json
+[
+    {
+        "component": "text",
+        "discovery": {
+            "name": "%ALIAS% %TOPIC%",
+            "ic": "mdi:image-outline",
+            "max": 255,
+            "cmd_tpl": "{\"fileName\": \"{{ value }}\" }",
+            "val_tpl": "{{ value_json.fileName }}"
+        }
+    }
+]
+```
+
+### Placeholders
+
+The ```name``` supports placeholders, which are expanded every time the discovery message is published:
+
+| Placeholder | Replaced by |
+| ----------- | ----------- |
+| ```%ALIAS%``` | The alias of the plugin instance, e.g. ```myIcons```. |
+| ```%TOPIC%``` | The topic, where the hierarchy separator ```/``` is replaced by a space. The topic ```slot/0``` becomes ```slot 0```. |
+
+Use ```%TOPIC%``` whenever a plugin registers the same discovery file for more than one topic. Without it every entity would get the same name and the user can not tell them apart in Home Assistant. The MultiIconPlugin registers the topics ```slot/0``` ... ```slot/3```, therefore
+
+```json
+"name": "%ALIAS% %TOPIC%"
+```
+
+results in the entity names ```myIcons slot 0``` ... ```myIcons slot 3```.
 
 ## Rules
 

@@ -144,6 +144,22 @@ public:
     }
 
     /**
+     * Set widget width.
+     *
+     * @param[in] width Width in pixel
+     */
+    void setWidth(uint16_t width) override
+    {
+        Widget::setWidth(width);
+
+        /* Only a text size which was limited by the widget width depends on it. */
+        if (true == m_isTextSizeLimited)
+        {
+            m_isTextSizeValid = false;
+        }
+    }
+
+    /**
      * Set the text string. It can contain format tags like "#RRGGBB" color
      * information in RGB888 format.
      *
@@ -183,6 +199,11 @@ public:
      * Get the bounding box of the text which is currently shown. A pending new
      * text is not considered, because it is shown after the transition only.
      *
+     * The size is cached, because it is requested every display update by a
+     * scrollable view and changes only with the text, the font or the widget
+     * width. Without the cache the plain text would be rebuilt into a new
+     * string on every update, which churns the heap.
+     *
      * @param[out] width  Text width in pixels.
      * @param[out] height Text height in pixels.
      * @param[in]  limitWidth  If true, use the widget width for wrapping.
@@ -205,7 +226,32 @@ public:
     {
         return (true == m_prepareNewText) ||
                (true == m_updateText) ||
-               (FADE_STATE_OUT == m_fadeState);
+               (FADE_STATE_OUT == m_fadeState) ||
+               (true == m_isTextChanged);
+    }
+
+    /**
+     * Was the shown text replaced by a new one since the last acknowledge?
+     *
+     * The text is replaced during the paint. A layout which is derived from
+     * the text size, e.g. the scrolling content, is therefore based on the
+     * previous text until it is measured again. The transition is considered
+     * active until the change is acknowledged, see clearTextChanged().
+     *
+     * @return If the text was replaced, it will return true otherwise false.
+     */
+    bool isTextChanged() const
+    {
+        return m_isTextChanged;
+    }
+
+    /**
+     * Acknowledge the text change, after the layout was adapted to the new
+     * text.
+     */
+    void clearTextChanged()
+    {
+        m_isTextChanged = false;
     }
 
     /**
@@ -291,7 +337,8 @@ public:
     void setFont(const YAFont& font)
     {
         m_gfxText.setFont(font);
-        m_prepareNewText = true;
+        m_prepareNewText  = true;
+        m_isTextSizeValid = false;
     }
 
     /**
@@ -418,6 +465,12 @@ private:
     uint16_t                 m_textHeightNew;       /**< Text height in pixel for new text */
     bool                     m_prepareNewText;      /**< User set new text, which shall be prepared. */
     bool                     m_updateText;          /**< New text is prepared shall be updated. */
+    bool                     m_isTextChanged;       /**< The shown text was replaced and the change is not acknowledged yet. */
+    bool                     m_isTextSizeValid;     /**< Is the cached text size valid? */
+    bool                     m_isTextSizeLimited;   /**< Was the cached text size determined with the widget width as limit? */
+    bool                     m_textSizeStatus;      /**< Cached result of the text size determination. */
+    uint16_t                 m_textSizeWidth;       /**< Cached text width in pixel. */
+    uint16_t                 m_textSizeHeight;      /**< Cached text height in pixel. */
     TWAbstractSyntaxTree     m_ast;                 /**< AST for the current format string. Encoding: Internal */
     TWAbstractSyntaxTree     m_astNew;              /**< AST for the new format string. Encoding: Internal */
     YAGfxSolidBrush          m_solidBrush;          /**< Solid text color brush. */

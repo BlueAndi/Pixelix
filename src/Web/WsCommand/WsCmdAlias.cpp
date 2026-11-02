@@ -37,6 +37,7 @@
 #include "DisplayMgr.h"
 
 #include <Logging.h>
+#include <PluginAlias.hpp>
 #include <Util.h>
 
 /******************************************************************************
@@ -77,20 +78,32 @@ void WsCmdAlias::execute(AsyncWebSocket* server, uint32_t clientId)
     }
     else
     {
-        String msg;
+        String              msg;
+        PluginAlias::Result result = PluginAlias::RESULT_OK;
 
         if (2U == m_parCnt)
         {
-            (void)DisplayMgr::getInstance().setPluginAliasName(m_pluginUid, m_alias);
+            result = DisplayMgr::getInstance().setPluginAliasName(m_pluginUid, m_alias);
         }
 
-        preparePositiveResponse(msg);
+        if (PluginAlias::RESULT_INVALID == result)
+        {
+            sendNegativeResponse(server, clientId, "\"Alias invalid.\"");
+        }
+        else if (PluginAlias::RESULT_IN_USE == result)
+        {
+            sendNegativeResponse(server, clientId, "\"Alias already in use.\"");
+        }
+        else
+        {
+            preparePositiveResponse(msg);
 
-        msg += "\"";
-        msg += DisplayMgr::getInstance().getPluginAliasName(m_pluginUid);
-        msg += "\"";
+            msg += "\"";
+            msg += DisplayMgr::getInstance().getPluginAliasName(m_pluginUid);
+            msg += "\"";
 
-        sendResponse(server, clientId, msg);
+            sendResponse(server, clientId, msg);
+        }
     }
 
     m_isError = false;

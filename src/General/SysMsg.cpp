@@ -67,7 +67,10 @@ bool SysMsg::init()
 {
     bool status = false;
 
-    m_plugin    = static_cast<SysMsgPlugin*>(PluginMgr::getInstance().install("SysMsgPlugin"));
+    /* A fixed alias, because a generated default would depend on the creation order
+     * and would not be stable across configurations.
+     */
+    m_plugin    = static_cast<SysMsgPlugin*>(PluginMgr::getInstance().install("SysMsgPlugin", SlotList::SLOT_ID_INVALID, "_sysmsg"));
 
     if (nullptr != m_plugin)
     {
@@ -92,16 +95,17 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
         uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
 
         /* Important: Call first show() to enable plugin. Otherwise the slot activation request will fail. */
-        m_plugin->show(msg, duration, max);
+        (void)m_plugin->show(msg, duration, max);
 
         if (false == displayMgr.activateSlot(slotId))
         {
             bool isRecovered = false;
 
-            if (SlotList::SLOT_ID_INVALID != displayMgr.getStickySlot())
-            {
-                displayMgr.clearSticky();
-            }
+            /* A sticky slot prevents the activation. Suspend the sticky flag
+             * instead of removing it, because the display manager restores it
+             * automatically after the system message is over.
+             */
+            displayMgr.suspendSticky(slotId);
 
             displayMgr.enableSlot(slotId);
             isRecovered = displayMgr.activateSlot(slotId);
@@ -115,6 +119,52 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
                 LOG_WARNING("System message activation recovered.");
             }
         }
+    }
+}
+
+bool SysMsg::showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume)
+{
+    bool isQueued = false;
+
+    if (nullptr != m_plugin)
+    {
+        DisplayMgr& displayMgr = DisplayMgr::getInstance();
+        uint8_t     slotId     = displayMgr.getSlotIdByPluginUID(m_plugin->getUID());
+
+        /* Important: Call first showNotification() to enable plugin. Otherwise the slot activation request will fail. */
+        isQueued               = m_plugin->showNotification(msg, duration, iconFileName, melody, volume);
+
+        if (true == isQueued)
+        {
+            if (false == displayMgr.activateSlot(slotId))
+            {
+                /* A sticky slot prevents the activation. Suspend the sticky flag instead of removing it, because the
+                 * display manager restores it automatically after the notification is over.
+                 */
+                displayMgr.suspendSticky(slotId);
+
+                displayMgr.enableSlot(slotId);
+
+                if (false == displayMgr.activateSlot(slotId))
+                {
+                    LOG_WARNING("Notification suppressed.");
+                }
+                else
+                {
+                    LOG_WARNING("Notification activation recovered.");
+                }
+            }
+        }
+    }
+
+    return isQueued;
+}
+
+void SysMsg::registerMelodyHandler(SysMsgPlugin::MelodyHandler handler)
+{
+    if (nullptr != m_plugin)
+    {
+        m_plugin->registerMelodyHandler(handler);
     }
 }
 

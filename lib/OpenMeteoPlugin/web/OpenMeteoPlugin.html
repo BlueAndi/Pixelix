@@ -69,8 +69,8 @@
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm" class="needs-validation" novalidate>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="pluginUid">Plugin UID:</label>
-                            <select class="form-select" id="pluginUid" size="1">
+                            <label class="form-label" for="pluginAlias">Plugin:</label>
+                            <select class="form-select" id="pluginAlias" size="1">
                             </select>
                         </div>
                         <div class="form-group mb-3">
@@ -182,22 +182,13 @@
                     for (let slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                            let optionText = rsp.data.slots[slotIndex].uid;
-                            optionText += " (";
-
-                            if (0 === rsp.data.slots[slotIndex].alias.length) {
-                                optionText += "-";
-                            } else {
-                                optionText += rsp.data.slots[slotIndex].alias;
-                            }
-
-                            optionText += ")";
+                            let optionText = rsp.data.slots[slotIndex].alias + " (slot " + slotIndex + ")";
 
                             const option = document.createElement("option");
-                            option.value = "" + rsp.data.slots[slotIndex].uid;
+                            option.value = rsp.data.slots[slotIndex].alias;
                             option.textContent = optionText;
 
-                            document.getElementById("pluginUid").appendChild(option);
+                            document.getElementById("pluginAlias").appendChild(option);
 
                             ++cnt;
                         }
@@ -232,12 +223,12 @@
                 }
             }
 
-            async function getConfig(pluginUid) {
+            async function getConfig(pluginAlias) {
                 disableUI();
                 try {
                     const rsp = await utils.makeRequest({
                         method: "GET",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/omweather",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/omweather",
                         isJsonResponse: true
                     });
                     document.getElementById("updatePeriod").value = rsp.data.updatePeriod;
@@ -264,13 +255,13 @@
                 return weatherInfo;
             }
 
-            async function setConfig(pluginUid) {
+            async function setConfig(pluginAlias) {
                 disableUI();
 
                 try {
                     const rsp = await utils.makeRequest({
                         method: "POST",
-                        url: restClient.getBaseUri() + "/display/uid/" + pluginUid + "/omweather",
+                        url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/omweather",
                         isJsonResponse: true,
                         parameter: {
                             updatePeriod: document.getElementById("updatePeriod").value,
@@ -307,11 +298,11 @@
                     }
                     form.classList.add('was-validated');
 
-                    setConfig(document.getElementById("pluginUid").value);
+                    setConfig(document.getElementById("pluginAlias").value);
                 });
 
-                document.getElementById("pluginUid").addEventListener("change", () => {
-                    getConfig(document.getElementById("pluginUid").value);
+                document.getElementById("pluginAlias").addEventListener("change", () => {
+                    getConfig(document.getElementById("pluginAlias").value);
                 });
 
                 /* Disable all forms, until the plugin instances are loaded. */
@@ -319,14 +310,14 @@
 
                 /* Load all plugin instances. */
                 const cnt = await getPluginInstances();
-                const select = document.getElementById("pluginUid");
+                const select = document.getElementById("pluginAlias");
 
                 if (0 < cnt) {
-                    /* Check if UID was passed in URL and auto-select it */
-                    const uidFromUrl = utils.getURLParameter('uid');
-                    if (uidFromUrl) {
+                    /* Check if the alias was passed in the URL and auto-select it */
+                    const aliasFromUrl = utils.getURLParameter('alias');
+                    if (aliasFromUrl) {
                         for (let i = 0; i < select.options.length; i++) {
-                            if (select.options[i].value === uidFromUrl) {
+                            if (select.options[i].value === aliasFromUrl) {
                                 select.selectedIndex = i;
                                 break;
                             }

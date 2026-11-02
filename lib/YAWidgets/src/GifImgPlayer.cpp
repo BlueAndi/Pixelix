@@ -1004,19 +1004,20 @@ bool GifImgPlayer::parseImageDescriptor()
                     [this](uint8_t data) -> bool {
                     return this->writeToIndexStream(data);
                 };
-                uint8_t blockTerminator = 0U;
+                uint8_t blockTerminator  = 0U;
+                bool    isTerminatorRead = false;
 
                 /* Reset data block before start decoding the next block. */
-                m_imageDataBlockIdx     = 0U;
-                m_imageDataBlockLength  = 0U;
+                m_imageDataBlockIdx      = 0U;
+                m_imageDataBlockLength   = 0U;
 
                 /* Reset coordinates used for drawing. */
-                m_posX                  = 0U;
-                m_posY                  = 0U;
+                m_posX                   = 0U;
+                m_posY                   = 0U;
 
                 /* Store interlace flag and reset interlace pass. */
-                m_isInterlaced          = (0U != imageDescriptor.packedField.interlaceFlag);
-                m_interlacePass         = 0U;
+                m_isInterlaced           = (0U != imageDescriptor.packedField.interlaceFlag);
+                m_interlacePass          = 0U;
 
                 /* Decode image data.
                  *
@@ -1041,13 +1042,29 @@ bool GifImgPlayer::parseImageDescriptor()
 
                     if (false == lzwDecoder.decode(readFromCodeStreamFunc, writeToIndexStreamFunc))
                     {
-                        isSuccessful = false;
+                        /* Some encoders omit the LZW end code. If the block terminator was reached
+                         * and the whole image is drawn, the frame is valid and the terminator is already consumed.
+                         */
+                        if ((0U == m_imageDataBlockLength) &&
+                            (false == m_isInterlaced) &&
+                            (m_canvas.getHeight() <= m_posY))
+                        {
+                            isTerminatorRead = true;
+                        }
+                        else
+                        {
+                            isSuccessful = false;
+                        }
                     }
 
                     lzwDecoder.deInit();
                 }
 
                 if (false == isSuccessful)
+                {
+                    /* Nothing to do. */
+                }
+                else if (true == isTerminatorRead)
                 {
                     /* Nothing to do. */
                 }

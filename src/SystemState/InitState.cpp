@@ -70,6 +70,7 @@
 #include <ESPmDNS.h>
 #include <SettingsService.h>
 #include <WiFiUtil.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -108,6 +109,12 @@ static const char WELCOME_PLUGIN_TYPE[]    = "IconTextPlugin";
  * exactly from the given path, therefore it must be complete.
  */
 static const char WELCOME_ICON_FILE_NAME[] = "/configuration/smiley.bmp";
+
+/* Full path of the animated logo, copied by the build to fit the display layout. */
+const char* InitState::LOGO_FILE_NAME      = "/images/LogoStartup.gif";
+
+/* The logo as plain text, used as fallback if no logo file is available. */
+const char* InitState::LOGO_TEXT           = "{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}{vm 1}:{vm -1}.";
 
 /******************************************************************************
  * Public Methods
@@ -226,23 +233,18 @@ void InitState::entry(StateMachine& sm)
             settings.close();
         }
 
-        /* Load some general configuration parameters from persistent memory. */
-        if (true == settings.open(true))
-        {
-            /* Set text scroll pause for all text widgets. */
-            uint32_t scrollPause = settings.getScrollPause().getValue();
-            if (false == ScrollContainer::setScrollPause(scrollPause))
-            {
-                LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
-            }
+        /* Remember whether the device is able to connect to a remote wifi
+         * network at all. Without credentials the wifi access point is the
+         * only way for the user to configure the device.
+         */
+        m_hasWifiCredentials = (false == settings.getWifiSSID().getValueFromRam().isEmpty()) &&
+                               (false == settings.getWifiPassphrase().getValueFromRam().isEmpty());
 
-            m_isQuiet = settings.getQuietMode().getValue();
-
-            settings.close();
-        }
-        else
+        /* Set text scroll pause for all text widgets. */
+        uint32_t scrollPause = settings.getScrollPause().getValueFromRam();
+        if (false == ScrollContainer::setScrollPause(scrollPause))
         {
-            m_isQuiet = settings.getQuietMode().getDefault();
+            LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
         }
 
         configureViews();
@@ -254,7 +256,7 @@ void InitState::entry(StateMachine& sm)
         WiFi.persistent(false);
 
         /* Show some informations on the display. */
-        showStartupInfoOnDisplay(m_isQuiet);
+        showStartupInfoOnDisplay(settings.getQuietMode().getValueFromRam());
 
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (false == isFsCompatible())
@@ -267,7 +269,7 @@ void InitState::entry(StateMachine& sm)
 
             LOG_WARNING(errMsg);
 
-            if (false == m_isQuiet)
+            if (false == settings.getQuietMode().getValueFromRam())
             {
                 SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
                 SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
@@ -287,7 +289,7 @@ void InitState::entry(StateMachine& sm)
         /* Stay for a minium time in this state.
          * This is only to give the user the chance to enter access point mode.
          */
-        m_timer.start(SHOW_LOGO_DURATION);
+        m_timer.start(MIN_STAY_DURATION);
     }
 }
 
@@ -307,8 +309,15 @@ void InitState::process(StateMachine& sm)
         }
     }
 
+    /* No remote wifi network credentials available? The wifi access point is
+     * the only way to configure the device, therefore the button is ignored.
+     */
+    if (false == m_hasWifiCredentials)
+    {
+        m_isApModeRequested = true;
+    }
     /* Connect to a remote wifi network? */
-    if (BUTTON_STATE_RELEASED == buttonState)
+    else if (BUTTON_STATE_RELEASED == buttonState)
     {
         m_isApModeRequested = false;
         DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_ALL, IIndicatorView::State::STATE_OFF);
@@ -327,8 +336,11 @@ void InitState::process(StateMachine& sm)
 
     Services::processAll();
 
-    /* Leave this state? */
-    if (true == m_timer.isTimeout())
+    /* Leave this state? Leaving while the startup messages are shown would cut them off,
+     * because the display manager skips the queued messages on a slot change.
+     */
+    if ((true == m_timer.isTimeout()) &&
+        (false == SysMsg::getInstance().isActive()))
     {
         m_timer.stop();
 
@@ -350,21 +362,7 @@ void InitState::exit(StateMachine& sm)
     {
         SettingsService& settings = SettingsService::getInstance();
         wifi_mode_t      wifiMode = WIFI_MODE_NULL;
-        String           hostname;
-
-        /* Get hostname for mDNS. */
-        if (false == settings.open(true))
-        {
-            LOG_WARNING("Use default hostname.");
-
-            hostname = settings.getHostname().getDefault();
-        }
-        else
-        {
-            hostname = settings.getHostname().getValue();
-
-            settings.close();
-        }
+        String           hostname = settings.getHostname().getValueFromRam();
 
         /* Start wifi and initialize the LwIP stack here. */
         if (false == m_isApModeRequested)
@@ -414,7 +412,7 @@ void InitState::exit(StateMachine& sm)
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
             {
-                if (false == m_isQuiet)
+                if (false == settings.getQuietMode().getValueFromRam())
                 {
                     const uint32_t MIN_WAIT_TIME = 500U; /* Min. wait time in ms to avoid splash screen. */
 
@@ -503,10 +501,23 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     const uint32_t SCROLLING_REPEAT_NUM   = 1U;
     const uint32_t DURATION_PAUSE         = 500U; /* ms */
     const uint32_t SCROLLING_NO_REPEAT    = 0U;
+    const uint8_t  NO_VOLUME              = 0U;
     SysMsg&        sysMsg                 = SysMsg::getInstance();
 
-    /* Show colored PIXELIX */
-    sysMsg.show("{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}{vm 1}:{vm -1}.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    /* Show the animated logo. Without a text the view shows the icon over the
+     * whole display. The logo is never scaled, therefore the build provides
+     * the one which fits to the display layout.
+     */
+    if (false == FILESYSTEM.exists(LOGO_FILE_NAME))
+    {
+        LOG_WARNING("No startup logo (%s), showing it as text.", LOGO_FILE_NAME);
+
+        sysMsg.show(LOGO_TEXT, SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    }
+    else
+    {
+        (void)sysMsg.showNotification("", SHOW_LOGO_DURATION, LOGO_FILE_NAME, String(), NO_VOLUME);
+    }
 
     if (false == isQuietEnabled)
     {
@@ -530,12 +541,7 @@ void InitState::welcome(bool isVeryFirstStart)
     {
         PluginMgr& pluginMgr = PluginMgr::getInstance();
 
-        welcomePlugin        = static_cast<IconTextPlugin*>(pluginMgr.install(WELCOME_PLUGIN_TYPE));
-
-        if (nullptr != welcomePlugin)
-        {
-            pluginMgr.setPluginAliasName(welcomePlugin, WELCOME_PLUGIN_ALIAS);
-        }
+        welcomePlugin        = static_cast<IconTextPlugin*>(pluginMgr.install(WELCOME_PLUGIN_TYPE, SlotList::SLOT_ID_INVALID, WELCOME_PLUGIN_ALIAS));
     }
     else
     {
@@ -564,7 +570,7 @@ bool InitState::isFsCompatible()
 {
     bool              isCompatible = false;
     JsonFile          jsonFile(FILESYSTEM);
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
@@ -620,22 +626,17 @@ void InitState::configureViews()
     bool             linearGradientColor1Status = false;
     bool             linearGradientColor2Status = false;
 
-    if (true == settings.open(true))
-    {
-        brushType               = settings.getBrushType().getValue();
-        solidBrushColorStr      = "0x" + settings.getSolidBrushColor().getValue();
-        linearGradientColor1Str = "0x" + settings.getLinearGradientColor1().getValue();
-        linearGradientColor2Str = "0x" + settings.getLinearGradientColor2().getValue();
-        linearGradientOffset    = settings.getLinearGradientOffset().getValue();
-        linearGradientLength    = settings.getLinearGradientLength().getValue();
-        linearGradientVertical  = settings.getLinearGradientVertical().getValue();
+    brushType                                   = settings.getBrushType().getValueFromRam();
+    solidBrushColorStr                          = "0x" + settings.getSolidBrushColor().getValueFromRam();
+    linearGradientColor1Str                     = "0x" + settings.getLinearGradientColor1().getValueFromRam();
+    linearGradientColor2Str                     = "0x" + settings.getLinearGradientColor2().getValueFromRam();
+    linearGradientOffset                        = settings.getLinearGradientOffset().getValueFromRam();
+    linearGradientLength                        = settings.getLinearGradientLength().getValueFromRam();
+    linearGradientVertical                      = settings.getLinearGradientVertical().getValueFromRam();
 
-        settings.close();
-    }
-
-    solidBrushColorStatus      = Util::strToUInt32(solidBrushColorStr, solidBrushColor);
-    linearGradientColor1Status = Util::strToUInt32(linearGradientColor1Str, linearGradientColor1);
-    linearGradientColor2Status = Util::strToUInt32(linearGradientColor2Str, linearGradientColor2);
+    solidBrushColorStatus                       = Util::strToUInt32(solidBrushColorStr, solidBrushColor);
+    linearGradientColor1Status                  = Util::strToUInt32(linearGradientColor1Str, linearGradientColor1);
+    linearGradientColor2Status                  = Util::strToUInt32(linearGradientColor2Str, linearGradientColor2);
 
     if (true == solidBrushColorStatus)
     {
@@ -672,21 +673,8 @@ void InitState::initClockDrv()
     String           timeZone;
     String           ntpServerAddress;
 
-    /* Get the time zone and the NTP server address from persistent memory. */
-    if (false == settings.open(true))
-    {
-        LOG_WARNING("Use default values for NTP request.");
-
-        timeZone         = settings.getTimeZone().getDefault();
-        ntpServerAddress = settings.getNTPServerAddress().getDefault();
-    }
-    else
-    {
-        timeZone         = settings.getTimeZone().getValue();
-        ntpServerAddress = settings.getNTPServerAddress().getValue();
-
-        settings.close();
-    }
+    timeZone         = settings.getTimeZone().getValueFromRam();
+    ntpServerAddress = settings.getNTPServerAddress().getValueFromRam();
 
     if (true == timeZone.isEmpty())
     {

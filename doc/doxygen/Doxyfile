@@ -1095,7 +1095,8 @@ EXCLUDE                = ../../lib/ArduinoNative \
                          ../../lib/HalHub75Esp32 \
                          ../../lib/HalTftDisplay \
                          ../../lib/Fonts/src/TomThumb.h \
-                         ../../lib/HalLedMatrixNative/src/imgui
+                         ../../lib/HalLedMatrixNative/src/imgui \
+                         ../../lib/libwebp
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -2532,7 +2533,8 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = __attribute__(x)= \
-                         IRAM_ATTR=
+                         IRAM_ATTR= \
+                         SDLCALL=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

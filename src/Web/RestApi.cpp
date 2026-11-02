@@ -58,6 +58,7 @@
 #include <PsramJsonDocument.hpp>
 #include <esp_core_dump.h>
 #include <esp_partition.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -118,7 +119,7 @@ static void                         handleSensors(AsyncWebServerRequest* request
 static void                         handleSettings(AsyncWebServerRequest* request);
 static void                         handleSetting(AsyncWebServerRequest* request);
 static bool                         storeSetting(KeyValue* parameter, const String& value, String& error);
-static void                         handleStatus(AsyncWebServerRequest* request);
+static void                         handleDevice(AsyncWebServerRequest* request);
 static void                         getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
 static void                         handleFilesystem(AsyncWebServerRequest* request);
 static void                         handleFileGet(AsyncWebServerRequest* request);
@@ -150,6 +151,7 @@ static const ContentTypeElem contentTypeTable[] = {
     { ".gif", "image/gif" },
     { ".jpg", "image/jpg" },
     { ".ico", "image/x-icon" },
+    { ".webp", "image/webp" },
     { ".gz", "application/x-gzip" }
 };
 
@@ -157,14 +159,14 @@ static const ContentTypeElem contentTypeTable[] = {
 static const RestApiRoute gRestApiRoutes[] = {
     { "/display/fadeEffect", HTTP_GET | HTTP_POST, handleFadeEffect, nullptr, nullptr },
     { "/display/slots", HTTP_GET, handleSlots, nullptr, nullptr },
-    { "/display/slot/*", HTTP_GET, handleSlot, nullptr, nullptr },
+    { "/display/slot/*", HTTP_GET | HTTP_POST, handleSlot, nullptr, nullptr },
     { "/plugin/install", HTTP_POST, handlePluginInstall, nullptr, nullptr },
     { "/plugin/uninstall", HTTP_POST, handlePluginUninstall, nullptr, nullptr },
     { "/plugins", HTTP_GET, handlePlugins, nullptr, nullptr },
     { "/sensors", HTTP_GET, handleSensors, nullptr, nullptr },
     { "/settings", HTTP_GET, handleSettings, nullptr, nullptr },
     { "/setting", HTTP_GET | HTTP_POST, handleSetting, nullptr, nullptr },
-    { "/status", HTTP_GET, handleStatus, nullptr, nullptr },
+    { "/device", HTTP_GET, handleDevice, nullptr, nullptr },
     { "/fs/file", HTTP_GET, handleFileGet, nullptr, nullptr },
     { "/fs/file", HTTP_POST, handleFilePost, uploadHandler, nullptr },
     { "/fs/file", HTTP_DELETE, handleFileDelete, nullptr, nullptr },
@@ -198,18 +200,8 @@ void RestApi::init(AsyncWebServer& srv)
     String           webLoginPassword;
     SettingsService& settings = SettingsService::getInstance();
 
-    if (false == settings.open(true))
-    {
-        webLoginUser     = settings.getWebLoginUser().getDefault();
-        webLoginPassword = settings.getWebLoginPassword().getDefault();
-    }
-    else
-    {
-        webLoginUser     = settings.getWebLoginUser().getValue();
-        webLoginPassword = settings.getWebLoginPassword().getValue();
-
-        settings.close();
-    }
+    webLoginUser              = settings.getWebLoginUser().getValueFromRam();
+    webLoginPassword          = settings.getWebLoginPassword().getValueFromRam();
 
     /* Register all REST API routes. */
     for (size_t idx = 0; idx < UTIL_ARRAY_NUM(gRestApiRoutes); ++idx)
@@ -235,7 +227,7 @@ void RestApi::init(AsyncWebServer& srv)
  */
 void RestApi::error(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
@@ -293,7 +285,7 @@ static bool parseStringBool(const String& str, bool& outValue)
 static void handleFadeEffect(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -363,7 +355,7 @@ static void handleSlots(AsyncWebServerRequest* request)
     /* Every slot is part of the response, therefore the required document size
      * depends on the number of slots.
      */
-    const size_t      JSON_DOC_SIZE = 512U + (static_cast<size_t>(maxSlots) * SLOT_INFO_DOC_SIZE);
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U + (static_cast<size_t>(maxSlots) * SLOT_INFO_DOC_SIZE));
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -406,7 +398,7 @@ static void handleSlots(AsyncWebServerRequest* request)
 static void handleSlot(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 1024U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -443,7 +435,7 @@ static void handleSlot(AsyncWebServerRequest* request)
                 httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
             }
             /* GET request? */
-            else if (HTTP_GET != request->method())
+            else if (HTTP_GET == request->method())
             {
                 JsonObject dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
@@ -586,7 +578,7 @@ static void handleSlot(AsyncWebServerRequest* request)
  */
 static void handlePluginInstall(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -611,7 +603,15 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
         else
         {
             const String&       pluginName = request->arg("name");
-            IPluginMaintenance* plugin     = PluginMgr::getInstance().install(pluginName.c_str());
+            String              alias;
+            IPluginMaintenance* plugin = nullptr;
+
+            if (true == request->hasArg("alias"))
+            {
+                alias = request->arg("alias");
+            }
+
+            plugin = PluginMgr::getInstance().install(pluginName.c_str(), SlotList::SLOT_ID_INVALID, alias);
 
             /* Plugin not found? */
             if (nullptr == plugin)
@@ -632,6 +632,7 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
                 /* Prepare response */
                 dataObj["slotId"] = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
                 dataObj["uid"]    = plugin->getUID();
+                dataObj["alias"]  = plugin->getAlias();
             }
         }
     }
@@ -647,7 +648,7 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
  */
 static void handlePluginUninstall(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -737,7 +738,7 @@ static void handlePlugins(AsyncWebServerRequest* request)
     /* The name of every plugin type is part of the response, therefore the
      * required document size depends on the number of plugin types.
      */
-    const size_t      JSON_DOC_SIZE                 = 512U + JSON_ARRAY_SIZE(pluginTypeListLength);
+    const size_t      JSON_DOC_SIZE                 = Json::getJsonSize(512U) + JSON_ARRAY_SIZE(pluginTypeListLength);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -779,7 +780,7 @@ static void handlePlugins(AsyncWebServerRequest* request)
  */
 static void handleSensors(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 2048U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(2048U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -846,7 +847,7 @@ static void handleSensors(AsyncWebServerRequest* request)
  */
 static void handleSettings(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 1024U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -894,7 +895,7 @@ static void handleSettings(AsyncWebServerRequest* request)
  */
 static void handleSetting(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 2048U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(2048U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
     SettingsService&  settings       = SettingsService::getInstance();
@@ -910,11 +911,6 @@ static void handleSetting(AsyncWebServerRequest* request)
         {
             RestUtil::prepareRspError(jsonDoc, "Key is missing.");
             httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else if (false == settings.open(true))
-        {
-            RestUtil::prepareRspError(jsonDoc, "Internal error.");
-            httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
         }
         else
         {
@@ -938,7 +934,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_STRING: {
                     KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
 
-                    dataObj["value"]      = kvStr->getValue();
+                    dataObj["value"]      = kvStr->getValueFromRam();
                     dataObj["minlength"]  = kvStr->getMinLength();
                     dataObj["maxlength"]  = kvStr->getMaxLength();
                     dataObj["isSecret"]   = kvStr->isSecret();
@@ -948,14 +944,14 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_BOOL: {
                     KeyValueBool* kvBool = static_cast<KeyValueBool*>(setting);
 
-                    dataObj["value"]     = kvBool->getValue();
+                    dataObj["value"]     = kvBool->getValueFromRam();
                 }
                 break;
 
                 case KeyValue::TYPE_UINT8: {
                     KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(setting);
 
-                    dataObj["value"]       = kvUInt8->getValue();
+                    dataObj["value"]       = kvUInt8->getValueFromRam();
                     dataObj["min"]         = kvUInt8->getMin();
                     dataObj["max"]         = kvUInt8->getMax();
                 }
@@ -964,7 +960,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_INT32: {
                     KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(setting);
 
-                    dataObj["value"]       = kvInt32->getValue();
+                    dataObj["value"]       = kvInt32->getValueFromRam();
                     dataObj["min"]         = kvInt32->getMin();
                     dataObj["max"]         = kvInt32->getMax();
                 }
@@ -974,7 +970,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                     KeyValueJson*        kvJson   = static_cast<KeyValueJson*>(setting);
                     JsonObject           valueObj = dataObj.createNestedObject("value");
                     PsramJsonDocument    jsonBuffer(JSON_DOC_SIZE);
-                    DeserializationError error = deserializeJson(jsonBuffer, kvJson->getValue());
+                    DeserializationError error = deserializeJson(jsonBuffer, kvJson->getValueFromRam());
 
                     if (DeserializationError::Ok != error.code())
                     {
@@ -994,7 +990,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 case KeyValue::TYPE_UINT32: {
                     KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(setting);
 
-                    dataObj["value"]         = kvUInt32->getValue();
+                    dataObj["value"]         = kvUInt32->getValueFromRam();
                     dataObj["min"]           = kvUInt32->getMin();
                     dataObj["max"]           = kvUInt32->getMax();
                 }
@@ -1004,8 +1000,6 @@ static void handleSetting(AsyncWebServerRequest* request)
                     break;
                 }
             }
-
-            settings.close();
         }
     }
     else if (HTTP_POST == request->method())
@@ -1292,15 +1286,15 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
 }
 
 /**
- * Get status information.
- * GET \c "/api/v1/status"
+ * Get device information.
+ * GET \c "/api/v1/device"
  *
  * @param[in] request   HTTP request
  */
-static void handleStatus(AsyncWebServerRequest* request)
+static void handleDevice(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 1024U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(1024U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1315,47 +1309,29 @@ static void handleStatus(AsyncWebServerRequest* request)
     }
     else
     {
-        String           ssid;
-        int8_t           rssi           = -100; /* [dbm] */
-        JsonVariant      dataObj        = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonObject       hwObj          = dataObj.createNestedObject("hardware");
-        JsonObject       swObj          = dataObj.createNestedObject("software");
-        JsonObject       internalRamObj = swObj.createNestedObject("internalRam");
-        JsonObject       wifiObj        = dataObj.createNestedObject("wifi");
-        SettingsService& settings       = SettingsService::getInstance();
-        ISystemDrv&      systemDrv      = Board::getInstance().getSystemDrv();
+        JsonVariant      dataObj   = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonObject       devObj    = dataObj.createNestedObject("device");
+        SettingsService& settings  = SettingsService::getInstance();
+        ISystemDrv&      systemDrv = Board::getInstance().getSystemDrv();
+        String           chipIdStr;
+        String           hostname;
 
-        /* Only in station mode it makes sense to retrieve the RSSI.
-         * Otherwise keep it -100 dbm.
+        systemDrv.getChipId(chipIdStr);
+
+        hostname               = settings.getHostname().getValueFromRam();
+
+        /* The id is required for identification in Home Assistant.
+         * Its used by the Home Assistant integration to uniquely identify the device.
+         *
+         * The following device block shall be identical to the MQTT device configuration.
          */
-        if (WIFI_MODE_STA == WiFi.getMode())
-        {
-            rssi = WiFi.RSSI();
-        }
-
-        if (true == settings.open(true))
-        {
-            ssid = settings.getWifiSSID().getValue();
-            settings.close();
-        }
-
-        /* Prepare response */
-        hwObj["chipRev"]                       = systemDrv.getChipRevision();
-        hwObj["cpuFreqMhz"]                    = systemDrv.getCpuFreqMHz();
-
-        swObj["version"]                       = Version::getSoftwareVersion();
-        swObj["revision"]                      = Version::getSoftwareRevision();
-        swObj["espSdkVersion"]                 = systemDrv.getSdkVersion();
-
-        internalRamObj["heapSize"]             = MemUtil::getTotalHeapSize();        /* [byte] */
-        internalRamObj["availableHeapSize"]    = MemUtil::getFreeHeapSize();         /* [byte] */
-        internalRamObj["minFreeHeapSize"]      = MemUtil::getMinFreeHeapSize();      /* [byte] */
-        internalRamObj["largestFreeBlockSize"] = MemUtil::getLargestFreeBlockSize(); /* [byte] */
-        internalRamObj["isPsramAvailable"]     = MemUtil::isPsramAvailable();        /* [byte] */
-
-        wifiObj["ssid"]                        = ssid;
-        wifiObj["rssi"]                        = rssi;                             /* [dbm] */
-        wifiObj["quality"]                     = WiFiUtil::getSignalQuality(rssi); /* [%] */
+        devObj["id"]           = chipIdStr;
+        devObj["model"]        = "Pixelix";
+        devObj["manufacturer"] = "BlueAndi & Friends";
+        devObj["name"]         = hostname;
+        devObj["swVersion"]    = Version::getSoftwareVersion();
+        devObj["hwVersion"]    = Version::getTargetName();
+        devObj["mac"]          = WiFi.macAddress();
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -1447,7 +1423,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
      */
     String            content;
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 4096U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(4096U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1514,7 +1490,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
  */
 static void handleFileGet(AsyncWebServerRequest* request)
 {
-    const size_t      JSON_DOC_SIZE = 512U;
+    const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1597,7 +1573,7 @@ static const char* getContentType(const String& filename)
 static void handleFilePost(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1693,7 +1669,7 @@ static void uploadHandler(AsyncWebServerRequest* request, const String& filename
 static void handleFileDelete(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -1930,7 +1906,7 @@ static bool isValidHostname(const String& hostname)
 static void handlePartitionChange(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     const uint32_t    RESTART_DELAY = 100U; /* ms */
 
@@ -2028,7 +2004,7 @@ static HomeAssistantDiscoveryStatus disableHomeAssistantAutomaticDiscovery()
 static void handleHomeAssistantAutomaticDiscoveryDisable(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -2085,20 +2061,15 @@ static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus()
     {
         if (KeyValue::TYPE_BOOL == kvHomeAssistantEnableDiscovery->getValueType())
         {
-            if (true == settings.open(true))
+            KeyValueBool* homeAssistantEnableDiscovery = static_cast<KeyValueBool*>(kvHomeAssistantEnableDiscovery);
+
+            if (true == homeAssistantEnableDiscovery->getValueFromRam())
             {
-                KeyValueBool* homeAssistantEnableDiscovery = static_cast<KeyValueBool*>(kvHomeAssistantEnableDiscovery);
-
-                if (true == homeAssistantEnableDiscovery->getValue())
-                {
-                    status = HA_ENABLED;
-                }
-                else
-                {
-                    status = HA_DISABLED;
-                }
-
-                settings.close();
+                status = HA_ENABLED;
+            }
+            else
+            {
+                status = HA_DISABLED;
             }
         }
     }
@@ -2118,7 +2089,7 @@ static HomeAssistantDiscoveryStatus getHomeAssistantAutomaticDiscoveryStatus()
 static void handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 512U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(512U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -2171,7 +2142,7 @@ static void handleHomeAssistantAutomaticDiscoveryStatus(AsyncWebServerRequest* r
 static void handleCoredump(AsyncWebServerRequest* request)
 {
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
-    const size_t      JSON_DOC_SIZE  = 2048U;
+    const size_t      JSON_DOC_SIZE  = Json::getJsonSize(2048U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)

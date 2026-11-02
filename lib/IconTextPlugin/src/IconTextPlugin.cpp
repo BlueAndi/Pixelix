@@ -38,6 +38,7 @@
 #include <FileSystem.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -116,7 +117,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
     {
         bool                storeFlag       = false;
         bool                isScrollIconSet = false;
-        const size_t        JSON_DOC_SIZE   = 512U;
+        const size_t        JSON_DOC_SIZE   = Json::getJsonSize(512U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg          = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonIconFileName = value["iconFileName"];

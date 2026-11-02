@@ -1,0 +1,3 @@
+# Test tools of the Pixelix Home Assistant integration. They need the Python
+# version which the Home Assistant version of the plugin requires.
+pytest-homeassistant-custom-component

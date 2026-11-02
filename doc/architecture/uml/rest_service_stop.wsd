@@ -1,48 +1,60 @@
-@startuml RestServiceStopped
+@startuml rest_service_stop
 
-participant Plugin
-participant RestService
-participant AsyncHttpClient
-participant "RestService::m_responseQueue" as ResponseQ
-participant "RestService::m_requestQueue" as RequestQ
+title REST Service - Service Stop
+
+' UML 2.5.1: a combined fragment with a single operand and a guard is
+' "opt", not an "alt" without an else operand.
+
+participant "ConcretePlugin" as plugin
+participant "RestService" as restService
+participant "HttpService" as httpService
 
 autoactivate on
 
--> RestService: stop()
-    RestService -> RestService: set m_isRunning = false
-    return 
+== Stop the service ==
 
-    RestService -> AsyncHttpClient: unregister Callbacks
-    RestService <-- AsyncHttpClient
+-> restService: stop()
 
-    RestService -> RequestQ: clear queue
-    RestService <-- RequestQ
+    restService -> httpService: abortJob(m_activeHttpJobId)
+    restService <-- httpService
 
-    RestService -> AsyncHttpClient: end()
-    RestService <-- AsyncHttpClient
+    restService -> restService: Clear m_requestQueue and m_responseQueue.
+    restService <-- restService
 
-    RestService -> ResponseQ: clear queue
-    RestService <-- ResponseQ
+    restService -> restService: Reset m_activeRestId, m_activeHttpJobId\nand the callback.
+    restService <-- restService
 
-    RestService -> RestService: reset m_activeRestId, m_activePreProcessCallback
-    return
-<-- RestService
+    restService -> restService: Destroy the mutex and set m_isRunning = false.
+    restService <-- restService
 
-Plugin <- : processTask
-    Plugin -> RestService: get()
-        alt false == m_isRunning
-            Plugin <-- RestService: false 
-        end
-    
-    Plugin -> RestService: getResponse()
-        alt false == m_isRunning
-            Plugin <-- RestService: empty, invalid response
-        end
+<-- restService
 
-    note over Plugin, RequestQ
-        Once the plugin calls getResponse(), its m_isAllowedToSend-flag will be reset leaving it in a safe state until the rest-service is started again. 
-        During that time rest-service does not accept any new requests.
-    end note 
-Plugin -->
+== Plugin behaviour while the service is stopped ==
+
+-> plugin: process(isConnected)
+
+    plugin -> restService: get(url, preProcessCallback)
+        opt false == m_isRunning
+            note over restService
+                No new request is accepted.
+            end note
+        end opt
+    plugin <-- restService: INVALID_REST_ID
+
+    plugin -> restService: getResponse(restId, isValidRsp, payload)
+        opt false == m_isRunning
+            note over restService
+                No response is delivered.
+            end note
+        end opt
+    plugin <-- restService: false
+
+    note over plugin, httpService
+        Once getResponse() returned false, the plugin resets its own
+        request state and stays in a safe state until the REST service
+        is started again.
+    end note
+
+<-- plugin
 
 @enduml

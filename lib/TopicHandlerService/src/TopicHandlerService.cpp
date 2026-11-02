@@ -39,6 +39,7 @@
 #include <Logging.h>
 #include <FileSystem.h>
 #include <JsonFile.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -123,7 +124,7 @@ void TopicHandlerService::registerTopics(const String& deviceId, const String& e
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
     {
-        const size_t        JSON_DOC_SIZE = 1024U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(1024U);
         DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
         JsonArray           jsonTopics = topicsDoc.createNestedArray("topics");
 
@@ -223,7 +224,7 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, const String&
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(512U);
         DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
         JsonArray           jsonTopics = topicsDoc.createNestedArray("topics");
 
@@ -324,7 +325,7 @@ void TopicHandlerService::registerTopic(const String& deviceId, const String& en
 
 void TopicHandlerService::registerTopic(const String& deviceId, const String& entityId, const String& topic, const char* extraFileName, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc)
 {
-    const size_t        JSON_DOC_SIZE = 1024U;
+    const size_t        JSON_DOC_SIZE = Json::getJsonSize(1024U);
     DynamicJsonDocument jsonDocExtra(JSON_DOC_SIZE);
     JsonObjectConst     jsonExtra;
 

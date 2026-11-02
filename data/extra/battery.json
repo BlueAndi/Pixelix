@@ -4,8 +4,9 @@
         "discovery": {
             "name": "Battery",
             "unit_of_meas": "%",
-            "ic": "mdi:battery-90",
             "dev_cla": "battery",
+            "stat_cla": "measurement",
+            "ent_cat": "diagnostic",
             "val_tpl": "{{ value_json.value }}"
         }
     }

@@ -1,130 +1,78 @@
 @startuml plugin-service-dynamic
 
-title Plugin Service
+title Plugin Concept - Install And Uninstall
 
-participant "App" as app
+' UML 2.5.1: a combined fragment with a single operand and a guard is "opt",
+' not an "alt" without an else operand.
+
+participant "Application" as app
 participant "PluginMgr" as pluginMgr
+participant "PluginFactory" as pluginFactory
 participant "DisplayMgr" as displayMgr
-participant "Plugin" as plugin
+participant "ConcretePlugin" as plugin
 participant "TopicHandlerService" as topicHandlerService
 
 autoactivate on
 
-note over app,topicHandlerService
-    Install plugin
-end note
+== Install a plugin ==
 
-app -> pluginMgr: Install concrete plugin.
-pluginMgr -> plugin: Create concrete plugin.
-plugin --> pluginMgr: Concrete plugin
-pluginMgr -> displayMgr: Install plugin in display slot.
+app -> pluginMgr: install(name, slotId, alias)
 
-alt Empty slot available
-    displayMgr -> displayMgr: Add plugin to available slot.
-    displayMgr <-- displayMgr
-    displayMgr -> plugin: Set slot interface.
-    plugin --> displayMgr
-    displayMgr -> plugin: Start plugin and provide display width and height.
-    plugin --> displayMgr
-    displayMgr --> pluginMgr: slot id
-    pluginMgr -> topicHandlerService: Register plugin topics
-        topicHandlerService -> plugin: Get topics
-        topicHandlerService <-- plugin: topics
+    pluginMgr -> pluginFactory: createPlugin(name, uid)
+    pluginMgr <-- pluginFactory: plugin
+
+    pluginMgr -> pluginMgr: determineAlias(name, alias, plugin)
+    pluginMgr <-- pluginMgr: unique alias
+
+    pluginMgr -> displayMgr: installPlugin(plugin, slotId)
+
+    alt empty slot available
+        displayMgr -> displayMgr: Add the plugin to the slot.
+        displayMgr <-- displayMgr
+        displayMgr -> plugin: setSlot(slotInterface)
+        displayMgr <-- plugin
+        displayMgr -> plugin: start(width, height)
+        displayMgr <-- plugin
+        displayMgr --> pluginMgr: slot id
+
+        pluginMgr -> topicHandlerService: registerTopics(deviceId, "display/plugin/<alias>", plugin)
+            topicHandlerService -> plugin: getTopics(topics)
+            topicHandlerService <-- plugin: topics
+        pluginMgr <-- topicHandlerService
+
+        pluginMgr --> app: plugin
+
+        opt the application wants the plugin visible
+            app -> plugin: enable()
+            plugin --> app
+        end opt
+
+    else no slot available
+        displayMgr --> pluginMgr: invalid slot id
+        pluginMgr -> pluginFactory: destroyPlugin(plugin)
+        pluginMgr <-- pluginFactory
+        pluginMgr --> app: nullptr
+    end alt
+
+== Uninstall a plugin ==
+
+app -> pluginMgr: uninstall(plugin)
+
+    pluginMgr -> topicHandlerService: unregisterTopics(deviceId, entityId, plugin, purge)
     pluginMgr <-- topicHandlerService
-    pluginMgr --> app: Concrete plugin
 
-    alt Depends on application
-        app -> plugin: Enable plugin.
-        plugin --> app
-    end alt
-else No slot available
-    displayMgr --> pluginMgr: invalid slot id
-    pluginMgr --> app: no plugin
-end alt
-
-note over app,topicHandlerService
-    Uninstall plugin
-end note
-
-app -> pluginMgr: Uninstall concrete plugin.
-pluginMgr -> displayMgr: Uninstall plugin.
-pluginMgr -> topicHandlerService: Unregister topics
-topicHandlerService --> pluginMgr
-displayMgr -> plugin: Stop plugin.
-plugin --> displayMgr
-displayMgr -> displayMgr: Remove plugin from slot.
-displayMgr -> plugin: Set invalid slot id.
-plugin --> displayMgr
-displayMgr --> pluginMgr
-pluginMgr -> pluginMgr: Destroy concrete plugin.
-pluginMgr --> app
-
-note over app,topicHandlerService
-    Plugin scheduler
-end note
-
-alt Plugin selected to show?
-
-    displayMgr -> displayMgr: Set selected slot, retrieved from selected plugin.
-    displayMgr <-- displayMgr
-
-    alt Selected plugin disabled in the meantime?
-        displayMgr -> displayMgr: Stop plugin duration timer.
+    pluginMgr -> displayMgr: uninstallPlugin(plugin)
+        displayMgr -> plugin: stop()
+        displayMgr <-- plugin
+        displayMgr -> displayMgr: Remove the plugin from the slot.
         displayMgr <-- displayMgr
-        displayMgr -> displayMgr: Clear selected plugin.
-        displayMgr <-- displayMgr
-    end alt
+        displayMgr -> plugin: setSlot(nullptr)
+        displayMgr <-- plugin
+    pluginMgr <-- displayMgr
 
-end alt
+    pluginMgr -> pluginFactory: destroyPlugin(plugin)
+    pluginMgr <-- pluginFactory
 
-alt No plugin selected?
-
-    displayMgr -> displayMgr: Find next slot with installed and enabled plugin.
-    displayMgr <-- displayMgr
-
-    alt Installed and enabled plugin found?
-        displayMgr -> displayMgr: Select plugin.
-        displayMgr <-- displayMgr
-        displayMgr -> plugin: Get how long slot shall be active.
-        plugin --> displayMgr: duration
-
-        alt Is duration not infinite?
-            displayMgr -> displayMgr: Start plugin duration timer.
-            displayMgr <-- displayMgr
-        end alt
-    end alt
-
-end alt
-
-loop For all installed plugins
-
-    alt Is plugin is enabled?
-
-        displayMgr -> plugin: Process plugin.
-        plugin --> displayMgr
-
-    end alt
-
-end loop
-
-displayMgr -> displayMgr: Clear display
-displayMgr <-- displayMgr
-
-alt Is a plugin selected?
-    displayMgr -> plugin: Call selected plugin to update framebuffer.
-    plugin --> displayMgr
-end alt
-
-displayMgr -> displayMgr: Update display with framebuffer.
-displayMgr <-- displayMgr
-
-alt Is plugin duration timer active?
-    alt Is plugin duration timer timeout?
-        displayMgr -> displayMgr: Stop plugin run duration timer.
-        displayMgr <-- displayMgr
-        displayMgr -> displayMgr: Clear selected plugin.
-        displayMgr <-- displayMgr
-    end alt
-end alt
+pluginMgr --> app: isSuccessful
 
 @enduml

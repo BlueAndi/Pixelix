@@ -41,6 +41,7 @@
 #include <Logging.h>
 #include <MqttService.h>
 #include <mbedtls/base64.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -74,6 +75,15 @@ const char* MqttApiTopicHandler::MQTT_ENDPOINT_WRITE_ACCESS = "/set";
 
 void MqttApiTopicHandler::start()
 {
+    /* The topic states are not published retained. After Home Assistant
+     * restarted, they are unknown to it until the next change. Therefore the
+     * Home Assistant extension requests to publish all of them again, as soon
+     * as Home Assistant reports itself as online.
+     */
+    m_haExtension.setRepublishStatesFunc([this]() {
+        this->requestToPublishAllTopicStates();
+    });
+
     m_haExtension.start();
 
     m_isStarted = true;
@@ -82,6 +92,7 @@ void MqttApiTopicHandler::start()
 void MqttApiTopicHandler::stop()
 {
     m_haExtension.stop();
+    m_haExtension.setRepublishStatesFunc(nullptr);
 
     m_isStarted = false;
 }
@@ -378,7 +389,7 @@ void MqttApiTopicHandler::publishTopicStatesOnDemand()
 
 void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    const size_t         JSON_DOC_SIZE = 4096U;
+    const size_t         JSON_DOC_SIZE = Json::getJsonSize(4096U);
     DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
     DeserializationError error = deserializeJson(jsonDoc, payload, size);
 
@@ -470,7 +481,7 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 {
     if (nullptr != getTopicFunc)
     {
-        const size_t        JSON_DOC_SIZE = 4096U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(4096U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonObj       = jsonDoc.createNestedObject("data");
         String              mqttTopicBase = getMqttBaseTopic(deviceId, entityId, topic);

@@ -171,6 +171,11 @@ static void testConstruction()
     empty = "Other";
     TEST_ASSERT_EQUAL_STRING("Other", empty.c_str());
 
+    /* A nullptr assignment results in an empty string and must not crash. */
+    empty = static_cast<const char*>(nullptr);
+    TEST_ASSERT_TRUE(empty.isEmpty());
+    TEST_ASSERT_EQUAL_STRING("", empty.c_str());
+
     TEST_ASSERT_TRUE(fromLiteral == copy);
     TEST_ASSERT_TRUE(fromLiteral != empty);
 
@@ -248,6 +253,23 @@ static void testConcat()
     str  = "value=";
     str += 42;
     TEST_ASSERT_EQUAL_STRING("value=42", str.c_str());
+
+    /* A nullptr is not appended and must not crash. */
+    str += static_cast<const char*>(nullptr);
+    TEST_ASSERT_EQUAL_STRING("value=42", str.c_str());
+
+    /* A floating point number is appended with 2 decimal places, like the
+     * concat and the Arduino do.
+     */
+    str  = "pi=";
+    str += 3.14159F;
+    TEST_ASSERT_EQUAL_STRING("pi=3.14", str.c_str());
+
+    str  = "pi=";
+    str += 3.14159;
+    TEST_ASSERT_EQUAL_STRING("pi=3.14", str.c_str());
+    TEST_ASSERT_TRUE(str.concat(2.71828));
+    TEST_ASSERT_EQUAL_STRING("pi=3.142.72", str.c_str());
 
     TEST_ASSERT_EQUAL_STRING("a1", (String("a") + 1).c_str());
     TEST_ASSERT_EQUAL_STRING("1a", (String("1") + String("a")).c_str());
@@ -414,6 +436,11 @@ static void testConversion()
     TEST_ASSERT_TRUE(String("Pixelix").equals(String("Pixelix")));
     TEST_ASSERT_TRUE(String("Pixelix").equals("Pixelix"));
     TEST_ASSERT_FALSE(String("Pixelix").equals("pixelix"));
+
+    /* A nullptr equals an empty string only, like on the Arduino. */
+    TEST_ASSERT_TRUE(String().equals(static_cast<const char*>(nullptr)));
+    TEST_ASSERT_FALSE(String("Pixelix").equals(static_cast<const char*>(nullptr)));
+    TEST_ASSERT_TRUE(String().equals(""));
     TEST_ASSERT_TRUE(String("Pixelix").equalsIgnoreCase(String("pIXELIX")));
     TEST_ASSERT_FALSE(String("Pixelix").equalsIgnoreCase(String("Pixeli")));
 

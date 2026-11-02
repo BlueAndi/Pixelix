@@ -151,18 +151,8 @@ void WebSocketSrv::init(AsyncWebServer& srv)
         String           webLoginPassword;
         SettingsService& settings = SettingsService::getInstance();
 
-        if (false == settings.open(true))
-        {
-            webLoginUser     = settings.getWebLoginUser().getDefault();
-            webLoginPassword = settings.getWebLoginPassword().getDefault();
-        }
-        else
-        {
-            webLoginUser     = settings.getWebLoginUser().getValue();
-            webLoginPassword = settings.getWebLoginPassword().getValue();
-
-            settings.close();
-        }
+        webLoginUser              = settings.getWebLoginUser().getValueFromRam();
+        webLoginPassword          = settings.getWebLoginPassword().getValueFromRam();
 
         /* Setup the websocket message input queue. */
         (void)m_msgQueue.create(MAX_WEBSOCKET_MSGS);

@@ -45,6 +45,7 @@
  * Includes
  *****************************************************************************/
 #include <Preferences.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -91,6 +92,18 @@ public:
     }
 
     /**
+     * Set the mutex which protects the RAM mirror against concurrent access.
+     * The mirror is written by the web server task and read by other tasks,
+     * therefore every mirror access of a string value is serialized by it.
+     *
+     * @param[in] mutex Mutex shared by all key value pairs of a settings set.
+     */
+    void setMutex(MutexRecursive& mutex)
+    {
+        m_mutex = &mutex;
+    }
+
+    /**
      * Get value type.
      *
      * @return Value type
@@ -111,15 +124,23 @@ public:
      */
     virtual const char* getKey() const  = 0;
 
+    /**
+     * Update the RAM mirror with the current value from storage.
+     * The storage must be opened before calling this function.
+     */
+    virtual void updateRamMirror()      = 0;
+
 protected:
 
-    Preferences* m_preferences; /**< Persistent storage */
+    Preferences*    m_preferences; /**< Persistent storage */
+    MutexRecursive* m_mutex;       /**< Protects the RAM mirror, may be nullptr if not shared between tasks. */
 
     /**
      * Constructs a key value pair.
      */
     KeyValue() :
-        m_preferences(nullptr)
+        m_preferences(nullptr),
+        m_mutex(nullptr)
     {
     }
 
@@ -129,8 +150,31 @@ protected:
      * @param[in] pref  Persistent storage
      */
     KeyValue(Preferences& pref) :
-        m_preferences(&pref)
+        m_preferences(&pref),
+        m_mutex(nullptr)
     {
+    }
+
+    /**
+     * Lock the RAM mirror. Without a mutex it has no effect.
+     */
+    void lock() const
+    {
+        if (nullptr != m_mutex)
+        {
+            (void)m_mutex->take(portMAX_DELAY);
+        }
+    }
+
+    /**
+     * Unlock the RAM mirror. Without a mutex it has no effect.
+     */
+    void unlock() const
+    {
+        if (nullptr != m_mutex)
+        {
+            (void)m_mutex->give();
+        }
     }
 };
 
@@ -231,14 +275,16 @@ public:
     }
 
     /**
-     * Get value.
+     * Get value from storage.
+     * The storage must be opened before calling this function.
      *
      * @return Value
      */
     virtual T getValue() const     = 0;
 
     /**
-     * Set value.
+     * Set value to storage.
+     * The storage must be opened before calling this function.
      *
      * @param[in] value Value
      */
@@ -254,13 +300,24 @@ public:
         return m_defValue;
     }
 
+    /**
+     * Get value from RAM mirror.
+     *
+     * @return Value from RAM mirror
+     */
+    T getValueFromRam() const
+    {
+        return m_value;
+    }
+
 protected:
 
     const char* m_key;      /**< Key */
     const char* m_name;     /**< Name */
     T           m_defValue; /**< Default value */
-    T           m_min;      /**< Min. length */
-    T           m_max;      /**< Max. length */
+    T           m_min;      /**< Minimum value */
+    T           m_max;      /**< Maximum value */
+    T           m_value;    /**< Current value (RAM mirror) */
 
 private:
 

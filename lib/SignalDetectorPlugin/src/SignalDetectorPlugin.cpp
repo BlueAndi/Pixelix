@@ -38,6 +38,7 @@
 #include "HttpStatus.h"
 
 #include <Logging.h>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -109,7 +110,7 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& 
 
     if (true == topic.equals(TOPIC_CONFIG))
     {
-        const size_t      JSON_DOC_SIZE = 512U;
+        const size_t      JSON_DOC_SIZE = Json::getJsonSize(512U);
         PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject        jsonCfg     = jsonDoc.to<JsonObject>();
         JsonArrayConst    jsonTones   = value["tones"];
@@ -465,7 +466,8 @@ bool SignalDetectorPlugin::startHttpRequest()
 
         LOG_INFO("Signal detection reported.");
 
-        return true;
+        /* The response content is not of interest, only that it arrived. */
+        return RestService::PreProcessResult::OK;
     };
 
     if (false == m_pushUrl.isEmpty())

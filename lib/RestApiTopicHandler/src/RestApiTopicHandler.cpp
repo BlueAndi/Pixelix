@@ -43,6 +43,8 @@
 #include <Logging.h>
 #include <Util.h>
 #include <SettingsService.h>
+#include <PsramJsonDocument.hpp>
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -67,24 +69,6 @@
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
-
-void RestApiTopicHandler::start()
-{
-    SettingsService& settings = SettingsService::getInstance();
-
-    if (false == settings.open(true))
-    {
-        m_webLoginUser     = settings.getWebLoginUser().getDefault();
-        m_webLoginPassword = settings.getWebLoginPassword().getDefault();
-    }
-    else
-    {
-        m_webLoginUser     = settings.getWebLoginUser().getValue();
-        m_webLoginPassword = settings.getWebLoginPassword().getValue();
-
-        settings.close();
-    }
-}
 
 void RestApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
@@ -122,7 +106,10 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
             topicMetaData->webHandler    = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload, onBody);
 
             /* Enable basic authentication. */
-            topicMetaData->webHandler->setAuthentication(m_webLoginUser, m_webLoginPassword);
+            SettingsService& settings    = SettingsService::getInstance();
+            topicMetaData->webHandler->setAuthentication(
+                settings.getWebLoginUser().getValueFromRam(),
+                settings.getWebLoginPassword().getValueFromRam());
 
             LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 
@@ -196,12 +183,13 @@ String RestApiTopicHandler::getUri(const String& entityId, const String& topic) 
 
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMetaData* topicMetaData)
 {
-    String              content;
-    const size_t        JSON_DOC_SIZE     = 9216U;
-    const size_t        JSON_PAR_DOC_SIZE = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonObject          dataObj        = jsonDoc.createNestedObject("data");
-    uint32_t            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    String            content;
+    const size_t      JSON_DOC_SIZE          = Json::getJsonSize(9216U);
+    const size_t      JSON_GET_PAR_DOC_SIZE  = Json::getJsonSize(512U);
+    const size_t      JSON_POST_PAR_DOC_SIZE = Json::getJsonSize(4096U);
+    PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
+    JsonObject        dataObj        = jsonDoc.createNestedObject("data");
+    uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
     if ((nullptr == request) ||
         (nullptr == topicMetaData))
@@ -213,7 +201,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
         (nullptr != topicMetaData->getTopicFunc))
     {
         /* passing params with get requests for advanced web config uses */
-        DynamicJsonDocument jsonDocPar(JSON_PAR_DOC_SIZE);
+        DynamicJsonDocument jsonDocPar(JSON_GET_PAR_DOC_SIZE);
         par2Json(jsonDocPar, request);
         dataObj["pars"] = jsonDocPar.as<JsonObject>();
 
@@ -262,8 +250,14 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
     else if ((HTTP_POST == request->method()) &&
              (nullptr != topicMetaData->setTopicFunc))
     {
-        DynamicJsonDocument jsonDocPar(JSON_PAR_DOC_SIZE);
-        JsonObjectConst     jsonValue;
+        /* The JSON body is parsed in place, therefore the parameter document
+         * holds only the structure and the body buffer must live until the
+         * topic function consumed the values.
+         */
+        PsramJsonDocument jsonDocPar(JSON_POST_PAR_DOC_SIZE);
+        JsonObjectConst   jsonValue;
+        bool              isPayloadValid    = true;
+        bool              isPayloadTooLarge = false;
 
         /* JSON in the body has higher priority than the HTTP parameters! */
         if (nullptr == request->_tempObject)
@@ -273,15 +267,21 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
         }
         else
         {
-            DeserializationError error = deserializeJson(jsonDocPar, static_cast<const char*>(request->_tempObject));
+            DeserializationError error = deserializeJson(jsonDocPar, static_cast<char*>(request->_tempObject));
 
-            if (DeserializationError::Ok != error)
+            if (DeserializationError::NoMemory == error)
             {
-                LOG_WARNING("Received invalid payload.");
+                isPayloadTooLarge = true;
             }
-
-            delete[] static_cast<uint8_t*>(request->_tempObject);
-            request->_tempObject = nullptr;
+            else if (DeserializationError::Ok != error)
+            {
+                isPayloadValid = false;
+            }
+            else
+            {
+                /* Payload successful parsed. */
+                ;
+            }
 
             if (0U < request->args())
             {
@@ -296,16 +296,33 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
             jsonDocPar["fullPath"] = topicMetaData->fullPath;
         }
 
-        /* Check for JSON document overflow. */
-        if (true == jsonDoc.overflowed())
+        if (true == jsonDocPar.overflowed())
         {
-            LOG_ERROR("JSON document size exceeded.");
+            isPayloadTooLarge = true;
+        }
+
+        /* A truncated payload must not reach the topic function, otherwise a
+         * partial configuration would be applied silently.
+         */
+        if (true == isPayloadTooLarge)
+        {
+            LOG_WARNING("Payload exceeds the parameter document size.");
+
+            RestUtil::prepareRspError(jsonDoc, "Payload too large.");
 
             jsonDoc.remove("data");
 
-            RestUtil::prepareRspError(jsonDoc, "JSON document size exceeded.");
+            httpStatusCode = HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE;
+        }
+        else if (false == isPayloadValid)
+        {
+            LOG_WARNING("Received invalid payload.");
 
-            httpStatusCode = HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR;
+            RestUtil::prepareRspError(jsonDoc, "Invalid payload.");
+
+            jsonDoc.remove("data");
+
+            httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
         }
         else
         {
@@ -318,12 +335,6 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
 
                 jsonDoc.remove("data");
 
-                /* If a file is available, it will be removed now. */
-                if (false == topicMetaData->fullPath.isEmpty())
-                {
-                    (void)FILESYSTEM.remove(topicMetaData->fullPath);
-                }
-
                 httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
             }
             else
@@ -331,6 +342,13 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
                 jsonDoc["status"] = "ok";
                 httpStatusCode    = HttpStatus::STATUS_CODE_OK;
             }
+        }
+
+        /* If a file is available and the request failed, it will be removed now. */
+        if ((HttpStatus::STATUS_CODE_OK != httpStatusCode) &&
+            (false == topicMetaData->fullPath.isEmpty()))
+        {
+            (void)FILESYSTEM.remove(topicMetaData->fullPath);
         }
     }
     else
@@ -341,6 +359,12 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
 
         httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
+
+    /* The body buffer is released on every path, otherwise it would leak for
+     * a request which is rejected before the body is parsed.
+     */
+    delete[] static_cast<uint8_t*>(request->_tempObject);
+    request->_tempObject = nullptr;
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 }
@@ -448,6 +472,11 @@ void RestApiTopicHandler::bodyHandler(AsyncWebServerRequest* request, uint8_t* d
             {
                 LOG_ERROR("Failed to allocate temporary object of %d bytes.", total + 1U);
                 request->abort();
+            }
+            else
+            {
+                /* The body is parsed as string, therefore it must be terminated. */
+                static_cast<uint8_t*>(request->_tempObject)[total] = 0U;
             }
         }
     }

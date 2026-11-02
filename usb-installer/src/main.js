@@ -1,3 +1,26 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 import { ESPLoader, Transport } from "esptool-js";
 import { ImprovSerial } from "improv-wifi-serial-sdk/dist/serial.js";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -5,17 +28,26 @@ import "./style.css";
 
 const IMPROV_AUTHORIZED_STATE = 0x02;
 const AUTHORIZATION_TIMEOUT_MS = 60000;
+/** Firmware application baud rate used by Improv and MiniTerminal. */
 const SERIAL_BAUD_RATE = 115200;
+/** ESP32 ROM/stub baud rate used to accelerate firmware flashing. */
+const FLASH_BAUD_RATE = 460800;
 const MAX_TERMINAL_OUTPUT_LENGTH = 48000;
+/** Number of leading SHA-256 hex digits used as cache-busting query of an image URL. */
+const IMAGE_CACHE_KEY_LENGTH = 16;
 const WIFI_CREDENTIAL_COMMAND = /^write\s+wifi\s+(ssid|passphrase)\b/i;
 
 const elements = {
+    versionSelect: document.getElementById("version-select"),
+    prereleaseWarning: document.getElementById("prerelease-warning"),
     releaseVersion: document.getElementById("release-version"),
     boardCount: document.getElementById("board-count"),
     boardSelect: document.getElementById("board-select"),
     connectButton: document.getElementById("connect-button"),
     chipStatus: document.getElementById("chip-status"),
+    bootloaderHelp: document.getElementById("bootloader-help"),
     flashButton: document.getElementById("flash-button"),
+    keepSettings: document.getElementById("keep-settings"),
     progressWrap: document.getElementById("progress-wrap"),
     flashProgress: document.getElementById("flash-progress"),
     progressLabel: document.getElementById("progress-label"),
@@ -34,16 +66,29 @@ const elements = {
     statusList: document.getElementById("status-list"),
 };
 
+let catalog;
+let selectedRelease;
+let releaseRequestId = 0;
+let improvSessionToken = 0;
+let preferredEnvironment;
 let manifest;
 let selectedTarget;
 let serialPort;
 let transport;
 let loader;
 let improv;
+let devicePortReady = false;
+let isFlashing = false;
 let terminalReader;
 let terminalReadTask;
 let terminalDisconnectRequested = false;
 
+/**
+ * Add a timestamped message to the installer status list.
+ * @param {string} message Status text
+ * @param {string} [status="info"] Status style: info, success, or error
+ * @returns {void}
+ */
 function addStatus(message, status = "info") {
     const item = document.createElement("li");
     item.className = `status-${status}`;
@@ -51,6 +96,11 @@ function addStatus(message, status = "info") {
     elements.statusList.prepend(item);
 }
 
+/**
+ * Append text to the bounded serial console buffer and scroll to its end.
+ * @param {string} text Text received from the device or active protocol
+ * @returns {void}
+ */
 function appendTerminalOutput(text) {
     elements.terminalOutput.textContent += text;
     if (MAX_TERMINAL_OUTPUT_LENGTH < elements.terminalOutput.textContent.length) {
@@ -59,17 +109,59 @@ function appendTerminalOutput(text) {
     elements.terminalOutput.scrollTop = elements.terminalOutput.scrollHeight;
 }
 
-function setTerminalConnected(isConnected) {
-    elements.terminalState.textContent = isConnected ? "CONNECTED" : "DISCONNECTED";
-    elements.terminalState.dataset.state = isConnected ? "connected" : "disconnected";
-    elements.terminalConnectButton.textContent = isConnected ? "Close serial console" : "Open serial console";
-    elements.terminalConnectButton.disabled = !isConnected && Boolean(transport || improv);
-    elements.terminalForm.hidden = !isConnected;
-    elements.connectButton.disabled = isConnected || !manifest || Boolean(transport);
-    elements.flashButton.disabled = isConnected || !loader || !transport;
-    elements.wifiConnectButton.disabled = isConnected || Boolean(transport) || !("serial" in navigator);
+/**
+ * Show the correct manual download-mode sequence for a board.
+ * @param {{board?: string}|null|undefined} target Selected firmware target
+ * @returns {void}
+ */
+function updateBootloaderInstructions(target) {
+    const boardId = target?.board?.toLowerCase() ?? "";
+
+    if (boardId.includes("esp32doit-devkit-v1")) {
+        elements.bootloaderHelp.textContent =
+            "ESP32 DevKit V1: if sync times out, hold BOOT, tap EN/RESET, then release BOOT when the connection starts. Other boards usually enter download mode automatically.";
+    } else {
+        elements.bootloaderHelp.textContent =
+            "Most boards enter download mode automatically. If sync fails, hold BOOT while tapping RESET/EN, then release it when connection starts.";
+    }
 }
 
+/**
+ * Synchronize controls with the current serial-port owner and device state.
+ * @returns {void}
+ */
+function updateSerialControls() {
+    const isConsoleConnected = Boolean(terminalReader);
+    const isSessionOwned = Boolean(transport || improv);
+    let consoleState = "DISCONNECTED";
+
+    if (transport) {
+        consoleState = "FLASH OUTPUT";
+    } else if (improv) {
+        consoleState = "IMPROV STATUS";
+    } else if (isConsoleConnected) {
+        consoleState = "CONNECTED";
+    }
+
+    elements.terminalState.textContent = consoleState;
+    elements.terminalState.dataset.state = isConsoleConnected ? "connected" : "disconnected";
+    elements.terminalConnectButton.textContent = isConsoleConnected ? "Close serial console" : "Open serial console";
+    elements.terminalConnectButton.disabled = isSessionOwned || !("serial" in navigator);
+    elements.terminalForm.hidden = !isConsoleConnected;
+    elements.connectButton.disabled = !manifest || isSessionOwned || isFlashing;
+    elements.flashButton.disabled = !manifest || !selectedTarget || !loader || !transport || Boolean(improv || isFlashing);
+    elements.flashButton.textContent = elements.keepSettings.checked ? "Install, keep settings" : "Erase and install";
+    elements.keepSettings.disabled = isFlashing;
+    elements.wifiConnectButton.disabled = !devicePortReady || Boolean(improv || isFlashing);
+    elements.boardSelect.disabled = !manifest || isFlashing;
+    elements.versionSelect.disabled = !catalog || isFlashing;
+}
+
+/**
+ * Reopen the previously selected serial port or request a device selection.
+ * @returns {Promise<SerialPort>} An open Web Serial port at firmware baud rate
+ * @throws {Error} If the user cancels selection or the port cannot be opened
+ */
 async function openSerialPort() {
     if (serialPort) {
         if ((null !== serialPort.readable) && (null !== serialPort.writable)) {
@@ -90,27 +182,163 @@ async function openSerialPort() {
     return serialPort;
 }
 
+/**
+ * Update one setup step's visible state label.
+ * @param {string} stepId Step DOM id prefix
+ * @param {string} state Human-readable state
+ * @returns {void}
+ */
 function setStepState(stepId, state) {
     const label = document.getElementById(`${stepId}-state`);
     label.textContent = state;
     label.dataset.state = state.toLowerCase();
 }
 
+/**
+ * Compare a target ESP family with the detected ROM family.
+ * @param {string} expectedChip Chip family required by the selected target
+ * @param {string} detectedChip Chip family reported by esptool-js
+ * @returns {boolean} Whether the detected chip matches the target
+ */
 function expectedChipMatches(expectedChip, detectedChip) {
     return expectedChip.replaceAll("-", "").toLowerCase() === detectedChip.replaceAll("-", "").toLowerCase();
 }
 
-async function loadManifest() {
-    const response = await fetch("./firmware-manifest.json", { cache: "no-store" });
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!response.ok || !contentType.includes("application/json")) {
-        throw new Error("No release firmware manifest is available in this preview.");
+/**
+ * Find the selected manifest target for a board environment.
+ * @param {string} environment PlatformIO environment identifier
+ * @returns {object|undefined} Matching firmware target
+ */
+function findTarget(environment) {
+    let selectedTarget;
+    for (const target of manifest.targets) {
+        if (target.environment === environment) {
+            selectedTarget = target;
+            break;
+        }
+    }
+    return selectedTarget;
+}
+
+/**
+ * Build the visible label of a release in the version selector.
+ * @param {{version: string, prerelease: boolean}} release Catalog release
+ * @param {boolean} isDefault True if it is the preselected stable release
+ * @returns {string} Option text
+ */
+function getReleaseLabel(release, isDefault) {
+    let label = release.version;
+
+    if (release.tag !== release.version) {
+        label += ` (tag ${release.tag})`;
     }
 
-    manifest = await response.json();
-    elements.releaseVersion.textContent = manifest.version;
-    elements.boardCount.textContent = `${manifest.targets.length} board builds`;
+    if (release.prerelease) {
+        label += " – Pre-release, not recommended for production";
+    } else if (isDefault) {
+        label += " (latest stable)";
+    }
+
+    return label;
+}
+
+/**
+ * Fetch a JSON file of the installer site.
+ * @param {string} url Site relative URL
+ * @param {string} errorMessage Message used if the file is not available
+ * @returns {Promise<object>} Parsed JSON
+ * @throws {Error} If the file cannot be loaded
+ */
+async function fetchJson(url, errorMessage) {
+    const response = await fetch(url, { cache: "no-store" });
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!response.ok || !contentType.includes("application/json")) {
+        throw new Error(errorMessage);
+    }
+
+    return response.json();
+}
+
+/**
+ * Load the release catalog and populate the version selector.
+ * The latest stable release is preselected.
+ * @returns {Promise<void>}
+ * @throws {Error} If the catalog cannot be loaded or is invalid
+ */
+async function loadCatalog() {
+    const data = await fetchJson("./releases.json", "No release catalog is available in this preview.");
+    const releases = Array.isArray(data.releases) ? data.releases : [];
+    let defaultRelease;
+
+    if (data.defaultTag) {
+        defaultRelease = releases.find((release) => release.tag === data.defaultTag);
+    } else {
+        defaultRelease = releases.find((release) => (release.version === data.default) && !release.prerelease);
+    }
+
+    if ((1 !== data.schema) || (!data.default) || (!defaultRelease) || defaultRelease.prerelease ||
+        (defaultRelease.version !== data.default)) {
+        throw new Error("The release catalog is invalid.");
+    }
+
+    catalog = data;
+    elements.versionSelect.replaceChildren();
+
+    for (const release of catalog.releases) {
+        const option = document.createElement("option");
+        option.value = release.tag;
+        option.textContent = getReleaseLabel(release, release.tag === defaultRelease.tag);
+        elements.versionSelect.append(option);
+    }
+
+    elements.versionSelect.value = defaultRelease.tag;
+    setStepState("version", "Ready");
+    await loadRelease(defaultRelease, beginReleaseRequest(defaultRelease));
+}
+
+/**
+ * Register a release request. It supersedes every earlier one, so it has to
+ * be called synchronously when the user changes the selection.
+ * @param {{version: string, prerelease: boolean}} release Requested catalog release
+ * @returns {number} Request identifier
+ */
+function beginReleaseRequest(release) {
+    selectedRelease = release;
+    releaseRequestId += 1;
+    return releaseRequestId;
+}
+
+/**
+ * Load the firmware manifest of a release and populate the board selector.
+ * Only the most recently registered request is applied.
+ * @param {{version: string, prerelease: boolean, manifest: string}} release Catalog release
+ * @param {number} requestId Identifier returned by beginReleaseRequest
+ * @returns {Promise<void>}
+ * @throws {Error} If the release manifest cannot be loaded or parsed
+ */
+async function loadRelease(release, requestId) {
+    if (requestId !== releaseRequestId) {
+        return;
+    }
+
+    manifest = undefined;
+    selectedTarget = undefined;
+    elements.prereleaseWarning.hidden = !release.prerelease;
+    elements.releaseVersion.textContent = release.prerelease ? `${release.version} (pre-release)` : release.version;
     elements.boardSelect.replaceChildren();
+    updateSerialControls();
+
+    const loadedManifest = await fetchJson(release.manifest, `The firmware of version ${release.version} is not available.`);
+    if (requestId !== releaseRequestId) {
+        return;
+    }
+
+    if ((!Array.isArray(loadedManifest.targets)) || (0 === loadedManifest.targets.length)) {
+        throw new Error(`The firmware manifest of version ${release.version} is invalid.`);
+    }
+
+    manifest = loadedManifest;
+    elements.boardCount.textContent = `${manifest.targets.length} board builds`;
 
     for (const target of manifest.targets) {
         const option = document.createElement("option");
@@ -119,23 +347,104 @@ async function loadManifest() {
         elements.boardSelect.append(option);
     }
 
-    elements.boardSelect.disabled = false;
-    selectedTarget = manifest.targets[0];
-    elements.boardSelect.addEventListener("change", () => {
-        selectedTarget = manifest.targets.find((target) => target.environment === elements.boardSelect.value);
-        setStepState("connect", "Waiting");
-        setStepState("flash", "Waiting");
-        elements.flashButton.disabled = true;
-        elements.connectButton.disabled = false;
-        elements.chipStatus.textContent = "Select the USB device to detect its chip.";
-        addStatus(`Selected ${selectedTarget.environment}.`);
-    });
+    const previousEnvironment = preferredEnvironment;
+    selectedTarget = findTarget(previousEnvironment) ?? manifest.targets[0];
+    preferredEnvironment = selectedTarget.environment;
+    elements.boardSelect.value = selectedTarget.environment;
+    updateBootloaderInstructions(selectedTarget);
 
-    elements.connectButton.disabled = false;
-    elements.wifiConnectButton.disabled = false;
-    addStatus(`${manifest.targets.length} board configurations are ready.`);
+    updateSerialControls();
+    addStatus(`Version ${release.version}: ${manifest.targets.length} board configurations are ready.`);
+    if (previousEnvironment && (previousEnvironment !== selectedTarget.environment)) {
+        addStatus(`${previousEnvironment} is not available in this version; selected ${selectedTarget.environment}.`);
+    }
 }
 
+/**
+ * Handle a version selection change.
+ * A flasher or Improv session belongs to the previous selection, therefore it
+ * is closed and the device has to be connected again.
+ * @param {Event} event Change event from the version selector
+ * @returns {Promise<void>}
+ */
+async function handleVersionSelection(event) {
+    const selector = /** @type {HTMLSelectElement} */ (event.currentTarget);
+    const release = catalog.releases.find((entry) => entry.tag === selector.value);
+
+    if (isFlashing) {
+        selector.value = selectedRelease.tag;
+        return;
+    }
+
+    const requestId = beginReleaseRequest(release);
+    devicePortReady = false;
+
+    // Invalidate the old firmware and abort a pending Wi-Fi connect before anything is awaited.
+    manifest = undefined;
+    selectedTarget = undefined;
+    improvSessionToken += 1;
+    elements.chipStatus.textContent = "Select the USB device to detect its chip.";
+    updateSerialControls();
+
+    try {
+        if (transport) {
+            await disconnectFlasher();
+            appendTerminalOutput("\r\n[Version changed; connect the device again to detect its chip.]\r\n");
+        }
+        if (improv) {
+            await closeImprovSession();
+        }
+        if (requestId !== releaseRequestId) {
+            return;
+        }
+
+        setStepState("connect", "Waiting");
+        setStepState("flash", "Waiting");
+        setStepState("wifi", "Waiting");
+        elements.wifiForm.hidden = true;
+        elements.authorizationStatus.textContent = "";
+        elements.chipStatus.textContent = "Select the USB device to detect its chip.";
+        addStatus(`Selected version ${release.version}${release.prerelease ? " (pre-release, not recommended for productive use)" : ""}.`);
+
+        await loadRelease(release, requestId);
+    } catch (error) {
+        if (requestId === releaseRequestId) {
+            handleManifestError(error);
+        }
+    }
+}
+
+/**
+ * Handle a board/display target selection change.
+ * A flasher session belongs to the chip check of the previously selected
+ * target, therefore it is closed and the device has to be connected again.
+ * @param {Event} event Change event from the board selector
+ * @returns {Promise<void>}
+ */
+async function handleBoardSelection(event) {
+    const selector = /** @type {HTMLSelectElement} */ (event.currentTarget);
+    selectedTarget = findTarget(selector.value);
+    preferredEnvironment = selectedTarget.environment;
+    devicePortReady = false;
+
+    if (transport) {
+        await disconnectFlasher();
+        appendTerminalOutput("\r\n[Board changed; connect the device again to detect its chip.]\r\n");
+    }
+
+    setStepState("connect", "Waiting");
+    setStepState("flash", "Waiting");
+    elements.chipStatus.textContent = "Select the USB device to detect its chip.";
+    updateBootloaderInstructions(selectedTarget);
+    updateSerialControls();
+    addStatus(`Selected ${selectedTarget.environment}.`);
+}
+
+/**
+ * Select a serial device, detect its ESP chip, and enable compatible actions.
+ * @returns {Promise<void>}
+ * @throws {Error} If serial access, chip detection, or target matching fails
+ */
 async function connectToBoard() {
     if (terminalReader) {
         await disconnectTerminal();
@@ -144,30 +453,47 @@ async function connectToBoard() {
         await closeImprovSession();
     }
 
+    devicePortReady = false;
     elements.connectButton.disabled = true;
     elements.chipStatus.textContent = "Choose the board's serial device in the browser dialog.";
 
     try {
-        serialPort = await navigator.serial.requestPort();
+        serialPort = serialPort ?? await navigator.serial.requestPort();
         transport = new Transport(serialPort, true);
         loader = new ESPLoader({
             transport,
-            baudrate: 115200,
+            baudrate: FLASH_BAUD_RATE,
             terminal: {
+                /** Keep existing console output while esptool starts. */
                 clean() { },
+                /**
+                 * Forward a complete esptool log line to both status surfaces.
+                 * @param {string} message Log line
+                 * @returns {void}
+                 */
                 writeLine(message) {
                     addStatus(message);
+                    appendTerminalOutput(`${message}\r\n`);
                 },
+                /**
+                 * Forward a partial esptool log message to both status surfaces.
+                 * @param {string} message Log fragment
+                 * @returns {void}
+                 */
                 write(message) {
                     if (message.trim()) {
                         addStatus(message.trim());
+                        appendTerminalOutput(message);
                     }
                 },
             },
         });
-        setTerminalConnected(false);
+        updateSerialControls();
 
         await loader.main();
+        if (!selectedTarget) {
+            throw new Error("The selected version changed; connect the device again.");
+        }
         const detectedChip = loader.chip.CHIP_NAME;
         if (!expectedChipMatches(selectedTarget.chip, detectedChip)) {
             throw new Error(`Selected target needs ${selectedTarget.chip}; detected ${detectedChip}.`);
@@ -175,25 +501,39 @@ async function connectToBoard() {
 
         elements.chipStatus.textContent = `Detected ${detectedChip}.`;
         elements.flashButton.disabled = false;
+        devicePortReady = true;
         setStepState("connect", "Connected");
+        updateSerialControls();
         addStatus(`Detected ${detectedChip}; target matches.`, "success");
+        appendTerminalOutput(`\r\n[Detected ${detectedChip}; board is ready.]\r\n`);
     } catch (error) {
+        devicePortReady = false;
         elements.chipStatus.textContent = error.message;
         addStatus(error.message, "error");
         await disconnectFlasher();
-        setTerminalConnected(false);
+        updateSerialControls();
     }
 }
 
+/**
+ * Fetch a firmware image and verify its SHA-256 digest before flashing.
+ * The image URL is the same for every release of a board, therefore a part of
+ * the manifest digest is appended as query, so that a cached image of a
+ * previous release is never served for a new one.
+ * @param {{file: string, url: string, sha256: string, offset: number}} image Manifest image
+ * @returns {Promise<{data: Uint8Array, address: number}>} Verified bytes and flash offset
+ * @throws {Error} If fetching or checksum validation fails
+ */
 async function fetchImage(image) {
-    const response = await fetch(`./${image.url}`, { cache: "force-cache" });
+    const cacheKey = image.sha256.slice(0, IMAGE_CACHE_KEY_LENGTH);
+    const response = await fetch(`./${image.url}?v=${cacheKey}`);
     if (!response.ok) {
         throw new Error(`Could not download ${image.file} (${response.status}).`);
     }
 
     const data = new Uint8Array(await response.arrayBuffer());
     const digest = await crypto.subtle.digest("SHA-256", data);
-    const checksum = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    const checksum = Array.from(new Uint8Array(digest), byteToHex).join("");
 
     if (checksum !== image.sha256) {
         throw new Error(`${image.file} failed its SHA-256 check.`);
@@ -202,7 +542,65 @@ async function fetchImage(image) {
     return { data, address: image.offset };
 }
 
+/**
+ * Format one checksum byte as a two-character lowercase hexadecimal string.
+ * @param {number} byte Unsigned byte
+ * @returns {string} Two-character hexadecimal byte
+ */
+function byteToHex(byte) {
+    return byte.toString(16).padStart(2, "0");
+}
+
+/**
+ * Sum uncompressed image sizes for aggregate progress calculation.
+ * @param {Array<{data: Uint8Array}>} images Images being written
+ * @returns {number} Total image bytes
+ */
+function getTotalImageBytes(images) {
+    let totalBytes = 0;
+    for (const image of images) {
+        totalBytes += image.data.length;
+    }
+    return totalBytes;
+}
+
+/**
+ * Update aggregate progress using the current image's compressed transfer ratio.
+ * @param {number} fileIndex Index reported by esptool-js
+ * @param {number} written Compressed bytes sent for this image
+ * @param {number} compressedTotal Total compressed bytes for this image
+ * @param {Array<{data: Uint8Array}>} files All images in flash order
+ * @param {number} totalBytes Sum of original image sizes
+ * @returns {void}
+ */
+function updateFlashProgress(fileIndex, written, compressedTotal, files, totalBytes) {
+    const image = files[fileIndex];
+    if (!image || (0 >= totalBytes)) {
+        return;
+    }
+
+    const completedBeforeImage = getTotalImageBytes(files.slice(0, fileIndex));
+    const imageFraction = 0 < compressedTotal
+        ? Math.min(1, written / compressedTotal)
+        : 0;
+    const completedBytes = completedBeforeImage + (image.data.length * imageFraction);
+    const percent = Math.min(100, Math.floor((completedBytes / totalBytes) * 100));
+    elements.flashProgress.value = percent;
+    elements.progressLabel.textContent = `${percent}%`;
+}
+
+/**
+ * Flash the selected target's verified images to the detected ESP32.
+ * @returns {Promise<void>}
+ * @throws {Error} If an image cannot be fetched or the flash operation fails
+ */
 async function flashBoard() {
+    if (!loader || !transport || isFlashing || !manifest || !selectedTarget) {
+        return;
+    }
+
+    isFlashing = true;
+    updateSerialControls();
     elements.flashButton.disabled = true;
     elements.connectButton.disabled = true;
     elements.progressWrap.hidden = false;
@@ -210,10 +608,20 @@ async function flashBoard() {
     setStepState("flash", "Preparing");
 
     try {
-        const files = await Promise.all(selectedTarget.images.map(fetchImage));
-        const totalBytes = files.reduce((total, file) => total + file.data.length, 0);
+        const detectedChip = loader.chip.CHIP_NAME;
+        if (!expectedChipMatches(selectedTarget.chip, detectedChip)) {
+            throw new Error(`Selected target needs ${selectedTarget.chip}; detected ${detectedChip}.`);
+        }
 
-        addStatus(`Verified all ${files.length} images. Erasing flash and installing ${selectedTarget.environment}.`);
+        const files = await Promise.all(selectedTarget.images.map(fetchImage));
+        const totalBytes = getTotalImageBytes(files);
+        const eraseAll = selectedTarget.eraseAll && !elements.keepSettings.checked;
+        const eraseInfo = eraseAll ? "Erasing flash" : "Keeping the stored device settings";
+
+        addStatus(`Verified all ${files.length} images. ${eraseInfo} and installing ${selectedTarget.environment}.`);
+        if (selectedRelease?.prerelease) {
+            addStatus(`Installing pre-release ${selectedRelease.version}. Not recommended for productive use.`);
+        }
         setStepState("flash", "Flashing");
 
         await loader.writeFlash({
@@ -221,30 +629,50 @@ async function flashBoard() {
             flashMode: selectedTarget.flashMode,
             flashFreq: selectedTarget.flashFrequency,
             flashSize: selectedTarget.flashSize,
-            eraseAll: selectedTarget.eraseAll,
+            eraseAll,
             compress: true,
-            reportProgress(fileIndex, written) {
-                const completedBytes = files.slice(0, fileIndex).reduce((total, file) => total + file.data.length, 0) + written;
-                const percent = Math.min(100, Math.floor((completedBytes / totalBytes) * 100));
-                elements.flashProgress.value = percent;
-                elements.progressLabel.textContent = `${percent}%`;
+            /**
+             * Translate esptool-js per-image compressed progress to total image progress.
+             * @param {number} fileIndex Image index
+             * @param {number} written Compressed bytes written for this image
+             * @param {number} compressedTotal Compressed size of this image
+             * @returns {void}
+             */
+            reportProgress(fileIndex, written, compressedTotal) {
+                updateFlashProgress(fileIndex, written, compressedTotal, files, totalBytes);
             },
         });
 
         await loader.after("hard_reset");
         await disconnectFlasher();
         setStepState("flash", "Complete");
-        elements.wifiConnectButton.disabled = false;
-        addStatus("Firmware installed. Reconnect to the device for Wi-Fi setup.", "success");
+        devicePortReady = true;
+        updateSerialControls();
+        addStatus(
+            eraseAll
+                ? "Firmware installed. Reconnect to the device for Wi-Fi setup."
+                : "Firmware installed. The stored settings were kept, so Wi-Fi setup is only needed if the device does not connect.",
+            "success"
+        );
+        appendTerminalOutput("\r\n[Firmware flashed. The device rebooted; USB remains connected.]\r\n");
     } catch (error) {
+        devicePortReady = false;
         setStepState("flash", "Failed");
         elements.chipStatus.textContent = error.message;
         addStatus(error.message, "error");
+        appendTerminalOutput(`\r\n[Flash failed: ${error.message}]\r\n`);
         await disconnectFlasher();
-        elements.connectButton.disabled = false;
+        updateSerialControls();
+    } finally {
+        isFlashing = false;
+        updateSerialControls();
     }
 }
 
+/**
+ * Close esptool-js transport and release its serial stream locks.
+ * @returns {Promise<void>}
+ */
 async function disconnectFlasher() {
     if (transport) {
         try {
@@ -255,9 +683,13 @@ async function disconnectFlasher() {
         transport = undefined;
         loader = undefined;
     }
-    setTerminalConnected(Boolean(terminalReader));
+    updateSerialControls();
 }
 
+/**
+ * Open the standalone diagnostic console using the selected Web Serial device.
+ * @returns {Promise<void>}
+ */
 async function connectTerminal() {
     if (transport || improv) {
         appendTerminalOutput("\r\n[Close the active flasher or Improv session before opening the terminal.]\r\n");
@@ -267,19 +699,26 @@ async function connectTerminal() {
             const port = await openSerialPort();
             const reader = port.readable.getReader();
             terminalReader = reader;
+            devicePortReady = true;
             terminalDisconnectRequested = false;
             appendTerminalOutput("\r\n[Serial console connected at 115200 baud.]\r\n");
-            setTerminalConnected(true);
+            updateSerialControls();
             terminalReadTask = readTerminal(reader);
         } catch (error) {
             serialPort = undefined;
+            devicePortReady = false;
             elements.terminalConnectButton.disabled = false;
-            setTerminalConnected(false);
+            updateSerialControls();
             appendTerminalOutput(`\r\n[Could not open serial console: ${error.message}]\r\n`);
         }
     }
 }
 
+/**
+ * Read and display serial data until the port is disconnected or closed.
+ * @param {ReadableStreamDefaultReader<Uint8Array>} reader Locked serial reader
+ * @returns {Promise<void>}
+ */
 async function readTerminal(reader) {
     const decoder = new TextDecoder();
 
@@ -303,11 +742,15 @@ async function readTerminal(reader) {
         if (terminalReader === reader) {
             terminalReader = undefined;
             terminalReadTask = undefined;
-            setTerminalConnected(false);
+            updateSerialControls();
         }
     }
 }
 
+/**
+ * Cancel the diagnostic reader and close its port without removing permission.
+ * @returns {Promise<void>}
+ */
 async function disconnectTerminal() {
     const reader = terminalReader;
     terminalDisconnectRequested = true;
@@ -328,9 +771,14 @@ async function disconnectTerminal() {
     terminalReadTask = undefined;
     terminalDisconnectRequested = false;
     appendTerminalOutput("\r\n[Serial console disconnected.]\r\n");
-    setTerminalConnected(false);
+    updateSerialControls();
 }
 
+/**
+ * Send one safe MiniTerminal diagnostic command.
+ * @param {SubmitEvent} event Terminal form submission
+ * @returns {Promise<void>}
+ */
 async function sendTerminalCommand(event) {
     event.preventDefault();
     const command = elements.terminalCommand.value.trim();
@@ -358,17 +806,37 @@ async function sendTerminalCommand(event) {
     }
 }
 
+/**
+ * Wait for the user to authorize Improv provisioning using a device button.
+ * @param {ImprovSerial} service Active Improv Serial service
+ * @returns {Promise<void>} Resolves when the service enters its authorized state
+ * @throws {Error} If physical authorization does not arrive before the timeout
+ */
 function waitForAuthorization(service) {
     if (service.state === IMPROV_AUTHORIZED_STATE) {
         return Promise.resolve();
     }
 
-    return new Promise((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
+    /**
+     * Register the authorization listener and its timeout.
+     * @param {(value?: void | PromiseLike<void>) => void} resolve Promise resolve callback
+     * @param {(reason?: Error) => void} reject Promise reject callback
+     * @returns {void}
+     */
+    function registerAuthorizationListener(resolve, reject) {
+        /** Reject authorization when the physical-button window expires. */
+        function handleAuthorizationTimeout() {
             service.removeEventListener("state-changed", onStateChanged);
             reject(new Error("Authorization timed out. Press a physical button and try again."));
-        }, AUTHORIZATION_TIMEOUT_MS);
+        }
 
+        const timeout = window.setTimeout(handleAuthorizationTimeout, AUTHORIZATION_TIMEOUT_MS);
+
+        /**
+         * Resolve when Improv reports physical authorization.
+         * @param {CustomEvent<number>} event Improv state-change event
+         * @returns {void}
+         */
         function onStateChanged(event) {
             if (event.detail === IMPROV_AUTHORIZED_STATE) {
                 window.clearTimeout(timeout);
@@ -378,10 +846,24 @@ function waitForAuthorization(service) {
         }
 
         service.addEventListener("state-changed", onStateChanged);
-    });
+    }
+
+    return new Promise(registerAuthorizationListener);
 }
 
+/**
+ * Open Improv on the selected port, returning a running board to its application first.
+ * @returns {Promise<void>}
+ */
 async function connectForWifiSetup() {
+    if (isFlashing) {
+        return;
+    }
+
+    // Closing the session invalidates the token, so a stale attempt must not touch a newer session.
+    improvSessionToken += 1;
+    const sessionToken = improvSessionToken;
+
     elements.wifiConnectButton.disabled = true;
     elements.authorizationStatus.textContent = "Connecting to Improv Serial…";
 
@@ -390,32 +872,62 @@ async function connectForWifiSetup() {
             await disconnectTerminal();
         }
         if (transport) {
+            await loader.after("hard_reset");
             await disconnectFlasher();
         }
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
         const port = await openSerialPort();
-        const quietLogger = { log() { }, debug() { }, error() { } };
-        improv = new ImprovSerial(port, quietLogger);
-        setTerminalConnected(false);
-
-        improv.addEventListener("state-changed", (event) => {
-            if (event.detail === IMPROV_AUTHORIZED_STATE) {
-                elements.authorizationStatus.textContent = "Authorized. Enter the Wi-Fi credentials.";
-                elements.provisionButton.disabled = false;
-                setStepState("wifi", "Authorized");
+        if (sessionToken !== improvSessionToken) {
+            if ((null !== port.readable) && (false === port.readable.locked) &&
+                (null !== port.writable) && (false === port.writable.locked)) {
+                await port.close();
             }
-        });
+            return;
+        }
+        const quietLogger = {
+            /** Suppress protocol logs from the status area. */
+            log() { },
+            /** Suppress protocol debug output. */
+            debug() { },
+            /** Suppress protocol error output; the UI handles state events. */
+            error() { },
+        };
+        const session = new ImprovSerial(port, quietLogger);
+        improv = session;
+        updateSerialControls();
 
-        const deviceInfo = await improv.initialize(5000);
+        appendTerminalOutput("\r\n[Improv Wi-Fi session started. Waiting for button authorization.]\r\n");
+
+        session.addEventListener("state-changed", handleImprovStateChanged);
+        session.addEventListener("error-changed", handleImprovErrorChanged);
+
+        const deviceInfo = await session.initialize(5000);
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
+
         elements.wifiForm.hidden = false;
         elements.authorizationStatus.textContent = `Press any physical button on the device to authorize Wi-Fi setup. ${deviceInfo?.name ?? "Pixelix"} is waiting.`;
+        appendTerminalOutput(`\r\n[${deviceInfo?.name ?? "Pixelix"} is waiting for a physical button.]\r\n`);
         setStepState("wifi", "Waiting for button");
 
-        await waitForAuthorization(improv);
+        await waitForAuthorization(session);
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
+
         elements.authorizationStatus.textContent = "Authorized. Enter the Wi-Fi credentials.";
         elements.provisionButton.disabled = false;
     } catch (error) {
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
+
         elements.authorizationStatus.textContent = error.message;
         addStatus(error.message, "error");
+        appendTerminalOutput(`\r\n[Wi-Fi setup failed: ${error.message}]\r\n`);
         elements.wifiConnectButton.disabled = false;
         if (improv) {
             await closeImprovSession();
@@ -425,7 +937,38 @@ async function connectForWifiSetup() {
     }
 }
 
+/**
+ * Update installer and console output when Improv state changes.
+ * @param {CustomEvent<number>} event Improv state-change event
+ * @returns {void}
+ */
+function handleImprovStateChanged(event) {
+    appendTerminalOutput(`\r\n[Improv state: ${event.detail}]\r\n`);
+    if (event.detail === IMPROV_AUTHORIZED_STATE) {
+        elements.authorizationStatus.textContent = "Authorized. Enter the Wi-Fi credentials.";
+        elements.provisionButton.disabled = false;
+        setStepState("wifi", "Authorized");
+    }
+}
+
+/**
+ * Forward an Improv error code to the serial console without exposing credentials.
+ * @param {CustomEvent<number>} event Improv error-change event
+ * @returns {void}
+ */
+function handleImprovErrorChanged(event) {
+    if (0 !== event.detail) {
+        appendTerminalOutput(`\r\n[Improv error: ${event.detail}]\r\n`);
+    }
+}
+
+/**
+ * Close the Improv reader and release the selected serial port.
+ * @returns {Promise<void>}
+ */
 async function closeImprovSession() {
+    improvSessionToken += 1;
+
     if (improv) {
         const session = improv;
         improv = undefined;
@@ -437,9 +980,14 @@ async function closeImprovSession() {
         await serialPort.close();
     }
 
-    setTerminalConnected(false);
+    updateSerialControls();
 }
 
+/**
+ * Submit Wi-Fi credentials to Improv after physical authorization.
+ * @param {SubmitEvent} event Wi-Fi form submission
+ * @returns {Promise<void>}
+ */
 async function provisionWifi(event) {
     event.preventDefault();
     const ssid = elements.ssidInput.value;
@@ -461,42 +1009,91 @@ async function provisionWifi(event) {
         elements.authorizationStatus.textContent = "Credentials saved. Pixelix is restarting; it will join the selected Wi-Fi network.";
         setStepState("wifi", "Restarting");
         addStatus("Wi-Fi credentials accepted; the device is restarting.", "success");
+        appendTerminalOutput("\r\n[Wi-Fi credentials accepted. Device restarting.]\r\n");
         await closeImprovSession();
-        elements.wifiConnectButton.disabled = false;
+        updateSerialControls();
     } catch (error) {
         elements.passwordInput.value = "";
         elements.authorizationStatus.textContent = "Wi-Fi setup failed. Check the credentials or use the captive portal.";
         elements.provisionButton.disabled = false;
         addStatus(`Wi-Fi provisioning failed: ${error.message}`, "error");
+        appendTerminalOutput(`\r\n[Wi-Fi provisioning failed: ${error.message}]\r\n`);
     }
 }
 
-if (!("serial" in navigator) || !window.isSecureContext) {
-    elements.chipStatus.textContent = "Web Serial requires a secure context in Chrome or Edge on desktop.";
+/**
+ * Show the unsupported-browser message when Web Serial is unavailable.
+ * @returns {void}
+ */
+function handleUnsupportedSerial() {
+    elements.chipStatus.textContent = "Web Serial requires a secure context in a Chromium based desktop browser (Chrome, Edge, Opera, Brave).";
     elements.connectButton.disabled = true;
     elements.wifiConnectButton.disabled = true;
     elements.terminalConnectButton.disabled = true;
-} else {
-    elements.terminalConnectButton.disabled = false;
-    loadManifest().catch((error) => {
-        elements.chipStatus.textContent = error.message;
-        addStatus(error.message, "error");
-    });
 }
 
-elements.connectButton.addEventListener("click", connectToBoard);
-elements.flashButton.addEventListener("click", flashBoard);
-elements.wifiConnectButton.addEventListener("click", connectForWifiSetup);
-elements.wifiForm.addEventListener("submit", provisionWifi);
-elements.terminalConnectButton.addEventListener("click", () => {
+/**
+ * Display manifest loading errors in the installer and activity list.
+ * @param {Error} error Manifest loading failure
+ * @returns {void}
+ */
+function handleManifestError(error) {
+    elements.chipStatus.textContent = error.message;
+    addStatus(error.message, "error");
+}
+
+/**
+ * Toggle standalone terminal ownership of the serial port.
+ * @returns {void}
+ */
+function toggleTerminalConnection() {
     if (terminalReader) {
-        disconnectTerminal().catch((error) => addStatus(error.message, "error"));
+        disconnectTerminal().catch(handleTerminalError);
     } else {
         connectTerminal();
     }
-});
-elements.terminalClearButton.addEventListener("click", () => {
+}
+
+/**
+ * Report a terminal connection/close failure in installer status.
+ * @param {Error} error Terminal failure
+ * @returns {void}
+ */
+function handleTerminalError(error) {
+    addStatus(error.message, "error");
+}
+
+/**
+ * Clear the serial console output buffer.
+ * @returns {void}
+ */
+function clearTerminalOutput() {
     elements.terminalOutput.textContent = "";
-});
+}
+
+/**
+ * Clear the installer status activity list.
+ * @returns {void}
+ */
+function clearInstallerStatus() {
+    elements.statusList.replaceChildren();
+}
+
+if (!("serial" in navigator) || !window.isSecureContext) {
+    handleUnsupportedSerial();
+} else {
+    updateSerialControls();
+    loadCatalog().catch(handleManifestError);
+}
+
+elements.versionSelect.addEventListener("change", handleVersionSelection);
+elements.boardSelect.addEventListener("change", handleBoardSelection);
+elements.connectButton.addEventListener("click", connectToBoard);
+elements.flashButton.addEventListener("click", flashBoard);
+elements.keepSettings.addEventListener("change", updateSerialControls);
+elements.wifiConnectButton.addEventListener("click", connectForWifiSetup);
+elements.wifiForm.addEventListener("submit", provisionWifi);
+elements.terminalConnectButton.addEventListener("click", toggleTerminalConnection);
+elements.terminalClearButton.addEventListener("click", clearTerminalOutput);
 elements.terminalForm.addEventListener("submit", sendTerminalCommand);
-document.getElementById("clear-status").addEventListener("click", () => elements.statusList.replaceChildren());
+document.getElementById("clear-status").addEventListener("click", clearInstallerStatus);

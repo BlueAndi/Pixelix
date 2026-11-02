@@ -123,7 +123,7 @@
 
                 try {
                     await restClient.restart();
-                    await dialog.showInfo("<p>Ok.</p>");
+                    await dialog.showCountdownAndReload("<p>Restart performed.</p>");
                 } catch (err) {
                     await dialog.showError("<p>Error: " + err + "</p>");
                 }

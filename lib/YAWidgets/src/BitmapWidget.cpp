@@ -36,6 +36,14 @@
 #include "BitmapWidget.h"
 #include "BmpImgLoader.h"
 
+/* The PNG image loader is only available if the build switch is enabled. Its
+ * header pulls in the PNGdec header, therefore the include must stay inside
+ * the guard.
+ */
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+#include "PngImgLoader.h"
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+
 #include <YAColor.h>
 #include <Logging.h>
 #include <FileUtil.h>
@@ -61,18 +69,38 @@
  *****************************************************************************/
 
 /* Initialize bitmap widget type. */
-const char* BitmapWidget::WIDGET_TYPE             = "bitmap";
+const char* BitmapWidget::WIDGET_TYPE     = "bitmap";
 
 /* Initialize bitmap image filename extension. */
-const char* BitmapWidget::FILE_EXT_BITMAP         = "bmp";
+const char* BitmapWidget::FILE_EXT_BITMAP = "bmp";
 
 /* Initialize GIF image filename extension. */
-const char* BitmapWidget::FILE_EXT_GIF            = "gif";
+const char* BitmapWidget::FILE_EXT_GIF    = "gif";
+
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+
+/* Initialize PNG image filename extension. */
+const char* BitmapWidget::FILE_EXT_PNG = "png";
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+
+/* Initialize WebP image filename extension. */
+const char* BitmapWidget::FILE_EXT_WEBP = "webp";
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
 
 /* Initialize supported image file extensions. */
 const char* BitmapWidget::IMAGE_FILE_EXTENSIONS[] = {
     FILE_EXT_BITMAP,
-    FILE_EXT_GIF
+    FILE_EXT_GIF,
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+    FILE_EXT_PNG,
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+    FILE_EXT_WEBP,
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
 };
 
 /* Initialize number of supported image file extensions. */
@@ -96,6 +124,10 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
         m_hAlignPosX    = widget.m_hAlignPosX;
         m_vAlignPosY    = widget.m_vAlignPosY;
         m_gifFileLoader = widget.m_gifFileLoader;
+
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+        m_webpPlayer = widget.m_webpPlayer;
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
     }
 
     return *this;
@@ -106,6 +138,7 @@ void BitmapWidget::set(const YAGfxBitmap& bitmap)
     /* Release unused memory. */
     m_bitmap.release();
     m_gifPlayer.close();
+    releaseWebp();
 
     if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
     {
@@ -124,10 +157,23 @@ void BitmapWidget::clear(const Color& color)
     {
         m_bitmap.release();
     }
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+    /* A PNG image is decoded into the same bitmap as a BMP image. */
+    else if (IMG_TYPE_PNG == m_imgType)
+    {
+        m_bitmap.release();
+    }
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
     else if (IMG_TYPE_GIF == m_imgType)
     {
         m_gifPlayer.close();
     }
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+    else if (IMG_TYPE_WEBP == m_imgType)
+    {
+        m_webpPlayer.close();
+    }
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
     else
     {
         ;
@@ -161,6 +207,20 @@ bool BitmapWidget::load(const String& filename, FS& fs)
             {
                 isSuccessful = loadGIF(fs, filename);
             }
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+            /* PNG image? */
+            else if (true == fileExtension.equalsIgnoreCase(FILE_EXT_PNG))
+            {
+                isSuccessful = loadPNG(fs, filename);
+            }
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+            /* WebP image? */
+            else if (true == fileExtension.equalsIgnoreCase(FILE_EXT_WEBP))
+            {
+                isSuccessful = loadWEBP(fs, filename);
+            }
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
             else
             {
                 /* Not supported. */
@@ -222,6 +282,21 @@ void BitmapWidget::alignWidget()
         imageWidth  = m_gifPlayer.getWidth();
         imageHeight = m_gifPlayer.getHeight();
         break;
+
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+    /* A PNG image is decoded into the same bitmap as a BMP image. */
+    case IMG_TYPE_PNG:
+        imageWidth  = m_bitmap.getWidth();
+        imageHeight = m_bitmap.getHeight();
+        break;
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+    case IMG_TYPE_WEBP:
+        imageWidth  = static_cast<uint16_t>(m_webpPlayer.getWidth());
+        imageHeight = static_cast<uint16_t>(m_webpPlayer.getHeight());
+        break;
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
 
     default:
         break;
@@ -306,6 +381,7 @@ bool BitmapWidget::loadBMP(FS& fs, const String& filename)
     {
         /* Release unused memory. */
         m_gifPlayer.close();
+        releaseWebp();
 
         /* Select image type. */
         m_imgType    = IMG_TYPE_BMP;
@@ -358,6 +434,7 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
     {
         /* Release unused memory. */
         m_bitmap.release();
+        releaseWebp();
 
         /* Select image type. */
         m_imgType    = IMG_TYPE_GIF;
@@ -367,6 +444,130 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
 
     return isSuccessful;
 }
+
+#if (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE)
+
+bool BitmapWidget::loadPNG(FS& fs, const String& filename)
+{
+    bool              isSuccessful = false;
+    PngImgLoader      loader;
+    PngImgLoader::Ret ret = loader.load(fs, filename, m_bitmap);
+
+    if (PngImgLoader::RET_OK != ret)
+    {
+        if (PngImgLoader::RET_FILE_NOT_FOUND == ret)
+        {
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
+        }
+        else if (PngImgLoader::RET_FILE_FORMAT_INVALID == ret)
+        {
+            LOG_ERROR("File %s has invalid format.", filename.c_str());
+        }
+        else if (PngImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
+        {
+            /* The decoder refuses 16 bit per sample and interlaced (Adam7)
+             * images. Interlacing is a common export option, therefore it is
+             * named explicit.
+             */
+            LOG_ERROR("File %s has unsupported format. 16 bit per sample and interlaced PNG images are not supported.", filename.c_str());
+        }
+        else if (PngImgLoader::RET_IMG_TOO_BIG == ret)
+        {
+            /* Either the image size can not be represented, the image is wider
+             * than the decoder line buffer can hold or the bitmap could not be
+             * allocated.
+             */
+            LOG_ERROR("File %s is too big: image size not representable, image too wide for the decoder or no memory for the bitmap.", filename.c_str());
+        }
+        else if (PngImgLoader::RET_OUT_OF_MEMORY == ret)
+        {
+            LOG_ERROR("Failed to load %s because of out of memory.", filename.c_str());
+        }
+        else
+        {
+            LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+        }
+    }
+    else
+    {
+        /* Release unused memory. */
+        m_gifPlayer.close();
+        releaseWebp();
+
+        /* Select image type. */
+        m_imgType    = IMG_TYPE_PNG;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_PNG_ENABLE) */
+
+#if (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE)
+
+bool BitmapWidget::loadWEBP(FS& fs, const String& filename)
+{
+    bool               isSuccessful = false;
+    WebpImgPlayer::Ret ret;
+
+    /* A already opened WebP image shall be closed first. */
+    m_webpPlayer.close();
+
+    /* Open WebP image and keep it opened as long its shown. */
+    ret = m_webpPlayer.open(fs, filename);
+
+    if (WebpImgPlayer::RET_OK != ret)
+    {
+        if (WebpImgPlayer::RET_FILE_NOT_FOUND == ret)
+        {
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
+        }
+        else if (WebpImgPlayer::RET_FILE_ALREADY_OPENED == ret)
+        {
+            LOG_ERROR("File %s already opened.", filename.c_str());
+        }
+        else if (WebpImgPlayer::RET_FILE_FORMAT_INVALID == ret)
+        {
+            LOG_ERROR("File %s has invalid format.", filename.c_str());
+        }
+        else if (WebpImgPlayer::RET_FILE_FORMAT_UNSUPPORTED == ret)
+        {
+            LOG_ERROR("File %s has unsupported format.", filename.c_str());
+        }
+        else if (WebpImgPlayer::RET_IMG_TOO_BIG == ret)
+        {
+            /* Either the canvas size can not be represented or the bitmap
+             * could not be allocated.
+             */
+            LOG_ERROR("File %s is too big: canvas size not representable or no memory for the bitmap.", filename.c_str());
+        }
+        else if (WebpImgPlayer::RET_OUT_OF_MEMORY == ret)
+        {
+            LOG_ERROR("Failed to load %s because of out of memory.", filename.c_str());
+        }
+        else
+        {
+            LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+        }
+    }
+    else
+    {
+        /* Release unused memory. */
+        m_bitmap.release();
+        m_gifPlayer.close();
+
+        /* Select image type. */
+        m_imgType    = IMG_TYPE_WEBP;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+#endif /* (0 != CONFIG_IMAGE_FORMAT_WEBP_ENABLE) */
 
 /******************************************************************************
  * External Functions

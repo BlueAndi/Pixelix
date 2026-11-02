@@ -355,7 +355,7 @@ private:
      *
      * @return If successful it will return true otherwise false.
      */
-    bool preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
+    RestService::PreProcessResult preProcessAsyncWebResponse(const char* payload, size_t payloadSize, PsramJsonDocument& jsonDoc);
 
     /**
      * Get value from JSON source by the filter.

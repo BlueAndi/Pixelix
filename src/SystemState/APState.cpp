@@ -103,25 +103,9 @@ void APState::entry(StateMachine& sm)
     LOG_INFO("Setup access point.");
 
     /* Get necessary settings. */
-    if (false == settings.open(true))
-    {
-        LOG_WARNING("Use default hostname.");
-        hostname = settings.getHostname().getDefault();
-
-        LOG_WARNING("Use default wifi AP SSID.");
-        wifiApSSID = settings.getWifiApSSID().getDefault();
-
-        LOG_WARNING("Use default wifi AP passphrase.");
-        wifiApPassphrase = settings.getWifiApPassphrase().getDefault();
-    }
-    else
-    {
-        hostname         = settings.getHostname().getValue();
-        wifiApSSID       = settings.getWifiApSSID().getValue();
-        wifiApPassphrase = settings.getWifiApPassphrase().getValue();
-
-        settings.close();
-    }
+    hostname         = settings.getHostname().getValueFromRam();
+    wifiApSSID       = settings.getWifiApSSID().getValueFromRam();
+    wifiApPassphrase = settings.getWifiApPassphrase().getValueFromRam();
 
     /* Configure access point.
      * The DHCP server will automatically be started and uses the range x.x.x.1 - x.x.x.11

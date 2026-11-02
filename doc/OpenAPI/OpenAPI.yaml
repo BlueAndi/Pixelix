@@ -7,13 +7,10 @@ info:
 
     ## General
 
-    If a plugin is instantiated, it will get a random and unqiue id (UID). The UID is used to address the plugin specific REST API. The user is able to assign a alias name for every plugin instance, which can be used to address it too.
-    * UID:
-      * ```<server-url>/display/uid/{uid}```
-    * Alias:
-      * ```/display/alias/{alias}```
+    Every plugin instance carries an alias name, which is unique per device and is the only way to address the plugin specific REST API:
+    * ```<server-url>/display/plugin/{alias}```
 
-    The REST API description focus only on the UID for the sake of maintainability.
+    An alias is 3 to 20 characters long and may contain ```A-Z```, ```a-z```, ```0-9```, ```_``` and ```-```. If none is given at installation time, a default is generated from the plugin type name, e.g. ```DateTime1```.
   version: 1.10.0
   title: Pixelix REST API
   termsOfService: ""
@@ -44,8 +41,6 @@ tags:
   - name: CountdownPlugin
     description: Plugin specific API
   - name: DateTimePlugin
-    description: Plugin specific API
-  - name: GithubPlugin
     description: Plugin specific API
   - name: GrabViaRestPlugin
     description: Plugin specific API
@@ -94,6 +89,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Button"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/fadeEffect:
@@ -116,6 +113,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FadeEffect"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -137,6 +136,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FadeEffect"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/power:
@@ -159,6 +160,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DisplayPowerState"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -166,11 +169,19 @@ paths:
         - Display
       summary: Set display power state.
       description: |
-        Set current display power state.
+        Set current display power state and/or brightness.
+
+        At least one of both parameters shall be given. If one of them is
+        invalid, nothing is applied at all.
+
+        The brightness is limited by the brightness soft limits. It has no
+        effect as long as the automatic brightness adjustment is enabled,
+        see /display/autoBrightness.
 
         Example:
         ```bash
         $ curl -u luke:skywalker -d "state=off" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/power
+        $ curl -u luke:skywalker -d "brightness=128" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/power
         ```
       operationId: setDisplayPowerState
       parameters:
@@ -181,6 +192,14 @@ paths:
             enum: [off, on]
           required: false
           description: "Power on/off state."
+        - in: query
+          name: brightness
+          schema:
+            type: number
+            minimum: 0
+            maximum: 255
+          required: false
+          description: "Display brightness."
       responses:
         "200":
           description: Ok
@@ -194,11 +213,78 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/channel:
+  /display/autoBrightness:
+    get:
+      tags:
+        - Display
+      summary: Get automatic brightness adjustment state.
+      description: |
+        Get the state of the automatic brightness adjustment, which adapts the
+        display brightness to the ambient light.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/autoBrightness
+        ```
+      operationId: getDisplayAutoBrightnessState
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisplayAutoBrightnessState"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Display
+      summary: Set automatic brightness adjustment state.
+      description: |
+        Enable or disable the automatic brightness adjustment.
+
+        It is rejected if the board provides no ambient light sensor. As long
+        as it is enabled, a brightness set via /display/power has no effect.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "state=on" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/autoBrightness
+        ```
+      operationId: setDisplayAutoBrightnessState
+      parameters:
+        - in: query
+          name: state
+          schema:
+            type: string
+            enum: [off, on]
+          required: true
+          description: "Automatic brightness adjustment on/off state."
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisplayAutoBrightnessState"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - pixelixAuth: []
+  /display/plugin/{alias}/channel:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SensorPlugin
@@ -208,7 +294,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/channel
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/channel
         ```
       operationId: getSensorCfg
       responses:
@@ -219,11 +305,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Channel"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -235,7 +323,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "sensorIndex=0" -d "channelIndex=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/channel
+        $ curl -u luke:skywalker -d "sensorIndex=0" -d "channelIndex=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/channel
         ```
       operationId: setSensorCfg
       parameters:
@@ -259,16 +347,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/chicagobus:
+  /display/plugin/{alias}/chicagobus:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - ChicagoBusTrackerPlugin
@@ -290,11 +380,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChicagoBusConfig"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -309,7 +401,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -F "apiKey=00000000" -F "rte=55" -F "dir=Eastbound" -F "stpid=10507" -F "orig=false" -F "dest=true" -F "two=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobus
+        $ curl -u luke:skywalker -F "apiKey=00000000" -F "rte=55" -F "dir=Eastbound" -F "stpid=10507" -F "orig=false" -F "dest=true" -F "two=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobus
         ```
       operationId: setChicagoBusConfig
       requestBody:
@@ -325,127 +417,99 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /display/uid/{uid}/chicagobusroutes:
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /display/plugin/{alias}/chicagobusrequest:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - ChicagoBusTrackerPlugin
-      summary: Get list of bus routes
+      summary: Poll the result of a proxied CTA Bus Tracker API request
       description: |
-        Returns a list of all CTA bus routes with 
-        their ID (55, X49, etc) 
-        and name ("Garfield", "Western Express", etc).
+        Returns the result of the CTA Bus Tracker API request which was started by the POST request.
+        The data object contains exactly one of the following:
+        * `pending: true` while the request is in progress. Poll again later, the web page polls every 100 ms up to 20 times.
+        * `error` if the request failed. The error is reported once, the next poll answers with `pending: false`.
+        * The CTA Bus Tracker API JSON response (`bustime-response`). For `/getroutes`, `/getdirections` and `/getstops`
+          it is reduced to the fields listed in the schema, every other path is passed through unfiltered.
+          The result is consumed by this request and can not be read twice.
+        * `pending: false` if no request is in progress and no result is available.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusroutes
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
         ```
-      operationId: getChicagoBusRoutes
+      operationId: getChicagoBusRequest
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChicagoBusRoutes"
+                $ref: "#/components/schemas/ChicagoBusRequest"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/chicagobusdirections:
-    parameters:
-      - $ref: "#/components/parameters/uid"
-      - in: query
-        name: rte
-        schema:
-          type: string
-        required: true
-        description: CTA Bus route ID (e.g. 55, X49, 111A)
-    get:
+    post:
       tags:
         - ChicagoBusTrackerPlugin
-      summary: Get list of directions for a given bus route ID
+      summary: Start a proxied CTA Bus Tracker API request
       description: |
-        Returns a list of valid directions for a given bus route.
-        This is always a pair of strings, either
-        `["Northbound", "Southbound"]` or `["Eastbound", "Westbound"]`
+        Starts a request to the CTA Bus Tracker API v3 (`http://ctabustracker.com/bustime/api/v3`) on behalf of the caller.
+        The device appends the API key of the plugin configuration and `format=json` to the given path, therefore the
+        API key must be configured first (see `/display/plugin/{alias}/chicagobus`), otherwise the request is rejected.
+        A request which is still in progress is aborted by a new one. The result is retrieved by polling with GET.
+
+        The path is restricted to prevent open proxy abuse. It is rejected if it does not start with `/get`,
+        contains `://` or contains `key=`.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusdirections?rte=55
+        $ curl -u luke:skywalker -d "path=/getroutes" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
+        $ curl -u luke:skywalker -d "path=/getdirections?rt=55" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
+        $ curl -u luke:skywalker -d "path=/getstops?rt=55&dir=Eastbound" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/chicagobusrequest
         ```
-      operationId: getChicagoBusDirections
+      operationId: setChicagoBusRequest
+      parameters:
+        - in: query
+          name: path
+          schema:
+            type: string
+          required: true
+          description: Relative CTA Bus Tracker API v3 path including its query parameters, e.g. `/getroutes`, `/getdirections?rt=55` or `/getstops?rt=55&dir=Eastbound`. Must start with `/get`.
       responses:
         "200":
-          description: Ok
+          description: Ok, the request was started.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ChicagoBusDirections"
+                $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown, the path is missing or rejected, or no API key is configured.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/chicagobusstops:
+  /display/plugin/{alias}/config:
     parameters:
-      - $ref: "#/components/parameters/uid"
-      - in: query
-        name: rte
-        schema:
-          type: string
-        required: true
-        description: CTA Bus route ID (e.g. 55, X49, 111A)
-      - in: query
-        name: dir
-        schema:
-          type: string
-          enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
-        required: true
-        description: Direction to list stop IDs for
-    get:
-      tags:
-        - ChicagoBusTrackerPlugin
-      summary: Get list of stops for a given bus route ID and direction
-      description: |
-        Returns a list of bus stop IDs for a given route and direction
-
-        Example:
-        ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/chicagobusstops?rte=55&dir=Eastbound
-        ```
-      operationId: getChicagoBusStops
-      responses:
-        "200":
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ChicagoBusStops"
-        "404":
-          description: Plugin UID or topic is unknown
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - pixelixAuth: []
-  /display/uid/{uid}/config:
-    parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SoundReactivePlugin
@@ -456,7 +520,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/config
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/config
         ```
       operationId: getConfiguration
       responses:
@@ -467,11 +531,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Config"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -484,7 +550,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/config
+        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/config
         ```
       operationId: setConfiguration
       parameters:
@@ -503,16 +569,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/countdown:
+  /display/plugin/{alias}/countdown:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - CountdownPlugin
@@ -522,7 +590,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/countdown
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/countdown
         ```
       operationId: getTargetDate
       responses:
@@ -533,11 +601,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Countdown"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -549,7 +619,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "descPlural=DAYS" -d "descSingular=DAY" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/countdown
+        $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "descPlural=DAYS" -d "descSingular=DAY" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/countdown
         ```
       operationId: setTargetDate
       parameters:
@@ -591,16 +661,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/dateTime:
+  /display/plugin/{alias}/dateTime:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - DateTimePlugin
@@ -610,7 +682,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/dateTime
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/dateTime
         ```
       operationId: getDateTimeCfg
       responses:
@@ -621,11 +693,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/DateTime"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -637,7 +711,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "mode=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/dateTime
+        $ curl -u luke:skywalker -d "mode=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/dateTime
         ```
       operationId: setDateTimeCfg
       parameters:
@@ -685,16 +759,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/grabConfig:
+  /display/plugin/{alias}/grabConfig:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - GrabViaRestPlugin
@@ -704,7 +780,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/grabConfig
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/grabConfig
         ```
       operationId: getGrabConfiguration
       responses:
@@ -715,11 +791,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/GrabConfig"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -731,7 +809,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/grabConfig
+        $ curl -u luke:skywalker -d "freqBandLen=8" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/grabConfig
         ```
       operationId: setGrabConfiguration
       parameters:
@@ -785,16 +863,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/host:
+  /display/plugin/{alias}/host:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - VolumioPlugin
@@ -804,7 +884,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/host
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/host
         ```
       operationId: getHost
       responses:
@@ -815,11 +895,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Host"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -831,7 +913,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/host
+        $ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/host
         ```
       operationId: setHost
       parameters:
@@ -849,16 +931,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/ipAddress:
+  /display/plugin/{alias}/ipAddress:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - GruenbeckPlugin
@@ -868,7 +952,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/ipAddress
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/ipAddress
         ```
       operationId: getIpAddress
       responses:
@@ -879,11 +963,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/IPAddress"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -895,7 +981,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "ipAddress=192.168.178.10" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/ipAddress
+        $ curl -u luke:skywalker -d "ipAddress=192.168.178.10" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/ipAddress
         ```
       operationId: setIpAddress
       parameters:
@@ -913,86 +999,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/github:
+  /display/plugin/{alias}/lamp/{lampId}:
     parameters:
-      - $ref: "#/components/parameters/uid"
-    get:
-      tags:
-        - GithubPlugin
-      summary: Get github user and repository name
-      description: |
-        Get github user and repository name.
-
-        Example:
-        ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/github
-        ```
-      operationId: getUserAndRepositoryName
-      responses:
-        "200":
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Github"
-        "404":
-          description: Plugin UID or topic is unknown
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - pixelixAuth: []
-    post:
-      tags:
-        - GithubPlugin
-      summary: Set github user and repository name
-      description: |
-        Set github user and repository name.
-
-        Example:
-        ```bash
-        $ curl -u luke:skywalker -d "user=BlueAndi" -d "repository=Pixelix" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/github
-        ```
-      operationId: setUserAndRepositoryName
-      parameters:
-        - in: query
-          name: user
-          schema:
-            type: string
-          required: true
-          description: The github user name.
-        - in: query
-          name: repository
-          schema:
-            type: string
-          required: true
-          description: The github repository name.
-      responses:
-        "200":
-          description: Ok
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Ok"
-        "404":
-          description: Plugin UID or topic is unknown
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-      security:
-        - pixelixAuth: []
-  /display/uid/{uid}/lamp/{lampId}:
-    parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - IconTextLampPlugin
@@ -1002,7 +1020,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamp/0
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/lamp/0
         ```
       operationId: getLampState
       parameters:
@@ -1020,11 +1038,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Lamp"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1036,7 +1056,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "state=on" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamp/0
+        $ curl -u luke:skywalker -d "state=on" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/lamp/0
         ```
       operationId: setLampState
       parameters:
@@ -1061,16 +1081,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/lamps:
+  /display/plugin/{alias}/lamps:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - IconTextLampPlugin
@@ -1080,7 +1102,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/lamps
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/lamps
         ```
       operationId: getLampStates
       responses:
@@ -1091,16 +1113,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Lamps"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/location:
+  /display/plugin/{alias}/location:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SunrisePlugin
@@ -1110,7 +1134,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/location
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/location
         ```
       operationId: getLocation
       responses:
@@ -1121,11 +1145,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Location"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1137,7 +1163,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/location
+        $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/location
         ```
       operationId: setLocation
       parameters:
@@ -1161,16 +1187,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/makapixCfg:
+  /display/plugin/{alias}/makapixCfg:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MakapixPlugin
@@ -1180,7 +1208,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixCfg
         ```
       operationId: getMakapixConfig
       responses:
@@ -1191,11 +1219,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/MakapixConfig"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1207,7 +1237,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "playerKey=abc123" -d "mqttInstance=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixCfg
+        $ curl -u luke:skywalker -d "playerKey=abc123" -d "mqttInstance=0" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixCfg
         ```
       operationId: setMakapixConfig
       parameters:
@@ -1231,16 +1261,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/makapixPlayCtrl:
+  /display/plugin/{alias}/makapixPlayCtrl:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MakapixPlugin
@@ -1250,7 +1282,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
         ```
       operationId: getMakapixPlaybackStatus
       responses:
@@ -1261,11 +1293,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/MakapixPlaybackStatus"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1278,19 +1312,19 @@ paths:
         Examples:
         ```bash
         # Next artwork
-        $ curl -u luke:skywalker -d "action=next" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=next" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Previous artwork
-        $ curl -u luke:skywalker -d "action=previous" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=previous" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Play a channel
-        $ curl -u luke:skywalker -d "action=playChannel" -d "channelName=promoted" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=playChannel" -d "channelName=promoted" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Pause playback
-        $ curl -u luke:skywalker -d "action=pause" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=pause" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
 
         # Continue playback
-        $ curl -u luke:skywalker -d "action=continue" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixPlayCtrl
+        $ curl -u luke:skywalker -d "action=continue" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixPlayCtrl
         ```
       operationId: controlMakapixPlayback
       parameters:
@@ -1327,16 +1361,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/makapixProvision:
+  /display/plugin/{alias}/makapixProvision:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MakapixPlugin
@@ -1346,7 +1382,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixProvision
         ```
       operationId: getMakapixProvisionStatus
       responses:
@@ -1357,11 +1393,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/MakapixProvisionStatus"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1373,7 +1411,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/makapixProvision
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/makapixProvision
         ```
       operationId: provisionMakapixPlayer
       responses:
@@ -1390,16 +1428,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/omweather:
+  /display/plugin/{alias}/omweather:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - OpenMeteoPlugin
@@ -1409,7 +1449,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/omweather
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/omweather
         ```
       operationId: getOMWeather
       responses:
@@ -1420,11 +1460,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/OMWeather"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1436,7 +1478,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "latitude=48.858" -d "longitude=2.295" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/omweather
+        $ curl -u luke:skywalker -d "latitude=48.858" -d "longitude=2.295" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/omweather
         ```
       operationId: setOMWeather
       parameters:
@@ -1486,16 +1528,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/signalDetector:
+  /display/plugin/{alias}/signalDetector:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - SignalDetectorPlugin
@@ -1505,7 +1549,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/signalDetector
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/signalDetector
         ```
       operationId: getSignalDetector
       responses:
@@ -1516,11 +1560,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/SignalDetector"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1532,7 +1578,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "pushUrl=\"http://notify.me\"" -d "text=\"Detected!\"" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/signalDetector
+        $ curl -u luke:skywalker -d "pushUrl=\"http://notify.me\"" -d "text=\"Detected!\"" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/signalDetector
         ```
       operationId: setSignalDetector
       parameters:
@@ -1592,16 +1638,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/slots:
+  /display/plugin/{alias}/slots:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MultiIconPlugin
@@ -1611,7 +1659,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots
         ```
       operationId: getSlotsFileName
       responses:
@@ -1622,11 +1670,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/SlotsFileName"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - MultiIconPlugin
@@ -1634,9 +1684,13 @@ paths:
       description: |
         Set all slot file names.
 
+        An array is passed as HTTP parameters with the index notation `slots._<index>_=<value>`, which the REST API
+        converts to a JSON array. Alternatively send a JSON body `{ "slots": [ "...", "..." ] }` with the content type
+        `application/json`.
+
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "slots[]=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots
+        $ curl -u luke:skywalker -d "slots._0_=/configuration/smiley.bmp" -d "slots._1_=/configuration/github.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots
         ```
       operationId: setSlotsFileName
       parameters:
@@ -1647,7 +1701,7 @@ paths:
             items:
               type: string
           required: false
-          description: The full path of the icon of every slot, e.g. /configuration/smiley.bmp.
+          description: The full path of the icon of every slot, e.g. /configuration/smiley.bmp. Passed as slots._0_=..., slots._1_=..., etc.
       responses:
         "200":
           description: Ok
@@ -1656,16 +1710,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/slot/{id}:
+  /display/plugin/{alias}/slot/{id}:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - MultiIconPlugin
@@ -1675,7 +1731,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slots/1
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slots/1
         ```
       operationId: getSlotFileName
       parameters:
@@ -1693,11 +1749,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/SlotFileName"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - MultiIconPlugin
@@ -1707,7 +1765,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "fileName=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/slot/1
+        $ curl -u luke:skywalker -d "fileName=/configuration/smiley.bmp" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/slot/1
         ```
       operationId: setSlotFileName
       parameters:
@@ -1731,42 +1789,46 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/text:
+  /display/plugin/{alias}/iconText:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - IconTextLampPlugin
         - IconTextPlugin
       summary: Get text
       description: |
-        Get the shown text and icon file name.
+        Get the shown text, the icon file name and whether the icon is scrolled with the text.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/text
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/iconText
         ```
-      operationId: getText
+      operationId: getIconText
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Text"
+                $ref: "#/components/schemas/IconText"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1775,13 +1837,14 @@ paths:
         - IconTextPlugin
       summary: Set text
       description: |
-        Set text which to show and/or icon file name.
+        Set the text which to show, the icon file name and/or whether the icon is scrolled with the text.
+        At least one of the parameters must be given, otherwise the request is rejected.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "text=Test" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/text
+        $ curl -u luke:skywalker -d "text=Test" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/iconText
         ```
-      operationId: setText
+      operationId: setIconText
       parameters:
         - in: query
           name: text
@@ -1796,11 +1859,17 @@ paths:
           required: false
           description: The full path of the icon, e.g. /configuration/smiley.bmp. The icon is loaded exactly from this path.
         - in: query
+          name: scrollIcon
+          schema:
+            type: boolean
+          required: false
+          description: Whether the icon is scrolled together with the text (true) or stays fixed on the left side (false). The value is accepted as boolean or as the string "true" / "false".
+        - in: query
           name: storeFlag
           schema:
             type: boolean
           required: false
-          description: Force persistent storage of the configuration (default is false to avoid flash wear).
+          description: Force persistent storage of the configuration (default is false to avoid flash wear). The value is accepted as boolean or as the string "true" / "false".
       responses:
         "200":
           description: Ok
@@ -1809,16 +1878,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/uid/{uid}/weather:
+  /display/plugin/{alias}/weather:
     parameters:
-      - $ref: "#/components/parameters/uid"
+      - $ref: "#/components/parameters/alias"
     get:
       tags:
         - OpenWeatherPlugin
@@ -1828,7 +1899,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/weather
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/weather
         ```
       operationId: getWeather
       responses:
@@ -1839,11 +1910,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Weather"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -1855,7 +1928,7 @@ paths:
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "apiKey=yourApiKey" -d "lat=48.858" -d "lon=2.295" -d "other=3" -d "units=metric" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/uid/0/weather
+        $ curl -u luke:skywalker -d "apiKey=yourApiKey" -d "lat=48.858" -d "lon=2.295" -d "other=3" -d "units=metric" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/plugin/MyAlias/weather
         ```
       operationId: setWeather
       parameters:
@@ -1898,11 +1971,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ok"
         "404":
-          description: Plugin UID or topic is unknown
+          description: Plugin alias or topic is unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /display/slots:
@@ -1914,9 +1989,11 @@ paths:
         Slot information:
         * Max. number of slots.
         * Per slot:
-          * The current installed plugin.
+          * The current installed plugin (name, unique id and alias).
+          * Whether the slot is sticky or not.
           * Whether the slot is locked or not.
           * Slot duration in ms. The plugins are listed in the ascending order of the slots.
+          * Whether the slot is disabled or not.
 
         Example:
         ```bash
@@ -1930,34 +2007,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Slots"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /display/slot/{id}:
-    post:
+  /display/slot/{slotId}:
+    parameters:
+      - in: path
+        name: slotId
+        schema:
+          type: number
+        required: true
+        description: The slot id.
+    get:
       tags:
         - Display
-      summary: Set slot parameter
+      summary: Get slot information
       description: |
-        Set slot parameters.
+        Get the information of a single slot, see `/display/slots` for the content.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -d "sticky=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
         ```
-      operationId: setSlot
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: number
-          required: true
-          description: The slot id.
-        - in: query
-          name: sticky
-          schema:
-            type: boolean
-          required: false
-          description: Set/Clear sticky flag.
+      operationId: getSlot
       responses:
         "200":
           description: Ok
@@ -1965,12 +2038,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Slot"
-        "404":
-          description: Invalid or missing data
+        "405":
+          description: Invalid slot id
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - pixelixAuth: []
+    post:
+      tags:
+        - Display
+      summary: Activate slot or set slot parameters
+      description: |
+        Without any parameter the slot is activated, i.e. the display switches to it. The response contains an
+        empty data object.
+
+        With the `sticky` and/or `disable` parameter the slot parameters are changed instead and persisted.
+        The response contains the slot information. The `sticky` parameter is handled before the `disable`
+        parameter. A parameter value must be exactly `true` or `false`.
+
+        * `sticky=true`: The slot is shown permanently. Rejected if the slot is empty or disabled.
+        * `sticky=false`: Clears the sticky flag. Rejected if the slot is not the sticky one.
+        * `disable=true`: The slot is skipped by the slot cycling. Rejected if the slot is sticky.
+        * `disable=false`: The slot takes part in the slot cycling again.
+
+        Examples:
+        ```bash
+        $ curl -u luke:skywalker -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        $ curl -u luke:skywalker -d "sticky=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        $ curl -u luke:skywalker -d "disable=true" -X POST http://pixelix-FFFFFFFF/rest/api/v1/display/slot/1
+        ```
+      operationId: setSlot
+      parameters:
+        - in: query
+          name: sticky
+          schema:
+            type: boolean
+          required: false
+          description: Set (true) or clear (false) the sticky flag.
+        - in: query
+          name: disable
+          schema:
+            type: boolean
+          required: false
+          description: Disable (true) or enable (false) the slot.
+      responses:
+        "200":
+          description: Ok. The data object is empty if the slot was activated, otherwise it contains the slot information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+        "405":
+          description: Invalid slot id, invalid parameter value or the request was rejected (see description).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fileMgrService/files:
@@ -2001,6 +2130,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fileMgrService/upload:
@@ -2032,6 +2163,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fileMgrService/remove:
@@ -2060,6 +2193,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fs:
@@ -2096,6 +2231,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Fs"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /fs/file:
@@ -2145,6 +2282,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2168,6 +2307,8 @@ paths:
               schema:
                 type: string
                 example: Upload aborted.
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     delete:
@@ -2175,8 +2316,23 @@ paths:
         - Filesystem
       summary: Delete file
       description: |
-        Delte a file in the filesystem.
+        Delete a file in the filesystem.
+
+        The file name part of the path may contain a `*` wildcard (e.g. `/configuration/*.bmp`), then every
+        matching file in the directory is deleted. The directory part must not contain a wildcard.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -X DELETE "http://pixelix-FFFFFFFF/rest/api/v1/fs/file?path=/configuration/smiley.bmp"
+        ```
       operationId: deleteFile
+      parameters:
+        - in: query
+          name: path
+          schema:
+            type: string
+          required: true
+          description: The full path of the file to delete, e.g. /configuration/smiley.bmp.
       responses:
         "200":
           description: Ok
@@ -2184,12 +2340,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Ok"
-        "404":
-          description: File not found
+        "400":
+          description: Invalid path (directory traversal) or wildcard in the directory part
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "404":
+          description: File or directory not found, or no file matches the wildcard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /mqttService/mqtt:
@@ -2212,6 +2376,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MqttServiceSettings"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2294,6 +2460,86 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+      security:
+        - pixelixAuth: []
+  /notify:
+    post:
+      tags:
+        - Display
+      summary: Show a notification
+      description: |
+        Show a notification on the display for a given time. The notification
+        interrupts the currently shown slot. A sticky slot is suspended and
+        restored automatically afterwards.
+
+        Only the text is mandatory. A problem with the optional icon or melody
+        never suppresses the notification itself.
+
+        The melody is only played on a board with a buzzer, see
+        CONFIG_MELODY_SERVICE_ENABLE. On every other board the melody and the
+        volume are ignored, the notification is shown as usual.
+
+        Example:
+        ```bash
+        $ curl -u luke:skywalker -d "text=Doorbell" -d "duration=5000" -X POST http://pixelix-FFFFFFFF/rest/api/v1/notify
+        ```
+      operationId: notify
+      parameters:
+        - in: query
+          name: text
+          schema:
+            type: string
+            maxLength: 256
+          required: true
+          description: "The notification text. A longer text is rejected, not truncated."
+        - in: query
+          name: duration
+          schema:
+            type: number
+            minimum: 0
+            maximum: 60000
+            default: 10000
+          required: false
+          description: "Display time in ms. A missing value or 0 means 10000 ms, a greater value than 60000 ms is limited to it. The duration also ends a scrolling text."
+        - in: query
+          name: iconFileName
+          schema:
+            type: string
+          required: false
+          description: "Full path of a icon on the device file system. Without a icon the text uses the full display width."
+        - in: query
+          name: melody
+          schema:
+            type: string
+            maxLength: 256
+          required: false
+          description: "Melody in RTTTL format. A longer melody is rejected and not truncated, because a cut off RTTTL string is invalid; the notification is still shown. It starts when the notification appears, not when it is accepted. Only played on a board with a buzzer."
+        - in: query
+          name: volume
+          schema:
+            type: number
+            minimum: 0
+            maximum: 10
+            default: 10
+          required: false
+          description: "Melody volume. Only evaluated together with the melody."
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        "404":
+          description: Invalid or missing data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /plugin/install:
@@ -2306,7 +2552,7 @@ paths:
 
         Example:
         ```bash
-        curl -u luke:skywalker -d "name=IconTextPlugin" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/install
+        curl -u luke:skywalker -d "name=IconTextPlugin" -d "alias=MyAlias" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/install
         ```
       operationId: installPlugin
       parameters:
@@ -2316,6 +2562,12 @@ paths:
             type: string
           required: true
           description: The plugin name.
+        - in: query
+          name: alias
+          schema:
+            type: string
+          required: false
+          description: The plugin alias name. 3 to 20 characters of A-Z, a-z, 0-9, _ and -. If omitted, invalid or already in use, a default is generated from the plugin type name.
       responses:
         "200":
           description: Ok
@@ -2324,17 +2576,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/PluginInstall"
         "404":
-          description: Plugin name is missing
+          description: Plugin name is missing or plugin unknown
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        "405":
-          description: Plugin name not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /plugin/uninstall:
@@ -2347,7 +2595,7 @@ paths:
 
         Example:
         ```bash
-        curl -u luke:skywalker -d "name=IconTextPlugin&slot=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/uninstall
+        curl -u luke:skywalker -d "name=IconTextPlugin&slotId=1" -X POST http://pixelix-FFFFFFFF/rest/api/v1/plugin/uninstall
         ```
       operationId: uninstallPlugin
       parameters:
@@ -2358,11 +2606,11 @@ paths:
           required: true
           description: The plugin name.
         - in: query
-          name: slot
+          name: slotId
           schema:
             type: number
           required: true
-          description: The slot where the plugin is currently installed.
+          description: The id of the slot where the plugin is currently installed.
       responses:
         "200":
           description: Ok
@@ -2382,6 +2630,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /plugins:
@@ -2404,6 +2654,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Plugins"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /restart:
@@ -2426,6 +2678,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Restart"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors:
@@ -2448,6 +2702,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Sensors"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/0/temperature:
@@ -2470,6 +2726,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Temperature"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/1/humidity:
@@ -2492,6 +2750,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Humidity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/2/illuminance:
@@ -2514,6 +2774,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Illuminance"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/3/soc:
@@ -2536,6 +2798,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SOC"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/4/freeHeap:
@@ -2558,6 +2822,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Heap"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/5/minFreeHeap:
@@ -2580,6 +2846,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Heap"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/6/maxAllocHeap:
@@ -2602,6 +2870,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Heap"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/7/signalStrength:
@@ -2624,6 +2894,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SignalStrength"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /sensors/8/uptime:
@@ -2646,6 +2918,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Uptime"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /setting:
@@ -2681,6 +2955,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2731,6 +3007,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /settings:
     get:
       tags:
@@ -2751,36 +3029,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Settings"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
-  /status:
+  /device:
     get:
       tags:
         - Common
-      summary: Get status information
+      summary: Get device information
       description: |
-        Status information:
+        Device information:
+        * Unique device id (chip id).
+        * Device model and manufacturer.
+        * Device name (hostname).
         * Software version.
-        * ESP SDK version.
-        * ESP chip revision.
-        * ESP cpu frequency in MHz.
-        * Internal RAM heap size and available heap.
-        * Wifi SSID of the network, the display will connect to.
-        * Wifi receive signal strength indicator in dBm.
-        * Wifi signal quality in percent.
+        * Hardware version (board target name).
+        * Wifi MAC address.
 
         Example:
         ```bash
-        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/status
+        $ curl -u luke:skywalker -X GET http://pixelix-FFFFFFFF/rest/api/v1/device
         ```
-      operationId: getStatus
+      operationId: getDevice
       responses:
         "200":
           description: Ok
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Status"
+                $ref: "#/components/schemas/Device"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /timerService/timer:
@@ -2803,6 +3083,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TimerServiceTimer"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
     post:
@@ -2904,6 +3186,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
       security:
         - pixelixAuth: []
   /coredump:
@@ -3183,20 +3467,20 @@ components:
         type: number
       required: true
       description: The bitmap slot id.
-    uid:
-      in: path
-      name: uid
-      schema:
-        type: number
-      required: true
-      description: The plugin unique id (UID).
     alias:
       in: path
       name: alias
       schema:
         type: string
       required: true
-      description: The plugin alias name.
+      description: The plugin alias name. 3 to 20 characters of A-Z, a-z, 0-9, _ and -. Unique per device.
+  responses:
+    InternalServerError:
+      description: Internal error, e.g. the JSON response exceeds the size which the firmware reserved for it.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     Button:
       type: object
@@ -3307,52 +3591,66 @@ components:
           type: string
           description: The request result.
           example: ok
-    ChicagoBusDirections:
+    ChicagoBusRequest:
       type: object
+      required:
+        - data
+        - status
       properties:
         data:
           type: object
+          description: Contains either the pending flag, an error or the CTA Bus Tracker API response.
           properties:
-            dirs:
-              type: array
-              items:
-                type: string
-                enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
-              description: Valid directions for a given route
-    ChicagoBusRoutes:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            routes:
-              type: array
-              items:
-                type: object
-                properties:
-                  rt:
-                    type: string
-                    description: Route ID (e.g. 55, X49, 111A)
-                  rtnm:
-                    type: string
-                    description: Route name (e.g. Garfield, Western Express)
-    ChicagoBusStops:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            stops:
-              type: array
-              items:
-                type: object
-                properties:
-                  stpid:
-                    type: string
-                    description: Stop ID (usually a number up to 6 digits)
-                  stpnm:
-                    type: string
-                    description: Stop name (e.g. 55th Street & St. Louis)
+            pending:
+              type: boolean
+              description: True while the request is in progress, false if no request is in progress and no result is available.
+              example: true
+            error:
+              type: string
+              description: The request failed. Reported only once.
+              example: Request failed.
+            bustime-response:
+              type: object
+              description: The CTA Bus Tracker API v3 response. Reduced to the listed fields for /getroutes, /getdirections and /getstops, otherwise passed through unfiltered.
+              properties:
+                routes:
+                  type: array
+                  description: Result of /getroutes.
+                  items:
+                    type: object
+                    properties:
+                      rt:
+                        type: string
+                        description: Route ID (e.g. 55, X49, 111A)
+                      rtnm:
+                        type: string
+                        description: Route name (e.g. Garfield, Western Express)
+                directions:
+                  type: array
+                  description: Result of /getdirections.
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        enum: ["Northbound", "Southbound", "Eastbound", "Westbound"]
+                        description: Valid direction for the given route
+                stops:
+                  type: array
+                  description: Result of /getstops.
+                  items:
+                    type: object
+                    properties:
+                      stpid:
+                        type: string
+                        description: Stop ID (usually a number up to 6 digits)
+                      stpnm:
+                        type: string
+                        description: Stop name (e.g. 55th Street & St. Louis)
+        status:
+          type: string
+          description: The request result.
+          example: ok
     Countdown:
       type: object
       required:
@@ -3421,6 +3719,26 @@ components:
             state:
               type: string
               example: off
+            brightness:
+              type: number
+              description: Display brightness, limited by the brightness soft limits.
+              example: 128
+        status:
+          type: string
+          description: The request result.
+          example: ok
+    DisplayAutoBrightnessState:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+          properties:
+            state:
+              type: string
+              example: off
         status:
           type: string
           description: The request result.
@@ -3470,28 +3788,6 @@ components:
               "size": 8330,
               "type": "file"
             }]
-        status:
-          type: string
-          description: The request result.
-          example: ok
-    Github:
-      type: object
-      required:
-        - data
-        - status
-      properties:
-        data:
-          type: object
-          properties:
-            user:
-              type: string
-            repository:
-              type: string
-          example: |
-            {
-              "user": "BlueAndi",
-              "repository": "Pixelix"
-            }
         status:
           type: string
           description: The request result.
@@ -3892,6 +4188,18 @@ components:
           type: string
           description: The request result.
           example: ok
+    Notification:
+      type: object
+      required:
+        - data
+        - status
+      properties:
+        data:
+          type: object
+        status:
+          type: string
+          description: The request result.
+          example: ok
     Ok:
       type: object
       required:
@@ -3952,6 +4260,10 @@ components:
             uid:
               type: number
               example: 27065
+            alias:
+              type: string
+              description: The alias the plugin was installed with, which may differ from the requested one.
+              example: IconText1
         status:
           type: string
           description: The request result.
@@ -4147,6 +4459,34 @@ components:
       properties:
         data:
           type: object
+          description: The slot information. Empty after a slot was activated.
+          properties:
+            name:
+              type: string
+              description: The name of the installed plugin. Empty if the slot is empty.
+              example: SysMsgPlugin
+            uid:
+              type: number
+              description: The unique id of the installed plugin.
+              example: 372
+            alias:
+              type: string
+              description: The alias name of the installed plugin. Empty if the slot is empty.
+              example: SysMsg1
+            isSticky:
+              type: boolean
+              example: false
+            isLocked:
+              type: boolean
+              example: true
+            duration:
+              type: number
+              description: Slot duration in ms.
+              example: 10000
+            isDisabled:
+              type: boolean
+              description: Whether the slot is disabled, i.e. skipped by the slot cycling.
+              example: false
         status:
           type: string
           description: The request result.
@@ -4167,10 +4507,16 @@ components:
                 properties:
                   name:
                     type: string
+                    description: The name of the installed plugin. Empty if the slot is empty.
                     example: SysMsgPlugin
                   uid:
                     type: number
+                    description: The unique id of the installed plugin.
                     example: 372
+                  alias:
+                    type: string
+                    description: The alias name of the installed plugin. Empty if the slot is empty.
+                    example: SysMsg1
                   isLocked:
                     type: boolean
                     example: true
@@ -4179,7 +4525,12 @@ components:
                     example: false
                   duration:
                     type: number
+                    description: Slot duration in ms.
                     example: 10000
+                  isDisabled:
+                    type: boolean
+                    description: Whether the slot is disabled, i.e. skipped by the slot cycling.
+                    example: false
             maxSlots:
               type: number
               example: 1
@@ -4239,7 +4590,7 @@ components:
           type: string
           description: The request result.
           example: ok
-    Status:
+    Device:
       type: object
       required:
         - data
@@ -4248,48 +4599,34 @@ components:
         data:
           type: object
           properties:
-            hardware:
+            device:
               type: object
               properties:
-                chipRev:
-                  type: number
-                  example: 1
-                cpuFreqMhz:
-                  type: number
-                  example: 120
-            software:
-              type: object
-              properties:
-                version:
+                id:
+                  type: string
+                  description: Unique device id (chip id).
+                  example: 1a2b3c4d5e6f
+                model:
+                  type: string
+                  example: Pixelix
+                manufacturer:
+                  type: string
+                  example: BlueAndi & Friends
+                name:
+                  type: string
+                  description: The hostname of the device.
+                  example: pixelix-FFFFFFFF
+                swVersion:
                   type: string
                   example: v3.0.0
-                revision:
+                hwVersion:
                   type: string
-                  example: 3d50648904d5633facecec278410cc34c8206b18
-                espSdkVersion:
+                  description: The board target name.
+                  example: ulanzi-TC001
+                mac:
                   type: string
-                  example: v3.3.5-1-g85c43024c
-                internalRam:
-                  type: object
-                  properties:
-                    heapSize:
-                      type: number
-                      example: 496
-                    availableHeap:
-                      type: number
-                      example: 412
-            wifi:
-              type: object
-              properties:
-                ssid:
-                  type: string
-                  example: DeathStar
-                rssi:
-                  type: number
-                  example: -50
-                quality:
-                  type: number
-                  example: 100
+                  description: The wifi MAC address.
+                  example: A1:B2:C3:D4:E5:F6
         status:
           type: string
           description: The request result.
@@ -4312,7 +4649,7 @@ components:
           type: string
           description: The request result.
           example: ok
-    Text:
+    IconText:
       type: object
       required:
         - data
@@ -4322,6 +4659,8 @@ components:
           type: object
           required:
             - text
+            - iconFileName
+            - scrollIcon
           properties:
             text:
               type: string
@@ -4329,6 +4668,10 @@ components:
             iconFileName:
               type: string
               example: /configuration/smiley.bmp
+            scrollIcon:
+              type: boolean
+              description: Whether the icon is scrolled together with the text.
+              example: false
         status:
           type: string
           description: The request result.

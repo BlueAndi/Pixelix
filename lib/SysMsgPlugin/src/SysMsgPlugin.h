@@ -47,8 +47,10 @@
 #include "./internal/View.h"
 
 #include <stdint.h>
+#include <functional>
 #include <Plugin.hpp>
 #include <SimpleTimer.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -67,6 +69,18 @@ class SysMsgPlugin : public Plugin
 public:
 
     /**
+     * Handler which plays a melody belonging to a notification.
+     *
+     * It is called when the notification becomes the current one, not when it is
+     * queued. The plugin itself has no audio knowledge, the application connects
+     * it to the melody service.
+     *
+     * @param[in] melody    The melody in RTTTL format.
+     * @param[in] volume    The volume.
+     */
+    typedef std::function<void(const String& melody, uint8_t volume)> MelodyHandler;
+
+    /**
      * Constructs the plugin.
      *
      * @param[in] name  Plugin name (must exist over lifetime)
@@ -79,10 +93,15 @@ public:
         m_duration(0U),
         m_max(0U),
         m_isInit(true),
+        m_isDurationHard(false),
         m_messages(),
         m_wrIndex(0U),
-        m_rdIndex(0U)
+        m_rdIndex(0U),
+        m_isNextMsgPending(false),
+        m_melodyHandler(nullptr),
+        m_mutex()
     {
+        (void)m_mutex.create();
     }
 
     /**
@@ -90,6 +109,7 @@ public:
      */
     ~SysMsgPlugin()
     {
+        m_mutex.destroy();
     }
 
     /**
@@ -112,6 +132,8 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         return m_view.getFontType();
     }
 
@@ -126,6 +148,8 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         m_view.setFontType(fontType);
     }
 
@@ -177,8 +201,38 @@ public:
      * @param[in] msg       Message to show
      * @param[in] duration  Duration in ms, how long a non-scrolling text shall be shown.
      * @param[in] max       Maximum number how often a scrolling text shall be shown.
+     *
+     * @return If the message is queued, it will return true otherwise false.
      */
-    void show(const String& msg, uint32_t duration, uint32_t max);
+    bool show(const String& msg, uint32_t duration, uint32_t max);
+
+    /**
+     * Show a notification.
+     *
+     * In contrast to show() the duration is a hard limit. It ends the message
+     * independent of the text scrolling. A optional icon is shown left of the
+     * text, without a icon the text uses the full display width.
+     *
+     * @param[in] msg           Message to show
+     * @param[in] duration      Duration in ms, how long the message shall be shown.
+     * @param[in] iconFileName  Full path of the icon file. Empty means no icon.
+     *
+     * @param[in] melody        Melody in RTTTL format, played when the notification appears. Empty means no melody.
+     * @param[in] volume        Volume of the melody.
+     *
+     * @return If the notification is queued, it will return true otherwise false.
+     */
+    bool showNotification(const String& msg, uint32_t duration, const String& iconFileName, const String& melody, uint8_t volume);
+
+    /**
+     * Register the handler which plays the melody of a notification.
+     *
+     * Without a handler a melody is silently ignored, which is the case on a
+     * board without a buzzer.
+     *
+     * @param[in] handler   The melody handler.
+     */
+    void registerMelodyHandler(MelodyHandler handler);
 
     /**
      * Show next message in the queue and abort the current one.
@@ -186,10 +240,18 @@ public:
      */
     void next()
     {
-        if (false == nextMessage())
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        /* Queue empty? */
+        if (m_rdIndex == m_wrIndex)
         {
             m_view.clear();
             disable();
+        }
+        else
+        {
+            /* The next message is taken over by the display update. */
+            m_isNextMsgPending = true;
         }
     }
 
@@ -203,9 +265,13 @@ private:
      */
     struct SysMsg
     {
-        String   msg;      /**< Message */
-        uint32_t duration; /**< Duration in ms, how long the text shall be shown. */
-        uint32_t max;      /**< Maximum number how often a scrolling text shall be shown. */
+        String   msg;            /**< Message */
+        uint32_t duration;       /**< Duration in ms, how long the text shall be shown. */
+        uint32_t max;            /**< Maximum number how often a scrolling text shall be shown. */
+        String   iconFileName;   /**< Full path of the icon file. Empty means no icon. */
+        String   melody;         /**< Melody in RTTTL format. Empty means no melody. */
+        uint8_t  volume;         /**< Volume of the melody. */
+        bool     isDurationHard; /**< Shall the duration end the message even if the text scrolls? */
 
         /**
          * Construct a system message.
@@ -213,7 +279,11 @@ private:
         SysMsg() :
             msg(),
             duration(0U),
-            max(0U)
+            max(0U),
+            iconFileName(),
+            melody(),
+            volume(0U),
+            isDurationHard(false)
         {
         }
 
@@ -230,9 +300,30 @@ private:
     uint32_t            m_duration;              /**< Duration in ms, how long a non-scrolling text shall be shown. */
     uint32_t            m_max;                   /**< Maximum number how often a scrolling text shall be shown. */
     bool                m_isInit;                /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
+    bool                m_isDurationHard;        /**< Shall the duration end the current message even if the text scrolls? */
     SysMsg              m_messages[MAX_SYS_MSG]; /**< System message buffer */
     size_t              m_wrIndex;               /**< System message buffer write index. */
     size_t              m_rdIndex;               /**< System message buffer read index. */
+    bool                m_isNextMsgPending;      /**< A queued message shall be taken over by the next display update. */
+    MelodyHandler       m_melodyHandler;         /**< Plays the melody of a notification. May be empty. */
+
+    /** Mutex to protect against concurrent access. A notification may arrive from a different task than the display update. */
+    mutable MutexRecursive m_mutex;
+
+    /**
+     * Queue a message.
+     *
+     * @param[in] msg               Message to show
+     * @param[in] duration          Duration in ms.
+     * @param[in] max               Maximum number how often a scrolling text shall be shown.
+     * @param[in] iconFileName      Full path of the icon file. Empty means no icon.
+     * @param[in] melody            Melody in RTTTL format. Empty means no melody.
+     * @param[in] volume            Volume of the melody.
+     * @param[in] isDurationHard    Shall the duration end the message even if the text scrolls?
+     *
+     * @return If the message is queued, it will return true otherwise false.
+     */
+    bool enqueue(const String& msg, uint32_t duration, uint32_t max, const String& iconFileName, const String& melody, uint8_t volume, bool isDurationHard);
 
     /**
      * Show next message from the queue.

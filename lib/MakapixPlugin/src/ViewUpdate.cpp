@@ -39,6 +39,7 @@
 #include <ClockDrv.h>
 #include <Logging.h>
 #include "MqttTopic.h"
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -119,7 +120,7 @@ void ViewUpdate::play()
 bool ViewUpdate::notifyViewUpdate()
 {
     bool                isSuccessful  = false;
-    const size_t        JSON_DOC_SIZE = 512U;
+    const size_t        JSON_DOC_SIZE = Json::getJsonSize(512U);
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          jsonObj = jsonDoc.to<JsonObject>();
     String              payload;

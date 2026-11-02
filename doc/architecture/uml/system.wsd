@@ -1,51 +1,51 @@
 @startuml system
 
-title ESP-RGB-LED Matrix
+title Reference Hardware (ESP32 DevKitV1)
 
-component "Ext. Power Supply" as extPowerSupply
+' Physical things are Nodes and Devices in UML 2.5.1 (section 19), not
+' packages and components. A connection between nodes is a CommunicationPath,
+' drawn as a plain solid line.
 
-interface "Vcc" as iVcc
+skinparam nodesep 20
+skinparam ranksep 35
 
-package "Housing" {
+node "External Power Supply" <<device>> as extPowerSupply
 
-    package "PCB" as pcb {
+node "Housing" as housing {
 
-        package "Power Supply Protection" {
+    node "PCB" <<device>> as pcb {
 
-            component "Overcurrent protection" as ocp
-            component "Inverse connection protection" as icp
-            component "Overvoltage protection" as ovp
+        node "Power supply protection" as protection {
+            node "Overcurrent protection" <<device>> as ocp
+            node "Inverse connection protection" <<device>> as icp
+            node "Overvoltage protection" <<device>> as ovp
         }
-        
-        package "ESP32 DevKitV1 connector" {
-        
-            component "ESP32 DevKitV1" as esp32
-        }
 
-        interface "JTAG" as iJtag
-
-        esp32 -u- iJtag
+        node "ESP32 DevKitV1" <<device>> as esp32
     }
-    
-    component "LED matrix" as ledMatrix
-    component "User Button" as userButton
-    component "Reset Button" as resetButton
-    component "Ambilight sensor" as ambilightSensor
-    component "DHT11 sensor" as dht11Sensor
-    
+
+    node "LED matrix" <<device>> as ledMatrix
+    node "User button" <<device>> as userButton
+    node "Reset button" <<device>> as resetButton
+    node "Ambient light sensor (LDR)" <<device>> as ldr
+    node "DHT11 sensor" <<device>> as dht11
 }
 
-extPowerSupply --( iVcc
-iVcc -- ocp
+extPowerSupply -- ocp: Vcc
 ocp -- icp
 icp -- ovp
-ovp -r- esp32: Vcc_protected
-ovp -- ledMatrix: Vcc_protected
+ovp -- esp32: Vcc protected
+ovp -- ledMatrix: Vcc protected
 
 esp32 -- ledMatrix: data
 esp32 -- userButton: input
 esp32 -- resetButton: reset
-esp32 -- ambilightSensor: control brightness
-esp32 -- dht11Sensor: read temperature\nand humidity
+esp32 -- ldr: brightness control
+esp32 -- dht11: temperature\nand humidity
+
+legend bottom
+    This is the reference hardware of the original design. PIXELIX
+    supports many more boards, see platformio.ini and doc/boards.
+endlegend
 
 @enduml

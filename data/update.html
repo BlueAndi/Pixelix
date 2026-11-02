@@ -152,6 +152,12 @@
             const restClient = new pixelix.rest.Client();
             const hostname = "~HOSTNAME~";
 
+            /* The firmware's supported image file extensions, as dotted entries
+             * (e.g. ".bmp"). Used to decide which backup entries are binary image
+             * files rather than text, so a board with PNG or WebP icons is backed
+             * up correctly too. */
+            const supportedImageExtensions = "~IMAGE_FILE_EXTENSIONS~".split(",");
+
             /* The device rejects a request with HTTP 503 as long as its internal heap is
              * temporarily too low. Such a request is repeated after a delay instead of
              * aborting the whole operation. Any other error aborts immediately, because
@@ -364,7 +370,7 @@
                         if (filename.endsWith(".json")) {
                             fileType = "text";
                             mimeType = "text/plain";
-                        } else if (filename.endsWith(".bmp") || filename.endsWith(".gif")) {
+                        } else if (supportedImageExtensions.some((ext) => filename.endsWith(ext))) {
                             if (JSZip.support.blob) {
                                 fileType = "blob";
                                 mimeType = "application/octet-stream";
@@ -390,7 +396,9 @@
                     progress = 100;
                     updateProgressBar("progressBarRestore", progress);
 
-                    dialog.showInfo("<p>Restart performed to apply restored configuration.</p>");
+                    disableUI();
+
+                    await dialog.showCountdownAndReload("<p>Restart performed to apply the restored configuration.</p>");
                 } catch (err) {
                     if (isServiceUnavailable(err) === true) {
                         dialog.showError("<p>Restore failed, because the device is busy. Please try again later.</p>");
@@ -406,7 +414,7 @@
 
                 try {
                     await restClient.restart();
-                    await dialog.showInfo("<p>Ok.</p>");
+                    await dialog.showCountdownAndReload("<p>Restart performed.</p>");
                 } catch (err) {
                     await dialog.showError("<p>Error: " + err + "</p>");
                 }
@@ -442,8 +450,6 @@
 
             /* Request change of active partition. */
             async function sendPartitionChangeRequest() {
-                let seconds = 10;
-
                 disableUI();
 
                 try {
@@ -453,30 +459,7 @@
                         isJsonResponse: true
                     });
 
-                    await dialog.showInfo(`<p>Reload in ${seconds}s</p>`);
-
-                    await new Promise((resolve) => {
-                        const intervalId = setInterval(() => {
-                            if (seconds > 0) {
-                                seconds--;
-                                dialog.updateMessage(`<p>Reload in ${seconds}s</p>`);
-                            }
-
-                            if (seconds === 0) {
-                                clearInterval(intervalId);
-                                resolve();
-                            }
-                        }, 1000);
-
-                        document.querySelectorAll("#modalDialog .btn-secondary").forEach((button) => {
-                            button.addEventListener("click", () => {
-                                clearInterval(intervalId);
-                                resolve();
-                            }, { once: true });
-                        });
-                    });
-
-                    location.reload();
+                    await dialog.showCountdownAndReload();
                 } catch (rsp) {
                     dialog.showError("<p>Error: " + rsp + "</p>");
                     enableUI();

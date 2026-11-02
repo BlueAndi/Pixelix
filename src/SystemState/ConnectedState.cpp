@@ -90,20 +90,8 @@ void ConnectedState::entry(StateMachine& sm)
     LOG_INFO("Connected.");
 
     /* Get some settings. */
-    if (false == settings.open(true))
-    {
-        LOG_WARNING("Using default hostname.");
-
-        notifyURL = settings.getNotifyURL().getDefault();
-        isQuiet   = settings.getQuietMode().getDefault();
-    }
-    else
-    {
-        notifyURL = settings.getNotifyURL().getValue();
-        isQuiet   = settings.getQuietMode().getValue();
-
-        settings.close();
-    }
+    notifyURL = settings.getNotifyURL().getValueFromRam();
+    isQuiet   = settings.getQuietMode().getValueFromRam();
 
     /* Notify about successful network connection. */
     DisplayMgr::getInstance().setNetworkStatus(true);

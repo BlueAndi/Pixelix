@@ -41,6 +41,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <atomic>
 #include <IService.hpp>
 #include <WString.h>
 #include <ArduinoJson.h>
@@ -122,7 +123,7 @@ private:
     static const char* TOPIC_REMOVE;
 
     String             m_deviceId;            /**< Device id used for topic handling. */
-    bool               m_hasFileTableChanged; /**< The file table has changed since last request? */
+    std::atomic<bool>  m_hasFileTableChanged; /**< The file table has changed since last request? Set by the web server task, consumed by the topic handler. */
 
     /**
      * Constructs the service instance.

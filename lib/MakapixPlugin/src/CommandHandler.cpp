@@ -40,6 +40,7 @@
 #include <Version.h>
 #include <ClockDrv.h>
 #include "MqttTopic.h"
+#include <Json.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -185,7 +186,7 @@ bool CommandHandler::notifyStatusUpdate(bool isOnline)
     if ((MqttTypes::STATE_CONNECTED == mqttService.getState(m_mqttInstance)) &&
         (false == m_playerKey.isEmpty()))
     {
-        const size_t        JSON_DOC_SIZE = 512U;
+        const size_t        JSON_DOC_SIZE = Json::getJsonSize(512U);
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonObj = jsonDoc.to<JsonObject>();
         String              payload;
@@ -231,7 +232,7 @@ void CommandHandler::mqttTopicCallback(const String& topic, const uint8_t* paylo
     }
     else
     {
-        const size_t         JSON_DOC_SIZE = 1024U;
+        const size_t         JSON_DOC_SIZE = Json::getJsonSize(1024U);
         DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
         DeserializationError error = deserializeJson(jsonDoc, payload, size);
 

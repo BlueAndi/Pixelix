@@ -46,7 +46,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
-#include <WString.h>
 #include <SimpleTimer.hpp>
 
 /******************************************************************************
@@ -108,26 +107,14 @@ public:
 
 private:
 
-    /** Remote wifi SSID */
-    String m_wifiSSID;
-
-    /** Remote wifi passphrase */
-    String m_wifiPassphrase;
-
     /** Timer, used for retry mechanism. */
     SimpleTimer m_retryTimer;
-
-    /** Is quiet mode active? Quiet mode no unnecessary system messages on the display. */
-    bool m_isQuiet;
 
     /**
      * Constructs the state.
      */
     ConnectingState() :
-        m_wifiSSID(),
-        m_wifiPassphrase(),
-        m_retryTimer(),
-        m_isQuiet(false)
+        m_retryTimer()
     {
     }
 
