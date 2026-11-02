@@ -190,17 +190,17 @@ The plugin shows the effect from the film "Matrix" over the whole display.
 
 ### OpenMeteoPlugin
 
-The OpenMeteoPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
-Information provided by [Open-Meteo](https://open-meteo.com/).\
-Its free for non-commerical use and there is no registration necessary, no API key required, neither credit card information!
+The OpenMeteoPlugin shows the current weather conditions (icon and temperature) and one additional detail (UV index, humidity, or wind speed).\
+Weather data is provided by [Open-Meteo](https://open-meteo.com/).\
+The service is free for non-commercial use and does not require registration, an API key, or credit card information.
 The coordinates (latitude & longitude) of your location and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/OpenMeteoPlugin).
 
 ### OpenWeatherPlugin
 
-The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
-Information provided by [OpenWeather](https://openweathermap.org/).\
-In order to use the plugin an API key is necessary, see [https://openweathermap.org/appid](https://openweathermap.org/appid) for further information.\
-The coordinates (latitude & longitude) of your location, your API key and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/OpenWeatherPlugin).
+The OpenWeatherPlugin shows the current weather conditions (icon and temperature) and one additional detail (UV index, humidity, or wind speed).\
+Weather data is provided by [OpenWeather](https://openweathermap.org/).\
+An API key is required; see [OpenWeather's documentation](https://openweathermap.org/appid) for details.\
+Set your location's coordinates (latitude and longitude), API key, and the additional detail to display through the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/OpenWeatherPlugin).
 
 ### RainbowPlugin
 
@@ -213,22 +213,21 @@ The plugin shows sensor values of the selected sensor channel.
 ### SignalDetectorPlugin
 
 The plugin is able to detect a signal, which can be combined with up to 2 frequencies.\
-Each frequency must be detected for a specific configureable time.\
-As long as nothing is detected, the plugin will disable itself.\
-If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection. \
-Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."
+Each frequency must be detected for a configurable duration.\
+If no signal is detected, the plugin disables itself.\
+When a signal is detected, it appears on the display for the configured slot duration. After the duration expires or the user changes slots, the plugin remains disabled until another signal is detected.\
+A push notification can also be configured. By default, it uses GET; prefix the URL with `GET` or `POST` to choose the method. For example: `POST http://...`.
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SignalDetectorPlugin).
 
 ### SoundReactivePlugin
 
-The plugin shows octave frequency bands, depended on the environment sound.
-Required: A digital microphone (INMP441) is required, connected to the I2S port.
-The number of shown frequency bands can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SoundReactivePlugin).
+The plugin displays octave frequency bands based on ambient sound. It requires an INMP441 digital microphone connected to the I2S port.
+Set the number of frequency bands through the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SoundReactivePlugin).
 
 ### SunrisePlugin
 
-The SunrisePlugin shows the current sunrise / sunset times for a configured location.\
-The coordinates (latitude & longitude) of your location can be set via the [REST API]([REST.md#endpoint-base-uridisplayuidplugin-uidlocation](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SunrisePlugin)).\
+The SunrisePlugin shows the current sunrise and sunset times for a configured location.\
+Set your location's coordinates (latitude and longitude) through the [SunrisePlugin REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0#/SunrisePlugin).\
 Powered by sunrise-sunset.org
 
 Configure the time format in the plugin configuration JSON file. The format itself is according to strftime(). For colorization text properties can be added.
@@ -237,11 +236,11 @@ Whether the icon scrolls together with the text or whether it stands still and o
 
 ### SysMsgPlugin
 
-The SysMsgPlugin is a system plugin, which is used to splash important information's to the user. Note, it can not be uninstalled.
+The SysMsgPlugin is a system plugin that displays important information to the user. It cannot be uninstalled.
 
 ### TempHumidPlugin
 
-Th TempHumidPlugin displays the temperature (in °C) and Humidity (in %) based on the readings of sensor connected to Pixelix.
+The TempHumidPlugin displays the temperature (in °C) and humidity (in %) based on readings from a sensor connected to Pixelix.
 
 ### TestPlugin
 

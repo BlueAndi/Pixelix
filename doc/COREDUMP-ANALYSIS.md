@@ -238,7 +238,7 @@ curl -X DELETE -u admin:password http://<device>/rest/api/v1/coredump
 | 28   | LoadProhibited        | Read from non-readable memory (null pointer, etc.) |
 | 29   | StoreProhibited       | Write to non-writable memory (ROM, etc.)           |
 
-For a complete list, refer to the Xtensa ISA documentation or the coredump decoder source in [src/General/CoredumpDecoder.cpp](src/General/CoredumpDecoder.cpp).
+For a complete list, refer to the Xtensa ISA documentation or the coredump decoder source in [CoredumpDecoder.cpp](../src/General/CoredumpDecoder.cpp).
 
 ## Workflow Example: Debugging a Null Pointer Dereference
 

@@ -86,13 +86,13 @@ No additional manipulation of the value shall take place.
 
 Example result: ```-1.5°C```
 
-Find the complete plugin configuration in [grodansparadisOutdoorTemperature.json](./rest/grodansparadisOutdoorTemperature.json).
+Find the complete plugin configuration in [grodansparadisOutdoorTemperature.json](./mqtt/grodansparadisOutdoorTemperature.json).
 
 ## GrabViaRestPlugin examples
 
 ### Bitcoin price in US$
 
-The bitcoin price is get from https://api.coinbase.com/v2/prices/BTC-USD/buy which returns a JSON object.
+The Bitcoin price is retrieved from https://api.coinbase.com/v2/prices/BTC-USD/buy, which returns a JSON object.
 
 ```json
 {
@@ -145,7 +145,7 @@ Find the complete plugin configuration in [bitcoin.json](./rest/bitcoin.json).
 
 ### Github repository stargazers
 
-The github repositiry stargazers is get for this repository from https://api.github.com/repos/BlueAndi/Pixelix which returns a JSON object.
+The number of GitHub stars for this repository is retrieved from https://api.github.com/repos/BlueAndi/Pixelix, which returns a JSON object.
 
 ```json
 {
@@ -313,7 +313,7 @@ Find the complete plugin configuration in [githubStargazers.json](./rest/githubS
 
 ### NINA - Warnings
 
-Show the warnings from the Bundesamt für [Bevölkerungsschutz und Katastrophenhilfe](https://www.bbk.bund.de/) in Germany. They provide a [REST API](https://nina.api.bund.dev/) to retrieve several kind of informations.
+This example shows warnings from Germany's Federal Office of Civil Protection and Disaster Assistance ([BBK](https://www.bbk.bund.de/)). The office provides a [REST API](https://nina.api.bund.dev/) for retrieving different types of information.
 
 Get the official regional key of your area here: https://www.xrepository.de/api/xrepository/urn:de:bund:destatis:bevoelkerungsstatistik:schluessel:rs_2021-07-31/download/Regionalschl_ssel_2021-07-31.json
 

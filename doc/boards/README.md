@@ -109,7 +109,7 @@ To find out which part shall be connected to which pin of your development board
 
 ### LILYGO&reg; TTGO ESP32 T-Display
 
-The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
+The LILYGO&reg; TTGO ESP32 T-Display is handled separately because it uses its onboard display instead of an external LED matrix.
 
 - Manufacturer: [Lilygo](https://lilygo.cc/products/t-display?srsltid=AfmBOoqYRjCX8MV0n_o-94-pFiF6-dUzS7QKkgV3mP2jYdcxx3uaqSSq)
 - Pinning:
@@ -119,7 +119,7 @@ The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, be
 
 ### LILYGO&reg; ESP32 T-Display S3
 
-The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
+The LILYGO&reg; ESP32 T-Display S3 is handled separately because it uses its onboard display instead of an external LED matrix.
 
 - Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
 - Pinning:

@@ -29,7 +29,7 @@ Two style layers, both mandatory:
 
 CI enforces layer 1 on `src/` and `lib/` only:
 ```bash
-find src lib -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' | xargs clang-format -i --dry-run -Werror
+find src lib -type f \( -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' \) -print0 | xargs -0 clang-format --dry-run --Werror
 ```
 
 ## The Non-Negotiables
@@ -95,7 +95,7 @@ One clear execution path per function. Guard-check invalid state first, keep nes
 
 ### 4. Doxygen is mandatory
 
-Every file gets the MIT block plus `@file`, `@brief`, `@author`. Headers add `@addtogroup <GROUP>` / `@{` ... `@}` around the content. Existing groups: `PLUGIN`, `GFX`, `UTILITIES`, `SETTINGS`, `SENSORS`, `HTTP_SERVICE`, `HAL`, `TOPIC_HANDLER_SERVICE`, `RTC`, `TEST`. Every public method needs a doc block with `@param[in]`/`@param[out]`/`@return` and any range, unit, ownership, or blocking behavior. Every member gets a trailing `/**< ... */`.
+Every C++ source and header file gets the MIT block plus `@file`, `@brief`, and `@author`. Headers add `@addtogroup <GROUP>` / `@{` ... `@}` around the content. Existing groups: `PLUGIN`, `GFX`, `UTILITIES`, `SETTINGS`, `SENSORS`, `HTTP_SERVICE`, `HAL`, `TOPIC_HANDLER_SERVICE`, `RTC`, `TEST`. Every public method needs a doc block with applicable `@param[in]`/`@param[out]` and `@return` tags, plus any relevant range, unit, ownership, or blocking behavior. Every member gets a trailing `/**< ... */`.
 
 ### 5. Section banners in fixed order
 
@@ -114,7 +114,7 @@ Files are divided by 80-column banner comments. Order differs by file type — s
 
 ## Safety Rules (MISRA-oriented)
 
-- Fixed-width types from `<stdint.h>` (`uint32_t`, `int16_t`); unsigned literals get a `U` suffix.
+- Use fixed-width types from `<stdint.h>` (`uint32_t`, `int16_t`) for values with a defined width and `size_t` for sizes and indexes; unsigned literals get a `U` suffix.
 - C++17 is available: use features such as `std::optional`, `std::string_view`, `if constexpr`, and structured bindings when they make code clearer and remain supported by the target toolchain. Keep memory use predictable; document non-owning lifetimes for `std::string_view`, and do not use a feature merely to make code shorter.
 - No implicit narrowing or signed/unsigned mixing — cast explicitly and say why if non-obvious.
 - No dynamic allocation unless justified in a comment; prefer fixed-size buffers and static/member storage. Heap fragmentation is a real failure mode on long-running devices.
@@ -188,10 +188,10 @@ platformio test --environment test               # if test/ is touched
 |---------|-------------|
 | `if (!ptr)` | `if (nullptr == ptr)` |
 | Early `return false;` in a guard | Set result variable, fall through to the single `return` |
-| `int` / `unsigned` for sizes and counts | `uint32_t`, `size_t`, `uint8_t` — fixed width |
+| `int` / `unsigned` for sizes and counts | Use `size_t` for sizes and indexes, or a suitable fixed-width type such as `uint32_t` or `uint8_t` |
 | `new` / `std::vector` growth in a hot or long-lived path | Fixed-size buffer, or a justifying comment |
 | Member assigned in the constructor body | Constructor initializer list, declaration order |
-| Public method with no doc block | `@brief`, `@param`, `@return` — always |
+| Public method with no doc block | Document it with `@brief` and applicable `@param` / `@return` tags |
 | `#define MAX_LEN 10` | `static const uint32_t MAX_LEN = 10U;` |
 | Deleting an empty section banner | Keep it — the layout is the convention |
 | Reformatting a whole file while fixing three lines | Touch only what the change needs |

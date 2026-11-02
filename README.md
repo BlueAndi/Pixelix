@@ -50,7 +50,7 @@ ___
 - [FAQ](#faq)
   - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
   - [How to change text properties?](#how-to-change-text-properties)
-  - [The display only shows a error code, like "E4". What does that mean?](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean)
+  - [The display only shows an error code, like "E4". What does that mean?](#the-display-only-shows-an-error-code-like-e4-what-does-that-mean)
   - [How can I use animated icons?](#how-can-i-use-animated-icons)
   - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
@@ -70,8 +70,8 @@ My initial goal was to have a remote display that would show multiple kind of in
 
 ## Introduction
 
-The PIXELIX firmware is for ESP32 boards that controls a RGB LED matrix or a TFT display. It can be used to display time, date, weather, text, animations and etc.
-It doesn't require any cloud connection, even its not required to have a smarthome system. But with its REST and MQTT API it fits perfect with [Home Assistant](https://www.home-assistant.io/) or any other smarthome system.
+PIXELIX firmware runs on ESP32 boards and controls RGB LED matrices or TFT displays. It can display the time, date, weather, text, animations, and more.
+It requires no cloud connection or smart home system, but its REST and MQTT APIs integrate with [Home Assistant](https://www.home-assistant.io/) and other smart home systems.
 
 ## Features
 
@@ -83,7 +83,7 @@ It doesn't require any cloud connection, even its not required to have a smartho
 - Extendable with custom effects and animations by plugins. See list of [plugins](./doc/PLUGINS.md).
 - Its plugin concept allows to scale for different development boards.
 
-Please note, that not every feature might be available for all kind of development boards. E.g. for MQTT support you need a development board with 8 MB flash or more, except for the Ulanzi TC001. See the `config<variant>.ini` configuration files in [./config](./config) folder.
+Not every feature is available on every development board. For example, MQTT generally requires a board with at least 8 MB of flash, except for the Ulanzi TC001. See the `config<variant>.ini` files in the [config](./config) folder for details.
 
 | Some impressions                                                           |                                                                |
 | -------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -91,7 +91,7 @@ Please note, that not every feature might be available for all kind of developme
 | ![IconTextLampPlugin](./lib/IconTextLampPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/IconTextPlugin/web/IconTextPlugin.jpg) |
 | ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg)       | ...                                                            |
 
-A native environment variant is available to run PIXELIX as an application on Windows and Linux platforms without the need for hardware. PIXELIX shows a simulated LED grid in a window und executes its web server on local port 8080. Melodies, which a board would play on its buzzer, are played through the audio device of the host and can be switched off with the _Mute_ entry in the menu bar of the simulator window.
+The native environment runs PIXELIX as an application on Windows and Linux without requiring hardware. It displays a simulated LED grid in a window and serves its web interface on local port 8080. Melodies that would play through a board's buzzer use the host's audio device. You can mute them with the _Mute_ entry in the simulator window's menu bar.
 
 ![Pixelix Native](./doc/images/pixelix_native.png)
 
@@ -103,15 +103,15 @@ The original setup for development and the first release was:
 - WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 - Power supply 5 V / 4 A
 
-The following shows the absolute minimal wiring setup e.g. for the ESP32 DevKitV1. It may differ depended on your development board.
+The following diagram shows the minimum wiring setup, for example, for the ESP32 DevKit V1. Wiring may differ depending on your development board.
 
 ![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
 
 ## Attention
 
-> :warning: **If you power the development board and the LED matrix via USB**: Be very careful, because it may destroy your ESP32 board if the LED current is too high. Avoid increasing the LED display brightness or filling it complete with white pixels. Please use a external power supply with at least 5V / 4A.
+> :warning: **If you power the development board and LED matrix via USB**, be careful: excessive LED current can damage the ESP32 board. Avoid increasing the display brightness or filling it completely with white pixels. Use an external power supply rated for at least 5 V / 4 A.
 
-> :information_source: To avoid any damage on your hardware and by the way to your eyes ;-), PIXELIX starts up with a low brightness setting. Additional the max. current is limited by software.
+> :information_source: To protect your hardware and your eyes, PIXELIX starts at a low brightness. The maximum current is also limited by software.
 
 ## Supported Development Boards
 
@@ -126,7 +126,7 @@ If you assemble your own Pixelix hardware, its recommended to use a development 
 
 - 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited.
 - A esp32 dual core variant, which provides more processing power.
-- PSRAM for images as internal RAM isn't that much available depended on the configured features.
+- PSRAM for image formats that require more memory than the available internal RAM, depending on the enabled features.
 
 ### Special Variants
 
@@ -215,7 +215,7 @@ Once the WiFi station SSID and passphrase are configured, PIXELIX connects to yo
 - SSID: **pixelix-&lt;DEVICE-ID&gt;**
 - Passphrase: **Luke, I am your father.**
 
-Depended on the type of device you are using for connecting to PIXELIX, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL `http://192.169.4.1` in the browser address field.
+Depending on your device, you may see a notification prompting you to open the captive portal. Otherwise, enter `http://192.169.4.1` in your browser's address bar.
 
 Use the following default credentials to get access to the PIXELIX web interface:
 
@@ -233,15 +233,15 @@ Connect PIXELIX to your PC via USB and start a serial terminal. Use the followin
 - Get hostname: ```get hostname```
 - Get status: ```get status```
   - A status of 0 means everything is ok.
-  - Other than 0, see their meaning in the low [low level error code table](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean). Note, the status of 1 is equal to E1 in the error code table and etc.
+  - For any other status, see the [low-level error code table](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean). For example, status 1 corresponds to error code E1.
 
 Use ```help``` to get a list of all supported commands.
 
 ### PIXELIX Is Ready
 
-After configuration, restart again and voila, PIXELIX will be available in your wifi network.
+After configuration, restart PIXELIX. It will then be available on your Wi-Fi network.
 
-For changing whats displayed, go to its web interface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
+To change what is displayed, open the web interface and use the same credentials as for the captive portal in Variant 1. On the **Display** page, configure it to suit your needs.
 
 ## User Interface
 
@@ -334,7 +334,7 @@ The following keywords are available:
 | `{hc}{#ff0000}Hi!` | `%7Bhc%7Dff0000Hi!` | &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp; |
 | `{hr}{#ff0000}Hi!` | `%7Bhr%7Dff0000Hi!` | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span> |
 
-### The display only shows a error code, like "E4". What does that mean?
+### The display only shows an error code, like "E4". What does that mean?
 
 This is a low level error code. Please have a look into the following table.
 
@@ -400,15 +400,15 @@ You can colorize it by using the [text properties](#how-to-change-text-propertie
 
 ### How to configure my own list of plugins?
 
-The list of plugins which are available depend on the development board you use. Because board with only 4 MB flash don't have enough capacity for all. Or in case of a ESP-S2 (single core) not enough power.
+The available plugins depend on your development board. Boards with only 4 MB of flash cannot fit every plugin, and single-core boards such as the ESP32-S2 may not have enough processing power for some plugins.
 
-To handle there are several .ini files in the ```./config``` folder:
+Several `.ini` files in the `./config` folder define plugin sets:
 
 - configSmall.ini: Used for boards with 4 MB flash.
 - configNormal.ini: Used for boards with 8 MB flash or more.
 - configSmallNoI2s.ini: Used for boards with 4 MB flash and less mcu power.
 
-Update the one you use for your needs by commenting in or out.
+Edit the file used by your board, commenting plugins in or out as needed.
 
 ### Is there an easy way to rotate the display by 180° ? I need to turn the display when putting it into a housing
 

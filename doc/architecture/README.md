@@ -74,7 +74,7 @@ The diagram below shows the hardware of the original design. Many more boards ar
 
 ## Deployment
 
-PIXELIX runs on the dual core ESP32 derivates. A FreeRTOS task is modelled as an artifact, deployed on the execution environment which schedules it.
+PIXELIX runs on dual-core ESP32 variants. A FreeRTOS task is modeled as an artifact deployed in the execution environment that schedules it.
 
 ![deployment-diagram](./svg/deployment.svg)
 
@@ -180,7 +180,7 @@ Both REST and MQTT route through `TopicHandlerService` using one unified topic m
 | Entity id of a plugin | `display/plugin/<PLUGIN-ALIAS>` |
 | REST URL | `<BASE-URI>/[<ENTITY-ID>/]<TOPIC>` |
 | MQTT, readable | `<DEVICE-ID>/[<ENTITY-ID>/]<TOPIC>/state` |
-| MQTT, writeable | `<DEVICE-ID>/[<ENTITY-ID>/]<TOPIC>/set` |
+| MQTT, writable | `<DEVICE-ID>/[<ENTITY-ID>/]<TOPIC>/set` |
 
 Every plugin always has a unique alias. The alias is the only plugin address used in a topic path.
 

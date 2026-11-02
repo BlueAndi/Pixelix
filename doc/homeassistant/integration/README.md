@@ -44,7 +44,7 @@ The device page under **Settings → Devices & services → Pixelix** shows what
 
 | Shown as    | Source (`device.*`) | Example               |
 | ----------- | ------------------- | --------------------- |
-| Firmware    | `swVersion`         | `7.4.0`               |
+| Firmware    | `swVersion`         | `11.0.0`              |
 | Hardware    | `hwVersion`         | `ulanzi-TC001`        |
 | MAC address | `mac`               | `a1:b2:c3:d4:e5:f6`   |
 
