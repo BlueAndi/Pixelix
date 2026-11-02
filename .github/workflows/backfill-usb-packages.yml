@@ -13,7 +13,7 @@ permissions:
 
 env:
     # Pinned to keep the toolchain reproducible and the cache key meaningful.
-    PIO_VERSION: "7.1.3"
+    PIO_VERSION: "6.2.0"
 
 jobs:
     backfill:

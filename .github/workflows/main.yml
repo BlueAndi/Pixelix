@@ -22,7 +22,7 @@ concurrency:
 
 env:
   # Pinned to keep the toolchain reproducible and the cache key meaningful.
-  PIO_VERSION: "7.1.3"
+  PIO_VERSION: "6.2.0"
   # Bump this to invalidate every PlatformIO cache of this repository.
   PIO_CACHE_EPOCH: "v1"
   # Only used if the runner image provides no libsdl3-dev package.
