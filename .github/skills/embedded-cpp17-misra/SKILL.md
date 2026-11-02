@@ -1,13 +1,26 @@
 ---
-name: embedded-cpp14-misra
-description: Use when writing, reviewing, or refactoring C/C++ firmware code in this repository (src/, lib/, test/) — creating or editing .h/.hpp/.cpp files, applying MISRA-oriented and defensive rules, Yoda conditions, single-exit/pathfinder control flow, mandatory Doxygen headers, and clang-format compliance. Covers the house C++14 style; not for Python build scripts, web assets, or docs.
+name: embedded-cpp17-misra
+description: 'Write, review and refactor embedded C/C++17 firmware code in this repository (src/, lib/, test/) with MISRA-oriented rules, defensive programming, Yoda conditions, single-exit/pathfinder control flow, mandatory Doxygen and clang-format compliance. Use for .h, .hpp and .cpp files.'
+argument-hint: 'Describe the module, file type (.h/.hpp/.cpp), and expected behavior'
 ---
 
-# Embedded C++14 (MISRA-Oriented) House Style
+# Embedded C++17 (MISRA-Oriented) House Style
+
+## When to Use
+
+Load this skill when asked to:
+- Create or update embedded C/C++17 firmware code
+- Add new `.h`, `.hpp` or `.cpp` files in this repository style
+- Enforce MISRA-oriented and defensive coding style
+- Apply Yoda conditions, single point of exit and the pathfinder rule
+- Add complete Doxygen documentation
+- Keep code clang-format clean
+
+Not for Python build scripts, web assets under `data/`, or documentation.
 
 ## Overview
 
-Pixelix firmware is C++14 on ESP32 with hard constraints: limited RAM, no exceptions in practice, long uptimes, and dual-core FreeRTOS tasks. The house style optimizes for **deterministic, reviewable code** over brevity — explicit state, bounded loops, single exit, and a documented public API.
+Pixelix firmware targets C++17 on ESP32 with hard constraints: limited RAM, no exceptions in practice, long uptimes, and dual-core FreeRTOS tasks. The active PlatformIO configuration selects C++17. The house style optimizes for **deterministic, reviewable code** over brevity — explicit state, bounded loops, single exit, and a documented public API.
 
 Two style layers, both mandatory:
 
@@ -78,11 +91,11 @@ else
 
 ### 3. Pathfinder rule
 
-One clear execution path per function. Guard-check invalid state first, keep nesting shallow (aim ≤ 3 levels), and split dense boolean chains into named helpers or named intermediate `bool` variables. If a reader cannot trace every path in one pass, decompose it.
+One clear execution path per function. Guard-check invalid state first, keep nesting shallow (aim <= 3 levels), and split dense boolean chains into named helpers or named intermediate `bool` variables. If a reader cannot trace every path in one pass, decompose it.
 
 ### 4. Doxygen is mandatory
 
-Every file gets the MIT block plus `@file`, `@brief`, `@author`. Headers add `@addtogroup <GROUP>` / `@{` … `@}` around the content. Existing groups: `PLUGIN`, `GFX`, `UTILITIES`, `SETTINGS`, `SENSORS`, `HTTP_SERVICE`, `HAL`, `TOPIC_HANDLER_SERVICE`, `RTC`, `TEST`. Every public method needs a doc block with `@param[in]`/`@param[out]`/`@return` and any range, unit, ownership, or blocking behavior. Every member gets a trailing `/**< ... */`.
+Every file gets the MIT block plus `@file`, `@brief`, `@author`. Headers add `@addtogroup <GROUP>` / `@{` ... `@}` around the content. Existing groups: `PLUGIN`, `GFX`, `UTILITIES`, `SETTINGS`, `SENSORS`, `HTTP_SERVICE`, `HAL`, `TOPIC_HANDLER_SERVICE`, `RTC`, `TEST`. Every public method needs a doc block with `@param[in]`/`@param[out]`/`@return` and any range, unit, ownership, or blocking behavior. Every member gets a trailing `/**< ... */`.
 
 ### 5. Section banners in fixed order
 
@@ -102,17 +115,18 @@ Files are divided by 80-column banner comments. Order differs by file type — s
 ## Safety Rules (MISRA-oriented)
 
 - Fixed-width types from `<stdint.h>` (`uint32_t`, `int16_t`); unsigned literals get a `U` suffix.
+- C++17 is available: use features such as `std::optional`, `std::string_view`, `if constexpr`, and structured bindings when they make code clearer and remain supported by the target toolchain. Keep memory use predictable; document non-owning lifetimes for `std::string_view`, and do not use a feature merely to make code shorter.
 - No implicit narrowing or signed/unsigned mixing — cast explicitly and say why if non-obvious.
 - No dynamic allocation unless justified in a comment; prefer fixed-size buffers and static/member storage. Heap fragmentation is a real failure mode on long-running devices.
 - Explicitly initialize every member in the constructor initializer list, in declaration order.
 - `const`-correct: `const` parameters, `const` methods, `const`/`constexpr` over macros.
-- No side effects inside conditions (no assignment, no `++`, no state-mutating calls in an `if`).
+- No side effects inside conditions (no assignment, no `++`, no state-mutating call in an `if`).
 - Bound every loop; bounds-check every index and every buffer write.
 - Validate all external input and every pointer parameter before use.
 - On failure, leave the object in a valid, consistent state and report status — never half-initialized.
 - Guard shared mutable state with `Mutex` / `MutexGuard` wherever a second task can reach it.
 
-Full detail and rationale → [references/coding-rules.md](references/coding-rules.md)
+Full detail and rationale: [coding-rules.md](./references/coding-rules.md)
 
 ## Naming
 
@@ -129,15 +143,15 @@ Full detail and rationale → [references/coding-rules.md](references/coding-rul
 
 Boolean names read as predicates: `isRunning`, `hasData`, `isSuccessful`.
 
-## Workflow
+## Procedure
 
 **Creating a file**
 
 1. Pick the type: `.h` for module and regular class headers, `.hpp` **only** for header-only / template code, `.cpp` for implementation.
 2. Copy the matching template and replace the placeholders — `ClassName`, `CLASS_NAME`, `GROUP`, `@brief`, `@author`:
-   - [assets/template.h](assets/template.h)
-   - [assets/template.hpp](assets/template.hpp)
-   - [assets/template.cpp](assets/template.cpp)
+   - [Regular/module header template (.h)](./assets/template.h)
+   - [Template/header-only header template (.hpp)](./assets/template.hpp)
+   - [C++ source template](./assets/template.cpp)
 3. Place it beside its peers (`lib/<Module>/src/`, `src/<Subsystem>/`), and mirror the neighbors' patterns for anything the template doesn't cover.
 4. Write guard checks and error paths before the happy path.
 5. Document as you write, not after.
@@ -155,7 +169,7 @@ platformio check --environment <env> --fail-on-defect=medium
 platformio test --environment test               # if test/ is touched
 ```
 
-Then walk the checklist:
+## Completion Checklist
 
 - [ ] Yoda conditions on all equality/bool tests
 - [ ] Exactly one `return` per function
@@ -181,3 +195,10 @@ Then walk the checklist:
 | `#define MAX_LEN 10` | `static const uint32_t MAX_LEN = 10U;` |
 | Deleting an empty section banner | Keep it — the layout is the convention |
 | Reformatting a whole file while fixing three lines | Touch only what the change needs |
+
+## References
+
+- [Coding rules](./references/coding-rules.md)
+- [Regular/module header template (.h)](./assets/template.h)
+- [Template/header-only header template (.hpp)](./assets/template.hpp)
+- [C++ source template](./assets/template.cpp)

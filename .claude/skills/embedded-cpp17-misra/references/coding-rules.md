@@ -1,10 +1,10 @@
-# Embedded C++14 Coding Rules (MISRA-Oriented)
+# Embedded C++17 Coding Rules (MISRA-Oriented)
 
 Detail and rationale behind the summary in [SKILL.md](../SKILL.md). Read this when a rule's *why* matters — a borderline case, a justified deviation, or a review disagreement.
 
 ## 1. Language and Safety Baseline
 
-- **C++14 only.** No C++17/20 constructs (`std::optional`, `if constexpr`, structured bindings, `std::string_view`). The toolchain may accept some; the codebase does not use them.
+- **C++17 baseline.** The active PlatformIO configuration selects C++17. C++17 features (`std::optional`, `std::string_view`, `if constexpr`, structured bindings) may be used when supported by the target toolchain and when they improve clarity without compromising predictable memory use, lifetime safety, or defensive behavior. `std::string_view` is non-owning: ensure its backing storage outlives all uses. Avoid C++20 and later features.
 - **Fixed-width integers** from `<stdint.h>`: `uint8_t`, `int16_t`, `uint32_t`. Use `size_t` for sizes and indices. Plain `int`/`unsigned` only where an external API dictates it.
 - **Unsigned literals carry `U`** — `0U`, `1000U`, `MAX_COUNT = 32U`. This makes signed/unsigned comparison warnings meaningful instead of noise.
 - **No implicit narrowing.** Cast explicitly (`static_cast`), and comment the cast when the truncation is intentional.
