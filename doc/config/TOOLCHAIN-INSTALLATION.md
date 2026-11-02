@@ -47,10 +47,9 @@ If you like to hack on the console/command shell, just [git for windows](https:/
 
 ## Installation of Native and Test Environment
 
-The test environment is only necessary if you want ro run Pixelix as a PC application or want
-to modify the sourcecode and test it afterwards.
+The test environment is only needed if you want to run Pixelix as a PC application or modify the source code and test your changes.
 
-:raising_hand: If your only interesting in getting PIXELIX running on your target, skip this installation.
+:raising_hand: If you are only interested in running PIXELIX on your target, you can skip this installation.
 
 ### Linux (Debian, Ubuntu)
 

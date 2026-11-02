@@ -40,7 +40,7 @@ Take a look to the recommendations which variant might be the best for you.
 
 ## Recommendations
 
-The recommeded way how to program the software to the board depends on the skill level, as well as the available toolchain. Hopefully it helps you to choose the right one.
+The recommended way to install the software depends on your experience and the available tools. The following table can help you choose the right method.
 
 ### Non-Developer
 
@@ -48,7 +48,7 @@ The recommeded way how to program the software to the board depends on the skill
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | Brand new development board, with only the preinstalled software on it.              | Web USB installer<br>Alternatively **Windows:** Espressif Flash Download Tool, **Linux:** esptool |
 | A development board already used by you.                                             | Web USB installer<br>Alternatively **Windows:** Espressif Flash Download Tool, **Linux:** esptool |
-| Pixelix is already running on the development board. Its webinterface is accessible. | Browser                                                                                           |
+| Pixelix is already running on the development board, and its web interface is accessible. | Browser                                                                                           |
 
 ### Developer
 
@@ -87,16 +87,16 @@ If the board does not enter the download mode automatically, follow the BOOT/RES
 4. Unzip to a local folder.
 5. Connect your development board with the PC.
 6. Start the Espressif Flash Download Tool with the executable ```flash_download_tool_<version>.exe```.
-7. Choose _ChipType_, depended on the development board you have.
+7. Choose _ChipType_ based on your development board.
 8. Choose _WorkMode_ "Develop".
 9. Choose _LoadMode_ "UART".
 10. Click on OK.
 11. Select binaries in the order and with the addresses of the [flash layout table](#flash-layout-information).
-12. Choose _SPI SPPED_: 40 MHz
+12. Choose _SPI SPEED_: 40 MHz.
 13. Choose _SPI MODE_:
     - esp32: DIO
     - esp32-s3: QIO
-14. Choose _COM_, e.g. COM4 which depends how the virtual COM port was mounted for the plugged in development board.
+14. Choose the _COM_ port, e.g. COM4. The port depends on how the connected development board's virtual COM port was assigned.
 15. Start flashing by clicking on _START_ in the DownloadPanel 1.
 16. The state will change from _IDLE_ to _SYNC_.
 17. Keep _BOOT_ button on the development board pressed, until the state changes to _DOWNLOAD_.
@@ -175,7 +175,7 @@ Steps:
       1. The software for the device: ```firmware.bin```
       2. The prebuilt filesystem for the device: ```littlefs.bin``` (or ```spiffs.bin``` for Pixelix &lt; 6.x.x)
 2. Open browser and enter the ip address of the device.
-3. Open the "Update" submenu of the webinterface.
+3. Open the "Update" submenu of the web interface.
 4. Go to [PIXELIX Updater](https://github.com/BlueAndi/PixelixUpdater).
 5. Select firmware binary (```firmware.bin```) or filesystem binary (```spiffs.bin```/```littlefs.bin```) and click on the respective upload button.
 

@@ -14,7 +14,7 @@
 - [Temperature and humidity sensors](#temperature-and-humidity-sensors)
   - [DHTx (Proprietary one-wire)](#dhtx-proprietary-one-wire)
   - [SHT3x (I2C)](#sht3x-i2c)
-- [Audio (digital micropohone with I2S)](#audio-digital-micropohone-with-i2s)
+- [Audio (digital microphone with I2S)](#audio-digital-microphone-with-i2s)
   - [INMP441](#inmp441)
 - [Calibration](#calibration)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
@@ -23,7 +23,7 @@
 
 ## Purpose
 
-Here is a list of supported sensors. Where they are connected, depends on the used [hardware board](./boards/README.md). Some of them need additional external parts e.g. the DHTx need a ext. 4.7kOhm pull-up resistor. Please check the corresponding datasheets.
+This page lists the supported sensors. Their pin connections depend on the [hardware board](./boards/README.md). Some sensors need additional components; for example, DHTx sensors require an external 4.7 kOhm pull-up resistor. Check the corresponding datasheets for details.
 
 ## General
 
@@ -40,7 +40,7 @@ A "X" in the development board column means valid all development boards. Except
 | Lilygo&reg; TTGO ESP32 T-Display | Vcc                 | Pin 32              |
 | WEMOS Lolin S2 Mini              | Vcc                 | Pin 1               |
 
-The photoresistor pin 2 needs additional a pull-down.
+Photoresistor pin 2 also needs a pull-down resistor.
 
 ## Temperature and humidity sensors
 
@@ -67,7 +67,7 @@ Different DHT sensors are supported. Out of the box the DHT11 is configured. It 
 | Lilygo&reg; ESP32 T-Display S3 | Pin 17  | Pin 18  |
 | WEMOS Lolin S2 Mini            | Pin 35  | Pin 33  |
 
-## Audio (digital micropohone with I2S)
+## Audio (digital microphone with I2S)
 
 ### INMP441
 

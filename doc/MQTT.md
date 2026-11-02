@@ -4,14 +4,14 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-## Plugin development <!-- omit in toc -->
+## MQTT <!-- omit in toc -->
 
 - [MQTT](#mqtt)
 - [Overview Mindmap](#overview-mindmap)
 - [MQTT Topics](#mqtt-topics)
   - [Birth and last will](#birth-and-last-will)
   - [Plugin topic path](#plugin-topic-path)
-  - [Readable/Writeable Topic](#readablewriteable-topic)
+  - [Readable/Writable Topic](#readablewritable-topic)
   - [Topic name](#topic-name)
   - [Sending a bitmap](#sending-a-bitmap)
   - [Sensors](#sensors)
@@ -21,7 +21,7 @@
 
 ## MQTT
 
-Pixelix is a MQTT client which can be connected to a MQTT broker. The MQTT broker is configued in the service settings via webinterface.
+Pixelix is an MQTT client that can connect to an MQTT broker. Configure the broker in the service settings through the web interface.
 
 Examples:
 
@@ -64,7 +64,7 @@ MQTT is available in the native environment too, which runs Pixelix on the host.
 
 Pixelix supports birth and last will messages (retained).
 
-After the successful connection establishment to the MQTT broker, Pixelix will send "online" to the &lt;HOSTNAME&gt;/status topic. In any disconnect case, "offline" will be sent to the &lt;HOSTNAME&gt;/status topic.
+After successfully connecting to the MQTT broker, Pixelix publishes `online` to the `<HOSTNAME>/status` topic. On disconnect, it publishes `offline` to the same topic.
 
 ### Plugin topic path
 
@@ -74,13 +74,13 @@ The MQTT base topic path to access plugin related topics is built from the plugi
 
 Every plugin instance has an alias, which is unique per device. It is 3 to 20 characters long and may contain ```A-Z```, ```a-z```, ```0-9```, ```_``` and ```-```. If none is given at installation time, a default is generated from the plugin type name, e.g. ```DateTime1```.
 
-### Readable/Writeable Topic
+### Readable/Writable Topic
 
-If a topic is readable or writeable, use the following suffixes for the MQTT base path:
+Use these suffixes for the MQTT base path, depending on whether a topic is readable or writable:
 
-- For readable topics, add ```/state``` to the base path.
-- For writeable topics, add ```/set``` to the base path.
-- For topics that are both readable and writeable, use both paths.
+- For readable topics, append `/state` to the base path.
+- For writable topics, append `/set` to the base path.
+- For topics that are both readable and writable, use both paths.
 
 This ensures clear communication and control over the topics.
 
