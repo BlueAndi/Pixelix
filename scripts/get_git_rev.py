@@ -35,7 +35,7 @@ import os
 ################################################################################
 
 # pylint: disable=undefined-variable
-Import("env") # type: ignore
+Import("env")  # type: ignore
 
 ################################################################################
 # Classes
@@ -44,6 +44,7 @@ Import("env") # type: ignore
 ################################################################################
 # Functions
 ################################################################################
+
 
 def run_git(args):
     """Run a git command and return its output.
@@ -57,11 +58,13 @@ def run_git(args):
     output = None
 
     try:
-        output = subprocess.check_output(['git'] + args, stderr=subprocess.DEVNULL).decode('utf-8', errors='replace').strip()
+        output = subprocess.check_output(
+            ['git'] + args, stderr=subprocess.DEVNULL).decode('utf-8', errors='replace').strip()
     except (subprocess.CalledProcessError, OSError):
         pass
 
     return output
+
 
 def get_git_revision_hash():
     """Get the git revision hash number.
@@ -76,6 +79,7 @@ def get_git_revision_hash():
 
     return rev_hash
 
+
 def get_git_revision_short_hash():
     """Get the short git revision hash number.
 
@@ -89,6 +93,7 @@ def get_git_revision_short_hash():
 
     return rev_short_hash
 
+
 def is_detached_head():
     """Checks whether HEAD is detached, i.e. no branch is checked out.
 
@@ -97,6 +102,7 @@ def is_detached_head():
     """
     # Fails with exit code 1 if HEAD is detached.
     return run_git(['symbolic-ref', '--quiet', 'HEAD']) is None
+
 
 def is_tagged_head():
     """Checks whether a tag points exactly at HEAD, which identifies a release build.
@@ -107,6 +113,7 @@ def is_tagged_head():
     result = run_git(['for-each-ref', '--points-at', 'HEAD', 'refs/tags'])
 
     return (result is not None) and (len(result) > 0)
+
 
 def get_detached_branch_name():
     """Get a branch name for a detached HEAD.
@@ -121,10 +128,12 @@ def get_detached_branch_name():
 
     # Local branches "refs/heads/<name>" and remote branches "refs/remotes/<remote>/<name>".
     for refs_path, strip_count in [('refs/heads', 2), ('refs/remotes', 3)]:
-        refs = run_git(['for-each-ref', '--points-at', 'HEAD', f'--format=%(refname:lstrip={strip_count})', refs_path])
+        refs = run_git(['for-each-ref', '--points-at', 'HEAD',
+                       f'--format=%(refname:lstrip={strip_count})', refs_path])
 
         if refs is not None:
-            candidates += [ref for ref in refs.splitlines() if ref not in ("", "HEAD")]
+            candidates += [ref for ref in refs.splitlines()
+                           if ref not in ("", "HEAD")]
 
     if "master" in candidates:
         branch_name = "master"
@@ -140,6 +149,7 @@ def get_detached_branch_name():
                 break
 
     return branch_name
+
 
 def get_current_git_branch():
     """Get current git branch name.
@@ -160,6 +170,7 @@ def get_current_git_branch():
 
     return branch_name
 
+
 def any_local_change():
     """Checks whether there is any local change in the sources,
     which are under revision control.
@@ -170,6 +181,7 @@ def any_local_change():
     result = run_git(['status', '--porcelain', '--untracked-files=no'])
 
     return (result is not None) and (len(result) > 0)
+
 
 def any_unpushed_commit(upstream):
     """Checks whether there is any commit, which is not pushed to the remote repository.
@@ -191,9 +203,11 @@ def any_unpushed_commit(upstream):
         is_unpushed_commit_available = (result is not None) and (result != "0")
     else:
         result = run_git(['cherry', '-v', upstream])
-        is_unpushed_commit_available = (result is not None) and (len(result) > 0)
+        is_unpushed_commit_available = (
+            result is not None) and (len(result) > 0)
 
     return is_unpushed_commit_available
+
 
 def get_version():
     """Get the version identification from the definition file.
@@ -230,10 +244,11 @@ def get_version():
 # Main
 ################################################################################
 
-SOFTWARE_VERSION        = "-DSW_VERSION=vX.X.X"                 
-SOFTWARE_REVISION       = "-DSW_REV=0"            
+
+SOFTWARE_VERSION = "-DSW_VERSION=vX.X.X"
+SOFTWARE_REVISION = "-DSW_REV=0"
 SOFTWARE_REVISION_SHORT = "-DSW_REV_SHORT=0"
-SOFTWARE_BRANCH         = "-DSW_BRANCH=unknown" 
+SOFTWARE_BRANCH = "-DSW_BRANCH=unknown"
 
 # Update GIT version information from git if git is installed and sandbox contains a repository.
 if shutil.which("git") is None:
@@ -241,10 +256,10 @@ if shutil.which("git") is None:
 elif run_git(["rev-parse",  "--is-inside-work-tree"]) is None:
     print("Project is without git repository, cannot determine versions and branches.")
 else:
-    SOFTWARE_VERSION        = "-DSW_VERSION=" + get_version()
-    SOFTWARE_REVISION       = "-DSW_REV=" + get_git_revision_hash()
+    SOFTWARE_VERSION = "-DSW_VERSION=" + get_version()
+    SOFTWARE_REVISION = "-DSW_REV=" + get_git_revision_hash()
     SOFTWARE_REVISION_SHORT = "-DSW_REV_SHORT=" + get_git_revision_short_hash()
-    SOFTWARE_BRANCH         = "-DSW_BRANCH=" + get_current_git_branch()
+    SOFTWARE_BRANCH = "-DSW_BRANCH=" + get_current_git_branch()
 
     print("Software version       : " + get_version())
     print("Software revision long : " + get_git_revision_hash())
@@ -252,4 +267,5 @@ else:
     print("Software branch        : " + get_current_git_branch())
 
 # pylint: disable=undefined-variable
-env.Append(BUILD_FLAGS=[ SOFTWARE_VERSION, SOFTWARE_REVISION, SOFTWARE_REVISION_SHORT, SOFTWARE_BRANCH ]) # type: ignore
+env.Append(BUILD_FLAGS=[SOFTWARE_VERSION, SOFTWARE_REVISION,
+           SOFTWARE_REVISION_SHORT, SOFTWARE_BRANCH])  # type: ignore
