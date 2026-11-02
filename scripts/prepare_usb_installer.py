@@ -183,24 +183,29 @@ def determine_default(releases: list[dict[str, Any]], default_tag: str) -> dict[
     Args:
         releases: Releases with a valid package, newest first.
         default_tag: Explicitly requested tag, empty for the newest stable release.
+            If only pre-releases exist, the newest pre-release is used.
 
     Returns:
         Catalog entry of the default release.
 
     Raises:
-        ValueError: If the requested tag is unknown or a pre-release, or no stable release exists.
+        ValueError: If the requested tag is unknown or no release with a USB flash package exists.
     """
-    for release in releases:
-        if release["prerelease"]:
-            continue
+    if default_tag:
+        for release in releases:
+            if default_tag == release["tag"]:
+                return release
 
-        if ((not default_tag) or (default_tag == release["tag"])):
+        raise ValueError(f"Default release is unknown: {default_tag}")
+
+    for release in releases:
+        if not release["prerelease"]:
             return release
 
-    if default_tag:
-        raise ValueError(f"Default release is unknown or a pre-release: {default_tag}")
+    if releases:
+        return releases[0]
 
-    raise ValueError("No stable release with a USB flash package found.")
+    raise ValueError("No release with a USB flash package found.")
 
 
 def validate_package(manifest: dict[str, Any], manifest_path: Path) -> None:

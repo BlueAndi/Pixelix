@@ -9,7 +9,7 @@ on:
                 required: true
                 type: string
             release_tag:
-                description: Stable release tag preselected in the installer. Empty uses the latest stable release.
+                description: Release tag preselected in the installer. Empty uses the latest stable release, or the latest pre-release if no stable one exists.
                 required: false
                 default: ""
                 type: string
@@ -24,7 +24,7 @@ on:
                 type: string
                 default: Development
             release_tag:
-                description: Stable release tag preselected in the installer. Empty uses the latest stable release.
+                description: Release tag preselected in the installer. Empty uses the latest stable release, or the latest pre-release if no stable one exists.
                 required: false
                 type: string
                 default: ""

@@ -106,22 +106,24 @@ def test_default_ignores_newer_prerelease() -> None:
 
 
 def test_default_explicit_tag() -> None:
-    """An explicit stable tag is accepted, a pre-release or unknown tag is rejected."""
+    """An explicit tag is accepted, including a pre-release; an unknown tag is rejected."""
     releases = pui.select_releases([meta("11.3.0-rc.1", True), meta("11.2.0"), meta("11.1.0")])
     assert "11.1.0" == pui.determine_default(releases, "11.1.0")["tag"]
-    with pytest.raises(ValueError):
-        pui.determine_default(pui.select_releases([meta("v11.0.0"), meta("11.0.0", True)]), "11.0.0")
-    assert "v11.0.0" == pui.determine_default(pui.select_releases([meta("v11.0.0"), meta("11.0.0", True)]), "v11.0.0")["tag"]
-    with pytest.raises(ValueError):
-        pui.determine_default(releases, "11.3.0-rc.1")
+    assert "11.3.0-rc.1" == pui.determine_default(releases, "11.3.0-rc.1")["tag"]
     with pytest.raises(ValueError):
         pui.determine_default(releases, "11.9.9")
 
 
-def test_default_requires_stable_release() -> None:
-    """Without a stable release there is no default."""
+def test_default_falls_back_to_prerelease() -> None:
+    """Without a stable release the newest pre-release is the default."""
+    releases = pui.select_releases([meta("11.3.0-rc.1", True), meta("11.3.0-rc.2", True)])
+    assert "11.3.0-rc.2" == pui.determine_default(releases, "")["tag"]
+
+
+def test_default_requires_release() -> None:
+    """Without any release there is no default."""
     with pytest.raises(ValueError):
-        pui.determine_default(pui.select_releases([meta("11.3.0-rc.1", True)]), "")
+        pui.determine_default([], "")
 
 
 def test_assemble(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

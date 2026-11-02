@@ -273,10 +273,10 @@ async function loadCatalog() {
     if (data.defaultTag) {
         defaultRelease = releases.find((release) => release.tag === data.defaultTag);
     } else {
-        defaultRelease = releases.find((release) => (release.version === data.default) && !release.prerelease);
+        defaultRelease = releases.find((release) => release.version === data.default);
     }
 
-    if ((1 !== data.schema) || (!data.default) || (!defaultRelease) || defaultRelease.prerelease ||
+    if ((1 !== data.schema) || (!data.default) || (!defaultRelease) ||
         (defaultRelease.version !== data.default)) {
         throw new Error("The release catalog is invalid.");
     }
