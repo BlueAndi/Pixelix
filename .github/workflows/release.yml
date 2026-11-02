@@ -266,6 +266,8 @@ jobs:
 
   # Publish the USB installer and the Home Assistant blueprints on GitHub Pages.
   publish_installer:
+    # The installer requires a stable release for its default selection.
+    if: ${{ !contains(github.event.inputs.tag_name, '-') }}
     needs: [deploy]
     permissions:
       contents: read
