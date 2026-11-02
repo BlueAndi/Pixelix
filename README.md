@@ -160,11 +160,12 @@ Every release provides ready-to-flash binaries for all supported board and displ
 This is the easiest way and the recommended one for everybody who does not want to touch the source code. The installer runs completely in the browser, writes a full flash image (bootloader, partition table, factory image, firmware and filesystem) and can hand over the WiFi credentials over USB afterwards.
 
 1. Open the [PIXELIX USB installer](https://blueandi.github.io/Pixelix/) in a Chromium based desktop browser, like Chrome, Edge, Opera or Brave. It is based on the Web Serial API, which is not available in Firefox, Safari or on mobile devices.
-2. Choose your board and display configuration.
-3. Connect the development board to your PC with a data capable USB cable and select the serial device once.
-4. Start _Erase and install_. Note, that the flash is erased completely, which includes all settings of a previous installation.
+2. Choose the version. The latest stable release is preselected. All releases from version 11 on are offered; pre-releases are marked as such and are not recommended for productive use.
+3. Choose your board and display configuration.
+4. Connect the development board to your PC with a data capable USB cable and select the serial device once.
+5. Start _Erase and install_. Note, that the flash is erased completely, which includes all settings of a previous installation.
     - To keep the settings of a previous installation, enable _Keep settings_ before. The flash is then not erased and the device settings stored in NVS survive: WiFi credentials, hostname, web login, brightness, timezone and so on. The slot configuration, MQTT, sensor calibration, timers and the plugin configuration are reset in any case, because they are part of the filesystem which is always written. Don't use it for the first installation on a board.
-5. Keep the USB cable connected and continue with the WiFi setup on the same page. If that succeeds, you can skip the [Very First Startup](#very-first-startup).
+6. Keep the USB cable connected and continue with the WiFi setup on the same page. If that succeeds, you can skip the [Very First Startup](#very-first-startup).
 
 If the board does not enter the download mode automatically, follow the BOOT/RESET sequence shown on the page. This is typically necessary for the ESP32 DevKit V1.
 

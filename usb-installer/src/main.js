@@ -38,6 +38,8 @@ const IMAGE_CACHE_KEY_LENGTH = 16;
 const WIFI_CREDENTIAL_COMMAND = /^write\s+wifi\s+(ssid|passphrase)\b/i;
 
 const elements = {
+    versionSelect: document.getElementById("version-select"),
+    prereleaseWarning: document.getElementById("prerelease-warning"),
     releaseVersion: document.getElementById("release-version"),
     boardCount: document.getElementById("board-count"),
     boardSelect: document.getElementById("board-select"),
@@ -64,6 +66,11 @@ const elements = {
     statusList: document.getElementById("status-list"),
 };
 
+let catalog;
+let selectedRelease;
+let releaseRequestId = 0;
+let improvSessionToken = 0;
+let preferredEnvironment;
 let manifest;
 let selectedTarget;
 let serialPort;
@@ -142,11 +149,12 @@ function updateSerialControls() {
     elements.terminalConnectButton.disabled = isSessionOwned || !("serial" in navigator);
     elements.terminalForm.hidden = !isConsoleConnected;
     elements.connectButton.disabled = !manifest || isSessionOwned || isFlashing;
-    elements.flashButton.disabled = !loader || !transport || Boolean(improv || isFlashing);
+    elements.flashButton.disabled = !manifest || !selectedTarget || !loader || !transport || Boolean(improv || isFlashing);
     elements.flashButton.textContent = elements.keepSettings.checked ? "Install, keep settings" : "Erase and install";
     elements.keepSettings.disabled = isFlashing;
     elements.wifiConnectButton.disabled = !devicePortReady || Boolean(improv || isFlashing);
     elements.boardSelect.disabled = !manifest || isFlashing;
+    elements.versionSelect.disabled = !catalog || isFlashing;
 }
 
 /**
@@ -213,21 +221,124 @@ function findTarget(environment) {
 }
 
 /**
- * Load firmware metadata and populate the board selector.
+ * Build the visible label of a release in the version selector.
+ * @param {{version: string, prerelease: boolean}} release Catalog release
+ * @param {boolean} isDefault True if it is the preselected stable release
+ * @returns {string} Option text
+ */
+function getReleaseLabel(release, isDefault) {
+    let label = release.version;
+
+    if (release.tag !== release.version) {
+        label += ` (tag ${release.tag})`;
+    }
+
+    if (release.prerelease) {
+        label += " – Pre-release, not recommended for production";
+    } else if (isDefault) {
+        label += " (latest stable)";
+    }
+
+    return label;
+}
+
+/**
+ * Fetch a JSON file of the installer site.
+ * @param {string} url Site relative URL
+ * @param {string} errorMessage Message used if the file is not available
+ * @returns {Promise<object>} Parsed JSON
+ * @throws {Error} If the file cannot be loaded
+ */
+async function fetchJson(url, errorMessage) {
+    const response = await fetch(url, { cache: "no-store" });
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!response.ok || !contentType.includes("application/json")) {
+        throw new Error(errorMessage);
+    }
+
+    return response.json();
+}
+
+/**
+ * Load the release catalog and populate the version selector.
+ * The latest stable release is preselected.
+ * @returns {Promise<void>}
+ * @throws {Error} If the catalog cannot be loaded or is invalid
+ */
+async function loadCatalog() {
+    const data = await fetchJson("./releases.json", "No release catalog is available in this preview.");
+    const releases = Array.isArray(data.releases) ? data.releases : [];
+    let defaultRelease;
+
+    if (data.defaultTag) {
+        defaultRelease = releases.find((release) => release.tag === data.defaultTag);
+    } else {
+        defaultRelease = releases.find((release) => (release.version === data.default) && !release.prerelease);
+    }
+
+    if ((1 !== data.schema) || (!data.default) || (!defaultRelease) || defaultRelease.prerelease ||
+        (defaultRelease.version !== data.default)) {
+        throw new Error("The release catalog is invalid.");
+    }
+
+    catalog = data;
+    elements.versionSelect.replaceChildren();
+
+    for (const release of catalog.releases) {
+        const option = document.createElement("option");
+        option.value = release.tag;
+        option.textContent = getReleaseLabel(release, release.tag === defaultRelease.tag);
+        elements.versionSelect.append(option);
+    }
+
+    elements.versionSelect.value = defaultRelease.tag;
+    setStepState("version", "Ready");
+    await loadRelease(defaultRelease, beginReleaseRequest(defaultRelease));
+}
+
+/**
+ * Register a release request. It supersedes every earlier one, so it has to
+ * be called synchronously when the user changes the selection.
+ * @param {{version: string, prerelease: boolean}} release Requested catalog release
+ * @returns {number} Request identifier
+ */
+function beginReleaseRequest(release) {
+    selectedRelease = release;
+    releaseRequestId += 1;
+    return releaseRequestId;
+}
+
+/**
+ * Load the firmware manifest of a release and populate the board selector.
+ * Only the most recently registered request is applied.
+ * @param {{version: string, prerelease: boolean, manifest: string}} release Catalog release
+ * @param {number} requestId Identifier returned by beginReleaseRequest
  * @returns {Promise<void>}
  * @throws {Error} If the release manifest cannot be loaded or parsed
  */
-async function loadManifest() {
-    const response = await fetch("./firmware-manifest.json", { cache: "no-store" });
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!response.ok || !contentType.includes("application/json")) {
-        throw new Error("No release firmware manifest is available in this preview.");
+async function loadRelease(release, requestId) {
+    if (requestId !== releaseRequestId) {
+        return;
     }
 
-    manifest = await response.json();
-    elements.releaseVersion.textContent = manifest.version;
-    elements.boardCount.textContent = `${manifest.targets.length} board builds`;
+    manifest = undefined;
+    selectedTarget = undefined;
+    elements.prereleaseWarning.hidden = !release.prerelease;
+    elements.releaseVersion.textContent = release.prerelease ? `${release.version} (pre-release)` : release.version;
     elements.boardSelect.replaceChildren();
+    updateSerialControls();
+
+    const loadedManifest = await fetchJson(release.manifest, `The firmware of version ${release.version} is not available.`);
+    if (requestId !== releaseRequestId) {
+        return;
+    }
+
+    if ((!Array.isArray(loadedManifest.targets)) || (0 === loadedManifest.targets.length)) {
+        throw new Error(`The firmware manifest of version ${release.version} is invalid.`);
+    }
+
+    manifest = loadedManifest;
+    elements.boardCount.textContent = `${manifest.targets.length} board builds`;
 
     for (const target of manifest.targets) {
         const option = document.createElement("option");
@@ -236,13 +347,71 @@ async function loadManifest() {
         elements.boardSelect.append(option);
     }
 
-    elements.boardSelect.disabled = false;
-    selectedTarget = manifest.targets[0];
+    const previousEnvironment = preferredEnvironment;
+    selectedTarget = findTarget(previousEnvironment) ?? manifest.targets[0];
+    preferredEnvironment = selectedTarget.environment;
+    elements.boardSelect.value = selectedTarget.environment;
     updateBootloaderInstructions(selectedTarget);
-    elements.boardSelect.addEventListener("change", handleBoardSelection);
 
     updateSerialControls();
-    addStatus(`${manifest.targets.length} board configurations are ready.`);
+    addStatus(`Version ${release.version}: ${manifest.targets.length} board configurations are ready.`);
+    if (previousEnvironment && (previousEnvironment !== selectedTarget.environment)) {
+        addStatus(`${previousEnvironment} is not available in this version; selected ${selectedTarget.environment}.`);
+    }
+}
+
+/**
+ * Handle a version selection change.
+ * A flasher or Improv session belongs to the previous selection, therefore it
+ * is closed and the device has to be connected again.
+ * @param {Event} event Change event from the version selector
+ * @returns {Promise<void>}
+ */
+async function handleVersionSelection(event) {
+    const selector = /** @type {HTMLSelectElement} */ (event.currentTarget);
+    const release = catalog.releases.find((entry) => entry.tag === selector.value);
+
+    if (isFlashing) {
+        selector.value = selectedRelease.tag;
+        return;
+    }
+
+    const requestId = beginReleaseRequest(release);
+    devicePortReady = false;
+
+    // Invalidate the old firmware and abort a pending Wi-Fi connect before anything is awaited.
+    manifest = undefined;
+    selectedTarget = undefined;
+    improvSessionToken += 1;
+    elements.chipStatus.textContent = "Select the USB device to detect its chip.";
+    updateSerialControls();
+
+    try {
+        if (transport) {
+            await disconnectFlasher();
+            appendTerminalOutput("\r\n[Version changed; connect the device again to detect its chip.]\r\n");
+        }
+        if (improv) {
+            await closeImprovSession();
+        }
+        if (requestId !== releaseRequestId) {
+            return;
+        }
+
+        setStepState("connect", "Waiting");
+        setStepState("flash", "Waiting");
+        setStepState("wifi", "Waiting");
+        elements.wifiForm.hidden = true;
+        elements.authorizationStatus.textContent = "";
+        elements.chipStatus.textContent = "Select the USB device to detect its chip.";
+        addStatus(`Selected version ${release.version}${release.prerelease ? " (pre-release, not recommended for productive use)" : ""}.`);
+
+        await loadRelease(release, requestId);
+    } catch (error) {
+        if (requestId === releaseRequestId) {
+            handleManifestError(error);
+        }
+    }
 }
 
 /**
@@ -255,6 +424,7 @@ async function loadManifest() {
 async function handleBoardSelection(event) {
     const selector = /** @type {HTMLSelectElement} */ (event.currentTarget);
     selectedTarget = findTarget(selector.value);
+    preferredEnvironment = selectedTarget.environment;
     devicePortReady = false;
 
     if (transport) {
@@ -321,6 +491,9 @@ async function connectToBoard() {
         updateSerialControls();
 
         await loader.main();
+        if (!selectedTarget) {
+            throw new Error("The selected version changed; connect the device again.");
+        }
         const detectedChip = loader.chip.CHIP_NAME;
         if (!expectedChipMatches(selectedTarget.chip, detectedChip)) {
             throw new Error(`Selected target needs ${selectedTarget.chip}; detected ${detectedChip}.`);
@@ -422,11 +595,12 @@ function updateFlashProgress(fileIndex, written, compressedTotal, files, totalBy
  * @throws {Error} If an image cannot be fetched or the flash operation fails
  */
 async function flashBoard() {
-    if (!loader || !transport || isFlashing) {
+    if (!loader || !transport || isFlashing || !manifest || !selectedTarget) {
         return;
     }
 
     isFlashing = true;
+    updateSerialControls();
     elements.flashButton.disabled = true;
     elements.connectButton.disabled = true;
     elements.progressWrap.hidden = false;
@@ -445,6 +619,9 @@ async function flashBoard() {
         const eraseInfo = eraseAll ? "Erasing flash" : "Keeping the stored device settings";
 
         addStatus(`Verified all ${files.length} images. ${eraseInfo} and installing ${selectedTarget.environment}.`);
+        if (selectedRelease?.prerelease) {
+            addStatus(`Installing pre-release ${selectedRelease.version}. Not recommended for productive use.`);
+        }
         setStepState("flash", "Flashing");
 
         await loader.writeFlash({
@@ -683,6 +860,10 @@ async function connectForWifiSetup() {
         return;
     }
 
+    // Closing the session invalidates the token, so a stale attempt must not touch a newer session.
+    improvSessionToken += 1;
+    const sessionToken = improvSessionToken;
+
     elements.wifiConnectButton.disabled = true;
     elements.authorizationStatus.textContent = "Connecting to Improv Serial…";
 
@@ -694,7 +875,17 @@ async function connectForWifiSetup() {
             await loader.after("hard_reset");
             await disconnectFlasher();
         }
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
         const port = await openSerialPort();
+        if (sessionToken !== improvSessionToken) {
+            if ((null !== port.readable) && (false === port.readable.locked) &&
+                (null !== port.writable) && (false === port.writable.locked)) {
+                await port.close();
+            }
+            return;
+        }
         const quietLogger = {
             /** Suppress protocol logs from the status area. */
             log() { },
@@ -703,24 +894,37 @@ async function connectForWifiSetup() {
             /** Suppress protocol error output; the UI handles state events. */
             error() { },
         };
-        improv = new ImprovSerial(port, quietLogger);
+        const session = new ImprovSerial(port, quietLogger);
+        improv = session;
         updateSerialControls();
 
         appendTerminalOutput("\r\n[Improv Wi-Fi session started. Waiting for button authorization.]\r\n");
 
-        improv.addEventListener("state-changed", handleImprovStateChanged);
-        improv.addEventListener("error-changed", handleImprovErrorChanged);
+        session.addEventListener("state-changed", handleImprovStateChanged);
+        session.addEventListener("error-changed", handleImprovErrorChanged);
 
-        const deviceInfo = await improv.initialize(5000);
+        const deviceInfo = await session.initialize(5000);
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
+
         elements.wifiForm.hidden = false;
         elements.authorizationStatus.textContent = `Press any physical button on the device to authorize Wi-Fi setup. ${deviceInfo?.name ?? "Pixelix"} is waiting.`;
         appendTerminalOutput(`\r\n[${deviceInfo?.name ?? "Pixelix"} is waiting for a physical button.]\r\n`);
         setStepState("wifi", "Waiting for button");
 
-        await waitForAuthorization(improv);
+        await waitForAuthorization(session);
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
+
         elements.authorizationStatus.textContent = "Authorized. Enter the Wi-Fi credentials.";
         elements.provisionButton.disabled = false;
     } catch (error) {
+        if (sessionToken !== improvSessionToken) {
+            return;
+        }
+
         elements.authorizationStatus.textContent = error.message;
         addStatus(error.message, "error");
         appendTerminalOutput(`\r\n[Wi-Fi setup failed: ${error.message}]\r\n`);
@@ -763,6 +967,8 @@ function handleImprovErrorChanged(event) {
  * @returns {Promise<void>}
  */
 async function closeImprovSession() {
+    improvSessionToken += 1;
+
     if (improv) {
         const session = improv;
         improv = undefined;
@@ -877,9 +1083,11 @@ if (!("serial" in navigator) || !window.isSecureContext) {
     handleUnsupportedSerial();
 } else {
     updateSerialControls();
-    loadManifest().catch(handleManifestError);
+    loadCatalog().catch(handleManifestError);
 }
 
+elements.versionSelect.addEventListener("change", handleVersionSelection);
+elements.boardSelect.addEventListener("change", handleBoardSelection);
 elements.connectButton.addEventListener("click", connectToBoard);
 elements.flashButton.addEventListener("click", flashBoard);
 elements.keepSettings.addEventListener("change", updateSerialControls);

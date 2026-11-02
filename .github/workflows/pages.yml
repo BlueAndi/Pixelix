@@ -9,7 +9,7 @@ on:
                 required: true
                 type: string
             release_tag:
-                description: Release tag whose USB flash packages are published. Empty uses the latest release.
+                description: Stable release tag preselected in the installer. Empty uses the latest stable release.
                 required: false
                 default: ""
                 type: string
@@ -24,7 +24,7 @@ on:
                 type: string
                 default: Development
             release_tag:
-                description: Release tag whose USB flash packages are published. Empty uses the latest release.
+                description: Stable release tag preselected in the installer. Empty uses the latest stable release.
                 required: false
                 type: string
                 default: ""
@@ -65,55 +65,49 @@ jobs:
                   npm ci
                   npm run build
 
-            - name: Resolve release tag
-              id: release
+            - name: List releases
               env:
                   GH_TOKEN: ${{ github.token }}
-                  RELEASE_TAG: ${{ inputs.release_tag }}
               run: |
-                  if [ -z "$RELEASE_TAG" ]; then
-                    RELEASE_TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
-                  fi
-                  if [ -z "$RELEASE_TAG" ]; then
-                    echo "No published release was found." >&2
-                    exit 1
-                  fi
-                  echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
-
-            - name: Determine site version label
-              id: version
-              env:
-                  RELEASE_TAG: ${{ steps.release.outputs.tag }}
-                  SOURCE_REF: ${{ inputs.source_ref }}
-              run: |
-                  if [ "$SOURCE_REF" = "$RELEASE_TAG" ]; then
-                    LABEL="$RELEASE_TAG"
-                  else
-                    LABEL="${SOURCE_REF}-$(git rev-parse --short HEAD) / Firmware-${RELEASE_TAG}"
-                  fi
-                  echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+                  gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --exclude-drafts \
+                    --json tagName,isPrerelease,publishedAt > releases-meta.json
 
             - name: Download release USB packages
               env:
                   GH_TOKEN: ${{ github.token }}
-                  RELEASE_TAG: ${{ steps.release.outputs.tag }}
               run: |
-                  ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${RELEASE_TAG}-usb-flash-packages.zip"
-                  gh release download "$RELEASE_TAG" \
-                    --repo "$GITHUB_REPOSITORY" \
-                    --pattern "$ARCHIVE_NAME" \
-                    --dir latest-release
-                  mkdir release-packages
-                  unzip "latest-release/$ARCHIVE_NAME" -d release-packages
+                  # Releases without USB flash packages archive are skipped by the assembly script.
+                  for TAG in $(python scripts/prepare_usb_installer.py list-tags --releases-meta releases-meta.json); do
+                    ARCHIVE_NAME="${GITHUB_REPOSITORY#*/}-${TAG}-usb-flash-packages.zip"
+                    if gh release download "$TAG" \
+                      --repo "$GITHUB_REPOSITORY" \
+                      --pattern "$ARCHIVE_NAME" \
+                      --dir "downloads/$TAG"; then
+                      mkdir -p "releases/$TAG"
+                      unzip -q "downloads/$TAG/$ARCHIVE_NAME" -d "releases/$TAG"
+                    else
+                      echo "::warning::No USB flash packages for release $TAG"
+                    fi
+                  done
 
             - name: Assemble Pages site
               env:
-                  VERSION_LABEL: ${{ steps.version.outputs.label }}
+                  DEFAULT_TAG: ${{ inputs.release_tag }}
               run: |
-                  python scripts/prepare_usb_installer.py \
-                    --packages-dir release-packages \
+                  python scripts/prepare_usb_installer.py assemble \
+                    --releases-dir releases \
+                    --releases-meta releases-meta.json \
                     --site-dir site \
-                    --version "$VERSION_LABEL"
+                    --default-tag "$DEFAULT_TAG"
+
+            - name: Check Pages size
+              run: |
+                  SIZE_MB=$(du -sm site | cut -f1)
+                  echo "Pages site size: ${SIZE_MB} MB"
+                  if [ "$SIZE_MB" -gt 800 ]; then
+                    echo "Pages site exceeds 800 MB (GitHub Pages limit is 1 GB); reduce the number of offered releases." >&2
+                    exit 1
+                  fi
 
             - name: Add Home Assistant blueprints
               run: cp doc/homeassistant/blueprint/*.yaml site/

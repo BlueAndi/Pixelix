@@ -40,8 +40,24 @@
             </section>
 
             <section class="setup-flow" aria-label="Device setup">
-                <article class="step" id="step-board">
+                <article class="step" id="step-version">
                     <div class="step-number">01</div>
+                    <div class="step-body">
+                        <h2>Choose the version</h2>
+                        <label class="form-label" for="version-select">Pixelix version</label>
+                        <select class="form-select" id="version-select" disabled>
+                            <option>Loading versions…</option>
+                        </select>
+                        <p class="step-note" id="version-note">The latest stable release is preselected.</p>
+                        <div class="alert alert-warning" id="prerelease-warning" role="alert" hidden>
+                            <strong>Pre-release.</strong> This version is not recommended for productive use.
+                        </div>
+                    </div>
+                    <span class="step-state" id="version-state">WAITING</span>
+                </article>
+
+                <article class="step" id="step-board">
+                    <div class="step-number">02</div>
                     <div class="step-body">
                         <h2>Choose your board</h2>
                         <label class="form-label" for="board-select">Board and display configuration</label>
@@ -54,7 +70,7 @@
                 </article>
 
                 <article class="step" id="step-connect">
-                    <div class="step-number">02</div>
+                    <div class="step-number">03</div>
                     <div class="step-body">
                         <h2>Connect over USB</h2>
                         <p>Use a data-capable USB cable and choose the device once. For ESP32 DevKit V1, see the bootloader steps below if automatic sync fails.</p>
@@ -66,7 +82,7 @@
                 </article>
 
                 <article class="step" id="step-flash">
-                    <div class="step-number">03</div>
+                    <div class="step-number">04</div>
                     <div class="step-body">
                         <h2>Install firmware</h2>
                         <p>By default the complete flash is erased, which removes every setting of a previous installation. Keep the USB cable connected while Pixelix restarts.</p>
@@ -85,7 +101,7 @@
                 </article>
 
                 <article class="step" id="step-wifi">
-                    <div class="step-number">04</div>
+                    <div class="step-number">05</div>
                     <div class="step-body">
                         <h2>Set up Wi-Fi</h2>
                         <p id="wifi-intro">Choose the USB device first. After firmware restart, this page reopens the same serial port; keep the cable connected. Some boards may ask you to select the device again.</p>

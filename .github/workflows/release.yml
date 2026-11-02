@@ -269,4 +269,3 @@ jobs:
     uses: ./.github/workflows/pages.yml
     with:
       source_ref: ${{ github.event.inputs.tag_name }}
-      release_tag: ${{ github.event.inputs.tag_name }}
