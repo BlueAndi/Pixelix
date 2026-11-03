@@ -36,6 +36,18 @@ const MAX_TERMINAL_OUTPUT_LENGTH = 48000;
 /** Number of leading SHA-256 hex digits used as cache-busting query of an image URL. */
 const IMAGE_CACHE_KEY_LENGTH = 16;
 const WIFI_CREDENTIAL_COMMAND = /^write\s+wifi\s+(ssid|passphrase)\b/i;
+/** Factory image signature: boot log partition line or its terminal help entry. */
+const FACTORY_IMAGE_MARKER = /Partition\s*:\s*Factory|activate app/i;
+/** Factory image replies which end the application activation attempt. */
+const FACTORY_ACTIVATION_RESULT = /Partition switched|Cannot switch|Could Not Activate|not found|Failed to set/i;
+/** Factory image reply confirming the switch to the application partition. */
+const FACTORY_ACTIVATION_SUCCESS = /Partition switched/i;
+/** Time in ms to look for the factory image on the serial port. */
+const FACTORY_PROBE_TIMEOUT_MS = 4000;
+/** Time in ms to wait for the factory image to answer the activation command. */
+const FACTORY_ACTIVATION_TIMEOUT_MS = 10000;
+/** Time in ms the board needs to restart into the application partition. */
+const FACTORY_RESTART_DELAY_MS = 3000;
 
 const elements = {
     versionSelect: document.getElementById("version-select"),
@@ -852,6 +864,100 @@ function waitForAuthorization(service) {
 }
 
 /**
+ * Send a command and collect the serial output until it is complete or times out.
+ * The port is left open, but its readable stream is cancelled and the port must be
+ * closed and reopened before the next use.
+ * @param {SerialPort} port Open Web Serial port
+ * @param {string} command Command line to send repeatedly until output is complete
+ * @param {(text: string) => boolean} isComplete Returns true when enough output was received
+ * @param {number} timeoutMs Maximum time to collect output
+ * @returns {Promise<string>} Collected output
+ */
+async function exchangeSerialText(port, command, isComplete, timeoutMs) {
+    const writer = port.writable.getWriter();
+    const reader = port.readable.getReader();
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+    let text = "";
+
+    /**
+     * Send the command; the device may have been busy booting before.
+     * @returns {void}
+     */
+    const sendCommand = () => {
+        writer.write(encoder.encode(`${command}\n`)).catch(() => { });
+    };
+    const timeout = window.setTimeout(() => reader.cancel().catch(() => { }), timeoutMs);
+    const retry = window.setInterval(sendCommand, 1500);
+
+    try {
+        sendCommand();
+        while (!isComplete(text)) {
+            const { value, done } = await reader.read();
+            if (done) {
+                break;
+            }
+            text += decoder.decode(value, { stream: true });
+        }
+    } finally {
+        window.clearTimeout(timeout);
+        window.clearInterval(retry);
+        await reader.cancel().catch(() => { });
+        reader.releaseLock();
+        writer.releaseLock();
+    }
+
+    return text;
+}
+
+/**
+ * Close the selected port, ignoring errors of a device which already vanished.
+ * @param {SerialPort} port Web Serial port
+ * @returns {Promise<void>}
+ */
+async function closeSerialPortQuietly(port) {
+    try {
+        await port.close();
+    } catch {
+        // The device may have restarted and disconnected already.
+    }
+}
+
+/**
+ * Make sure the application partition runs, because the factory image has no Improv support.
+ * A freshly flashed board starts the factory image, which must be told to activate the
+ * application and restart.
+ * @param {SerialPort} port Open Web Serial port
+ * @returns {Promise<SerialPort>} Open port, ready for Improv
+ * @throws {Error} If the factory image refuses to activate the application
+ */
+async function ensureApplicationPartition(port) {
+    const probe = await exchangeSerialText(port, "help", (text) => FACTORY_IMAGE_MARKER.test(text), FACTORY_PROBE_TIMEOUT_MS);
+    let isActivated = true;
+
+    if (FACTORY_IMAGE_MARKER.test(probe)) {
+        addStatus("Factory image detected. Activating the application partition…");
+        elements.authorizationStatus.textContent = "Factory image detected. Activating the application…";
+        const result = await exchangeSerialText(port, "activate app", (text) => FACTORY_ACTIVATION_RESULT.test(text), FACTORY_ACTIVATION_TIMEOUT_MS);
+        isActivated = FACTORY_ACTIVATION_SUCCESS.test(result);
+
+        if (isActivated) {
+            appendTerminalOutput("\r\n[Application partition activated, waiting for the restart.]\r\n");
+        }
+    }
+
+    await closeSerialPortQuietly(port);
+
+    if (!isActivated) {
+        throw new Error("The factory image could not activate the application. Flash the complete firmware again.");
+    }
+
+    // Reopening the port also gives the restarted application time to boot.
+    await new Promise((resolve) => window.setTimeout(resolve, FACTORY_RESTART_DELAY_MS));
+    return openSerialPort();
+}
+
+/**
  * Open Improv on the selected port, returning a running board to its application first.
  * @returns {Promise<void>}
  */
@@ -878,7 +984,7 @@ async function connectForWifiSetup() {
         if (sessionToken !== improvSessionToken) {
             return;
         }
-        const port = await openSerialPort();
+        const port = await ensureApplicationPartition(await openSerialPort());
         if (sessionToken !== improvSessionToken) {
             if ((null !== port.readable) && (false === port.readable.locked) &&
                 (null !== port.writable) && (false === port.writable.locked)) {
