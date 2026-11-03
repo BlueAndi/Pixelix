@@ -39,13 +39,13 @@ const WIFI_CREDENTIAL_COMMAND = /^write\s+wifi\s+(ssid|passphrase)\b/i;
 /** Factory image signature: boot log partition line or its terminal help entry. */
 const FACTORY_IMAGE_MARKER = /Partition\s*:\s*Factory|activate app/i;
 /** Factory image replies which end the application activation attempt. */
-const FACTORY_ACTIVATION_RESULT = /Partition switched|Cannot switch|Could Not Activate|not found|Failed to set/i;
-/** Factory image reply confirming the switch to the application partition. */
-const FACTORY_ACTIVATION_SUCCESS = /Partition switched/i;
+const FACTORY_ACTIVATION_RESULT = /^OK\s*$|Cannot switch|Could Not Activate|not found|Failed to set/im;
+/** Factory image replies reporting a failed activation. */
+const FACTORY_ACTIVATION_FAILURE = /Cannot switch|Could Not Activate|not found|Failed to set/i;
 /** Time in ms to look for the factory image on the serial port. */
 const FACTORY_PROBE_TIMEOUT_MS = 4000;
 /** Time in ms to wait for the factory image to answer the activation command. */
-const FACTORY_ACTIVATION_TIMEOUT_MS = 10000;
+const FACTORY_ACTIVATION_TIMEOUT_MS = 4000;
 /** Time in ms the board needs to restart into the application partition. */
 const FACTORY_RESTART_DELAY_MS = 3000;
 
@@ -899,6 +899,8 @@ async function exchangeSerialText(port, command, isComplete, timeoutMs) {
             }
             text += decoder.decode(value, { stream: true });
         }
+    } catch {
+        // The device restarting during the command ends the stream; the collected text is still valid.
     } finally {
         window.clearTimeout(timeout);
         window.clearInterval(retry);
@@ -908,6 +910,44 @@ async function exchangeSerialText(port, command, isComplete, timeoutMs) {
     }
 
     return text;
+}
+
+/**
+ * Discard pending serial input, e.g. the late `OK` of an earlier command.
+ * @param {SerialPort} port Open Web Serial port
+ * @param {number} durationMs Time to keep discarding input
+ * @returns {Promise<void>}
+ */
+async function drainSerialInput(port, durationMs) {
+    const reader = port.readable.getReader();
+    const timeout = window.setTimeout(() => reader.cancel().catch(() => { }), durationMs);
+
+    try {
+        while (!(await reader.read()).done) {
+            // Input is intentionally discarded.
+        }
+    } catch {
+        // A restarting device ends the stream.
+    } finally {
+        window.clearTimeout(timeout);
+        reader.releaseLock();
+    }
+}
+
+/**
+ * Send one command line without waiting for an answer.
+ * @param {SerialPort} port Open Web Serial port
+ * @param {string} command Command line to send
+ * @returns {Promise<void>}
+ */
+async function sendSerialLine(port, command) {
+    const writer = port.writable.getWriter();
+
+    try {
+        await writer.write(new TextEncoder().encode(`${command}\n`));
+    } finally {
+        writer.releaseLock();
+    }
 }
 
 /**
@@ -933,27 +973,35 @@ async function closeSerialPortQuietly(port) {
  */
 async function ensureApplicationPartition(port) {
     const probe = await exchangeSerialText(port, "help", (text) => FACTORY_IMAGE_MARKER.test(text), FACTORY_PROBE_TIMEOUT_MS);
-    let isActivated = true;
 
-    if (FACTORY_IMAGE_MARKER.test(probe)) {
-        addStatus("Factory image detected. Activating the application partition…");
-        elements.authorizationStatus.textContent = "Factory image detected. Activating the application…";
-        const result = await exchangeSerialText(port, "activate app", (text) => FACTORY_ACTIVATION_RESULT.test(text), FACTORY_ACTIVATION_TIMEOUT_MS);
-        isActivated = FACTORY_ACTIVATION_SUCCESS.test(result);
-
-        if (isActivated) {
-            appendTerminalOutput("\r\n[Application partition activated, waiting for the restart.]\r\n");
-        }
+    if (!FACTORY_IMAGE_MARKER.test(probe)) {
+        return port;
     }
 
+    addStatus("Factory image detected. Activating the application partition…");
+    elements.authorizationStatus.textContent = "Factory image detected. Activating the application…";
+    await drainSerialInput(port, 500);
+    const result = await exchangeSerialText(port, "activate app", (text) => FACTORY_ACTIVATION_RESULT.test(text), FACTORY_ACTIVATION_TIMEOUT_MS);
+    appendTerminalOutput(`\r\n[Factory image answered: ${result.trim() || "(no answer)"}]\r\n`);
+    if (FACTORY_ACTIVATION_FAILURE.test(result)) {
+        await closeSerialPortQuietly(port);
+        throw new Error(`The factory image could not activate the application: ${result.trim()}`);
+    }
+
+    // The factory image only selects the boot partition; the restart must be requested separately.
+    await sendSerialLine(port, "restart");
     await closeSerialPortQuietly(port);
+    // The reply may be lost while the board restarts, so verify which image runs afterwards.
+    await new Promise((resolve) => window.setTimeout(resolve, FACTORY_RESTART_DELAY_MS));
+    const reopened = await openSerialPort();
+    const verify = await exchangeSerialText(reopened, "help", (text) => FACTORY_IMAGE_MARKER.test(text), FACTORY_PROBE_TIMEOUT_MS);
 
-    if (!isActivated) {
-        throw new Error("The factory image could not activate the application. Flash the complete firmware again.");
+    if (FACTORY_IMAGE_MARKER.test(verify)) {
+        await closeSerialPortQuietly(reopened);
+        throw new Error("The factory image is still running after the activation. Reset the board and try again, or flash the complete firmware again.");
     }
 
-    // Reopening the port also gives the restarted application time to boot.
-    await new Promise((resolve) => window.setTimeout(resolve, FACTORY_RESTART_DELAY_MS));
+    await closeSerialPortQuietly(reopened);
     return openSerialPort();
 }
 
