@@ -32,17 +32,30 @@
  * The Arduino framework provides the main() which calls setup() once and loop()
  * periodically. On the host it is provided here.
  *
- * Important: This file contains nothing else than the main(). A unit test
+ * Important: This file exports nothing else than the main(). A unit test
  * brings its own main() and is linked directly, therefore this object is never
- * pulled out of the library archive in the test environment. Adding anything
- * else here would break that, because the linker would pull the object in for
- * the other symbol and then report a duplicated main().
+ * pulled out of the library archive in the test environment. Adding any other
+ * external symbol here would break that, because the linker would pull the
+ * object in for that symbol and then report a duplicated main().
+ *
+ * The application works inside the directory given by the --work-dir option,
+ * like PlatformIO starts it, see scripts/deploy_native_fs.py. Without the
+ * option it works inside the current directory.
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
 #include "Arduino.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif
 
 /******************************************************************************
  * Compiler Switches
@@ -60,12 +73,18 @@
  * Prototypes
  *****************************************************************************/
 
-extern void setup();
-extern void loop();
+extern void        setup();
+extern void        loop();
+
+static const char* getWorkDir(int argc, char** argv);
+static bool        changeWorkDir(const char* workDir);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** Command line option, which selects the working directory. */
+static const char* WORK_DIR_OPTION = "--work-dir";
 
 /******************************************************************************
  * Public Methods
@@ -93,19 +112,82 @@ extern void loop();
  */
 extern int main(int argc, char** argv)
 {
-    (void)argc;
-    (void)argv;
+    int         exitCode = 0;
+    const char* workDir  = getWorkDir(argc, argv);
 
-    setup();
-
-    for (;;)
+    if ((nullptr != workDir) &&
+        (false == changeWorkDir(workDir)))
     {
-        loop();
+        /* Running in the wrong directory would litter it with runtime files,
+         * therefore abort.
+         */
+        exitCode = 1;
+    }
+    else
+    {
+        setup();
+
+        for (;;)
+        {
+            loop();
+        }
     }
 
-    return 0;
+    return exitCode;
 }
 
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Get the working directory from the command line arguments.
+ *
+ * @param[in] argc  Number of command line arguments
+ * @param[in] argv  Command line arguments
+ *
+ * @return Working directory, or nullptr if the option is not given.
+ */
+static const char* getWorkDir(int argc, char** argv)
+{
+    const char* workDir = nullptr;
+    int         index   = 1;
+
+    /* The option needs a value, therefore the last argument is never the option. */
+    while ((nullptr == workDir) && ((argc - 1) > index))
+    {
+        if (0 == strcmp(argv[index], WORK_DIR_OPTION))
+        {
+            workDir = argv[index + 1];
+        }
+
+        ++index;
+    }
+
+    return workDir;
+}
+
+/**
+ * Change the working directory of the process.
+ *
+ * @param[in] workDir   Working directory
+ *
+ * @return If successful, it will return true otherwise false.
+ */
+static bool changeWorkDir(const char* workDir)
+{
+    int result = 0;
+
+#ifdef _WIN32
+    result = _chdir(workDir);
+#else
+    result = chdir(workDir);
+#endif
+
+    if (0 != result)
+    {
+        (void)fprintf(stderr, "Failed to change the working directory to %s.\n", workDir);
+    }
+
+    return (0 == result);
+}

@@ -62,7 +62,9 @@
  *
  * The application uses absolute paths like "/js/app.js", which the target finds
  * in the filesystem image. On the host they are mapped below this path, which
- * is the folder the filesystem image is built from.
+ * is relative to the working directory of the application. PlatformIO deploys
+ * the filesystem content there before it starts the application, see
+ * scripts/deploy_native_fs.py.
  */
 static const char* FILESYSTEM_ROOT_PATH = "./data";
 
