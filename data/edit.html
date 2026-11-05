@@ -518,15 +518,46 @@
                 }
             }
 
+            function toSafePreviewSrc(rawPath) {
+                if (typeof rawPath !== "string") {
+                    return null;
+                }
+
+                const value = rawPath.trim();
+                if (!value) {
+                    return null;
+                }
+
+                try {
+                    const parsed = new URL(value, window.location.href);
+                    const protocol = parsed.protocol.toLowerCase();
+
+                    // Allow only http/https for preview sources.
+                    if (protocol !== "http:" && protocol !== "https:") {
+                        return null;
+                    }
+
+                    return parsed.href;
+                } catch (_err) {
+                    return null;
+                }
+            }
+
             function previewFile(id) {
                 const filename = document.getElementById(id).getAttribute("data-full-path"); // Use full path from data attribute
+                const safeSrc = toSafePreviewSrc(filename);
+
+                if (!safeSrc) {
+                    dialog.showError("<p>Invalid preview path.</p>");
+                    return;
+                }
 
                 loadedFile = "";
                 editor.setValue("");
 
                 const image = document.createElement("img");
-                image.src = filename;
-                image.alt = filename;
+                image.src = safeSrc;
+                image.alt = safeSrc;
 
                 const preview = document.getElementById("preview");
                 preview.replaceChildren(image);
