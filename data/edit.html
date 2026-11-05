@@ -533,7 +533,7 @@
                     const protocol = parsed.protocol.toLowerCase();
 
                     // Allow only http/https for preview sources.
-                    if (protocol !== "http:" && protocol !== "https:") {
+                    if ((protocol !== "http:") && (protocol !== "https:")) {
                         return null;
                     }
 
