@@ -71,8 +71,7 @@ public:
      * @param[in] max       Maximum value
      */
     KeyValueUInt32(const char* key, const char* name, uint32_t defValue, size_t min, size_t max) :
-        KeyValueNumber(key, name, defValue, min, max),
-        m_value(defValue)
+        KeyValueNumber(key, name, defValue, min, max)
     {
     }
 
@@ -87,8 +86,7 @@ public:
      * @param[in] max       Maximum value
      */
     KeyValueUInt32(Preferences& pref, const char* key, const char* name, uint32_t defValue, size_t min, size_t max) :
-        KeyValueNumber(pref, key, name, defValue, min, max),
-        m_value(defValue)
+        KeyValueNumber(pref, key, name, defValue, min, max)
     {
     }
 
@@ -156,8 +154,6 @@ public:
     }
 
 private:
-
-    uint32_t m_value; /**< Current value (RAM mirror) */
 
     /* An instance shall not be copied. */
     KeyValueUInt32(const KeyValueUInt32& kv);

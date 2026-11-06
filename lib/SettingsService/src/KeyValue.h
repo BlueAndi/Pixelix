@@ -203,7 +203,8 @@ public:
         m_name(name),
         m_defValue(defValue),
         m_min(min),
-        m_max(max)
+        m_max(max),
+        m_value(defValue)
     {
     }
 
@@ -223,7 +224,8 @@ public:
         m_name(name),
         m_defValue(defValue),
         m_min(min),
-        m_max(max)
+        m_max(max),
+        m_value(defValue)
     {
     }
 
