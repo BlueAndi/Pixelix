@@ -79,41 +79,10 @@ MqttSetting::MqttSetting(const MqttSetting& other) :
     m_port(other.m_port),
     m_user(other.m_user),
     m_password(other.m_password),
-    m_rootCaCert(nullptr),
-    m_clientCert(nullptr),
-    m_clientKey(nullptr)
+    m_rootCaCert(copyCert(other.m_rootCaCert)),
+    m_clientCert(copyCert(other.m_clientCert)),
+    m_clientKey(copyCert(other.m_clientKey))
 {
-    CertAllocator certAllocator;
-
-    if (nullptr != other.m_rootCaCert)
-    {
-        m_rootCaCert = certAllocator.allocateArray(strlen(other.m_rootCaCert) + 1U);
-
-        if (nullptr != m_rootCaCert)
-        {
-            (void)strcpy(m_rootCaCert, other.m_rootCaCert);
-        }
-    }
-
-    if (nullptr != other.m_clientCert)
-    {
-        m_clientCert = certAllocator.allocateArray(strlen(other.m_clientCert) + 1U);
-
-        if (nullptr != m_clientCert)
-        {
-            (void)strcpy(m_clientCert, other.m_clientCert);
-        }
-    }
-
-    if (nullptr != other.m_clientKey)
-    {
-        m_clientKey = certAllocator.allocateArray(strlen(other.m_clientKey) + 1U);
-
-        if (nullptr != m_clientKey)
-        {
-            (void)strcpy(m_clientKey, other.m_clientKey);
-        }
-    }
 }
 
 MqttSetting& MqttSetting::operator=(const MqttSetting& other)
@@ -135,15 +104,7 @@ MqttSetting& MqttSetting::operator=(const MqttSetting& other)
             m_rootCaCert = nullptr;
         }
 
-        if (nullptr != other.m_rootCaCert)
-        {
-            m_rootCaCert = certAllocator.allocateArray(strlen(other.m_rootCaCert) + 1U);
-
-            if (nullptr != m_rootCaCert)
-            {
-                (void)strcpy(m_rootCaCert, other.m_rootCaCert);
-            }
-        }
+        m_rootCaCert = copyCert(other.m_rootCaCert);
 
         if (nullptr != m_clientCert)
         {
@@ -151,15 +112,7 @@ MqttSetting& MqttSetting::operator=(const MqttSetting& other)
             m_clientCert = nullptr;
         }
 
-        if (nullptr != other.m_clientCert)
-        {
-            m_clientCert = certAllocator.allocateArray(strlen(other.m_clientCert) + 1U);
-
-            if (nullptr != m_clientCert)
-            {
-                (void)strcpy(m_clientCert, other.m_clientCert);
-            }
-        }
+        m_clientCert = copyCert(other.m_clientCert);
 
         if (nullptr != m_clientKey)
         {
@@ -167,15 +120,7 @@ MqttSetting& MqttSetting::operator=(const MqttSetting& other)
             m_clientKey = nullptr;
         }
 
-        if (nullptr != other.m_clientKey)
-        {
-            m_clientKey = certAllocator.allocateArray(strlen(other.m_clientKey) + 1U);
-
-            if (nullptr != m_clientKey)
-            {
-                (void)strcpy(m_clientKey, other.m_clientKey);
-            }
-        }
+        m_clientKey = copyCert(other.m_clientKey);
     }
 
     return *this;
@@ -355,56 +300,35 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
 
         if (nullptr != rootCaCert)
         {
-            const size_t ROOT_CA_CERT_LEN = strlen(rootCaCert);
-
             if (nullptr != m_rootCaCert)
             {
                 certAllocator.deallocateArray(m_rootCaCert);
                 m_rootCaCert = nullptr;
             }
 
-            m_rootCaCert = certAllocator.allocateArray(ROOT_CA_CERT_LEN + 1U);
-
-            if (nullptr != m_rootCaCert)
-            {
-                (void)strcpy(m_rootCaCert, rootCaCert);
-            }
+            m_rootCaCert = copyCert(rootCaCert);
         }
 
         if (nullptr != clientCert)
         {
-            const size_t CLIENT_CERT_LEN = strlen(clientCert);
-
             if (nullptr != m_clientCert)
             {
                 certAllocator.deallocateArray(m_clientCert);
                 m_clientCert = nullptr;
             }
 
-            m_clientCert = certAllocator.allocateArray(CLIENT_CERT_LEN + 1U);
-
-            if (nullptr != m_clientCert)
-            {
-                (void)strcpy(m_clientCert, clientCert);
-            }
+            m_clientCert = copyCert(clientCert);
         }
 
         if (nullptr != clientKey)
         {
-            const size_t CLIENT_KEY_LEN = strlen(clientKey);
-
             if (nullptr != m_clientKey)
             {
                 certAllocator.deallocateArray(m_clientKey);
                 m_clientKey = nullptr;
             }
 
-            m_clientKey = certAllocator.allocateArray(CLIENT_KEY_LEN + 1U);
-
-            if (nullptr != m_clientKey)
-            {
-                (void)strcpy(m_clientKey, clientKey);
-            }
+            m_clientKey = copyCert(clientKey);
         }
 
         isSuccessful = true;
@@ -420,6 +344,26 @@ bool MqttSetting::fromJson(const JsonObjectConst& jsonSetting)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+char* MqttSetting::copyCert(const char* cert)
+{
+    char* certCopy = nullptr;
+
+    if (nullptr != cert)
+    {
+        CertAllocator certAllocator;
+        const size_t  CERT_SIZE = strlen(cert) + 1U; /* Incl. string termination. */
+
+        certCopy                = certAllocator.allocateArray(CERT_SIZE);
+
+        if (nullptr != certCopy)
+        {
+            (void)memcpy(certCopy, cert, CERT_SIZE);
+        }
+    }
+
+    return certCopy;
+}
 
 /******************************************************************************
  * External Functions
