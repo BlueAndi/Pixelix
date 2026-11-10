@@ -92,7 +92,7 @@ public:
 
         for (bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
         {
-            m_corrFactors[bandIdx] = 1.0f;
+            m_corrFactors[bandIdx] = 1.0F;
         }
     }
 
@@ -287,18 +287,18 @@ private:
     /**
      * INMP441 nominal sensitivity in dbFS at 1 kHz.
      */
-    static const constexpr float INMP441_SENSITIVITY           = -26.0f;
+    static const constexpr float INMP441_SENSITIVITY           = -26.0F;
 
     /**
      * INMP441 the applied sound pressure level by measuring the sensitivity
      * at 1 kHz.
      */
-    static const constexpr float INMP441_SENSITIVITY_SPL       = 94.0f;
+    static const constexpr float INMP441_SENSITIVITY_SPL       = 94.0F;
 
     /**
      * INMP441 the noise floor in dbFS.
      */
-    static const constexpr float INMP441_NOISE_FLOOR           = -87.0f;
+    static const constexpr float INMP441_NOISE_FLOOR           = -87.0F;
 
     /**
      * The calculated full scale value of the INMP441.
@@ -309,25 +309,25 @@ private:
      * INMP441 the nominal sensitivity as digital value.
      * = 10^(sensitivity [dbFS] / 20) * full scale
      */
-    static const constexpr int32_t IMMP441_SENSITIVITY_DIGITAL = powf(10.0f, INMP441_SENSITIVITY / 20.0f) * INMP441_FULL_SCALE;
+    static const constexpr int32_t IMMP441_SENSITIVITY_DIGITAL = powf(10.0F, INMP441_SENSITIVITY / 20.0F) * INMP441_FULL_SCALE;
 
     /**
      * INMP441 the noise floor as digital value.
      * = 10^(noise floor [dbFS] / 20) * full scale
      */
-    static const constexpr int32_t INMP441_NOISE_FLOOR_DIGITAL = powf(10.0f, INMP441_NOISE_FLOOR / 20.0f) * INMP441_FULL_SCALE;
+    static const constexpr int32_t INMP441_NOISE_FLOOR_DIGITAL = powf(10.0F, INMP441_NOISE_FLOOR / 20.0F) * INMP441_FULL_SCALE;
 
     /**
      * INMP441 the max. sound pressure level in db SPL.
      * = sensitivity [db SPL] + 20 * log10(full scale / sensitivity digital)
      */
-    static const constexpr int32_t INMP441_MAX_SPL             = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_FULL_SCALE) / IMMP441_SENSITIVITY_DIGITAL);
+    static const constexpr int32_t INMP441_MAX_SPL             = INMP441_SENSITIVITY_SPL + 20.0F * log10f((1.0F * INMP441_FULL_SCALE) / IMMP441_SENSITIVITY_DIGITAL);
 
     /**
      * INMP441 the equivalent input noise in db SPL.
      * = sensitivity [db SPL] + 20 * log10(noise floor digital / sensitivity digital)
      */
-    static const constexpr int32_t INMP441_NOISE_SPL           = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_NOISE_FLOOR_DIGITAL) / IMMP441_SENSITIVITY_DIGITAL);
+    static const constexpr int32_t INMP441_NOISE_SPL           = INMP441_SENSITIVITY_SPL + 20.0F * log10f((1.0F * INMP441_NOISE_FLOOR_DIGITAL) / IMMP441_SENSITIVITY_DIGITAL);
 
     /**
      * The human hearing threshold in dB SPL.
@@ -337,7 +337,7 @@ private:
     /**
      * Minimum dynamic range in dB SPL, on the y-axis.
      */
-    static const constexpr float MIN_DYNAMIC_RANGE             = 40.0f;
+    static const constexpr float MIN_DYNAMIC_RANGE             = 40.0F;
 
     /**
      * List with the high edge frequency bin of the center band frequency.

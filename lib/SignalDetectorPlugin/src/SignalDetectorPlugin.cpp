@@ -549,7 +549,7 @@ bool SignalDetectorPlugin::isSignalDetected()
 
                 if (true == audioToneDetector->isTargetFreqDetected())
                 {
-                    LOG_INFO("Freq %u detected with magnitude %0.0F.", idx, audioToneDetector->getLastMagnitude());
+                    LOG_INFO("Freq %u detected with magnitude %0.0f.", idx, audioToneDetector->getLastMagnitude());
 
                     ++countDetectedTones;
                 }
