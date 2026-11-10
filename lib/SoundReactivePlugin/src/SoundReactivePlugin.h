@@ -332,7 +332,7 @@ private:
     /**
      * The human hearing threshold in dB SPL.
      */
-    static const constexpr float HEARING_THRESHOLD             = 0.0f;
+    static const constexpr float HEARING_THRESHOLD             = 0.0F;
 
     /**
      * Minimum dynamic range in dB SPL, on the y-axis.

@@ -72,16 +72,16 @@ public:
      */
     AudioToneDetector() :
         m_mutex(),
-        m_targetFreq(0.0f),
-        m_omega(0.0f),
-        m_cosValue(0.0f),
-        m_sinValue(0.0f),
-        m_coeff(0.0f),
+        m_targetFreq(0.0F),
+        m_omega(0.0F),
+        m_cosValue(0.0F),
+        m_sinValue(0.0F),
+        m_coeff(0.0F),
         m_minDuration(0U),
-        m_threshold(0.0f),
+        m_threshold(0.0F),
         m_isDetected(false),
         m_timer(),
-        m_lastMagntiude(0.0f)
+        m_lastMagntiude(0.0F)
     {
     }
 

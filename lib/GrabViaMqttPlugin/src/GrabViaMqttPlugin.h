@@ -81,7 +81,7 @@ public:
         m_format("%s"),
         m_delimiter("::"),
         m_multiplier(1.0f),
-        m_offset(0.0f),
+        m_offset(0.0F),
         m_mutex(),
         m_hasTopicChanged(false)
     {
