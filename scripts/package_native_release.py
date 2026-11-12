@@ -88,6 +88,75 @@ def windows_dependencies(executable: Path, runtime_dir: Path) -> list[Path]:
     return list(found.values())
 
 
+def windows_licenses(libraries: list[Path], msys2: Path) -> dict[Path, Path]:
+    """Collect the license notices of the MSYS2 packages owning the bundled DLLs.
+
+    Args:
+        libraries: Bundled MSYS2 runtime DLLs.
+        msys2: MSYS2 installation root containing the package database.
+
+    Returns:
+        License notice files keyed by their path below the package license
+        directory.
+
+    Raises:
+        FileNotFoundError: A DLL has no owning package or a package ships no
+            license notice.
+        subprocess.CalledProcessError: The package database cannot be queried.
+    """
+    pacman = msys2 / "usr" / "bin" / "pacman.exe"
+    root = msys2.resolve()
+    packages: list[str] = []
+    for library in libraries:
+        # Import tables may differ in case from the file name on disk, but
+        # the package database is case sensitive.
+        names = {entry.name.lower(): entry for entry in library.parent.iterdir()}
+        actual = names.get(library.name.lower(), library)
+        posix = "/" + actual.resolve().relative_to(root).as_posix()
+        owners = subprocess.run(
+            [str(pacman), "-Qqo", posix], check=True,
+            capture_output=True, text=True
+        ).stdout.split()
+        if not owners:
+            raise FileNotFoundError(f"No MSYS2 package owns {library}")
+        if owners[0] not in packages:
+            packages.append(owners[0])
+    marker = "/share/licenses/"
+    notices: dict[Path, Path] = {}
+    for package_name in packages:
+        entries = subprocess.run(
+            [str(pacman), "-Qlq", package_name], check=True,
+            capture_output=True, text=True
+        ).stdout.splitlines()
+        found = False
+        for entry in entries:
+            index = entry.find(marker)
+            notice = msys2 / entry.lstrip("/")
+            if (index >= 0) and (not entry.endswith("/")) and notice.is_file():
+                notices[Path(entry[index + len(marker):])] = notice
+                found = True
+        if not found:
+            raise FileNotFoundError(
+                f"MSYS2 package {package_name} ships no license notice"
+            )
+    return notices
+
+
+def copy_windows_licenses(libraries: list[Path], msys2: Path,
+                          destination: Path) -> None:
+    """Copy only the notices of the packages whose DLLs are bundled.
+
+    Args:
+        libraries: Bundled MSYS2 runtime DLLs.
+        msys2: MSYS2 installation root containing the package database.
+        destination: License directory in the staged archive.
+    """
+    for relative, notice in windows_licenses(libraries, msys2).items():
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(notice, target)
+
+
 def archive_mode(info: tarfile.TarInfo) -> tarfile.TarInfo:
     """Preserve executable permissions independently of the packaging host.
 
@@ -129,9 +198,10 @@ def copy_project_licenses(project: Path, destination: Path) -> None:
                     shutil.copy2(notice, target / notice.name)
 
 
-# pylint: disable-next=too-many-arguments
+# pylint: disable-next=too-many-arguments,too-many-locals
 def package(*, kind: str, executable: Path, data: Path, runtime: Path,
-            licenses: Path, project: Path, output: Path) -> None:
+            project: Path, output: Path, licenses: Path | None = None,
+            msys2: Path | None = None) -> None:
     """Create a platform archive from the build outputs.
 
     Args:
@@ -139,13 +209,24 @@ def package(*, kind: str, executable: Path, data: Path, runtime: Path,
         executable: Built native executable.
         data: Generated filesystem tree.
         runtime: SDL3 library on Linux, or MSYS2 binary directory on Windows.
-        licenses: Directory containing third-party license notices.
         project: Release source checkout containing installed dependencies.
         output: Destination archive path.
+        licenses: Directory containing the SDL3 license notice on Linux.
+        msys2: MSYS2 installation root on Windows, whose package database
+            provides the license notices of the bundled DLLs.
 
     Raises:
         FileNotFoundError: A required input is missing.
+        ValueError: The platform specific license source is not given.
     """
+    if kind == "linux":
+        if licenses is None:
+            raise ValueError("Linux packaging requires the license directory")
+        license_source = licenses
+    else:
+        if msys2 is None:
+            raise ValueError("Windows packaging requires the MSYS2 root")
+        license_source = msys2
     for required in (executable, data / "js" / "app-menu.js",
                      data / "cp" / "captivePortal.html",
                      data / "configuration" / "smiley.bmp",
@@ -153,7 +234,7 @@ def package(*, kind: str, executable: Path, data: Path, runtime: Path,
                      data / "plugins" / "DateTimePlugin" /
                      "DateTimePlugin.html",
                      data / "services" / "MqttService" / "MqttService.html",
-                     licenses):
+                     license_source):
         if not required.exists():
             raise FileNotFoundError(
                 f"Required native release input is missing: {required}"
@@ -163,7 +244,12 @@ def package(*, kind: str, executable: Path, data: Path, runtime: Path,
         root = Path(temporary) / "pixelix"
         root.mkdir()
         shutil.copytree(data, root / "data")
-        shutil.copytree(licenses, root / "licenses")
+        if kind == "linux":
+            shutil.copytree(license_source, root / "licenses")
+        else:
+            libraries = windows_dependencies(executable, runtime)
+            (root / "licenses").mkdir()
+            copy_windows_licenses(libraries, license_source, root / "licenses")
         copy_project_licenses(project, root / "licenses")
         if kind == "linux":
             binary = root / "pixelix"
@@ -191,7 +277,7 @@ def package(*, kind: str, executable: Path, data: Path, runtime: Path,
                 archive.add(root, arcname=root.name, filter=archive_mode)
         else:
             shutil.copy2(executable, root / "pixelix.exe")
-            for library in windows_dependencies(executable, runtime):
+            for library in libraries:
                 shutil.copy2(library, root / library.name)
             (root / "start.cmd").write_text(
                 '@echo off\r\n"%~dp0pixelix.exe" --work-dir "%~dp0." %*\r\n',
@@ -213,13 +299,20 @@ def main() -> None:
         "--runtime", type=Path, required=True,
         help="Linux SDL3 library or Windows MSYS2 bin directory"
     )
-    parser.add_argument("--licenses", type=Path, required=True)
+    parser.add_argument(
+        "--licenses", type=Path,
+        help="Linux: directory containing the SDL3 license notice"
+    )
+    parser.add_argument(
+        "--msys2", type=Path,
+        help="Windows: MSYS2 installation root providing the package database"
+    )
     parser.add_argument("--project", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     package(kind=args.kind, executable=args.executable, data=args.data,
-            runtime=args.runtime, licenses=args.licenses, project=args.project,
-            output=args.output)
+            runtime=args.runtime, project=args.project, output=args.output,
+            licenses=args.licenses, msys2=args.msys2)
 
 
 ###############################################################################

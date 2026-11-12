@@ -1,4 +1,4 @@
-"""Tests for native release archives and legacy asset cleanup."""
+"""Tests for native release archives."""
 
 # MIT License
 #
@@ -25,7 +25,6 @@
 ###############################################################################
 # Imports
 ###############################################################################
-import json
 from pathlib import Path
 import subprocess
 import tarfile
@@ -35,7 +34,6 @@ from unittest import mock
 import zipfile
 
 import package_native_release
-import remove_legacy_release_asset
 
 
 ###############################################################################
@@ -116,21 +114,50 @@ class NativePackageTest(unittest.TestCase):
     def test_windows_archive_includes_runtime_and_launcher(self) -> None:
         """Check that the Windows archive contains its DLL and launcher."""
         output = self.root / "native.zip"
+        notice = self.root / "sdl-notice.txt"
+        notice.write_text("sdl notice", encoding="utf-8")
         with mock.patch.object(
             package_native_release, "windows_dependencies",
             return_value=[self.library]
-        ):
+        ), mock.patch.object(
+            package_native_release, "windows_licenses",
+            return_value={Path("SDL3") / "LICENSE.txt": notice}
+        ) as licenses:
+            package_native_release.package(
+                kind="windows", executable=self.binary, data=self.data,
+                runtime=self.root, msys2=self.root, project=self.root,
+                output=output
+            )
+        licenses.assert_called_once_with([self.library], self.root)
+        with zipfile.ZipFile(output) as archive:
+            names = archive.namelist()
+            self.assertIn("pixelix/pixelix.exe", names)
+            self.assertIn("pixelix/libSDL3.so.0", names)
+            self.assertIn("pixelix/data/js/app-menu.js", names)
+            self.assertIn("pixelix/licenses/SDL3/LICENSE.txt", names)
+            self.assertIn("pixelix/licenses/Pixelix-LICENSE", names)
+            self.assertIn("pixelix/licenses/platformio/library/LICENSE", names)
+            self.assertNotIn("pixelix/licenses/LICENSE.txt", names)
+            self.assertIn(
+                b'--work-dir "%~dp0."', archive.read("pixelix/start.cmd")
+            )
+
+    def test_windows_archive_requires_msys2_root(self) -> None:
+        """Reject Windows packaging without the package database."""
+        with self.assertRaises(ValueError):
             package_native_release.package(
                 kind="windows", executable=self.binary, data=self.data,
                 runtime=self.root, licenses=self.licenses, project=self.root,
-                output=output
+                output=self.root / "native.zip"
             )
-        with zipfile.ZipFile(output) as archive:
-            self.assertIn("pixelix/pixelix.exe", archive.namelist())
-            self.assertIn("pixelix/libSDL3.so.0", archive.namelist())
-            self.assertIn("pixelix/data/js/app-menu.js", archive.namelist())
-            self.assertIn(
-                b'--work-dir "%~dp0."', archive.read("pixelix/start.cmd")
+
+    def test_linux_archive_requires_license_directory(self) -> None:
+        """Reject Linux packaging without the SDL3 license notice."""
+        with self.assertRaises(ValueError):
+            package_native_release.package(
+                kind="linux", executable=self.binary, data=self.data,
+                runtime=self.library, msys2=self.root, project=self.root,
+                output=self.root / "native.tar.gz"
             )
 
     def test_missing_generated_data_fails(self) -> None:
@@ -196,75 +223,141 @@ class NativePackageTest(unittest.TestCase):
             package_native_release.windows_dependencies(self.binary, self.root)
 
 
-class LegacyAssetTest(unittest.TestCase):
-    """Verify exact matching and GitHub error propagation."""
+class WindowsLicenseTest(unittest.TestCase):
+    """Exercise the license lookup through the MSYS2 package database."""
 
-    @mock.patch("remove_legacy_release_asset.subprocess.run")
-    def test_removes_only_exact_legacy_asset(
+    def setUp(self) -> None:
+        """Create a minimal MSYS2 tree with two runtime DLLs."""
+        # The cleanup callback owns this directory for the entire test.
+        # pylint: disable=consider-using-with
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.msys2 = Path(self.temporary.name) / "msys64"
+        self.runtime = self.msys2 / "ucrt64" / "bin"
+        self.runtime.mkdir(parents=True)
+        self.sdl = self.runtime / "SDL3.dll"
+        self.sdl.touch()
+        self.gcc = self.runtime / "libgcc_s_seh-1.dll"
+        self.gcc.touch()
+        self.stdcpp = self.runtime / "libstdc++-6.dll"
+        self.stdcpp.touch()
+        licenses = self.msys2 / "ucrt64" / "share" / "licenses"
+        self.sdl_notice = licenses / "SDL3" / "LICENSE.txt"
+        self.gcc_notice = licenses / "gcc-libs" / "COPYING.RUNTIME"
+        for notice in (self.sdl_notice, self.gcc_notice):
+            notice.parent.mkdir(parents=True)
+            notice.write_text(notice.name, encoding="utf-8")
+
+    @staticmethod
+    def pacman(stdout: str) -> subprocess.CompletedProcess:
+        """Build a package manager result.
+
+        Args:
+            stdout: Package manager output.
+
+        Returns:
+            Completed package manager invocation.
+        """
+        return subprocess.CompletedProcess("pacman", 0, stdout=stdout)
+
+    @mock.patch("package_native_release.subprocess.run")
+    def test_only_notices_of_bundled_packages_are_collected(
         self, run: mock.MagicMock
     ) -> None:
-        """Delete the old firmware archive and no other release asset.
+        """Map each DLL to its package and ship only those notices.
 
         Args:
-            run: Mock GitHub CLI invocation.
-        """
-        run.return_value.stdout = json.dumps({"assets": [
-            {"name": "Pixelix-v11.0.0-rc.1.zip"},
-            {"name": "Pixelix-v11.0.0-rc.1-usb-flash-packages.zip"},
-        ]})
-        remove_legacy_release_asset.remove_legacy_asset(
-            "BlueAndi/Pixelix", "v11.0.0-rc.1"
-        )
-        self.assertEqual(run.call_count, 2)
-        self.assertEqual(run.call_args.args[0][3:5],
-                         ["v11.0.0-rc.1", "Pixelix-v11.0.0-rc.1.zip"])
-
-    @mock.patch("remove_legacy_release_asset.subprocess.run")
-    def test_does_not_remove_other_assets(self, run: mock.MagicMock) -> None:
-        """Leave other assets alone when the old ZIP is absent.
-
-        Args:
-            run: Mock GitHub CLI invocation.
-        """
-        run.return_value.stdout = json.dumps({"assets": [
-            {"name": "Pixelix-v11.0.0-rc.1-usb-flash-packages.zip"}
-        ]})
-        remove_legacy_release_asset.remove_legacy_asset(
-            "BlueAndi/Pixelix", "v11.0.0-rc.1"
-        )
-        self.assertEqual(run.call_count, 1)
-
-    @mock.patch("remove_legacy_release_asset.subprocess.run")
-    def test_github_failure_is_not_treated_as_missing(
-        self, run: mock.MagicMock
-    ) -> None:
-        """Propagate failures when looking up the release.
-
-        Args:
-            run: Mock GitHub CLI invocation.
-        """
-        run.side_effect = subprocess.CalledProcessError(1, "gh")
-        with self.assertRaises(subprocess.CalledProcessError):
-            remove_legacy_release_asset.remove_legacy_asset(
-                "BlueAndi/Pixelix", "v11.0.0-rc.1"
-            )
-
-    @mock.patch("remove_legacy_release_asset.subprocess.run")
-    def test_deletion_failure_is_reported(self, run: mock.MagicMock) -> None:
-        """Propagate failures when deleting the old asset.
-
-        Args:
-            run: Mock GitHub CLI invocation.
+            run: Mock package manager invocation.
         """
         run.side_effect = [
-            subprocess.CompletedProcess("gh", 0, stdout=json.dumps(
-                {"assets": [{"name": "Pixelix-v1.zip"}]})),
-            subprocess.CalledProcessError(1, "gh")
+            self.pacman("mingw-w64-ucrt-x86_64-sdl3\n"),
+            self.pacman("mingw-w64-ucrt-x86_64-gcc-libs\n"),
+            self.pacman("mingw-w64-ucrt-x86_64-gcc-libs\n"),
+            self.pacman(
+                "/ucrt64/bin/SDL3.dll\n"
+                "/ucrt64/share/licenses/SDL3/\n"
+                "/ucrt64/share/licenses/SDL3/LICENSE.txt\n"
+            ),
+            self.pacman(
+                "/ucrt64/bin/libgcc_s_seh-1.dll\n"
+                "/ucrt64/bin/libstdc++-6.dll\n"
+                "/ucrt64/share/licenses/gcc-libs/\n"
+                "/ucrt64/share/licenses/gcc-libs/COPYING.RUNTIME\n"
+            ),
         ]
+        notices = package_native_release.windows_licenses(
+            [self.sdl, self.gcc, self.stdcpp], self.msys2
+        )
+        self.assertEqual({
+            Path("SDL3") / "LICENSE.txt": self.sdl_notice,
+            Path("gcc-libs") / "COPYING.RUNTIME": self.gcc_notice,
+        }, notices)
+        pacman = str(self.msys2 / "usr" / "bin" / "pacman.exe")
+        self.assertEqual(
+            [call.args[0] for call in run.call_args_list],
+            [[pacman, "-Qqo", "/ucrt64/bin/SDL3.dll"],
+             [pacman, "-Qqo", "/ucrt64/bin/libgcc_s_seh-1.dll"],
+             [pacman, "-Qqo", "/ucrt64/bin/libstdc++-6.dll"],
+             [pacman, "-Qlq", "mingw-w64-ucrt-x86_64-sdl3"],
+             [pacman, "-Qlq", "mingw-w64-ucrt-x86_64-gcc-libs"]]
+        )
+
+    @mock.patch("package_native_release.subprocess.run")
+    def test_import_name_case_is_matched_to_disk(
+        self, run: mock.MagicMock
+    ) -> None:
+        """Query the package database with the file name as stored on disk.
+
+        Args:
+            run: Mock package manager invocation.
+        """
+        run.side_effect = [
+            self.pacman("mingw-w64-ucrt-x86_64-sdl3\n"),
+            self.pacman("/ucrt64/share/licenses/SDL3/LICENSE.txt\n"),
+        ]
+        package_native_release.windows_licenses(
+            [self.runtime / "sdl3.DLL"], self.msys2
+        )
+        self.assertEqual(run.call_args_list[0].args[0][1:],
+                         ["-Qqo", "/ucrt64/bin/SDL3.dll"])
+
+    @mock.patch("package_native_release.subprocess.run")
+    def test_package_without_notice_fails(self, run: mock.MagicMock) -> None:
+        """Refuse to ship a DLL whose package has no license notice.
+
+        Args:
+            run: Mock package manager invocation.
+        """
+        run.side_effect = [
+            self.pacman("mingw-w64-ucrt-x86_64-sdl3\n"),
+            self.pacman("/ucrt64/bin/SDL3.dll\n"),
+        ]
+        with self.assertRaises(FileNotFoundError):
+            package_native_release.windows_licenses([self.sdl], self.msys2)
+
+    @mock.patch("package_native_release.subprocess.run")
+    def test_unowned_library_fails(self, run: mock.MagicMock) -> None:
+        """Refuse to ship a DLL that no package owns.
+
+        Args:
+            run: Mock package manager invocation.
+        """
+        run.return_value = self.pacman("")
+        with self.assertRaises(FileNotFoundError):
+            package_native_release.windows_licenses([self.sdl], self.msys2)
+
+    @mock.patch("package_native_release.subprocess.run")
+    def test_package_manager_failure_is_propagated(
+        self, run: mock.MagicMock
+    ) -> None:
+        """Propagate package database errors instead of shipping silently.
+
+        Args:
+            run: Mock package manager invocation.
+        """
+        run.side_effect = subprocess.CalledProcessError(1, "pacman")
         with self.assertRaises(subprocess.CalledProcessError):
-            remove_legacy_release_asset.remove_legacy_asset(
-                "BlueAndi/Pixelix", "v1"
-            )
+            package_native_release.windows_licenses([self.sdl], self.msys2)
 
 
 ###############################################################################

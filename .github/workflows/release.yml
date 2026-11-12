@@ -90,31 +90,6 @@ jobs:
       - name: Compile ${{ matrix.environment }} firmware
         run: platformio run --environment ${{ matrix.environment }} 2>&1 | tee firmware-build.log
 
-      - name: Determine factory binary name
-        id: factory
-        # Extract board name from environment (remove display suffix like -LED-32x8)
-        run: |
-          BOARD_NAME=$(echo "${{ matrix.environment }}" | sed 's/-LED-.*//; s/-HUB75-.*//; s/-TFT-.*//')
-          FACTORY_BIN="factory_binaries/${BOARD_NAME}-factory.bin"
-          if [ -f "$FACTORY_BIN" ]; then
-            echo "factory_bin=$FACTORY_BIN" >> $GITHUB_OUTPUT
-            echo "Found factory binary: $FACTORY_BIN"
-          else
-            echo "factory_bin=" >> $GITHUB_OUTPUT
-            echo "No factory binary found for: $BOARD_NAME"
-          fi
-
-      - name: Deploy ${{ matrix.environment }} firmware
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ matrix.environment }}_firmware
-          path: |
-            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
-            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
-            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
-            ${{ github.workspace }}/${{ steps.factory.outputs.factory_bin }}
-          retention-days: 5
-
       - name: Build ${{ matrix.environment }} filesystem image
         run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
@@ -145,15 +120,6 @@ jobs:
         with:
           name: size-metrics-${{ matrix.environment }}
           path: size-metrics/${{ matrix.environment }}.json
-
-      - name: Deploy ${{ matrix.environment }} filesystem image
-        uses: actions/upload-artifact@v6
-        with:
-          name: ${{ matrix.environment }}_filesystem
-          path: |
-            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
-            ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
-          retention-days: 5
 
   # Build distributable native applications on their target operating systems.
   build_native:
@@ -257,10 +223,9 @@ jobs:
         run: |
           $archive = Join-Path $env:RUNNER_TEMP "$env:REPOSITORY_NAME-$env:TAG_NAME-native-windows-x86_64.zip"
           $runtime = Join-Path $env:MSYS2_LOCATION "ucrt64\bin"
-          $licenses = Join-Path $env:MSYS2_LOCATION "ucrt64\share\licenses"
           python release-tooling/scripts/package_native_release.py --kind windows `
             --executable .pio/build/native/program.exe --data data `
-            --runtime $runtime --licenses $licenses `
+            --runtime $runtime --msys2 $env:MSYS2_LOCATION `
             --project . `
             --output $archive
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -352,11 +317,6 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
       - name: Download USB flash packages
         uses: actions/download-artifact@v7
         with:
@@ -393,13 +353,6 @@ jobs:
             ${{ github.workspace }}/native-artifacts/native-*/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Remove obsolete firmware archive from this release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ github.event.inputs.tag_name }}
-        run: |
-          python scripts/remove_legacy_release_asset.py --repository "$GITHUB_REPOSITORY" --tag "$TAG_NAME"
 
   # Publish the USB installer and the Home Assistant blueprints on GitHub Pages.
   publish_installer:

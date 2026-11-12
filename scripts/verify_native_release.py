@@ -81,12 +81,21 @@ def stop_process(process: subprocess.Popen, kind: str) -> None:
     if kind == "windows":
         powershell = (Path(os.environ["SystemRoot"]) / "System32" /
                       "WindowsPowerShell" / "v1.0" / "powershell.exe")
+        # Stop-Process returns before the application has exited. Wait for
+        # the children, otherwise the temporary directory cleanup races with
+        # the application that still holds files open below it. A child that
+        # survives the timeout is reported through the exit code.
         command = (
-            f"Get-CimInstance Win32_Process -Filter "
+            "$children = @(Get-CimInstance Win32_Process -Filter "
             f"'ParentProcessId={process.pid}' | "
-            "ForEach-Object { Stop-Process -Id $_.ProcessId "
-            "-ErrorAction SilentlyContinue }; "
-            f"Stop-Process -Id {process.pid} -ErrorAction SilentlyContinue"
+            "ForEach-Object { $_.ProcessId }); "
+            "foreach ($id in $children) { "
+            "Stop-Process -Id $id -ErrorAction SilentlyContinue }; "
+            f"Stop-Process -Id {process.pid} -ErrorAction SilentlyContinue; "
+            "foreach ($id in $children) { "
+            "$child = Get-Process -Id $id -ErrorAction SilentlyContinue; "
+            "if ($child -and -not $child.WaitForExit(15000)) { exit 2 } }; "
+            "exit 0"
         )
         subprocess.run(
             [str(powershell), "-NoProfile", "-Command", command], check=True
