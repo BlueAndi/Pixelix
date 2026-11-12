@@ -15,10 +15,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  PYTHON_VERSION: "3.12"
   # Pinned to keep the toolchain reproducible and the cache key meaningful.
   PIO_VERSION: "6.2.0"
   # Bump this to invalidate every PlatformIO cache of this repository.
   PIO_CACHE_EPOCH: "v1"
+  # SDL3 version built from source for the Linux native release.
   SDL3_VERSION: "release-3.4.18"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
@@ -59,7 +61,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       # Only the toolchain is cached. The build folder is deliberately not
       # restored here, so that every release artifact comes from a clean build.
@@ -179,7 +181,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up Windows native toolchain
         if: runner.os == 'Windows'
@@ -287,7 +289,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Download current size metrics
         uses: actions/download-artifact@v7
@@ -349,6 +351,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Download USB flash packages
         uses: actions/download-artifact@v7

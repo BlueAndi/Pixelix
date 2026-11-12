@@ -25,6 +25,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
+  PYTHON_VERSION: "3.12"
   # Pinned to keep the toolchain reproducible and the cache key meaningful.
   PIO_VERSION: "6.2.0"
   # Bump this to invalidate every PlatformIO cache of this repository.
@@ -68,7 +69,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       # The pip download cache and the PlatformIO home share one cache entry.
       # All ESP32 environments use the same platform packages, therefore a
@@ -140,7 +141,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Download current size metrics
         uses: actions/download-artifact@v7
@@ -234,7 +235,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Cache PlatformIO core and packages
         uses: actions/cache@v5
@@ -264,7 +265,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Cache PlatformIO core and packages
         uses: actions/cache@v5
@@ -294,7 +295,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install openapi-spec-validator
         run: pip install --disable-pip-version-check openapi-spec-validator==0.9.0
@@ -317,7 +318,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Cache PlatformIO core and packages
         uses: actions/cache@v5

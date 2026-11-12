@@ -12,6 +12,7 @@ permissions:
     contents: write
 
 env:
+    PYTHON_VERSION: "3.12"
     # Pinned to keep the toolchain reproducible and the cache key meaningful.
     PIO_VERSION: "6.2.0"
 
@@ -31,7 +32,7 @@ jobs:
             - name: Set up Python
               uses: actions/setup-python@v6
               with:
-                  python-version: "3.12"
+                  python-version: ${{ env.PYTHON_VERSION }}
 
             - name: Install PlatformIO CLI
               run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
