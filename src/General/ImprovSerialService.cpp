@@ -357,8 +357,12 @@ void ImprovSerialService::processButtons(IButtonDrv& buttonDrv)
             m_state        = STATE_AUTHORIZED;
             m_authorizedAt = millis();
 
+            /* The button press is the activity the client waits for, so it
+             * keeps the session alive like a received RPC does.
+             */
             if (true == m_isSessionActive)
             {
+                m_lastActivityAt = m_authorizedAt;
                 sendState(m_state);
             }
         }

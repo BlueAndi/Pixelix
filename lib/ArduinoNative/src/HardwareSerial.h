@@ -78,7 +78,7 @@ public:
     /**
      * Destroys the serial interface.
      */
-    ~HardwareSerial();
+    ~HardwareSerial() final;
 
     /**
      * Start the serial interface.
@@ -128,7 +128,7 @@ public:
     /**
      * Wait until everything is written out.
      */
-    void flush();
+    void flush() final;
 
     /**
      * Get the number of bytes which are available to read from the terminal.

@@ -72,7 +72,8 @@ public:
         KeyValue(),
         m_key(key),
         m_name(name),
-        m_defValue(defValue)
+        m_defValue(defValue),
+        m_value(defValue)
     {
     }
 

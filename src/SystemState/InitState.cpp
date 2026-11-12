@@ -122,11 +122,10 @@ const char* InitState::LOGO_TEXT           = "{#FFFFFF}.{vm 1}:{vm -1}{#FF0000}P
 
 void InitState::entry(StateMachine& sm)
 {
-    bool                isError   = false;
-    Board&              board     = Board::getInstance();
-    IButtonDrv&         buttonDrv = board.getButtonDrv();
-    ErrorState::ErrorId errorId   = ErrorState::ERROR_ID_UNKNOWN;
-    SettingsService&    settings  = SettingsService::getInstance();
+    bool                isError  = false;
+    Board&              board    = Board::getInstance();
+    ErrorState::ErrorId errorId  = ErrorState::ERROR_ID_UNKNOWN;
+    SettingsService&    settings = SettingsService::getInstance();
     String              uniqueId;
 
     /* Show as soon as possible the user on the serial console that the system is booting. */

@@ -232,6 +232,16 @@ private:
     char*                 m_rootCaCert; /**< Root CA certificate for TLS connection. */
     char*                 m_clientCert; /**< Client certificate for TLS connection. */
     char*                 m_clientKey;  /**< Client key for TLS connection. */
+
+    /**
+     * Create a copy of a certificate or key string in the certificate memory.
+     * The caller takes ownership and must release it with the CertAllocator.
+     *
+     * @param[in] cert  Certificate or key string, may be nullptr.
+     *
+     * @return Copy of the string or nullptr if no string was given or the allocation failed.
+     */
+    static char* copyCert(const char* cert);
 };
 
 /******************************************************************************

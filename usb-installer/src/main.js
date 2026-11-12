@@ -28,6 +28,14 @@ import "./style.css";
 
 const IMPROV_AUTHORIZED_STATE = 0x02;
 const AUTHORIZATION_TIMEOUT_MS = 60000;
+/** Interval in ms between device state polls while waiting for the button press. */
+const AUTHORIZATION_KEEP_ALIVE_MS = 10000;
+/** Interval in ms between countdown updates in the authorization dialog. */
+const AUTHORIZATION_COUNTDOWN_MS = 1000;
+/** Dialog text while the device waits for a button press. */
+const AUTHORIZATION_PROMPT = "Pixelix accepts Wi-Fi credentials over USB only after a button on the device was pressed. Press any button on the device now.";
+/** Dialog text after the button press window expired. */
+const AUTHORIZATION_TIMEOUT_PROMPT = "No button press was detected. Check that the device runs the Pixelix application and that it is the device on the selected USB port, then try again.";
 /** Firmware application baud rate used by Improv and MiniTerminal. */
 const SERIAL_BAUD_RATE = 115200;
 /** ESP32 ROM/stub baud rate used to accelerate firmware flashing. */
@@ -65,6 +73,11 @@ const elements = {
     progressLabel: document.getElementById("progress-label"),
     wifiConnectButton: document.getElementById("wifi-connect-button"),
     authorizationStatus: document.getElementById("authorization-status"),
+    authorizationDialog: document.getElementById("authorization-dialog"),
+    authorizationDialogMessage: document.getElementById("authorization-dialog-message"),
+    authorizationCountdown: document.getElementById("authorization-countdown"),
+    authorizationRetryButton: document.getElementById("authorization-retry-button"),
+    authorizationCancelButton: document.getElementById("authorization-cancel-button"),
     wifiForm: document.getElementById("wifi-form"),
     ssidInput: document.getElementById("ssid-input"),
     passwordInput: document.getElementById("password-input"),
@@ -89,6 +102,7 @@ let serialPort;
 let transport;
 let loader;
 let improv;
+let lastImprovState;
 let devicePortReady = false;
 let isFlashing = false;
 let terminalReader;
@@ -819,10 +833,74 @@ async function sendTerminalCommand(event) {
 }
 
 /**
+ * Raised when the button press window expired without a press.
+ */
+class AuthorizationTimeoutError extends Error {
+    /** Create the error with a user-facing message. */
+    constructor() {
+        super(`No button press was detected within ${AUTHORIZATION_TIMEOUT_MS / 1000} s.`);
+        this.name = "AuthorizationTimeoutError";
+    }
+}
+
+/**
+ * Raised when the user cancels the Wi-Fi setup from the authorization dialog.
+ */
+class AuthorizationCancelledError extends Error {
+    /** Create the error with a user-facing message. */
+    constructor() {
+        super("Wi-Fi setup cancelled.");
+        this.name = "AuthorizationCancelledError";
+    }
+}
+
+/**
+ * Show the authorization dialog in its waiting state.
+ * @returns {void}
+ */
+function showAuthorizationDialog() {
+    elements.authorizationDialogMessage.textContent = AUTHORIZATION_PROMPT;
+    elements.authorizationRetryButton.hidden = true;
+    elements.authorizationCancelButton.textContent = "Cancel";
+
+    if (!elements.authorizationDialog.open) {
+        elements.authorizationDialog.showModal();
+    }
+    elements.authorizationCancelButton.focus();
+}
+
+/**
+ * Switch the authorization dialog to its timed-out state with a retry option.
+ * @returns {void}
+ */
+function showAuthorizationTimeout() {
+    elements.authorizationDialogMessage.textContent = AUTHORIZATION_TIMEOUT_PROMPT;
+    elements.authorizationCountdown.textContent = `Timed out after ${AUTHORIZATION_TIMEOUT_MS / 1000} s`;
+    elements.authorizationRetryButton.hidden = false;
+    elements.authorizationCancelButton.textContent = "Close";
+    elements.authorizationRetryButton.focus();
+}
+
+/**
+ * Close the authorization dialog if it is open.
+ * @returns {void}
+ */
+function closeAuthorizationDialog() {
+    if (elements.authorizationDialog.open) {
+        elements.authorizationDialog.close();
+    }
+}
+
+/**
  * Wait for the user to authorize Improv provisioning using a device button.
+ * The dialog shows the remaining time. The device state is polled meanwhile, which
+ * keeps the firmware's Improv session alive and picks up an authorization whose
+ * state packet was missed.
  * @param {ImprovSerial} service Active Improv Serial service
  * @returns {Promise<void>} Resolves when the service enters its authorized state
- * @throws {Error} If physical authorization does not arrive before the timeout
+ * @throws {AuthorizationTimeoutError} If physical authorization does not arrive before the timeout
+ * @throws {AuthorizationCancelledError} If the user cancels the dialog
+ * @throws {Error} If the Improv session is closed meanwhile
  */
 function waitForAuthorization(service) {
     if (service.state === IMPROV_AUTHORIZED_STATE) {
@@ -830,19 +908,25 @@ function waitForAuthorization(service) {
     }
 
     /**
-     * Register the authorization listener and its timeout.
+     * Register the authorization listeners, the countdown and the keep-alive poll.
      * @param {(value?: void | PromiseLike<void>) => void} resolve Promise resolve callback
      * @param {(reason?: Error) => void} reject Promise reject callback
      * @returns {void}
      */
     function registerAuthorizationListener(resolve, reject) {
-        /** Reject authorization when the physical-button window expires. */
-        function handleAuthorizationTimeout() {
-            service.removeEventListener("state-changed", onStateChanged);
-            reject(new Error("Authorization timed out. Press a physical button and try again."));
-        }
+        const deadline = Date.now() + AUTHORIZATION_TIMEOUT_MS;
+        let countdownTimer;
+        let keepAliveTimer;
 
-        const timeout = window.setTimeout(handleAuthorizationTimeout, AUTHORIZATION_TIMEOUT_MS);
+        /** Remove every listener and timer of this wait. */
+        function cleanUp() {
+            window.clearInterval(countdownTimer);
+            window.clearInterval(keepAliveTimer);
+            service.removeEventListener("state-changed", onStateChanged);
+            service.removeEventListener("disconnect", onDisconnect);
+            elements.authorizationCancelButton.removeEventListener("click", onCancel);
+            elements.authorizationDialog.removeEventListener("cancel", onCancel);
+        }
 
         /**
          * Resolve when Improv reports physical authorization.
@@ -851,16 +935,119 @@ function waitForAuthorization(service) {
          */
         function onStateChanged(event) {
             if (event.detail === IMPROV_AUTHORIZED_STATE) {
-                window.clearTimeout(timeout);
-                service.removeEventListener("state-changed", onStateChanged);
+                cleanUp();
+                closeAuthorizationDialog();
                 resolve();
             }
         }
 
+        /**
+         * Reject when the user cancels via button or Escape key.
+         * @param {Event} event Click or dialog cancel event
+         * @returns {void}
+         */
+        function onCancel(event) {
+            event.preventDefault();
+            cleanUp();
+            closeAuthorizationDialog();
+            reject(new AuthorizationCancelledError());
+        }
+
+        /** Reject when the Improv session is closed while waiting. */
+        function onDisconnect() {
+            cleanUp();
+            closeAuthorizationDialog();
+            reject(new Error("The Improv session was closed before the device was authorized."));
+        }
+
+        /** Update the remaining time; reject once the window expired. */
+        function updateCountdown() {
+            const remainingMs = deadline - Date.now();
+
+            if (0 >= remainingMs) {
+                cleanUp();
+                showAuthorizationTimeout();
+                reject(new AuthorizationTimeoutError());
+            } else {
+                elements.authorizationCountdown.textContent = `Waiting for a button press … ${Math.ceil(remainingMs / 1000)} s`;
+            }
+        }
+
+        /**
+         * Poll the device state. The firmware treats the request as session activity
+         * and answers with its current state, so an authorization given earlier is
+         * reported even if its unsolicited state packet was lost.
+         */
+        function keepAlive() {
+            service.requestCurrentState(AUTHORIZATION_KEEP_ALIVE_MS).catch(() => {
+                // A device that stopped answering is reported by the countdown.
+            });
+        }
+
+        showAuthorizationDialog();
+        updateCountdown();
+        countdownTimer = window.setInterval(updateCountdown, AUTHORIZATION_COUNTDOWN_MS);
+        keepAliveTimer = window.setInterval(keepAlive, AUTHORIZATION_KEEP_ALIVE_MS);
         service.addEventListener("state-changed", onStateChanged);
+        service.addEventListener("disconnect", onDisconnect);
+        elements.authorizationCancelButton.addEventListener("click", onCancel);
+        elements.authorizationDialog.addEventListener("cancel", onCancel);
     }
 
     return new Promise(registerAuthorizationListener);
+}
+
+/**
+ * Let the user choose between retrying the authorization and closing the dialog
+ * after the button press window expired.
+ * @returns {Promise<boolean>} True to wait for the button press again, false to give up
+ */
+function awaitAuthorizationRetryChoice() {
+    /**
+     * Register the dialog button listeners.
+     * @param {(value: boolean) => void} resolve Promise resolve callback
+     * @returns {void}
+     */
+    function registerChoiceListeners(resolve) {
+        /** Remove the choice listeners. */
+        function cleanUp() {
+            elements.authorizationRetryButton.removeEventListener("click", onRetry);
+            elements.authorizationCancelButton.removeEventListener("click", onClose);
+            elements.authorizationDialog.removeEventListener("cancel", onClose);
+            elements.authorizationDialog.removeEventListener("close", onClosed);
+        }
+
+        /** Resolve with giving up when the dialog was closed elsewhere, e.g. by a session close. */
+        function onClosed() {
+            cleanUp();
+            resolve(false);
+        }
+
+        /** Resolve with a retry. */
+        function onRetry() {
+            cleanUp();
+            resolve(true);
+        }
+
+        /**
+         * Resolve with giving up.
+         * @param {Event} event Click or dialog cancel event
+         * @returns {void}
+         */
+        function onClose(event) {
+            event.preventDefault();
+            cleanUp();
+            closeAuthorizationDialog();
+            resolve(false);
+        }
+
+        elements.authorizationRetryButton.addEventListener("click", onRetry);
+        elements.authorizationCancelButton.addEventListener("click", onClose);
+        elements.authorizationDialog.addEventListener("cancel", onClose);
+        elements.authorizationDialog.addEventListener("close", onClosed);
+    }
+
+    return new Promise(registerChoiceListeners);
 }
 
 /**
@@ -1050,6 +1237,7 @@ async function connectForWifiSetup() {
         };
         const session = new ImprovSerial(port, quietLogger);
         improv = session;
+        lastImprovState = undefined;
         updateSerialControls();
 
         appendTerminalOutput("\r\n[Improv Wi-Fi session started. Waiting for button authorization.]\r\n");
@@ -1067,7 +1255,26 @@ async function connectForWifiSetup() {
         appendTerminalOutput(`\r\n[${deviceInfo?.name ?? "Pixelix"} is waiting for a physical button.]\r\n`);
         setStepState("wifi", "Waiting for button");
 
-        await waitForAuthorization(session);
+        let isAuthorized = false;
+        while (!isAuthorized) {
+            try {
+                await waitForAuthorization(session);
+                isAuthorized = true;
+            } catch (error) {
+                if (!(error instanceof AuthorizationTimeoutError) || (sessionToken !== improvSessionToken)) {
+                    throw error;
+                }
+                addStatus(error.message, "error");
+                appendTerminalOutput(`\r\n[${error.message}]\r\n`);
+                if (!(await awaitAuthorizationRetryChoice())) {
+                    throw new AuthorizationCancelledError();
+                }
+                if (sessionToken !== improvSessionToken) {
+                    return;
+                }
+                appendTerminalOutput("\r\n[Waiting for a physical button again.]\r\n");
+            }
+        }
         if (sessionToken !== improvSessionToken) {
             return;
         }
@@ -1079,9 +1286,12 @@ async function connectForWifiSetup() {
             return;
         }
 
+        const isCancelled = error instanceof AuthorizationCancelledError;
+
         elements.authorizationStatus.textContent = error.message;
-        addStatus(error.message, "error");
-        appendTerminalOutput(`\r\n[Wi-Fi setup failed: ${error.message}]\r\n`);
+        addStatus(error.message, isCancelled ? "info" : "error");
+        appendTerminalOutput(`\r\n[Wi-Fi setup ${isCancelled ? "cancelled" : `failed: ${error.message}`}]\r\n`);
+        setStepState("wifi", isCancelled ? "Waiting" : "Failed");
         elements.wifiConnectButton.disabled = false;
         if (improv) {
             await closeImprovSession();
@@ -1097,7 +1307,11 @@ async function connectForWifiSetup() {
  * @returns {void}
  */
 function handleImprovStateChanged(event) {
-    appendTerminalOutput(`\r\n[Improv state: ${event.detail}]\r\n`);
+    // The keep-alive poll reports the state repeatedly; only log an actual change.
+    if (lastImprovState !== event.detail) {
+        lastImprovState = event.detail;
+        appendTerminalOutput(`\r\n[Improv state: ${event.detail}]\r\n`);
+    }
     if (event.detail === IMPROV_AUTHORIZED_STATE) {
         elements.authorizationStatus.textContent = "Authorized. Enter the Wi-Fi credentials.";
         elements.provisionButton.disabled = false;
@@ -1122,6 +1336,7 @@ function handleImprovErrorChanged(event) {
  */
 async function closeImprovSession() {
     improvSessionToken += 1;
+    closeAuthorizationDialog();
 
     if (improv) {
         const session = improv;

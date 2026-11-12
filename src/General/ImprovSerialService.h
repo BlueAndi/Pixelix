@@ -100,7 +100,8 @@ private:
     static const uint8_t  ERROR_UNKNOWN        = 0xFFU;  /**< Unclassified service error. */
     static const uint32_t AUTH_TIMEOUT_MS      = 60000U; /**< Authorization lifetime in ms. */
     static const uint32_t RESTART_DELAY_MS     = 2500U;  /**< Delay before applying Wi-Fi settings. */
-    static const uint32_t SESSION_TIMEOUT_MS   = 30000U; /**< Idle time before restoring serial logs. */
+    static const uint32_t SESSION_TIMEOUT_MS   = 90000U; /**< Idle time before restoring serial logs. Longer than the
+                                                              authorization window, so a slow button press is still reported. */
     static const uint32_t FRAME_TIMEOUT_MS     = 1000U;  /**< Max. gap between two bytes of one frame. */
 
     Stream&               m_stream;                              /**< Serial transport. */

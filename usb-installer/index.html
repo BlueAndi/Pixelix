@@ -158,6 +158,19 @@
             </aside>
         </main>
 
+        <dialog class="authorization-dialog" id="authorization-dialog" aria-labelledby="authorization-dialog-title">
+            <div class="authorization-dialog-body">
+                <p class="authorization-dialog-kicker">PHYSICAL AUTHORIZATION</p>
+                <h2 id="authorization-dialog-title">Press a button on the device</h2>
+                <p id="authorization-dialog-message">Pixelix accepts Wi-Fi credentials over USB only after a button on the device was pressed. Press any button on the device now.</p>
+                <p class="authorization-countdown" id="authorization-countdown" role="timer"></p>
+                <div class="authorization-dialog-actions">
+                    <button class="btn button button-accent" id="authorization-retry-button" type="button" hidden>Try again</button>
+                    <button class="btn button button-dark" id="authorization-cancel-button" type="button">Cancel</button>
+                </div>
+            </div>
+        </dialog>
+
         <footer class="container-xl">
             <span>Pixelix firmware is open source under the MIT License.</span>
             <a href="https://github.com/BlueAndi/Pixelix">Source code</a>

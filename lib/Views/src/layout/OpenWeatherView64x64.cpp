@@ -557,7 +557,6 @@ void OpenWeatherView64x64::handleWeatherInfo()
     else if (true == m_viewDurationTimer.isTimeout())
     {
         WeatherInfo oldWeatherInfo = getActiveWeatherInfo();
-        WeatherInfo newWeatherInfo = WEATHER_INFO_EMPTY;
 
         nextWeatherInfo();
 

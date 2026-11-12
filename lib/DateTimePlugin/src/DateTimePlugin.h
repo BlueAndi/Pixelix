@@ -79,7 +79,7 @@ public:
         m_view(),
         m_mode(MODE_DATE_TIME),
         m_checkUpdateTimer(),
-        m_durationCounter(0u),
+        m_durationCounter(0U),
         m_shownSecond(-1),
         m_shownDayOfTheYear(-1),
         m_timeFormat(TIME_FORMAT_DEFAULT),

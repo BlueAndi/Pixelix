@@ -33,6 +33,9 @@ concurrency:
     group: github-pages
     cancel-in-progress: false
 
+env:
+    PYTHON_VERSION: "3.12"
+
 jobs:
     deploy_pages:
         runs-on: ubuntu-latest
@@ -51,6 +54,11 @@ jobs:
 
             - name: Configure GitHub Pages
               uses: actions/configure-pages@v5
+
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: ${{ env.PYTHON_VERSION }}
 
             - name: Set up Node.js
               uses: actions/setup-node@v6

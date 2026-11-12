@@ -82,7 +82,7 @@ public:
      *
      * @return If successful, returns true otherwise false.
      */
-    bool begin()
+    bool begin() final
     {
         return m_displayDrv.begin();
     }
@@ -91,7 +91,7 @@ public:
      * Show framebuffer on physical display. This may be synchronous
      * or asynchronous.
      */
-    void show()
+    void show() final
     {
         m_displayDrv.show(m_bitmap);
     }
@@ -102,7 +102,7 @@ public:
      *
      * @return If ready for another update via show(), it will return true otherwise false.
      */
-    bool isReady() const
+    bool isReady() const final
     {
         return m_displayDrv.isReady();
     }
@@ -112,7 +112,7 @@ public:
      *
      * @param[in] brightness    Brightness value [0; 255]
      */
-    void setBrightness(uint8_t brightness)
+    void setBrightness(uint8_t brightness) final
     {
         m_displayDrv.setBrightness(brightness);
     }
@@ -120,7 +120,7 @@ public:
     /**
      * Clear display.
      */
-    void clear()
+    void clear() final
     {
         m_displayDrv.clear();
         m_bitmap.fillScreen(ColorDef::BLACK);
@@ -251,7 +251,7 @@ public:
     /**
      * Power display off.
      */
-    void off()
+    void off() final
     {
         m_displayDrv.off();
     }
@@ -259,7 +259,7 @@ public:
     /**
      * Power display on.
      */
-    void on()
+    void on() final
     {
         m_displayDrv.on();
     }
@@ -269,7 +269,7 @@ public:
      *
      * @return If display is powered on, it will return true otherwise false.
      */
-    bool isOn() const
+    bool isOn() const final
     {
         return m_displayDrv.isOn();
     }
@@ -295,7 +295,7 @@ private:
     /**
      * Destroys display.
      */
-    ~Display();
+    ~Display() final;
 
     Display(const Display& display);
     Display& operator=(const Display& display);
