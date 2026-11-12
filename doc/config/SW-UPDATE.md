@@ -7,6 +7,7 @@
 ## Update The Software <!-- omit in toc -->
 
 - [Purpose](#purpose)
+- [Native application](#native-application)
 - [Recommendations](#recommendations)
   - [Non-Developer](#non-developer)
   - [Developer](#developer)
@@ -37,6 +38,34 @@ The software can be uploaded/updated to the development board in several differe
 Note, that the web USB installer always installs the prebuilt binaries of the latest release. All other ways work with the release binaries as well as with binaries you built yourself.
 
 Take a look to the recommendations which variant might be the best for you.
+
+## Native application
+
+The [releases](https://github.com/BlueAndi/Pixelix/releases) provide native
+archives for running PIXELIX without a development board:
+
+- Linux x86-64: `Pixelix-<version>-native-linux-x86_64.tar.gz`
+- Windows x86-64: `Pixelix-<version>-native-windows-x86_64.zip`
+
+Extract the appropriate archive to a writable directory and run
+`pixelix/start.sh` on Linux or `pixelix\start.cmd` on Windows. The launchers
+work from any current directory. The web interface is available at
+http://localhost:8080.
+
+The bundled `data` directory contains the generated web interface and initial
+configuration files. Settings and other runtime files are stored in the
+extracted `pixelix` directory, so back up this directory before replacing it
+with a newer release.
+
+The archives include SDL3 and non-system runtime libraries. Linux requires a
+compatible x86-64 system with standard graphical, audio, and C runtime
+libraries; the archive is built on Ubuntu 24.04. Windows requires 64-bit
+Windows with the Universal C Runtime. Other CPU architectures and macOS are
+not provided.
+
+For development boards, the release asset
+`Pixelix-<version>-usb-flash-packages.zip` contains the firmware images. They
+are also available through the web USB installer described below.
 
 ## Recommendations
 

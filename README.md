@@ -177,6 +177,8 @@ Use this way if no Chromium based browser is available or if you prefer the clas
 2. Write them to the flash with the Espressif Flash Download Tool (Windows only) or with esptool (any OS). The detailed steps, the required flash addresses and the flash layout are documented in [Upload/Update the software and the filesystem](./doc/config/SW-UPDATE.md).
 3. Continue with the [Very First Startup](#very-first-startup).
 
+See the [software update guide](./doc/config/SW-UPDATE.md#native-application) for native release downloads and installation.
+
 ### Build And Install The Software Yourself
 
 > :information_source: The order matters. Configure the display **before** the first build, because the display configuration is compiled into the firmware.
