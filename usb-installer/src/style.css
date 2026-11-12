@@ -389,6 +389,54 @@ a:focus-visible {
     cursor: not-allowed;
 }
 
+.authorization-dialog {
+    width: min(92vw, 520px);
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--ink);
+}
+
+.authorization-dialog::backdrop {
+    background: rgb(25 34 31 / 72%);
+}
+
+.authorization-dialog-body {
+    padding: 28px 32px;
+}
+
+.authorization-dialog-kicker {
+    margin: 0 0 12px;
+    color: var(--teal);
+    font-family: "DM Mono", monospace;
+    font-size: 10px;
+}
+
+.authorization-dialog h2 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.authorization-dialog p {
+    margin: 0 0 12px;
+    line-height: 1.55;
+}
+
+.authorization-countdown {
+    font-family: "DM Mono", monospace;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.authorization-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
 .progress-wrap {
     display: flex;
     align-items: center;
