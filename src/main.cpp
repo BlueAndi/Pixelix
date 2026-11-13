@@ -233,6 +233,12 @@ void setup()
 
         /* Memory monitor */
         MemMon::getInstance().process();
+
+        /* Process Improv serial protocol already while the startup screen is shown,
+         * so a USB installer detects the device right after a reset. A restart
+         * requested by a provisioning is carried out in the loop routine.
+         */
+        gImprovSerialService.process(Board::getInstance().getButtonDrv());
     }
     while (static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
 

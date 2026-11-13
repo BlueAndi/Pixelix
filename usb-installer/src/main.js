@@ -36,6 +36,10 @@ const AUTHORIZATION_COUNTDOWN_MS = 1000;
 const AUTHORIZATION_PROMPT = "Pixelix accepts Wi-Fi credentials over USB only after a button on the device was pressed. Press any button on the device now.";
 /** Dialog text after the button press window expired. */
 const AUTHORIZATION_TIMEOUT_PROMPT = "No button press was detected. Check that the device runs the Pixelix application and that it is the device on the selected USB port, then try again.";
+/**
+ * Time in ms to wait for the first Improv answer.
+ */
+const IMPROV_DETECTION_TIMEOUT_MS = 30000;
 /** Firmware application baud rate used by Improv and MiniTerminal. */
 const SERIAL_BAUD_RATE = 115200;
 /** ESP32 ROM/stub baud rate used to accelerate firmware flashing. */
@@ -1206,7 +1210,7 @@ async function connectForWifiSetup() {
     const sessionToken = improvSessionToken;
 
     elements.wifiConnectButton.disabled = true;
-    elements.authorizationStatus.textContent = "Connecting to Improv Serial…";
+    elements.authorizationStatus.textContent = "Connecting to Improv Serial… The device answers once its startup screen has finished.";
 
     try {
         if (terminalReader) {
@@ -1245,7 +1249,7 @@ async function connectForWifiSetup() {
         session.addEventListener("state-changed", handleImprovStateChanged);
         session.addEventListener("error-changed", handleImprovErrorChanged);
 
-        const deviceInfo = await session.initialize(5000);
+        const deviceInfo = await session.initialize(IMPROV_DETECTION_TIMEOUT_MS);
         if (sessionToken !== improvSessionToken) {
             return;
         }
