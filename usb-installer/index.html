@@ -78,6 +78,20 @@
                         <button class="btn button button-dark" id="connect-button" type="button" disabled>Choose USB device</button>
                         <p class="step-note" id="chip-status" role="status">A Chromium based desktop browser (Chrome, Edge, Opera, Brave) is required.</p>
                         <p class="bootloader-note" id="bootloader-help">Most boards enter download mode automatically. If sync fails, follow the board-specific BOOT/RESET sequence.</p>
+                        <details class="driver-help" id="driver-help">
+                            <summary>No device found?</summary>
+                            <ul>
+                                <li>Use a USB cable that transfers data. Many cables only charge.</li>
+                                <li>Close other programs that use the serial port, e.g. a serial monitor or another browser tab.</li>
+                                <li>Install the driver of the board's USB-UART chip. The Ulanzi TC001 uses a CH340.
+                                    <ul>
+                                        <li>CH340/CH341: <a href="https://www.wch.cn/downloads/CH341SER_ZIP.html" target="_blank" rel="noopener">Windows</a>, <a href="https://www.wch.cn/downloads/CH34XSER_MAC_ZIP.html" target="_blank" rel="noopener">macOS</a></li>
+                                        <li>CH343: <a href="https://www.wch.cn/downloads/CH343SER_ZIP.html" target="_blank" rel="noopener">Windows</a></li>
+                                        <li>CP2102: <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers" target="_blank" rel="noopener">Windows and macOS</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </details>
                     </div>
                     <span class="step-state" id="connect-state">WAITING</span>
                 </article>
@@ -93,6 +107,7 @@
                         </div>
                         <p class="step-note">Keeps the device settings stored in NVS: WiFi credentials, hostname, web login, brightness, timezone and so on. Slot configuration, MQTT, sensor calibration, timers and plugin configuration are reset in any case, because the filesystem image is always written.</p>
                         <button class="btn button button-accent" id="flash-button" type="button" disabled>Erase and install</button>
+                        <p class="step-note">Installing takes a few minutes. Keep this page in the foreground meanwhile, because browsers slow down background tabs.</p>
                         <div class="progress-wrap" id="progress-wrap" hidden>
                             <progress id="flash-progress" max="100" value="0"></progress>
                             <span id="progress-label">0%</span>
@@ -130,6 +145,7 @@
                         <p>View device output and run diagnostic commands. Wi-Fi credentials are managed above.</p>
                         <div class="terminal-actions">
                             <button class="btn button button-dark" id="terminal-connect-button" type="button" disabled>Open serial console</button>
+                            <button class="btn button button-dark" id="terminal-reset-button" type="button" title="Restart the device into its application, e.g. if it is stuck in the download mode." disabled>Reset device</button>
                             <button class="text-button" id="terminal-clear-button" type="button">Clear output</button>
                         </div>
                     </div>
@@ -175,6 +191,7 @@
         <footer class="container-xl">
             <span>Pixelix firmware is open source under the MIT License.</span>
             <a href="https://github.com/BlueAndi/Pixelix">Source code</a>
+            <span class="build-info" id="build-info" hidden></span>
         </footer>
 
         <script type="module" src="/src/main.js"></script>

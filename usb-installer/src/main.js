@@ -40,16 +40,37 @@ const AUTHORIZATION_TIMEOUT_PROMPT = "No button press was detected. Check that t
  * Time in ms to wait for the first Improv answer.
  */
 const IMPROV_DETECTION_TIMEOUT_MS = 30000;
+/**
+ * Time in ms to wait for a device that already runs its application. The Improv
+ * request is sent every second, so this allows one retry before the installer
+ * falls back to waiting for a booting device.
+ */
+const IMPROV_QUICK_DETECTION_TIMEOUT_MS = 1500;
+/** Time in ms after a reset, within which the device is assumed to be still booting. */
+const DEVICE_BOOT_WINDOW_MS = 20000;
 /** Firmware application baud rate used by Improv and MiniTerminal. */
 const SERIAL_BAUD_RATE = 115200;
-/** ESP32 ROM/stub baud rate used to accelerate firmware flashing. */
-const FLASH_BAUD_RATE = 460800;
+/**
+ * Baud rate used for flashing. It equals the ROM baud rate, so esptool-js never
+ * switches the rate. Higher rates lose the connection on some USB-UART bridges
+ * (CH340) and cables, which leaves the board in the download mode.
+ */
+const FLASH_BAUD_RATE = 115200;
+/**
+ * Web Serial receive buffer size in bytes. The default of 255 bytes overflows
+ * while the device writes its log output, which aborts the read stream.
+ */
+const SERIAL_BUFFER_SIZE = 8192;
+/** Web Serial options for every port opened by the installer. */
+const SERIAL_OPTIONS = { baudRate: SERIAL_BAUD_RATE, bufferSize: SERIAL_BUFFER_SIZE };
 const MAX_TERMINAL_OUTPUT_LENGTH = 48000;
 /** Number of leading SHA-256 hex digits used as cache-busting query of an image URL. */
 const IMAGE_CACHE_KEY_LENGTH = 16;
 const WIFI_CREDENTIAL_COMMAND = /^write\s+wifi\s+(ssid|passphrase)\b/i;
 /** Factory image signature: boot log partition line or its terminal help entry. */
 const FACTORY_IMAGE_MARKER = /Partition\s*:\s*Factory|activate app/i;
+/** Last line of a complete help output, sent by the application and the factory image. */
+const HELP_COMPLETE_MARKER = /^OK\s*$/m;
 /** Factory image replies which end the application activation attempt. */
 const FACTORY_ACTIVATION_RESULT = /^OK\s*$|Cannot switch|Could Not Activate|not found|Failed to set/im;
 /** Factory image replies reporting a failed activation. */
@@ -72,6 +93,8 @@ const elements = {
     connectButton: document.getElementById("connect-button"),
     chipStatus: document.getElementById("chip-status"),
     bootloaderHelp: document.getElementById("bootloader-help"),
+    driverHelp: document.getElementById("driver-help"),
+    buildInfo: document.getElementById("build-info"),
     flashButton: document.getElementById("flash-button"),
     keepSettings: document.getElementById("keep-settings"),
     progressWrap: document.getElementById("progress-wrap"),
@@ -90,6 +113,7 @@ const elements = {
     provisionButton: document.getElementById("provision-button"),
     terminalConnectButton: document.getElementById("terminal-connect-button"),
     terminalClearButton: document.getElementById("terminal-clear-button"),
+    terminalResetButton: document.getElementById("terminal-reset-button"),
     terminalState: document.getElementById("terminal-state"),
     terminalOutput: document.getElementById("terminal-output"),
     terminalForm: document.getElementById("terminal-form"),
@@ -114,6 +138,10 @@ let isFlashing = false;
 let terminalReader;
 let terminalReadTask;
 let terminalDisconnectRequested = false;
+/** Time stamp in ms of the last reset pulse, used to tell a booting device from a running one. */
+let lastResetAt = 0;
+/** Whether the background tab warning was already shown for the running flash. */
+let isBackgroundWarningShown = false;
 
 /**
  * Add a timestamped message to the installer status list.
@@ -179,6 +207,7 @@ function updateSerialControls() {
     elements.terminalState.dataset.state = isConsoleConnected ? "connected" : "disconnected";
     elements.terminalConnectButton.textContent = isConsoleConnected ? "Close serial console" : "Open serial console";
     elements.terminalConnectButton.disabled = isSessionOwned || !("serial" in navigator);
+    elements.terminalResetButton.disabled = isFlashing || Boolean(improv) || !("serial" in navigator);
     elements.terminalForm.hidden = !isConsoleConnected;
     elements.connectButton.disabled = !manifest || isSessionOwned || isFlashing;
     elements.flashButton.disabled = !manifest || !selectedTarget || !loader || !transport || Boolean(improv || isFlashing);
@@ -187,6 +216,24 @@ function updateSerialControls() {
     elements.wifiConnectButton.disabled = !devicePortReady || Boolean(improv || isFlashing);
     elements.boardSelect.disabled = !manifest || isFlashing;
     elements.versionSelect.disabled = !catalog || isFlashing;
+}
+
+/**
+ * Ask the user to choose a serial device. If no device was chosen, which also
+ * happens when no device shows up at all, the driver help is opened.
+ * @returns {Promise<SerialPort>} The chosen, still closed serial port
+ * @throws {Error} If no device was chosen
+ */
+async function requestSerialPort() {
+    try {
+        return await navigator.serial.requestPort();
+    } catch (error) {
+        if ("NotFoundError" === error.name) {
+            elements.driverHelp.open = true;
+            throw new Error("No USB device was selected. If the device is not listed, check the cable and the USB driver.");
+        }
+        throw error;
+    }
 }
 
 /**
@@ -201,7 +248,7 @@ async function openSerialPort() {
         }
 
         try {
-            await serialPort.open({ baudRate: SERIAL_BAUD_RATE });
+            await serialPort.open(SERIAL_OPTIONS);
             return serialPort;
         } catch (error) {
             serialPort = undefined;
@@ -209,8 +256,8 @@ async function openSerialPort() {
         }
     }
 
-    serialPort = await navigator.serial.requestPort();
-    await serialPort.open({ baudRate: SERIAL_BAUD_RATE });
+    serialPort = await requestSerialPort();
+    await serialPort.open(SERIAL_OPTIONS);
     return serialPort;
 }
 
@@ -490,11 +537,12 @@ async function connectToBoard() {
     elements.chipStatus.textContent = "Choose the board's serial device in the browser dialog.";
 
     try {
-        serialPort = serialPort ?? await navigator.serial.requestPort();
+        serialPort = serialPort ?? await requestSerialPort();
         transport = new Transport(serialPort, true);
         loader = new ESPLoader({
             transport,
             baudrate: FLASH_BAUD_RATE,
+            serialOptions: { bufferSize: SERIAL_BUFFER_SIZE },
             terminal: {
                 /** Keep existing console output while esptool starts. */
                 clean() { },
@@ -542,6 +590,8 @@ async function connectToBoard() {
         devicePortReady = false;
         elements.chipStatus.textContent = error.message;
         addStatus(error.message, "error");
+        // The connect attempt may have left the board in the download mode.
+        await resetBoardQuietly();
         await disconnectFlasher();
         updateSerialControls();
     }
@@ -632,6 +682,7 @@ async function flashBoard() {
     }
 
     isFlashing = true;
+    isBackgroundWarningShown = false;
     updateSerialControls();
     elements.flashButton.disabled = true;
     elements.connectButton.disabled = true;
@@ -693,6 +744,8 @@ async function flashBoard() {
         elements.chipStatus.textContent = error.message;
         addStatus(error.message, "error");
         appendTerminalOutput(`\r\n[Flash failed: ${error.message}]\r\n`);
+        // Leave the download mode, otherwise the board stays silent (the Ulanzi whistles).
+        await resetBoardQuietly();
         await disconnectFlasher();
         updateSerialControls();
     } finally {
@@ -714,6 +767,71 @@ async function pulseReset(setSignals) {
     await setSignals(false, true);
     await new Promise((resolve) => window.setTimeout(resolve, HARD_RESET_PULSE_MS));
     await setSignals(false, false);
+    lastResetAt = Date.now();
+}
+
+/**
+ * Reset the board into its application on an error path. The device may already
+ * be gone, so a failing reset is only reported in the console.
+ * @returns {Promise<void>}
+ */
+async function resetBoardQuietly() {
+    try {
+        await hardResetBoard();
+    } catch (error) {
+        appendTerminalOutput(`\r\n[Reset failed: ${error.message}]\r\n`);
+    }
+}
+
+/**
+ * Reset the device from the serial console, e.g. to leave the download mode.
+ * The esptool-js connection is released afterwards, because the board no longer
+ * runs the flasher stub. A port opened only for the reset is closed again.
+ * @returns {Promise<void>}
+ */
+async function resetDeviceFromConsole() {
+    if (isFlashing || improv) {
+        return;
+    }
+
+    elements.terminalResetButton.disabled = true;
+
+    try {
+        if (transport) {
+            await hardResetBoard();
+            await disconnectFlasher();
+            setStepState("connect", "Waiting");
+            addStatus("Device reset into its application. Choose the USB device again before installing.");
+        } else {
+            const isConsoleOpen = Boolean(terminalReader);
+            const port = await openSerialPort();
+
+            appendTerminalOutput("\r\n[Resetting the device.]\r\n");
+            await pulseReset((dtr, rts) => port.setSignals({ dataTerminalReady: dtr, requestToSend: rts }));
+            devicePortReady = true;
+            if (!isConsoleOpen && (null !== port.readable) && (false === port.readable.locked)) {
+                await port.close();
+            }
+            addStatus("Device reset into its application.");
+        }
+    } catch (error) {
+        addStatus(`Device reset failed: ${error.message}`, "error");
+        appendTerminalOutput(`\r\n[Reset failed: ${error.message}]\r\n`);
+    } finally {
+        updateSerialControls();
+    }
+}
+
+/**
+ * Warn once per flash when the page goes to the background, because browsers
+ * throttle timers of hidden tabs, which slows down or breaks the transfer.
+ * @returns {void}
+ */
+function handleVisibilityChange() {
+    if (isFlashing && document.hidden && !isBackgroundWarningShown) {
+        isBackgroundWarningShown = true;
+        addStatus("Keep this page in the foreground while installing. Background tabs are slowed down by the browser.", "error");
+    }
 }
 
 /**
@@ -1191,7 +1309,9 @@ async function closeSerialPortQuietly(port) {
  * @throws {Error} If the factory image refuses to activate the application
  */
 async function ensureApplicationPartition(port) {
-    const probe = await exchangeSerialText(port, "help", (text) => FACTORY_IMAGE_MARKER.test(text), FACTORY_PROBE_TIMEOUT_MS);
+    // Both images end their help output with "OK", after the command list that
+    // carries the factory marker. A running device therefore ends the probe early.
+    const probe = await exchangeSerialText(port, "help", (text) => FACTORY_IMAGE_MARKER.test(text) || HELP_COMPLETE_MARKER.test(text), FACTORY_PROBE_TIMEOUT_MS);
 
     if (!FACTORY_IMAGE_MARKER.test(probe)) {
         return port;
@@ -1224,6 +1344,43 @@ async function ensureApplicationPartition(port) {
     return openSerialPort();
 }
 
+/** Improv SDK logger, which keeps protocol details out of the status area. */
+const QUIET_IMPROV_LOGGER = {
+    /** Suppress protocol logs from the status area. */
+    log() { },
+    /** Suppress protocol debug output. */
+    debug() { },
+    /** Suppress protocol error output; the UI handles state events. */
+    error() { },
+};
+
+/**
+ * Start an Improv session on the open port and wait for the device to answer.
+ * Errors are reported only for a detected device, so a timed out detection
+ * attempt does not show up as an Improv error.
+ * @param {SerialPort} port Open Web Serial port
+ * @param {number} timeoutMs Time in ms to wait for the first answer
+ * @returns {Promise<{session: ImprovSerial, deviceInfo: object | undefined}>} Detected session and device info
+ * @throws {Error} If the device does not answer in time
+ */
+async function startImprovSession(port, timeoutMs) {
+    const session = new ImprovSerial(port, QUIET_IMPROV_LOGGER);
+
+    improv = session;
+    lastImprovState = undefined;
+    updateSerialControls();
+    session.addEventListener("state-changed", handleImprovStateChanged);
+
+    try {
+        const deviceInfo = await session.initialize(timeoutMs);
+        session.addEventListener("error-changed", handleImprovErrorChanged);
+        return { session, deviceInfo };
+    } catch (error) {
+        session.removeEventListener("state-changed", handleImprovStateChanged);
+        throw error;
+    }
+}
+
 /**
  * Open Improv on the selected port, returning a running board to its application first.
  * @returns {Promise<void>}
@@ -1238,7 +1395,7 @@ async function connectForWifiSetup() {
     const sessionToken = improvSessionToken;
 
     elements.wifiConnectButton.disabled = true;
-    elements.authorizationStatus.textContent = "Connecting to Improv Serial… The device answers once its startup screen has finished.";
+    elements.authorizationStatus.textContent = "Connecting to Improv Serial…";
 
     try {
         if (terminalReader) {
@@ -1267,25 +1424,28 @@ async function connectForWifiSetup() {
             }
             return;
         }
-        const quietLogger = {
-            /** Suppress protocol logs from the status area. */
-            log() { },
-            /** Suppress protocol debug output. */
-            debug() { },
-            /** Suppress protocol error output; the UI handles state events. */
-            error() { },
-        };
-        const session = new ImprovSerial(port, quietLogger);
-        improv = session;
-        lastImprovState = undefined;
-        updateSerialControls();
-
         appendTerminalOutput("\r\n[Improv Wi-Fi session started. Waiting for button authorization.]\r\n");
 
-        session.addEventListener("state-changed", handleImprovStateChanged);
-        session.addEventListener("error-changed", handleImprovErrorChanged);
+        // A running device answers at once. Only a device which was reset recently
+        // may still show its startup screen, so only then the long wait is used first.
+        const isBooting = (Date.now() - lastResetAt) < DEVICE_BOOT_WINDOW_MS;
+        let session;
+        let deviceInfo;
 
-        const deviceInfo = await session.initialize(IMPROV_DETECTION_TIMEOUT_MS);
+        if (!isBooting) {
+            try {
+                ({ session, deviceInfo } = await startImprovSession(port, IMPROV_QUICK_DETECTION_TIMEOUT_MS));
+            } catch {
+                // Not answering at once: the device may still boot, so wait longer below.
+            }
+            if (sessionToken !== improvSessionToken) {
+                return;
+            }
+        }
+        if (undefined === session) {
+            elements.authorizationStatus.textContent = "Waiting for the device to finish its startup…";
+            ({ session, deviceInfo } = await startImprovSession(port, IMPROV_DETECTION_TIMEOUT_MS));
+        }
         if (sessionToken !== improvSessionToken) {
             return;
         }
@@ -1488,6 +1648,24 @@ function clearInstallerStatus() {
     elements.statusList.replaceChildren();
 }
 
+/**
+ * Show which installer build is served, so a stale cached or deployed copy is
+ * recognized. The values are injected by the Vite configuration at build time.
+ * @returns {void}
+ */
+function showBuildInfo() {
+    const buildInfo = __INSTALLER_BUILD__;
+
+    if (buildInfo.commit) {
+        const builtAt = new Date(buildInfo.builtAt);
+        const date = Number.isNaN(builtAt.getTime()) ? buildInfo.builtAt : builtAt.toISOString().slice(0, 16).replace("T", " ");
+        elements.buildInfo.textContent = `Installer build ${buildInfo.commit}${buildInfo.dirty ? "+" : ""}, ${date} UTC`;
+        elements.buildInfo.hidden = false;
+    }
+}
+
+showBuildInfo();
+
 if (!("serial" in navigator) || !window.isSecureContext) {
     handleUnsupportedSerial();
 } else {
@@ -1504,5 +1682,7 @@ elements.wifiConnectButton.addEventListener("click", connectForWifiSetup);
 elements.wifiForm.addEventListener("submit", provisionWifi);
 elements.terminalConnectButton.addEventListener("click", toggleTerminalConnection);
 elements.terminalClearButton.addEventListener("click", clearTerminalOutput);
+elements.terminalResetButton.addEventListener("click", resetDeviceFromConsole);
+document.addEventListener("visibilitychange", handleVisibilityChange);
 elements.terminalForm.addEventListener("submit", sendTerminalCommand);
 document.getElementById("clear-status").addEventListener("click", clearInstallerStatus);
