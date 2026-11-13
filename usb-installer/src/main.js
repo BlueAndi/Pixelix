@@ -209,7 +209,7 @@ function updateSerialControls() {
     elements.terminalConnectButton.disabled = isSessionOwned || !("serial" in navigator);
     elements.terminalResetButton.disabled = isFlashing || Boolean(improv) || !("serial" in navigator);
     elements.terminalForm.hidden = !isConsoleConnected;
-    elements.connectButton.disabled = !manifest || isSessionOwned || isFlashing;
+    elements.connectButton.disabled = !manifest || !selectedTarget || isSessionOwned || isFlashing;
     elements.flashButton.disabled = !manifest || !selectedTarget || !loader || !transport || Boolean(improv || isFlashing);
     elements.flashButton.textContent = elements.keepSettings.checked ? "Install, keep settings" : "Erase and install";
     elements.keepSettings.disabled = isFlashing;
@@ -419,6 +419,14 @@ async function loadRelease(release, requestId) {
     manifest = loadedManifest;
     elements.boardCount.textContent = `${manifest.targets.length} board builds`;
 
+    // No board is preselected, because flashing the wrong display configuration
+    // is a likely mistake. The placeholder can not be chosen again later.
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Choose your board…";
+    placeholder.disabled = true;
+    elements.boardSelect.append(placeholder);
+
     for (const target of manifest.targets) {
         const option = document.createElement("option");
         option.value = target.environment;
@@ -426,16 +434,17 @@ async function loadRelease(release, requestId) {
         elements.boardSelect.append(option);
     }
 
-    const previousEnvironment = preferredEnvironment;
-    selectedTarget = findTarget(previousEnvironment) ?? manifest.targets[0];
-    preferredEnvironment = selectedTarget.environment;
-    elements.boardSelect.value = selectedTarget.environment;
+    // A board chosen for another version stays chosen, if this version supports it.
+    selectedTarget = findTarget(preferredEnvironment);
+    elements.boardSelect.value = selectedTarget?.environment ?? "";
     updateBootloaderInstructions(selectedTarget);
+    setStepState("board", selectedTarget ? "Ready" : "Waiting");
+    elements.chipStatus.textContent = selectedTarget ? "Select the USB device to detect its chip." : "Choose your board first.";
 
     updateSerialControls();
     addStatus(`Version ${release.version}: ${manifest.targets.length} board configurations are ready.`);
-    if (previousEnvironment && (previousEnvironment !== selectedTarget.environment)) {
-        addStatus(`${previousEnvironment} is not available in this version; selected ${selectedTarget.environment}.`);
+    if (preferredEnvironment && !selectedTarget) {
+        addStatus(`${preferredEnvironment} is not available in this version. Choose your board again.`, "error");
     }
 }
 
@@ -477,6 +486,7 @@ async function handleVersionSelection(event) {
             return;
         }
 
+        setStepState("board", "Waiting");
         setStepState("connect", "Waiting");
         setStepState("flash", "Waiting");
         setStepState("wifi", "Waiting");
@@ -503,8 +513,14 @@ async function handleVersionSelection(event) {
 async function handleBoardSelection(event) {
     const selector = /** @type {HTMLSelectElement} */ (event.currentTarget);
     selectedTarget = findTarget(selector.value);
+    if (!selectedTarget) {
+        setStepState("board", "Waiting");
+        updateSerialControls();
+        return;
+    }
     preferredEnvironment = selectedTarget.environment;
     devicePortReady = false;
+    setStepState("board", "Ready");
 
     if (transport) {
         await disconnectFlasher();
