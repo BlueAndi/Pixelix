@@ -60,6 +60,8 @@ const FACTORY_PROBE_TIMEOUT_MS = 4000;
 const FACTORY_ACTIVATION_TIMEOUT_MS = 4000;
 /** Time in ms the board needs to restart into the application partition. */
 const FACTORY_RESTART_DELAY_MS = 3000;
+/** Time in ms to hold the ESP32 in reset (EN low) when leaving the flasher. */
+const HARD_RESET_PULSE_MS = 100;
 
 const elements = {
     versionSelect: document.getElementById("version-select"),
@@ -673,7 +675,7 @@ async function flashBoard() {
             },
         });
 
-        await loader.after("hard_reset");
+        await hardResetBoard();
         await disconnectFlasher();
         setStepState("flash", "Complete");
         devicePortReady = true;
@@ -696,6 +698,23 @@ async function flashBoard() {
     } finally {
         isFlashing = false;
         updateSerialControls();
+    }
+}
+
+/**
+ * Reset the board into its application after flashing or chip detection.
+ * The connect leaves the ESP32 in the ROM download mode, and the hard reset of
+ * esptool-js 0.7.0 only releases RTS without ever pulling EN low, so the board
+ * would stay in the download mode (the Ulanzi then whistles) and Improv could not
+ * answer. Pull EN low via RTS while IO0 (DTR) stays released, then let it boot.
+ * @returns {Promise<void>}
+ */
+async function hardResetBoard() {
+    if (transport) {
+        appendTerminalOutput("\r\n[Resetting the board into the application.]\r\n");
+        await transport.setSignals(false, true);
+        await new Promise((resolve) => window.setTimeout(resolve, HARD_RESET_PULSE_MS));
+        await transport.setSignals(false, false);
     }
 }
 
@@ -1217,7 +1236,7 @@ async function connectForWifiSetup() {
             await disconnectTerminal();
         }
         if (transport) {
-            await loader.after("hard_reset");
+            await hardResetBoard();
             await disconnectFlasher();
         }
         if (sessionToken !== improvSessionToken) {
