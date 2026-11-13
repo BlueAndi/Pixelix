@@ -702,19 +702,28 @@ async function flashBoard() {
 }
 
 /**
- * Reset the board into its application after flashing or chip detection.
- * The connect leaves the ESP32 in the ROM download mode, and the hard reset of
- * esptool-js 0.7.0 only releases RTS without ever pulling EN low, so the board
- * would stay in the download mode (the Ulanzi then whistles) and Improv could not
- * answer. Pull EN low via RTS while IO0 (DTR) stays released, then let it boot.
+ * Pulse the ESP32 reset: pull EN low via RTS while IO0 (DTR) stays released, then
+ * let the board boot its application. The hard reset of esptool-js 0.7.0 only
+ * releases RTS without ever pulling EN low, so a board left in the ROM download
+ * mode by the connect would stay there (the Ulanzi then whistles) and Improv
+ * could not answer.
+ * @param {(dtr: boolean, rts: boolean) => Promise<void>} setSignals Sets the DTR and RTS lines
+ * @returns {Promise<void>}
+ */
+async function pulseReset(setSignals) {
+    await setSignals(false, true);
+    await new Promise((resolve) => window.setTimeout(resolve, HARD_RESET_PULSE_MS));
+    await setSignals(false, false);
+}
+
+/**
+ * Reset the board into its application after flashing.
  * @returns {Promise<void>}
  */
 async function hardResetBoard() {
     if (transport) {
         appendTerminalOutput("\r\n[Resetting the board into the application.]\r\n");
-        await transport.setSignals(false, true);
-        await new Promise((resolve) => window.setTimeout(resolve, HARD_RESET_PULSE_MS));
-        await transport.setSignals(false, false);
+        await pulseReset((dtr, rts) => transport.setSignals(dtr, rts));
     }
 }
 
@@ -1235,14 +1244,22 @@ async function connectForWifiSetup() {
         if (terminalReader) {
             await disconnectTerminal();
         }
+        // A board that was connected to esptool-js sits in the ROM download mode. It is
+        // reset only after the port was reopened, so no later close or open of the port
+        // can toggle DTR/RTS into the download mode again.
+        const needsReset = Boolean(transport);
         if (transport) {
-            await hardResetBoard();
             await disconnectFlasher();
         }
         if (sessionToken !== improvSessionToken) {
             return;
         }
-        const port = await ensureApplicationPartition(await openSerialPort());
+        let port = await openSerialPort();
+        if (needsReset) {
+            appendTerminalOutput("\r\n[Resetting the board into the application.]\r\n");
+            await pulseReset((dtr, rts) => port.setSignals({ dataTerminalReady: dtr, requestToSend: rts }));
+        }
+        port = await ensureApplicationPartition(port);
         if (sessionToken !== improvSessionToken) {
             if ((null !== port.readable) && (false === port.readable.locked) &&
                 (null !== port.writable) && (false === port.writable.locked)) {
