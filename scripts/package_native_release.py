@@ -88,20 +88,18 @@ def windows_dependencies(executable: Path, runtime_dir: Path) -> list[Path]:
     return list(found.values())
 
 
-def windows_licenses(libraries: list[Path], msys2: Path) -> dict[Path, Path]:
-    """Collect the license notices of the MSYS2 packages owning the bundled DLLs.
+def _windows_packages(libraries: list[Path], msys2: Path) -> list[str]:
+    """Find the MSYS2 packages owning the bundled DLLs.
 
     Args:
         libraries: Bundled MSYS2 runtime DLLs.
         msys2: MSYS2 installation root containing the package database.
 
     Returns:
-        License notice files keyed by their path below the package license
-        directory.
+        Package names, in the order they were discovered.
 
     Raises:
-        FileNotFoundError: A DLL has no owning package or a package ships no
-            license notice.
+        FileNotFoundError: A DLL has no owning package.
         subprocess.CalledProcessError: The package database cannot be queried.
     """
     pacman = msys2 / "usr" / "bin" / "pacman.exe"
@@ -121,9 +119,29 @@ def windows_licenses(libraries: list[Path], msys2: Path) -> dict[Path, Path]:
             raise FileNotFoundError(f"No MSYS2 package owns {library}")
         if owners[0] not in packages:
             packages.append(owners[0])
+    return packages
+
+
+def windows_licenses(libraries: list[Path], msys2: Path) -> dict[Path, Path]:
+    """Collect the license notices of the MSYS2 packages owning the bundled DLLs.
+
+    Args:
+        libraries: Bundled MSYS2 runtime DLLs.
+        msys2: MSYS2 installation root containing the package database.
+
+    Returns:
+        License notice files keyed by their path below the package license
+        directory.
+
+    Raises:
+        FileNotFoundError: A DLL has no owning package or a package ships no
+            license notice.
+        subprocess.CalledProcessError: The package database cannot be queried.
+    """
+    pacman = msys2 / "usr" / "bin" / "pacman.exe"
     marker = "/share/licenses/"
     notices: dict[Path, Path] = {}
-    for package_name in packages:
+    for package_name in _windows_packages(libraries, msys2):
         entries = subprocess.run(
             [str(pacman), "-Qlq", package_name], check=True,
             capture_output=True, text=True
@@ -150,6 +168,9 @@ def copy_windows_licenses(libraries: list[Path], msys2: Path,
         libraries: Bundled MSYS2 runtime DLLs.
         msys2: MSYS2 installation root containing the package database.
         destination: License directory in the staged archive.
+
+    Returns:
+        None.
     """
     for relative, notice in windows_licenses(libraries, msys2).items():
         target = destination / relative
@@ -178,6 +199,9 @@ def copy_project_licenses(project: Path, destination: Path) -> None:
         project: Release source checkout with installed native dependencies.
         destination: License directory in the staged archive.
 
+    Returns:
+        None.
+
     Raises:
         FileNotFoundError: The project license or dependency tree is missing.
     """
@@ -198,6 +222,29 @@ def copy_project_licenses(project: Path, destination: Path) -> None:
                     shutil.copy2(notice, target / notice.name)
 
 
+def _license_source(kind: str, licenses: Path | None, msys2: Path | None) -> Path:
+    """Select the required platform-specific license source.
+
+    Args:
+        kind: Target operating system.
+        licenses: Linux license directory.
+        msys2: Windows MSYS2 installation root.
+
+    Returns:
+        The license directory for the selected platform.
+
+    Raises:
+        ValueError: The required source for the selected platform is missing.
+    """
+    if kind == "linux":
+        if licenses is None:
+            raise ValueError("Linux packaging requires the license directory")
+        return licenses
+    if msys2 is None:
+        raise ValueError("Windows packaging requires the MSYS2 root")
+    return msys2
+
+
 # pylint: disable-next=too-many-arguments,too-many-locals
 def package(*, kind: str, executable: Path, data: Path, runtime: Path,
             project: Path, output: Path, licenses: Path | None = None,
@@ -215,18 +262,14 @@ def package(*, kind: str, executable: Path, data: Path, runtime: Path,
         msys2: MSYS2 installation root on Windows, whose package database
             provides the license notices of the bundled DLLs.
 
+    Returns:
+        None.
+
     Raises:
         FileNotFoundError: A required input is missing.
         ValueError: The platform specific license source is not given.
     """
-    if kind == "linux":
-        if licenses is None:
-            raise ValueError("Linux packaging requires the license directory")
-        license_source = licenses
-    else:
-        if msys2 is None:
-            raise ValueError("Windows packaging requires the MSYS2 root")
-        license_source = msys2
+    license_source = _license_source(kind, licenses, msys2)
     for required in (executable, data / "js" / "app-menu.js",
                      data / "cp" / "captivePortal.html",
                      data / "configuration" / "smiley.bmp",
@@ -290,7 +333,11 @@ def package(*, kind: str, executable: Path, data: Path, runtime: Path,
 
 
 def main() -> None:
-    """Parse packaging arguments and create the archive."""
+    """Parse packaging arguments and create the archive.
+
+    Returns:
+        None.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--kind", choices=("linux", "windows"), required=True)
     parser.add_argument("--executable", type=Path, required=True)

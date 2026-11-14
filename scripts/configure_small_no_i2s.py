@@ -28,9 +28,6 @@
 from configure import configure
 from determine_layout import determine_layout
 
-# pylint: disable=undefined-variable
-Import("env") # type: ignore
-
 ################################################################################
 # Variables
 ################################################################################
@@ -48,6 +45,9 @@ Import("env") # type: ignore
 ################################################################################
 
 # pylint: disable=undefined-variable
-layout = determine_layout(env["BUILD_FLAGS"]) # type: ignore
+Import("env")  # type: ignore
 
-configure("./config/configSmallNoI2s.ini", layout)
+# pylint: disable=undefined-variable
+LAYOUT: str = determine_layout(env["BUILD_FLAGS"])  # type: ignore
+
+configure("./config/configSmallNoI2s.ini", LAYOUT)

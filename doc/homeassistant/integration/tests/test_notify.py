@@ -25,6 +25,7 @@
 ###############################################################################
 # Imports
 ###############################################################################
+from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
 from typing import Any
 
@@ -88,7 +89,14 @@ from .helpers import (
 
 @pytest.fixture(autouse=True)
 def auto_mock_devices(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock device status responses so entries can be set up without errors."""
+    """Mock device status responses so entries can be set up without errors.
+
+    Args:
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     mock_device_status(aioclient_mock, HOST_B, DEVICE_ID_B)
 
@@ -111,7 +119,15 @@ async def notify(hass: HomeAssistant, data: dict[str, Any]) -> None:
 async def test_only_message(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Without optional fields, only the text is sent."""
+    """Without optional fields, only the text is sent.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -125,17 +141,51 @@ async def test_notify_uses_mqtt_when_device_is_online(
     aioclient_mock: AiohttpClientMocker,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An online device receives notifications through its MQTT topic."""
-    availability_callbacks = []
+    """An online device receives notifications through its MQTT topic.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        monkeypatch: Pytest fixture used to replace runtime dependencies.
+
+    Returns:
+        None.
+    """
+    availability_callbacks: list[Callable[[Any], Awaitable[None]]] = []
     published = []
 
-    async def subscribe(_hass, topic, callback, qos=0):
+    async def subscribe(
+        _hass: HomeAssistant, topic: str, callback: Callable[[Any], Awaitable[None]], qos: int = 0
+    ) -> Callable[[], None]:
+        """Record the availability subscription.
+
+        Args:
+            _hass: Home Assistant instance.
+            topic: MQTT topic to subscribe to.
+            callback: Callback receiving availability messages.
+            qos: Requested quality of service.
+
+        Returns:
+            A no-op unsubscribe callback.
+        """
         assert topic == f"{HOSTNAME_A}/status"
         assert qos == 0
         availability_callbacks.append(callback)
         return lambda: None
 
-    async def publish(_hass, topic, payload, qos=0, retain=False):
+    async def publish(_hass: HomeAssistant, topic: str, payload: str, qos: int = 0, retain: bool = False) -> None:
+        """Record a published MQTT message.
+
+        Args:
+            _hass: Home Assistant instance.
+            topic: MQTT topic.
+            payload: Message content.
+            qos: Requested quality of service.
+            retain: Whether the message is retained.
+
+        Returns:
+            None.
+        """
         published.append((topic, payload, qos, retain))
 
     hass.config.components.add("mqtt")
@@ -172,15 +222,46 @@ async def test_notify_falls_back_to_rest_when_device_is_offline(
     aioclient_mock: AiohttpClientMocker,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """An offline MQTT device receives notifications through REST."""
-    availability_callbacks = []
+    """An offline MQTT device receives notifications through REST.
 
-    async def subscribe(_hass, _topic, callback, qos=0):
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        monkeypatch: Pytest fixture used to replace runtime dependencies.
+
+    Returns:
+        None.
+    """
+    availability_callbacks: list[Callable[[Any], Awaitable[None]]] = []
+
+    async def subscribe(
+        _hass: HomeAssistant, _topic: str, callback: Callable[[Any], Awaitable[None]], qos: int = 0
+    ) -> Callable[[], None]:
+        """Record the availability subscription.
+
+        Args:
+            _hass: Home Assistant instance.
+            _topic: MQTT topic to subscribe to.
+            callback: Callback receiving availability messages.
+            qos: Requested quality of service.
+
+        Returns:
+            A no-op unsubscribe callback.
+        """
         del qos
         availability_callbacks.append(callback)
         return lambda: None
 
-    async def publish(*_args, **_kwargs):
+    async def publish(*_args: object, **_kwargs: object) -> None:
+        """Fail if the offline device receives an MQTT message.
+
+        Args:
+            *_args: Positional publish arguments.
+            **_kwargs: Keyword publish arguments.
+
+        Returns:
+            None.
+        """
         pytest.fail("MQTT must not be used for an offline device.")
 
     hass.config.components.add("mqtt")
@@ -200,7 +281,15 @@ async def test_notify_falls_back_to_rest_when_device_is_offline(
 async def test_all_parameters(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """All fields are sent completely and with the names of the REST API."""
+    """All fields are sent completely and with the names of the REST API.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -229,7 +318,15 @@ async def test_all_parameters(
 async def test_duration_zero_is_forwarded(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The firmware maps a duration of 0 to its default, so it is sent."""
+    """The firmware maps a duration of 0 to its default, so it is sent.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -257,7 +354,17 @@ async def test_invalid_number(
     field: str,
     value: Any,
 ) -> None:
-    """A value which the firmware can not parse is rejected."""
+    """A value which the firmware can not parse is rejected.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        field: Notification field under test.
+        value: Notification field value under test.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -270,7 +377,15 @@ async def test_invalid_number(
 async def test_volume_maximum_is_accepted(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The firmware constant MAX_VOLUME is 10, volume 10 is accepted."""
+    """The firmware constant MAX_VOLUME is 10, volume 10 is accepted.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -282,7 +397,15 @@ async def test_volume_maximum_is_accepted(
 async def test_icon_file_name_relative_path_normalized(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A relative icon path gets a leading slash so LittleFS finds it."""
+    """A relative icon path gets a leading slash so LittleFS finds it.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -312,7 +435,17 @@ async def test_too_long_text_is_rejected(
     field: str,
     value: str,
 ) -> None:
-    """Text and melody are limited in bytes and are never cut."""
+    """Text and melody are limited in bytes and are never cut.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        field: Notification field under test.
+        value: Notification field value under test.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
     data = {"message": "Hello", field: value}
@@ -326,7 +459,15 @@ async def test_too_long_text_is_rejected(
 async def test_limits_are_accepted(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Exactly the maximum length of text and melody is valid."""
+    """Exactly the maximum length of text and melody is valid.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -338,7 +479,14 @@ async def test_limits_are_accepted(
 
 
 async def test_message_is_mandatory(hass: HomeAssistant) -> None:
-    """The message is the only mandatory field."""
+    """The message is the only mandatory field.
+
+    Args:
+        hass: Home Assistant test instance.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
 
     with pytest.raises(vol.Invalid):
@@ -348,7 +496,15 @@ async def test_message_is_mandatory(hass: HomeAssistant) -> None:
 async def test_device_offline(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """An offline device is reported with its name and a clear reason."""
+    """An offline device is reported with its name and a clear reason.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A, exc=aiohttp.ClientError)
 
@@ -361,7 +517,15 @@ async def test_device_offline(
 async def test_device_rejects_notification(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The reason of the device is reported."""
+    """The reason of the device is reported.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A, **INVALID_DATA_ANSWER)
 
@@ -372,7 +536,15 @@ async def test_device_rejects_notification(
 async def test_two_devices_one_offline(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """An offline device does not stop the other device."""
+    """An offline device does not stop the other device.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
     await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
     mock_notify(aioclient_mock, HOST_A, exc=TimeoutError)
@@ -389,7 +561,15 @@ async def test_two_devices_one_offline(
 async def test_without_target_all_devices(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Without a target, every device shows the notification."""
+    """Without a target, every device shows the notification.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
     await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
     mock_notify(aioclient_mock, HOST_A)
@@ -404,7 +584,15 @@ async def test_without_target_all_devices(
 async def test_target_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Only the selected device shows the notification."""
+    """Only the selected device shows the notification.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     entry_a = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
     await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
     mock_notify(aioclient_mock, HOST_A)
@@ -636,7 +824,14 @@ async def test_unknown_area_sends_nothing(
 
 
 async def test_without_any_device(hass: HomeAssistant) -> None:
-    """The action is available, but fails clearly without a device."""
+    """The action is available, but fails clearly without a device.
+
+    Args:
+        hass: Home Assistant test instance.
+
+    Returns:
+        None.
+    """
     entry = await setup_entry(hass)
     await hass.config_entries.async_remove(entry.entry_id)
 
@@ -657,7 +852,16 @@ async def test_invalid_target_sends_nothing(
     aioclient_mock: AiohttpClientMocker,
     target: list[str] | None,
 ) -> None:
-    """An invalid selection never falls back to all devices."""
+    """An invalid selection never falls back to all devices.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        target: Target devices under test.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
     await setup_entry(hass, HOST_B, DEVICE_ID_B, HOSTNAME_B)
     mock_notify(aioclient_mock, HOST_A)
@@ -673,7 +877,15 @@ async def test_invalid_target_sends_nothing(
 async def test_valid_and_invalid_target_sends_nothing(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """One unknown device prevents the notification for all targets."""
+    """One unknown device prevents the notification for all targets.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     entry_a = await setup_entry(hass, HOST_A, HOSTNAME_A)
     mock_notify(aioclient_mock, HOST_A)
 
@@ -692,7 +904,15 @@ async def test_valid_and_invalid_target_sends_nothing(
 async def test_device_of_other_integration_is_invalid(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A device of another integration is not a valid target."""
+    """A device of another integration is not a valid target.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     await setup_entry(hass, HOST_A, HOSTNAME_A)
     mock_notify(aioclient_mock, HOST_A)
     foreign = _foreign_device(hass)
@@ -708,7 +928,15 @@ async def test_device_of_other_integration_is_invalid(
 async def test_rejected_login_starts_reauthentication(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A rejected login is reported and asks the user for a new login."""
+    """A rejected login is reported and asks the user for a new login.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     entry = await setup_entry(hass)
     mock_notify(aioclient_mock, HOST_A, status=401, text="")
 

@@ -128,7 +128,15 @@ async def discover(
 async def test_manual_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A device is added by its address, identified by its device id."""
+    """A device is added by its address, identified by its device id.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
 
     result = await add_manually(hass, USER_INPUT)
@@ -219,7 +227,15 @@ async def test_manual_flow_invalid_host(
 async def test_manual_flow_invalid_auth(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A rejected login is not reported as a connection problem."""
+    """A rejected login is not reported as a connection problem.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A,
                        DEVICE_ID_A, status=401, text="")
 
@@ -245,7 +261,17 @@ async def test_manual_flow_errors(
     answer: dict[str, Any],
     error: str,
 ) -> None:
-    """Every kind of problem has its own message."""
+    """Every kind of problem has its own message.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        answer: Simulated device response.
+        error: Expected configuration flow error.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A, **answer)
 
     result = await add_manually(hass, USER_INPUT)
@@ -257,7 +283,15 @@ async def test_manual_flow_errors(
 async def test_zeroconf_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A discovered device is added after the web login was entered."""
+    """A discovered device is added after the web login was entered.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
 
     result = await discover(hass, HOSTNAME_A, HOST_A)
@@ -303,7 +337,15 @@ async def test_zeroconf_flow_title_is_reported_hostname(
 async def test_zeroconf_flow_invalid_auth(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A wrong login of a discovered device asks again."""
+    """A wrong login of a discovered device asks again.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A,
                        DEVICE_ID_A, status=401, text="")
 
@@ -319,7 +361,15 @@ async def test_zeroconf_flow_invalid_auth(
 async def test_duplicate_discovery_in_progress(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The same device announced twice results in one flow."""
+    """The same device announced twice results in one flow.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
 
     first = await discover(hass, HOSTNAME_A, HOST_A)
@@ -333,7 +383,15 @@ async def test_duplicate_discovery_in_progress(
 async def test_duplicate_discovery_after_setup(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A configured device is not offered again, but its address follows."""
+    """A configured device is not offered again, but its address follows.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     mock_device_status(aioclient_mock, HOST_B, DEVICE_ID_A)
     entry = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
@@ -354,7 +412,15 @@ async def test_duplicate_discovery_after_setup(
 async def test_manual_then_discovery_is_one_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Manual setup by IP and discovery produce the same unique id."""
+    """Manual setup by IP and discovery produce the same unique id.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     mock_device_status(aioclient_mock, HOST_B, DEVICE_ID_A)
     await add_manually(hass, USER_INPUT)
@@ -375,7 +441,15 @@ async def test_manual_then_discovery_is_one_device(
 async def test_discovery_then_manual_is_one_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Discovery and a later manual setup by IP produce one entry."""
+    """Discovery and a later manual setup by IP produce one entry.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     result = await discover(hass, HOSTNAME_A, HOST_A)
     await hass.config_entries.flow.async_configure(
@@ -392,7 +466,15 @@ async def test_discovery_then_manual_is_one_device(
 async def test_two_devices(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Different devices are different entries."""
+    """Different devices are different entries.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     mock_device_status(aioclient_mock, HOST_B, DEVICE_ID_B)
 
@@ -423,7 +505,15 @@ async def start_reauth(hass: HomeAssistant, entry: Any) -> dict[str, Any]:
 async def test_reauthentication(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """New credentials replace the old ones, the entry stays."""
+    """New credentials replace the old ones, the entry stays.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     entry = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
     entry_id = entry.entry_id
@@ -463,7 +553,15 @@ async def test_reauthentication(
 async def test_reauthentication_other_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The login of another device is never stored in the entry."""
+    """The login of another device is never stored in the entry.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     entry = await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
     result = await start_reauth(hass, entry)
@@ -483,7 +581,15 @@ async def test_reauthentication_other_device(
 async def test_migration_of_address_based_unique_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A version 1 entry gets the device id as unique id, device stays."""
+    """A version 1 entry gets the device id as unique id, device stays.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     registry = dr.async_get(hass)
     entry = await setup_entry(
@@ -500,7 +606,15 @@ async def test_migration_of_address_based_unique_id(
 async def test_migration_keeps_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The device of a version 1 entry keeps its id and its assignment."""
+    """The device of a version 1 entry keeps its id and its assignment.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     registry = dr.async_get(hass)
     entry = MockConfigEntry(
@@ -527,7 +641,15 @@ async def test_migration_keeps_device(
 async def test_migration_of_offline_device_keeps_unique_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Without an answer of the device, the old unique id stays."""
+    """Without an answer of the device, the old unique id stays.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A,
                        exc=aiohttp.ClientError)
 
@@ -548,7 +670,15 @@ async def test_migration_of_offline_device_keeps_unique_id(
 async def test_migration_does_not_create_duplicate_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A duplicate entry of one device keeps its old unique id."""
+    """A duplicate entry of one device keeps its old unique id.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     mock_device_status(aioclient_mock, HOST_B, DEVICE_ID_A)
     await setup_entry(hass, HOST_A, DEVICE_ID_A, HOSTNAME_A)
@@ -564,7 +694,15 @@ async def test_migration_does_not_create_duplicate_id(
 async def test_setup_entry_auth_failed_triggers_reauth(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """A rejected login during startup triggers reauthentication."""
+    """A rejected login during startup triggers reauthentication.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A,
                        DEVICE_ID_A, status=401, text="")
     entry = MockConfigEntry(
@@ -587,7 +725,15 @@ async def test_setup_entry_auth_failed_triggers_reauth(
 async def test_setup_entry_offline_succeeds(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """An unreachable device during startup does not prevent setup."""
+    """An unreachable device during startup does not prevent setup.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A,
                        exc=aiohttp.ClientError)
     entry = MockConfigEntry(
@@ -608,7 +754,15 @@ async def test_setup_entry_offline_succeeds(
 async def test_setup_entry_online_updates_migrated_unique_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """An entry with old IP unique_id is updated when it comes online."""
+    """An entry with old IP unique_id is updated when it comes online.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
     entry = MockConfigEntry(
         domain=DOMAIN,

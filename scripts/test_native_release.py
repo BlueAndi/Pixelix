@@ -49,7 +49,14 @@ class NativePackageTest(unittest.TestCase):
     """Exercise platform archive layout and required input validation."""
 
     def setUp(self) -> None:
-        """Create isolated input files for each archive test."""
+        """Create isolated input files for each archive test.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         # The cleanup callback owns this directory for the entire test.
         # pylint: disable=consider-using-with
         self.temporary = tempfile.TemporaryDirectory()
@@ -80,7 +87,14 @@ class NativePackageTest(unittest.TestCase):
     def test_linux_archive_has_generated_data_and_executable_permissions(
         self
     ) -> None:
-        """Check generated content, launcher and archive permissions."""
+        """Check generated content, launcher and archive permissions.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         output = self.root / "native.tar.gz"
         package_native_release.package(
             kind="linux", executable=self.binary, data=self.data,
@@ -112,7 +126,14 @@ class NativePackageTest(unittest.TestCase):
                 self.assertIn(b'--work-dir "$DIR"', launcher.read())
 
     def test_windows_archive_includes_runtime_and_launcher(self) -> None:
-        """Check that the Windows archive contains its DLL and launcher."""
+        """Check that the Windows archive contains its DLL and launcher.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         output = self.root / "native.zip"
         notice = self.root / "sdl-notice.txt"
         notice.write_text("sdl notice", encoding="utf-8")
@@ -143,7 +164,14 @@ class NativePackageTest(unittest.TestCase):
             )
 
     def test_windows_archive_requires_msys2_root(self) -> None:
-        """Reject Windows packaging without the package database."""
+        """Reject Windows packaging without the package database.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         with self.assertRaises(ValueError):
             package_native_release.package(
                 kind="windows", executable=self.binary, data=self.data,
@@ -152,7 +180,14 @@ class NativePackageTest(unittest.TestCase):
             )
 
     def test_linux_archive_requires_license_directory(self) -> None:
-        """Reject Linux packaging without the SDL3 license notice."""
+        """Reject Linux packaging without the SDL3 license notice.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         with self.assertRaises(ValueError):
             package_native_release.package(
                 kind="linux", executable=self.binary, data=self.data,
@@ -161,7 +196,14 @@ class NativePackageTest(unittest.TestCase):
             )
 
     def test_missing_generated_data_fails(self) -> None:
-        """Fail instead of shipping an incomplete filesystem."""
+        """Fail instead of shipping an incomplete filesystem.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         (self.data / "js" / "app-menu.js").unlink()
         with self.assertRaises(FileNotFoundError):
             package_native_release.package(
@@ -171,7 +213,14 @@ class NativePackageTest(unittest.TestCase):
             )
 
     def test_missing_sdl_library_fails(self) -> None:
-        """Fail instead of shipping an archive without SDL."""
+        """Fail instead of shipping an archive without SDL.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         self.library.unlink()
         with self.assertRaises(FileNotFoundError):
             package_native_release.package(
@@ -188,7 +237,11 @@ class NativePackageTest(unittest.TestCase):
         """Include non-system DLLs required by other DLLs.
 
         Args:
+            self: Test case instance.
             run: Mock binary inspection command.
+
+        Returns:
+            None.
         """
         first = self.root / "first.dll"
         second = self.root / "second.dll"
@@ -216,7 +269,11 @@ class NativePackageTest(unittest.TestCase):
         """Reject an unresolved non-system DLL.
 
         Args:
+            self: Test case instance.
             run: Mock binary inspection command.
+
+        Returns:
+            None.
         """
         run.return_value.stdout = "DLL Name: pixelix-unknown.dll"
         with self.assertRaises(FileNotFoundError):
@@ -227,7 +284,14 @@ class WindowsLicenseTest(unittest.TestCase):
     """Exercise the license lookup through the MSYS2 package database."""
 
     def setUp(self) -> None:
-        """Create a minimal MSYS2 tree with two runtime DLLs."""
+        """Create a minimal MSYS2 tree with runtime DLLs and notices.
+
+        Args:
+            self: Test case instance.
+
+        Returns:
+            None.
+        """
         # The cleanup callback owns this directory for the entire test.
         # pylint: disable=consider-using-with
         self.temporary = tempfile.TemporaryDirectory()
@@ -239,8 +303,7 @@ class WindowsLicenseTest(unittest.TestCase):
         self.sdl.touch()
         self.gcc = self.runtime / "libgcc_s_seh-1.dll"
         self.gcc.touch()
-        self.stdcpp = self.runtime / "libstdc++-6.dll"
-        self.stdcpp.touch()
+        (self.runtime / "libstdc++-6.dll").touch()
         licenses = self.msys2 / "ucrt64" / "share" / "licenses"
         self.sdl_notice = licenses / "SDL3" / "LICENSE.txt"
         self.gcc_notice = licenses / "gcc-libs" / "COPYING.RUNTIME"
@@ -267,7 +330,11 @@ class WindowsLicenseTest(unittest.TestCase):
         """Map each DLL to its package and ship only those notices.
 
         Args:
+            self: Test case instance.
             run: Mock package manager invocation.
+
+        Returns:
+            None.
         """
         run.side_effect = [
             self.pacman("mingw-w64-ucrt-x86_64-sdl3\n"),
@@ -286,7 +353,7 @@ class WindowsLicenseTest(unittest.TestCase):
             ),
         ]
         notices = package_native_release.windows_licenses(
-            [self.sdl, self.gcc, self.stdcpp], self.msys2
+            [self.sdl, self.gcc, self.runtime / "libstdc++-6.dll"], self.msys2
         )
         self.assertEqual({
             Path("SDL3") / "LICENSE.txt": self.sdl_notice,
@@ -309,7 +376,11 @@ class WindowsLicenseTest(unittest.TestCase):
         """Query the package database with the file name as stored on disk.
 
         Args:
+            self: Test case instance.
             run: Mock package manager invocation.
+
+        Returns:
+            None.
         """
         run.side_effect = [
             self.pacman("mingw-w64-ucrt-x86_64-sdl3\n"),
@@ -326,7 +397,11 @@ class WindowsLicenseTest(unittest.TestCase):
         """Refuse to ship a DLL whose package has no license notice.
 
         Args:
+            self: Test case instance.
             run: Mock package manager invocation.
+
+        Returns:
+            None.
         """
         run.side_effect = [
             self.pacman("mingw-w64-ucrt-x86_64-sdl3\n"),
@@ -340,7 +415,11 @@ class WindowsLicenseTest(unittest.TestCase):
         """Refuse to ship a DLL that no package owns.
 
         Args:
+            self: Test case instance.
             run: Mock package manager invocation.
+
+        Returns:
+            None.
         """
         run.return_value = self.pacman("")
         with self.assertRaises(FileNotFoundError):
@@ -353,7 +432,11 @@ class WindowsLicenseTest(unittest.TestCase):
         """Propagate package database errors instead of shipping silently.
 
         Args:
+            self: Test case instance.
             run: Mock package manager invocation.
+
+        Returns:
+            None.
         """
         run.side_effect = subprocess.CalledProcessError(1, "pacman")
         with self.assertRaises(subprocess.CalledProcessError):

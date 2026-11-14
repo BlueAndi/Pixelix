@@ -69,6 +69,7 @@ class PixelixRequestError(PixelixError):
         """Create the error.
 
         Args:
+            self: The error instance.
             message: The reason, taken from the answer of the device if it
                 provides one.
             status: The HTTP status code of the answer.
@@ -98,6 +99,7 @@ class PixelixClient:
         """Create the client.
 
         Args:
+            self: The client instance.
             session: The HTTP session to use. It is owned by the caller.
             host: Host name or IP address of the device.
             port: Port of the web server of the device.
@@ -122,6 +124,9 @@ class PixelixClient:
     def base_url(self) -> str:
         """Get the URL of the web interface of the device.
 
+        Args:
+            self: The client instance.
+
         Returns:
             The URL, e.g. ``http://192.168.1.10``.
         """
@@ -131,6 +136,9 @@ class PixelixClient:
     def hostname(self) -> str | None:
         """Get the device hostname reported by its device endpoint.
 
+        Args:
+            self: The client instance.
+
         Returns:
             The hostname, or None if the device did not report one.
         """
@@ -139,6 +147,9 @@ class PixelixClient:
     @property
     def sw_version(self) -> str | None:
         """Get the firmware version reported by the device.
+
+        Args:
+            self: The client instance.
 
         Returns:
             The firmware version, e.g. ``"7.4.0"``, or None if the device
@@ -153,6 +164,9 @@ class PixelixClient:
         The firmware reports the PlatformIO target name here, which
         identifies the board, e.g. ``"ulanzi-TC001"``.
 
+        Args:
+            self: The client instance.
+
         Returns:
             The hardware name, or None if the device did not report one.
             It is read by async_get_device_id().
@@ -165,6 +179,9 @@ class PixelixClient:
 
         Older firmware versions do not report it.
 
+        Args:
+            self: The client instance.
+
         Returns:
             The MAC address as the device spells it, e.g.
             ``"A1:B2:C3:D4:E5:F6"``, or None if the device did not report
@@ -174,6 +191,9 @@ class PixelixClient:
 
     async def async_get_device(self) -> dict[str, Any]:
         """Read the device information of the device.
+
+        Args:
+            self: The client instance.
 
         Returns:
             The JSON response of the device.
@@ -192,6 +212,9 @@ class PixelixClient:
         The device endpoint returns the chip id under ``device.id``, which
         uniquely identifies the physical device. It also verifies host, port
         and web login.
+
+        Args:
+            self: The client instance.
 
         Returns:
             The device id (chip id as hex string, e.g. ``"1a2b3c4d5e6f"``).
@@ -230,6 +253,7 @@ class PixelixClient:
         accept for ``duration`` and ``volume``. JSON keeps the types.
 
         Args:
+            self: The client instance.
             payload: The notification, which is ``text`` and optionally
                 ``duration``, ``iconFileName``, ``melody`` and ``volume``.
 
@@ -254,6 +278,7 @@ class PixelixClient:
         """Send a request to the REST API of the device.
 
         Args:
+            self: The client instance.
             method: The HTTP method.
             path: The path below the REST API base path.
             params: The URL parameters, if any.

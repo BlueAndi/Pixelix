@@ -55,6 +55,7 @@ class Example:
         """Create the example.
 
         Args:
+            self: The example instance.
             hass: The Home Assistant instance.
             name: The name of the device.
 
@@ -68,6 +69,9 @@ class Example:
     def name(self) -> str:
         """Get the name of the device.
 
+        Args:
+            self: The example instance.
+
         Returns:
             The name of the device.
         """
@@ -77,6 +81,7 @@ class Example:
         """Do something with the device.
 
         Args:
+            self: The example instance.
             value: The value to send to the device.
 
         Returns:

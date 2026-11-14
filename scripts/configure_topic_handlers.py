@@ -25,6 +25,8 @@
 ################################################################################
 # Imports
 ################################################################################
+from __future__ import annotations
+
 import os
 from string import Template
 
@@ -44,12 +46,16 @@ _TOPIC_HANDLER_LIST_TEMPLATE_FULL_PATH = "./scripts/TopicHandlers.cpp"
 # Functions
 ################################################################################
 
-def _generate_cpp_topic_handler(topic_handler_list_full_path, topic_handler_list):
-    """Generate the Service.cpp source file.
+
+def _generate_cpp_topic_handler(topic_handler_list_full_path: str, topic_handler_list: list[str]) -> None:
+    """Generate the topic handlers C++ source file.
 
     Args:
-        topic_handler_list_full_path (str): Full path to where the source code shall be created.
-        topic_handler_list (list): List of all topic handlers names
+        topic_handler_list_full_path: Destination for the generated source file.
+        topic_handler_list: Topic handler names to include.
+
+    Returns:
+        None.
     """
     includes = ""
     instances = ""
@@ -82,11 +88,15 @@ def _generate_cpp_topic_handler(topic_handler_list_full_path, topic_handler_list
     with open(topic_handler_list_full_path, "w", encoding="utf-8") as file_desc:
         file_desc.write(result)
 
-def configure_topic_handlers(topic_handler_list):
-    """Generate all topic handler related artifacts.
+
+def configure_topic_handlers(topic_handler_list: list[str]) -> None:
+    """Generate topic handler artifacts, removing missing names from the list.
 
     Args:
-        topic_handler_list (list): List of topic handler names
+        topic_handler_list: Mutable list of topic handler names.
+
+    Returns:
+        None.
     """
     skip_list = []
     for topic_handler_name in topic_handler_list:

@@ -25,6 +25,8 @@
 ################################################################################
 # Imports
 ################################################################################
+from __future__ import annotations
+
 import configparser
 import re
 
@@ -36,20 +38,30 @@ import re
 # Classes
 ################################################################################
 
+
 class ConfigModel():
     """Loads a configuration and provides necessary access functions.
     """
     def __init__(self) -> None:
-        self._lib_deps = []
+        """Initialize an empty library dependency list.
 
-    def _get_config_section(self, config):
+        Args:
+            self: Configuration model instance.
+
+        Returns:
+            None.
+        """
+        self._lib_deps: list[str] = []
+
+    def _get_config_section(self, config: configparser.ConfigParser) -> str:
         """Find the config:<type> section in the configuration.
 
         Args:
-            config (obj): Configuration
+            self: Configuration model instance.
+            config: Configuration to inspect.
 
         Returns:
-            str: Section name
+            Section name, or an empty string if no section matches.
         """
         name = ""
         sections = config.sections()
@@ -61,14 +73,15 @@ class ConfigModel():
 
         return name
 
-    def load(self, full_path):
+    def load(self, full_path: str) -> bool:
         """Load the configuration file.
 
         Args:
-            full_path (str): Full path to configuration file.
+            self: Configuration model instance.
+            full_path: Full path to configuration file.
 
         Returns:
-            boolean: If successful, it will return True otherwise False.
+            Whether the configuration was loaded successfully.
         """
         is_successful = True
 
@@ -83,15 +96,16 @@ class ConfigModel():
 
         return is_successful
 
-    def _get_lib_list(self, postfix):
+    def _get_lib_list(self, postfix: str) -> list[str]:
         """Get list of libraries from library dependencies, which name has the
             given postfix.
 
         Args:
-            postfix (str): Postfix which identifies the libraries.
+            self: Configuration model instance.
+            postfix: Postfix which identifies the libraries.
 
         Returns:
-            list: List of libraries
+            Matching library names.
         """
         lib_list = []
         for lib_name in self._lib_deps:
@@ -101,27 +115,36 @@ class ConfigModel():
 
         return lib_list
 
-    def get_plugin_list(self):
+    def get_plugin_list(self) -> list[str]:
         """Get list of plugins from library dependencies.
 
+        Args:
+            self: Configuration model instance.
+
         Returns:
-            list: List of plugins
+            Plugin library names.
         """
         return self._get_lib_list("Plugin")
 
-    def get_service_list(self):
+    def get_service_list(self) -> list[str]:
         """Get list of services from library dependencies.
 
+        Args:
+            self: Configuration model instance.
+
         Returns:
-            list: List of services
+            Service library names.
         """
         return self._get_lib_list("Service")
 
-    def get_topic_handler_list(self):
+    def get_topic_handler_list(self) -> list[str]:
         """Get list of topic handlers from library dependencies.
 
+        Args:
+            self: Configuration model instance.
+
         Returns:
-            list: List of topic handlers
+            Topic handler library names.
         """
         return self._get_lib_list("TopicHandler")
 

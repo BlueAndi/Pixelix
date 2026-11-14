@@ -1,3 +1,8 @@
 @echo off
-copy gimp_create_preview.py %APPDATA%\GIMP\2.10\plug-ins
-cd %APPDATA%\GIMP\2.10\plug-ins
+set "PLUGIN_DIR=%APPDATA%\GIMP\3.0\plug-ins\gimp_create_preview"
+if not exist "%PLUGIN_DIR%" (
+    mkdir "%PLUGIN_DIR%"
+    if errorlevel 1 exit /b 1
+)
+copy /y "%~dp0gimp_create_preview.py" "%PLUGIN_DIR%\gimp_create_preview.py"
+if errorlevel 1 exit /b 1

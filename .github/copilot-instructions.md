@@ -41,6 +41,7 @@
 - Board and config references: `doc/boards/README.md`, `doc/config/README.md`, `doc/grabConfigs/README.md`
 
 ## Copilot Skills
+- For Python creation, changes, or review, read `.github/skills/python-coding-guidelines/SKILL.md`. For Home Assistant integration code, also use the `ha-integration-dev` skill.
 - For embedded C/C++ firmware work in `src/`, `lib/`, or `test/`, read `.github/skills/embedded-cpp17-misra/SKILL.md`.
 - For HTML and Bootstrap UI work, read `.github/skills/html5-bootstrap/SKILL.md`.
 - For JavaScript work in `data/` or frontend assets, read `.github/skills/javascript-coding-guidelines/SKILL.md`.

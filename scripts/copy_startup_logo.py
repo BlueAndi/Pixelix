@@ -46,7 +46,7 @@ _LAYOUT_PATTERN = r"LAYOUT_([0-9]+)X([0-9]+)"
 ################################################################################
 
 
-def copy_startup_logo(layout):
+def copy_startup_logo(layout: str) -> bool:
     """Copy the startup logo which fits to the display layout.
 
     The logo is not scaled by the firmware, therefore every display layout
@@ -58,10 +58,10 @@ def copy_startup_logo(layout):
     falls back to the plain text one.
 
     Args:
-        layout (str): Display layout, e.g. "LAYOUT_32X8".
+        layout: Display layout, e.g. "LAYOUT_32X8".
 
     Returns:
-        bool: If a logo was copied, it will return True otherwise False.
+        Whether a logo was copied.
     """
     is_successful = False
     match = re.fullmatch(_LAYOUT_PATTERN, layout)

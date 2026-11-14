@@ -34,17 +34,44 @@ import pytest
 import prepare_usb_installer as pui
 
 ################################################################################
-# Helpers
+# Variables
+################################################################################
+
+################################################################################
+# Classes
+################################################################################
+
+################################################################################
+# Functions
 ################################################################################
 
 
 def meta(tag: str, prerelease: bool = False, published: str = "2026-01-01T00:00:00Z") -> dict[str, Any]:
-    """Create one release metadata entry."""
+    """Create one release metadata entry.
+
+    Args:
+        tag: Release tag.
+        prerelease: Whether the release is a prerelease.
+        published: Publication timestamp.
+
+    Returns:
+        Release metadata.
+    """
     return {"tagName": tag, "isPrerelease": prerelease, "publishedAt": published}
 
 
 def create_package(releases_dir: Path, tag: str, environment: str, with_image: bool = True) -> None:
-    """Create one extracted flash package of a release."""
+    """Create one extracted flash package of a release.
+
+    Args:
+        releases_dir: Release package root.
+        tag: Release tag.
+        environment: Board environment name.
+        with_image: Whether to create the image referenced by the manifest.
+
+    Returns:
+        None.
+    """
     package = releases_dir / tag / f"usb-flash-{environment}"
     package.mkdir(parents=True)
     (package / "manifest.json").write_text(json.dumps({
@@ -71,18 +98,34 @@ def create_package(releases_dir: Path, tag: str, environment: str, with_image: b
     ("10.9.9", False), ("9.0.0", False),
 ])
 def test_minimum_version(tag: str, expected: bool) -> None:
-    """Only versions with major >= 11 are selected."""
+    """Only versions with major >= 11 are selected.
+
+    Args:
+        tag: Release tag under test.
+        expected: Whether the release should be selected.
+
+    Returns:
+        None.
+    """
     assert expected == bool(pui.select_releases([meta(tag)]))
 
 
 def test_invalid_tags_and_drafts_are_skipped() -> None:
-    """Invalid tags, path injection and drafts are dropped."""
+    """Invalid tags, path injection and drafts are dropped.
+
+    Returns:
+        None.
+    """
     entries = [meta("latest"), meta("../11.0.0"), meta("11.0"), {**meta("11.0.1"), "isDraft": True}]
     assert not pui.select_releases(entries)
 
 
 def test_sorting_and_prerelease_flag() -> None:
-    """Releases are sorted by SemVer; the flag comes from the metadata."""
+    """Releases are sorted by SemVer; the flag comes from the metadata.
+
+    Returns:
+        None.
+    """
     entries = [
         meta("11.2.0"), meta("11.3.0-rc.2", True), meta("11.3.0-rc.10", True),
         meta("11.3.0-beta", True), meta("11.10.0"), meta("11.3.0-rc.1", True),
@@ -94,19 +137,31 @@ def test_sorting_and_prerelease_flag() -> None:
 
 
 def test_stable_is_newer_than_its_prerelease() -> None:
-    """A stable version ranks above its own pre-releases."""
+    """A stable version ranks above its own pre-releases.
+
+    Returns:
+        None.
+    """
     selected = pui.select_releases([meta("11.1.0-rc.1", True), meta("11.1.0")])
     assert "11.1.0" == selected[0]["version"]
 
 
 def test_default_ignores_newer_prerelease() -> None:
-    """The default is the newest stable release."""
+    """The default is the newest stable release.
+
+    Returns:
+        None.
+    """
     releases = pui.select_releases([meta("11.3.0-rc.1", True), meta("11.2.0"), meta("11.1.0")])
     assert "11.2.0" == pui.determine_default(releases, "")["version"]
 
 
 def test_default_explicit_tag() -> None:
-    """An explicit tag is accepted, including a pre-release; an unknown tag is rejected."""
+    """An explicit tag is accepted, including a pre-release; an unknown tag is rejected.
+
+    Returns:
+        None.
+    """
     releases = pui.select_releases([meta("11.3.0-rc.1", True), meta("11.2.0"), meta("11.1.0")])
     assert "11.1.0" == pui.determine_default(releases, "11.1.0")["tag"]
     assert "11.3.0-rc.1" == pui.determine_default(releases, "11.3.0-rc.1")["tag"]
@@ -115,19 +170,35 @@ def test_default_explicit_tag() -> None:
 
 
 def test_default_falls_back_to_prerelease() -> None:
-    """Without a stable release the newest pre-release is the default."""
+    """Without a stable release the newest pre-release is the default.
+
+    Returns:
+        None.
+    """
     releases = pui.select_releases([meta("11.3.0-rc.1", True), meta("11.3.0-rc.2", True)])
     assert "11.3.0-rc.2" == pui.determine_default(releases, "")["tag"]
 
 
 def test_default_requires_release() -> None:
-    """Without any release there is no default."""
+    """Without any release there is no default.
+
+    Returns:
+        None.
+    """
     with pytest.raises(ValueError):
         pui.determine_default([], "")
 
 
 def test_assemble(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """The site contains a catalog and per-release manifests and images."""
+    """The site contains a catalog and per-release manifests and images.
+
+    Args:
+        tmp_path: Temporary test directory.
+        monkeypatch: Pytest fixture used to replace the installer assets path.
+
+    Returns:
+        None.
+    """
     dist = tmp_path / "dist"
     dist.mkdir()
     (dist / "index.html").write_text("x", encoding="utf-8")
@@ -150,7 +221,15 @@ def test_assemble(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_assemble_defective_package_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """A package with a missing image aborts the assembly."""
+    """A package with a missing image aborts the assembly.
+
+    Args:
+        tmp_path: Temporary test directory.
+        monkeypatch: Pytest fixture used to replace the installer assets path.
+
+    Returns:
+        None.
+    """
     dist = tmp_path / "dist"
     dist.mkdir()
     monkeypatch.setattr(pui, "INSTALLER_ASSETS", dist)
@@ -163,7 +242,16 @@ def test_assemble_defective_package_fails(tmp_path: Path, monkeypatch: pytest.Mo
 
 
 def assemble_single(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, releases_dir: Path) -> None:
-    """Assemble a site with the single release 11.2.0."""
+    """Assemble a site with the single release 11.2.0.
+
+    Args:
+        tmp_path: Temporary test directory.
+        monkeypatch: Pytest fixture used to replace the installer assets path.
+        releases_dir: Directory containing release packages.
+
+    Returns:
+        None.
+    """
     dist = tmp_path / "dist"
     dist.mkdir()
     monkeypatch.setattr(pui, "INSTALLER_ASSETS", dist)
@@ -172,7 +260,16 @@ def assemble_single(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, releases_di
 
 @pytest.mark.parametrize("field", ["chip", "board", "environment", "images", "eraseAll", "flashMode", "flashFrequency", "flashSize"])
 def test_assemble_missing_manifest_field_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, field: str) -> None:
-    """A package without a required manifest field aborts the assembly."""
+    """A package without a required manifest field aborts the assembly.
+
+    Args:
+        tmp_path: Temporary test directory.
+        monkeypatch: Pytest fixture used to replace the installer assets path.
+        field: Required manifest field to remove.
+
+    Returns:
+        None.
+    """
     releases_dir = tmp_path / "releases"
     create_package(releases_dir, "11.2.0", "board-a")
     manifest_path = releases_dir / "11.2.0" / "usb-flash-board-a" / "manifest.json"
@@ -190,7 +287,17 @@ def test_assemble_missing_manifest_field_fails(tmp_path: Path, monkeypatch: pyte
 def test_assemble_invalid_image_field_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, key: str, value: Any
 ) -> None:
-    """A package with an invalid image field aborts the assembly."""
+    """A package with an invalid image field aborts the assembly.
+
+    Args:
+        tmp_path: Temporary test directory.
+        monkeypatch: Pytest fixture used to replace the installer assets path.
+        key: Image field to replace.
+        value: Invalid field value.
+
+    Returns:
+        None.
+    """
     releases_dir = tmp_path / "releases"
     create_package(releases_dir, "11.2.0", "board-a")
     manifest_path = releases_dir / "11.2.0" / "usb-flash-board-a" / "manifest.json"
@@ -203,7 +310,15 @@ def test_assemble_invalid_image_field_fails(
 
 
 def test_assemble_package_without_manifest_fails(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """A package directory without manifest is defective, even next to valid ones."""
+    """A package directory without manifest is defective, even next to valid ones.
+
+    Args:
+        tmp_path: Temporary test directory.
+        monkeypatch: Pytest fixture used to replace the installer assets path.
+
+    Returns:
+        None.
+    """
     releases_dir = tmp_path / "releases"
     create_package(releases_dir, "11.2.0", "board-a")
     (releases_dir / "11.2.0" / "usb-flash-board-b").mkdir()
@@ -213,7 +328,15 @@ def test_assemble_package_without_manifest_fails(tmp_path: Path, monkeypatch: py
 
 
 def test_same_version_with_different_tags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Tags 11.0.0 and v11.0.0 get separate entries and directories."""
+    """Tags 11.0.0 and v11.0.0 get separate entries and directories.
+
+    Args:
+        tmp_path: Temporary test directory.
+        monkeypatch: Pytest fixture used to replace the installer assets path.
+
+    Returns:
+        None.
+    """
     dist = tmp_path / "dist"
     dist.mkdir()
     monkeypatch.setattr(pui, "INSTALLER_ASSETS", dist)

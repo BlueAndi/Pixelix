@@ -33,8 +33,9 @@ Author: Andreas Merkle <web@blue-andi.de>
 # Imports
 ################################################################################
 import sys
+from typing import Any
 
-Import("env") # pylint: disable=undefined-variable
+Import("env")  # pylint: disable=undefined-variable
 
 ################################################################################
 # Variables
@@ -48,11 +49,15 @@ Import("env") # pylint: disable=undefined-variable
 # Functions
 ################################################################################
 
-def _link_socket_library(build_env):
+
+def _link_socket_library(build_env: Any) -> None:
     """Add the socket library of the host to the linker.
 
     Args:
-        build_env (SCons.Environment): The library build environment.
+        build_env: SCons library build environment.
+
+    Returns:
+        None.
     """
     if sys.platform.startswith("win"):
         # The library is appended to the linker command of the whole program,
@@ -63,4 +68,5 @@ def _link_socket_library(build_env):
 # Main
 ################################################################################
 
-_link_socket_library(env) # pylint: disable=undefined-variable
+
+_link_socket_library(env)  # pylint: disable=undefined-variable

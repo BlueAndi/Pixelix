@@ -44,11 +44,14 @@ scratch.
 ################################################################################
 # Imports
 ################################################################################
+from __future__ import annotations
+
 import os
 import shutil
+from typing import Any
 
 # pylint: disable=undefined-variable
-Import("env") # type: ignore
+Import("env")  # type: ignore
 
 ################################################################################
 # Variables
@@ -71,6 +74,7 @@ _WORK_DIR_OPTION = "--work-dir"
 # Functions
 ################################################################################
 
+
 def get_work_dir() -> str:
     """Get the working directory of the native application.
 
@@ -78,9 +82,10 @@ def get_work_dir() -> str:
         str: Absolute path of the working directory.
     """
     # pylint: disable=undefined-variable
-    return os.path.join(env.subst("$BUILD_DIR"), _WORK_DIR_NAME) # type: ignore
+    return os.path.join(env.subst("$BUILD_DIR"), _WORK_DIR_NAME)  # type: ignore
 
-def deploy_filesystem(source, target, env): # pylint: disable=unused-argument,redefined-outer-name
+
+def deploy_filesystem(source: list[Any], target: list[Any], env: Any) -> None:  # pylint: disable=unused-argument,redefined-outer-name
     """Copy the data folder into the working directory of the application.
 
     Existing files are overwritten, additional files are kept.
@@ -89,6 +94,9 @@ def deploy_filesystem(source, target, env): # pylint: disable=unused-argument,re
         source: SCons source nodes, unused.
         target: SCons target nodes, unused.
         env: SCons environment.
+
+    Returns:
+        None.
     """
     src_dir = env.subst("$PROJECT_DATA_DIR")
     dst_dir = os.path.join(get_work_dir(), _FS_DIR_NAME)
@@ -96,32 +104,37 @@ def deploy_filesystem(source, target, env): # pylint: disable=unused-argument,re
     print(f"Deploy filesystem content from {src_dir} to {dst_dir}")
     shutil.copytree(src_dir, dst_dir, dirs_exist_ok=True)
 
+
 def add_work_dir_argument() -> None:
     """Pass the working directory to the application via its command line.
 
     The path is relative to the project folder, which is the current directory
     while PlatformIO runs the application. That way the argument never contains
     a space, even if the project path does.
+
+    Returns:
+        None.
     """
     # pylint: disable=undefined-variable
-    project_dir = env.subst("$PROJECT_DIR") # type: ignore
+    project_dir = env.subst("$PROJECT_DIR")  # type: ignore
     rel_dir = os.path.relpath(get_work_dir(), project_dir).replace(os.sep, "/")
-    program_args = env.get("PROGRAM_ARGS", "") # type: ignore
+    program_args = env.get("PROGRAM_ARGS", "")  # type: ignore
 
     if isinstance(program_args, (list, tuple)):
         program_args = " ".join(program_args)
 
     program_args = f"{program_args} {_WORK_DIR_OPTION} {rel_dir}".strip()
 
-    env.Replace(PROGRAM_ARGS=program_args) # type: ignore
+    env.Replace(PROGRAM_ARGS=program_args)  # type: ignore
 
 ################################################################################
 # Main
 ################################################################################
 
+
 add_work_dir_argument()
 
 # The native platform runs the application for both targets.
 # pylint: disable=undefined-variable
-env.AddPreAction("upload", deploy_filesystem) # type: ignore
-env.AddPreAction("exec", deploy_filesystem) # type: ignore
+env.AddPreAction("upload", deploy_filesystem)  # type: ignore
+env.AddPreAction("exec", deploy_filesystem)  # type: ignore

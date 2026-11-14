@@ -32,11 +32,241 @@ env:
   PIO_CACHE_EPOCH: "v1"
   # Only used if the runner image provides no libsdl3-dev package.
   SDL3_VERSION: "release-3.4.18"
+  PYLINT_VERSION: "4.1.3"
+  YAMLLINT_VERSION: "1.37.1"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # Build all targets
+  # Detect changes per CI concern so unrelated changes do not start expensive jobs.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      firmware: ${{ steps.filter.outputs.firmware }}
+      static: ${{ steps.filter.outputs.static }}
+      format: ${{ steps.filter.outputs.format }}
+      python: ${{ steps.filter.outputs.python }}
+      openapi: ${{ steps.filter.outputs.openapi }}
+      tests: ${{ steps.filter.outputs.tests }}
+      native: ${{ steps.filter.outputs.native }}
+      docs: ${{ steps.filter.outputs.docs }}
+      yaml: ${{ steps.filter.outputs.yaml }}
+    steps:
+      - name: Checkout repository
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detect firmware build changes
+        if: github.event_name != 'workflow_dispatch'
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            firmware:
+              - 'src/**'
+              - 'lib/**'
+              - 'include/**'
+              - 'config/**'
+              - 'data/**'
+              - 'partitionTables/**'
+              - 'platformio.ini'
+              - 'scripts/configure*.py'
+              - 'scripts/add_factory_to_extra_images.py'
+              - 'scripts/get_git_rev.py'
+              - 'scripts/determine_layout.py'
+              - 'scripts/copy_startup_logo.py'
+            static:
+              - 'src/**'
+              - 'lib/**'
+              - 'include/**'
+              - 'config/**'
+              - 'platformio.ini'
+            format:
+              - 'src/**'
+              - 'lib/**'
+              - 'include/**'
+              - '.clang-format'
+            python:
+              - '**/*.py'
+              - '.pylintrc'
+            openapi:
+              - 'doc/OpenAPI/**'
+            tests:
+              - 'test/**'
+              - 'src/**'
+              - 'lib/**'
+              - 'include/**'
+              - 'config/**'
+              - 'platformio.ini'
+              - 'scripts/configure*.py'
+              - 'scripts/get_git_rev.py'
+              - 'scripts/determine_layout.py'
+              - 'scripts/copy_startup_logo.py'
+            native:
+              - 'src/**'
+              - 'lib/**'
+              - 'include/**'
+              - 'config/**'
+              - 'data/**'
+              - 'platformio.ini'
+              - 'doc/OpenAPI/**'
+              - 'scripts/configure*.py'
+              - 'scripts/get_git_rev.py'
+              - 'scripts/determine_layout.py'
+              - 'scripts/copy_startup_logo.py'
+              - 'scripts/prepare_api_test.py'
+            yaml:
+              - '**/*.yml'
+              - '**/*.yaml'
+            docs:
+              - 'src/**'
+              - 'lib/**'
+              - 'include/**'
+              - 'doc/doxygen/**'
+
+  # Stage 1: checks run in parallel.
+  check:
+    needs: changes
+    if: needs.changes.outputs.static == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment:
+          [
+            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
+            "esp32doit-devkit-v1-HUB75-64x64",
+            "esp32doit-devkit-v1-LED-32x8",
+            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
+            "lilygo-ttgo-t-display-TFT-32x8",
+            "lilygo-t-display-s3-TFT-64x16",
+            "m5stack_core-TFT-32x8",
+            "ulanzi-tc001-LED-32x8",
+            "wemos_lolin_s2_mini-LED-32x8",
+          ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache PlatformIO core and packages
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
+
+      - name: Install PlatformIO
+        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
+
+      - name: Perform static checks on ${{ matrix.environment }}
+        run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
+
+  check_format:
+    needs: changes
+    if: needs.changes.outputs.format == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Run clang-format check
+        run: |
+          find src lib include \
+            -path 'lib/HalLedMatrixNative/src/imgui' -prune -o \
+            -path 'lib/libwebp' -prune -o \
+            \( -iname '*.h' -o -iname '*.hpp' -o -iname '*.cpp' \) \
+            -print | xargs -r clang-format --dry-run --Werror
+
+  check_python:
+    needs: changes
+    if: needs.changes.outputs.python == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Pylint
+        run: python -m pip install --disable-pip-version-check pylint==${{ env.PYLINT_VERSION }} pytest==9.2.0 paho-mqtt==2.2.0 requests==2.34.2 PyYAML==6.0.3
+
+      - name: Check Python sources
+        run: |
+          git ls-files -z -- '*.py' ':(exclude).claude/skills/**/module_template.py' ':(exclude).claude/skills/**/test_template.py' \
+            | xargs -0 python -m pylint --rcfile=.pylintrc
+
+  openapi_lint:
+    needs: changes
+    if: needs.changes.outputs.openapi == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install openapi-spec-validator
+        run: pip install --disable-pip-version-check openapi-spec-validator==0.9.0
+
+      - name: Validate the OpenAPI specification
+        run: openapi-spec-validator ./doc/OpenAPI/OpenAPI.yaml
+
+  check_yaml:
+    needs: changes
+    if: needs.changes.outputs.yaml == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install yamllint
+        run: python -m pip install --disable-pip-version-check yamllint==${{ env.YAMLLINT_VERSION }}
+
+      - name: Validate YAML syntax and duplicate keys
+        run: |
+          git ls-files -z -- '*.yml' '*.yaml' \
+            | xargs -0 -r python -m yamllint -d '{rules: {key-duplicates: enable}}'
+
+  check_gate:
+    if: always() && !cancelled()
+    needs: [changes, check, check_format, check_python, openapi_lint, check_yaml]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a required check failed
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          if [[ "$RESULTS" == *failure* || "$RESULTS" == *cancelled* ]]; then
+            echo "At least one check failed or was cancelled: $RESULTS"
+            exit 1
+          fi
+
+  # Stage 2: builds start only after all applicable checks have passed.
   build:
+    needs: [changes, check_gate]
+    if: needs.check_gate.result == 'success' && (needs.changes.outputs.firmware == 'true' || github.event_name == 'workflow_dispatch')
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
     strategy:
@@ -204,57 +434,24 @@ jobs:
             --branch-label "$BRANCH_LABEL" \
             --target-label "$TARGET_LABEL"
 
-  # Perform static checks
-  #
-  # clang-tidy sees the same sources for every environment, only the
-  # preprocessor configuration differs. The matrix therefore contains one
-  # environment per combination of feature set (config/config*.ini) and display
-  # driver, which covers all of them without running the analysis 15 times.
-  check:
-    # The type of runner that the job will run on.
+  build_gate:
+    if: always() && !cancelled()
+    needs: [check_gate, build, build_native, size_report]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        environment:
-          [
-            "adafruit_matrixportal_s3-HUB75-64x64-makapix",
-            "esp32doit-devkit-v1-HUB75-64x64",
-            "esp32doit-devkit-v1-LED-32x8",
-            "esp32-s3-devkitc-1-n16r8v-LED-32x16",
-            "lilygo-ttgo-t-display-TFT-32x8",
-            "lilygo-t-display-s3-TFT-64x16",
-            "m5stack_core-TFT-32x8",
-            "ulanzi-tc001-LED-32x8",
-            "wemos_lolin_s2_mini-LED-32x8",
-          ]
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Cache PlatformIO core and packages
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.platformio
-            ~/.cache/pip
-          key: ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-${{ hashFiles('platformio.ini', 'config/*.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-pio-${{ env.PIO_CACHE_EPOCH }}-${{ env.PIO_VERSION }}-
-
-      - name: Install PlatformIO
-        run: pip install --disable-pip-version-check platformio==${{ env.PIO_VERSION }}
-
-      - name: Perform static checks on ${{ matrix.environment }}
-        run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
+      - name: Fail if a build failed
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          if [[ "$RESULTS" == *failure* || "$RESULTS" == *cancelled* ]]; then
+            echo "At least one build failed or was cancelled: $RESULTS"
+            exit 1
+          fi
 
   # Perform tests
   test:
+    needs: [changes, build_gate]
+    if: needs.changes.outputs.tests == 'true' || github.event_name == 'workflow_dispatch'
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
 
@@ -283,31 +480,10 @@ jobs:
       - name: Run tests on native environment
         run: platformio test --environment test -vvv
 
-  # Validate the OpenAPI specification of the REST API.
-  openapi_lint:
-    # The type of runner that the job will run on.
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install openapi-spec-validator
-        run: pip install --disable-pip-version-check openapi-spec-validator==0.9.0
-
-      - name: Validate the OpenAPI specification
-        run: openapi-spec-validator ./doc/OpenAPI/OpenAPI.yaml
-
-  # Build the application for the host, check that its webserver answers and
-  # verify the REST API against the OpenAPI specification.
-  # This is the only place where the POSIX part of the native environment is
-  # built.
+  # Stage 2: compile the native application and export it with its shared libraries.
   build_native:
+    needs: [changes, check_gate]
+    if: needs.changes.outputs.native == 'true' || github.event_name == 'workflow_dispatch'
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
 
@@ -393,11 +569,62 @@ jobs:
       - name: Compile native application
         run: platformio run --environment native
 
+      - name: Collect native runtime libraries
+        run: |
+          mkdir -p native-runtime/lib
+          ldd ./.pio/build/native/program \
+            | awk '$2 == "=>" && $3 ~ /^\// { print $1, $3 } $1 ~ /^\// { print $1, $1 }' \
+            | while read -r name library; do
+                name=$(basename "$name")
+                case "$name" in
+                  libc.so.*|libpthread.so.*|libdl.so.*|libm.so.*|libgcc_s.so.*|libstdc++.so.*|ld-linux*) continue ;;
+                esac
+                cp -L "$library" "native-runtime/lib/$name"
+              done
+
+      - name: Upload native application
+        uses: actions/upload-artifact@v6
+        with:
+          name: native-application
+          path: |
+            .pio/build/native/program
+            native-runtime/lib/*
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
+
+  # Stage 3: exercise the native application and REST API.
+  native_api_test:
+    needs: [changes, build_gate]
+    if: needs.changes.outputs.native == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      LD_LIBRARY_PATH: ${{ github.workspace }}/native-runtime/lib
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download native application
+        uses: actions/download-artifact@v7
+        with:
+          name: native-application
+          path: ${{ github.workspace }}
+
+      - name: Set executable permission
+        run: chmod +x ./.pio/build/native/program
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install REST API test tools
+        run: pip install --disable-pip-version-check schemathesis==4.27.0 pyyaml==6.0.2
+
       - name: Start the native application
         run: |
           ./.pio/build/native/program > pixelix.log 2>&1 &
           echo $! > pixelix.pid
-          # The webserver is started by the init state, which takes a moment.
           for _ in $(seq 1 30); do
             if curl --silent --output /dev/null http://localhost:8080/; then
               break
@@ -405,9 +632,6 @@ jobs:
             sleep 1
           done
 
-      # Without WiFi station credentials the application spawns a WiFi access
-      # point and serves the captive portal. This is the state of a device,
-      # which is started the very first time.
       - name: Check that the captive portal answers
         run: |
           STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8080/)
@@ -416,25 +640,17 @@ jobs:
             exit 1
           fi
 
-      # In this state the captive portal is the only way to configure the WiFi
-      # station credentials. The native WiFi stub accepts any credentials and
-      # reports a successful connection afterwards.
-      - name: Configure the WiFi station credentials via the captive portal
+      - name: Configure WiFi station credentials
         run: |
           RESULT=$(curl --silent --show-error --fail --data "ssid=simulated" --data "passphrase=simulated123" http://localhost:8080/)
-          # The captive portal answers with HTTP 200 even in case it failed.
           if [ "${RESULT}" != "Ok." ]; then
             echo "The captive portal answered with '${RESULT}' instead of 'Ok.'."
             exit 1
           fi
 
-      # The credentials are evaluated during startup only. A restart terminates
-      # the native application, therefore it is started again here instead of
-      # killing it.
-      - name: Restart into the WiFi station mode
+      - name: Restart into WiFi station mode
         run: |
           curl --silent --show-error --fail --output /dev/null --data "restart=now" http://localhost:8080/
-          # Wait until the application terminated itself.
           for _ in $(seq 1 30); do
             if ! curl --silent --output /dev/null http://localhost:8080/; then
               break
@@ -453,16 +669,11 @@ jobs:
       - name: Check that the webserver answers
         run: |
           STATUS=$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8080/)
-          # The root page redirects to the index page.
           if [ "${STATUS}" != "302" ]; then
             echo "The webserver answered with ${STATUS} instead of 302."
             exit 1
           fi
 
-      # Every plugin which the OpenAPI specification describes shall be installed
-      # for the test, which needs more display slots than the default. The number
-      # of slots is evaluated during startup only, therefore the application is
-      # restarted afterwards.
       - name: Increase the number of display slots
         run: |
           curl --silent --show-error --fail --user luke:skywalker \
@@ -472,7 +683,6 @@ jobs:
       - name: Restart the native application
         run: |
           kill "$(cat pixelix.pid)"
-          # Wait until the webserver is down.
           for _ in $(seq 1 30); do
             if ! curl --silent --output /dev/null http://localhost:8080/; then
               break
@@ -488,13 +698,7 @@ jobs:
             sleep 1
           done
 
-      - name: Install schemathesis
-        run: pip install --disable-pip-version-check schemathesis==4.27.0
-
-      # A plugin instance gets its unique id (UID) at runtime, therefore the UID
-      # can not be part of the OpenAPI specification. The plugins are installed
-      # first and their UIDs are written into the schemathesis configuration.
-      - name: Prepare the plugin UIDs for the REST API test
+      - name: Prepare plugin UIDs for the REST API test
         run: |
           python ./scripts/prepare_api_test.py \
             --spec ./doc/OpenAPI/OpenAPI.yaml \
@@ -503,13 +707,6 @@ jobs:
             --password skywalker \
             --output ./schemathesis.toml
 
-      # Every REST API endpoint is called with generated data and the response is
-      # verified against the OpenAPI specification. Endpoints which would stop the
-      # application or modify the filesystem/settings are excluded, because they
-      # would break the test run itself.
-      #
-      # Only valid data is generated (positive mode). Remove the mode option to
-      # let schemathesis fuzz the API with invalid data as well.
       - name: Verify the REST API against the OpenAPI specification
         run: |
           schemathesis --config-file ./schemathesis.toml \
@@ -538,34 +735,26 @@ jobs:
           fi
           cat pixelix.log || true
 
-  # Perform clang-format check
-  #
-  # clang-format is part of the runner image, no further tooling is required.
-  check_format:
-    # The type of runner that the job will run on.
+  test_gate:
+    if: always() && !cancelled()
+    needs: [build_gate, test, native_api_test]
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name:
-          Run clang-format check
-          # Exlcude the imgui library folder, because it is not part of this project and its formatting is not relevant.
-          # Exlcude the libwebp library folder for the same reason, it is vendored upstream source.
+      - name: Fail if a test failed
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
         run: |
-          find src lib \
-            -path 'lib/HalLedMatrixNative/src/imgui' -prune -o \
-            -path 'lib/libwebp' -prune -o \
-            \( -iname '*.h' -o \
-               -iname '*.hpp' -o \
-               -iname '*.cpp' \) \
-            -print | xargs clang-format -i --dry-run -Werror
+          if [[ "$RESULTS" == *failure* || "$RESULTS" == *cancelled* ]]; then
+            echo "At least one test failed or was cancelled: $RESULTS"
+            exit 1
+          fi
 
   # Build documentation
   #
   # Only doxygen and graphviz are required here, PlatformIO is not used.
   doc:
+    needs: [changes, test_gate]
+    if: needs.changes.outputs.docs == 'true' || github.event_name == 'workflow_dispatch'
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
     steps:
@@ -584,3 +773,17 @@ jobs:
       - name: Print doxygen warnings
         if: ${{ failure() }}
         run: cat ./doc/doxygen/doxygen_warnings.txt
+
+  ci_status:
+    if: always()
+    needs: [check_gate, build_gate, test_gate, doc]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a phase failed or was cancelled
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          if [[ "$RESULTS" == *failure* || "$RESULTS" == *cancelled* ]]; then
+            echo "At least one CI phase failed or was cancelled: $RESULTS"
+            exit 1
+          fi
