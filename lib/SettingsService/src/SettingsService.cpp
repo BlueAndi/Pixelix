@@ -541,33 +541,43 @@ void SettingsService::cleanUp()
     /* Clean up is only necessary, if settings version is different. */
     if (VERSION != storedVersion)
     {
-        nvs_iterator_t it = nvs_entry_find(NVS_DEFAULT_PART_NAME, PREF_NAMESPACE, NVS_TYPE_ANY);
+        nvs_iterator_t it  = nullptr;
+        esp_err_t      err = nvs_entry_find(NVS_DEFAULT_PART_NAME, PREF_NAMESPACE, NVS_TYPE_ANY, &it);
 
-        while (nullptr != it)
+        /* No entry found is not an error, e.g. in case of the initial setup. */
+        if ((ESP_OK != err) && (ESP_ERR_NVS_NOT_FOUND != err))
+        {
+            LOG_WARNING("Failed to find settings: %d", err);
+        }
+
+        while (ESP_OK == err)
         {
             nvs_entry_info_t info;
 
-            nvs_entry_info(it, &info);
-            it = nvs_entry_next(it);
+            err = nvs_entry_info(it, &info);
 
-            /* Obsolete setting?
-             * m_version key must be handled separate, because its not part of the settings list.
-             */
-            if ((0 != strcmp(m_version.getKey(), info.key)) &&
-                (nullptr == getSettingByKey(info.key)))
+            if (ESP_OK != err)
             {
-                LOG_WARNING("Obsolete key %s removed from settings.", info.key);
-
-                if (false == m_preferences.remove(info.key))
-                {
-                    LOG_ERROR("Failed to remove key %s removed from settings.", info.key);
-                }
+                LOG_WARNING("Failed to get setting info: %d", err);
             }
             else
             {
-                LOG_INFO("SettingsService key %s is valid.", info.key);
+                /* Advance before the current entry may be removed. */
+                err = nvs_entry_next(&it);
+
+                if ((ESP_OK != err) && (ESP_ERR_NVS_NOT_FOUND != err))
+                {
+                    LOG_WARNING("Failed to get next setting: %d", err);
+                }
+
+                removeIfObsolete(info.key);
             }
-        };
+        }
+
+        /* After the last entry, the iterator is already released and set to
+         * nullptr. But not in case of an error, which requires it here.
+         */
+        nvs_release_iterator(it);
 
         /* Update version */
         m_version.setValue(VERSION);
@@ -747,6 +757,31 @@ SettingsService::SettingsService() :
 SettingsService::~SettingsService()
 {
     m_mutex.destroy();
+}
+
+void SettingsService::removeIfObsolete(const char* key)
+{
+    if (nullptr == key)
+    {
+        /* Guard path: nothing to check. */
+    }
+    /* Obsolete setting?
+     * m_version key must be handled separate, because its not part of the settings list.
+     */
+    else if ((0 != strcmp(m_version.getKey(), key)) &&
+             (nullptr == getSettingByKey(key)))
+    {
+        LOG_WARNING("Obsolete key %s removed from settings.", key);
+
+        if (false == m_preferences.remove(key))
+        {
+            LOG_ERROR("Failed to remove key %s removed from settings.", key);
+        }
+    }
+    else
+    {
+        LOG_INFO("SettingsService key %s is valid.", key);
+    }
 }
 
 /******************************************************************************

@@ -492,6 +492,16 @@ private:
      */
     ~SettingsService();
 
+    /**
+     * Remove the key from the persistency, if its obsolete. A key is obsolete,
+     * if it belongs to no registered setting and is not the settings version.
+     *
+     * Note, the settings must be opened in write mode!
+     *
+     * @param[in] key   Key of the stored key/value pair.
+     */
+    void removeIfObsolete(const char* key);
+
     /* An instance shall not be copied. */
     SettingsService(const SettingsService& service);
     SettingsService& operator=(const SettingsService& service);
