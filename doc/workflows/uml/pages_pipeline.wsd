@@ -1,0 +1,14 @@
+@startuml pages_pipeline
+title Publish GitHub Pages
+
+start
+:Receive source_ref and optional release_tag;
+:Checkout source and build installer;
+:List non-draft releases;
+:Download available USB archives;
+:Assemble installer site and select default;
+:Check 800 MB site limit;
+:Add Home Assistant blueprints;
+:Upload and deploy Pages artifact;
+stop
+@enduml

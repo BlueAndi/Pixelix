@@ -1,0 +1,12 @@
+@startuml backfill_pipeline
+title Backfill Release USB Packages
+
+start
+:Select existing release tag;
+:Checkout tooling and tagged source;
+:Download existing firmware release archive;
+:Repackage existing firmware images\ninto USB flash packages;
+:Create USB packages archive;
+:Upload archive to existing release\nreplacing the same-named asset;
+stop
+@enduml

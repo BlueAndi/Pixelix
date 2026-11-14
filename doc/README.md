@@ -20,6 +20,7 @@
 ## Software
 
 - [Software architecture](./architecture/README.md)
+- [CI and release workflows](WORKFLOWS.md)
 - [Software configuration management](./config/README.md)
   - [Toolchain installation](./config/TOOLCHAIN-INSTALLATION.md)
   - [Software build](./config/SW-BUILD.md)

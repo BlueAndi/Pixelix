@@ -1,0 +1,24 @@
+@startuml ci_pipeline
+title Feature Branches CI and Main CI/CD Pipeline
+
+start
+:Determine changed paths;
+:Run applicable checks\nin parallel;
+:check_gate;
+fork
+  :Build firmware and filesystem\nif applicable and checks passed;
+  :Report sizes if built;
+fork again
+  :Build native application\nif applicable and checks passed;
+end fork
+:build_gate;
+fork
+  :Run unit tests if applicable\nand build gate passed;
+fork again
+  :Run native API tests if applicable\nand build gate passed;
+end fork
+:test_gate;
+:Build Doxygen docs if applicable\nand test gate passed;
+:ci_status aggregates phase results;
+stop
+@enduml
