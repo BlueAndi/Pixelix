@@ -29,6 +29,9 @@ on:
                 type: string
                 default: ""
 
+permissions:
+    contents: read
+
 concurrency:
     group: github-pages
     cancel-in-progress: false

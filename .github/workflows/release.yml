@@ -9,6 +9,9 @@ on:
         description: "Enter the name of the tag which to release."
         required: true
 
+permissions:
+  contents: read
+
 # Releasing the same tag twice in parallel would race for the release assets.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.inputs.tag_name }}

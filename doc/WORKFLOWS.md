@@ -4,6 +4,12 @@ Pixelix uses GitHub Actions for change-sensitive CI, release packaging and
 publication. The definitions in [`.github/workflows`](../.github/workflows/) are
 the source of truth; this document describes their current behavior.
 
+Workflows default to read-only repository contents access, except the backfill
+workflow, which requires write access to update a release. Jobs that need
+additional permissions declare them explicitly: change detection reads pull
+requests, size reports read Actions data, release deployment writes contents,
+and Pages deployment uses Pages and OIDC permissions.
+
 | Workflow | Trigger | Purpose |
 | --- | --- | --- |
 | [Feature Branches CI](../.github/workflows/featureBranches.yml) | Push to `Development`, pull request targeting any branch except `master` or `main`, or manual dispatch | Check and build integration and feature changes. |

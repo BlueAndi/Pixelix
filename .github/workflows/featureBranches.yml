@@ -17,6 +17,9 @@ on:
       - "!main"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 # A superseded pull request run is cancelled, because its result is obsolete as
 # soon as a newer commit is pushed. Runs on the integration branch are kept,
 # because they refresh the build cache and the size report baseline.
