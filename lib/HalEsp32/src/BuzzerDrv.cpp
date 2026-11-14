@@ -35,6 +35,8 @@
  *****************************************************************************/
 #include "BuzzerDrv.h"
 
+#include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -65,8 +67,8 @@ void BuzzerDrv::stop()
     {
         if (true == m_isInit)
         {
-            (void)ledcWriteTone(TONE_PWM_CHANNEL, 0U); /* Off */
-            ledcDetachPin(m_buzzerOut->getPinNo());
+            (void)ledcWriteTone(m_buzzerOut->getPinNo(), 0U); /* Off */
+            (void)ledcDetach(m_buzzerOut->getPinNo());
 
             m_isInit = false;
         }
@@ -77,16 +79,11 @@ void BuzzerDrv::play(uint32_t freq)
 {
     if ((nullptr != m_buzzerOut) && (IoPin::NC != m_buzzerOut->getPinNo()))
     {
-        if (false == m_isInit)
+        if (true == attach())
         {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(m_buzzerOut->getPinNo(), TONE_PWM_CHANNEL);
-
-            m_isInit = true;
+            (void)ledcWriteTone(m_buzzerOut->getPinNo(), freq);    /* Note, it will set duty cycle 50%. */
+            (void)ledcWrite(m_buzzerOut->getPinNo(), m_dutyCycle); /* Change duty cycle immediately. */
         }
-
-        (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);    /* Change duty cycle immediately. */
     }
 }
 
@@ -96,16 +93,11 @@ void BuzzerDrv::play(uint32_t freq, uint16_t dc)
     {
         m_dutyCycle = dc;
 
-        if (false == m_isInit)
+        if (true == attach())
         {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(m_buzzerOut->getPinNo(), TONE_PWM_CHANNEL);
-
-            m_isInit = true;
+            (void)ledcWriteTone(m_buzzerOut->getPinNo(), freq);    /* Note, it will set duty cycle 50%. */
+            (void)ledcWrite(m_buzzerOut->getPinNo(), m_dutyCycle); /* Change duty cycle immediately. */
         }
-
-        (void)ledcWriteTone(TONE_PWM_CHANNEL, freq); /* Note, it will set duty cycle 50%. */
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);    /* Change duty cycle immediately. */
     }
 }
 
@@ -115,15 +107,10 @@ void BuzzerDrv::changeDutyCycle(uint16_t dc)
     {
         m_dutyCycle = dc;
 
-        if (false == m_isInit)
+        if (true == attach())
         {
-            (void)ledcSetup(TONE_PWM_CHANNEL, INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS);
-            ledcAttachPin(m_buzzerOut->getPinNo(), TONE_PWM_CHANNEL);
-
-            m_isInit = true;
+            (void)ledcWrite(m_buzzerOut->getPinNo(), m_dutyCycle);
         }
-
-        ledcWrite(TONE_PWM_CHANNEL, m_dutyCycle);
     }
 }
 
@@ -134,6 +121,24 @@ void BuzzerDrv::changeDutyCycle(uint16_t dc)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+bool BuzzerDrv::attach()
+{
+    if (false == m_isInit)
+    {
+        /* The LEDC channel is selected automatically by the Arduino framework. */
+        if (false == ledcAttach(m_buzzerOut->getPinNo(), INIT_FREQUENCY, DUTY_CYCLE_RESOLUTION_BITS))
+        {
+            LOG_ERROR("Failed to attach buzzer pin %u to LEDC.", m_buzzerOut->getPinNo());
+        }
+        else
+        {
+            m_isInit = true;
+        }
+    }
+
+    return m_isInit;
+}
 
 /******************************************************************************
  * External Functions
