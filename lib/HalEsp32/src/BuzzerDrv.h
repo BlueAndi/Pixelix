@@ -119,11 +119,6 @@ public:
 private:
 
     /**
-     * The PWM channel which to use for the tone generation.
-     */
-    static const uint8_t TONE_PWM_CHANNEL           = 0U;
-
-    /**
      * Frequency in Hz used to initialize the PWM. Has no influence on a tone.
      * Its just required for initialization.
      */
@@ -139,9 +134,17 @@ private:
      */
     static const uint32_t DEFAULT_DUTY_CYCLE        = 0x00FF;
 
-    uint8_t               m_isInit;    /**< Is initialized or not? */
+    bool                  m_isInit;    /**< Is initialized or not? */
     uint32_t              m_dutyCycle; /**< Duty cycle in digits [0; 1023] */
     const DOutPin*        m_buzzerOut; /**< Digital output for buzzer */
+
+    /**
+     * Attach the buzzer pin to the LEDC peripheral, if not already done.
+     * The buzzer output must be valid.
+     *
+     * @return If the buzzer pin is attached, it will return true otherwise false.
+     */
+    bool attach();
 
     /* Prevent copying */
     BuzzerDrv(const BuzzerDrv&);
