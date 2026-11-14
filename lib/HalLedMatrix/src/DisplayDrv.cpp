@@ -36,6 +36,8 @@
 #include "DisplayDrv.h"
 #include "Pin.h"
 
+#include <esp_log.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -70,6 +72,20 @@ DisplayDrv::DisplayDrv() :
 
 DisplayDrv::~DisplayDrv()
 {
+}
+
+bool DisplayDrv::begin()
+{
+    /* The RMT driver logs an error on every flush timeout, e.g.
+     * "rmt: rmt_tx_wait_all_done(593): flush timeout", which floods the log.
+     * Therefore all logs of the RMT driver are disabled.
+     */
+    esp_log_level_set("rmt", ESP_LOG_NONE);
+
+    m_strip.Begin(); /* Initializes the strip with black color. */
+    m_strip.Show();
+
+    return true;
 }
 
 void DisplayDrv::show(const YAGfxBitmap& bitmap)

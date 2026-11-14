@@ -16,7 +16,7 @@
     }, {
         "owner": "makuna",
         "name": "NeoPixelBus",
-        "version": "~2.8.4"
+        "version": "https://github.com/sblantipodi/NeoPixelBus#e54c3231f8e730c921ed922f140481e9c65ca0ba"
     }, {
         "name": "Utilities"
     }],

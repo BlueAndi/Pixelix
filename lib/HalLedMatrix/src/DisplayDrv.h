@@ -80,13 +80,7 @@ public:
      *
      * @return If successful, returns true otherwise false.
      */
-    bool begin() final
-    {
-        m_strip.Begin(); /* Initializes the strip with black color. */
-        m_strip.Show();
-
-        return true;
-    }
+    bool begin() final;
 
     /**
      * Show framebuffer on physical display. This may be synchronous
