@@ -34,6 +34,11 @@
             })();
         </script>
         <link rel="stylesheet" type="text/css" href="/style/app-common.css" />
+        <style>
+            .version-tooltip .tooltip-inner {
+                text-align: left;
+            }
+        </style>
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
@@ -44,7 +49,7 @@
             <!-- Fixed navbar -->
             <nav class="navbar navbar-expand-md fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
-                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" title="~TARGET~ | ~HOSTNAME~" />
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-custom-class="logo-tooltip" title="Target: ~TARGET~&#10;Hostname: ~HOSTNAME~" />
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -61,11 +66,36 @@
             <div class="container text-center">
                 <h1 class="mt-5">Welcome to</h1>
                 <p class="lead"><img src="/images/Logo.png" alt="Pixelix" /></p>
-                <p>~SW_VERSION~</p>
-                <p>~SW_REVISION~</p>
-                <p>~SW_BRANCH~</p>
-                <p>~TARGET~</p>
-                <p>~HOSTNAME~</p>
+                <table class="table table-borderless table-sm w-auto mx-auto mt-5 text-start">
+                    <caption class="visually-hidden">Software and build information</caption>
+                    <tbody>
+                        <tr>
+                            <th scope="row">
+                                <span tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top"
+                                    title=":uc = unpushed commits&#10;:lc = tracked local changes&#10;:b = non-master, non-tag build."
+                                    data-bs-custom-class="version-tooltip"
+                                    data-bs-title="<span class='badge bg-warning text-dark'>:uc</span> Unpushed commits<br><span class='badge bg-info text-dark'>:lc</span> Tracked local changes<br><span class='badge bg-secondary'>:b</span> Non-master, non-tag build.">Software version</span>
+                            </th>
+                            <td>~SW_VERSION~</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Git revision</th>
+                            <td><span id="software-revision">~SW_REVISION~</span></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Git ref</th>
+                            <td>~SW_BRANCH~</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Build target</th>
+                            <td>~TARGET~</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Hostname</th>
+                            <td>~HOSTNAME~</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </main>
 
@@ -89,6 +119,19 @@
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.addSubMenu(menu.data, "Services", serviceSubMenu);
                 menu.create("menu", menu.data);
+
+                const revisionElement = document.getElementById("software-revision");
+                const revision = revisionElement.textContent.trim();
+
+                if (/^[0-9a-f]{40}$/i.test(revision)) {
+                    const revisionLink = document.createElement("a");
+                    revisionLink.href = `https://github.com/BlueAndi/Pixelix/tree/${revision}`;
+                    revisionLink.target = "_blank";
+                    revisionLink.rel = "noopener noreferrer";
+                    revisionLink.textContent = revision;
+                    revisionElement.replaceChildren(revisionLink);
+                }
+
             });
         </script>
     </body>
