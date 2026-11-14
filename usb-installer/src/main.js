@@ -63,6 +63,33 @@ const FLASH_BAUD_RATE = 115200;
 const SERIAL_BUFFER_SIZE = 8192;
 /** Web Serial options for every port opened by the installer. */
 const SERIAL_OPTIONS = { baudRate: SERIAL_BAUD_RATE, bufferSize: SERIAL_BUFFER_SIZE };
+/**
+ * Boards with a 3.3 V flash whose GPIO12 (MTDI) is not tied to a defined level.
+ * The ESP32 samples GPIO12 on reset to choose the flash supply voltage. If the
+ * floating pin is read as high, the flash is supplied with 1.8 V only: reading
+ * mostly still works, but erasing never completes and esptool-js times out with
+ * "Serial data stream stopped". The supply is only switched to 3.3 V if the
+ * flash chip is additionally listed in FLASH_3V3_JEDEC_IDS.
+ */
+const FLASH_3V3_ENVIRONMENTS = ["ulanzi-tc001-LED-32x8"];
+/**
+ * Flash chips which are known to need a 3.3 V supply, as JEDEC ID
+ * (manufacturer, memory type, capacity). A 1.8 V flash would be damaged by
+ * 3.3 V, therefore only add a chip after checking its datasheet.
+ */
+const FLASH_3V3_JEDEC_IDS = [
+    0x5e4016, // Zbit ZB25VQ32, 2.3 V to 3.6 V
+];
+/** JEDEC IDs read from a flash chip which does not answer. */
+const FLASH_JEDEC_ID_NO_ANSWER = [0x000000, 0xffffff];
+/** ESP32 strapping register, latched on reset. */
+const ESP32_GPIO_STRAP_REG = 0x3ff44038;
+/** Strapping bit of GPIO12 (MTDI): set means a 1.8 V flash supply was selected. */
+const ESP32_GPIO_STRAP_VDD_SDIO_1V8 = 0x20;
+/** ESP32 flash supply (VDD_SDIO) regulator configuration register. */
+const ESP32_RTC_CNTL_SDIO_CONF_REG = 0x3ff48074;
+/** XPD_SDIO_REG | SDIO_TIEH | SDIO_FORCE: regulator on at 3.3 V, regardless of the strapping. */
+const ESP32_RTC_CNTL_SDIO_FORCE_3V3 = 0x80c00000;
 const MAX_TERMINAL_OUTPUT_LENGTH = 48000;
 /** Number of leading SHA-256 hex digits used as cache-busting query of an image URL. */
 const IMAGE_CACHE_KEY_LENGTH = 16;
@@ -594,6 +621,7 @@ async function connectToBoard() {
         if (!expectedChipMatches(selectedTarget.chip, detectedChip)) {
             throw new Error(`Selected target needs ${selectedTarget.chip}; detected ${detectedChip}.`);
         }
+        await ensureFlashVoltage();
 
         elements.chipStatus.textContent = `Detected ${detectedChip}.`;
         elements.flashButton.disabled = false;
@@ -611,6 +639,46 @@ async function connectToBoard() {
         await disconnectFlasher();
         updateSerialControls();
     }
+}
+
+/**
+ * Supply the flash with 3.3 V if the reset strapping selected 1.8 V on a board
+ * with a floating GPIO12 and the flash chip is known to be a 3.3 V type. The
+ * setting lasts until the next reset. An unknown flash chip is left untouched.
+ * @returns {Promise<void>}
+ * @throws {Error} If the register access fails or the flash chip does not answer
+ */
+async function ensureFlashVoltage() {
+    const isAffectedBoard = "ESP32" === loader.chip.CHIP_NAME && FLASH_3V3_ENVIRONMENTS.includes(selectedTarget.environment);
+
+    if (!isAffectedBoard) {
+        return;
+    }
+
+    const strapping = await loader.readReg(ESP32_GPIO_STRAP_REG);
+
+    if (0 === (strapping & ESP32_GPIO_STRAP_VDD_SDIO_1V8)) {
+        return;
+    }
+
+    // esptool-js reports the ID as read from the bus: manufacturer in the lowest byte.
+    const rawId = await loader.readFlashId();
+    const jedecId = ((rawId & 0xff) << 16) | (rawId & 0xff00) | ((rawId >> 16) & 0xff);
+    const jedecIdText = jedecId.toString(16).padStart(6, "0");
+
+    if (FLASH_JEDEC_ID_NO_ANSWER.includes(jedecId)) {
+        throw new Error("The flash chip does not answer, because the board selected a 1.8 V flash supply on reset. Connect the device again.");
+    }
+
+    if (!FLASH_3V3_JEDEC_IDS.includes(jedecId)) {
+        addStatus(`The board selected a 1.8 V flash supply on reset. The flash chip ${jedecIdText} is not known as 3.3 V type, so the supply is left unchanged. If the installation stops, connect the device again.`, "error");
+        appendTerminalOutput(`\r\n[Flash supply stays at 1.8 V: flash chip ${jedecIdText} is not known as 3.3 V type.]\r\n`);
+        return;
+    }
+
+    await loader.writeReg(ESP32_RTC_CNTL_SDIO_CONF_REG, ESP32_RTC_CNTL_SDIO_FORCE_3V3, ESP32_RTC_CNTL_SDIO_FORCE_3V3);
+    addStatus(`The board selected a 1.8 V flash supply on reset. Switched it to 3.3 V for the installation (flash chip ${jedecIdText}).`);
+    appendTerminalOutput(`\r\n[Flash supply switched from 1.8 V to 3.3 V, flash chip ${jedecIdText}.]\r\n`);
 }
 
 /**
