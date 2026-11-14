@@ -92,9 +92,9 @@ extern void processAll();
 
 /**
  * Get list of provided plugins and their creation function.
- * 
+ *
  * @param[out] length   Length of list.
- * 
+ *
  * @return List of plugins.
  */
 const Element* getList(uint8_t& length);
