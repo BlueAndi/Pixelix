@@ -1,2 +1,6 @@
 [FORMAT]
 max-line-length=140
+
+[SIMILARITIES]
+# Pylint reports matches exceeding this value: 9 means 10 or more lines.
+min-similarity-lines=9

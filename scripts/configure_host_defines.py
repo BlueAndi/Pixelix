@@ -25,14 +25,13 @@
 ################################################################################
 # Imports
 ################################################################################
+from __future__ import annotations
+
 import platform
 
 ################################################################################
 # Variables
 ################################################################################
-
-# pylint: disable=undefined-variable
-Import("env") # type: ignore
 
 ################################################################################
 # Classes
@@ -42,23 +41,24 @@ Import("env") # type: ignore
 # Functions
 ################################################################################
 
-def get_host_defines(system_name):
+
+def get_host_defines(system_name: str) -> list[tuple[str, str]]:
     """Determine the pre-processor defines which the given host system needs.
 
-        PNGdec's bundled zlib declares inflateSetDictionary() with the BSD type
-        "uint" in inflate.c. glibc's sys/types.h provides that type, the Windows
-        host toolchain does not, therefore it is defined for Windows only.
+    PNGdec's bundled zlib declares inflateSetDictionary() with the BSD
+    type "uint" in inflate.c. glibc's sys/types.h provides that type, but
+    the Windows host toolchain does not, so it is defined for Windows only.
 
-        It must NOT be defined on glibc: sys/types.h holds "typedef unsigned int
-        uint;" under __USE_MISC, which g++ enables by default. The macro would
-        rewrite that typedef into "typedef unsigned int unsigned int;" and every
-        translation unit which includes sys/types.h would fail to compile.
+    It must not be defined on glibc: sys/types.h holds "typedef unsigned int
+    uint;" under __USE_MISC, which g++ enables by default. The macro would
+    rewrite that typedef into "typedef unsigned int unsigned int;", causing
+    every translation unit including sys/types.h to fail to compile.
 
     Args:
-        system_name (str): Host system name, as platform.system() returns it.
+        system_name: Host system name, as platform.system() returns it.
 
     Returns:
-        list[tuple[str, str]]: Pre-processor defines as (name, value) tuples.
+        Preprocessor definitions as (name, value) tuples.
     """
     defines = []
 
@@ -67,9 +67,13 @@ def get_host_defines(system_name):
 
     return defines
 
+
 ################################################################################
 # Main
 ################################################################################
 
 # pylint: disable=undefined-variable
-env.Append(CPPDEFINES=get_host_defines(platform.system())) # type: ignore
+Import("env")  # type: ignore
+
+# pylint: disable=undefined-variable
+env.Append(CPPDEFINES=get_host_defines(platform.system()))  # type: ignore

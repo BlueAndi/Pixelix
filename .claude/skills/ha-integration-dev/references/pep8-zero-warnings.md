@@ -5,7 +5,7 @@ The goal is not "mostly clean". It is `pycodestyle` silent and `pylint`
 
 ```bash
 cd doc/homeassistant/integration
-python -m pycodestyle custom_components/pixelix tests
+python -m pycodestyle --max-line-length=140 custom_components/pixelix tests
 python -m pylint --rcfile="$(git rev-parse --show-toplevel)/.pylintrc" \
     custom_components/pixelix tests
 ```
@@ -29,10 +29,9 @@ regardless of where you are. A plain relative `../../../.pylintrc` works too
 when you are exactly in `doc/homeassistant/integration/`. If the file is
 genuinely missing, run without the flag and state that in the result.
 
-`pycodestyle` meanwhile runs with its defaults — **79 columns**, no
-configuration file for the integration. The root `.pylintrc` only raises
-*pylint's* line limit to 140 (which is what `scripts/` needs); pycodestyle
-still enforces 79, so 79 wins for integration code.
+Pass `--max-line-length=140` to `pycodestyle` to apply the project's PEP 8
+exception consistently with the root `.pylintrc`. Do not reflow existing
+lines solely to reach the default 79 columns.
 
 ---
 
@@ -64,7 +63,7 @@ Pylint additions that bite in HA code:
 
 ---
 
-## Wrapping at 79 columns
+## Wrapping long lines
 
 Parentheses, never backslashes.
 
@@ -209,11 +208,9 @@ type PixelixConfigEntry = ConfigEntry[PixelixRuntimeData]   # PEP 695
 
 ## Formatters
 
-The integration is **hand-formatted to 79 columns**, matching the file layout
-with its 79-wide banners. Do not run `black` or `ruff format` over it — their
-default is 88 and they would reflow the whole tree and break the banner
-alignment. (`ruff format` is the Home Assistant *Core* standard; this is a
-custom integration in a non-HA repository, which follows this repo's style.)
+New integration files use 79-wide banners; existing banner widths are preserved.
+Lines may be up to 140 characters.
+Do not run a formatter over the whole tree solely to reflow shorter lines.
 
 ---
 
@@ -222,7 +219,7 @@ custom integration in a non-HA repository, which follows this repo's style.)
 ```bash
 cd doc/homeassistant/integration
 python -m pip install -r requirements_test.txt          # pylint needs these
-python -m pycodestyle custom_components/pixelix tests   # expect: no output
+python -m pycodestyle --max-line-length=140 custom_components/pixelix tests
 python -m pylint --rcfile="$(git rev-parse --show-toplevel)/.pylintrc" \
     custom_components/pixelix tests                     # expect: 10.00/10
 python -m pytest                                        # expect: all passed

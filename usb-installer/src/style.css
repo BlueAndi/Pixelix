@@ -340,6 +340,32 @@ a:focus-visible {
     line-height: 1.55 !important;
 }
 
+.driver-help {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.driver-help summary {
+    color: var(--teal);
+    font-family: "DM Mono", monospace;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.driver-help ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+}
+
+.driver-help li {
+    margin-top: 4px;
+}
+
+.build-info {
+    font-family: "DM Mono", monospace;
+}
+
 .step-state {
     justify-self: end;
     padding: 6px 8px;

@@ -25,6 +25,8 @@
 ################################################################################
 # Imports
 ################################################################################
+from __future__ import annotations
+
 import subprocess
 import shutil
 import json
@@ -46,11 +48,11 @@ Import("env")  # type: ignore
 ################################################################################
 
 
-def run_git(args):
+def run_git(args: list[str]) -> str | None:
     """Run a git command and return its output.
 
     Args:
-        args (list): Git arguments, without the leading 'git'
+        args: Git arguments, without the leading 'git'.
 
     Returns:
         str: Stripped output or None if the command failed or git is not available.
@@ -66,7 +68,7 @@ def run_git(args):
     return output
 
 
-def get_git_revision_hash():
+def get_git_revision_hash() -> str:
     """Get the git revision hash number.
 
     Returns:
@@ -80,7 +82,7 @@ def get_git_revision_hash():
     return rev_hash
 
 
-def get_git_revision_short_hash():
+def get_git_revision_short_hash() -> str:
     """Get the short git revision hash number.
 
     Returns:
@@ -94,7 +96,7 @@ def get_git_revision_short_hash():
     return rev_short_hash
 
 
-def is_detached_head():
+def is_detached_head() -> bool:
     """Checks whether HEAD is detached, i.e. no branch is checked out.
 
     Returns:
@@ -104,7 +106,7 @@ def is_detached_head():
     return run_git(['symbolic-ref', '--quiet', 'HEAD']) is None
 
 
-def is_tagged_head():
+def is_tagged_head() -> bool:
     """Checks whether a tag points exactly at HEAD, which identifies a release build.
 
     Returns:
@@ -115,7 +117,7 @@ def is_tagged_head():
     return (result is not None) and (len(result) > 0)
 
 
-def get_detached_branch_name():
+def get_detached_branch_name() -> str:
     """Get a branch name for a detached HEAD.
     A local or remote branch pointing to HEAD is preferred, then the
     branch name provided by a CI environment.
@@ -151,7 +153,7 @@ def get_detached_branch_name():
     return branch_name
 
 
-def get_current_git_branch():
+def get_current_git_branch() -> str:
     """Get current git branch name.
 
     Returns:
@@ -171,7 +173,7 @@ def get_current_git_branch():
     return branch_name
 
 
-def any_local_change():
+def any_local_change() -> bool:
     """Checks whether there is any local change in the sources,
     which are under revision control.
 
@@ -183,13 +185,13 @@ def any_local_change():
     return (result is not None) and (len(result) > 0)
 
 
-def any_unpushed_commit(upstream):
+def any_unpushed_commit(upstream: str) -> bool:
     """Checks whether there is any commit, which is not pushed to the remote repository.
     A tagged HEAD is considered as pushed, because a release is built from a tag.
     If HEAD is detached, it checks whether HEAD is reachable from any remote branch.
 
     Args:
-        upstream (str): Upstream repository path
+        upstream: Upstream repository path.
 
     Returns:
         bool: If there is any unpushed commit, it will return True otherwise False.
@@ -209,7 +211,7 @@ def any_unpushed_commit(upstream):
     return is_unpushed_commit_available
 
 
-def get_version():
+def get_version() -> str:
     """Get the version identification from the definition file.
 
     Returns:

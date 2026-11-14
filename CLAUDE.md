@@ -81,6 +81,7 @@ Build configuration is split across `config/`:
 - **Headers**: Every file starts with the MIT license block, `@file`, `@brief`, `@author` doxygen tags
 - **Naming**: Plugins must end with `Plugin` suffix; services follow the `IService` interface
 - **Python scripts**: max line length 140 (`.pylintrc`)
+- **Python skill**: For Python creation, changes, or review, use [python-coding-guidelines](.claude/skills/python-coding-guidelines/SKILL.md). For Home Assistant integration code, also use [ha-integration-dev](.claude/skills/ha-integration-dev/SKILL.md).
 - **Skill**: For writing/refactoring/reviewing embedded C/C++17 code (MISRA-oriented rules, defensive programming, Yoda conditions, single-exit "pathfinder" rule, Doxygen, section-banner layout, clang-format), use the [embedded-cpp17-misra](.claude/skills/embedded-cpp17-misra/SKILL.md) skill, which includes `.h`/`.hpp`/`.cpp` templates.
 
 ## Testing

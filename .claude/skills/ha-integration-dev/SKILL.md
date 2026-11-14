@@ -60,9 +60,8 @@ Every `.py` file — source *and* test — has this skeleton, in this order:
 ###############################################################################
 ```
 
-- Banners are **79 `#` characters**, never 80. (The `scripts/` banners are 80
-  because those files run at a 140-column pylint limit; integration code runs
-  at the PEP8 79 limit, so the banner matches it.)
+- For new files, use banners of **79 `#` characters**. Preserve existing
+  banner widths instead of changing them solely for length.
 - **All four banners are always present**, even when the section is empty —
   see [const.py](../../../doc/homeassistant/integration/custom_components/pixelix/const.py),
   which has empty `Imports`, `Classes` and `Functions` sections.
@@ -70,12 +69,12 @@ Every `.py` file — source *and* test — has this skeleton, in this order:
   which are executables).
 - The docstring comes **before** the license block, never after.
 
-### 2. 79 columns, hard
+### 2. 140 columns, hard
 
-PEP8's limit, enforced by `pycodestyle`'s default. The repo's
-[.pylintrc](../../../.pylintrc) says `max-line-length=140`, which applies to
-`scripts/` — **it does not relax the integration**, because `pycodestyle` is
-the stricter of the two gates and both must be clean.
+The project permits 140 characters per line as an exception to PEP 8's
+recommendation. Match the root [.pylintrc](../../../.pylintrc) by passing
+`--max-line-length=140` to `pycodestyle`; do not reflow lines solely to reach
+79 characters.
 
 Wrap with parentheses, not backslashes:
 
@@ -245,7 +244,7 @@ Run both, from `doc/homeassistant/integration/`:
 python -m pip install pycodestyle pylint
 python -m pip install -r requirements_test.txt
 
-python -m pycodestyle custom_components/pixelix tests
+python -m pycodestyle --max-line-length=140 custom_components/pixelix tests
 python -m pylint --rcfile="$(git rev-parse --show-toplevel)/.pylintrc" \
     custom_components/pixelix tests
 python -m pytest
@@ -339,7 +338,7 @@ Never let a bare `Exception` escape to the user.
 
 | Mistake | Fix |
 | --- | --- |
-| 80-wide `#` banner copied from `scripts/` | 79 wide in integration code. |
+| Changing an existing banner solely for its width | Preserve the existing width; use 79 for new files. |
 | Section banner omitted because the section is empty | Keep all four, always. |
 | License block placed above the module docstring | Docstring first, then license. |
 | `strings.json` added to the custom component | Use `translations/en.json`. |

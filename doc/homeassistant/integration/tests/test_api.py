@@ -90,7 +90,15 @@ def create_client(hass: HomeAssistant) -> PixelixClient:
 async def test_device_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The unique device id is read from the status of the device."""
+    """The unique device id is read from the status of the device.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A)
 
     assert await create_client(hass).async_get_device_id() == DEVICE_ID_A
@@ -108,7 +116,16 @@ async def test_device_id(
 async def test_device_id_missing(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, answer: dict
 ) -> None:
-    """An answer without device.id is an incompatible response."""
+    """An answer without device.id is an incompatible response.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        answer: Simulated status response.
+
+    Returns:
+        None.
+    """
     mock_device_status(aioclient_mock, HOST_A, DEVICE_ID_A, **answer)
 
     with pytest.raises(PixelixResponseError):
@@ -118,7 +135,15 @@ async def test_device_id_missing(
 async def test_auth_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """HTTP 401 is the answer of the web server to a wrong login."""
+    """HTTP 401 is the answer of the web server to a wrong login.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, status=401, text="")
 
     with pytest.raises(PixelixAuthError):
@@ -128,7 +153,15 @@ async def test_auth_error(
 async def test_forbidden_is_not_an_auth_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The firmware never answers a login problem with HTTP 403."""
+    """The firmware never answers a login problem with HTTP 403.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, status=403, text="Forbidden")
 
     with pytest.raises(PixelixRequestError) as err:
@@ -140,7 +173,15 @@ async def test_forbidden_is_not_an_auth_error(
 async def test_request_error_uses_message_of_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The reason of the device is part of the error."""
+    """The reason of the device is part of the error.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, **INVALID_DATA_ANSWER)
 
     with pytest.raises(PixelixRequestError, match="Invalid data.") as err:
@@ -152,7 +193,15 @@ async def test_request_error_uses_message_of_device(
 async def test_request_error_without_message(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """An unexpected HTTP status without a reason names the status."""
+    """An unexpected HTTP status without a reason names the status.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, status=500, text="<html></html>")
 
     with pytest.raises(PixelixRequestError, match="HTTP 500"):
@@ -171,7 +220,16 @@ async def test_request_error_without_message(
 async def test_invalid_response(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, answer: dict
 ) -> None:
-    """HTTP 200 with another body than the REST API is incompatible."""
+    """HTTP 200 with another body than the REST API is incompatible.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        answer: Simulated notification response.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, **answer)
 
     with pytest.raises(PixelixResponseError):
@@ -182,7 +240,16 @@ async def test_invalid_response(
 async def test_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, exc: type
 ) -> None:
-    """A not reachable device and a timeout are connection errors."""
+    """A not reachable device and a timeout are connection errors.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        exc: Connection exception to simulate.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, exc=exc)
 
     with pytest.raises(PixelixConnectionError, match=HOST_A):
@@ -192,7 +259,15 @@ async def test_connection_error(
 async def test_json_body_keeps_types(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Numbers are sent as numbers, which the firmware requires."""
+    """Numbers are sent as numbers, which the firmware requires.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, json=OK_RESPONSE)
     payload = {"text": "Hello", "duration": 5000, "volume": 3}
 
@@ -205,7 +280,15 @@ async def test_json_body_keeps_types(
 async def test_basic_auth_header(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """The web login is sent as HTTP basic authentication."""
+    """The web login is sent as HTTP basic authentication.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+
+    Returns:
+        None.
+    """
     mock_notify(aioclient_mock, HOST_A, json=OK_RESPONSE)
 
     await create_client(hass).async_notify({"text": "Hello"})
@@ -219,7 +302,16 @@ async def test_secrets_are_not_logged(
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Neither the password nor the notification text appears in a log."""
+    """Neither the password nor the notification text appears in a log.
+
+    Args:
+        hass: Home Assistant test instance.
+        aioclient_mock: Mock aiohttp client.
+        caplog: Captured application logs.
+
+    Returns:
+        None.
+    """
     caplog.set_level(logging.DEBUG)
     mock_notify(aioclient_mock, HOST_A, status=401, text="")
 

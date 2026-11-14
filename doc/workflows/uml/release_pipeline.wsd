@@ -1,0 +1,28 @@
+@startuml release_pipeline
+title Release Pipeline
+
+start
+:Select release tag;
+fork
+  :Check Python at tag;
+fork again
+  :Check YAML at tag;
+end fork
+if (Checks passed?) then ([yes])
+  fork
+    :Build firmware and filesystem\nfor each environment;
+    :Package USB flash images\nand collect size metrics;
+    note right
+      size_report starts after the firmware
+      build, independently of deploy.
+    end note
+  fork again
+    :Build, package and verify\nLinux and Windows native releases;
+  end fork
+  if (Builds passed?) then ([yes])
+    :Deploy USB and native archives\nto the GitHub release;
+    :Call Pages workflow;
+  endif
+endif
+stop
+@enduml

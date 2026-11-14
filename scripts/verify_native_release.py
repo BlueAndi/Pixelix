@@ -58,6 +58,9 @@ def check_data(root: Path, source_data: Path) -> None:
         root: Extracted package directory.
         source_data: Generated source filesystem directory.
 
+    Returns:
+        None.
+
     Raises:
         ValueError: A generated file or directory is incorrect.
     """
@@ -77,6 +80,9 @@ def stop_process(process: subprocess.Popen, kind: str) -> None:
     Args:
         process: Running launcher process.
         kind: Target operating system.
+
+    Returns:
+        None.
     """
     if kind == "windows":
         powershell = (Path(os.environ["SystemRoot"]) / "System32" /
@@ -112,6 +118,9 @@ def check_startup(root: Path, work: Path, kind: str) -> None:
         root: Extracted package directory.
         work: Unrelated current working directory and log location.
         kind: Target operating system.
+
+    Returns:
+        None.
 
     Raises:
         RuntimeError: Startup fails or the expected page is unavailable.
@@ -169,6 +178,9 @@ def verify(archive_path: Path, source_data: Path, kind: str) -> None:
         archive_path: Release archive to test.
         source_data: Generated source filesystem directory.
         kind: Target operating system.
+
+    Returns:
+        None.
     """
     with tempfile.TemporaryDirectory(prefix="pixelix release ") as temporary:
         work = Path(temporary)
@@ -184,7 +196,11 @@ def verify(archive_path: Path, source_data: Path, kind: str) -> None:
 
 
 def main() -> None:
-    """Parse verification arguments."""
+    """Parse verification arguments.
+
+    Returns:
+        None.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--archive", type=Path, required=True)
     parser.add_argument("--data", type=Path, required=True)

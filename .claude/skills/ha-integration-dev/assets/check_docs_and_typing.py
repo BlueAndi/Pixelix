@@ -55,6 +55,9 @@ class Finding:
     def __str__(self) -> str:
         """Format the finding like a compiler diagnostic.
 
+        Args:
+            self: The finding to format.
+
         Returns:
             The finding as ``path:line: name: reason``.
         """

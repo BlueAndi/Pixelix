@@ -479,6 +479,14 @@ void ImprovSerialService::sendPacket(uint8_t type, const uint8_t* data, size_t d
         uint8_t checksum               = 0U;
         size_t  index                  = 0U;
 
+        /* Send a newline before the packet, so the host parser starts the Improv
+         * signature on a fresh line. The firmware shares the serial stream with the
+         * log output, and a log line in flight right before the packet would
+         * otherwise shift the parser's signature window and hide the packet. The
+         * newline is not part of the checksum.
+         */
+        (void)m_stream.write(static_cast<uint8_t>('\n'));
+
         while (HEADER_SIZE > index)
         {
             packet[position] = IMPROV_HEADER[index];

@@ -63,3 +63,8 @@ code {
         font-size: 3.5rem;
     }
 }
+
+.logo-tooltip .tooltip-inner {
+    text-align: left;
+    white-space: pre-line;
+}

@@ -109,6 +109,9 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Create the flow.
 
+        Args:
+            self: The config flow instance.
+
         Returns:
             None.
         """
@@ -122,6 +125,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         """Add a device by manual input.
 
         Args:
+            self: The config flow instance.
             user_input: The form input. It is None for the first call,
                 which shows the form.
 
@@ -181,6 +185,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         credentials are confirmed.
 
         Args:
+            self: The config flow instance.
             discovery_info: The mDNS service information of the device.
 
         Returns:
@@ -209,6 +214,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask for the web login of a discovered device.
 
         Args:
+            self: The config flow instance.
             user_input: The form input. It is None for the first call,
                 which shows the form.
 
@@ -258,6 +264,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         """Start the reauthentication after the device rejected the login.
 
         Args:
+            self: The config flow instance.
             entry_data: The data of the config entry.
 
         Returns:
@@ -275,6 +282,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         The config entry, its device and its unique id are kept.
 
         Args:
+            self: The config flow instance.
             user_input: The form input. It is None for the first call,
                 which shows the form.
 
@@ -323,6 +331,7 @@ class PixelixConfigFlow(ConfigFlow, domain=DOMAIN):
         """Check the device and read its device id and host name.
 
         Args:
+            self: The config flow instance.
             host: Host name or IP address of the device.
             port: Port of the web server of the device.
             username: Web login user.

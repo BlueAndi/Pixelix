@@ -42,8 +42,9 @@ Author: Andreas Merkle <web@blue-andi.de>
 # Imports
 ################################################################################
 import os
+from typing import Any
 
-Import("env") # pylint: disable=undefined-variable
+Import("env")  # pylint: disable=undefined-variable
 
 ################################################################################
 # Variables
@@ -66,11 +67,15 @@ ESP32_SUB_DIR = "esp32"
 # Functions
 ################################################################################
 
-def _select_implementation(build_env):
+
+def _select_implementation(build_env: Any) -> None:
     """Add the include path of the implementation which fits to the platform.
 
     Args:
-        build_env (SCons.Environment): The library build environment.
+        build_env: SCons library build environment.
+
+    Returns:
+        None.
     """
     if build_env["PIOPLATFORM"] == NATIVE_PLATFORM:
         sub_dir = NATIVE_SUB_DIR
@@ -84,4 +89,5 @@ def _select_implementation(build_env):
 # Main
 ################################################################################
 
-_select_implementation(env) # pylint: disable=undefined-variable
+
+_select_implementation(env)  # pylint: disable=undefined-variable

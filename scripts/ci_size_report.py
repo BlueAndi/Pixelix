@@ -1,6 +1,31 @@
 #!/usr/bin/env python3
 """Collect and compare firmware size metrics for GitHub Actions."""
 
+# MIT License
+#
+# Copyright (c) 2019 - 2026 Andreas Merkle <web@blue-andi.de>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+###############################################################################
+# Imports
+###############################################################################
 from __future__ import annotations
 
 import argparse
@@ -13,6 +38,9 @@ from pathlib import Path
 from typing import Any
 
 
+###############################################################################
+# Variables
+###############################################################################
 MEMORY_RE = re.compile(
     r"^\s*(RAM|Flash):.*?\(used\s+"
     r"([\d,]+)\s+bytes\s+from\s+([\d,]+)\s+bytes\)",
@@ -20,9 +48,24 @@ MEMORY_RE = re.compile(
 )
 IMAGE_NAMES = ("littlefs.bin", "spiffs.bin")
 
+###############################################################################
+# Classes
+###############################################################################
+
+###############################################################################
+# Functions
+###############################################################################
+
 
 def parse_bytes(value: str) -> int:
-    """Convert a comma-separated byte count to an integer."""
+    """Convert a comma-separated byte count to an integer.
+
+    Args:
+        value: Byte count as text.
+
+    Returns:
+        Parsed byte count.
+    """
     return int(value.replace(",", ""))
 
 
@@ -31,7 +74,19 @@ def collect_metrics(
     build_log: Path,
     build_dir: Path,
 ) -> dict[str, Any]:
-    """Collect firmware and filesystem size metrics for one environment."""
+    """Collect firmware and filesystem size metrics for one environment.
+
+    Args:
+        environment: PlatformIO environment name.
+        build_log: Firmware build log.
+        build_dir: Directory containing filesystem images.
+
+    Returns:
+        Collected RAM, flash and filesystem metrics.
+
+    Raises:
+        ValueError: The build log or filesystem images lack required metrics.
+    """
     log_text = build_log.read_text(encoding="utf-8", errors="replace")
     memory = {
         name.lower(): {"used": parse_bytes(used), "total": parse_bytes(total)}
@@ -59,7 +114,14 @@ def collect_metrics(
 
 
 def read_metrics(directory: Path) -> dict[str, dict[str, Any]]:
-    """Load environment metrics from JSON files in a directory."""
+    """Load environment metrics from JSON files in a directory.
+
+    Args:
+        directory: Directory containing metric files.
+
+    Returns:
+        Metrics keyed by environment; empty if the directory does not exist.
+    """
     result: dict[str, dict[str, Any]] = {}
     if not directory.is_dir():
         return result
@@ -70,7 +132,15 @@ def read_metrics(directory: Path) -> dict[str, dict[str, Any]]:
 
 
 def format_bytes(value: int, signed: bool = False) -> str:
-    """Format a byte count using a readable binary unit."""
+    """Format a byte count using a readable binary unit.
+
+    Args:
+        value: Byte count.
+        signed: Whether to include a sign for nonzero values.
+
+    Returns:
+        Human-readable binary size.
+    """
     sign = ""
     if signed:
         sign = "+" if value > 0 else "-" if value < 0 else ""
@@ -85,7 +155,14 @@ def format_bytes(value: int, signed: bool = False) -> str:
 
 
 def format_usage(metric: dict[str, int]) -> str:
-    """Format a used/available size and its percentage."""
+    """Format a used/available size and its percentage.
+
+    Args:
+        metric: Mapping containing used and total bytes.
+
+    Returns:
+        Formatted usage and percentage.
+    """
     used = metric["used"]
     total = metric["total"]
     percent = (used / total * 100.0) if total else 0.0
@@ -93,7 +170,15 @@ def format_usage(metric: dict[str, int]) -> str:
 
 
 def format_delta(current: int, previous: int | None) -> str:
-    """Format an absolute and relative change from a previous value."""
+    """Format an absolute and relative change from a previous value.
+
+    Args:
+        current: Current byte count.
+        previous: Previous byte count, or None if unavailable.
+
+    Returns:
+        Formatted byte and percentage changes, or n/a if unavailable.
+    """
     if previous is None:
         return "n/a"
     delta = current - previous
@@ -104,12 +189,26 @@ def format_delta(current: int, previous: int | None) -> str:
 
 
 def filesystem_total(metrics: dict[str, Any]) -> int:
-    """Return the combined size of filesystem images."""
+    """Return the combined size of filesystem images.
+
+    Args:
+        metrics: Environment metrics.
+
+    Returns:
+        Sum of image sizes in bytes.
+    """
     return sum(metrics["filesystem_images"].values())
 
 
 def format_filesystem(metrics: dict[str, Any]) -> str:
-    """Format each generated filesystem image and its size."""
+    """Format each generated filesystem image and its size.
+
+    Args:
+        metrics: Environment metrics.
+
+    Returns:
+        Image names and sizes separated by HTML line breaks.
+    """
     return "<br>".join(
         f"{name}: {format_bytes(size)}"
         for name, size in sorted(metrics["filesystem_images"].items())
@@ -117,14 +216,30 @@ def format_filesystem(metrics: dict[str, Any]) -> str:
 
 
 def metric_value(metrics: dict[str, Any], metric_name: str) -> int:
-    """Return the byte count for one metric."""
+    """Return the byte count for one metric.
+
+    Args:
+        metrics: Environment metrics.
+        metric_name: Metric to select.
+
+    Returns:
+        Used bytes or the combined filesystem image size.
+    """
     if metric_name == "filesystem_images":
         return filesystem_total(metrics)
     return metrics[metric_name]["used"]
 
 
 def metric_display(metrics: dict[str, Any], metric_name: str) -> str:
-    """Format one metric for display in a report table."""
+    """Format one metric for display in a report table.
+
+    Args:
+        metrics: Environment metrics.
+        metric_name: Metric to select.
+
+    Returns:
+        Formatted metric.
+    """
     if metric_name == "filesystem_images":
         return format_filesystem(metrics)
     return format_usage(metrics[metric_name])
@@ -137,7 +252,18 @@ def render_table(
     target: dict[str, dict[str, Any]],
     metric_name: str,
 ) -> str:
-    """Render one table with current values and both baseline deltas."""
+    """Render one table with current values and both baseline deltas.
+
+    Args:
+        title: Table heading.
+        current: Current metrics by environment.
+        branch: Previous branch metrics by environment.
+        target: Target branch metrics by environment.
+        metric_name: Metric to compare.
+
+    Returns:
+        Markdown table.
+    """
     lines = [
         f"### {title}",
         "| Environment | Current | vs previous branch | vs target branch |",
@@ -166,7 +292,17 @@ def render_table(
 
 
 def write_report(args: argparse.Namespace) -> None:
-    """Write firmware, filesystem, and RAM tables to the Actions summary."""
+    """Write firmware, filesystem, and RAM tables to the Actions summary.
+
+    Args:
+        args: Parsed report arguments.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: No current metrics were found.
+    """
     current = read_metrics(args.current_dir)
     branch = read_metrics(args.branch_dir) if args.branch_dir else {}
     target = read_metrics(args.target_dir) if args.target_dir else {}
@@ -206,7 +342,17 @@ def find_successful_run(
     event_name: str,
     excluded_sha: str,
 ) -> str:
-    """Find the latest successful matching workflow run ID."""
+    """Find the latest successful matching workflow run ID.
+
+    Args:
+        workflow_file: Workflow filename.
+        branch_name: Branch to filter, or None for all branches.
+        event_name: Workflow event type.
+        excluded_sha: Commit SHA to exclude from results.
+
+    Returns:
+        Run ID, or an empty string if no matching run exists.
+    """
     command = [
         "gh",
         "run",
@@ -234,7 +380,17 @@ def find_successful_run(
 
 
 def write_run_outputs(args: argparse.Namespace) -> None:
-    """Resolve and write the branch and target baseline run IDs."""
+    """Resolve and write the branch and target baseline run IDs.
+
+    Args:
+        args: Parsed run lookup arguments.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: The workflow filename is unsupported.
+    """
     workflow_file = Path(args.workflow_file).name
     event_name = args.event
     head_branch = args.head_branch or args.ref_name
@@ -284,7 +440,11 @@ def write_run_outputs(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the command-line argument parser."""
+    """Build the command-line argument parser.
+
+    Returns:
+        Configured argument parser.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -315,7 +475,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
-    """Run the requested metrics collection or reporting command."""
+    """Run the requested metrics collection or reporting command.
+
+    Returns:
+        Zero on success, or one if processing fails.
+    """
     args = build_parser().parse_args()
     try:
         if args.command == "collect":
@@ -343,6 +507,10 @@ def main() -> int:
         return 1
     return 0
 
+
+###############################################################################
+# Main
+###############################################################################
 
 if __name__ == "__main__":
     raise SystemExit(main())

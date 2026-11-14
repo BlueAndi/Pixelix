@@ -9,6 +9,9 @@ on:
         description: "Enter the name of the tag which to release."
         required: true
 
+permissions:
+  contents: read
+
 # Releasing the same tag twice in parallel would race for the release assets.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.inputs.tag_name }}
@@ -22,11 +25,56 @@ env:
   PIO_CACHE_EPOCH: "v1"
   # SDL3 version built from source for the Linux native release.
   SDL3_VERSION: "release-3.4.18"
+  PYLINT_VERSION: "4.1.3"
+  YAMLLINT_VERSION: "1.37.1"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
+  check_python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected release source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Pylint
+        run: python -m pip install --disable-pip-version-check pylint==${{ env.PYLINT_VERSION }} pytest==9.2.0 paho-mqtt==2.2.0 requests==2.34.2 PyYAML==6.0.3
+
+      - name: Check Python sources
+        run: |
+          git ls-files -z -- '*.py' ':(exclude).claude/skills/**/module_template.py' ':(exclude).claude/skills/**/test_template.py' \
+            | xargs -0 python -m pylint --rcfile=.pylintrc
+
+  check_yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected release source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.inputs.tag_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install yamllint
+        run: python -m pip install --disable-pip-version-check yamllint==${{ env.YAMLLINT_VERSION }}
+
+      - name: Check YAML syntax and duplicate keys
+        run: |
+          git ls-files -z -- '*.yml' '*.yaml' \
+            | xargs -0 -r python -m yamllint -d '{rules: {key-duplicates: enable}}'
+
   # Build all targets
   build:
+    needs: [check_python, check_yaml]
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
     strategy:
@@ -123,6 +171,7 @@ jobs:
 
   # Build distributable native applications on their target operating systems.
   build_native:
+    needs: [check_python, check_yaml]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -308,7 +357,7 @@ jobs:
   deploy:
     # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-    needs: [build, build_native]
+    needs: [build, build_native, check_python]
     permissions:
       contents: write
     steps:

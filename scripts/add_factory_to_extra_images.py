@@ -1,6 +1,6 @@
 """
-This script adds a factory binary to FLASH_EXTRA_IMAGES with the offset defined in the 
-partition table. This way the factory binary will be flashed together with the firmware 
+This script adds a factory binary to FLASH_EXTRA_IMAGES with the offset defined in the
+partition table. This way the factory binary will be flashed together with the firmware
 binary during the upload process.
 """
 
@@ -32,19 +32,21 @@ binary during the upload process.
 # Imports
 ################################################################################
 
+from __future__ import annotations
+
 import os
 import sys
-from typing import Optional
-Import("env") # pylint: disable=undefined-variable
+from typing import Any, Optional
+Import("env")  # pylint: disable=undefined-variable
 
 ################################################################################
 # Variables
 ################################################################################
 
 FACTORY_PARTITION_NAME = "factory"
-PROJECT_DIR = env.subst("$PROJECT_DIR") # pylint: disable=undefined-variable
-FACTORY_BINARY = env.GetProjectOption("custom_factory_binary", "") # pylint: disable=undefined-variable
-ENV_NAME = env["PIOENV"] # pylint: disable=undefined-variable
+PROJECT_DIR = env.subst("$PROJECT_DIR")  # pylint: disable=undefined-variable
+FACTORY_BINARY = env.GetProjectOption("custom_factory_binary", "")  # pylint: disable=undefined-variable
+ENV_NAME = env["PIOENV"]  # pylint: disable=undefined-variable
 
 ################################################################################
 # Classes
@@ -54,15 +56,15 @@ ENV_NAME = env["PIOENV"] # pylint: disable=undefined-variable
 # Functions
 ################################################################################
 
-def get_partition_table(env): # pylint: disable=undefined-variable
-    """
-    Get the partition table from the environment.
-    
+
+def get_partition_table(env: Any) -> list[dict[str, str]]:  # pylint: disable=undefined-variable
+    """Get the partition table from the environment.
+
     Args:
         env: The environment object containing project and build directories.
-    
+
     Returns:
-        List[Dict[str, str]]: A list of partitions defined in the partition table CSV file.
+        Partitions defined in the partition table CSV file.
     """
     partition_table = []
     partition_table_file_name = PROJECT_DIR + "/" + env.BoardConfig().get("build.partitions")
@@ -92,12 +94,12 @@ def get_partition_table(env): # pylint: disable=undefined-variable
 
     return partition_table
 
+
 def get_factory_image() -> Optional[str]:
-    """
-    Get the factory binary file depending on the active environment.
-    
+    """Get the factory binary file depending on the active environment.
+
     Returns:
-        str: A path to a factory binary file.
+        Path to a factory binary file, or None if it is unavailable.
     """
     factory_image = ""
 
@@ -106,19 +108,25 @@ def get_factory_image() -> Optional[str]:
 
         if os.path.isfile(factory_image):
             return factory_image
-        else:
-            print(f"Factory binary: {factory_image} does not exist!")
+        print(f"Factory binary: {factory_image} does not exist!")
     else:
         print(f"No factory binary specified for environment: {ENV_NAME}!")
 
     return None
 
+
 def handle_upload() -> None:
-    """
-    Handle the upload process by adding the factory binary to FLASH_EXTRA_IMAGES.
+    """Handle the upload process by adding the factory binary to FLASH_EXTRA_IMAGES.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: The factory partition has no offset.
+        FileNotFoundError: No factory image was found.
     """
     factory_image = get_factory_image()
-    partition_table = get_partition_table(env) # pylint: disable=undefined-variable
+    partition_table = get_partition_table(env)  # pylint: disable=undefined-variable
     factory_offset = 0
 
     if factory_image is not None:
@@ -128,7 +136,7 @@ def handle_upload() -> None:
                 factory_offset = partition["offset"]
 
         if factory_offset != 0:
-            env.Append( # pylint: disable=undefined-variable
+            env.Append(  # pylint: disable=undefined-variable
                 FLASH_EXTRA_IMAGES=[
                     (f"{factory_offset}", f"{factory_image}")
                 ]

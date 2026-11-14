@@ -69,7 +69,14 @@ class PackageContext:
 
 
 def normalized_parts(member_name: str) -> tuple[str, ...]:
-    """Return safe, non-empty POSIX archive path components."""
+    """Return safe, non-empty POSIX archive path components.
+
+    Args:
+        member_name: Archive member name.
+
+    Returns:
+        Non-empty archive path components.
+    """
     return tuple(
         part
         for part in PurePosixPath(member_name).parts
@@ -78,7 +85,14 @@ def normalized_parts(member_name: str) -> tuple[str, ...]:
 
 
 def find_artifact_directories(archive: zipfile.ZipFile) -> dict[str, set[str]]:
-    """Find release artifact directories for firmware and filesystem images."""
+    """Find release artifact directories for firmware and filesystem images.
+
+    Args:
+        archive: Open release ZIP archive.
+
+    Returns:
+        Sets of firmware and filesystem artifact directory names.
+    """
     artifacts: dict[str, set[str]] = {
         "firmware": set(),
         "filesystem": set(),
@@ -99,7 +113,19 @@ def find_artifact_member(
     artifact_directory: str,
     filename: str,
 ) -> str:
-    """Find one named image below its release artifact directory."""
+    """Find one named image below its release artifact directory.
+
+    Args:
+        archive: Open release ZIP archive.
+        artifact_directory: Artifact directory name.
+        filename: Image filename.
+
+    Returns:
+        Matching archive member name.
+
+    Raises:
+        ValueError: The archive does not contain exactly one matching image.
+    """
     candidates = [
         member
         for member in archive.namelist()
@@ -121,7 +147,17 @@ def copy_archive_image(
     filename: str,
     destination: Path,
 ) -> None:
-    """Copy one named image from the release ZIP into a temporary directory."""
+    """Copy one named image from the release ZIP into a temporary directory.
+
+    Args:
+        archive: Open release ZIP archive.
+        artifact_directory: Artifact directory name.
+        filename: Image filename.
+        destination: Destination file.
+
+    Returns:
+        None.
+    """
     member_name = find_artifact_member(archive, artifact_directory, filename)
     with archive.open(member_name, "r") as source:
         with destination.open("wb") as output:
@@ -129,7 +165,17 @@ def copy_archive_image(
 
 
 def release_environments(archive: zipfile.ZipFile) -> list[str]:
-    """Return the matching firmware/filesystem targets present in the release."""
+    """Return the matching firmware/filesystem targets present in the release.
+
+    Args:
+        archive: Open release ZIP archive.
+
+    Returns:
+        Sorted environment names.
+
+    Raises:
+        ValueError: Firmware is missing or target sets do not match.
+    """
     artifacts = find_artifact_directories(archive)
     firmware_environments = {
         artifact.removesuffix(FIRMWARE_SUFFIX)
@@ -155,7 +201,19 @@ def package_archive_environment(
     environment: str,
     context: PackageContext,
 ) -> None:
-    """Package one target using the binaries stored in a release archive."""
+    """Package one target using the binaries stored in a release archive.
+
+    Args:
+        archive: Open release ZIP archive.
+        environment: PlatformIO environment name.
+        context: Packaging paths and project configuration.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: The environment is missing from the project configuration.
+    """
     config = context.sections.get(f"env:{environment}")
     if config is None:
         raise ValueError(
@@ -207,7 +265,17 @@ def package_release_archive(
     project_directory: Path,
     platformio_command: str,
 ) -> int:
-    """Build per-board USB packages from the binaries in an existing release ZIP."""
+    """Build per-board USB packages from the binaries in an existing release ZIP.
+
+    Args:
+        release_archive: Existing release ZIP file.
+        output_directory: Destination for board packages.
+        project_directory: Project root for PlatformIO configuration.
+        platformio_command: PlatformIO executable.
+
+    Returns:
+        Number of packaged environments.
+    """
     sections = read_platformio_sections(platformio_command, project_directory)
     output_directory.mkdir(parents=True, exist_ok=True)
 
@@ -232,7 +300,11 @@ def package_release_archive(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the command-line argument parser."""
+    """Build the command-line argument parser.
+
+    Returns:
+        Configured argument parser.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release-archive", type=Path, required=True)
     parser.add_argument("--project-dir", type=Path, required=True)
@@ -242,7 +314,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
-    """Parse arguments and repackage an existing release's firmware images."""
+    """Parse arguments and repackage an existing release's firmware images.
+
+    Returns:
+        Zero on success, or one when packaging fails.
+    """
     args = build_parser().parse_args()
 
     try:

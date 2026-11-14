@@ -50,8 +50,15 @@ _APP_MENU_FULL_PATH = "./data/js/app-menu.js"
 ################################################################################
 
 
-def _generate_app_menu():
-    """Generate app-menu.js from static and generated menu fragments."""
+def _generate_app_menu() -> None:
+    """Generate app-menu.js from static and generated menu fragments.
+
+    Returns:
+        None.
+
+    Raises:
+        FileNotFoundError: A menu source file is missing.
+    """
     source_files = [
         _MENU_BASE_FULL_PATH,
         _PLUGIN_SUB_MENU_FULL_PATH,
@@ -72,12 +79,15 @@ def _generate_app_menu():
         file_desc.write(app_menu)
 
 
-def configure(config_full_path, layout):
+def configure(config_full_path: str, layout: str) -> None:
     """Configures the plugins according to configuration.
 
     Args:
-        config_full_path (str): Full path to configuration file.
-        layout (str): The display layout.
+        config_full_path: Full path to configuration file.
+        layout: The display layout.
+
+    Returns:
+        None.
     """
     print(
         f"Configure plugins and services: {config_full_path} with layout {layout}")

@@ -55,7 +55,18 @@ def read_platformio_sections(
     platformio_command: str,
     project_directory: Path | None = None,
 ) -> dict[str, dict[str, Any]]:
-    """Return PlatformIO's resolved project configuration sections."""
+    """Return PlatformIO's resolved project configuration sections.
+
+    Args:
+        platformio_command: PlatformIO executable.
+        project_directory: Project directory, or None for the current directory.
+
+    Returns:
+        Resolved sections keyed by section name.
+
+    Raises:
+        subprocess.CalledProcessError: PlatformIO fails to resolve the project.
+    """
     result = subprocess.run(
         [platformio_command, "project", "config", "--json-output"],
         check=True,
@@ -68,7 +79,14 @@ def read_platformio_sections(
 
 
 def read_partitions(partition_file: Path) -> dict[str, dict[str, int]]:
-    """Read named partitions from an ESP-IDF CSV partition table."""
+    """Read named partitions from an ESP-IDF CSV partition table.
+
+    Args:
+        partition_file: Partition table CSV file.
+
+    Returns:
+        Partition offsets and sizes keyed by partition name.
+    """
     partitions: dict[str, dict[str, int]] = {}
 
     with partition_file.open("r", encoding="utf-8", newline="") as stream:
@@ -86,7 +104,14 @@ def read_partitions(partition_file: Path) -> dict[str, dict[str, int]]:
 
 
 def chip_family(board_id: str) -> str:
-    """Map a configured PlatformIO board ID to its ESP32 ROM family."""
+    """Map a configured PlatformIO board ID to its ESP32 ROM family.
+
+    Args:
+        board_id: PlatformIO board identifier.
+
+    Returns:
+        ESP32 ROM family name.
+    """
     normalized_board_id = board_id.lower().replace("_", "-")
 
     if "s3" in normalized_board_id:
@@ -100,7 +125,14 @@ def chip_family(board_id: str) -> str:
 
 
 def sha256_file(path: Path) -> str:
-    """Compute a file's SHA-256 digest using bounded memory."""
+    """Compute a file's SHA-256 digest using bounded memory.
+
+    Args:
+        path: File to hash.
+
+    Returns:
+        Hexadecimal SHA-256 digest.
+    """
     digest = hashlib.sha256()
 
     with path.open("rb") as stream:
@@ -118,7 +150,19 @@ def get_image_sources(
     build_directory: Path,
     project_directory: Path,
 ) -> tuple[str, str, list[tuple[str, Path, int]]]:
-    """Resolve board family, display label, and flash image sources."""
+    """Resolve board family, display label, and flash image sources.
+
+    Args:
+        config: Resolved PlatformIO environment settings.
+        build_directory: Build directory containing generated images.
+        project_directory: Project root containing the partition table.
+
+    Returns:
+        Board ID, chip family, and image names, paths and flash offsets.
+
+    Raises:
+        ValueError: A required factory or filesystem partition is missing.
+    """
     partition_file = project_directory / str(config["board_build.partitions"])
     partitions = read_partitions(partition_file)
     factory_partition = partitions.get("factory")
@@ -159,7 +203,18 @@ def write_manifest(
     family: str,
     images: list[dict[str, Any]],
 ) -> None:
-    """Write a target's board metadata and image hashes as JSON."""
+    """Write a target's board metadata and image hashes as JSON.
+
+    Args:
+        output_directory: Destination directory.
+        environment: PlatformIO environment name.
+        board_id: PlatformIO board identifier.
+        family: ESP32 ROM family.
+        images: Image metadata and hashes.
+
+    Returns:
+        None.
+    """
     manifest = {
         "environment": environment,
         "board": board_id,
@@ -184,7 +239,22 @@ def package_environment(
     sections: dict[str, dict[str, Any]],
     project_directory: Path | None = None,
 ) -> None:
-    """Copy build images and write their exact flash plan and hashes."""
+    """Copy build images and write their exact flash plan and hashes.
+
+    Args:
+        environment: PlatformIO environment name.
+        build_directory: Directory containing the built images.
+        output_directory: Destination directory for the flash package.
+        sections: Resolved PlatformIO project configuration.
+        project_directory: Project root, or None for the current directory.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: The environment or required partitions are missing.
+        FileNotFoundError: A required flash image is missing.
+    """
     config = sections.get(f"env:{environment}")
     if config is None:
         raise ValueError(f"Unknown PlatformIO environment: {environment}")
@@ -218,7 +288,11 @@ def package_environment(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the command-line argument parser."""
+    """Build the command-line argument parser.
+
+    Returns:
+        Configured argument parser.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--environment", required=True)
     parser.add_argument("--build-dir", type=Path, required=True)
@@ -228,7 +302,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
-    """Parse arguments and package one PlatformIO target."""
+    """Parse arguments and package one PlatformIO target.
+
+    Returns:
+        Zero on success, or one when packaging fails.
+    """
     args = build_parser().parse_args()
 
     try:

@@ -68,6 +68,9 @@ def warn(message: str) -> None:
 
     Args:
         message: Warning text.
+
+    Returns:
+        None.
     """
     print(f"Warning: {message}", file=sys.stderr)
 
@@ -215,6 +218,9 @@ def validate_package(manifest: dict[str, Any], manifest_path: Path) -> None:
         manifest: Parsed package manifest.
         manifest_path: Manifest file, used for error messages.
 
+    Returns:
+        None.
+
     Raises:
         ValueError: If a required field is missing or has an invalid value.
     """
@@ -292,6 +298,9 @@ def copy_package_images(
         url_prefix: Pages-relative URL of the destination directory.
         manifest: Package manifest, updated with the image URLs.
 
+    Returns:
+        None.
+
     Raises:
         FileNotFoundError: If an image is missing.
     """
@@ -363,6 +372,9 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     Args:
         path: Destination file.
         data: JSON serializable content.
+
+    Returns:
+        None.
     """
     with path.open("w", encoding="utf-8", newline="\n") as stream:
         json.dump(data, stream, indent=2)
@@ -382,6 +394,9 @@ def assemble(
         releases_meta: GitHub release metadata.
         site_directory: Pages root.
         default_tag: Tag to preselect, empty for the newest stable release.
+
+    Returns:
+        None.
 
     Raises:
         FileNotFoundError: If the installer build output or an image is missing.

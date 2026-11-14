@@ -25,6 +25,8 @@
 ################################################################################
 # Imports
 ################################################################################
+from __future__ import annotations
+
 import re
 
 ################################################################################
@@ -39,17 +41,19 @@ import re
 # Functions
 ################################################################################
 
-def determine_layout(build_flags):
+
+def determine_layout(build_flags: list[str]) -> str:
     """Determine the display layout by the build flags.
-        It assumes that the build flags contain the following pre-processor defines:
-        - CONFIG_LED_MATRIX_WIDTH
-        - CONFIG_LED_MATRIX_HEIGHT
+
+    The build flags are expected to contain CONFIG_LED_MATRIX_WIDTH and
+    CONFIG_LED_MATRIX_HEIGHT preprocessor definitions. Missing dimensions
+    default to zero.
 
     Args:
-        build_flags (list[str]): Build flags
+        build_flags: Build flags to search for display dimensions.
 
     Returns:
-        str: Display layout
+        Display layout name in the form LAYOUT_<width>X<height>.
     """
     width = 0
     height = 0
@@ -64,6 +68,7 @@ def determine_layout(build_flags):
             height = int(match.group(1))
 
     return f"LAYOUT_{width}X{height}"
+
 
 ################################################################################
 # Main

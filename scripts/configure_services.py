@@ -25,11 +25,15 @@
 ################################################################################
 # Imports
 ################################################################################
+from __future__ import annotations
+
 import os
-import shutil
-import json
-import hashlib
 from string import Template
+
+from configure_common import (
+    clean_up_folders as _clean_up_folders,
+    sync_web_files,
+)
 
 ################################################################################
 # Variables
@@ -52,124 +56,15 @@ _SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/Services.cpp"
 ################################################################################
 
 
-def _sort_key(file_path):
-    return os.path.basename(file_path)
-
-
-def calculate_path_checksum(paths):
-    """Recursively calculates a checksum representing the contents of all files
-        found with a sequence of file and/or directory paths.
+def _generate_web_menu(menu_full_path: str, service_list: list[str]) -> None:
+    """Generate the service web menu.
 
     Args:
-        paths (list[str]): List of paths
+        menu_full_path: Destination for the JavaScript menu.
+        service_list: Service names to include.
 
     Returns:
-        int: MD5 checksum
-    """
-    hasher = hashlib.md5()
-    file_list = []
-
-    for path in paths:
-        if os.path.isdir(path):
-            filenames = os.listdir(path)
-            for filename in filenames:
-                file_path = os.path.normpath(path + "/" + filename)
-                file_list.append(file_path)
-        elif os.path.isfile(path):
-            file_list.append(path)
-
-    file_list_sorted = sorted(file_list, key=_sort_key)
-
-    for file_path in file_list_sorted:
-        with open(file_path, "rb") as file:
-            while chunk := file.read(8192):
-                hasher.update(chunk)
-
-    return hasher.hexdigest()
-
-
-def _load_json_file(full_path):
-    """Load JSON file.
-
-    Args:
-        full_path (str): Full path to JSON file.
-
-    Returns:
-        dict|None: Data dictionary or None
-    """
-    data = None
-
-    try:
-        with open(full_path, encoding="utf-8") as json_data:
-            data = json.load(json_data)
-
-    except FileNotFoundError:
-        pass
-
-    return data
-
-
-def _clean_up_folders(service_list, dst_path):
-    """Remove folders in destination path, which are not present in the source path.
-
-    Args:
-        service_list (list): List with all service names
-        dst_path (str): Destination path
-
-    Return:
-        bool: If cleaned something, it will return True otherwise False.
-    """
-    is_cleaned_up = False
-
-    if os.path.isdir(dst_path) is False:
-        pass
-    else:
-
-        dst_subfolders = []
-        for dst_file in os.listdir(dst_path):
-            if os.path.isdir(dst_path + "/" + dst_file) is True:
-                dst_subfolders.append(dst_file)
-
-        # Remove folders which exists only in the destination
-        for folder in dst_subfolders:
-            if folder not in service_list:
-                dst_full_path = dst_path + "/" + folder
-                try:
-                    shutil.rmtree(dst_full_path)
-                    print(f"\t\"{dst_full_path}\" removed.")
-                except FileNotFoundError:
-                    pass
-                is_cleaned_up = True
-
-    return is_cleaned_up
-
-
-def _copy_files(src_files, dst_path):
-    """Copy service web related files from /lib/<service-name> to /data/services/<service-name>.
-        If no destination folder exists, it will be created.
-
-    Args:
-        service_name (str): service name
-    """
-    if os.path.exists(dst_path) is False:
-        os.mkdir(dst_path)
-
-    # Copy source files to destination.
-    for src_file in src_files:
-        print(f"\t\t{src_file} -> {dst_path}", end="")
-        try:
-            shutil.copy2(src_file, dst_path)
-            print("")
-        except FileNotFoundError:
-            print(" -> file not found!")
-
-
-def _generate_web_menu(menu_full_path, service_list):
-    """Generate the menu.json file.
-
-    Args:
-        menu_full_path (str): Full path to menu.json where it shall be created.
-        service_list (list): List of all service names
+        None.
     """
     with open(menu_full_path, 'w', encoding="utf-8") as file_desc:
         file_desc.write("var serviceSubMenu = [\n")
@@ -179,7 +74,9 @@ def _generate_web_menu(menu_full_path, service_list):
             file_desc.write("    {\n")
             file_desc.write(f"        title: \"{service_name}\",\n")
             file_desc.write(
-                f"        hyperRef: \"/services/{service_name}/{service_name}.html\"\n")
+                f"        hyperRef: "
+                f"\"/services/{service_name}/{service_name}.html\"\n"
+            )
             file_desc.write("    }")
 
             if idx == (len(service_list) - 1):
@@ -190,12 +87,17 @@ def _generate_web_menu(menu_full_path, service_list):
         file_desc.write("];\n")
 
 
-def _generate_cpp_service(service_list_full_path, service_list):
-    """Generate the Service.cpp source file.
+def _generate_cpp_service(
+    service_list_full_path: str, service_list: list[str]
+) -> None:
+    """Generate the service C++ source file.
 
     Args:
-        service_list_full_path (str): Full path to where the source code shall be created.
-        service_list (list): List of all service names
+        service_list_full_path: Destination for the generated source file.
+        service_list: Service names to include.
+
+    Returns:
+        None.
     """
     includes = ""
     start_calls = ""
@@ -247,12 +149,15 @@ def _generate_cpp_service(service_list_full_path, service_list):
         file_desc.write(result)
 
 
-def configure_services(service_list, layout):
-    """Generate all service related artifacts.
+def configure_services(service_list: list[str], layout: str) -> None:
+    """Generate service artifacts, removing skipped names from the input list.
 
     Args:
-        service_list (list): List of service names
-        layout (str): The display layout.
+        service_list: Mutable list of service names.
+        layout: Display layout.
+
+    Returns:
+        None.
     """
     # Avoid generation if possible, because it will cause a compilation step.
     is_generation_required = False
@@ -274,73 +179,24 @@ def configure_services(service_list, layout):
         service_lib_web_path = service_lib_path + "/web"
 
         if os.path.isdir(service_lib_path) is False:
-            print(
-                f"\tSkipping {service_name}, because {service_lib_path} doesn't exist.")
+            print(f"\tSkipping {service_name}, because "
+                  f"{service_lib_path} doesn't exist.")
             skip_list.append(service_name)
 
         elif os.path.isdir(service_lib_web_path) is False:
-            print(
-                f"\tSkipping {service_name}, because {service_lib_web_path} doesn't exist.")
+            print(f"\tSkipping {service_name}, because "
+                  f"{service_lib_web_path} doesn't exist.")
             skip_list_web.append(service_name)
 
         else:
-            data_web_service_path = _WEB_DATA_PATH + "/" + service_name
-
-            data_web_service_path_checksum = calculate_path_checksum(
-                [data_web_service_path])
-
-            src_files = []
-
-            service_lib_data = _load_json_file(
-                service_lib_path + "/pixelix.json")
-
-            if service_lib_data is None:
-                src_files = os.listdir(service_lib_web_path)
-                src_files = [service_lib_web_path + "/" +
-                             src_file for src_file in src_files]
-            else:
-
-                if service_lib_data["pixelix"]["type"] != "service":
-                    print(
-                        f"\tSkipping {service_name}, because its type isn't service in pixelix.json.")
-                    skip_list.append(service_name)
-
-                elif service_lib_data["pixelix"]["name"] != service_name:
-                    print(
-                        f"\tSkipping {service_name}, because service name doesn't match with pixelix.json.")
-
-                else:
-                    web_files = service_lib_data["pixelix"]["web"]["files"]
-                    layout_specific_files = []
-                    src_files = [service_lib_path + "/" +
-                                 file_rel_path for file_rel_path in web_files]
-
-                    # Search for layout specific files or use generic file list.
-                    for lib_layout in service_lib_data["pixelix"]["web"]["layouts"]:
-
-                        if lib_layout["name"] == layout:
-                            layout_specific_files = lib_layout["files"]
-
-                        elif lib_layout["name"] == "LAYOUT_GENERIC":
-                            if layout_specific_files is None:
-                                layout_specific_files = lib_layout["files"]
-
-                    layout_specific_files_full_path = [
-                        service_lib_path + "/" + file_rel_path for file_rel_path in layout_specific_files]
-                    src_files = src_files + layout_specific_files_full_path
-
-            if src_files:
-                service_lib_web_path_checksum = calculate_path_checksum(
-                    src_files)
-
-                if data_web_service_path_checksum != service_lib_web_path_checksum:
-                    print("\tCopy web data:")
-                    try:
-                        shutil.rmtree(data_web_service_path)
-                    except FileNotFoundError:
-                        pass
-                    _copy_files(src_files, data_web_service_path)
-                    is_generation_required = True
+            invalid_type, changed = sync_web_files(
+                service_name, "service", service_lib_path,
+                _WEB_DATA_PATH + "/" + service_name, layout
+            )
+            if invalid_type:
+                skip_list.append(service_name)
+            if changed:
+                is_generation_required = True
 
     # Remove skipped services from list
     for service_name in skip_list:
