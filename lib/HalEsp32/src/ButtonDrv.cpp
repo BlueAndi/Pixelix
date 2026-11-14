@@ -54,7 +54,8 @@
  * Prototypes
  *****************************************************************************/
 
-static void IRAM_ATTR isrButton(void* arg);
+/* IRAM_ATTR only at the definition, because the section name is unique per use. */
+static void isrButton(void* arg);
 
 /******************************************************************************
  * Local Variables
