@@ -112,6 +112,20 @@
  */
 #define TASK_WDT_TIMEOUT_S (10U)
 
+/** Observe the idle task of core 0 by task watchdog, like configured in the sdkconfig. */
+#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0
+#define TASK_WDT_IDLE_CORE_0_MASK (1U << 0U)
+#else
+#define TASK_WDT_IDLE_CORE_0_MASK (0U)
+#endif
+
+/** Observe the idle task of core 1 by task watchdog, like configured in the sdkconfig. */
+#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1
+#define TASK_WDT_IDLE_CORE_1_MASK (1U << 1U)
+#else
+#define TASK_WDT_IDLE_CORE_1_MASK (0U)
+#endif
+
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
@@ -169,6 +183,15 @@ static const uint32_t HWCDC_TX_TIMEOUT = 4U;
  * Timer to output the current frames per second (fps) in the serial console periodically.
  */
 static SimpleTimer gFpsOutputTimer;
+
+/**
+ * Task watchdog configuration.
+ */
+static const esp_task_wdt_config_t gTaskWdtConfig = {
+    TASK_WDT_TIMEOUT_S * 1000U,                            /* Timeout in ms */
+    TASK_WDT_IDLE_CORE_0_MASK | TASK_WDT_IDLE_CORE_1_MASK, /* Observed idle tasks */
+    true                                                   /* Panic */
+};
 
 /******************************************************************************
  * External functions
@@ -247,8 +270,11 @@ void setup()
      */
     Board::getInstance().getButtonDrv().registerObserver(gButtonHandler);
 
-    /* Initialize task watchdog. */
-    (void)esp_task_wdt_init(TASK_WDT_TIMEOUT_S, true);
+    /* Reconfigure task watchdog. The initialization is already done by the Arduino framework. */
+    if (ESP_OK != esp_task_wdt_reconfigure(&gTaskWdtConfig))
+    {
+        LOG_WARNING("Failed to reconfigure task watchdog.");
+    }
 
     /* Enable task watchdog for the loop task.
      *
