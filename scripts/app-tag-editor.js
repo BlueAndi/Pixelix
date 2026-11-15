@@ -1,0 +1,718 @@
+"use strict";
+
+/* Tag editor for text inputs, which contain text widget format tags.
+ *
+ * This file is the source. The filesystem contains data/js/app-tag-editor.js.gz,
+ * which must be regenerated after every change, see doc/WEB-CONVENTIONS.md.
+ *
+ * Attach to window explicitly, see app-api.js. Without window (Node.js) the
+ * pure functions are exported for testing purposes.
+ */
+const tagEditor = ("object" === typeof window) ? (window.tagEditor = window.tagEditor || {}) : {};
+
+/* Shown in the preview instead of a special character code, because the glyph
+ * depends on the font used by the firmware.
+ */
+tagEditor.SPECIAL_CHAR_PLACEHOLDER = "□";
+
+/* Firmware defaults, see TextWidget.h */
+tagEditor._DEFAULT_COLOR = "#FFFFFF";
+tagEditor._DEFAULT_GRADIENT = { type: "gradient", direction: "vertical", startColor: "#FF0000", endColor: "#0000FF" };
+
+tagEditor._H_ALIGN = { "{hl}": "left", "{hc}": "center", "{hr}": "right" };
+tagEditor._V_ALIGN = { "{vt}": "top", "{vc}": "center", "{vb}": "bottom" };
+
+/* Convert hex digits to "#RRGGBB" or return null if invalid. */
+tagEditor._toColor = function (hexStr) {
+    let color = null;
+
+    if (true === /^[0-9a-f]{1,8}$/i.test(hexStr)) {
+        color = "#" + (Number.parseInt(hexStr, 16) & 0xFFFFFF).toString(16).padStart(6, "0").toUpperCase();
+    }
+
+    return color;
+};
+
+/* Split the text into text and tag tokens, like the firmware does it in
+ * TWTokenizer::parse().
+ */
+tagEditor._tokenize = function (text) {
+    const tokens = [];
+    let isValid = true;
+    let isEscapeActive = false;
+    let tagBegin = -1;
+    let buffer = "";
+    let idx = 0;
+
+    const flush = function () {
+        if (0 < buffer.length) {
+            tokens.push({ isTag: false, str: buffer });
+            buffer = "";
+        }
+    };
+
+    while ((true === isValid) && (text.length > idx)) {
+        const character = text[idx];
+        const isInTag = (0 <= tagBegin);
+
+        if (true === isEscapeActive) {
+            buffer += character;
+            isEscapeActive = false;
+        } else if ("\\" === character) {
+            if (true === isInTag) {
+                isValid = false;
+            } else {
+                isEscapeActive = true;
+            }
+        } else if ("\n" === character) {
+            if (true === isInTag) {
+                isValid = false;
+            } else {
+                buffer += character;
+            }
+        } else if ("{" === character) {
+            if (true === isInTag) {
+                isValid = false;
+            } else {
+                flush();
+                tagBegin = idx;
+            }
+        } else if ("}" === character) {
+            if (false === isInTag) {
+                isValid = false;
+            } else {
+                tokens.push({ isTag: true, str: text.substring(tagBegin, idx + 1) });
+                tagBegin = -1;
+            }
+        } else if (false === isInTag) {
+            buffer += character;
+        }
+
+        if (true === isValid) {
+            ++idx;
+        }
+    }
+
+    /* Best effort in case of an error: Keep the rest as it is. */
+    if (false === isValid) {
+        buffer += text.substring(idx);
+    }
+
+    /* A unterminated tag at the end is dropped. */
+    flush();
+
+    return { isValid: isValid, tokens: tokens };
+};
+
+/* Parse text with format tags.
+ *
+ * Returns { isValid, hAlign, vAlign, runs }, with runs as array of { text, brush }.
+ * A brush is { type: "solid", color } or { type: "gradient", direction, startColor, endColor }.
+ * isValid is false if the firmware would reject the text.
+ */
+tagEditor.parse = function (text) {
+    const tokenized = tagEditor._tokenize(text);
+    const result = { isValid: tokenized.isValid, hAlign: "left", vAlign: "top", runs: [] };
+    let solidBrush = { type: "solid", color: tagEditor._DEFAULT_COLOR };
+    let gradientBrush = tagEditor._DEFAULT_GRADIENT;
+    let brush = solidBrush;
+    let pendingHAlign = null;
+
+    const addText = function (str) {
+        const last = result.runs[result.runs.length - 1];
+
+        /* The firmware applies a horizontal alignment not before text is drawn. */
+        if (null !== pendingHAlign) {
+            result.hAlign = pendingHAlign;
+            pendingHAlign = null;
+        }
+
+        if ((undefined !== last) && (JSON.stringify(last.brush) === JSON.stringify(brush))) {
+            last.text += str;
+        } else {
+            result.runs.push({ text: str, brush: Object.assign({}, brush) });
+        }
+    };
+
+    const handleGradient = function (tag, direction) {
+        const match = /^#([0-9a-f]{1,8}),#([0-9a-f]{1,8}),-?\d+,\d+$/i.exec(tag.substring(5, tag.length - 1));
+
+        if (null !== match) {
+            gradientBrush = { type: "gradient", direction: direction, startColor: tagEditor._toColor(match[1]), endColor: tagEditor._toColor(match[2]) };
+            brush = gradientBrush;
+        }
+    };
+
+    tokenized.tokens.forEach(function (token) {
+        const tag = token.str;
+
+        if (false === token.isTag) {
+            addText(tag);
+        } else if (undefined !== tagEditor._H_ALIGN[tag]) {
+            pendingHAlign = tagEditor._H_ALIGN[tag];
+        } else if (undefined !== tagEditor._V_ALIGN[tag]) {
+            result.vAlign = tagEditor._V_ALIGN[tag];
+        } else if ("{stc}" === tag) {
+            brush = solidBrush;
+        } else if ("{lgtc}" === tag) {
+            brush = gradientBrush;
+        } else if (true === tag.startsWith("{lgv ")) {
+            handleGradient(tag, "vertical");
+        } else if (true === tag.startsWith("{lgh ")) {
+            handleGradient(tag, "horizontal");
+        } else if (true === tag.startsWith("{#")) {
+            const color = tagEditor._toColor(tag.substring(2, tag.length - 1));
+
+            if (null !== color) {
+                solidBrush = { type: "solid", color: color };
+                brush = solidBrush;
+            }
+        } else if (true === /^\{0x[0-9a-f]{1,2}\}$/i.test(tag)) {
+            addText(tagEditor.SPECIAL_CHAR_PLACEHOLDER);
+        } else {
+            /* Unknown tags are skipped. */
+        }
+    });
+
+    return result;
+};
+
+/* Split the text into tags and the text between, each with its position.
+ *
+ * Returns an array of { start, end, str, isTag }, which covers the whole text.
+ * Complete format tags and the given plugin specific placeholders are tags,
+ * everything else is text, including escaped and incomplete tags.
+ */
+tagEditor.split = function (value, placeholders) {
+    const segments = [];
+    let idx = 0;
+
+    while (value.length > idx) {
+        const last = segments[segments.length - 1];
+        let end = idx + 1;
+        let isTag = false;
+
+        if ("\\" === value[idx]) {
+            /* The escaped character belongs to the text. */
+            end = Math.min(idx + 2, value.length);
+        } else if ("{" === value[idx]) {
+            const match = /^\{[^{}\\\n]*\}/.exec(value.substring(idx));
+
+            if (null !== match) {
+                end = idx + match[0].length;
+                isTag = true;
+            }
+        } else {
+            (placeholders || []).forEach(function (placeholder) {
+                if ((false === isTag) && (0 < placeholder.length) && (true === value.startsWith(placeholder, idx))) {
+                    end = idx + placeholder.length;
+                    isTag = true;
+                }
+            });
+        }
+
+        if ((false === isTag) && (undefined !== last) && (false === last.isTag)) {
+            last.end = end;
+            last.str = value.substring(last.start, end);
+        } else {
+            segments.push({ start: idx, end: end, str: value.substring(idx, end), isTag: isTag });
+        }
+
+        idx = end;
+    }
+
+    return segments;
+};
+
+/* Insert a tag at the selection start. Selected text is kept.
+ *
+ * Returns { value, cursor } or null if the max. length (optional) would be exceeded.
+ */
+tagEditor.insertAt = function (value, selectionStart, selectionEnd, tag, maxLength) {
+    let result = null;
+
+    if (("number" !== typeof maxLength) || (maxLength >= (value.length + tag.length))) {
+        result = {
+            value: value.substring(0, selectionStart) + tag + value.substring(selectionStart),
+            cursor: selectionStart + tag.length
+        };
+    }
+
+    return result;
+};
+
+tagEditor._HINT_INVALID = "Invalid tag syntax, the display will not update.";
+tagEditor._BTN_CLASS = "btn btn-sm btn-secondary";
+tagEditor._ROW_CLASS = "d-flex flex-wrap gap-2 align-items-center";
+
+/* There is only one editor per page, which moves to the focused input. */
+tagEditor._options = new WeakMap();
+tagEditor._root = null;
+tagEditor._input = null;
+tagEditor._preview = null;
+tagEditor._hint = null;
+tagEditor._tags = null;
+tagEditor._warning = "";
+tagEditor._timer = null;
+tagEditor._isPointerFocus = false;
+tagEditor._isInitialized = false;
+
+/* Create a HTML element with CSS classes, optional text and attributes. */
+tagEditor._create = function (tagName, className, text, attributes) {
+    const element = document.createElement(tagName);
+
+    element.className = className;
+
+    if (undefined !== text) {
+        element.textContent = text;
+    }
+
+    Object.keys(attributes || {}).forEach(function (name) {
+        element.setAttribute(name, attributes[name]);
+    });
+
+    return element;
+};
+
+/* Create a button, which calls the handler on click. */
+tagEditor._createButton = function (text, onClick, title) {
+    const button = tagEditor._create("button", tagEditor._BTN_CLASS, text, { type: "button" });
+
+    if (undefined !== title) {
+        button.title = title;
+    }
+
+    button.addEventListener("click", onClick);
+
+    return button;
+};
+
+/* Create a button, which inserts the tag on click. */
+tagEditor._createTagButton = function (text, tag, title) {
+    return tagEditor._createButton(text, function () {
+        tagEditor._insert(tag);
+    }, title);
+};
+
+tagEditor._createColorInput = function (value, label) {
+    return tagEditor._create("input", "form-control form-control-sm form-control-color", undefined, { "type": "color", "value": value, "aria-label": label });
+};
+
+tagEditor._createColorTab = function () {
+    const pane = tagEditor._create("div", tagEditor._ROW_CLASS);
+    const color = tagEditor._createColorInput("#ff0000", "Text color");
+
+    pane.append(color, tagEditor._createButton("Add color", function () {
+        tagEditor._insert("{" + color.value.toUpperCase() + "}");
+    }));
+
+    return pane;
+};
+
+tagEditor._createGradientTab = function () {
+    const pane = tagEditor._create("div", tagEditor._ROW_CLASS);
+    const startColor = tagEditor._createColorInput("#ff0000", "Gradient start color");
+    const endColor = tagEditor._createColorInput("#0000ff", "Gradient end color");
+    const direction = tagEditor._create("select", "form-select form-select-sm w-auto", undefined, { "aria-label": "Gradient direction" });
+    const offset = tagEditor._create("input", "form-control form-control-sm tag-editor-number", undefined, { "type": "number", "value": "0", "aria-label": "Gradient offset in pixels", "title": "Offset in pixels" });
+    const length = tagEditor._create("input", "form-control form-control-sm tag-editor-number", undefined, { "type": "number", "value": "32", "aria-label": "Gradient length in pixels", "title": "Length in pixels" });
+
+    direction.append(tagEditor._create("option", "", "Vertical", { value: "lgv" }), tagEditor._create("option", "", "Horizontal", { value: "lgh" }));
+
+    pane.append(startColor, endColor, direction, offset, length, tagEditor._createButton("Add gradient", function () {
+        const offsetValue = Number.parseInt(offset.value, 10);
+        const lengthValue = Number.parseInt(length.value, 10);
+        const isValid = (false === Number.isNaN(offsetValue)) && (false === Number.isNaN(lengthValue)) && (0 <= lengthValue);
+
+        offset.classList.toggle("is-invalid", Number.isNaN(offsetValue));
+        length.classList.toggle("is-invalid", Number.isNaN(lengthValue) || (0 > lengthValue));
+
+        if (true === isValid) {
+            tagEditor._insert("{" + direction.value + " " + startColor.value.toUpperCase() + "," + endColor.value.toUpperCase() + "," + offsetValue + "," + lengthValue + "}");
+        }
+    }), tagEditor._createTagButton("Use solid color", "{stc}", "Activate solid text color"), tagEditor._createTagButton("Use gradient", "{lgtc}", "Activate linear gradient text color"));
+
+    return pane;
+};
+
+tagEditor._createAlignmentTab = function () {
+    const pane = tagEditor._create("div", tagEditor._ROW_CLASS);
+
+    [["Left", "{hl}"], ["Center", "{hc}"], ["Right", "{hr}"], ["Top", "{vt}"], ["Middle", "{vc}"], ["Bottom", "{vb}"]].forEach(function (item) {
+        pane.append(tagEditor._createTagButton(item[0], item[1]));
+    });
+
+    return pane;
+};
+
+tagEditor._createCharacterTab = function () {
+    const pane = tagEditor._create("div", tagEditor._ROW_CLASS);
+    const code = tagEditor._create("input", "form-control form-control-sm tag-editor-number", undefined, { "type": "text", "maxlength": "2", "placeholder": "CC", "aria-label": "Character code in hex (00-FF)", "title": "Character code in hex (00-FF)" });
+
+    pane.append(code, tagEditor._createButton("Add character", function () {
+        const isValid = /^[0-9a-f]{1,2}$/i.test(code.value);
+
+        code.classList.toggle("is-invalid", false === isValid);
+
+        if (true === isValid) {
+            tagEditor._insert("{0x" + code.value.toUpperCase().padStart(2, "0") + "}");
+        }
+    }));
+
+    return pane;
+};
+
+/* Create a tab with plugin specific tags, one button per item. */
+tagEditor._createItemsTab = function (tab) {
+    const pane = tagEditor._create("div", tagEditor._ROW_CLASS);
+
+    (tab.items || []).forEach(function (item) {
+        pane.append(tagEditor._createTagButton(item.label, item.insert, item.description));
+    });
+
+    return pane;
+};
+
+/* Create a tab with presets, which replace the whole text. */
+tagEditor._createPresetsTab = function (presets) {
+    const pane = tagEditor._create("div", tagEditor._ROW_CLASS);
+
+    presets.forEach(function (preset) {
+        pane.append(tagEditor._createButton(preset.label, function () {
+            tagEditor._setValue(preset.value, preset.value.length);
+        }, preset.value));
+    });
+
+    return pane;
+};
+
+/* Build the editor for the given options. */
+tagEditor._build = function (options) {
+    const root = tagEditor._create("div", "tag-editor border rounded bg-body shadow p-2");
+    const nav = tagEditor._create("ul", "nav nav-tabs small mb-2");
+    const tabs = [
+        { title: "Color", pane: tagEditor._createColorTab() },
+        { title: "Gradient", pane: tagEditor._createGradientTab() },
+        { title: "Alignment", pane: tagEditor._createAlignmentTab() },
+        { title: "Character", pane: tagEditor._createCharacterTab() }
+    ];
+
+    (options.extraTabs || []).forEach(function (tab) {
+        tabs.push({ title: tab.title, pane: tagEditor._createItemsTab(tab) });
+    });
+
+    if (0 < (options.presets || []).length) {
+        tabs.push({ title: "Presets", pane: tagEditor._createPresetsTab(options.presets) });
+    }
+
+    tagEditor._preview = tagEditor._create("div", "tag-editor-preview");
+    tagEditor._tags = tagEditor._create("div", "tag-editor-tags");
+    tagEditor._hint = tagEditor._create("div", "tag-editor-hint small text-warning");
+
+    root.append(tagEditor._preview, tagEditor._hint, nav);
+
+    tabs.forEach(function (tab, tabIdx) {
+        const item = tagEditor._create("li", "nav-item");
+        const link = tagEditor._create("button", "nav-link py-1 px-2", tab.title, { type: "button" });
+
+        link.addEventListener("click", function () {
+            tabs.forEach(function (other) {
+                other.link.classList.toggle("active", other === tab);
+                other.pane.hidden = (other !== tab);
+            });
+        });
+
+        tab.link = link;
+        tab.pane.hidden = (0 !== tabIdx);
+        link.classList.toggle("active", 0 === tabIdx);
+
+        item.append(link);
+        nav.append(item);
+        root.append(tab.pane);
+    });
+
+    root.append(tagEditor._tags);
+
+    /* The editor is located inside the form, avoid that enter submits it. */
+    root.addEventListener("keydown", function (event) {
+        if (("Enter" === event.key) && ("INPUT" === event.target.tagName)) {
+            event.preventDefault();
+        }
+    });
+
+    return root;
+};
+
+/* Place the editor above the input or its input group. */
+tagEditor._place = function () {
+    if (null !== tagEditor._root) {
+        const anchor = tagEditor._input.closest(".input-group") || tagEditor._input;
+
+        tagEditor._root.style.left = anchor.offsetLeft + "px";
+        tagEditor._root.style.top = anchor.offsetTop + "px";
+        tagEditor._root.style.width = anchor.offsetWidth + "px";
+    }
+};
+
+/* Show the parse result in the preview element. Its a separate step, so it
+ * can be replaced by a more accurate one.
+ */
+tagEditor._render = function (preview, parsed) {
+    const FLEX = { left: "flex-start", top: "flex-start", center: "center", right: "flex-end", bottom: "flex-end" };
+    const text = tagEditor._create("div", "tag-editor-preview-text");
+
+    parsed.runs.forEach(function (run) {
+        const span = tagEditor._create("span", "", run.text);
+
+        if ("gradient" === run.brush.type) {
+            span.className = "tag-editor-gradient";
+            span.style.backgroundImage = "linear-gradient(to " + (("vertical" === run.brush.direction) ? "bottom" : "right") + ", " + run.brush.startColor + ", " + run.brush.endColor + ")";
+        } else {
+            span.style.color = run.brush.color;
+        }
+
+        text.append(span);
+    });
+
+    text.style.textAlign = parsed.hAlign;
+    preview.style.justifyContent = FLEX[parsed.hAlign];
+    preview.style.alignItems = FLEX[parsed.vAlign];
+    preview.replaceChildren(text);
+};
+
+tagEditor._updatePreview = function () {
+    if (null !== tagEditor._root) {
+        const options = tagEditor._options.get(tagEditor._input);
+        let text = (options.previewPrefix || "") + tagEditor._input.value;
+        let parsed = null;
+
+        (options.extraTabs || []).forEach(function (tab) {
+            if ("function" === typeof tab.resolvePreview) {
+                text = tab.resolvePreview(text);
+            }
+        });
+
+        parsed = tagEditor.parse(text);
+        tagEditor._render(tagEditor._preview, parsed);
+
+        if ("" !== tagEditor._warning) {
+            tagEditor._hint.textContent = tagEditor._warning;
+        } else {
+            tagEditor._hint.textContent = (true === parsed.isValid) ? "" : tagEditor._HINT_INVALID;
+        }
+    }
+};
+
+/* Select a part of the text in the input of the open editor. */
+tagEditor._select = function (start, end) {
+    tagEditor._input.focus();
+    tagEditor._input.setSelectionRange(start, end);
+};
+
+/* Show the text of the input as row of tags. A click selects the tag or the text
+ * between in the input, a tag can be removed as a whole.
+ */
+tagEditor._updateTags = function () {
+    if (null !== tagEditor._root) {
+        const options = tagEditor._options.get(tagEditor._input);
+        const value = tagEditor._input.value;
+        const placeholders = [];
+        const row = [];
+
+        (options.extraTabs || []).forEach(function (tab) {
+            (tab.items || []).forEach(function (item) {
+                placeholders.push(item.insert);
+            });
+        });
+
+        tagEditor.split(value, placeholders).forEach(function (segment) {
+            const onSelect = function () {
+                tagEditor._select(segment.start, segment.end);
+            };
+
+            if (false === segment.isTag) {
+                const text = tagEditor._create("span", "tag-editor-text text-secondary", segment.str, { title: "Select in the text field" });
+
+                text.addEventListener("click", onSelect);
+                row.push(text);
+            } else {
+                const tag = tagEditor._create("span", "tag-editor-tag badge text-bg-secondary", segment.str);
+                const remove = tagEditor._create("button", "tag-editor-tag-remove", "×", { "type": "button", "title": "Remove " + segment.str, "aria-label": "Remove " + segment.str });
+                const color = (true === segment.str.startsWith("{#")) ? tagEditor._toColor(segment.str.substring(2, segment.str.length - 1)) : null;
+
+                if (null !== color) {
+                    tag.style.borderLeft = "0.75rem solid " + color;
+                }
+
+                tag.title = "Select in the text field";
+                tag.addEventListener("click", onSelect);
+
+                remove.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    tagEditor._setValue(value.substring(0, segment.start) + value.substring(segment.end), segment.start);
+                });
+
+                tag.append(remove);
+                row.push(tag);
+            }
+        });
+
+        tagEditor._tags.replaceChildren(...row);
+    }
+};
+
+/* Set the text of the input of the open editor and notify about it. */
+tagEditor._setValue = function (value, cursor) {
+    const input = tagEditor._input;
+
+    input.value = value;
+    input.focus();
+    input.setSelectionRange(cursor, cursor);
+
+    /* Notify other listeners. The own one clears the warning and updates the editor. */
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+};
+
+/* Insert the tag into the input of the open editor. */
+tagEditor._insert = function (tag) {
+    const input = tagEditor._input;
+    const options = tagEditor._options.get(input);
+    const result = tagEditor.insertAt(input.value, input.selectionStart, input.selectionEnd, tag, options.maxLength);
+
+    if (null === result) {
+        tagEditor._warning = "Not inserted: the text would exceed " + options.maxLength + " characters.";
+        tagEditor._updatePreview();
+    } else {
+        tagEditor._setValue(result.value, result.cursor);
+    }
+};
+
+tagEditor._close = function () {
+    if (null !== tagEditor._root) {
+        window.clearInterval(tagEditor._timer);
+        tagEditor._root.remove();
+        tagEditor._root = null;
+        tagEditor._input = null;
+        tagEditor._timer = null;
+        tagEditor._warning = "";
+    }
+};
+
+tagEditor._open = function (input) {
+    const options = tagEditor._options.get(input);
+    const anchor = input.closest(".input-group") || input;
+    let refreshMs = 0;
+
+    tagEditor._close();
+
+    tagEditor._input = input;
+    tagEditor._root = tagEditor._build(options);
+
+    anchor.parentNode.classList.add("tag-editor-host");
+    anchor.parentNode.insertBefore(tagEditor._root, anchor);
+
+    tagEditor._place();
+    tagEditor._updatePreview();
+    tagEditor._updateTags();
+
+    /* Time dependent preview? Use the shortest refresh interval. */
+    (options.extraTabs || []).forEach(function (tab) {
+        if (("number" === typeof tab.previewRefreshMs) && (0 < tab.previewRefreshMs) && ((0 === refreshMs) || (refreshMs > tab.previewRefreshMs))) {
+            refreshMs = tab.previewRefreshMs;
+        }
+    });
+
+    if (0 < refreshMs) {
+        tagEditor._timer = window.setInterval(tagEditor._updatePreview, refreshMs);
+    }
+};
+
+/* Register the page wide listeners once. */
+tagEditor._init = function () {
+    const closeIfOutside = function (event) {
+        if ((null !== tagEditor._root) && (event.target !== tagEditor._input) && (false === tagEditor._root.contains(event.target))) {
+            tagEditor._close();
+        }
+    };
+
+    document.addEventListener("pointerdown", closeIfOutside);
+    document.addEventListener("focusin", closeIfOutside);
+    document.addEventListener("keydown", function (event) {
+        if ("Escape" === event.key) {
+            tagEditor._close();
+        }
+    });
+    window.addEventListener("resize", tagEditor._place);
+};
+
+/* Attach the tag editor to a text input. It opens if the input gets the focus.
+ *
+ * Options (all optional):
+ * - extraTabs: Array of plugin specific tabs:
+ *     { title, items: [{ insert, label, description }], resolvePreview(text), previewRefreshMs }
+ *     resolvePreview replaces plugin specific placeholders for the preview.
+ *     previewRefreshMs refreshes a time dependent preview periodically.
+ * - presets: Array of { label, value }, offered in an own tab. A preset replaces the whole text.
+ * - previewPrefix: Text which the firmware puts in front of the input value.
+ * - maxLength: Max. length of the input value.
+ */
+tagEditor.attach = function (input, options) {
+    const usedOptions = options || {};
+
+    if (false === tagEditor._isInitialized) {
+        tagEditor._init();
+        tagEditor._isInitialized = true;
+    }
+
+    tagEditor._options.set(input, usedOptions);
+
+    if ("number" === typeof usedOptions.maxLength) {
+        input.maxLength = usedOptions.maxLength;
+    }
+
+    input.addEventListener("pointerdown", function () {
+        tagEditor._isPointerFocus = true;
+    });
+
+    input.addEventListener("blur", function () {
+        tagEditor._isPointerFocus = false;
+    });
+
+    input.addEventListener("focus", function () {
+        /* Getting the focus back from the editor shall change nothing. */
+        if (tagEditor._input !== input) {
+            /* The browser selects the whole text if the focus is set by keyboard.
+             * Avoid that the first insert happens in front of everything.
+             */
+            if (false === tagEditor._isPointerFocus) {
+                const length = input.value.length;
+
+                input.setSelectionRange(length, length);
+                window.setTimeout(function () {
+                    input.setSelectionRange(length, length);
+                }, 0);
+            }
+
+            tagEditor._open(input);
+        }
+    });
+
+    /* Reopen the editor in case it was closed while the input kept the focus. */
+    input.addEventListener("click", function () {
+        if (tagEditor._input !== input) {
+            tagEditor._open(input);
+        }
+    });
+
+    input.addEventListener("input", function () {
+        if (tagEditor._input === input) {
+            tagEditor._warning = "";
+            tagEditor._updatePreview();
+            tagEditor._updateTags();
+        }
+    });
+};
+
+if ("object" === typeof module) {
+    module.exports = tagEditor;
+}
