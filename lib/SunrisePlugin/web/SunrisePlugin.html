@@ -62,19 +62,9 @@
             <div class="container">
                 <h1 class="mt-5">SunrisePlugin</h1>
                 <p><img src="SunrisePlugin.jpg" alt="Screenshot" /></p>
-                <p>The plugin shows the current sunrise / sunset times for a configured location.</p>
-                <p>Configure the time format you like.</p>
-                <p>The format is according to <a href="https://cplusplus.com/reference/ctime/strftime/" target="_blank">strftime()</a>. For colorization text properties can be added.</p>
-                <ul>
-                    <li>%b - Abbreviated month name (3 characters)</li>
-                    <li>%d - Day of the month, zero-padded (01-31)</li>
-                    <li>%m - Month as a decimal number (01-12)</li>
-                    <li>%H - Hour in 24h format (00-23)</li>
-                    <li>%I - Hour in 12h format (01-12)</li>
-                    <li>%M - Minute (00-59)</li>
-                    <li>%p - AM or PM designation</li>
-                    <li>%Y - Year</li>
-                </ul>
+                <p>When does the sun rise and set today? The plugin shows both times for the location you enter, as "sunrise / sunset".</p>
+                <p>You decide how the times look. Click into the time format field and the tag editor opens: choose a preset or compose your own format from hours, minutes and more, add a color, and check the result in the preview.</p>
+                <p>The format is used for both times and is limited to 16 characters. That is enough for a time with one color, but not for a gradient.</p>
                 <h2>Configuration</h2>
                 <h3>Location</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
@@ -94,17 +84,8 @@
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="timeFormat">Time format:</label>
-                            <div class="input-group">
-                                <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />
-                                <select class="form-select" id="predefinedTimeFormat">
-                                    <option value="">Choose preset...</option>
-                                    <option value="%H:%M">24h (HH:MM)</option>
-                                    <option value="%I:%M %p">12h (HH:MM AM/PM)</option>
-                                    <option value="%H:%M:%S">24h with seconds (HH:MM:SS)</option>
-                                    <option value="%I:%M:%S %p">12h with seconds (HH:MM:SS AM/PM)</option>
-                                </select>
-                            </div>
-                            <small class="form-text">The time format string defines how the time is shown.</small>
+                            <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />
+                            <small class="form-text">The time format string defines how the time is shown. Click into the field to open the tag editor with presets.</small>
                         </div>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="scrollIcon" name="scrollIcon" value="0" />
@@ -132,12 +113,25 @@
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/app-api.js"></script>
+        <!-- Pixelix tag editor -->
+        <script type="text/javascript" src="/js/app-tag-editor.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
 
             const pluginName = "SunrisePlugin";
             const restClient = new pixelix.rest.Client();
+
+            /* Max. length of the time format. The firmware provides 16 characters for a formatted time. */
+            const MAX_FORMAT_LENGTH = 16;
+
+            /* Presets offered by the tag editor. */
+            const TIME_FORMAT_PRESETS = [
+                { label: "24h (HH:MM)", value: "%H:%M" },
+                { label: "12h (HH:MM AM/PM)", value: "%I:%M %p" },
+                { label: "24h with seconds (HH:MM:SS)", value: "%H:%M:%S" },
+                { label: "12h with seconds (HH:MM:SS AM/PM)", value: "%I:%M:%S %p" }
+            ];
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -230,9 +224,28 @@
                     getConfig(document.getElementById("pluginAlias").value);
                 });
 
-                document.getElementById("predefinedTimeFormat").addEventListener("change", (event) => {
-                    document.getElementById("timeFormat").value = event.target.value;
-                });
+                /* Attach the tag editor to the time format input. The page shall work without the editor too,
+                 * e.g. if the filesystem is older than the firmware.
+                 */
+                if ("object" === typeof window.tagEditor) {
+                    tagEditor.attach(document.getElementById("timeFormat"), {
+                        extraTabs: [{ title: "Date/Time", items: tagEditor.STRFTIME_ITEMS }],
+                        presets: TIME_FORMAT_PRESETS,
+                        maxLength: MAX_FORMAT_LENGTH,
+                        /* The firmware formats sunrise and sunset time separately and shows them as
+                         * "sunrise / sunset". The preview uses example times of today.
+                         */
+                        resolvePreview: (text) => {
+                            const sunrise = new Date();
+                            const sunset = new Date();
+
+                            sunrise.setHours(6, 42, 7);
+                            sunset.setHours(18, 17, 53);
+
+                            return tagEditor.strftime(text, sunrise) + " / " + tagEditor.strftime(text, sunset);
+                        }
+                    });
+                }
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();

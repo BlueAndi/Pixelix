@@ -241,6 +241,56 @@ tagEditor.insertAt = function (value, selectionStart, selectionEnd, tag, maxLeng
     return result;
 };
 
+/* Date/time placeholders according to strftime(), usable as items of a plugin specific tab. */
+tagEditor.STRFTIME_ITEMS = [
+    { insert: "%H", label: "Hour (24h)", description: "%H - Hour in 24h format (00-23)" },
+    { insert: "%I", label: "Hour (12h)", description: "%I - Hour in 12h format (01-12)" },
+    { insert: "%M", label: "Minute", description: "%M - Minute (00-59)" },
+    { insert: "%S", label: "Second", description: "%S - Second (00-59)" },
+    { insert: "%p", label: "AM/PM", description: "%p - AM or PM designation" },
+    { insert: "%d", label: "Day", description: "%d - Day of the month, zero-padded (01-31)" },
+    { insert: "%m", label: "Month", description: "%m - Month as a decimal number (01-12)" },
+    { insert: "%Y", label: "Year", description: "%Y - Year" },
+    { insert: "%y", label: "Year (2 digits)", description: "%y - Year, last two digits (00-99)" },
+    { insert: "%b", label: "Month name (short)", description: "%b - Abbreviated month name (3 characters)" },
+    { insert: "%B", label: "Month name", description: "%B - Full month name" },
+    { insert: "%a", label: "Weekday (short)", description: "%a - Abbreviated weekday name (3 characters)" },
+    { insert: "%A", label: "Weekday", description: "%A - Full weekday name" },
+    { insert: "%%", label: "% sign", description: "%% - A % sign" }
+];
+
+tagEditor._MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+tagEditor._WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/* Replace the offered strftime() placeholders in the text with the given local date/time,
+ * for the preview. Other placeholders are kept as they are.
+ */
+tagEditor.strftime = function (text, date) {
+    const pad = function (value) {
+        return String(value).padStart(2, "0");
+    };
+    const values = {
+        "H": pad(date.getHours()),
+        "I": pad(((date.getHours() + 11) % 12) + 1),
+        "M": pad(date.getMinutes()),
+        "S": pad(date.getSeconds()),
+        "p": (12 > date.getHours()) ? "AM" : "PM",
+        "d": pad(date.getDate()),
+        "m": pad(date.getMonth() + 1),
+        "Y": String(date.getFullYear()),
+        "y": pad(date.getFullYear() % 100),
+        "b": tagEditor._MONTH_NAMES[date.getMonth()].substring(0, 3),
+        "B": tagEditor._MONTH_NAMES[date.getMonth()],
+        "a": tagEditor._WEEKDAY_NAMES[date.getDay()].substring(0, 3),
+        "A": tagEditor._WEEKDAY_NAMES[date.getDay()],
+        "%": "%"
+    };
+
+    return text.replace(/%(.)/g, function (match, specifier) {
+        return (true === Object.prototype.hasOwnProperty.call(values, specifier)) ? values[specifier] : match;
+    });
+};
+
 tagEditor._HINT_INVALID = "Invalid tag syntax, the display will not update.";
 tagEditor._BTN_CLASS = "btn btn-sm btn-secondary";
 tagEditor._ROW_CLASS = "d-flex flex-wrap gap-2 align-items-center";

@@ -227,9 +227,6 @@
             const pluginName = "DateTimePlugin";
             const restClient = new pixelix.rest.Client();
 
-            const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
             /* Max. length of a format string, to keep distance to the buffer size the firmware uses for the result. */
             const MAX_FORMAT_LENGTH = 100;
 
@@ -248,55 +245,6 @@
                 { label: "Mon DD, YYYY", value: "%b %d, %Y" },
                 { label: "Weekday, DD Month YYYY", value: "%A, %d %B %Y" }
             ];
-
-            /* Date/Time specific tab of the tag editor. */
-            const dateTimeTab = {
-                title: "Date/Time",
-                previewRefreshMs: 1000,
-                items: [
-                    { insert: "%H", label: "Hour (24h)", description: "%H - Hour in 24h format (00-23)" },
-                    { insert: "%I", label: "Hour (12h)", description: "%I - Hour in 12h format (01-12)" },
-                    { insert: "%M", label: "Minute", description: "%M - Minute (00-59)" },
-                    { insert: "%S", label: "Second", description: "%S - Second (00-59)" },
-                    { insert: "%p", label: "AM/PM", description: "%p - AM or PM designation" },
-                    { insert: "%d", label: "Day", description: "%d - Day of the month, zero-padded (01-31)" },
-                    { insert: "%m", label: "Month", description: "%m - Month as a decimal number (01-12)" },
-                    { insert: "%Y", label: "Year", description: "%Y - Year" },
-                    { insert: "%y", label: "Year (2 digits)", description: "%y - Year, last two digits (00-99)" },
-                    { insert: "%b", label: "Month name (short)", description: "%b - Abbreviated month name (3 characters)" },
-                    { insert: "%B", label: "Month name", description: "%B - Full month name" },
-                    { insert: "%a", label: "Weekday (short)", description: "%a - Abbreviated weekday name (3 characters)" },
-                    { insert: "%A", label: "Weekday", description: "%A - Full weekday name" },
-                    { insert: "%%", label: "% sign", description: "%% - A % sign" }
-                ],
-                /* Replace the specifiers with the current local time of the browser. */
-                resolvePreview: function (text) {
-                    const now = new Date();
-                    const pad = function (value) {
-                        return String(value).padStart(2, "0");
-                    };
-                    const values = {
-                        "H": pad(now.getHours()),
-                        "I": pad(((now.getHours() + 11) % 12) + 1),
-                        "M": pad(now.getMinutes()),
-                        "S": pad(now.getSeconds()),
-                        "p": (12 > now.getHours()) ? "AM" : "PM",
-                        "d": pad(now.getDate()),
-                        "m": pad(now.getMonth() + 1),
-                        "Y": String(now.getFullYear()),
-                        "y": pad(now.getFullYear() % 100),
-                        "b": MONTH_NAMES[now.getMonth()].substring(0, 3),
-                        "B": MONTH_NAMES[now.getMonth()],
-                        "a": WEEKDAY_NAMES[now.getDay()].substring(0, 3),
-                        "A": WEEKDAY_NAMES[now.getDay()],
-                        "%": "%"
-                    };
-
-                    return text.replace(/%(.)/g, function (match, specifier) {
-                        return (true === Object.prototype.hasOwnProperty.call(values, specifier)) ? values[specifier] : match;
-                    });
-                }
-            };
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -450,6 +398,14 @@
                  * The page shall work without the editor too, e.g. if the filesystem is older than the firmware.
                  */
                 if ("object" === typeof window.tagEditor) {
+                    /* Date/Time specific tab. The preview shows the current local time of the browser. */
+                    const dateTimeTab = {
+                        title: "Date/Time",
+                        previewRefreshMs: 1000,
+                        items: tagEditor.STRFTIME_ITEMS,
+                        resolvePreview: (text) => tagEditor.strftime(text, new Date())
+                    };
+
                     [["timeFormat", TIME_FORMAT_PRESETS], ["dateFormat", DATE_FORMAT_PRESETS]].forEach(([id, presets]) => {
                         tagEditor.attach(document.getElementById(id), {
                             extraTabs: [dateTimeTab],

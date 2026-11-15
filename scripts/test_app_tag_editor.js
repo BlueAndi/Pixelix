@@ -125,3 +125,32 @@ test("split keeps escaped, stray and unterminated braces as text", () => {
 test("split does not search placeholders inside tags", () => {
     assert.deepEqual(tagEditor.split("{%H}", ["%H"]), [{ start: 0, end: 4, str: "{%H}", isTag: true }]);
 });
+
+test("strftime resolves time specifiers with zero padding", () => {
+    assert.equal(tagEditor.strftime("%H:%M:%S", new Date(2026, 10, 5, 7, 8, 9)), "07:08:09");
+});
+
+test("strftime resolves the 12h format", () => {
+    assert.equal(tagEditor.strftime("%I %p", new Date(2026, 10, 5, 0, 30, 0)), "12 AM");
+    assert.equal(tagEditor.strftime("%I %p", new Date(2026, 10, 5, 12, 30, 0)), "12 PM");
+    assert.equal(tagEditor.strftime("%I %p", new Date(2026, 10, 5, 13, 30, 0)), "01 PM");
+});
+
+test("strftime resolves date specifiers and english names", () => {
+    assert.equal(tagEditor.strftime("%d.%m.%Y %y", new Date(2026, 10, 5, 7, 8, 9)), "05.11.2026 26");
+    assert.equal(tagEditor.strftime("%a %A %b %B", new Date(2026, 10, 5, 7, 8, 9)), "Thu Thursday Nov November");
+});
+
+test("strftime keeps unknown specifiers and format tags", () => {
+    assert.equal(tagEditor.strftime("%% %Q {#FF0000}", new Date(2026, 10, 5, 7, 8, 9)), "% %Q {#FF0000}");
+});
+
+test("strftime resolves every offered item", () => {
+    const date = new Date(2026, 10, 5, 7, 8, 9);
+
+    assert.equal(tagEditor.STRFTIME_ITEMS.length, 14);
+    for (const item of tagEditor.STRFTIME_ITEMS) {
+        assert.notEqual(tagEditor.strftime(item.insert, date), item.insert, item.insert);
+        assert.ok(item.description.startsWith(item.insert + " - "), item.insert);
+    }
+});
