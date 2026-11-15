@@ -483,8 +483,14 @@ tagEditor._render = function (preview, parsed) {
 tagEditor._updatePreview = function () {
     if (null !== tagEditor._root) {
         const options = tagEditor._options.get(tagEditor._input);
-        let text = (options.previewPrefix || "") + tagEditor._input.value;
+        let text = tagEditor._input.value;
         let parsed = null;
+
+        if ("function" === typeof options.resolvePreview) {
+            text = options.resolvePreview(text);
+        }
+
+        text = (options.previewPrefix || "") + text;
 
         (options.extraTabs || []).forEach(function (tab) {
             if ("function" === typeof tab.resolvePreview) {
@@ -653,6 +659,7 @@ tagEditor._init = function () {
  *     resolvePreview replaces plugin specific placeholders for the preview.
  *     previewRefreshMs refreshes a time dependent preview periodically.
  * - presets: Array of { label, value }, offered in an own tab. A preset replaces the whole text.
+ * - resolvePreview(text): Converts the input value to the text the firmware gets, for the preview.
  * - previewPrefix: Text which the firmware puts in front of the input value.
  * - maxLength: Max. length of the input value.
  */
