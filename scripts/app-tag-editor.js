@@ -33,30 +33,39 @@ tagEditor._toColor = function (hexStr) {
     return color;
 };
 
-/* Split the text into text and tag tokens, like the firmware does it in
- * TWTokenizer::parse().
+/* Check gradient offset and length against the range the firmware accepts. */
+tagEditor.isGradientRangeValid = function (offset, length) {
+    const INT16_MIN = -32768;
+    const INT16_MAX = 32767;
+    const UINT16_MAX = 65535;
+
+    return (true === Number.isInteger(offset)) && (true === Number.isInteger(length)) &&
+        (INT16_MIN <= offset) && (INT16_MAX >= offset) &&
+        (0 <= length) && (UINT16_MAX >= length);
+};
+
+/* Split the text into text and tag tokens. Its a port of TWTokenizer::parse() of the
+ * firmware, including its specialities:
+ * - Text which ends with an escaped character is not closed by a following tag or
+ *   line feed, it continues behind.
+ * - Text which ends with a single escape character is dropped.
  */
 tagEditor._tokenize = function (text) {
     const tokens = [];
     let isValid = true;
     let isEscapeActive = false;
-    let tagBegin = -1;
-    let buffer = "";
+    let isInTag = false;
+    let beginIdx = 0;
+    let result = "";
     let idx = 0;
-
-    const flush = function () {
-        if (0 < buffer.length) {
-            tokens.push({ isTag: false, str: buffer });
-            buffer = "";
-        }
-    };
 
     while ((true === isValid) && (text.length > idx)) {
         const character = text[idx];
-        const isInTag = (0 <= tagBegin);
 
         if (true === isEscapeActive) {
-            buffer += character;
+            /* The escape character itself is not part of the text. */
+            result += text.substring(beginIdx, idx - 1) + character;
+            beginIdx = idx + 1;
             isEscapeActive = false;
         } else if ("\\" === character) {
             if (true === isInTag) {
@@ -68,24 +77,34 @@ tagEditor._tokenize = function (text) {
             if (true === isInTag) {
                 isValid = false;
             } else {
-                buffer += character;
+                tokens.push({ isTag: false, str: "\n" });
+                beginIdx = idx + 1;
             }
         } else if ("{" === character) {
             if (true === isInTag) {
                 isValid = false;
             } else {
-                flush();
-                tagBegin = idx;
+                beginIdx = idx;
+                isInTag = true;
             }
         } else if ("}" === character) {
             if (false === isInTag) {
                 isValid = false;
             } else {
-                tokens.push({ isTag: true, str: text.substring(tagBegin, idx + 1) });
-                tagBegin = -1;
+                tokens.push({ isTag: true, str: text.substring(beginIdx, idx + 1) });
+                beginIdx = idx + 1;
+                isInTag = false;
             }
         } else if (false === isInTag) {
-            buffer += character;
+            const next = text[idx + 1];
+
+            /* End of text reached? */
+            if (("{" === next) || ("}" === next) || ("\n" === next) || (undefined === next)) {
+                result += text.substring(beginIdx, idx + 1);
+                tokens.push({ isTag: false, str: result });
+                beginIdx = idx + 1;
+                result = "";
+            }
         }
 
         if (true === isValid) {
@@ -95,11 +114,12 @@ tagEditor._tokenize = function (text) {
 
     /* Best effort in case of an error: Keep the rest as it is. */
     if (false === isValid) {
-        buffer += text.substring(idx);
+        result += text.substring(idx);
     }
 
-    /* A unterminated tag at the end is dropped. */
-    flush();
+    if (0 < result.length) {
+        tokens.push({ isTag: false, str: result });
+    }
 
     return { isValid: isValid, tokens: tokens };
 };
@@ -135,9 +155,9 @@ tagEditor.parse = function (text) {
     };
 
     const handleGradient = function (tag, direction) {
-        const match = /^#([0-9a-f]{1,8}),#([0-9a-f]{1,8}),-?\d+,\d+$/i.exec(tag.substring(5, tag.length - 1));
+        const match = /^#([0-9a-f]{1,8}),#([0-9a-f]{1,8}),(-?\d+),(\d+)$/i.exec(tag.substring(5, tag.length - 1));
 
-        if (null !== match) {
+        if ((null !== match) && (true === tagEditor.isGradientRangeValid(Number.parseInt(match[3], 10), Number.parseInt(match[4], 10)))) {
             gradientBrush = { type: "gradient", direction: direction, startColor: tagEditor._toColor(match[1]), endColor: tagEditor._toColor(match[2]) };
             brush = gradientBrush;
         }
@@ -167,8 +187,11 @@ tagEditor.parse = function (text) {
                 solidBrush = { type: "solid", color: color };
                 brush = solidBrush;
             }
-        } else if (true === /^\{0x[0-9a-f]{1,2}\}$/i.test(tag)) {
-            addText(tagEditor.SPECIAL_CHAR_PLACEHOLDER);
+        } else if (true === /^\{0x[0-9a-fA-F]+\}$/.test(tag)) {
+            /* The firmware converts it to a text, if its a valid character code. */
+            if (0xFF >= Number.parseInt(tag.substring(3, tag.length - 1), 16)) {
+                addText(tagEditor.SPECIAL_CHAR_PLACEHOLDER);
+            }
         } else {
             /* Unknown tags are skipped. */
         }
@@ -419,20 +442,23 @@ tagEditor._createGradientTab = function () {
     const startColor = tagEditor._createColorInput("#ff0000", "Gradient start color");
     const endColor = tagEditor._createColorInput("#0000ff", "Gradient end color");
     const direction = tagEditor._create("select", "form-select form-select-sm w-auto", undefined, { "aria-label": "Gradient direction" });
-    const offset = tagEditor._create("input", "form-control form-control-sm tag-editor-number", undefined, { "type": "number", "value": "0", "aria-label": "Gradient offset in pixels", "title": "Offset in pixels" });
-    const length = tagEditor._create("input", "form-control form-control-sm tag-editor-number", undefined, { "type": "number", "value": "32", "aria-label": "Gradient length in pixels", "title": "Length in pixels" });
+    const offset = tagEditor._create("input", "form-control form-control-sm tag-editor-number", undefined, { "type": "number", "value": "0", "aria-label": "Gradient offset in pixels", "title": "Offset in pixels (-32768 to 32767)" });
+    const length = tagEditor._create("input", "form-control form-control-sm tag-editor-number", undefined, { "type": "number", "value": "32", "aria-label": "Gradient length in pixels", "title": "Length in pixels (0 to 65535)" });
 
     direction.append(tagEditor._create("option", "", "Vertical", { value: "lgv" }), tagEditor._create("option", "", "Horizontal", { value: "lgh" }));
 
     pane.append(startColor, endColor, direction, offset, length, tagEditor._createButton("Add gradient", function () {
-        const offsetValue = Number.parseInt(offset.value, 10);
-        const lengthValue = Number.parseInt(length.value, 10);
-        const isValid = (false === Number.isNaN(offsetValue)) && (false === Number.isNaN(lengthValue)) && (0 <= lengthValue);
+        const toNumber = function (str) {
+            return ("" === str.trim()) ? Number.NaN : Number(str);
+        };
+        const offsetValue = toNumber(offset.value);
+        const lengthValue = toNumber(length.value);
 
-        offset.classList.toggle("is-invalid", Number.isNaN(offsetValue));
-        length.classList.toggle("is-invalid", Number.isNaN(lengthValue) || (0 > lengthValue));
+        /* Mark the invalid one(s), by checking each with a valid counterpart. */
+        offset.classList.toggle("is-invalid", false === tagEditor.isGradientRangeValid(offsetValue, 0));
+        length.classList.toggle("is-invalid", false === tagEditor.isGradientRangeValid(0, lengthValue));
 
-        if (true === isValid) {
+        if (true === tagEditor.isGradientRangeValid(offsetValue, lengthValue)) {
             tagEditor._insert("{" + direction.value + " " + startColor.value.toUpperCase() + "," + endColor.value.toUpperCase() + "," + offsetValue + "," + lengthValue + "}");
         }
     }), tagEditor._createTagButton("Use solid color", "{stc}", "Activate solid text color"), tagEditor._createTagButton("Use gradient", "{lgtc}", "Activate linear gradient text color"));
@@ -484,7 +510,7 @@ tagEditor._createPresetsTab = function (presets) {
 
     presets.forEach(function (preset) {
         pane.append(tagEditor._createButton(preset.label, function () {
-            tagEditor._setValue(preset.value, preset.value.length);
+            tagEditor._replaceRange(0, tagEditor._input.value.length, preset.value);
         }, preset.value));
     });
 
@@ -608,6 +634,9 @@ tagEditor._updatePreview = function () {
 
         if ("" !== tagEditor._warning) {
             tagEditor._hint.textContent = tagEditor._warning;
+        } else if (("number" === typeof options.maxLength) && (options.maxLength < tagEditor._input.value.length)) {
+            /* E.g. set via REST API. The browser refuses to submit it after a change. */
+            tagEditor._hint.textContent = "The text is longer than " + options.maxLength + " characters, please shorten it.";
         } else {
             tagEditor._hint.textContent = (true === parsed.isValid) ? "" : tagEditor._HINT_INVALID;
         }
@@ -660,7 +689,7 @@ tagEditor._updateTags = function () {
 
                 remove.addEventListener("click", function (event) {
                     event.stopPropagation();
-                    tagEditor._setValue(value.substring(0, segment.start) + value.substring(segment.end), segment.start);
+                    tagEditor._replaceRange(segment.start, segment.end, "");
                 });
 
                 tag.append(remove);
@@ -672,16 +701,28 @@ tagEditor._updateTags = function () {
     }
 };
 
-/* Set the text of the input of the open editor and notify about it. */
-tagEditor._setValue = function (value, cursor) {
+/* Replace a part of the text of the input of the open editor and notify about it. */
+tagEditor._replaceRange = function (start, end, replacement) {
     const input = tagEditor._input;
+    const expected = input.value.substring(0, start) + replacement + input.value.substring(end);
+    const cursor = start + replacement.length;
 
-    input.value = value;
     input.focus();
-    input.setSelectionRange(cursor, cursor);
+    input.setSelectionRange(start, end);
 
-    /* Notify other listeners. The own one clears the warning and updates the editor. */
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    /* execCommand() is deprecated, but its the only way to keep the undo history of
+     * the browser. It notifies the listeners by itself. If its not supported, the text
+     * is set directly.
+     */
+    if ((expected !== input.value) &&
+        ((false === document.execCommand(("" === replacement) ? "delete" : "insertText", false, replacement)) || (expected !== input.value))) {
+        input.value = expected;
+
+        /* Notify other listeners. The own one clears the warning and updates the editor. */
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    input.setSelectionRange(cursor, cursor);
 };
 
 /* Insert the tag into the input of the open editor. */
@@ -694,7 +735,7 @@ tagEditor._insert = function (tag) {
         tagEditor._warning = "Not inserted: the text would exceed " + options.maxLength + " characters.";
         tagEditor._updatePreview();
     } else {
-        tagEditor._setValue(result.value, result.cursor);
+        tagEditor._replaceRange(input.selectionStart, input.selectionStart, tag);
     }
 };
 
@@ -720,7 +761,8 @@ tagEditor._open = function (input) {
     tagEditor._root = tagEditor._build(options);
 
     anchor.parentNode.classList.add("tag-editor-host");
-    anchor.parentNode.insertBefore(tagEditor._root, anchor);
+    /* Located behind the input, to be the next in the tab order. Its shown above, see CSS. */
+    anchor.after(tagEditor._root);
 
     tagEditor._place();
     tagEditor._updatePreview();

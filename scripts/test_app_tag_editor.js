@@ -177,3 +177,42 @@ test("printf resolves every offered item", () => {
         assert.ok(item.description.startsWith(item.insert + " - "), item.insert);
     }
 });
+
+test("parse ignores a gradient with offset or length out of the firmware range", () => {
+    const WHITE_RUN = [{ text: "x", brush: { type: "solid", color: "#FFFFFF" } }];
+
+    assert.deepEqual(tagEditor.parse("{lgv #FF0000,#0000FF,0,65536}x").runs, WHITE_RUN);
+    assert.deepEqual(tagEditor.parse("{lgv #FF0000,#0000FF,32768,8}x").runs, WHITE_RUN);
+    assert.equal(tagEditor.parse("{lgv #FF0000,#0000FF,32767,65535}x").runs[0].brush.type, "gradient");
+    assert.equal(tagEditor.parse("{lgv #FF0000,#0000FF,-5,8}x").runs[0].brush.type, "gradient");
+});
+
+test("parse carries text which ends with an escaped character behind the next tag, like the firmware", () => {
+    assert.deepEqual(tagEditor.parse("a\\}{#FF0000}b").runs, [{ text: "a}b", brush: { type: "solid", color: "#FF0000" } }]);
+});
+
+test("parse shows nothing for text which ends with a single backslash, like the firmware", () => {
+    assert.deepEqual(tagEditor.parse("ab\\"), { isValid: true, hAlign: "left", vAlign: "top", runs: [] });
+});
+
+test("parse accepts special character codes like the firmware", () => {
+    const text = function (value) {
+        return tagEditor.parse(value).runs[0].text;
+    };
+
+    assert.equal(text("a{0X41}b"), "ab");
+    assert.equal(text("a{0x041}b"), "a" + tagEditor.SPECIAL_CHAR_PLACEHOLDER + "b");
+    assert.equal(text("a{0xff}b"), "a" + tagEditor.SPECIAL_CHAR_PLACEHOLDER + "b");
+    assert.equal(text("a{0x100}b"), "ab");
+});
+
+test("isGradientRangeValid checks offset and length against the firmware range", () => {
+    assert.equal(tagEditor.isGradientRangeValid(0, 32), true);
+    assert.equal(tagEditor.isGradientRangeValid(-32768, 0), true);
+    assert.equal(tagEditor.isGradientRangeValid(32767, 65535), true);
+    assert.equal(tagEditor.isGradientRangeValid(32768, 32), false);
+    assert.equal(tagEditor.isGradientRangeValid(0, 65536), false);
+    assert.equal(tagEditor.isGradientRangeValid(0, -1), false);
+    assert.equal(tagEditor.isGradientRangeValid(Number.NaN, 32), false);
+    assert.equal(tagEditor.isGradientRangeValid(1.5, 32), false);
+});
