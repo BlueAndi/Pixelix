@@ -21,12 +21,12 @@
 
 ## Purpose
 
-The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the development. Its a new generation toolset for embedded C/C++ development, integrated as extension in Microsoft Visual Studio Code Editor.
+The [pioarduino IDE](https://github.com/pioarduino/pioarduino-vscode-ide) is used for the development. It is a fork of the [PlatformIO IDE](https://platformio.org/platformio-ide), a new generation toolset for embedded C/C++ development, integrated as extension in Microsoft Visual Studio Code Editor. The fork is necessary, because the [pioarduino platform](https://github.com/pioarduino/platform-espressif32) with the ESP32 Arduino framework v3.x.x requires PlatformIO Core v6.2.0 or later.
 
 ## Installation Of VSCode
 
 1. Install [VSCode](https://code.visualstudio.com/) which depends on your operating system.
-2. Install PlatformIO IDE according to this [HowTo](https://platformio.org/install/ide?install=vscode).
+2. Install the pioarduino IDE extension from the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=pioarduino.pioarduino-ide). If the PlatformIO IDE extension is installed, disable or uninstall it, because both extensions conflict.
 3. Close and start VSCode again.
 4. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
 

@@ -5,9 +5,9 @@ boards or optional features.
 
 | Library | Description | License |
 | --- | --- | --- |
-| [Arduino](https://github.com/platformio/platform-espressif32) | ESP32 Arduino framework v2.x.x | Apache-2.0 |
+| [pioarduino](https://github.com/pioarduino/platform-espressif32) | ESP32 Arduino framework v3.x.x | Apache-2.0 |
 | [PlatformIO](https://platformio.org) | Cross-platform build system for embedded software | Apache-2.0 |
-| [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) | Controls LED matrices with hardware support (I2S) | LGPL-3.0 |
+| [NeoPixelBus](https://github.com/sblantipodi/NeoPixelBus) | Controls LED matrices with hardware support (RMT), fork with ESP32 Arduino framework v3.x.x support | LGPL-3.0 |
 | [ESP32 HUB75 LED MATRIX PANEL DMA Display](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA) | DMA-driven driver for HUB75 LED matrix panels | MIT |
 | [ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer) | Web server | LGPL-3.0 |
 | [AsyncTCP](https://github.com/ESP32Async/AsyncTCP) | Asynchronous TCP library for ESP32 | LGPL-3.0 |
