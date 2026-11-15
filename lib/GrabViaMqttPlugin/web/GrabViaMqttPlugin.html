@@ -95,7 +95,7 @@
             <div class="container">
                 <h1 class="mt-5">GrabViaMqttPlugin</h1>
                 <p><img src="GrabViaMqttPlugin.jpg" alt="Screenshot" /></p>
-                <p>This plugin connects to an MQTT server to receive data in JSON format and displays that information on the display. It helps you easily view live updates from devices or services that send data using MQTT.</p>
+                <p>Shows live values from your devices and services: the plugin subscribes to an MQTT topic, picks the value you are interested in from the JSON payload and shows it whenever a new message arrives.</p>
                 <p>The filter identifies the value in the JSON payload that you want to display.</p>
                 <p><strong>Example:</strong></p>
                 <p>JSON payload:</p>
@@ -112,24 +112,8 @@
 }
 </code></p>
                 <p><a href="https://github.com/BlueAndi/Pixelix/tree/Development/doc/grabConfigs/mqtt" target="_blank">Configuration examples</a> may help to configure.</p>
-                <h2>Format text tags</h2>
-                <p>The following tags are supported in the format text:</p>
-                <ul>
-                    <li>{#RRGGBB} - Set solid text color (RRGGBB in hex)</li>
-                    <li>{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear vertical gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
-                    <li>{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear horizontal gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
-                    <li>{stc} - Activate solid text color</li>
-                    <li>{lgtc} - Activate linear gradient text color</li>
-                    <li>{hl} - Horizontal alignment left</li>
-                    <li>{hc} - Horizontal alignment right</li>
-                    <li>{hr} - Horizontal alignment center</li>
-                    <li>{vt} - Vertical alignment top</li>
-                    <li>{vc} - Vertical alignment center</li>
-                    <li>{vb} - Vertical alignment bottom</li>
-                    <li>{0xCC} - Special character code (CC in hex)</li>
-                </ul>
-                <p>Use for numbers always "%f", independed whether its a integer or floating point number.</p>
-                <p>In all other cases use "%s".</p>
+                <p>You decide how the result looks. Click into the format field and the tag editor opens: place the value as text or as number, add a unit, colors and alignment, and check the result in the preview.</p>
+                <p>A number is shown with "%f", e.g. "%.1f" for one decimal, anything else with "%s". Multiplier and offset are applied to numbers only.</p>
                 <h2>Configuration</h2>
                 <h3>User</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
@@ -200,6 +184,8 @@
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/app-api.js"></script>
+        <!-- Pixelix tag editor -->
+        <script type="text/javascript" src="/js/app-tag-editor.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -462,6 +448,35 @@
                     event.preventDefault();
                     setConfig(document.getElementById("pluginAlias").value);
                 });
+
+                /* Attach the tag editor to the format input. The page shall work without the editor too,
+                 * e.g. if the filesystem is older than the firmware.
+                 */
+                if ("object" === typeof window.tagEditor) {
+                    const formatInput = document.getElementById("format");
+
+                    tagEditor.attach(formatInput, {
+                        extraTabs: [{ title: "Value", items: tagEditor.PRINTF_ITEMS }],
+                        maxLength: formatInput.maxLength,
+                        /* The preview uses an example value. Like the firmware, multiplier and offset
+                         * are applied only if the value is shown as number.
+                         */
+                        resolvePreview: (text) => {
+                            const EXAMPLE_NUMBER = 22.5;
+                            const EXAMPLE_TEXT = "Text";
+                            const isNumber = /%[-+ #0-9.]*f/.test(text);
+                            const multiplier = Number.parseFloat(document.getElementById("multiplier").value);
+                            const offset = Number.parseFloat(document.getElementById("offset").value);
+                            let value = EXAMPLE_TEXT;
+
+                            if (true === isNumber) {
+                                value = (EXAMPLE_NUMBER * (Number.isNaN(multiplier) ? 1 : multiplier)) + (Number.isNaN(offset) ? 0 : offset);
+                            }
+
+                            return tagEditor.printf(text, value);
+                        }
+                    });
+                }
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
