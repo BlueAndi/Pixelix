@@ -315,8 +315,8 @@ The following keywords are available:
 | `{stc}`                               | Activate solid text color                                                                |
 | `{lgtc}`                              | Activate linear gradient text color                                                      |
 | `{hl}`                                | Horizontal alignment left                                                                |
-| `{hc}`                                | Horizontal alignment right                                                               |
-| `{hr}`                                | Horizontal alignment center                                                              |
+| `{hc}`                                | Horizontal alignment center                                                              |
+| `{hr}`                                | Horizontal alignment right                                                               |
 | `{vt}`                                | Vertical alignment top                                                                   |
 | `{vc}`                                | Vertical alignment center                                                                |
 | `{vb}`                                | Vertical alignment bottom                                                                |
