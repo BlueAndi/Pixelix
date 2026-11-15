@@ -154,3 +154,26 @@ test("strftime resolves every offered item", () => {
         assert.ok(item.description.startsWith(item.insert + " - "), item.insert);
     }
 });
+
+test("printf formats numbers with precision, width and flags", () => {
+    assert.equal(tagEditor.printf("%f", 22.5), "22.500000");
+    assert.equal(tagEditor.printf("%.1f C", 22.46), "22.5 C");
+    assert.equal(tagEditor.printf("%5.1f|%-6.1f|%05.1f|%+.0f", 2.3), "  2.3|2.3   |002.3|+2");
+});
+
+test("printf formats strings", () => {
+    assert.equal(tagEditor.printf("%s", "abc"), "abc");
+    assert.equal(tagEditor.printf("%5s|%-5s|", "abc"), "  abc|abc  |");
+});
+
+test("printf keeps percent signs, unknown specifiers and format tags", () => {
+    assert.equal(tagEditor.printf("{#FF0000}%.0f%% %d", 99.6), "{#FF0000}100% %d");
+});
+
+test("printf resolves every offered item", () => {
+    assert.equal(tagEditor.PRINTF_ITEMS.length, 5);
+    for (const item of tagEditor.PRINTF_ITEMS) {
+        assert.notEqual(tagEditor.printf(item.insert, 22.5), item.insert, item.insert);
+        assert.ok(item.description.startsWith(item.insert + " - "), item.insert);
+    }
+});

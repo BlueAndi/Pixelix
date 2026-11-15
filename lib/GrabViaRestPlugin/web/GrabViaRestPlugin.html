@@ -95,7 +95,7 @@
             <div class="container">
                 <h1 class="mt-5">GrabViaRestPlugin</h1>
                 <p><img src="GrabViaRestPlugin.jpg" alt="Screenshot" /></p>
-                <p>This plugin connects to a REST API to fetch information in JSON format and displays the results on the display.</p>
+                <p>Shows a value from the web on your display: the plugin periodically calls a REST API, picks the value you are interested in from the JSON response and shows it.</p>
                 <p><strong>Example:</strong></p>
                 <p>JSON payload:</p>
                 <p><code>
@@ -111,24 +111,8 @@
 }
 </code></p>
                 <p><a href="https://github.com/BlueAndi/Pixelix/tree/Development/doc/grabConfigs/rest" target="_blank">Configuration examples</a> may help to configure.</p>
-                <h2>Format text tags</h2>
-                <p>The following tags are supported in the format text:</p>
-                <ul>
-                    <li>{#RRGGBB} - Set solid text color (RRGGBB in hex)</li>
-                    <li>{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear vertical gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
-                    <li>{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH} - Set linear horizontal gradient text color (RRGGBB in hex, OFFSET in pixels, LENGTH in pixels)</li>
-                    <li>{stc} - Activate solid text color</li>
-                    <li>{lgtc} - Activate linear gradient text color</li>
-                    <li>{hl} - Horizontal alignment left</li>
-                    <li>{hc} - Horizontal alignment right</li>
-                    <li>{hr} - Horizontal alignment center</li>
-                    <li>{vt} - Vertical alignment top</li>
-                    <li>{vc} - Vertical alignment center</li>
-                    <li>{vb} - Vertical alignment bottom</li>
-                    <li>{0xCC} - Special character code (CC in hex)</li>
-                </ul>
-                <p>Use for numbers always "%f", independed whether its a integer or floating point number.</p>
-                <p>In all other cases use "%s".</p>
+                <p>You decide how the result looks. Click into the format field and the tag editor opens: place the value as text or as number, add a unit, colors and alignment, and check the result in the preview.</p>
+                <p>A number is shown with "%f", e.g. "%.1f" for one decimal, anything else with "%s". Multiplier and offset are applied to numbers only.</p>
                 <h2>Configuration</h2>
                 <h3>User</h3>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
@@ -140,7 +124,10 @@
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="method">Method:</label>
-                            <input class="form-control" type="text" id="method" name="method" value="GET" />
+                            <select class="form-select" id="method" name="method">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                            </select>
                             <small class="form-text text-muted">The HTTP method.</small>
                         </div>
                         <div class="form-group mb-3">
@@ -204,6 +191,8 @@
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/app-api.js"></script>
+        <!-- Pixelix tag editor -->
+        <script type="text/javascript" src="/js/app-tag-editor.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -397,7 +386,8 @@
                         url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/grabConfig",
                         isJsonResponse: true
                     });
-                    document.getElementById("method").value = rsp.data.method;
+                    /* The device handles the method case insensitive. */
+                    document.getElementById("method").value = rsp.data.method.toUpperCase();
                     document.getElementById("url").value = rsp.data.url;
                     document.getElementById("filter").value = JSON.stringify(rsp.data.filter);
                     document.getElementById("iconFileName").value = rsp.data.iconFileName ?? "";
@@ -467,6 +457,35 @@
                     event.preventDefault();
                     setConfig(document.getElementById("pluginAlias").value);
                 });
+
+                /* Attach the tag editor to the format input. The page shall work without the editor too,
+                 * e.g. if the filesystem is older than the firmware.
+                 */
+                if ("object" === typeof window.tagEditor) {
+                    const formatInput = document.getElementById("format");
+
+                    tagEditor.attach(formatInput, {
+                        extraTabs: [{ title: "Value", items: tagEditor.PRINTF_ITEMS }],
+                        maxLength: formatInput.maxLength,
+                        /* The preview uses an example value. Like the firmware, multiplier and offset
+                         * are applied only if the value is shown as number.
+                         */
+                        resolvePreview: (text) => {
+                            const EXAMPLE_NUMBER = 22.5;
+                            const EXAMPLE_TEXT = "Text";
+                            const isNumber = /%[-+ #0-9.]*f/.test(text);
+                            const multiplier = Number.parseFloat(document.getElementById("multiplier").value);
+                            const offset = Number.parseFloat(document.getElementById("offset").value);
+                            let value = EXAMPLE_TEXT;
+
+                            if (true === isNumber) {
+                                value = (EXAMPLE_NUMBER * (Number.isNaN(multiplier) ? 1 : multiplier)) + (Number.isNaN(offset) ? 0 : offset);
+                            }
+
+                            return tagEditor.printf(text, value);
+                        }
+                    });
+                }
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();

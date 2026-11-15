@@ -291,6 +291,61 @@ tagEditor.strftime = function (text, date) {
     });
 };
 
+/* Value placeholders according to printf(), usable as items of a plugin specific tab. */
+tagEditor.PRINTF_ITEMS = [
+    { insert: "%s", label: "Text", description: "%s - The value as text" },
+    { insert: "%.0f", label: "Number", description: "%.0f - The value as number without decimals" },
+    { insert: "%.1f", label: "Number (1 decimal)", description: "%.1f - The value as number with one decimal" },
+    { insert: "%.2f", label: "Number (2 decimals)", description: "%.2f - The value as number with two decimals" },
+    { insert: "%%", label: "% sign", description: "%% - A % sign" }
+];
+
+/* Replace the printf() specifiers %f and %s (with optional flags, width and precision)
+ * and %% in the text with the given value, for the preview. Other specifiers are kept
+ * as they are.
+ */
+tagEditor.printf = function (text, value) {
+    return text.replace(/%([-+ #0]*)(\d+)?(?:\.(\d+))?([fs%])/g, function (match, flags, width, precision, specifier) {
+        let result = "%";
+
+        if ("f" === specifier) {
+            const number = Number(value);
+
+            result = Math.abs(number).toFixed((undefined === precision) ? 6 : Number.parseInt(precision, 10));
+
+            if (0 > number) {
+                result = "-" + result;
+            } else if (true === flags.includes("+")) {
+                result = "+" + result;
+            } else if (true === flags.includes(" ")) {
+                result = " " + result;
+            }
+        } else if ("s" === specifier) {
+            result = String(value);
+
+            if (undefined !== precision) {
+                result = result.substring(0, Number.parseInt(precision, 10));
+            }
+        }
+
+        if (("%" !== specifier) && (undefined !== width)) {
+            const length = Number.parseInt(width, 10);
+
+            if (true === flags.includes("-")) {
+                result = result.padEnd(length, " ");
+            } else if ((true === flags.includes("0")) && ("f" === specifier)) {
+                const sign = /^[-+ ]/.test(result) ? result[0] : "";
+
+                result = sign + result.substring(sign.length).padStart(length - sign.length, "0");
+            } else {
+                result = result.padStart(length, " ");
+            }
+        }
+
+        return result;
+    });
+};
+
 tagEditor._HINT_INVALID = "Invalid tag syntax, the display will not update.";
 tagEditor._BTN_CLASS = "btn btn-sm btn-secondary";
 tagEditor._ROW_CLASS = "d-flex flex-wrap gap-2 align-items-center";
