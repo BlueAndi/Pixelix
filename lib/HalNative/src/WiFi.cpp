@@ -196,6 +196,18 @@ bool WiFiClass::setAutoReconnect(bool autoReconnect)
     return true;
 }
 
+void WiFiClass::setScanMethod(wifi_scan_method_t scanMethod)
+{
+    /* The virtual wifi has no access point to scan for. */
+    (void)scanMethod;
+}
+
+void WiFiClass::setSortMethod(wifi_sort_method_t sortMethod)
+{
+    /* The virtual wifi has no access point to select. */
+    (void)sortMethod;
+}
+
 void WiFiClass::persistent(bool persistent)
 {
     /* There is nothing to store. */

@@ -109,6 +109,13 @@ void ConnectingState::entry(StateMachine& sm)
         sm.setState(ErrorState::getInstance());
     }
 
+    /* Scan all channels and connect to the access point with the strongest
+     * signal. By default the first found access point is used, which may be
+     * a weak one in a network with several access points.
+     */
+    WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
+    WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
+
     /* Show the user via indicator light that there is no connection. */
     DisplayMgr::getInstance().setIndicatorState(DisplayMgr::INDICATOR_ID_NETWORK, IIndicatorView::State::STATE_BLINK);
 }

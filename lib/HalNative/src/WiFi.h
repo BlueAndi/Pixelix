@@ -85,6 +85,22 @@ typedef enum
 
 } wl_status_t;
 
+/** Wifi scan method, compatible to the ESP32 wifi_scan_method_t. */
+typedef enum
+{
+    WIFI_FAST_SCAN = 0,   /**< Use the first found access point. */
+    WIFI_ALL_CHANNEL_SCAN /**< Scan all channels before a access point is selected. */
+
+} wifi_scan_method_t;
+
+/** Wifi sort method, compatible to the ESP32 wifi_sort_method_t. */
+typedef enum
+{
+    WIFI_CONNECT_AP_BY_SIGNAL = 0, /**< Sort the access points by signal strength. */
+    WIFI_CONNECT_AP_BY_SECURITY    /**< Sort the access points by security mode. */
+
+} wifi_sort_method_t;
+
 /**
  * Virtual wifi for the native environment.
  */
@@ -202,6 +218,20 @@ public:
      * @return If successful set, it will return true otherwise false.
      */
     bool setAutoReconnect(bool autoReconnect);
+
+    /**
+     * Set the scan method, which is used to find the access point.
+     *
+     * @param[in] scanMethod    Scan method
+     */
+    void setScanMethod(wifi_scan_method_t scanMethod);
+
+    /**
+     * Set the sort method, which is used to select the access point.
+     *
+     * @param[in] sortMethod    Sort method
+     */
+    void setSortMethod(wifi_sort_method_t sortMethod);
 
     /**
      * Enable or disable the persistent storage of the wifi configuration.
