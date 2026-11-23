@@ -117,7 +117,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <!-- Dialog -->
             <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
@@ -148,7 +148,7 @@
                     <div class="row g-2 align-items-center">
                         <div class="col-lg-8">
                             <div class="input-group">
-                                <input type="file" class="form-control" id="uploadFile">
+                                <input type="file" class="form-control" id="uploadFile" />
                                 <button class="btn btn-light" type="button" id="btnUpload">Upload</button>
                             </div>
                         </div>
@@ -209,15 +209,15 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
         <!-- The high performance code editor Ace. -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.43.6/ace.min.js" referrerpolicy="origin"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.43.6/ace.min.js" referrerpolicy="origin"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -396,7 +396,7 @@
 
                     initFileTree(menuEl);
                 } catch (rsp) {
-                    const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                    const alertMsg = utils.getErrorMsg(rsp);
                     await dialog.showError("<p>" + alertMsg + "</p>");
                 }
             }
@@ -427,7 +427,7 @@
                     dirElement.setAttribute("data-loaded", "true");
                     initFileTree(document.getElementById("fileTree"));
                 } catch (rsp) {
-                    const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                    const alertMsg = utils.getErrorMsg(rsp);
                     await dialog.showError("<p>" + alertMsg + "</p>");
                 }
             }
@@ -512,7 +512,7 @@
 
                     await dialog.hide();
                 } catch (rsp) {
-                    const errorMsg = (rsp && rsp.error && rsp.error.msg) ? rsp.error.msg : rsp.message;
+                    const errorMsg = utils.getErrorMsg(rsp);
                     await dialog.showError("<p>" + errorMsg + "</p>");
                 }
             }
@@ -549,7 +549,7 @@
 
                     await dialog.showInfo("<p>File " + filename + " removed.</p>");
                 } catch (rsp) {
-                    await dialog.showError("<p>" + rsp.error.msg + "</p>");
+                    await dialog.showError("<p>" + utils.getErrorMsg(rsp) + "</p>");
                 }
             }
 
@@ -620,7 +620,7 @@
                     await dialog.showInfo("<p>File " + file.name + " uploaded.</p>");
                     await listRootFiles("fileTree");
                 } catch (rsp) {
-                    await dialog.showError("<p>" + rsp.error.msg + "</p>");
+                    await dialog.showError("<p>" + utils.getErrorMsg(rsp) + "</p>");
                 }
             }
 

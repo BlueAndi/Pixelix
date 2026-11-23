@@ -58,7 +58,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <!-- Dialog -->
             <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
@@ -95,7 +95,7 @@
                             <div class="control-panel-title">Install Plugin</div>
                             <select class="form-select form-select-sm mb-2" id="pluginToInstall" size="1">
                             </select>
-                            <input class="form-control form-control-sm mb-2" id="pluginAliasToInstall" type="text" maxlength="20" placeholder="Alias (optional)">
+                            <input class="form-control form-control-sm mb-2" id="pluginAliasToInstall" type="text" maxlength="20" placeholder="Alias (optional)" />
                             <button class="btn btn-sm btn-outline-light w-100" id="btnInstall" type="button" disabled>Install</button>
                         </div>
 
@@ -186,17 +186,17 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix websocket library -->
-        <script type="text/javascript" src="/js/ws.js"></script>
+        <script src="/js/ws.js"></script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
         <!-- Pixelix drag'n drop -->
-        <script type="text/javascript" src="/js/dragDropTouch.js"></script>
+        <script src="/js/dragDropTouch.js"></script>
 
         <!-- Custom javascript -->
         <script>

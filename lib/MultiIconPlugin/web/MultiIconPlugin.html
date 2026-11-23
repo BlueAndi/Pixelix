@@ -58,7 +58,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="modal fade" id="iconPickerDialog" tabindex="-1" aria-labelledby="iconPickerTitle" aria-hidden="true">
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
@@ -149,12 +149,12 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -310,8 +310,8 @@
                     });
 
                     await fillIconPicker(rsp.data.files);
-                } catch (e) {
-                    alert("Failed to load icon list. Open the icons page once to initialize it.");
+                } catch (rsp) {
+                    alert("Failed to load icon list. Open the icons page once to initialize it. (" + utils.getErrorMsg(rsp) + ")");
                 }
             }
 
@@ -349,7 +349,7 @@
 
                     return cnt;
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                     return 0;
                 }
             }
@@ -357,28 +357,17 @@
             function getSlotsByForm(formId) {
                 const values = serializeFormAll(formId);
                 let pluginAlias = 0;
-                let icon0FileName = "";
-                let icon1FileName = "";
-                let icon2FileName = "";
 
                 values.forEach((field) => {
                     if (field.name === "pluginAlias") {
                         pluginAlias = field.value;
-                    } else if (field.name === "icon0FileName") {
-                        icon0FileName = field.value;
-                    } else if (field.name === "icon1FileName") {
-                        icon1FileName = field.value;
-                    } else if (field.name === "icon2FileName") {
-                        icon2FileName = field.value;
-                    } else {
-                        /* Skip. */
                     }
                 });
 
-                return getSlots(pluginAlias, icon0FileName, icon1FileName, icon2FileName);
+                return getSlots(pluginAlias);
             }
 
-            async function getSlots(pluginAlias, icon0FileName, icon1FileName, icon2FileName) {
+            async function getSlots(pluginAlias) {
                 disableUI();
 
                 try {
@@ -396,7 +385,7 @@
                     icon1FileNameInput.value = rsp.data.slots[1] ?? "";
                     icon2FileNameInput.value = rsp.data.slots[2] ?? "";
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -439,7 +428,7 @@
 
                     alert("Ok.");
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }

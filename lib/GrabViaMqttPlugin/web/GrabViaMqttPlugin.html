@@ -58,7 +58,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="modal fade" id="iconPickerDialog" tabindex="-1" aria-labelledby="iconPickerTitle" aria-hidden="true">
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
@@ -178,14 +178,14 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix tag editor -->
-        <script type="text/javascript" src="/js/app-tag-editor.js"></script>
+        <script src="/js/app-tag-editor.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -331,8 +331,8 @@
                     });
 
                     await fillIconPicker(rsp.data.files);
-                } catch (e) {
-                    alert("Failed to load icon list. Open the icons page once to initialize it.");
+                } catch (rsp) {
+                    alert("Failed to load icon list. Open the icons page once to initialize it. (" + utils.getErrorMsg(rsp) + ")");
                 }
             }
 
@@ -365,7 +365,7 @@
                         }
                     }
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                     return 0;
                 }
 
@@ -389,7 +389,7 @@
                     document.getElementById("offset").value = rsp.data.offset;
                     document.getElementById("scrollIcon").checked = rsp.data.scrollIcon;
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -399,7 +399,7 @@
                 disableUI();
 
                 try {
-                    const rsp = await utils.makeRequest({
+                    await utils.makeRequest({
                         method: "POST",
                         url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/grabConfig",
                         isJsonResponse: true,
@@ -415,7 +415,7 @@
                     });
                     alert("Ok.");
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }

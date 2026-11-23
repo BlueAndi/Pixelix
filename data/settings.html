@@ -57,7 +57,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <!-- Dialog -->
             <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
@@ -91,12 +91,12 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
 
         <!-- Custom javascript -->
@@ -125,7 +125,7 @@
                     await restClient.restart();
                     await dialog.showCountdownAndReload("<p>Restart performed.</p>");
                 } catch (err) {
-                    await dialog.showError("<p>Error: " + err + "</p>");
+                    await dialog.showError("<p>Error: " + utils.getErrorMsg(err) + "</p>");
                 }
             }
 
@@ -144,7 +144,7 @@
                     await restClient.setSetting(data[index].key, value);
                     await dialog.showInfo("<p>Successful stored.</p>");
                 } catch (rsp) {
-                    await dialog.showError("<p>Error: " + rsp.error.msg + "</p>");
+                    await dialog.showError("<p>Error: " + utils.getErrorMsg(rsp) + "</p>");
                 }
             }
 
@@ -274,7 +274,7 @@
 
                     enableUI();
                 } catch (err) {
-                    await dialog.showError("<p>Error: " + err + "</p>");
+                    await dialog.showError("<p>Error: " + utils.getErrorMsg(err) + "</p>");
                 }
             });
 

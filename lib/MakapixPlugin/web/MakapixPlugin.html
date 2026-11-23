@@ -58,7 +58,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">MakapixPlugin</h1>
                 <p><img src="MakapixPlugin.jpg" alt="Screenshot" /></p>
@@ -244,12 +244,12 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -294,7 +294,7 @@
 
                     return cnt;
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                     return 0;
                 }
             }
@@ -310,7 +310,7 @@
                     document.getElementById("playerKey").value = rsp.data.playerKey;
                     document.getElementById("mqttInstance").value = rsp.data.mqttInstance;
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -331,7 +331,7 @@
                     });
                     alert("Ok.");
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -378,7 +378,7 @@
                     }
 
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -413,7 +413,7 @@
                     });
                     await getStatus(pluginAlias);
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -433,7 +433,7 @@
                     });
                     await getStatus(pluginAlias);
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -456,7 +456,7 @@
                     });
                     await getStatus(pluginAlias);
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -476,7 +476,7 @@
                     });
                     await getStatus(pluginAlias);
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -508,7 +508,7 @@
                         alert("Provisioning not started.");
                     }
                 } catch (rsp) {
-                    alert("Failed to get provision status. Please try again.");
+                    alert("Failed to get provision status. Please try again. (" + utils.getErrorMsg(rsp) + ")");
                 } finally {
                     enableUI();
                 }
@@ -527,7 +527,7 @@
                     });
                     alert("Makapix player provision is pending. Please wait...");
                 } catch (rsp) {
-                    alert("Failed to provision player. Please try again.");
+                    alert("Failed to provision player. Please try again. (" + utils.getErrorMsg(rsp) + ")");
                 } finally {
                     enableUI();
                 }

@@ -58,7 +58,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">OpenWeatherPlugin</h1>
                 <p><img src="OpenWeatherPlugin.jpg" alt="Screenshot" /></p>
@@ -152,12 +152,12 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -195,7 +195,7 @@
 
                     return cnt;
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                     return 0;
                 }
             }
@@ -238,7 +238,7 @@
                     document.getElementById("units").value = rsp.data.units;
                     setWeatherInfo(rsp.data.weatherInfo);
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -259,7 +259,7 @@
                 disableUI();
 
                 try {
-                    const rsp = await utils.makeRequest({
+                    await utils.makeRequest({
                         method: "POST",
                         url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/weather",
                         isJsonResponse: true,
@@ -275,7 +275,7 @@
                     });
                     alert("Ok.");
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }

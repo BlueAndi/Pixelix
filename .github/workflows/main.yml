@@ -51,6 +51,7 @@ jobs:
       native: ${{ steps.filter.outputs.native }}
       docs: ${{ steps.filter.outputs.docs }}
       yaml: ${{ steps.filter.outputs.yaml }}
+      web: ${{ steps.filter.outputs.web }}
     steps:
       - name: Checkout repository
         if: github.event_name != 'workflow_dispatch' && github.event_name != 'release'
@@ -120,6 +121,14 @@ jobs:
             yaml:
               - '**/*.yml'
               - '**/*.yaml'
+            web:
+              - 'data/**'
+              - 'lib/*/web/**'
+              - 'scripts/*.js'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.htmlvalidate.json'
+              - 'eslint.config.mjs'
             docs:
               - 'src/**'
               - 'lib/**'
@@ -629,9 +638,32 @@ jobs:
           git ls-files -z -- '*.yml' '*.yaml' \
             | xargs -0 -r python -m yamllint -d '{rules: {key-duplicates: enable}}'
 
+  check_web:
+    needs: changes
+    if: github.event_name != 'push' && (needs.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch' || github.event_name == 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install the lint tools
+        run: npm ci
+
+      - name: Lint HTML markup
+        run: npm run lint:html
+
+      - name: Lint JavaScript
+        run: npm run lint:js
+
   check_gate:
     if: always() && !cancelled()
-    needs: [changes, check, check_format, check_python, openapi_lint, check_yaml]
+    needs: [changes, check, check_format, check_python, openapi_lint, check_yaml, check_web]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if a required check failed

@@ -59,7 +59,7 @@
     </header>
 
     <!-- Begin page content -->
-    <main role="main" class="flex-shrink-0">
+    <main class="flex-shrink-0">
         <!-- Dialog -->
         <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true"
             data-bs-keyboard="false" data-bs-backdrop="static">
@@ -87,16 +87,16 @@
                 <label class="form-label">Zoom Level:</label>
                 <div class="btn-group" role="group" aria-label="Zoom controls">
                     <input type="radio" class="btn-check" name="zoomOptions" id="zoomOriginal" value="1" checked
-                        autocomplete="off">
+                        autocomplete="off" />
                     <label class="btn btn-outline-primary" for="zoomOriginal">Original</label>
 
-                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom2x" value="2" autocomplete="off">
+                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom2x" value="2" autocomplete="off" />
                     <label class="btn btn-outline-primary" for="zoom2x">2x</label>
 
-                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom4x" value="4" autocomplete="off">
+                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom4x" value="4" autocomplete="off" />
                     <label class="btn btn-outline-primary" for="zoom4x">4x</label>
 
-                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom8x" value="8" autocomplete="off">
+                    <input type="radio" class="btn-check" name="zoomOptions" id="zoom8x" value="8" autocomplete="off" />
                     <label class="btn btn-outline-primary" for="zoom8x">8x</label>
                 </div>
             </div>
@@ -161,13 +161,13 @@
     </footer>
 
     <!-- Bootstrap JS bundle -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js"
         onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
     <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
     <!-- Pixelix menu -->
-    <script type="text/javascript" src="/js/app-menu.js"></script>
+    <script src="/js/app-menu.js"></script>
     <!-- Pixelix utilities -->
-    <script type="text/javascript" src="/js/app-api.js"></script>
+    <script src="/js/app-api.js"></script>
     <!-- Pixelix REST API -->
 
     <script>
@@ -228,12 +228,12 @@
                 document.getElementById("overview").textContent = "";
                 await downloadFileList("overview");
             } catch (rsp) {
-                const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                const alertMsg = utils.getErrorMsg(rsp);
 
                 await dialog.showError("<p>" + alertMsg + "</p>");
 
                 /* Re-signal the failure to callers (e.g. the LaMetric flow). */
-                throw new Error(alertMsg);
+                throw new Error(alertMsg, { cause: rsp });
             } finally {
                 enableUI();
             }
@@ -262,7 +262,7 @@
 
                 updateOverviewLoadStatus(overview, iconEntries.length, iconEntries.length, true);
             } catch (rsp) {
-                const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                const alertMsg = utils.getErrorMsg(rsp);
 
                 updateOverviewLoadStatus(document.getElementById(id), 0, 0, true);
                 await dialog.showError("<p>" + alertMsg + "</p>");
@@ -336,7 +336,7 @@
                 document.getElementById("overview").textContent = "";
                 await downloadFileList("overview");
             } catch (rsp) {
-                const alertMsg = (typeof rsp === "string") ? rsp : rsp.error.msg;
+                const alertMsg = utils.getErrorMsg(rsp);
                 await dialog.showError("<p>" + alertMsg + "</p>");
             }
         }
@@ -401,8 +401,8 @@
                 } else {
                     previewArea.innerHTML = '<div class="text-danger">Icon not found or invalid response.</div>';
                 }
-            } catch (err) {
-                previewArea.innerHTML = '<div class="text-danger">Failed to fetch icon info.</div>';
+            } catch (rsp) {
+                previewArea.innerHTML = '<div class="text-danger">Failed to fetch icon info: ' + utils.getErrorMsg(rsp) + '</div>';
             }
         }
 

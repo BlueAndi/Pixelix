@@ -7,6 +7,7 @@ __pycache__
 .pio
 .pioenvs
 .piolibdeps
+/node_modules/
 /usb-installer/node_modules/
 /usb-installer/dist/
 .vscode/.browse.c_cpp.db*

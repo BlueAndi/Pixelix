@@ -57,7 +57,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">ChicagoBusTrackerPlugin</h1>
                 <p><img src="ChicagoBusTrackerPlugin.png" alt="Screenshot" /></p>
@@ -102,7 +102,7 @@
                         <div class="form-group mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="origin" name="origin" />
-                                <label class="form-label" for="origin">Show stop name (e.g. "...from 55th Street & St. Louis"):</label>
+                                <label class="form-label" for="origin">Show stop name (e.g. "...from 55th Street &amp; St. Louis"):</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="dest" name="dest" />
@@ -126,11 +126,11 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -234,8 +234,6 @@
 
                 element.innerHTML = ""
 
-                const options = Array.from(element.options).map((o) => o.value)
-
                 values.forEach((value) => {
                     const optionValue = value[valueproperty] ?? value
                     const optionText = value[textproperty] ?? value
@@ -281,7 +279,7 @@
 
                     return cnt;
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                     return 0;
                 }
             }
@@ -376,7 +374,7 @@
                         updateDependentControlState();
                     }
                 } catch (rsp) {
-                    alert("Failed.")
+                    alert("Failed: " + utils.getErrorMsg(rsp))
                 } finally {
                     enableUI()
                     updateDependentControlState()

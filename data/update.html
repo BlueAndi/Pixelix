@@ -57,7 +57,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <!-- Dialog -->
             <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
@@ -88,11 +88,9 @@
                     <div class="tab-pane fade active show" id="update" role="tabpanel" aria-labelledby="update-tab">
                         <br />
                         <p>To update the firmware or filesystem, activate the Pixelix Updater.</p>
-                        <p>
                         <div class="alert alert-warning" role="alert">
                             <strong>Important:</strong> Updating the filesystem will erase all your configuration data. Before proceeding, make sure to create a backup of your configuration to avoid losing any settings.
                         </div>
-                        </p>
                         <button class="btn btn-light" type="button" id="btnGoToUpdater" disabled>Go to PixelixUpdater</button>
                     </div>
 
@@ -106,7 +104,7 @@
                         <br />
                         <p>Restore the configuration.</p>
                         <div class="input-group">
-                            <input type="file" class="form-control" id="backupFile" accept=".zip">
+                            <input type="file" class="form-control" id="backupFile" accept=".zip" />
                             <button class="btn btn-light" type="button" id="btnRestore" disabled>Restore</button>
                         </div>
                         <div class="progress">
@@ -135,16 +133,16 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) { new bootstrap.Tooltip(el); });</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
         <!-- Zip library-->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onerror="this.onerror=null;this.src='/js/jszip.min.js';"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" onerror="this.onerror=null;this.src='/js/FileSaver.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" onerror="this.onerror=null;this.src='/js/jszip.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" onerror="this.onerror=null;this.src='/js/FileSaver.min.js';"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -416,7 +414,7 @@
                     await restClient.restart();
                     await dialog.showCountdownAndReload("<p>Restart performed.</p>");
                 } catch (err) {
-                    await dialog.showError("<p>Error: " + err + "</p>");
+                    await dialog.showError("<p>Error: " + utils.getErrorMsg(err) + "</p>");
                 }
             }
 
@@ -444,7 +442,7 @@
                     });
                     dialog.showInfo("<p>HomeAssistant automatic discovery is now disabled. </p>");
                 } catch (rsp) {
-                    dialog.showError("<p>HomeAssistant automatic discovery could not be disabled. </p>");
+                    dialog.showError("<p>HomeAssistant automatic discovery could not be disabled: " + utils.getErrorMsg(rsp) + "</p>");
                 }
             }
 
@@ -461,7 +459,7 @@
 
                     await dialog.showCountdownAndReload();
                 } catch (rsp) {
-                    dialog.showError("<p>Error: " + rsp + "</p>");
+                    dialog.showError("<p>Error: " + utils.getErrorMsg(rsp) + "</p>");
                     enableUI();
                 }
             }
@@ -486,7 +484,7 @@
                         console.error("Unexpected response!");
                         enableUI();
                     }
-                } catch (rsp) {
+                } catch {
                     dialog.showYesNo('HomeAssistant', '<p>In case of a filesystem update the HomeAssistant MQTT discovery feature needs to be disabled. Current status is unknown. Do you want to disable it? </p>', homeAssistantPopUpYesPressed, homeAssistantPopUpNoPressed, true);
                 }
             }

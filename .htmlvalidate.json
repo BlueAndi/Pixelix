@@ -1,0 +1,21 @@
+{
+    "root": true,
+    "extends": [
+        "html-validate:recommended"
+    ],
+    "rules": {
+        "autocomplete-password": "off",
+        "doctype-style": ["error", { "style": "lowercase" }],
+        "empty-heading": "off",
+        "form-dup-name": ["error", { "shared": ["radio", "checkbox", "button", "reset", "submit"] }],
+        "hidden-focusable": "off",
+        "input-attributes": "off",
+        "no-inline-style": "off",
+        "prefer-button": "off",
+        "prefer-native-element": "off",
+        "presentation-role-style": "off",
+        "valid-autocomplete": "off",
+        "void-style": ["error", { "style": "selfclosing" }],
+        "wcag/h32": "off"
+    }
+}

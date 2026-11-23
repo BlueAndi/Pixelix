@@ -99,7 +99,7 @@ utils.makeRequest = function (options) {
 
                 try {
                     jsonRsp = JSON.parse(xhr.response);
-                } catch (e) {
+                } catch {
                     /* A rejected request may come without any body, e.g. if the device
                      * has not enough memory left to generate one. */
                     jsonRsp = null;
@@ -137,6 +137,32 @@ utils.makeRequest = function (options) {
 
         xhr.send(formData);
     });
+};
+
+/* Get a human readable message from the reason of a failure. The reason is
+ * either what utils.makeRequest() rejected with (a string, the JSON response of
+ * the device or an object with a message) or an exception, thrown while
+ * handling the response. */
+utils.getErrorMsg = function (reason) {
+    let msg = "";
+
+    if (typeof reason === "string") {
+        msg = reason;
+    } else if ((reason !== null) && (typeof reason === "object")) {
+        if ((reason.error !== null) && (typeof reason.error === "object") && (typeof reason.error.msg === "string")) {
+            msg = reason.error.msg;
+        } else if (typeof reason.msg === "string") {
+            msg = reason.msg;
+        } else if (typeof reason.message === "string") {
+            msg = reason.message;
+        }
+    }
+
+    if (msg === "") {
+        msg = "Unknown error";
+    }
+
+    return msg;
 };
 
 utils.readJsonFile = async function (file) {

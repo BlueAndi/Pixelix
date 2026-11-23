@@ -58,7 +58,7 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">DateTimePlugin</h1>
                 <p><img src="DateTimePlugin1.jpg" alt="Screenshot" /></p>
@@ -213,14 +213,14 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix tag editor -->
-        <script type="text/javascript" src="/js/app-tag-editor.js"></script>
+        <script src="/js/app-tag-editor.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -278,7 +278,7 @@
 
                     return cnt;
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                     return 0;
                 }
             }
@@ -306,7 +306,7 @@
                         viewModeRadio.checked = true;
                     }
 
-                    if (rsp.data.hasOwnProperty("analogClock")) {
+                    if (Object.prototype.hasOwnProperty.call(rsp.data, "analogClock")) {
                         const jsonAnalogClock = rsp.data.analogClock;
                         const secondsModeRadio = document.querySelector('input[name="secondsMode"][value="' + jsonAnalogClock.secondsMode + '"]');
                         if (null !== secondsModeRadio) {
@@ -320,7 +320,7 @@
                     }
 
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -329,8 +329,8 @@
             async function setConfig(pluginAlias) {
                 disableUI();
 
-                let displayWidth = ~DISPLAY_HEIGHT~;
-                let displayHeight = ~DISPLAY_HEIGHT~;
+                const displayWidth = Number.parseInt("~DISPLAY_WIDTH~");
+                const displayHeight = Number.parseInt("~DISPLAY_HEIGHT~");
 
                 const configJson = {
                     mode: document.getElementById("mode").value,
@@ -343,7 +343,7 @@
                     viewMode: document.querySelector('input[name="viewMode"]:checked').value
                 };
 
-                if ((64 <= ~DISPLAY_HEIGHT~) && (64 <= ~DISPLAY_WIDTH~))
+                if ((64 <= displayHeight) && (64 <= displayWidth))
                 {
                     configJson["analogClock"] =
                     {
@@ -357,7 +357,7 @@
                 }
 
                 try {
-                    const rsp = await utils.makeRequest({
+                    await utils.makeRequest({
                         method: "POST",
                         url: restClient.getBaseUri() + "/display/plugin/" + pluginAlias + "/dateTime",
                         isJsonResponse: true,
@@ -366,7 +366,7 @@
 
                     alert("Ok.");
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -418,8 +418,8 @@
                     });
                 }
 
-                let displayWidth = ~DISPLAY_WIDTH~;
-                let displayHeight = ~DISPLAY_HEIGHT~;
+                const displayWidth = Number.parseInt("~DISPLAY_WIDTH~");
+                const displayHeight = Number.parseInt("~DISPLAY_HEIGHT~");
 
                 /* Enable extended options for screens >= 64x64. */
                 if ((displayWidth >= 64) && (displayHeight >= 64)) {

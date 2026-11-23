@@ -36,7 +36,9 @@ in parallel, but applicable later work waits for the preceding gate:
    bundled imgui and libwebp. `check_python` runs full Pylint on tracked Python
    files, except the two context-dependent skill templates. `openapi_lint`
    validates the OpenAPI specification; `check_yaml` checks tracked YAML syntax
-   and duplicate keys. `check_gate` waits for these jobs.
+   and duplicate keys. `check_web` lints the web frontend sources with
+   html-validate (markup) and ESLint (JavaScript, including inline scripts).
+   `check_gate` waits for these jobs.
 3. **Build:** `build` compiles firmware and builds filesystem images for 16
    environments. It uploads per-environment size metrics; `size_report`
    compares them with available previous runs and writes a workflow summary.
@@ -70,6 +72,7 @@ the workflow definitions. A single change can enable several categories.
 | `python` | Python files and `.pylintrc` | `check_python` |
 | `openapi` | `doc/OpenAPI` | `openapi_lint` |
 | `yaml` | `*.yml` and `*.yaml` | `check_yaml` |
+| `web` | Web data, `lib/*/web`, `scripts/*.js` and the lint configuration | `check_web` |
 | `tests` | Tests, sources, headers, configuration and selected build scripts | `test` |
 | `native` | Sources, headers, configuration, web data, OpenAPI and selected scripts | `build_native` and `native_api_test` |
 | `docs` | Sources, headers and `doc/doxygen` | `doc` |

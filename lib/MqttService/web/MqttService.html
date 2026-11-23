@@ -56,15 +56,13 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">MqttService</h1>
                 <p>The MQTT service allows to configure and manage MQTT broker connections.</p>
-                <p>
-                    <div class="alert alert-warning" role="alert">
-                        <strong>Important:</strong> The primary MQTT broker connection publishes configuration data for plugins, sensors and services. Make sure that its not a security risk to publish this data to the configured broker.
-                    </div>
-                </p>
+                <div class="alert alert-warning" role="alert">
+                    <strong>Important:</strong> The primary MQTT broker connection publishes configuration data for plugins, sensors and services. Make sure that its not a security risk to publish this data to the configured broker.
+                </div>
                 <p>Notes:</p>
                 <ul>
                     <li>The first configured broker is used as primary connection.</li>
@@ -88,12 +86,12 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
         <script>document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){new bootstrap.Tooltip(el);});</script>
         <!-- Pixelix menu -->
-        <script type="text/javascript" src="/js/app-menu.js"></script>
+        <script src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
-        <script type="text/javascript" src="/js/app-api.js"></script>
+        <script src="/js/app-api.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -122,14 +120,6 @@
 
             function createFormCheck(elements) {
                 return createContainer("form-check", elements);
-            }
-
-            function createFormCheckInline(elements) {
-                return createContainer("form-check form-check-inline", elements);
-            }
-
-            function createInputGroup(elements) {
-                return createContainer("input-group", elements);
             }
 
             function createTextInput(type, id, value) {
@@ -249,7 +239,7 @@
                     saveButton.textContent = "Save";
                     document.getElementById("myForm").appendChild(saveButton);
                 } catch (rsp) {
-                    alert("Internal error.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }
@@ -289,7 +279,7 @@
                     });
                     alert("Ok.");
                 } catch (rsp) {
-                    alert("Failed.");
+                    alert("Failed: " + utils.getErrorMsg(rsp));
                 } finally {
                     enableUI();
                 }

@@ -1,0 +1,18 @@
+{
+  "name": "pixelix-web-lint",
+  "private": true,
+  "description": "Lint tooling for the Pixelix web frontend sources.",
+  "license": "MIT",
+  "scripts": {
+    "lint": "npm run lint:html && npm run lint:js",
+    "lint:html": "html-validate \"data/*.html\" \"data/cp/*.html\" \"lib/*/web/*.html\"",
+    "lint:js": "eslint data lib scripts"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.15.0",
+    "eslint-plugin-html": "8.2.1",
+    "globals": "17.14.0",
+    "html-validate": "11.21.1"
+  }
+}

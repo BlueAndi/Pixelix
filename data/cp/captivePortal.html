@@ -77,19 +77,17 @@
         </header>
 
         <!-- Begin page content -->
-        <main role="main" class="flex-shrink-0">
+        <main class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">Captive Portal</h1>
                 <h2>Wifi network configuration</h2>
-                <p>
-                    <div class="form-group mb-3">
-                        <label class="form-label" for="ssid">SSID:</label><br />
-                        <input class="form-control" type="text" id="ssid" name="ssid" value="~SSID~" /><br />
-                        <label class="form-label" for="passphrase">Passphrase:</label><br />
-                        <input class="form-control" type="password" id="passphrase" name="passphrase" value="~PASSPHRASE~" /><br />
-                        <input type="button" value="Store configuration" id="btnStore" />
-                    </div>
-                </p>
+                <div class="form-group mb-3">
+                    <label class="form-label" for="ssid">SSID:</label><br />
+                    <input class="form-control" type="text" id="ssid" name="ssid" value="~SSID~" /><br />
+                    <label class="form-label" for="passphrase">Passphrase:</label><br />
+                    <input class="form-control" type="password" id="passphrase" name="passphrase" value="~PASSPHRASE~" /><br />
+                    <input type="button" value="Store configuration" id="btnStore" />
+                </div>
                 <p>WiFi MAC address: ~MAC_ADDR~</p>
                 <h2>Restart</h2>
                 <p>
@@ -97,7 +95,7 @@
                 </p>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -108,7 +106,7 @@
         </footer>
 
         <!-- Bootstrap JS bundle -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.8/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/js/bootstrap.bundle.min.js';"></script>
 
         <script>
             async function store() {

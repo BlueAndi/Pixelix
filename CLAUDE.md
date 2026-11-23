@@ -50,6 +50,9 @@ python -m pytest tests/test_notify.py::test_only_message
 # Web tag editor test
 node --test scripts/test_app_tag_editor.js
 
+# Web frontend lint: html-validate (markup) and ESLint (JavaScript incl. inline scripts), install once with "npm ci"
+npm run lint
+
 # OpenAPI specification and YAML
 openapi-spec-validator doc/OpenAPI/OpenAPI.yaml
 python -m yamllint -d '{rules: {key-duplicates: enable}}' <file.yml>
