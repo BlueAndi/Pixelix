@@ -8,7 +8,7 @@ Pixelix is ESP32 firmware for RGB LED matrix displays (WS2812B, HUB75) and TFT d
 
 ## Build Commands
 
-Uses PlatformIO. The default environment is `esp32doit-devkit-v1-LED-32x8`.
+Uses PlatformIO. The default environment is `adafruit_feather_esp32_v2-LED-32x8`.
 
 ```bash
 # Build firmware
@@ -34,7 +34,7 @@ clang-format --dry-run --Werror <file>
 ```
 
 Available environments are defined in [platformio.ini](platformio.ini) (15+ boards). Key ones:
-- `esp32doit-devkit-v1-LED-32x8` — 32×8 LED matrix, ESP32 DevKit
+- `adafruit_feather_esp32_v2-LED-32x8` — 32×8 LED matrix, Adafruit ESP32 Feather V2
 - `ulanzi-TC001` — Ulanzi TC001 smart pixel clock
 - `lilygo-t-display-s3-LED-32x8` — LILYGO T-Display S3
 
