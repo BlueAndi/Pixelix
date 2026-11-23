@@ -48,3 +48,87 @@ code {
     text-align: left;
     white-space: pre-line;
 }
+
+/* Tag editor, see app-tag-editor.js */
+.tag-editor-host {
+    position: relative;
+}
+
+.tag-editor {
+    position: absolute;
+    z-index: 1040;
+    transform: translateY(calc(-100% - 0.25rem));
+}
+
+.tag-editor [hidden] {
+    display: none !important;
+}
+
+.tag-editor-preview {
+    display: flex;
+    height: 3.5rem;
+    padding: 0.25rem 0.5rem;
+    overflow: hidden;
+    background-color: #000000;
+    border-radius: var(--bs-border-radius);
+    font-family: var(--bs-font-monospace);
+    font-size: 1.25rem;
+    font-weight: bold;
+    line-height: 1.1;
+}
+
+.tag-editor-preview-text {
+    white-space: pre;
+}
+
+.tag-editor-gradient {
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.tag-editor-hint {
+    min-height: 1.5rem;
+}
+
+.tag-editor-number {
+    width: 5rem;
+}
+
+.tag-editor-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.25rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--bs-border-color);
+    font-family: var(--bs-font-monospace);
+    font-size: 0.875rem;
+}
+
+.tag-editor-text {
+    white-space: pre;
+}
+
+.tag-editor-tags > span {
+    cursor: pointer;
+}
+
+.tag-editor-tags > span:hover {
+    outline: 1px solid var(--bs-primary);
+}
+
+.tag-editor-tag-remove {
+    padding: 0 0 0 0.35rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    line-height: 1;
+}
+
+.tag-editor-tag {
+    font-size: 0.875rem;
+    font-weight: normal;
+}

@@ -62,11 +62,11 @@
             <div class="container">
                 <h1 class="mt-5">SignalDetectorPlugin</h1>
                 <p><img src="SignalDetectorPlugin.jpg" alt="Screenshot" /></p>
-                <p>The plugin is able to detect a signal, which can be combined with up to 2 frequencies.</p>
-                <p>Each frequency must be detected for a specific configureable time.</p>
-                <p>As long as nothing is detected, the plugin will disable itself.</p>
-                <p>If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection.</p>
-                <p>Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."</p>
+                <p>Listens for an acoustic signal and shows your text as soon as it is heard.</p>
+                <p>A signal consists of up to two tones. Each tone must be present for at least its configured duration to count.</p>
+                <p>While nothing is detected, the plugin stays hidden. After a detection the text is shown for the slot duration or until the slot is changed, then the plugin hides again until the next detection.</p>
+                <p>You decide how the text looks. Click into the text field and the tag editor opens: add colors, gradients, alignment and special characters, and check the result in the preview.</p>
+                <p>Optionally a URL is called on every detection, e.g. to send a push notification. By default a GET request is sent. Put "GET" or "POST" in front of the URL to choose, e.g. "POST http://..."</p>
                 <h2>Configuration</h2>
                 <div class="h-100 p-2 bg-body-tertiary border rounded-3">
                     <form id="myForm">
@@ -78,7 +78,7 @@
                         <div class="form-group mb-3">
                             <label class="form-label" for="text">Text:</label>
                             <input class="form-control" type="text" id="text" name="text" value="" size="20" />
-                            <small class="form-text">The text to will be shown on the display if signal is detected.</small>
+                            <small class="form-text">The text which will be shown on the display if a signal is detected.</small>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="pushUrl">Push URL:</label>
@@ -141,6 +141,8 @@
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/app-api.js"></script>
+        <!-- Pixelix tag editor -->
+        <script type="text/javascript" src="/js/app-tag-editor.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
@@ -251,6 +253,13 @@
                 document.getElementById("pluginAlias").addEventListener("change", () => {
                     getConfig(document.getElementById("pluginAlias").value);
                 });
+
+                /* Attach the tag editor to the text input. The page shall work without the editor too,
+                 * e.g. if the filesystem is older than the firmware.
+                 */
+                if ("object" === typeof window.tagEditor) {
+                    tagEditor.attach(document.getElementById("text"));
+                }
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();

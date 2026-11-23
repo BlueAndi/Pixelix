@@ -63,23 +63,10 @@
                 <h1 class="mt-5">DateTimePlugin</h1>
                 <p><img src="DateTimePlugin1.jpg" alt="Screenshot" /></p>
                 <p><img src="DateTimePlugin2.jpg" alt="Screenshot" /></p>
-                <p>This plugin lets you see the current date and time for any time zone you choose.</p>
-                <p>With the display mode, it can be configured to show only the date or only the time as well.</p>
-                <p>It can also be set to show the time in 12-hour or 24-hour format.</p>
-                <p>Additionally, the time zone can be specified to display the time in a particular region. If no time zone is set, the configured time zone in the <a href="/settings.html" target="_blank">settings</a> will be used.</p>
-                <p>Depending on the country, the first day of the week can be configured.</p>
-                <p>With the time and date format specifier, the output format can be customized.</p>
-                <p>The format is according to <a href="https://cplusplus.com/reference/ctime/strftime/" target="_blank">strftime()</a>. For colorization text properties can be added.</p>
-                <ul>
-                    <li>%b - Abbreviated month name (3 characters)</li>
-                    <li>%d - Day of the month, zero-padded (01-31)</li>
-                    <li>%m - Month as a decimal number (01-12)</li>
-                    <li>%H - Hour in 24h format (00-23)</li>
-                    <li>%I - Hour in 12h format (01-12)</li>
-                    <li>%M - Minute (00-59)</li>
-                    <li>%p - AM or PM designation</li>
-                    <li>%Y - Year</li>
-                </ul>
+                <p>A clock and calendar for your display: the plugin shows the current time and date. Where the layout has room for it, a bar below marks the day of the week.</p>
+                <p>The layout depends on the display and on the font of the slot, e.g. a larger font leaves no room for the weekday bar. The font is selected per slot on the <a href="/display.html" target="_blank">display</a> page.</p>
+                <p>You decide how time and date look. Click into the time or date format field and the tag editor opens: choose a preset or compose your own format from hours, minutes, weekday and more, add colors and alignment, and check the result in the preview.</p>
+                <p>Every plugin instance can have its own time zone, so several instances make a world clock. Without a time zone, the one from the <a href="/settings.html" target="_blank">settings</a> is used.</p>
                 <h2>Configuration</h2>
                 <h3>Display</h3>
                 <div class="h-100 p-1 p-md-5 bg-body-tertiary border rounded-3">
@@ -99,33 +86,13 @@
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="timeFormat">Time format:</label>
-                            <div class="input-group">
-                                <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />
-                                <select class="form-select" id="predefinedTimeFormat">
-                                    <option value="">Choose preset...</option>
-                                    <option value="%H:%M">24h (HH:MM)</option>
-                                    <option value="%I:%M %p">12h (HH:MM AM/PM)</option>
-                                    <option value="%H:%M:%S">24h with seconds (HH:MM:SS)</option>
-                                    <option value="%I:%M:%S %p">12h with seconds (HH:MM:SS AM/PM)</option>
-                                </select>
-                            </div>
-                            <small class="form-text">The time format string defines how the time is shown.</small>
+                            <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />
+                            <small class="form-text">The time format string defines how the time is shown. Click into the field to open the tag editor with presets.</small>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="dateFormat">Date format:</label>
-                            <div class="input-group">
-                                <input class="form-control" type="text" id="dateFormat" name="dateFormat" value="" />
-                                <select class="form-select" id="predefinedDateFormat">
-                                    <option value="">Choose preset...</option>
-                                    <option value="%m-%d">MM-DD.</option>
-                                    <option value="%d.%m.">DD.MM.</option>
-                                    <option value="%Y-%m-%d">YYYY-MM-DD</option>
-                                    <option value="%d.%m.%Y">DD.MM.YYYY</option>
-                                    <option value="%b %d, %Y">Mon DD, YYYY</option>
-                                    <option value="%A, %d %B %Y">Weekday, DD Month YYYY</option>
-                                </select>
-                            </div>
-                            <small class="form-text">The date format string defines how the date is shown.</small>
+                            <input class="form-control" type="text" id="dateFormat" name="dateFormat" value="" />
+                            <small class="form-text">The date format string defines how the date is shown. Click into the field to open the tag editor with presets.</small>
                         </div>
                         <div class="form-group mb-3">
                             <label class="form-label" for="timeZone">POSIX time zone:</label>
@@ -150,11 +117,11 @@
                             </select>
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="timeFormat">Color of actual day:</label>
+                            <label class="form-label" for="dayOnColor">Color of actual day:</label>
                             <input class="form-control form-control-color" type="color" id="dayOnColor" name="dayOnColor" value="#000000" title="Choose color of actual day" />
                         </div>
                         <div class="form-group mb-3">
-                            <label class="form-label" for="timeFormat">Color of other days:</label>
+                            <label class="form-label" for="dayOffColor">Color of other days:</label>
                             <input class="form-control form-control-color" type="color" id="dayOffColor" name="dayOffColor" value="#000000" title="Choose color of other days than the actual." />
                         </div>
                         <div class="container-fluid mt-3 p-0" id="options64x64" style="Display:none">
@@ -252,11 +219,32 @@
         <script type="text/javascript" src="/js/app-menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/app-api.js"></script>
+        <!-- Pixelix tag editor -->
+        <script type="text/javascript" src="/js/app-tag-editor.js"></script>
         <!-- Pixelix REST API -->
 
         <script>
             const pluginName = "DateTimePlugin";
             const restClient = new pixelix.rest.Client();
+
+            /* Max. length of a format string, to keep distance to the buffer size the firmware uses for the result. */
+            const MAX_FORMAT_LENGTH = 100;
+
+            /* Presets offered by the tag editor. */
+            const TIME_FORMAT_PRESETS = [
+                { label: "24h (HH:MM)", value: "%H:%M" },
+                { label: "12h (HH:MM AM/PM)", value: "%I:%M %p" },
+                { label: "24h with seconds (HH:MM:SS)", value: "%H:%M:%S" },
+                { label: "12h with seconds (HH:MM:SS AM/PM)", value: "%I:%M:%S %p" }
+            ];
+            const DATE_FORMAT_PRESETS = [
+                { label: "MM-DD.", value: "%m-%d" },
+                { label: "DD.MM.", value: "%d.%m." },
+                { label: "YYYY-MM-DD", value: "%Y-%m-%d" },
+                { label: "DD.MM.YYYY", value: "%d.%m.%Y" },
+                { label: "Mon DD, YYYY", value: "%b %d, %Y" },
+                { label: "Weekday, DD Month YYYY", value: "%A, %d %B %Y" }
+            ];
 
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -401,16 +389,32 @@
                     getConfig(document.getElementById("pluginAlias").value);
                 });
 
-                /* Wire up preset selects. */
-                document.getElementById("predefinedTimeFormat").addEventListener("change", (event) => {
-                    document.getElementById("timeFormat").value = event.target.value;
-                });
-                document.getElementById("predefinedDateFormat").addEventListener("change", (event) => {
-                    document.getElementById("dateFormat").value = event.target.value;
-                });
+                /* Wire up preset select. */
                 document.getElementById("predefinedTimeZone").addEventListener("change", (event) => {
                     document.getElementById("timeZone").value = event.target.value;
                 });
+
+                /* Attach the tag editor to the format inputs. The firmware centers the text by default.
+                 * The page shall work without the editor too, e.g. if the filesystem is older than the firmware.
+                 */
+                if ("object" === typeof window.tagEditor) {
+                    /* Date/Time specific tab. The preview shows the current local time of the browser. */
+                    const dateTimeTab = {
+                        title: "Date/Time",
+                        previewRefreshMs: 1000,
+                        items: tagEditor.STRFTIME_ITEMS,
+                        resolvePreview: (text) => tagEditor.strftime(text, new Date())
+                    };
+
+                    [["timeFormat", TIME_FORMAT_PRESETS], ["dateFormat", DATE_FORMAT_PRESETS]].forEach(([id, presets]) => {
+                        tagEditor.attach(document.getElementById(id), {
+                            extraTabs: [dateTimeTab],
+                            presets: presets,
+                            previewPrefix: "{hc}",
+                            maxLength: MAX_FORMAT_LENGTH
+                        });
+                    });
+                }
 
                 let displayWidth = ~DISPLAY_WIDTH~;
                 let displayHeight = ~DISPLAY_HEIGHT~;
