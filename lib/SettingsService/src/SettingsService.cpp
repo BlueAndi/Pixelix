@@ -351,7 +351,7 @@ static const uint8_t    MIN_VALUE_MAX_BRIGHTNESS_SL         = MIN_VALUE_BRIGHTNE
 static const size_t     MIN_VALUE_TIMEZONE                  = 4U;
 
 /** NTP server address min. length */
-static const size_t     MIN_VALUE_NTP_SERVER                = 12U;
+static const size_t     MIN_VALUE_NTP_SERVER                = 1U;
 
 /** Max. number of display slots minimum value */
 static const uint8_t    MIN_MAX_SLOTS                       = 2U;
