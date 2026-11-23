@@ -1,47 +1,45 @@
-# PIXELIX <!-- omit in toc -->
+# PIXELIX Documentation <!-- omit in toc -->
 
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-## Documentation  <!-- omit in toc -->
+This index puts user guides first. For a first installation, start with the
+[installation and startup guide](../README.md#installation) in the main README.
 
-- [Hardware](#hardware)
-- [Software](#software)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+## For users
 
-## Hardware
+### Get started and use PIXELIX
 
-- [Boards](./boards/README.md)
-- [Sensors](SENSORS.md)
+- [Install PIXELIX and complete the first startup](../README.md#installation)
+- [Set up Wi-Fi](../README.md#very-first-startup)
+- [Use the device buttons and remote button](../README.md#user-interface)
+- [Update a running device](./config/SW-UPDATE.md)
+- [Frequently asked questions](./FAQ.md)
 
-## Software
+### Configure the display
 
+- [Supported boards and pin connections](./boards/README.md)
+- [Available plugins and display content](./PLUGINS.md)
+- [Supported sensors, wiring, and calibration](./SENSORS.md)
+- [Use alternative icons](./ICONS.md)
+- [GrabViaREST and GrabViaMQTT configuration examples](./grabConfigs/README.md)
+
+### Connect PIXELIX to other systems
+
+- [Home Assistant: choose MQTT, the custom integration, or REST](./HOMEASSISTANT.md)
+- [REST API reference](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0)
+- [MQTT API](./MQTT.md)
+- [WebSocket API](./WEBSOCKET.md)
+
+## For developers
+
+- [Set up the toolchain](./config/TOOLCHAIN-INSTALLATION.md), [build firmware](./config/SW-BUILD.md), and [upload it](./config/SW-UPDATE.md)
+- [Configure boards and build variants](./config/README.md)
+- [Custom ESP-IDF libraries](./CUSTOM-IDF-LIBRARIES.md)
 - [Software architecture](./architecture/README.md)
-- [CI and release workflows](WORKFLOWS.md)
-- [Software configuration management](./config/README.md)
-  - [Toolchain installation](./config/TOOLCHAIN-INSTALLATION.md)
-  - [Software build](./config/SW-BUILD.md)
-  - [Software update](./config/SW-UPDATE.md)
-- [Plugins](PLUGINS.md)
-- [Plugin Development](PLUGIN-DEV.md)
-- [Websocket API description](WEBSOCKET.md)
-- [Coredump Analysis & Debugging](COREDUMP-ANALYSIS.md)
-- [Alternative icons](ICONS.md)
-- [Configuration examples for GrabViaMqttPlugin and GrabViaRestPlugin.](./grabConfigs/README.md)
-
-## Issues, Ideas And Bugs
-
-If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/Pixelix/issues). If you want to fix it yourself, clone the repository and open a pull request.
-
-## License
-
-The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
-Consider the different licenses of the used third party libraries too!
-
-## Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
-additional terms or conditions.
+- [Develop a plugin](./PLUGIN-DEV.md)
+- [Third-party libraries and license information](./USED-LIBRARIES.md)
+- [Web frontend conventions](./WEB-CONVENTIONS.md)
+- [CI and release workflows](./WORKFLOWS.md)
+- [Coredump analysis and debugging](./COREDUMP-ANALYSIS.md)

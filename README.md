@@ -2,7 +2,9 @@
 
 ![PIXELIX](./doc/images/LogoBlack.png)
 
-Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
+An ESP32-powered information display for RGB LED matrices and selected TFT
+screens. Show useful information at a glance, configure it from the web
+interface, and integrate it with your smart home.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Supported-41BDF5?logo=home-assistant&logoColor=white)](https://www.home-assistant.io/integrations/mqtt)
@@ -10,27 +12,19 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![Release](https://img.shields.io/github/release/BlueAndi/Pixelix.svg)](https://github.com/BlueAndi/Pixelix/releases)
 [![Build Status](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml/badge.svg)](https://github.com/BlueAndi/Pixelix/actions/workflows/main.yml)
 
-[![pixelix](https://img.youtube.com/vi/u1W9nlzJOI4/1.jpg)](https://youtu.be/u1W9nlzJOI4 "Pixelix & Friends")
-[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/1.jpg)](https://youtu.be/dik8Rm6f3o0 "Pixelix")
-[![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/1.jpg)](https://youtu.be/UCjJCI5JShY "Pixelix - Remote Button")
-
-Click on the preview to see the video.
-
 [![wwha-blue](./doc/images/wwha-blue.svg)](./doc/HOMEASSISTANT.md)\
 [![makapix-bluc](./doc/images/MakapixClub/MakapixClubBadge.png)](https://makapix.club/)
 
+[Install PIXELIX](#installation) · [Check supported hardware](./doc/boards/README.md) · [Connect Home Assistant](./doc/HOMEASSISTANT.md) · [Browse all documentation](./doc/README.md)
+
 ___
 
-## Table of Content <!-- omit in toc -->
+## Table of Contents <!-- omit in toc -->
 
-- [Motivation](#motivation)
-- [Introduction](#introduction)
-- [Features](#features)
-- [Original Setup](#original-setup)
-- [Attention](#attention)
+- [What Is PIXELIX?](#what-is-pixelix)
+- [What Can It Do?](#what-can-it-do)
+- [Get Started](#get-started)
 - [Supported Development Boards](#supported-development-boards)
-  - [Recommendation](#recommendation)
-  - [Special Variants](#special-variants)
 - [Installation](#installation)
   - [Install A Prebuilt Release With The Web USB Installer](#install-a-prebuilt-release-with-the-web-usb-installer)
   - [Install A Prebuilt Release Manually](#install-a-prebuilt-release-manually)
@@ -38,109 +32,96 @@ ___
   - [Verify The Installation](#verify-the-installation)
   - [Update A Running PIXELIX](#update-a-running-pixelix)
 - [Very First Startup](#very-first-startup)
-  - [Variant 1: Configure WiFi station SSID and passphrase using a browser](#variant-1-configure-wifi-station-ssid-and-passphrase-using-a-browser)
-  - [Variant 2: Configure WiFi station SSID and passphrase using a serial terminal](#variant-2-configure-wifi-station-ssid-and-passphrase-using-a-serial-terminal)
-  - [PIXELIX Is Ready](#pixelix-is-ready)
 - [User Interface](#user-interface)
-  - [One button control](#one-button-control)
-  - [Two button control (LILYGO® T-Display ESP32-S3)](#two-button-control-lilygo-t-display-esp32-s3)
-  - [Three button control (Ulanzi TC001)](#three-button-control-ulanzi-tc001)
-  - [Remote button](#remote-button)
-- [Details](#details)
+- [Integrations And Help](#integrations-and-help)
 - [FAQ](#faq)
-  - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
-  - [How to change text properties?](#how-to-change-text-properties)
-  - [The display only shows an error code, like "E4". What does that mean?](#the-display-only-shows-an-error-code-like-e4-what-does-that-mean)
-  - [How can I use animated icons?](#how-can-i-use-animated-icons)
-  - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
-  - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
-  - [How can I use alternative icons?](#how-can-i-use-alternative-icons)
-  - [Is it possible to use a font with 8px height?](#is-it-possible-to-use-a-font-with-8px-height)
-  - [How to configure the date/time format?](#how-to-configure-the-datetime-format)
-  - [How to configure my own list of plugins?](#how-to-configure-my-own-list-of-plugins)
-  - [Is there an easy way to rotate the display by 180° ? I need to turn the display when putting it into a housing](#is-there-an-easy-way-to-rotate-the-display-by-180--i-need-to-turn-the-display-when-putting-it-into-a-housing)
 - [Used Libraries](#used-libraries)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
 
-## Motivation
+## What Is PIXELIX?
 
-My initial goal was to have a remote display that would show multiple kind of information and run reliably 24/7. Can be connected to the local network via WiFi and controlled via REST API or Websocket. PIXELIX was born!
+PIXELIX turns an ESP32 board and an RGB LED matrix or small TFT into a
+customizable information display. Show clocks, weather, sensor readings,
+notifications, animations, and your own content. Configure the display from
+its web interface; no cloud service is required.
 
-## Introduction
+PIXELIX can also connect to Home Assistant and other systems through MQTT and
+REST. Its plugins let you choose what appears on the display and add new
+content without changing the user interface.
 
-PIXELIX firmware runs on ESP32 boards and controls RGB LED matrices or TFT displays. It can display the time, date, weather, text, animations, and more.
-It requires no cloud connection or smart home system, but its REST and MQTT APIs integrate with [Home Assistant](https://www.home-assistant.io/) and other smart home systems.
+## What Can It Do?
 
-## Features
+- Show static or scrolling text, icons, and animated GIFs. PNG and WebP support
+  is available on boards with PSRAM.
+- Display the time, weather, sensor readings, messages, and custom data.
+- Configure display slots, brightness, and plugins in the web interface.
+- Integrate with Home Assistant using MQTT discovery, the custom integration,
+  or REST.
+- Run on supported ESP32 boards with LED matrices or selected TFT displays.
 
-- Supports 32x8, 32x16 and 64x64 LED matrix size out of the box.
-- Supports some small TFT displays to simulate a LED matrix in retro style.
-- Display static or scrolling text, as well as static or animated icons (BMP, GIF and additional for boards with PSRAM PNG and WEBP).
-- Includes a web interface for configuration and control.
-- Supports REST and MQTT API for remote control and integration with other systems, like [Home Assistant](https://www.home-assistant.io/).
-- Extendable with custom effects and animations by plugins. See list of [plugins](./doc/PLUGINS.md).
-- Its plugin concept allows to scale for different development boards.
+### Display examples
 
-Not every feature is available on every development board. For example, MQTT generally requires a board with at least 8 MB of flash, except for the Ulanzi TC001. See the `config<variant>.ini` files in the [config](./config) folder for details.
+| Time and date | Date display | Icon and text |
+| --- | --- | --- |
+| ![Time and date on a PIXELIX display](./lib/DateTimePlugin/web/DateTimePlugin1.jpg) | ![Date display on a PIXELIX display](./lib/DateTimePlugin/web/DateTimePlugin2.jpg) | ![Icon and text on a PIXELIX display](./lib/IconTextPlugin/web/IconTextPlugin.jpg) |
 
-| Some impressions                                                           |                                                                |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| ![TimePlugin](./lib/DateTimePlugin/web/DateTimePlugin1.jpg)                | ![DatePlugin](./lib//DateTimePlugin/web/DateTimePlugin2.jpg)   |
-| ![IconTextLampPlugin](./lib/IconTextLampPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/IconTextPlugin/web/IconTextPlugin.jpg) |
-| ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg)       | ...                                                            |
+| Sensor display | Wi-Fi status | OpenMeteoPlugin |
+| --- | --- | --- |
+| ![Icon, text, and sensor values on a PIXELIX display](./lib/IconTextLampPlugin/web/IconTextLampPlugin.jpg) | ![Wi-Fi status on a PIXELIX display](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg) | ![Weather forecast from OpenMeteo on a PIXELIX display](./lib/OpenMeteoPlugin/web/OpenMeteoPlugin.jpg) |
 
-The native environment runs PIXELIX as an application on Windows and Linux without requiring hardware. It displays a simulated LED grid in a window and serves its web interface on local port 8080. Melodies that would play through a board's buzzer use the host's audio device. You can mute them with the _Mute_ entry in the simulator window's menu bar.
+| Sound reactive | Fire effect | Game of Life |
+| --- | --- | --- |
+| ![Sound reactive spectrum on a PIXELIX display](./lib/SoundReactivePlugin/web/SoundReactivePlugin.jpg) | ![Fire effect on a PIXELIX display](./lib/FirePlugin/web/FirePlugin.jpg) | ![Game of Life animation on a PIXELIX display](./lib/GameOfLifePlugin/web/GameOfLifePlugin.jpg) |
 
-![Pixelix Native](./doc/images/pixelix_native.png)
+### See PIXELIX in action
 
-## Original Setup
+Click a preview to watch the video:
 
-The original setup for development and the first release was:
+[![PIXELIX and friends](https://img.youtube.com/vi/u1W9nlzJOI4/1.jpg)](https://youtu.be/u1W9nlzJOI4 "PIXELIX & Friends")
+[![PIXELIX display](https://img.youtube.com/vi/dik8Rm6f3o0/1.jpg)](https://youtu.be/dik8Rm6f3o0 "PIXELIX")
+[![PIXELIX remote button](https://img.youtube.com/vi/UCjJCI5JShY/1.jpg)](https://youtu.be/UCjJCI5JShY "PIXELIX - Remote Button")
 
-- [ESP32 DevKitV1](https://github.com/playelek/pinout-doit-32devkitv1)
-- WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
-- Power supply 5 V / 4 A
+### Develop with the native environment
 
-The following diagram shows the minimum wiring setup, for example, for the ESP32 DevKit V1. Wiring may differ depending on your development board.
+You can also build and develop PIXELIX on Windows or Linux without an ESP32.
+The native environment opens a simulated LED grid in a desktop window and
+serves the web interface locally at `http://localhost:8080`.
 
-![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
+![PIXELIX running in the native environment](./doc/images/pixelix_native.png)
 
-## Attention
+Set up PlatformIO using the [toolchain guide](./doc/config/TOOLCHAIN-INSTALLATION.md),
+then build the native environment with `platformio run --environment native`.
 
-> :warning: **If you power the development board and LED matrix via USB**, be careful: excessive LED current can damage the ESP32 board. Avoid increasing the display brightness or filling it completely with white pixels. Use an external power supply rated for at least 5 V / 4 A.
+## Get Started
 
-> :information_source: To protect your hardware and your eyes, PIXELIX starts at a low brightness. The maximum current is also limited by software.
+1. Check the [supported boards and displays](./doc/boards/README.md).
+2. If your board and display match a release configuration, install a
+   [prebuilt release](#install-a-prebuilt-release-with-the-web-usb-installer).
+   No build toolchain is needed.
+3. If you need a different matrix size, wiring, or plugin set, [build PIXELIX
+   for your hardware](#build-and-install-the-software-yourself).
+4. Follow the [first-startup guide](#very-first-startup) to connect it to Wi-Fi.
 
 ## Supported Development Boards
 
-In the meantime several other boards are supported as well. You can find them in the [list of boards](./doc/boards/README.md).
-If your board is not listed in the main branch, please have a look in the [Development branch](https://github.com/BlueAndi/Pixelix/tree/Development) too.
+PIXELIX supports a range of ESP32 boards, LED matrices, and selected TFT
+displays. The [board guide](./doc/boards/README.md) lists supported
+combinations and pin connections. The [sensor guide](./doc/SENSORS.md) covers
+compatible sensors and wiring.
 
-With the [Ulanzi TC001 smart pixel clock](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882) you even don't need to assemble the electronic and mechanic together.
+The [Ulanzi TC001](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882)
+is a ready-to-use option. For a custom build, 8 MB of flash or more and a
+dual-core ESP32 are recommended; PSRAM enables additional image formats.
 
-### Recommendation
+> **Power safety:** Do not power both the development board and LED matrix
+> through USB. High LED current can damage the board. Use a suitably rated
+> external 5 V supply and keep brightness within the software limit.
 
-If you assemble your own Pixelix hardware, its recommended to use a development board with the following properties:
-
-- 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited.
-- A esp32 dual core variant, which provides more processing power.
-- PSRAM for image formats that require more memory than the available internal RAM, depending on the enabled features.
-
-### Special Variants
-
-Additional supported variants, which were original not in focus:
-
-- [LILYGO&reg; TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
-- [LILYGO&reg; T-Display ESP32-S3 1.9 inch ST7789 LCD Display Touch Screen Development Board](https://www.lilygo.cc/products/t-display-s3)
-- Limited HUB75 panel support, configured for the ESP32-DoIt DevKit v1 and the Adafruit MatrixPortal S3 development board.
-
-Although PIXELIX was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
-
-- Temperature and humidity sensors DHTx
-- Temperature and humidity sensors SHT3x
-- Digitial microphone INMP441 for some sound reactive stuff.
+This [minimal wiring example](./doc/images/PixelixMinimalSetup.png) is based
+on the ESP32 DevKit V1 and a 32×8 WS2812B panel. Wiring depends on the board
+and display.
 
 ## Installation
 
@@ -187,8 +168,8 @@ See the [software update guide](./doc/config/SW-UPDATE.md#native-application) fo
 2. Configure your display in ```./config/display.ini```:
    - Adapt _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according to your LED matrix.
    - Change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: [https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects](https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects)
-   - Optional: set _CONFIG_DISPLAY_ROTATE180_ to 1 to [rotate the display by 180&deg;](#is-there-an-easy-way-to-rotate-the-display-by-180--i-need-to-turn-the-display-when-putting-it-into-a-housing).
-3. Optional: adapt the [list of plugins](#how-to-configure-my-own-list-of-plugins) in the corresponding ```./config/config*.ini```.
+   - Optional: set _CONFIG_DISPLAY_ROTATE180_ to 1 to [rotate the display by 180&deg;](./doc/FAQ.md#how-do-i-rotate-the-display-by-180-degrees).
+3. Optional: adapt the [list of plugins](./doc/FAQ.md#how-do-i-configure-my-own-list-of-plugins) in the corresponding ```./config/config*.ini```.
 4. [Build the software](./doc/config/SW-BUILD.md) and check whether the toolchain works.
 5. [Upload the software and the filesystem](./doc/config/SW-UPDATE.md) to the target. Note, that both parts are necessary, the firmware and the filesystem image.
 6. Continue with the [Very First Startup](#very-first-startup).
@@ -235,7 +216,7 @@ Connect PIXELIX to your PC via USB and start a serial terminal. Use the followin
 - Get hostname: ```get hostname```
 - Get status: ```get status```
   - A status of 0 means everything is ok.
-  - For any other status, see the [low-level error code table](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean). For example, status 1 corresponds to error code E1.
+  - For any other status, see the [error code table](./doc/FAQ.md#the-display-shows-an-error-code-such-as-e4-what-does-it-mean). For example, status 1 corresponds to error code E1.
 
 Use ```help``` to get a list of all supported commands.
 
@@ -287,172 +268,23 @@ Pixelix can be controlled with buttons. Most of the development boards are suppo
 
 If the display's location is hard to reach, the remote user button feature can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 
-## Details
+## Integrations And Help
 
 - [Home Assistant](./doc/HOMEASSISTANT.md)
 - [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0)
 - [MQTT API](./doc/MQTT.md)
-- More information is in the [documentation](./doc/README.md) folder.
+- [Available plugins](./doc/PLUGINS.md)
+- [Frequently asked questions](./doc/FAQ.md)
+- [All user guides and developer references](./doc/README.md)
 
 ## FAQ
 
-### Where to change panel topology of the LED matrix?
-
-Adapt in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according your LED matrix and change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: [https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects](https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects)
-
-### How to change text properties?
-
-Text properties can be changed using different keywords added to the string to be displayed.
-In order to be able to use these keywords, they must be inside curly braces, otherwise they will only be treated as text.
-
-The following keywords are available:
-
-| Keyword                               | Description                                                                              |
-| ------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `{#RRGGBB}`                           | Set solid text color (`RRGGBB` in hex)                                                   |
-| `{lgv #RRGGBB,#RRGGBB,OFFSET,LENGTH}` | Set linear vertical gradient text color (`RRGGBB` in hex, `OFFSET`/`LENGTH` in pixels)   |
-| `{lgh #RRGGBB,#RRGGBB,OFFSET,LENGTH}` | Set linear horizontal gradient text color (`RRGGBB` in hex, `OFFSET`/`LENGTH` in pixels) |
-| `{stc}`                               | Activate solid text color                                                                |
-| `{lgtc}`                              | Activate linear gradient text color                                                      |
-| `{hl}`                                | Horizontal alignment left                                                                |
-| `{hc}`                                | Horizontal alignment center                                                              |
-| `{hr}`                                | Horizontal alignment right                                                               |
-| `{vt}`                                | Vertical alignment top                                                                   |
-| `{vc}`                                | Vertical alignment center                                                                |
-| `{vb}`                                | Vertical alignment bottom                                                                |
-| `{0xCC}`                              | Special character code (CC in hex)                                                       |
-
-**Notes**:
-
-- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.10.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
-- The keywords can be combined.
-- Don't add additional spaces, e.g. after a comma. Write them exactly as the format is specified.
-
-**Examples**:
-
-| Sourcecode         | URL                 | Result                                                                             |
-| ------------------ | ------------------- | ---------------------------------------------------------------------------------- |
-| `{hl}{#ff0000}Hi!` | `%7Bcl%7Dff0000Hi!` | <span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
-| `{hc}{#ff0000}Hi!` | `%7Bhc%7Dff0000Hi!` | &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp; |
-| `{hr}{#ff0000}Hi!` | `%7Bhr%7Dff0000Hi!` | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span> |
-
-### The display only shows an error code, like "E4". What does that mean?
-
-This is a low level error code. Please have a look into the following table.
-
-| Error code | Description                                                                            |
-| ---------- | -------------------------------------------------------------------------------------- |
-| E1         | Something happened, which can not be further explained, but was fatal.                 |
-| E2         | There is a problem with the two-wire (i2c) interface.                                  |
-| E3         | There is no user button available.                                                     |
-| E4         | Bad filesystem, did you explicit program the filesystem too? If not, please upload it. |
-| E5         | The display manager didn't start up.                                                   |
-| E6         | The system message handler didn't start up.                                            |
-| E7         | One of the services failed to start.                                                   |
-
-Press a button and Pixelix will jump to the Pixelix Updater.
-
-### How can I use animated icons?
-
-Use animated GIF images to get animated icons. The sprite sheet support (< v8.0.0) was replaced with the GIF images.
-
-If you like to create animated GIFs by yourself, the [Piskel](https://www.piskelapp.com/) editor is recommended. Piskel is a free online editor for animated sprites & pixel art.
-
-### How do I know that my sensor is recognized?
-
-1. Check the log output from USB (not via web interface) right after startup (at this point WiFi is not connected yet).
-2. Install the SensorPlugin and open the SensorPlugin website. There the sensor should be shown in the drop-down.
-
-### Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?
-
-The LDR pin is configured as input (ADC) and it seems that the pin is floating, because there is the ext. pull-down missing.
-
-### How can I use alternative icons?
-
-Find details in the [icon page](./doc/ICONS.md).
-
-### Is it possible to use a font with 8px height?
-
-There are three font types defined:
-
-- default (6px height)
-- normal (6px height)
-- large (8px height)
-
-Note, the default font type is "normal".
-
-The font type can be selected per plugin instance in the display web page.
-
-Not all plugin may support this in case they get conflicts with their layout.
-If a plugin don't support it, it will use the default font type.
-
-### How to configure the date/time format?
-
-The date/time format used by plugins, e.g. the DateTimePlugin or the SunrisePlugin, can be configured in their configuration JSON file. Use the file editor in the web interface to modify it according to your needs. The file can be found in the ```/configuration``` folder and the filename is ```<PLUGIN-UID>.json```. The format specifiers following [strftime()](https://cplusplus.com/reference/ctime/strftime/).
-
-Examples:
-
-- `%I:%M %p`: 02:30 PM
-- `%H:%M`: 14:30
-- `%m/%d`: 11/12
-- `%d.%m.`: 11.12.
-- `%d - %b`: 11 - Nov
-
-You can colorize it by using the [text properties](#how-to-change-text-properties).
-
-### How to configure my own list of plugins?
-
-The available plugins depend on your development board. Boards with only 4 MB of flash cannot fit every plugin, and single-core boards such as the ESP32-S2 may not have enough processing power for some plugins.
-
-Several `.ini` files in the `./config` folder define plugin sets:
-
-- configSmall.ini: Used for boards with 4 MB flash.
-- configNormal.ini: Used for boards with 8 MB flash or more.
-- configSmallNoI2s.ini: Used for boards with 4 MB flash and less mcu power.
-
-Edit the file used by your board, commenting plugins in or out as needed.
-
-### Is there an easy way to rotate the display by 180° ? I need to turn the display when putting it into a housing
-
-Change option CONFIG_DISPLAY_ROTATE180 in ```config/display.ini``` to 1 as shown below and rebuild.
-
-Example:
-
-```ini
-[display:common]
-build_flags =
-    -D CONFIG_DISPLAY_ROTATE180=1
-```
+Find answers to common questions in the [PIXELIX FAQ](./doc/FAQ.md).
 
 ## Used Libraries
 
-| Library                                                                       | Description                                                                                                                                                                                        | License                                       |
-| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| [Arduino](https://github.com/platformio/platform-espressif32)                 | ESP32 Arduino framework v2.x.x                                                                                                                                                                     | Apache-2.0                                    |
-| [PlatformIO](https://platformio.org)                                          | PlatformIO is a cross-platform, cross-architecture, multiple framework, professional tool for embedded systems engineers and for software developers who write applications for embedded products. | Apache-2.0                                    |
-| [NeoPixelBus](https://github.com/Makuna/NeoPixelBus)                          | Controlling the LED matrix with hardware support (I2S)                                                                                                                                             | LGPL-3.0                                      |
-| [ESP32 HUB75 LED MATRIX PANEL DMA Display](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA) | DMA-driven driver for HUB75 LED matrix panels                                                                                                                                                       | MIT                                           |
-| [ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer)          | Webserver                                                                                                                                                                                          | LGPL-3.0                                      |
-| [AsyncTCP](https://github.com/ESP32Async/AsyncTCP)                            | This is a fully asynchronous TCP library, aimed at enabling trouble-free, multi-connection network environment for Espressif's ESP32 MCUs.                                                         | LGPL-3.0                                      |
-| [ArduinoJson](https://arduinojson.org/)                                       | JSON handling                                                                                                                                                                                      | MIT                                           |
-| [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils)                | Stream utilities                                                                                                                                                                                   | MIT                                           |
-| [Bootstrap](https://getbootstrap.com/)                                        | CSS Framework                                                                                                                                                                                      | MIT                                           |
-| [POPPER JS](https://popper.js.org/)                                           | POPPER JS                                                                                                                                                                                          | MIT                                           |
-| [Adafruit Unified Sensor Driver](https://github.com/adafruit/Adafruit_Sensor) | A unified sensor abstraction layer.                                                                                                                                                                | Apache License 2.0                            |
-| [Adafruit BusIO](https://github.com/adafruit/Adafruit_BusIO)                  | Abstracts I2C, SPI, and UART communication for Adafruit libraries                                                                                                                                  | MIT                                           |
-| [RTClib](https://github.com/adafruit/RTClib)                                  | Arduino library for real-time clock modules                                                                                                                                                         | MIT                                           |
-| [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) | An Arduino library for the DHT series of low-cost temperature/humidity sensors.                                                                                                                    | MIT                                           |
-| [arduino-sht](https://github.com/Sensirion/arduino-sht)                       | An Arduino library for reading the SHT3x family of temperature and humidity sensors.                                                                                                               | BSD-3-Clause                                  |
-| [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI)                                | Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips                                      | Mixed licenses: MIT, BSD, FreeBSD             |
-| [arduinoFFT](https://github.com/kosme/arduinoFFT)                             | Fast Fourier Transform for Arduino.                                                                                                                                                                | GPL 3.0                                       |
-| [mufonts](https://github.com/muwerk/mufonts)                                  | A collection of fonts compatible with Adafruit GFX library. These fonts were developed when creating various samples for mupplet display code.                                                     | MIT                                           |
-| [JSZip](https://github.com/Stuk/jszip)                                        | A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API.                                                                                              | MIT                                           |
-| [FileSaver.js](https://github.com/eligrey/FileSaver.js)                       | FileSaver.js is the solution to saving files on the client-side.                                                                                                                                   | MIT                                           |
-| [Arduino client for MQTT](https://github.com/hmueller01/pubsubclient)         | This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT.                                                                                      | MIT                                           |
-| [ESP32-PSRamFS](https://github.com/tobozo/ESP32-PsRamFS)                      | ESP32-PsRamFS is a pseudo RamDisk library for Arduino-ESP32, with vfs compliance.                                                                                                                  | MIT                                           |
-| [Dear ImGui](https://github.com/ocornut/imgui)                                | ImGui is a bloat-free graphical user interface library for C++. Is is used by the native Platfrom only to create a simulated LED grid window.                                                      | MIT                                           |
-| [PNGdec](https://github.com/bitbank2/PNGdec)                                  | PNG image decoding. Only built for boards with PSRAM.                                                                                                                                              | Apache-2.0                                    |
-| [libwebp](https://github.com/webmproject/libwebp)                             | WebP image decoding (static and animated), vendored decoder-only. Only built for boards with PSRAM.                                                                                                | BSD-3-Clause, plus an additional patent grant |
+The complete list, including license information, is in the
+[third-party library reference](./doc/USED-LIBRARIES.md).
 
 ## Issues, Ideas And Bugs
 
@@ -461,7 +293,7 @@ If you have ideas or found a bug, create an [issue](https://github.com/BlueAndi/
 ## License
 
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
-Consider the different licenses of the used third party libraries too!
+Third-party library licenses are listed in the [library reference](./doc/USED-LIBRARIES.md).
 
 ## Contribution
 
