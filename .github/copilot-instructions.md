@@ -75,7 +75,7 @@ clang-format --dry-run --Werror <file>
 
 ## Copilot Skills
 - For Python creation, changes, or review, read `.github/skills/python-coding-guidelines/SKILL.md`. For Home Assistant integration code, also read `.claude/skills/ha-integration-dev/SKILL.md`.
-- For embedded C/C++ firmware work in `src/`, `lib/`, or `test/`, read `.github/skills/embedded-cpp17-misra/SKILL.md`.
+- For embedded C/C++ firmware work in `src/`, `lib/`, or `test/`, read `.github/skills/embedded-cpp-misra/SKILL.md`.
 - For HTML and Bootstrap UI work, read `.github/skills/html5-bootstrap/SKILL.md`.
 - For JavaScript work in `data/` or frontend assets, read `.github/skills/javascript-coding-guidelines/SKILL.md`.
 - For OpenAPI specification work, read `.github/skills/openapi-spec/SKILL.md`.

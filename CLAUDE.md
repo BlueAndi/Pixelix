@@ -110,7 +110,7 @@ Follow [doc/PLUGIN-DEV.md](doc/PLUGIN-DEV.md):
 - **Headers**: Every file starts with the MIT license block, `@file`, `@brief`, `@author` doxygen tags
 - **Python scripts**: max line length 140 (`.pylintrc`); CI runs Pylint over all tracked Python files
 - **Python skill**: For Python creation, changes, or review, use [python-coding-guidelines](.claude/skills/python-coding-guidelines/SKILL.md). For Home Assistant integration code (`doc/homeassistant/integration/`), also use [ha-integration-dev](.claude/skills/ha-integration-dev/SKILL.md).
-- **C/C++ skill**: For writing/refactoring/reviewing embedded C/C++17 code (MISRA-oriented rules, defensive programming, Yoda conditions, single-exit "pathfinder" rule, Doxygen, section-banner layout, clang-format), use the [embedded-cpp17-misra](.claude/skills/embedded-cpp17-misra/SKILL.md) skill, which includes `.h`/`.hpp`/`.cpp` templates.
+- **C/C++ skill**: For writing/refactoring/reviewing embedded C/C++17 code (MISRA-oriented rules, defensive programming, Yoda conditions, single-exit "pathfinder" rule, Doxygen, section-banner layout, clang-format), use the [embedded-cpp-misra](.claude/skills/embedded-cpp-misra/SKILL.md) skill, which includes `.h`/`.hpp`/`.cpp` templates.
 - **Web skills**: For the web frontend (`data/`, `lib/<Name>/web/`) use the `html5-reference`, `bootstrap-reference` and `javascript-reference` skills; for diagrams the `plantuml-reference` skill.
 
 ## Testing
