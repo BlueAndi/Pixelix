@@ -389,7 +389,7 @@ void MqttApiTopicHandler::publishTopicStatesOnDemand()
 
 void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    const size_t         JSON_DOC_SIZE = Json::getJsonSize(4096U);
+    const size_t         JSON_DOC_SIZE = Json::getJsonSize(8192U);
     DynamicJsonDocument  jsonDoc(JSON_DOC_SIZE);
     DeserializationError error = deserializeJson(jsonDoc, payload, size);
 
@@ -454,10 +454,19 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
                             }
                             else
                             {
-                                (void)fd.write(buffer, fileSize);
+                                const size_t writtenSize = fd.write(buffer, fileSize);
+
                                 fd.close();
 
-                                jsonDoc["fullPath"] = dstFullPath;
+                                if (writtenSize != fileSize)
+                                {
+                                    LOG_ERROR("Couldn't write complete upload file: %s", dstFullPath.c_str());
+                                    (void)FILESYSTEM.remove(dstFullPath);
+                                }
+                                else
+                                {
+                                    jsonDoc["fullPath"] = dstFullPath;
+                                }
                             }
                         }
 
