@@ -186,7 +186,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest* request, TopicMet
     String            content;
     const size_t      JSON_DOC_SIZE          = Json::getJsonSize(9216U);
     const size_t      JSON_GET_PAR_DOC_SIZE  = Json::getJsonSize(512U);
-    const size_t      JSON_POST_PAR_DOC_SIZE = Json::getJsonSize(4096U);
+    const size_t      JSON_POST_PAR_DOC_SIZE = Json::getJsonSize(8192U);
     PsramJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject        dataObj        = jsonDoc.createNestedObject("data");
     uint32_t          httpStatusCode = HttpStatus::STATUS_CODE_OK;
